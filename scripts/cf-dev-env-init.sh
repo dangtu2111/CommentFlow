@@ -19,7 +19,7 @@ hex() { openssl rand -hex "$1"; }
 umask 077
 cat > "$TARGET" <<EOF
 # Sinh tự động bởi scripts/cf-dev-env-init.sh — KHÔNG commit, KHÔNG chép về máy code.
-CF_DATABASES=cf_dev cf_test
+CF_DATABASES="cf_dev cf_test"
 CACHE_NAMESPACE=dev:litellm
 LAN_HOST=${LAN_HOST}
 LANGFUSE_PUBLIC_URL=http://${LAN_HOST}:3100
@@ -42,7 +42,7 @@ NEXTAUTH_SECRET=$(hex 32)
 LANGFUSE_SALT=$(hex 32)
 LANGFUSE_ENCRYPTION_KEY=$(hex 32)
 LANGFUSE_INIT_ORG_ID=cf-dev-org
-LANGFUSE_INIT_ORG_NAME=CommentFlow Dev
+LANGFUSE_INIT_ORG_NAME="CommentFlow Dev"
 LANGFUSE_INIT_PROJECT_ID=cf-dev
 LANGFUSE_INIT_PROJECT_NAME=cf-dev
 LANGFUSE_INIT_PROJECT_PUBLIC_KEY=pk-lf-$(hex 16)

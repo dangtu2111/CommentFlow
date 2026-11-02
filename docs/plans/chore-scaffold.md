@@ -55,7 +55,8 @@ Tổng **5 cổng** → 5 dòng `netsh interface portproxy` + 5 luật tường 
 | `packages/saas-core/` | `auth` (Better Auth), `tenancy`, `flags` |
 | `packages/ai/` | `callLlm()` → LiteLLM + ghi `ai_usage` |
 | `infra/` | `docker-compose.yml` (nền, không publish cổng) + `docker-compose.dev.yml` (cf-dev) + `docker-compose.staging.yml` (cf-staging), Dockerfile, cấu hình LiteLLM, script khởi tạo Postgres |
-| `scripts/` | `env-init.mjs`, `cf-dev.mjs`, `stack-check.mjs`, `check-i18n-literals` (xem S7) |
+| `scripts/` | `cf-dev-env-init.sh` (chạy **trên máy ảo**, sinh `.env.cf-dev` bằng openssl, chmod 600, không in bí mật), `cf-dev.mjs` (ssh cf, chỉ project cf-dev, từ chối `-v`/`-p`/`-f`/staging, `config` chỉ với `-q`), `stack-check.mjs` (từ máy code, không cần mật khẩu) |
+| `env.example`, `infra/env.cf-dev.example` | Tên biến + mô tả cho `.env` (máy code) và `.env.cf-dev` (máy ảo). Không có dấu chấm đầu vì quy tắc quyền chặn ghi `.env*.example` — đổi tên bằng `git mv` nếu muốn |
 | `.github/workflows/ci.yml`, `.gitleaks.toml`, `.dependency-cruiser.cjs` | CI và luật ranh giới |
 
 Không tạo ở khung này: `packages/connectors`, `evals/`, design tokens (`08` §2), Caddy, trang đăng nhập/đăng ký, deploy staging (workflow runner — GĐ3).
@@ -89,6 +90,8 @@ Không tạo ở khung này: `packages/connectors`, `evals/`, design tokens (`08
 | H3 | ClickHouse + SeaweedFS (S3, bắt buộc file danh tính) + Langfuse web/worker, khởi tạo bằng `LANGFUSE_INIT_*`; LiteLLM gửi trace | Bốn container healthy; gọi `mock-llm` xong, API Langfuse (khóa dự án dev) thấy trace; ghi RAM bằng `docker stats` |
 | H4 | `ml` image + `scripts/cf-dev.mjs` (up/down/ps/logs, chỉ `cf-dev`) + `stack-check.mjs` (từ máy code gọi mọi URL trong `.env`) | `pnpm stack:check` xanh toàn bộ; Valkey đúng prefix `dev:` |
 | H5 | `docker-compose.staging.yml` + Dockerfile web/worker/ml (nhiều tầng, user thường). **Không chạy**, chỉ kiểm cú pháp: `ssh cf "cd ~/CommentFlow && docker compose -p cf-dev -f … -f docker-compose.staging.yml config -q"` | Lệnh `config -q` thoát 0; xác nhận Postgres/Valkey của staging không có `ports:` |
+
+> **Trạng thái nhóm H (03/11/2026):** H1–H4 xong và kiểm từ máy code (`pnpm stack:check` 7/7). H5 (staging, Dockerfile web/worker) **chưa làm** — chờ lệnh riêng. Số đo RAM thật ở `001-stack.md` §8.
 
 ### Giai đoạn 3 — Lõi dùng chung (cần `cf-dev`; chỉ khung hạ tầng, không nghiệp vụ sản phẩm)
 

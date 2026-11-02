@@ -116,3 +116,25 @@ Chọn **SeaweedFS** (Apache-2.0; kho còn hoạt động, đẩy mã ngày 02/1
 CI (`.github/workflows/ci.yml`) chỉ dùng `actions/checkout` và `actions/setup-node` (ghim theo mã commit); `pnpm` qua corepack, `uv` qua `pipx` bản ghim, gitleaks 8.30.1 tải về kèm kiểm checksum — không dùng action bên thứ ba.
 
 Phát hiện khi làm S3: bản dịch phải nạp bằng import tĩnh (import động theo tên gói làm `next build` xanh nhưng chạy thật lỗi 500) — đã có test + kiểm chạy thật.
+
+## 8. Đo thực tế cf-dev (03/11/2026, sau khi up, không tải)
+
+| Container | RAM dùng | Giới hạn đặt |
+|---|---|---|
+| langfuse-web | 715 MiB | **2 GiB** (1 GiB làm Node hết heap → đã nâng, kèm `--max-old-space-size=1536`) |
+| litellm | 591 MiB | 1,25 GiB |
+| langfuse-worker | 352 MiB | 768 MiB |
+| clickhouse | 230 MiB | 1,5 GiB |
+| seaweedfs | 123 MiB | 512 MiB |
+| postgres | 79 MiB | 1 GiB |
+| ml (chỉ /health) | 34 MiB | 512 MiB |
+| valkey | 6 MiB | 256 MiB |
+| **Tổng 8 container** | **≈ 2,1 GiB** (thấp hơn ước tính 2,2–4,3 GB) | ≈ 7,75 GiB |
+
+Máy ảo (40 GB): đang dùng ≈ 3,2 GB cho toàn hệ thống. Số đo ở trạng thái rảnh; sẽ tăng khi có tải (ClickHouse, Postgres, `ml` nạp model).
+
+Phát hiện khi dựng (đã sửa trong compose):
+- Healthcheck phải gọi qua địa chỉ container: SeaweedFS nghe trên IP container (`hostname -i`), Langfuse web/worker nghe trên `$HOSTNAME`; `localhost` bị từ chối.
+- LiteLLM `/health` cần khóa (401, và gọi cả các model) → kiểm không khóa bằng `/health/liveliness` và `/health/readiness`.
+- Langfuse v4: `/api/public/traces` không còn; đọc trace qua `/api/public/v2/observations`. Đã xác nhận: gọi `mock-llm` qua LiteLLM tạo observation `litellm-acompletion` trong Langfuse.
+- SeaweedFS 4.52 chạy được với Langfuse (tạo bucket `langfuse` bằng `weed shell`, S3 có xác thực).
