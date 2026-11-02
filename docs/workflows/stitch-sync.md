@@ -10,6 +10,8 @@ Mục tiêu: đưa thiết kế vào repo **một lần** để các phiên sau 
    - Người dùng chỉ định màn hình → chỉ màn hình đó.
    - Không có → màn hình chưa có trong manifest hoặc có thời điểm/phiên bản mới hơn. Màn hình không đổi → bỏ qua.
 4. Với mỗi màn hình cần tải: lấy code HTML (Tailwind) và ảnh chụp; ghi thẳng ra file, **không in nội dung HTML vào hội thoại**:
+   - Nhiều màn hình (> 3) → giao cho **một** subagent chạy nền ngay từ đầu để HTML/ảnh base64 không vào hội thoại chính; subagent chỉ trả về danh sách file đã ghi + lỗi.
+   - Giải mã base64/JSON bằng Python (`python -c` hoặc script tạm trong thư mục tạm), **không dùng `jq`** (Windows thường không có).
    - Tên file theo slug tiếng Anh của trang trong `docs/CommentFlow_UI_Design_Prompt.md` / `docs/CommentFlow_Admin_Design_Prompt.md` (ví dụ `comments`, `messages`, `knowledge-base`, `posts`, `automation`, `admin-overview`); không khớp được thì dùng tên màn hình Stitch đã chuyển thành slug và ghi "chưa khớp" trong bảng.
    - `design/stitch/<slug>.html`, `design/stitch/<slug>.png`.
    - Nếu MCP cung cấp DESIGN.md / design system → `design/stitch/DESIGN.md`.

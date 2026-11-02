@@ -1,0 +1,33 @@
+# Bí mật — không bao giờ commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Phụ thuộc và bản build
+node_modules/
+.next/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Python (services/ml)
+.venv/
+__pycache__/
+*.pyc
+
+# Dữ liệu Docker local (database, Langfuse, MinIO…)
+.docker-data/
+volumes/
+
+# Cấu hình cá nhân của Claude Code (mỗi máy một bản)
+.claude/settings.local.json
+
+# Hệ điều hành / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json

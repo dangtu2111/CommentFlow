@@ -25,9 +25,9 @@ nvm install 22 && nvm use 22
 ```
 > Nếu dự án của bạn đang ghim phiên bản Node khác (file `.nvmrc` / `engines` trong package.json), giữ phiên bản dự án cho repo và chỉ dùng Node 22 khi cài Codex — báo tôi nếu xung đột.
 
-**Docker Desktop** (bắt buộc — khung chạy đủ 7 dịch vụ): cài Docker Desktop cho Windows, bật WSL2, trong Settings → Resources cấp **ít nhất 12 GB RAM** (Langfuse + ClickHouse khá nặng; máy dưới 16 GB RAM sẽ chậm).
+**Docker:** máy code **không cài** (chốt 02/11, `docs/decisions/002-hai-may.md`); mọi container chạy trên máy phụ — xem mục "Cài máy phụ".
 
-**Kiểm tra:** `git --version`, `node --version` (≥ 22) và `docker compose version` đều in ra phiên bản.
+**Kiểm tra:** `git --version` và `node --version` (≥ 22) đều in ra phiên bản.
 
 ### A3. Claude Code
 ```bash
@@ -87,6 +87,7 @@ Giải nén `CommentFlow_ClaudeCode_Starter.zip`, rồi chép vào **gốc repo*
 ```bash
 STARTER=<đường-dẫn>/commentflow-starter
 cp    $STARTER/AGENTS.md                      .
+cp -n $STARTER/.gitignore                     .
 cp -n $STARTER/CLAUDE.md                      .   # -n: không ghi đè nếu repo đã có
 mkdir -p .claude docs design
 cp -rn $STARTER/.claude/.                     .claude/
@@ -99,9 +100,10 @@ cp    $STARTER/THIET_LAP.md $STARTER/HUONG_DAN_CLAUDE_CODE.md docs/
 - **Repo đã có `docs/` khác:** `cp -n` không ghi đè; kiểm `git status` để thấy file nào được thêm.
 
 ### B3. Bí mật
-```bash
-grep -n "^\.env" .gitignore || printf "\n.env\n.env.*\n!.env.example\n" >> .gitignore
-git ls-files | grep -E "(^|/)\.env" && echo "CẢNH BÁO: .env đang bị commit"
+Bộ khởi động đã có sẵn `.gitignore` (chặn `.env*`, `node_modules`, dữ liệu Docker, `.claude/settings.local.json`). Kiểm tra trong PowerShell:
+```powershell
+Select-String -Path .gitignore -Pattern '^\.env'          # phải thấy .env và .env.*
+git ls-files | Select-String '(^|/)\.env'                  # phải KHÔNG in ra gì
 ```
 - Có cảnh báo → `git rm --cached <file>` và **đổi ngay** các khóa trong file đó.
 - `.env` trên máy dev chỉ chứa khóa thử nghiệm (Meta App dev, Shopify dev store, LLM key ngân sách thấp). Không để token production.
@@ -138,7 +140,7 @@ Trong phiên, gõ lần lượt:
 | Lệnh | Phải thấy | Nếu không |
 |---|---|---|
 | `/model` | `sonnet` | Kiểm `.claude/settings.json` có `"model": "sonnet"` (gói Pro: Sonnet mặc định; chỉ gõ `/model opusplan` cho việc lập kế hoạch khó, đầu phiên) |
-| `/agents` | gap-analyzer, verifier-security, verifier-db, test-runner | File phải nằm ở `.claude/agents/*.md`, có phần `---` đầu file |
+| Hỏi Claude: *"Liệt kê các subagent có trong project này, kèm model của từng cái"* (lệnh `/agents` đã bị bỏ ở bản Claude Code mới) | gap-analyzer, verifier-security, verifier-db, test-runner | Ngoài PowerShell: `dir .claude\agents` phải có 4 file `.md`, mỗi file bắt đầu bằng phần `---` (name, description, model) |
 | `/permissions` | Luật chặn `Read(./.env)` … | Kiểm JSON hợp lệ: `claude doctor` báo lỗi settings |
 | `/mcp` | Server Stitch trạng thái connected | Xem mục D1 |
 | `/feature` (gõ `/` rồi tìm) | Có các lệnh feature, finish, stitch-sync, codemap-init | File ở `.claude/commands/*.md` |
@@ -194,8 +196,8 @@ Gõ: *"Không sửa file. Liệt kê 5 điều trong mục Cấm và quy tắc '
 **Prompt G2** (dán nguyên văn):
 ```
 Repo đang trống, chỉ có docs/ và design/. Lập kế hoạch dựng khung CommentFlow theo docs/decisions/000-chot-02-11.md, docs/09_System_Architecture.md §2 (ghi chú "Chốt 02/11"), §3, §3.1, §10 và docs/16_Development_Roadmap.md §3 GĐ0 + §3.1.
-Chỉ đọc: decisions/000, 09 §2–3.1 và §10, 10 §1, §3.1, §3.8 và §4, 13 §4, 15 §4, 16 §3–3.1, 08 §8. Không đọc file khác trong docs/.
-Phạm vi khung: apps/web (Next.js, TypeScript, next-intl vi/en), apps/worker (pg-boss), services/ml (FastAPI, chỉ endpoint /health), packages/db (migration + RLS + withWorkspace, Postgres có pgvector), packages/saas-core (auth, tenancy, flags), packages/ai (chỉ lớp bọc gọi LLM qua LiteLLM + ghi ai_usage, chưa có pipeline), packages/shared; Docker Compose local chạy đủ 7 dịch vụ (web, worker, ml, Postgres+pgvector, Redis, LiteLLM, Langfuse tự host kèm ClickHouse + MinIO) có health check; CI GitHub Actions (lint, typecheck, test, dependency-cruiser, gitleaks).
+Chỉ đọc: decisions/000 và 002, 09 §2–3.1 và §10, 10 §1, §3.1, §3.8 và §4, 13 §4, 15 §4, 16 §3–3.1, 08 §8. Không đọc file khác trong docs/.
+Phạm vi khung: apps/web (Next.js, TypeScript, next-intl vi/en), apps/worker (pg-boss), services/ml (FastAPI, chỉ endpoint /health), packages/db (migration + RLS + withWorkspace, Postgres có pgvector), packages/saas-core (auth, tenancy, flags), packages/ai (chỉ lớp bọc gọi LLM qua LiteLLM + ghi ai_usage, chưa có pipeline), packages/shared; Docker Compose đủ 7 dịch vụ (web, worker, ml, Postgres+pgvector, Redis, LiteLLM, Langfuse tự host kèm ClickHouse + MinIO) có health check, chia 2 project: `cf-dev` (chỉ dịch vụ phụ trợ, chạy trên máy phụ cho máy code dùng qua LAN — máy code KHÔNG có Docker, xem docs/decisions/002-hai-may.md) và `cf-staging` (đủ 7 dịch vụ); web/worker chạy bằng Node trên máy code; workflow deploy staging bằng GitHub self-hosted runner; CI GitHub Actions (lint, typecheck, test, dependency-cruiser, gitleaks).
 Đề xuất và nêu lý do + giấy phép cho: trình quản lý gói/monorepo, ORM/migration, thư viện auth, test runner, lint/format. Ưu tiên ít phụ thuộc, phổ biến, chạy tốt trên Windows (Docker Desktop + WSL2). Ghi rõ RAM dự kiến của cả bộ Compose.
 Viết kế hoạch bằng tiếng Việt dễ hiểu theo mục "Cách trình bày cho chủ dự án" trong AGENTS.md.
 Ghi vào docs/plans/chore-scaffold.md (các bước nhỏ, mỗi bước có cách kiểm tra) và docs/decisions/001-stack.md. Chưa tạo code. Liệt kê câu hỏi cần tôi chốt.
@@ -211,7 +213,7 @@ Hết token Claude giữa chừng → chuyển sang Codex theo `docs/HUONG_DAN_C
 - [ ] `codex login status` OK; `~/.codex/config.toml` có `on-request` + `workspace-write`
 - [ ] `.gitignore` có `.env*`; không có `.env` nào bị commit; `.env` máy dev chỉ có khóa thử nghiệm
 - [ ] `AGENTS.md` + `CLAUDE.md` (dòng đầu `@AGENTS.md`) ở gốc repo
-- [ ] `/model` = sonnet · `/agents` thấy 4 agent · `/permissions` có luật chặn · `/mcp` thấy Stitch
+- [ ] `/model` = sonnet · Claude liệt kê đủ 4 subagent · `/permissions` có luật chặn · `/mcp` thấy Stitch
 - [ ] `.claude/rules/ecc/common` + `typescript` có mặt; không cài plugin/hook ECC
 - [ ] Codex trả lời đúng nội dung AGENTS.md
 - [ ] Commit `chore: add Claude Code + Codex starter` trên nhánh `chore/claude-setup`
@@ -229,3 +231,73 @@ Hết token Claude giữa chừng → chuyển sang Codex theo `docs/HUONG_DAN_C
 - **TikTok:** tạo tài khoản TikTok Business + đăng ký TikTok for Developers, xin quyền API bình luận (Q5). Chưa có thì GĐ5 chờ, các giai đoạn khác không ảnh hưởng.
 - **Google Cloud:** tạo project, bật Sheets API, màn hình OAuth (chỉ quyền đọc) cho FR-121.
 - **Codex** (ChatGPT Plus/Pro): cài sẵn, dùng khi hết lượt Claude — xem `HUONG_DAN_CLAUDE_CODE.md` §7. Không đưa dữ liệu khách thật vào phiên Codex.
+
+## Làm tiếp trên máy khác (git clone)
+
+Mọi trạng thái công việc nằm trong repo (`docs/plans/`, `docs/handoff/`, `docs/codemap.md`, `docs/gap-matrix.md`, `.claude/`, `AGENTS.md`), nên máy nào clone về cũng làm tiếp được.
+
+**Trước khi rời máy đang dùng:** `/finish` (ghi handoff) → commit → `git push`.
+
+**Máy mới, lần đầu:**
+1. Cài như mục A (Git, Node 22, Docker Desktop, Claude Code; Codex nếu cần), đăng nhập Claude.
+2. `git clone <url-repo-private> CommentFlow` → `cd CommentFlow` → `git checkout <nhánh-đang-làm>`.
+3. Tạo `.env` từ `.env.example`, điền **khóa thử nghiệm** (không chép `.env` qua chat/email/USB không mã hóa; dùng trình quản lý mật khẩu).
+4. Cài MCP Stitch ở phạm vi user (mục D1) nếu cần `/stitch-sync`.
+5. Cài thư viện + `docker compose up -d` + chạy migration theo mục **Lệnh** trong `AGENTS.md` (database local là trống — dữ liệu thử nằm ở máy cũ, không theo git).
+6. `claude` → *"Đọc docs/handoff/<nhánh>.md và làm tiếp"*.
+
+**Mỗi lần đổi máy:** `git pull` trước khi mở `claude`. Không code cùng một nhánh trên hai máy cùng lúc.
+
+## Máy phụ (việc nhẹ + staging)
+
+1. Cài như mục A (thêm GitHub CLI: `winget install GitHub.cli` hoặc `sudo apt install gh`, rồi `gh auth login`), clone repo như mục "Làm tiếp trên máy khác".
+2. Tạo `.claude/settings.local.json` (đã nằm trong `.gitignore`, chỉ máy này dùng):
+   ```json
+   { "model": "haiku" }
+   ```
+   Mở `claude` → `/model` phải thấy haiku. Nếu gói tài khoản không cho dùng Haiku trong Claude Code, để `sonnet` và chỉ giao việc nhẹ.
+3. Việc hằng ngày: `/staging-verify <nhánh>` sau mỗi lần máy chính push; `/mech <việc>` cho việc cơ học (máy chính ghi việc thành issue nhãn `mech`).
+4. Phần runner tự host, Docker đủ 7 dịch vụ và HTTPS cho webhook Facebook: xem hướng dẫn riêng (tùy máy là PC ở nhà hay VPS).
+
+### Hai máy cùng mạng Wi-Fi (LAN)
+
+- **Mọi dịch vụ chạy trên máy phụ** (máy code không cài Docker): Compose `cf-dev` (Postgres có DB `cf_dev` + `cf_test`, Redis, `ml`, LiteLLM, Langfuse) cho máy code dùng qua LAN; Compose `cf-staging` riêng cho staging. Máy code trỏ `DATABASE_URL`, `TEST_DATABASE_URL`, `REDIS_URL`, `ML_URL`, `LITELLM_BASE_URL`, `LANGFUSE_HOST` tới IP LAN của máy ảo. Tách dữ liệu dev/staging: Langfuse **2 project** (dev, staging) với khóa riêng; LiteLLM **2 virtual key** có ngân sách riêng; `ml` không lưu dữ liệu nên dùng chung.
+- **IP cố định cho máy phụ:** đặt DHCP reservation trên router (hoặc IP tĩnh) để địa chỉ không đổi.
+- **Chỉ mở trong LAN:** các cổng `ml`/LiteLLM/Langfuse chỉ cho phép IP của máy chính (Windows Firewall hoặc `ufw allow from <IP-máy-chính>`); Postgres/Redis của `cf-dev` chỉ mở cho IP máy code; Postgres/Redis của `cf-staging` **không** mở ra LAN. Ra internet chỉ có web app qua Cloudflare Tunnel (webhook + OAuth Facebook cần HTTPS công khai).
+- **Điều khiển từ xa:** dùng kết nối từ xa sẵn có để mở phiên `claude` trên máy phụ ngay từ máy chính; vẫn tuân thủ một nhánh một máy.
+
+### Cài máy phụ: Windows 10 IoT Enterprise LTSC, 64 GB RAM
+
+**Vì sao không cài Docker Desktop thẳng lên Windows:** Docker Desktop chỉ hỗ trợ chính thức Windows 10 bản 22H2 (build 19045); LTSC 2021 là build 19044, LTSC 2019 còn cũ hơn. Trên Windows 10, dịch vụ chạy trong WSL2 cũng khó mở ra mạng LAN. → Dùng **máy ảo Ubuntu Server trong Hyper-V** (có sẵn trong bản Enterprise): máy ảo có IP LAN riêng, chạy Docker Engine, runner, Cloudflare Tunnel và Claude Code; Windows chỉ là máy chủ ảo hóa.
+
+1. **Kiểm tra:** `winver` (ghi lại build); Task Manager → Performance → CPU → *Virtualization: Enabled* (nếu Disabled → bật VT-x/AMD-V trong BIOS).
+2. **Bật Hyper-V** (PowerShell quyền Administrator) rồi khởi động lại:
+   ```powershell
+   Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
+   ```
+3. **Switch mạng:** Hyper-V Manager → Virtual Switch Manager → *External* → chọn card mạng. **Ưu tiên cắm dây LAN**; cầu nối qua Wi-Fi trên Hyper-V hay chập chờn. Nếu chỉ có Wi-Fi và máy ảo không nhận IP → báo để chuyển phương án (NAT + chuyển cổng).
+4. **Tạo máy ảo** (Generation 2): Ubuntu Server 24.04 LTS (ISO từ ubuntu.com); **8 vCPU, 40 GB RAM cố định** (tắt Dynamic Memory), ổ 200 GB; Security → Secure Boot template *Microsoft UEFI Certificate Authority*; Automatic Start Action = *Always start*. Khi cài Ubuntu chọn **Install OpenSSH server**.
+5. **IP cố định:** vào router đặt DHCP reservation cho địa chỉ MAC của máy ảo (xem trong Hyper-V → Network Adapter → Advanced Features).
+6. **Trong máy ảo** (SSH từ máy chính: `ssh <user>@<IP-máy-ảo>`):
+   ```bash
+   sudo apt update && sudo apt -y upgrade
+   curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER   # Docker Engine + compose plugin; đăng xuất/đăng nhập lại
+   curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash   # mở lại shell
+   nvm install 22
+   npm install -g @anthropic-ai/claude-code
+   sudo apt -y install gh && gh auth login
+   ```
+   Kiểm: `docker run --rm hello-world`, `claude --version`, `gh auth status`.
+7. **Clone repo + Claude Code máy phụ:** làm như mục "Làm tiếp trên máy khác", tạo `.claude/settings.local.json` với `{ "model": "haiku" }`.
+8. **GitHub runner:** GitHub → repo → Settings → Actions → Runners → *New self-hosted runner* → Linux x64 → chạy đúng các lệnh GitHub hiển thị, gắn nhãn `staging`; rồi `sudo ./svc.sh install && sudo ./svc.sh start` để chạy nền.
+9. **Tường lửa trong máy ảo** (thay IP và cổng thật sau khi khung đã dựng):
+   ```bash
+   sudo ufw default deny incoming
+   sudo ufw allow from <IP-máy-chính> to any port 22
+   sudo ufw allow from <IP-máy-chính> to any port <cổng-LiteLLM>,<cổng-Langfuse>,<cổng-ml> proto tcp
+   sudo ufw enable
+   ```
+   Không mở cổng Postgres/Redis của staging. Lưu ý: cổng Docker publish có thể vượt qua ufw — trong Compose chỉ publish các cổng trên ra IP LAN, còn lại để `expose` nội bộ.
+10. **Cloudflare Tunnel** (cần tên miền, Q6): cài `cloudflared` theo hướng dẫn Cloudflare, chạy dạng service, chỉ trỏ tới web app; không trỏ Langfuse/LiteLLM/Postgres ra internet.
+
+Windows bên ngoài còn ~24 GB RAM, đủ dùng hằng ngày và mở Hyper-V Manager/kết nối từ xa.

@@ -2,7 +2,7 @@
 
 # Riêng cho Claude Code
 
-Lệnh tắt: `/feature <mã>` = `docs/workflows/feature.md` · `/finish` = `docs/workflows/finish.md` · `/stitch-sync` = `docs/workflows/stitch-sync.md` · `/codemap-init` (chỉ chạy một lần ở GĐ0).
+Lệnh tắt: `/feature <mã>` = `docs/workflows/feature.md` · `/finish` = `docs/workflows/finish.md` · `/stitch-sync` = `docs/workflows/stitch-sync.md` · `/codemap-init` (chỉ chạy một lần ở GĐ0) · `/fix-issues [nhánh]` (máy chính: sửa lỗi staging từ GitHub Issues) · `/staging-verify <nhánh>` và `/mech <việc>` (chỉ máy phụ — xem `AGENTS.md` § Hai máy).
 
 ## Subagent của Claude Code
 

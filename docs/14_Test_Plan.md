@@ -7,7 +7,7 @@
 | Cấp | Công cụ | Phạm vi | Khi chạy |
 |---|---|---|---|
 | Unit | Vitest (TS), pytest (ml) | Quy tắc spam, cổng tự gửi, guard, nhận ngôn ngữ, che PII, hiệu chuẩn, tính lượt | Mọi PR |
-| Integration | Vitest + Postgres thật (Testcontainers/Docker) | Repository, RLS, hybrid search, pg-boss job | Mọi PR |
+| Integration | Vitest + Postgres thật — máy code không có Docker nên dùng database `cf_test` trên máy phụ qua `TEST_DATABASE_URL` (tạo lại schema mỗi lần chạy); CI dùng service container của GitHub Actions | Repository, RLS, hybrid search, pg-boss job | Mọi PR |
 | Contract | Fixture webhook đã ghi (Meta, Shopify) | Parse, xác minh chữ ký, mapError | Mọi PR |
 | E2E | Playwright | 10 luồng chính (UF-1…UF-10) | PR vào `main`, trước release |
 | AI eval | promptfoo | Phân loại, soạn, an toàn, song ngữ | PR đổi prompt/model/pipeline; hằng đêm |

@@ -3,6 +3,7 @@
 SaaS quản lý bình luận/tin nhắn Facebook, Instagram (sau này TikTok) bằng AI cho shop và agency Việt Nam: phân loại ý định, gợi ý trả lời từ cơ sở kiến thức, nhân viên duyệt hoặc AI tự gửi khi Owner bật. Phần SaaS dùng chung (`saas-core`) sẽ phục vụ cả sản phẩm thứ hai là ExcelFlow.
 
 Đặc tả: `docs/01_…16_*.md`. Bản đồ tính năng → mục spec: `docs/specs/README.md`. **Chỉ đọc mục spec của việc đang làm, không đọc cả bộ.** Quyết định đã chốt: `docs/decisions/000-chot-02-11.md`.
+
 ## Vai trò và chuẩn code
 
 Làm việc như **Senior Software Architect & Senior Full-stack Developer**: phân tích trước khi code, ưu tiên khả năng bảo trì, mở rộng và phát triển lâu dài (Clean Code).
@@ -13,6 +14,7 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - Xử lý lỗi rõ ràng, có mã lỗi và thông báo dễ hiểu; không nuốt lỗi.
 - Code mới đi kèm test; sửa lỗi đi kèm test hồi quy.
 - Tái cấu trúc chỉ trong phạm vi việc đang làm; muốn tái cấu trúc rộng hơn → đề xuất trong `docs/decisions/`, chờ duyệt.
+
 ## Lệnh
 
 <!-- TODO(GĐ0): agent điền mục này sau khi đọc package.json / pyproject; không đoán. -->
@@ -88,3 +90,18 @@ Chủ dự án đọc TypeScript ở mức cơ bản. Mọi kế hoạch, báo c
 - **Không lập lại kế hoạch, không làm lại việc đã commit.** Thấy kế hoạch sai → ghi đề xuất sửa vào `docs/plans/<nhánh>.md` mục "Đề xuất thay đổi" và dừng chờ chủ dự án.
 - **Kiểm chứng chéo chỉ cho diff nhạy cảm** (auth, phiên, token, chữ ký webhook, RLS/`withWorkspace`, thanh toán, cổng tự gửi, `sendRecheck`, che PII, migration): agent **không viết** đoạn đó kiểm chứng theo `docs/workflows/verify.md`, chỉ nhận diff + mục spec. Diff thường không cần agent thứ hai.
 - Ghi agent đã làm vào cột "Nhánh" của gap matrix, ví dụ `feat/ai-usage (codex)`.
+
+## Hai máy: máy chính (việc nặng) và máy phụ (việc nhẹ, chạy staging)
+
+| | Máy chính (máy code) | Máy phụ (máy chạy thật) |
+|---|---|---|
+| Model mặc định | `sonnet` (`.claude/settings.json`); `opusplan` cho việc khó | `haiku` — đặt trong `.claude/settings.local.json` của máy phụ (không commit) |
+| Việc | Lập kế hoạch, viết tính năng, logic nhạy cảm (cổng tự gửi, `sendRecheck`, RLS, auth, thanh toán, prompt AI), sửa lỗi khó, **kiểm chứng độc lập** bằng subagent `verifier-*` khi `/finish` | Deploy staging + kiểm sức khỏe, chạy E2E/contract test, thao tác thử với Page/IG thật, đọc log và tóm lỗi thành issue, việc cơ học kiểm được bằng công cụ (tách chuỗi `vi.json`/`en.json`, dịch chuỗi giao diện, đổi tên theo danh sách, cập nhật `codemap`/`gap-matrix`) |
+| Nhánh được tạo | `feat/*`, `fix/*`, `chore/*` | `mech/*` (việc cơ học), `ops/*` (hạ tầng), commit `docs/staging/*` |
+| Không được | Chạy migration/lệnh ghi lên staging | Sửa logic nghiệp vụ trong `apps/`, `packages/`, `services/`; lập kế hoạch tính năng; kiểm chứng diff nhạy cảm |
+| Lệnh chính | `/feature`, `/finish`, `/fix-issues` | `/staging-verify <nhánh>`, `/mech <việc>` |
+
+- Việc trên máy phụ làm sai 2 lần → chuyển về máy chính (ghi issue), không thử lần ba.
+- Trao đổi giữa hai máy **chỉ qua repo và GitHub Issues** (nhãn `staging-bug`, `mech`), không qua trí nhớ phiên. Luôn `git pull` trước khi bắt đầu.
+- Một nhánh chỉ một máy sửa tại một thời điểm.
+- Khóa bí mật staging chỉ nằm trên máy phụ; log/issue phải che PII, không dán token.

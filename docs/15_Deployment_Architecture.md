@@ -6,8 +6,8 @@
 
 | Môi trường | Mục đích | Hạ tầng | Dữ liệu |
 |---|---|---|---|
-| `local` | Phát triển | Docker Compose trên máy dev | Seed tối thiểu; **không token production** |
-| `staging` | Kiểm thử tích hợp, E2E, chạy thử với Page thật (GĐ3) | VPS nhỏ hoặc chung VPS khác project Compose | Meta App dev + Page test, Shopify dev store |
+| `local` | Phát triển | **Chốt 02/11: máy code không cài Docker.** Next.js, worker, test chạy bằng Node trên máy code; Postgres + Redis (dev và test) + `ml`, LiteLLM, Langfuse chạy bằng Docker Compose trên **máy phụ** (máy ảo Ubuntu trong Hyper-V, cùng mạng LAN), project Compose `cf-dev` tách khỏi `cf-staging` | Seed tối thiểu; **không token production**; DB dev/test chỉ mở cho IP máy code |
+| `staging` | Kiểm thử tích hợp, E2E, chạy thử với Page thật (đưa lên sớm từ GĐ1) | **Máy phụ** (máy ảo Ubuntu, project Compose `cf-staging`, deploy bằng GitHub self-hosted runner, ra internet qua Cloudflare Tunnel); sau này có thể chuyển VPS | Meta App dev + Page test, Shopify dev store |
 | `production` | Khách thật | VPS riêng | Dữ liệu thật, sao lưu hằng ngày |
 
 ## 2. Sơ đồ production

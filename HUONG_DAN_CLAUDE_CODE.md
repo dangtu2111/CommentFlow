@@ -25,7 +25,7 @@ design/stitch/README.md           → bản xuất Stitch; tải bằng /stitch-
 .claude/commands/stitch-sync.md   → /stitch-sync (gọi MCP Stitch, chạy ở bước 0)
 ```
 
-Kiểm `.gitignore` có `.env*`. Mở Claude Code ở gốc repo, chạy `/agents` để thấy 3 agent, `/permissions` để thấy luật chặn.
+Kiểm `.gitignore` có `.env*`. Mở Claude Code ở gốc repo, hỏi Claude "liệt kê các subagent có trong project" để thấy 4 agent (lệnh `/agents` đã bị bỏ ở bản mới), `/permissions` để thấy luật chặn.
 
 ## 2. ECC — chỉ lấy phần không tốn ngữ cảnh
 
@@ -106,3 +106,28 @@ Nguyên tắc: **chuyển việc, không chia đôi việc.** Hai agent không b
 - Kế hoạch sai → agent ghi vào "Đề xuất thay đổi" trong plan và dừng; bạn quyết, không để agent thứ hai tự lập kế hoạch mới.
 - Không nhờ agent thứ hai "xem lại toàn bộ" — chỉ diff nhạy cảm, một lần.
 - Cuối tuần ghi chi phí **cả hai** vào bảng của gap matrix để biết việc nào rẻ hơn ở đâu.
+
+## 8. Hai máy: máy chính (việc nặng) và máy phụ (việc nhẹ + staging) — chốt 02/11
+
+Chi tiết: `AGENTS.md` § Hai máy, `docs/decisions/002-hai-may.md`.
+
+| | Máy chính (Windows, tài khoản Claude 1) | Máy phụ (máy ảo Ubuntu, tài khoản Claude 2) |
+|---|---|---|
+| Model | Sonnet; `opusplan` cho việc khó | Sonnet cho `/staging-verify`, Haiku (`.claude/settings.local.json`) cho `/mech` |
+| Docker | **Không cài** | `cf-dev` (dịch vụ cho máy chính dùng qua LAN) + `cf-staging` |
+| Vào máy | — | `ssh cf` từ máy chính |
+
+**Một vòng làm việc**
+
+```
+Máy chính:  git pull → /clear → /feature <mã> → duyệt → code → /finish (verifier nếu diff nhạy cảm) → commit → git push
+GitHub:     CI xanh → runner trên máy phụ deploy cf-staging
+Máy phụ:    ssh cf → cd ~/CommentFlow → git pull → claude → /staging-verify <nhánh>
+            → lỗi: GitHub Issue nhãn staging-bug · việc cơ học: /mech (nhánh mech/*)
+Máy chính:  /fix-issues <nhánh> → /finish → push
+```
+
+**Giao việc nhẹ cho máy phụ:** máy chính tạo issue nhãn `mech` (`gh issue create --label mech --title "<việc>" --body "<file, quy tắc, cách kiểm>"`); máy phụ chạy `/mech <số-issue>`.
+
+**Quy tắc:** một nhánh một máy tại một thời điểm; trao đổi chỉ qua repo + GitHub Issues; luôn `git pull` trước khi mở `claude`; khóa staging chỉ trên máy phụ.
+

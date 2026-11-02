@@ -43,3 +43,4 @@ Khi giao việc cho Claude Code, chỉ trỏ đến các mục dưới đây. Kh
 | Gộp bình luận liên tiếp (FR-148) | `09_System_Architecture.md` §7.1a |
 | Chống cài lệnh qua nguồn (FR-164) | `13_Security_Design.md` §1 · `05_Functional_Requirements.md` FR-R |
 | Bộ đánh giá ~300 mẫu (FR-165) | `14_Test_Plan.md` §4 |
+| Hai máy, staging, việc cơ học | `AGENTS.md` § Hai máy · `docs/decisions/002-hai-may.md` · `docs/workflows/staging-verify.md` · `15_Deployment_Architecture.md` §1 |
