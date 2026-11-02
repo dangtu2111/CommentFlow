@@ -1,0 +1,23 @@
+{
+  "name": "@flow/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Gói lá dùng chung: lỗi có mã, đọc cấu hình bằng Zod, chuỗi giao diện vi/en. Không import gói nội bộ nào khác.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./messages/vi.json": "./src/i18n/messages/vi.json",
+    "./messages/en.json": "./src/i18n/messages/en.json"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "vitest": "5.0.5"
+  }
+}
