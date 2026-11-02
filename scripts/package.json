@@ -1,0 +1,13 @@
+{
+  "name": "@flow/scripts",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Script vận hành (cf-dev, stack-check) và test của chúng. Không import gói nội bộ.",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5"
+  }
+}

@@ -14,7 +14,9 @@
     "test": "pnpm -r --if-present run test",
     "build": "pnpm -r --if-present run build",
     "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs",
-    "lint:i18n": "pnpm --filter @flow/web run lint:i18n"
+    "lint:i18n": "pnpm --filter @flow/web run lint:i18n",
+    "cf:dev": "node scripts/cf-dev.mjs",
+    "stack:check": "node scripts/stack-check.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
