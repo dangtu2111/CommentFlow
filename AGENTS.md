@@ -18,11 +18,11 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 ## Lệnh
 
 <!-- TODO(GĐ0): agent điền mục này sau khi đọc package.json / pyproject; không đoán. -->
-- Cài đặt: `TODO`
-- Chạy dev: `TODO`
-- Test một file: `TODO`
-- Test toàn bộ: `TODO`
-- Lint / typecheck: `TODO`
+- Cài đặt: `corepack enable` rồi `pnpm install --frozen-lockfile` (Node 24; `.nvmrc`)
+- Chạy dev: `pnpm --filter @flow/web dev` (cổng 3000), `pnpm --filter @flow/worker dev` (health ở cổng 3001)
+- Test một file: `pnpm --filter <gói> exec vitest run <đường-dẫn-file>`; ml: `cd services/ml && uv run pytest tests/<file>`
+- Test toàn bộ: `pnpm test` (ml: `cd services/ml && uv run pytest`)
+- Lint / typecheck: `pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm depcruise` (ml: `uv run ruff check .`)
 - Migration (local/staging): `TODO`
 
 ## Nguyên tắc bất biến

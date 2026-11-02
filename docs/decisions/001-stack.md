@@ -45,7 +45,7 @@ Tóm tắt: bộ công cụ **ít phụ thuộc, phổ biến, chạy tốt trê
 | Log | pino + danh sách che | MIT | Bất biến #6 | — |
 | Test | Vitest (TS), pytest (Python); **integration test chạy với `TEST_DATABASE_URL` (DB `cf_test` trên máy ảo, tạo lại schema mỗi lần), không Testcontainers**; CI dùng service container; Playwright thêm khi có giao diện đăng nhập | MIT / Apache-2.0 | `002` | Jest |
 | Lint/format | **Biome** (TS), ruff (Python) | MIT / Apache-2.0 | Chủ dự án chốt | ESLint+Prettier toàn bộ |
-| Kiểm chuỗi giao diện viết cứng | Biome **không** có luật này → **ESLint chỉ một luật** `no-literal-string` của `eslint-plugin-i18next`, chỉ cho `apps/web` (`pnpm lint:i18n`); Biome lo phần còn lại (chủ dự án chốt) | MIT | FR-119, `14` §2 | script tự viết |
+| Kiểm chuỗi giao diện viết cứng | Biome **không** có luật này → **ESLint chỉ một luật** `no-literal-string` của `eslint-plugin-i18next`, chỉ cho `apps/web` (`pnpm lint:i18n`); Biome lo phần còn lại (chủ dự án chốt) | ISC (plugin) / MIT (ESLint) | FR-119, `14` §2 | script tự viết |
 | Ranh giới gói | dependency-cruiser | MIT | `09` §3.1 | — |
 | Quét bí mật | gitleaks (binary, không dùng action cần license) | MIT | spec | — |
 | CI | GitHub Actions, `ubuntu-latest`, action bên thứ ba ghim theo mã commit | — | `15` §6 | — |
@@ -98,3 +98,21 @@ Chọn **SeaweedFS** (Apache-2.0; kho còn hoạt động, đẩy mã ngày 02/1
 - Ngoại lệ nguyên tắc #2: khóa Valkey hệ thống trước khi có workspace (giới hạn đăng nhập) dùng tiền tố `sys:`.
 - **Chưa xác minh:** Better Auth có lưu token phiên thô hay băm, và ánh xạ được vào `core.users`/`core.sessions` (spec `10` §3.1 có `token_hash`) → bước C0; SeaweedFS chạy với Langfuse thật → H3; tag chính xác của LiteLLM → H2; `ml` chưa chạy cục bộ (máy code thiếu uv/Python 3.12).
 - Mỗi lần thêm thư viện: ghi tên, lý do, giấy phép vào đây trong cùng commit.
+
+## 7. Thư viện đã thêm trong nhóm S (S1–S8)
+
+| Thư viện | Dùng ở | Giấy phép | Lý do |
+|---|---|---|---|
+| `@biomejs/biome` 2.6.4, `typescript` 6.0.3 | gốc | MIT/Apache-2.0, Apache-2.0 | Lint/format; trình biên dịch (theo mục 2) |
+| `zod` 4.6.7 | shared, worker | MIT | Kiểm dữ liệu ở ranh giới |
+| `vitest` 5.0.5, `@types/node` 24 | mọi gói TS | MIT | Test; kiểu Node |
+| `next` 16.4.4, `react`/`react-dom` 19.3.1, `next-intl` 4.14.9 | web | MIT | Theo mục 2 |
+| `pino` 10.4.0 | worker | MIT | Log có che bí mật/PII |
+| `tsx` 4.23.15 | worker | MIT | Chạy TypeScript trực tiếp (dev và Docker), không cần bước đóng gói; gói nội bộ được dùng từ mã nguồn |
+| `dependency-cruiser` 18.7.1 | gốc, tools/boundaries | MIT | Ranh giới gói |
+| `eslint` 10.14.0, `eslint-plugin-i18next` 6.1.5, `typescript-eslint` 8.72.1 | web (chỉ cho luật i18n) | MIT, ISC, MIT/BSD-2 | Chốt ở câu 1 |
+| Python: `fastapi` 0.162.0, `uvicorn` 0.54.0 / dev: `pytest` 9.2.0, `httpx` 0.28.1, `ruff` 0.17.3; công cụ `uv` 0.13.6 | ml | MIT, BSD-3 / MIT, BSD-3, MIT; uv Apache-2.0/MIT | Theo mục 2 |
+
+CI (`.github/workflows/ci.yml`) chỉ dùng `actions/checkout` và `actions/setup-node` (ghim theo mã commit); `pnpm` qua corepack, `uv` qua `pipx` bản ghim, gitleaks 8.30.1 tải về kèm kiểm checksum — không dùng action bên thứ ba.
+
+Phát hiện khi làm S3: bản dịch phải nạp bằng import tĩnh (import động theo tên gói làm `next build` xanh nhưng chạy thật lỗi 500) — đã có test + kiểm chạy thật.
