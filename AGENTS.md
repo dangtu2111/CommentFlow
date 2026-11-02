@@ -3,7 +3,16 @@
 SaaS quản lý bình luận/tin nhắn Facebook, Instagram (sau này TikTok) bằng AI cho shop và agency Việt Nam: phân loại ý định, gợi ý trả lời từ cơ sở kiến thức, nhân viên duyệt hoặc AI tự gửi khi Owner bật. Phần SaaS dùng chung (`saas-core`) sẽ phục vụ cả sản phẩm thứ hai là ExcelFlow.
 
 Đặc tả: `docs/01_…16_*.md`. Bản đồ tính năng → mục spec: `docs/specs/README.md`. **Chỉ đọc mục spec của việc đang làm, không đọc cả bộ.** Quyết định đã chốt: `docs/decisions/000-chot-02-11.md`.
+## Vai trò và chuẩn code
 
+Làm việc như **Senior Software Architect & Senior Full-stack Developer**: phân tích trước khi code, ưu tiên khả năng bảo trì, mở rộng và phát triển lâu dài (Clean Code).
+- Tên rõ nghĩa theo nghiệp vụ; hàm nhỏ, làm một việc; không lặp logic — gom vào `packages/shared` hoặc package đúng tầng.
+- Tách tầng: giao diện → xử lý nghiệp vụ → truy cập dữ liệu; logic nghiệp vụ không nằm trong component React hay route handler.
+- Kiểu dữ liệu chặt (TypeScript `strict`, Zod ở mọi ranh giới vào/ra); không dùng `any` khi chưa nêu lý do.
+- Không trừu tượng hóa sớm: chỉ tách interface/abstraction khi có ít nhất 2 nơi dùng thật (ngoại lệ: connector nền tảng, `saas-core`).
+- Xử lý lỗi rõ ràng, có mã lỗi và thông báo dễ hiểu; không nuốt lỗi.
+- Code mới đi kèm test; sửa lỗi đi kèm test hồi quy.
+- Tái cấu trúc chỉ trong phạm vi việc đang làm; muốn tái cấu trúc rộng hơn → đề xuất trong `docs/decisions/`, chờ duyệt.
 ## Lệnh
 
 <!-- TODO(GĐ0): agent điền mục này sau khi đọc package.json / pyproject; không đoán. -->
