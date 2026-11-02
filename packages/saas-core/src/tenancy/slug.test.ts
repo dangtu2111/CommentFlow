@@ -11,7 +11,7 @@ describe('slugify', () => {
   });
 
   it('cắt tối đa 40 ký tự và không để gạch ngang ở cuối', () => {
-    const slug = slugify('a'.repeat(39) + ' bbbbbb');
+    const slug = slugify(`${'a'.repeat(39)} bbbbbb`);
     expect(slug.length).toBeLessThanOrEqual(40);
     expect(slug.endsWith('-')).toBe(false);
   });

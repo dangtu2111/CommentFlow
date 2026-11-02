@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { FlowDb } from '@flow/db';
+import { and, asc, eq } from '@flow/db';
 import { members, workspaces } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
-import { and, asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { uniqueSlug } from './slug';
 
