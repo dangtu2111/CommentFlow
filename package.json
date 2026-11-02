@@ -12,10 +12,12 @@
     "format": "biome format --write .",
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
-    "build": "pnpm -r --if-present run build"
+    "build": "pnpm -r --if-present run build",
+    "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
+    "dependency-cruiser": "18.7.1",
     "typescript": "6.0.3"
   }
 }
