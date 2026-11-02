@@ -10,6 +10,10 @@ describe('AppError', () => {
     expect(error).toBeInstanceOf(Error);
   });
 
+  it('CONFLICT ứng với mã HTTP 409 (xung đột/trùng lặp)', () => {
+    expect(new AppError('CONFLICT', 'Đã là thành viên').httpStatus).toBe(409);
+  });
+
   it('giữ nguyên nguyên nhân gốc để truy vết', () => {
     const cause = new Error('connection refused');
     const error = new AppError('LLM_UNAVAILABLE', 'Dịch vụ AI tạm thời không dùng được', { cause });

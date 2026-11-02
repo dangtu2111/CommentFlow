@@ -1,0 +1,25 @@
+{
+  "name": "@flow/saas-core",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Hạ tầng SaaS dùng chung CommentFlow + ExcelFlow: auth, tenancy, flags. Không biết gì về bình luận, kênh, AI.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:db": "vitest run --config vitest.int.config.ts"
+  },
+  "dependencies": {
+    "@flow/db": "workspace:*",
+    "@flow/shared": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "vitest": "5.0.5"
+  }
+}
