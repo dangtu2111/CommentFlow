@@ -1,0 +1,236 @@
+# 10 — Thiết kế Database & ERD
+
+> Phiên bản 1.1 · 02/11/2026 (biến thể câu, object extract, thành phần độ tin cậy, đánh dấu cài lệnh FR-161–165; thang xử lý khi không chắc, gộp bình luận, bảng size, xung đột giá… FR-147–160; nhiều nhãn, tệp đính kèm, trả lời một phần, xưng hô, `kb_gaps`, độ sẵn sàng FR-141–146; halfvec FR-139, cột định tuyến/viết lại câu hỏi FR-136–137; bổ sung tìm kiếm: tìm sản phẩm gần đúng, bí danh, bảng biến thể, đoạn có ngữ cảnh, hạn hiệu lực, câu mẫu, nhật ký tìm kiếm, cache theo giá; sửa truy vấn full-text; trước đó: saas-core, feature flag, đối soát Shopify, bảo vệ Meta App, kiểm tra lại trước khi gửi) · PostgreSQL 16 + pgvector 0.8.x, extension `unaccent`, `pg_trgm`. Bảng nào đã có trong source hiện tại cần **đối chiếu và migration bổ sung**, không tạo lại. Mọi bảng nghiệp vụ có `workspace_id` + RLS.
+
+## 1. Quy ước
+
+- Khóa chính `id uuid default gen_random_uuid()`; thời gian `timestamptz`; `created_at`, `updated_at`.
+- Tiền lưu `bigint` đơn vị VND (không dùng float).
+- Định danh nền tảng: `external_id text`, unique theo `(channel_id, external_id)`.
+- Xóa mềm (`deleted_at`) cho dữ liệu người dùng tạo; dữ liệu nền tảng xóa cứng khi có yêu cầu xóa.
+- Token mã hóa AES-GCM: cột `*_enc bytea` + `key_version int`.
+- Enum dùng `text` + CHECK để dễ migration.
+- **Schema theo sản phẩm** (`09_System_Architecture.md` §3.1): bảng dùng chung ở schema `core` (users, sessions, workspaces, members, invitations, plans, subscriptions, invoices, payments, usage_counters, feature_flags, feature_flag_overrides, action_logs, admin_impersonations, notification_prefs, push_subscriptions, data_exports); bảng CommentFlow ở schema `cf`; ExcelFlow sau này ở `xf`. Bảng `core` không có khóa ngoại trỏ sang `cf`/`xf`.
+
+## 2. ERD tổng quan
+
+```mermaid
+erDiagram
+  workspaces ||--o{ members : has
+  users ||--o{ members : joins
+  workspaces ||--o{ channels : connects
+  channels ||--o{ posts : has
+  posts ||--o{ comments : has
+  comments ||--o{ drafts : gets
+  channels ||--o{ conversations : has
+  conversations ||--o{ messages : has
+  messages ||--o{ drafts : gets
+  posts ||--o{ post_products : maps
+  products ||--o{ post_products : mapped
+  posts ||--o{ post_notes : has
+  workspaces ||--o{ kb_sources : owns
+  kb_sources ||--o{ kb_chunks : splits
+  kb_versions ||--o{ kb_chunks : publishes
+  workspaces ||--o{ rules : defines
+  rules ||--o{ rule_matches : produces
+  workspaces ||--o{ automation_settings : configures
+  drafts ||--o{ automation_events : logs
+  workspaces ||--o{ leads : collects
+  workspaces ||--o{ subscriptions : has
+  plans ||--o{ subscriptions : priced
+  subscriptions ||--o{ invoices : bills
+  invoices ||--o{ payments : paid
+  workspaces ||--o{ usage_counters : meters
+  workspaces ||--o{ ai_usage : costs
+  workspaces ||--o{ action_logs : audits
+```
+
+## 3. Bảng chi tiết
+
+### 3.1 Tổ chức & người dùng
+
+| Bảng | Cột chính | Ghi chú |
+|---|---|---|
+| `users` | id, email (unique, citext), name, password_hash / auth provider, totp_secret_enc, totp_enabled, locale, is_admin, admin_role (`super`/`support`/`finance`) | Không có workspace_id |
+| `workspaces` | id, name, slug, timezone (mặc định Asia/Ho_Chi_Minh), default_lang, ai_enabled, emergency_stopped_at, ai_cost_cap_usd, status (`trial`/`active`/`past_due`/`suspended`/`deleted`) | |
+| `sessions` | user_id, token_hash, created_at, expires_at, last_seen_at, ip, user_agent, is_admin_session | Không có workspace_id; xóa khi đăng xuất/đổi mật khẩu |
+| `members` | workspace_id, user_id, role (`owner`/`staff`), invited_by, status | unique (workspace_id, user_id) |
+| `invitations` | workspace_id, email, role, token_hash, expires_at, accepted_at | |
+
+### 3.2 Kênh & nội dung nền tảng
+
+| Bảng | Cột chính | Ghi chú |
+|---|---|---|
+| `channels` | workspace_id, platform (`facebook`/`instagram`/`tiktok`), external_id, name, avatar_url, access_token_enc, token_expires_at, scopes text[], status (`connected`/`expired`/`revoked`/`error`), webhook_subscribed, reply_language (`auto`/`vi`/`en`), capabilities jsonb (hành động connector cho phép: reply, hide, private_reply, message, publish (FR-166, sau GĐ5); giới hạn độ dài/thời gian — FR-016), last_polled_at, send_suspended_until, send_suspended_reason, rate_limit_override jsonb | unique (platform, external_id, workspace_id) |
+| `posts` | workspace_id, channel_id, external_id, message, permalink, media_url, is_ad, created_time, comment_count, pending_count | |
+| `comments` | workspace_id, channel_id, post_id, external_id, parent_external_id, author_external_id, author_name, text, text_normalized, lang, created_time, label (nhãn chính), label_confidence, label_source (`rule`/`ml`/`llm`/`human`), labels jsonb (`[{label, confidence}]` — FR-145), attachments jsonb (`[{type: photo/video/sticker/gif, url, external_id}]` — FR-143), needs_followup bool + followup_topics text[] (tag "Cần hỗ trợ thêm" — FR-141), merged_into_id (bình luận gộp — FR-148), is_impersonation_suspected bool (FR-155), status, is_hidden, is_own, locked_by, locked_until, external_reply_id, replied_by, replied_at, private_replied_at | unique (channel_id, external_id); index (workspace_id, status, created_time) |
+| `conversations` | workspace_id, channel_id, external_id, customer_external_id, customer_name, last_customer_msg_at, window_state (`open`/`human_only`/`closed`), ai_enabled, ai_disabled_reason, assigned_to, status | |
+| `messages` | workspace_id, conversation_id, external_id, direction (`in`/`out`), text, lang, sent_by (`customer`/`staff`/`ai`), tag (`HUMAN_AGENT` hoặc null), created_time | |
+| `webhook_events` | workspace_id (nullable khi chưa map), platform, event_hash (unique), payload jsonb, status, attempts, error | Idempotency + dead letter |
+
+**Trạng thái bình luận** (`comments.status`): `new`, `processing`, `pending_review`, `needs_human`, `scheduled_auto`, `sending`, `replied`, `auto_replied`, `send_failed`, `skipped`, `spam_suspected`, `hidden`.
+
+### 3.3 AI & tự động hóa
+
+| Bảng | Cột chính | Ghi chú |
+|---|---|---|
+| `drafts` | workspace_id, target_type (`comment`/`message`), target_id, text, lang, sources jsonb, confidence, needs_human, reason, model, prompt_version, kb_version, status (`suggested`/`sent_as_is`/`edited`/`discarded`/`auto_sent`/`would_send`), not_auto_sent_reason, failed_gate (ví dụ `gate:5` hoặc `recheck:R5`), final_text, edit_distance, trace_id, action (`answer`/`clarify`/`redirect`/`handoff` — FR-147), variants jsonb (3–5 câu cùng nội dung — FR-161), chosen_variant smallint, confidence_components jsonb (FR-163), extracted jsonb (object của bước `extract` — FR-162), claims jsonb (`[{text, source_ids, kind: fact/greeting/question_back/handoff}]` — FR-140, FR-141), unanswered_topics text[] (FR-141), context_refs jsonb (id các lượt hội thoại đã ghép — FR-144), price_snapshot jsonb (`[{product_id, variant_id, price_vnd, stock, updated_from_source_at}]` lúc soạn — dùng cho `sendRecheck` R5) | Nguồn dữ liệu hiệu chuẩn |
+| `automation_settings` | workspace_id, scope (`workspace`/`channel`/`post`), scope_id, target (`comment`/`message`), label, lang (`all`/`vi`/`en` — FR-120), mode (`off`/`shadow`/`auto`), threshold, delay_seconds, daily_cap, active_hours jsonb, blocked_keywords text[], allow_partial bool default false (FR-141), allow_clarify bool default true (FR-147), merge_window_seconds int default 30 (FR-148), stock_stale_days int default 3 (FR-151), human_hold_minutes int default 120 (FR-154), suggest_alternatives bool default false (FR-157) | unique (workspace_id, scope, scope_id, target, label, lang) |
+| `automation_events` | workspace_id, draft_id, event (`would_send`/`auto_sent`/`cancelled`/`blocked`/`marked_wrong`/`paused`), gate, reason, actor_id | |
+| `ai_usage` | workspace_id, draft_id, step, model, input_tokens, output_tokens, cached_tokens, cost_usd numeric(12,6), cache_hit, created_at | Tổng hợp theo ngày |
+| `brand_voice` | workspace_id, lang, tone, greeting, sign_off, do text[], dont text[], address_by_name bool default false (FR-161), shop_pronoun (`em`/`shop`/`minh`/`custom` + shop_pronoun_custom), customer_address (`anh_chi`/`ban`/`quy_khach`/`you`), handoff_templates jsonb (câu mời theo chủ đề `shipping`/`discount`/`order_status`/`stock_check`/`other`, mỗi chủ đề có bản trong giờ và ngoài giờ — FR-141, FR-152) | Theo ngôn ngữ; FR-142 |
+| `size_charts` | workspace_id, product_id (null = theo danh mục), category, size, height_min_cm, height_max_cm, weight_min_kg, weight_max_kg, measures jsonb (ngực/eo/mông…), note | FR-149; tra bằng SQL |
+| `post_price_mentions` | workspace_id, post_id, amount_vnd, text_span, product_id, matches_stock bool, checked_at | FR-150a; tính khi bài/quảng cáo được đồng bộ hoặc giá đổi |
+| `kb_gaps` | workspace_id, topic (`shipping`/`discount`/`product_info`/`policy`/`order_status`/`size`/`other`), sample_question_masked, product_id, count, first_seen_at, last_seen_at, status (`open`/`resolved`/`ignored`), resolved_by_source_id | FR-141, FR-134; gộp theo (workspace_id, topic, product_id) |
+| `readiness_checks` | workspace_id, lang, checklist jsonb (mục bắt buộc đã có/thiếu), sample_pass_rate numeric, score numeric, kb_version, computed_at | FR-146; tính lại khi xuất bản kiến thức |
+| `abbreviations` | workspace_id (null = hệ thống), short, full, lang | |
+
+### 3.4 Kiến thức
+
+| Bảng | Cột chính | Ghi chú |
+|---|---|---|
+| `kb_sources` | workspace_id, type (`manual`/`faq`/`excel`/`shopify`/`url`/`policy`), title, origin_url, external_key (ổn định), status, last_synced_at, sync_error, deleted_at | |
+| `kb_chunks` | workspace_id, source_id, version_id, chunk_key, injection_suspected bool + injection_reason (FR-164; true → không xuất bản tự động), content, lang, content_hash, embedding halfvec(1024), tsv tsvector, metadata jsonb, is_draft, **context_header** text (nguồn › mục › tên sản phẩm — FR-130), **product_id** (null = kiến thức chung), **valid_from**, **valid_until** (FR-131), **embedding_model** text (tên + revision — FR-133) | Index B-tree (workspace_id, version_id); GIN (tsv); HNSW (embedding) khi lớn; B-tree (workspace_id, product_id); B-tree (workspace_id, embedding_model) |
+| `kb_versions` | workspace_id, number, published_by, published_at, note, changed_categories text[] | |
+| `kb_tests` | workspace_id, question, lang, expected_label, expected_contains, last_result jsonb | |
+| `kb_connections` | workspace_id, provider (`google_sheets` / `shopify` / `haravan` / `sapo` / `kiotviet` / `pancake`), shop_domain (hoặc mã sheet / mã cửa hàng), sync_interval, access_token_enc, scopes, status, webhook_ok_at, last_reconciled_at | |
+| `reconcile_runs` | workspace_id, connection_id, started_at, finished_at, products_checked, diffs_count, webhooks_reregistered, status, error | Đối soát Shopify (09 §7.3) |
+| `reconcile_diffs` | workspace_id, run_id, product_id, field (`price`/`compare_at`/`stock`/`status`/`name`/`policy`), old_value, source_value, action (`updated`/`archived`/`queued_review`) | |
+| `faq_items` | workspace_id, question, answer, lang, tags | Bản gốc FAQ thủ công |
+| `products` | workspace_id, source (`manual`/`excel`/`google_sheets`/`shopify`/`haravan`/`sapo`/`kiotviet`/`pancake`), external_id, name, sku, price_vnd bigint, compare_at_vnd, stock, variants jsonb (bản gốc từ nguồn, giữ để đối chiếu), url, locked_fields text[], updated_from_source_at, **search_text** text (tên + SKU + thuộc tính + bí danh, viết thường, đã `unaccent` — app tính khi ghi), **name_embedding** halfvec(1024), **rev** bigint (tăng mỗi khi giá/tồn/trạng thái/biến thể đổi — FR-135), status (`active`/`archived`), category (danh mục — FR-157) | **Giá/tồn đọc trực tiếp**; GIN `gin_trgm_ops` (search_text); HNSW (name_embedding) khi lớn (FR-127) |
+| `product_variants` | workspace_id, product_id, external_id, sku, attrs jsonb (`{"size":"M","color":"đen"}`), attrs_norm jsonb (khóa/giá trị chuẩn hóa: `mau`→`color`, `đen`/`den`/`black`→`black`), price_vnd bigint, compare_at_vnd, stock, status, updated_from_source_at | **Nguồn đúng cho giá/tồn theo biến thể** (FR-129); GIN (attrs_norm); unique (workspace_id, product_id, external_id). `price_snapshot` và `sendRecheck` R5 đọc bảng này |
+| `product_aliases` | workspace_id, product_id, alias, alias_norm (viết thường, `unaccent`), source (`staff`/`import`/`ai_suggested`), confirmed_by, created_at | FR-128; GIN `gin_trgm_ops` (alias_norm); unique (workspace_id, alias_norm, product_id); `ai_suggested` chỉ dùng khi đã có người xác nhận |
+| `post_products` | workspace_id, post_id, product_id, is_primary, confirmed_by, suggested_by_ai | |
+| `post_notes` | workspace_id, post_id, content, valid_from, valid_to | |
+| `kb_answer_examples` | workspace_id, channel_id (null = mọi kênh), label, lang, question_masked, answer_template (số tiền/tồn kho thay bằng `{price:<variant_id>}`, `{stock:<variant_id>}`), product_ids uuid[], embedding halfvec(1024), source_draft_id, approved_by, status (`active`/`disabled`), kb_version, used_count, created_at | FR-132; chỉ lấy từ câu nhân viên gửi nguyên văn hoặc đã sửa; Owner tắt được từng mẫu; tối đa 2.000 mẫu/workspace (giữ mẫu mới + dùng nhiều) |
+| `retrieval_logs` | workspace_id, draft_id, query_masked, lang, kb_version, route (`sql`/`hybrid`/`both` — FR-136), search_query_masked (FR-137), candidates jsonb (`[{chunk_id, vec_rank, fts_rank, trgm_rank, rerank_score}]`), used_chunk_ids uuid[], resolved_product_ids uuid[], latency_ms, created_at | FR-134; lưu 90 ngày; không lưu nội dung chưa che PII |
+
+**Kiểu vector (FR-139):** mọi cột embedding là `halfvec(1024)` (pgvector ≥ 0.7), index `hnsw (embedding halfvec_cosine_ops)`; tham số truy vấn ép kiểu `$1::halfvec`.
+
+**Văn bản đem đi lập chỉ mục (FR-130):** `embedding` và `tsv` tính trên `context_header + "\n" + content`, không chỉ `content`; `content` giữ nguyên để hiển thị và trích dẫn.
+
+**tsvector theo ngôn ngữ đoạn:** `lang = 'vi'` → `to_tsvector('simple', unaccent(content))` (không có bộ tách từ tiếng Việt chuẩn trong Postgres; `unaccent` cho phép tìm có dấu/không dấu); `lang = 'en'` → `to_tsvector('english', content)` (có stemming). Câu hỏi dùng cùng cấu hình theo ngôn ngữ đã nhận diện; câu trộn → chạy cả hai và trộn bằng RRF.
+
+### 3.5 Spam, khách tiềm năng
+
+| Bảng | Cột chính |
+|---|---|
+| `rules` | workspace_id, name, type (`keyword`/`regex`/`phone`/`link`/`emoji_only`/`tag_only`), pattern, action (`mark`/`auto_hide`/`skip`), enabled, shadow_until |
+| `rule_matches` | workspace_id, rule_id, comment_id, action_taken, reverted |
+| `leads` | workspace_id, channel_id, source_type, source_id, name, phone_enc, phone_last4, note, stage (`new`/`contacted`/`won`/`lost`), assigned_to |
+
+### 3.6 Thanh toán & hạn mức
+
+| Bảng | Cột chính | Ghi chú |
+|---|---|---|
+| `plans` | product (`commentflow`/`excelflow`), code (`trial`/`starter`/`growth`/`business`/`addon_1000`), price_vnd, channels_limit, monthly_turns, auto_reply_allowed | Starter 299k/1/1.000/không; Growth 699k/3/3.000; Business 1.490k/10/7.500; add-on 149k/+1.000; trial 14 ngày/300 |
+| `subscriptions` | workspace_id, product — unique (workspace_id, product), plan_code, status, period_start, period_end, cancel_at | |
+| `invoices` | workspace_id, product, number, amount_vnd, items jsonb, status (`pending`/`paid`/`void`), transfer_code (nội dung CK bắt buộc), due_at | |
+| `payments` | workspace_id, invoice_id, amount_vnd, bank_ref, raw_statement, confirmed_by, confirmed_at | |
+| `usage_counters` | workspace_id, product, meter (CommentFlow: `ai_turns`), period_start, used, limit, addon, warned_80_at, blocked_at | 1 lượt = 1 lần AI soạn; unique (workspace_id, product, meter, period_start) |
+| `daily_stats` | workspace_id, date, channel_id, comments_in, replied, auto_replied, median_response_sec, edited_rate, cost_usd | Báo cáo |
+
+### 3.7 Nhật ký, thông báo, quyền riêng tư
+
+| Bảng | Cột chính |
+|---|---|
+| `action_logs` | workspace_id, actor_type (`user`/`ai`/`system`/`admin`), actor_id, action, target_type, target_id, before jsonb, after jsonb, impersonation_id, ip |
+| `admin_impersonations` | admin_id, workspace_id, reason, started_at, expires_at (30 phút), read_only |
+| `notification_prefs` | workspace_id, user_id, event, channel (`inapp`/`email`/`push`), enabled |
+| `push_subscriptions` | user_id, endpoint, keys jsonb |
+| `deletion_requests` | platform, external_user_id, confirmation_code, status, reason, completed_at |
+| `data_exports` | workspace_id, requested_by, status, file_key, expires_at |
+
+### 3.8 Feature flag & bảo vệ gửi
+
+| Bảng | Cột chính | Ghi chú |
+|---|---|---|
+| `feature_flags` | key (PK), product (`core`/`commentflow`/`excelflow`), description, kind (`release`/`ops`/`kill_switch`/`plan`), default_on, rollout_percent, plans text[], owner, expires_at | Không có workspace_id; chỉ Super Admin ghi |
+| `feature_flag_overrides` | flag_key, workspace_id, enabled, reason, set_by, created_at | unique (flag_key, workspace_id) |
+| `abuse_signals` | workspace_id, channel_id, signal (`marked_wrong_rate`/`removed_after_send`/`graph_368`/`volume_spike`/`banned_keyword`), value, threshold, action_taken, resolved_by, resolved_at | Job `abuse` (09 §11.2) |
+| `app_usage_samples` | sampled_at, app_usage_pct, buc_usage jsonb | Từ header Graph API; giữ 7 ngày |
+
+Bộ đếm giới hạn tốc độ (token bucket) nằm trong Redis, không lưu DB.
+
+## 4. RLS
+
+```sql
+alter table comments enable row level security;
+create policy ws_isolation on comments
+  using (workspace_id = current_setting('app.workspace_id')::uuid)
+  with check (workspace_id = current_setting('app.workspace_id')::uuid);
+```
+
+- Mỗi request/job đặt `set local app.workspace_id = ...` trong transaction.
+- Role DB của app **không** có `BYPASSRLS`; Admin dùng role riêng + ghi nhật ký.
+- Test CI: mỗi bảng có `workspace_id` phải có policy (script kiểm `pg_policies`).
+
+## 5. Truy vấn tìm kiến thức (hybrid)
+
+```sql
+with v as (
+  select id, row_number() over (order by embedding <=> $1) r
+  from kb_chunks where workspace_id = $ws and version_id = $ver
+  order by embedding <=> $1 limit 30
+), t as (
+  select id, row_number() over (order by ts_rank(tsv, q) desc) r
+  from kb_chunks, websearch_to_tsquery($cfg::regconfig, $q_text) q  -- $cfg: 'simple' (vi, $q_text đã unaccent) hoặc 'english' (en)
+  where workspace_id = $ws and version_id = $ver and tsv @@ q
+  order by ts_rank(tsv, q) desc limit 30   -- sửa 02/11: thiếu order by thì lấy 30 dòng bất kỳ
+)
+select id, sum(1.0 / (60 + r)) score
+from (select * from v union all select * from t) x
+group by id order by score desc limit 20;
+```
+
+Sau đó rerank top 20 → lấy 5. Bật `hnsw.iterative_scan = relaxed_order` khi dùng HNSW với lọc.
+
+**Bộ lọc bắt buộc cho cả hai nhánh `v` và `t` (bổ sung 02/11):** `and (valid_from is null or valid_from <= now()) and (valid_until is null or valid_until > now())` (FR-131); khi bài đã gắn sản phẩm: `and (product_id is null or product_id = any($post_products))` để không lấy đoạn của sản phẩm khác.
+
+### 5.1 Tìm sản phẩm (FR-127, FR-128)
+
+Chạy trước tìm kiến thức; dừng ở bước đầu tiên có kết quả đủ tin cậy:
+
+```sql
+-- 1) sản phẩm gắn bài (post_products) — luôn ưu tiên
+-- 2) bí danh khớp: similarity(alias_norm, $q_norm) >= 0.6
+select product_id, max(similarity(alias_norm, $q_norm)) s
+from product_aliases where workspace_id = $ws and alias_norm % $q_norm
+group by product_id order by s desc limit 5;
+-- 3) tên/SKU gần đúng (chịu gõ sai, không dấu)
+select id, similarity(search_text, $q_norm) s
+from products where workspace_id = $ws and status = 'active' and search_text % $q_norm
+order by s desc limit 10;
+-- 4) theo nghĩa: name_embedding <=> $q_vec, limit 10
+-- Trộn 3 + 4 bằng RRF; điểm cao nhất < ngưỡng → không chọn, để AI hỏi lại khách hoặc chuyển người
+```
+
+`$q_norm` = câu đã chuẩn hóa (viết thường, `unaccent`, mở rộng viết tắt). Đặt `pg_trgm.similarity_threshold` theo bộ đánh giá (khởi điểm 0,3).
+
+### 5.2 Biến thể, giá, tồn kho (FR-129)
+
+Thuộc tính khách hỏi (size, màu) được tách ở bước chuẩn hóa thành `{size, color}` đã chuẩn hóa, rồi tra bằng SQL — **không** qua vector:
+
+```sql
+select id, attrs, price_vnd, stock from product_variants
+where workspace_id = $ws and product_id = any($products) and status = 'active'
+  and attrs_norm @> $wanted::jsonb;   -- ví dụ {"size":"m","color":"black"}
+```
+
+Không có dòng nào → câu trả lời nói rõ "hết/không có" theo dữ liệu, không đoán.
+
+### 5.3 Cache an toàn với giá (FR-135)
+
+Giá trị cache lưu kèm `product_revs = {product_id: rev}` của các sản phẩm đã dùng. `cacheLookup` so với `products.rev` hiện tại; lệch một sản phẩm → coi như trượt cache. Khóa cache vẫn gồm `workspace_id` + `kb_version`.
+
+**Bổ sung FR-161:** giá trị cache câu trả lời lưu cả `variants[]`; câu đã gửi ghi hash vào Redis `cf:{ws}:post:{post_id}:recent` (TTL 1 giờ) để không lặp chữ.
+
+### 5.4 Câu mẫu của shop (FR-132)
+
+`select ... from kb_answer_examples where workspace_id = $ws and status = 'active' and lang = $lang and (label = $label) order by embedding <=> $q_vec limit 3` → đưa vào prompt soạn làm ví dụ giọng văn. Placeholder `{price:…}`/`{stock:…}` được điền lại bằng giá/tồn **hiện tại** từ `product_variants` trước khi đưa vào prompt; không còn biến thể → bỏ mẫu đó.
+
+## 6. Migration & dữ liệu
+
+- Công cụ migration chốt trong `docs/decisions/001-stack.md` khi dựng khung (GĐ0); RLS và index vector viết SQL thuần.
+- Thời gian lưu: bình luận/tin nhắn 12 tháng (đề xuất, cần chốt); `ai_usage` gộp theo ngày sau 90 ngày; `webhook_events` 30 ngày.
+- Seed: chỉ `plans` và `abbreviations` hệ thống. **Không seed dữ liệu khách giả.**

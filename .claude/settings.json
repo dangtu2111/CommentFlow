@@ -1,0 +1,26 @@
+{
+  "model": "sonnet",
+  "effortLevel": "medium",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./node_modules/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./.next/**)",
+      "Read(./**/.next/**)",
+      "Read(./dist/**)",
+      "Read(./coverage/**)",
+      "Bash(printenv*)",
+      "Bash(git push --force*)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(docker*)"
+    ]
+  }
+}
