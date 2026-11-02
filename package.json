@@ -16,7 +16,10 @@
     "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs",
     "lint:i18n": "pnpm --filter @flow/web run lint:i18n",
     "cf:dev": "node scripts/cf-dev.mjs",
-    "stack:check": "node scripts/stack-check.mjs"
+    "stack:check": "node scripts/stack-check.mjs",
+    "test:db": "pnpm -r --if-present run test:db",
+    "db:migrate": "pnpm --filter @flow/db run db:migrate",
+    "db:check-rls": "pnpm --filter @flow/db run db:check-rls"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
