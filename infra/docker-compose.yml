@@ -196,6 +196,7 @@ services:
       retries: 10
       start_period: 10s
 
+  # Langfuse chỉ nghe trên tên host của container (không phải localhost) → healthcheck dùng $HOSTNAME.
   langfuse-worker:
     image: langfuse/langfuse-worker:4.72.0
     restart: unless-stopped
@@ -208,7 +209,7 @@ services:
     environment:
       <<: *langfuse-env
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3030/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://$HOSTNAME:3030/api/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -235,7 +236,7 @@ services:
       LANGFUSE_INIT_USER_NAME: ${LANGFUSE_INIT_USER_NAME:?}
       LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_INIT_USER_PASSWORD:?}
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/api/public/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://$HOSTNAME:3000/api/public/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
