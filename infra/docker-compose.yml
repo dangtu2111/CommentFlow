@@ -120,10 +120,11 @@ services:
     volumes:
       - s3data:/data
     healthcheck:
+      # SeaweedFS nghe trên IP container (không phải localhost) nên kiểm qua `hostname -i`.
       test:
         [
           "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:9333/cluster/status && nc -z localhost 8333",
+          "IP=$$(hostname -i) && wget -q -O /dev/null http://$$IP:9333/cluster/status && nc -z $$IP 8333",
         ]
       interval: 5s
       timeout: 5s
