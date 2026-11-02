@@ -74,7 +74,7 @@ Mục tiêu: ExcelFlow dùng lại phần SaaS mà không sao chép code. Ranh g
 
 | Module | Nội dung | Bảng sở hữu |
 |---|---|---|
-| `auth` | Đăng ký, đăng nhập, phiên, 2FA, quên mật khẩu, rate limit đăng nhập | `users`, `sessions` |
+| `auth` | Đăng ký, đăng nhập, phiên, 2FA, quên mật khẩu, rate limit đăng nhập — dựng trên Better Auth (ADR 001, 003) | `users`, `sessions`, `accounts`, `verifications`, `two_factors` |
 | `tenancy` | Workspace, thành viên, lời mời, vai trò, `withWorkspace()` đặt RLS | `workspaces`, `members`, `invitations` |
 | `billing` | Gói, đăng ký, hóa đơn, thanh toán QR, xác nhận chuyển khoản, bộ đếm hạn mức **chung** (`meter` do sản phẩm khai báo) | `plans`, `subscriptions`, `invoices`, `payments`, `usage_counters` |
 | `flags` | Feature flag (§10) | `feature_flags`, `feature_flag_overrides` |

@@ -1,6 +1,6 @@
 # 13 — Thiết kế bảo mật
 
-> Phiên bản 0.6 · 02/11/2026 (bổ sung: saas-core, feature flag, đối soát Shopify, bảo vệ Meta App, kiểm tra lại trước khi gửi) · Áp dụng cho `web`, `worker`, `ml`, Admin Console và quy trình phát triển với Claude Code.
+> Phiên bản 0.7 · 02/11/2026 (bổ sung: saas-core, feature flag, đối soát Shopify, bảo vệ Meta App, kiểm tra lại trước khi gửi) · Áp dụng cho `web`, `worker`, `ml`, Admin Console và quy trình phát triển với Claude Code.
 
 ## 1. Mô hình đe dọa (tóm tắt)
 
@@ -19,9 +19,11 @@
 
 ## 2. Xác thực
 
-- Mật khẩu: argon2id (hoặc bcrypt cost ≥ 12 nếu thư viện auth chọn ở ADR 001 dùng bcrypt); tối thiểu 10 ký tự; kiểm danh sách mật khẩu lộ.
-- Phiên: cookie httpOnly, Secure, SameSite=Lax; hết hạn 14 ngày (app), 8 giờ (Admin); xoay phiên khi đăng nhập/đổi quyền.
-- 2FA TOTP: **bắt buộc Owner và mọi Admin**; Staff tùy chọn; 10 mã dự phòng (lưu hash).
+- Thư viện: **Better Auth** (ADR 001); các điểm lệch so với bản thiết kế ban đầu chốt ở ADR 003 (03/11).
+- Mật khẩu: argon2id (Better Auth mặc định scrypt → **cấu hình hàm băm/kiểm tùy chỉnh bằng argon2id**); tối thiểu 10 ký tự; kiểm danh sách mật khẩu lộ.
+- Phiên: cookie httpOnly, Secure, SameSite=Lax, **ký HMAC** bằng `BETTER_AUTH_SECRET` (khóa trong env/secret manager, không trong DB, xoay được); token phiên lưu thô trong DB (Better Auth không băm) — chấp nhận vì lộ riêng DB không dựng được cookie hợp lệ; **tắt cookie cache** để thu hồi phiên có hiệu lực ngay; hết hạn 14 ngày (app), 8 giờ (Admin, đặt bằng hook khi tạo phiên `is_admin_session`); ghi `last_seen_at` tối đa 1 lần/giờ; xoay phiên khi đăng nhập/đổi quyền; xóa mọi phiên khi đổi mật khẩu.
+- Sao lưu DB và DB staging/dev **không** được lưu cùng chỗ với `BETTER_AUTH_SECRET`.
+- 2FA TOTP: **bắt buộc Owner và mọi Admin** — Better Auth không ép theo vai trò nên app tự chặn (middleware: Owner/Admin chưa bật 2FA chỉ vào được trang cài 2FA); Staff tùy chọn; 10 mã dự phòng (lưu băm nếu plugin cho phép hàm tùy chỉnh, không thì mã hóa AES-GCM — ghi rõ ở ADR 003). "Xem như khách" của Admin **tự viết** theo §3.2 (chỉ đọc, 30 phút), không dùng impersonation của plugin admin.
 - Rate limit (Redis): đăng nhập 5 lần/15 phút/IP+email; quên mật khẩu 3 lần/giờ.
 - Google Sheets chỉ xin quyền đọc (`spreadsheets.readonly` hoặc `drive.file`), có thể cần Google xác minh app.
 - OAuth nền tảng: tham số `state` ký + hết hạn 10 phút; kiểm redirect URI cố định.

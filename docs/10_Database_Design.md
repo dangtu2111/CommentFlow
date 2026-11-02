@@ -1,6 +1,6 @@
 # 10 — Thiết kế Database & ERD
 
-> Phiên bản 1.1 · 02/11/2026 (biến thể câu, object extract, thành phần độ tin cậy, đánh dấu cài lệnh FR-161–165; thang xử lý khi không chắc, gộp bình luận, bảng size, xung đột giá… FR-147–160; nhiều nhãn, tệp đính kèm, trả lời một phần, xưng hô, `kb_gaps`, độ sẵn sàng FR-141–146; halfvec FR-139, cột định tuyến/viết lại câu hỏi FR-136–137; bổ sung tìm kiếm: tìm sản phẩm gần đúng, bí danh, bảng biến thể, đoạn có ngữ cảnh, hạn hiệu lực, câu mẫu, nhật ký tìm kiếm, cache theo giá; sửa truy vấn full-text; trước đó: saas-core, feature flag, đối soát Shopify, bảo vệ Meta App, kiểm tra lại trước khi gửi) · PostgreSQL 16 + pgvector 0.8.x, extension `unaccent`, `pg_trgm`. Bảng nào đã có trong source hiện tại cần **đối chiếu và migration bổ sung**, không tạo lại. Mọi bảng nghiệp vụ có `workspace_id` + RLS.
+> Phiên bản 1.2 · 03/11/2026 (auth theo Better Auth: `sessions.token`, thêm `accounts`, `verifications`, `two_factors` — ADR 003; biến thể câu, object extract, thành phần độ tin cậy, đánh dấu cài lệnh FR-161–165; thang xử lý khi không chắc, gộp bình luận, bảng size, xung đột giá… FR-147–160; nhiều nhãn, tệp đính kèm, trả lời một phần, xưng hô, `kb_gaps`, độ sẵn sàng FR-141–146; halfvec FR-139, cột định tuyến/viết lại câu hỏi FR-136–137; bổ sung tìm kiếm: tìm sản phẩm gần đúng, bí danh, bảng biến thể, đoạn có ngữ cảnh, hạn hiệu lực, câu mẫu, nhật ký tìm kiếm, cache theo giá; sửa truy vấn full-text; trước đó: saas-core, feature flag, đối soát Shopify, bảo vệ Meta App, kiểm tra lại trước khi gửi) · PostgreSQL 16 + pgvector 0.8.x, extension `unaccent`, `pg_trgm`. Bảng nào đã có trong source hiện tại cần **đối chiếu và migration bổ sung**, không tạo lại. Mọi bảng nghiệp vụ có `workspace_id` + RLS.
 
 ## 1. Quy ước
 
@@ -10,7 +10,7 @@
 - Xóa mềm (`deleted_at`) cho dữ liệu người dùng tạo; dữ liệu nền tảng xóa cứng khi có yêu cầu xóa.
 - Token mã hóa AES-GCM: cột `*_enc bytea` + `key_version int`.
 - Enum dùng `text` + CHECK để dễ migration.
-- **Schema theo sản phẩm** (`09_System_Architecture.md` §3.1): bảng dùng chung ở schema `core` (users, sessions, workspaces, members, invitations, plans, subscriptions, invoices, payments, usage_counters, feature_flags, feature_flag_overrides, action_logs, admin_impersonations, notification_prefs, push_subscriptions, data_exports); bảng CommentFlow ở schema `cf`; ExcelFlow sau này ở `xf`. Bảng `core` không có khóa ngoại trỏ sang `cf`/`xf`.
+- **Schema theo sản phẩm** (`09_System_Architecture.md` §3.1): bảng dùng chung ở schema `core` (users, sessions, accounts, verifications, two_factors, workspaces, members, invitations, plans, subscriptions, invoices, payments, usage_counters, feature_flags, feature_flag_overrides, action_logs, admin_impersonations, notification_prefs, push_subscriptions, data_exports); bảng CommentFlow ở schema `cf`; ExcelFlow sau này ở `xf`. Bảng `core` không có khóa ngoại trỏ sang `cf`/`xf`.
 
 ## 2. ERD tổng quan
 
@@ -51,9 +51,12 @@ erDiagram
 
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `users` | id, email (unique, citext), name, password_hash / auth provider, totp_secret_enc, totp_enabled, locale, is_admin, admin_role (`super`/`support`/`finance`) | Không có workspace_id |
+| `users` | id, email (unique, citext), name, email_verified, image, ~~password_hash~~ (→ `accounts`), ~~totp_secret_enc~~ (→ `two_factors`), totp_enabled, locale, is_admin, admin_role (`super`/`support`/`finance`) | Không có workspace_id |
 | `workspaces` | id, name, slug, timezone (mặc định Asia/Ho_Chi_Minh), default_lang, ai_enabled, emergency_stopped_at, ai_cost_cap_usd, status (`trial`/`active`/`past_due`/`suspended`/`deleted`) | |
-| `sessions` | user_id, token_hash, created_at, expires_at, last_seen_at, ip, user_agent, is_admin_session | Không có workspace_id; xóa khi đăng xuất/đổi mật khẩu |
+| `sessions` | user_id, token (ngẫu nhiên, **lưu thô theo Better Auth** — chốt 03/11, ADR 003), created_at, expires_at, last_seen_at (= `updated_at`, ghi tối đa 1 lần/giờ), ip, user_agent, is_admin_session | Không có workspace_id; xóa khi đăng xuất/đổi mật khẩu/đổi quyền. Bù cho token thô: cookie ký HMAC bằng `BETTER_AUTH_SECRET` (khóa ngoài DB, kiểm chữ ký trước khi tra DB), tắt cookie cache, phiên có hạn (13 §2). Bản spec cũ ghi `token_hash` — thay bằng quyết định này |
+| `accounts` | user_id, provider_id (`credential`/…), account_id, password (argon2id), access/refresh token (mã hóa nếu có OAuth), created_at, updated_at | Bảng của Better Auth (03/11); mật khẩu nằm ở đây thay cho `users.password_hash` |
+| `verifications` | identifier, value, expires_at | Bảng của Better Auth: mã xác minh email, quên mật khẩu |
+| `two_factors` | user_id, secret (mã hóa), backup_codes (mã hóa hoặc băm — theo khả năng plugin, ADR 003) | Plugin 2FA của Better Auth; thay cho `users.totp_secret_enc`; `users.totp_enabled` giữ làm cờ |
 | `members` | workspace_id, user_id, role (`owner`/`staff`), invited_by, status | unique (workspace_id, user_id) |
 | `invitations` | workspace_id, email, role, token_hash, expires_at, accepted_at | |
 
