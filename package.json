@@ -13,7 +13,8 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
     "build": "pnpm -r --if-present run build",
-    "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs"
+    "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "lint:i18n": "pnpm --filter @flow/web run lint:i18n"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
