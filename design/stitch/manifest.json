@@ -1,0 +1,274 @@
+{
+  "project_id": "15298527895734533184",
+  "synced_at": "2026-11-02T19:15:22+07:00",
+  "screens": [
+    {
+      "stitch_id": "f96e516f1a6d41fb943b3b4c4fc065e2",
+      "name": "Chào mừng nhân viên mới",
+      "slug": "staff-welcome",
+      "updated": null,
+      "files": [
+        "staff-welcome.html",
+        "staff-welcome.png"
+      ]
+    },
+    {
+      "stitch_id": "1ed2939b3d79460787d970d8419baa37",
+      "name": "Lỗi 403 Staff vs Owner",
+      "slug": "error-403",
+      "updated": null,
+      "files": [
+        "error-403.html",
+        "error-403.png"
+      ]
+    },
+    {
+      "stitch_id": "016397f19b0f4bc792003f741a641caa",
+      "name": "Cài đặt – Xác nhận tắt 2FA",
+      "slug": "settings-2fa-disable-modal",
+      "updated": null,
+      "files": [
+        "settings-2fa-disable-modal.png"
+      ]
+    },
+    {
+      "stitch_id": "9a12dc1e90db4c07b8e5a7425a2e2dca",
+      "name": "Cài đặt – Tài khoản & Bảo mật",
+      "slug": "settings-security",
+      "updated": null,
+      "files": [
+        "settings-security.png"
+      ]
+    },
+    {
+      "stitch_id": "814fe8fca36a4c0d9af19e57cd6b48e0",
+      "name": "Brand Guideline & Component Library",
+      "slug": "brand-guideline",
+      "updated": null,
+      "files": [
+        "brand-guideline.html",
+        "brand-guideline.png"
+      ]
+    },
+    {
+      "stitch_id": "7baae546bbca419c8deaa399b84f2e5f",
+      "name": "Báo cáo – Hiệu suất AI & SLA",
+      "slug": "reports",
+      "updated": null,
+      "files": [
+        "reports.html",
+        "reports.png"
+      ]
+    },
+    {
+      "stitch_id": "34d18f09ce2c4e3bbcd47a2b518e0a49",
+      "name": "Chính sách bảo mật & xóa dữ liệu",
+      "slug": "privacy-data-deletion",
+      "updated": null,
+      "files": [
+        "privacy-data-deletion.html",
+        "privacy-data-deletion.png"
+      ]
+    },
+    {
+      "stitch_id": "b5dfbcfce3994087806db7b73d63fd3d",
+      "name": "Trang chủ & Bảng giá",
+      "slug": "landing-pricing",
+      "updated": null,
+      "files": [
+        "landing-pricing.html",
+        "landing-pricing.png"
+      ]
+    },
+    {
+      "stitch_id": "32e20b5cf9694802b2a4d0dd83c2bb1a",
+      "name": "Bình luận",
+      "slug": "comments",
+      "updated": null,
+      "files": [
+        "comments.html",
+        "comments.png"
+      ]
+    },
+    {
+      "stitch_id": "36f64cb2dfe44634b8b9391cede62950",
+      "name": "Tự động hóa",
+      "slug": "automation",
+      "updated": null,
+      "files": [
+        "automation.png"
+      ]
+    },
+    {
+      "stitch_id": "280bbe1a41474f85bec16ba0e1b8633a",
+      "name": "Đăng nhập & Đăng ký",
+      "slug": "auth-login-register",
+      "updated": null,
+      "files": [
+        "auth-login-register.png"
+      ]
+    },
+    {
+      "stitch_id": "ba972096f5804eccbdc61c50bbb9455b",
+      "name": "Quy tắc spam",
+      "slug": "spam-rules",
+      "updated": null,
+      "files": [
+        "spam-rules.png"
+      ]
+    },
+    {
+      "stitch_id": "715429e94e8842368095a8328c6096a1",
+      "name": "Onboarding 5 bước",
+      "slug": "onboarding",
+      "updated": null,
+      "files": [
+        "onboarding.png"
+      ]
+    },
+    {
+      "stitch_id": "6e70d9a6d38448eb998a3afdb468d083",
+      "name": "Email mời thành viên",
+      "slug": "email-invite",
+      "updated": null,
+      "files": [
+        "email-invite.png"
+      ]
+    },
+    {
+      "stitch_id": "fd831a4294cd4d36a1eb8d235a52c167",
+      "name": "Cài đặt – Đổi mật khẩu thành công",
+      "slug": "settings-password-changed",
+      "updated": null,
+      "files": [
+        "settings-password-changed.png"
+      ]
+    },
+    {
+      "stitch_id": "c3ea149384ec4b4ab05386e789054982",
+      "name": "Cài đặt – Gói & Thanh toán VietQR",
+      "slug": "settings-billing",
+      "updated": null,
+      "files": [
+        "settings-billing.png"
+      ]
+    },
+    {
+      "stitch_id": "4368b709925a4d26bec22cd7d71b752b",
+      "name": "Chấp nhận lời mời & đặt mật khẩu",
+      "slug": "accept-invite",
+      "updated": null,
+      "files": [
+        "accept-invite.png"
+      ]
+    },
+    {
+      "stitch_id": "a3527a28fdb847f7ae91d5575565567c",
+      "name": "Cài đặt – Đổi mật khẩu (modal)",
+      "slug": "settings-change-password-modal",
+      "updated": null,
+      "files": [
+        "settings-change-password-modal.png"
+      ]
+    },
+    {
+      "stitch_id": "b74c79811a2a4cd7a208216863268a66",
+      "name": "Khách tiềm năng",
+      "slug": "leads",
+      "updated": null,
+      "files": [
+        "leads.png"
+      ]
+    },
+    {
+      "stitch_id": "e445b2f684f7426bb7d782ea1f95a6eb",
+      "name": "Nhật ký hoạt động",
+      "slug": "activity-log",
+      "updated": null,
+      "files": [
+        "activity-log.png"
+      ]
+    },
+    {
+      "stitch_id": "8d74f0eac3074802841500ac268007c3",
+      "name": "Lỗi 404",
+      "slug": "error-404",
+      "updated": null,
+      "files": [
+        "error-404.png"
+      ]
+    },
+    {
+      "stitch_id": "d0f6c13b47624e62af3140bd3d72d142",
+      "name": "Email thông báo đổi mật khẩu",
+      "slug": "email-password-changed",
+      "updated": null,
+      "files": [
+        "email-password-changed.png"
+      ]
+    },
+    {
+      "stitch_id": "6f488e7e8c6d4d8ba5f5a4f57cbaf384",
+      "name": "Cơ sở kiến thức",
+      "slug": "knowledge-base",
+      "updated": null,
+      "files": [
+        "knowledge-base.png"
+      ]
+    },
+    {
+      "stitch_id": "38073c66cb424effa233bd7a2d5fd759",
+      "name": "Tin nhắn",
+      "slug": "messages",
+      "updated": null,
+      "files": [
+        "messages.png"
+      ]
+    },
+    {
+      "stitch_id": "f17aed7efa854909b0bca9f567d94d7f",
+      "name": "Điều khoản & DPA",
+      "slug": "terms-dpa",
+      "updated": null,
+      "files": [
+        "terms-dpa.png"
+      ]
+    },
+    {
+      "stitch_id": "f75580e11d804588a43f802c8dbd4177",
+      "name": "Bài viết",
+      "slug": "posts",
+      "updated": null,
+      "files": [
+        "posts.png"
+      ]
+    },
+    {
+      "stitch_id": "861d69bbca544e41aa8266bab96e81a4",
+      "name": "Mất kết nối Fanpage",
+      "slug": "channel-disconnected",
+      "updated": null,
+      "files": [
+        "channel-disconnected.png"
+      ]
+    },
+    {
+      "stitch_id": "85510bb868f543738c3d74c759549674",
+      "name": "Cài đặt – Thiết lập 2FA (modal)",
+      "slug": "settings-2fa-setup-modal",
+      "updated": null,
+      "files": [
+        "settings-2fa-setup-modal.png"
+      ]
+    },
+    {
+      "stitch_id": "5e50cc7b96b84d0f9de5507b0a43f790",
+      "name": "Cài đặt – Hệ thống & Thành viên",
+      "slug": "settings-workspace-members",
+      "updated": null,
+      "files": [
+        "settings-workspace-members.png"
+      ]
+    }
+  ]
+}

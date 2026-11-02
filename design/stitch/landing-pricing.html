@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-primary-container":"#bdf0ff","on-background":"#101d25","secondary-container":"#7c59ef","surface-bright":"#f5faff","background":"#f5faff","on-secondary":"#ffffff","on-tertiary-fixed":"#2e1500","surface-container":"#e2f0fb","surface":"#f5faff","outline":"#6f797c","inverse-primary":"#82d2e7","on-secondary-container":"#fffbff","inverse-on-surface":"#e5f3fe","surface-dim":"#cedce7","on-tertiary-fixed-variant":"#6c3a02","error":"#ba1a1a","on-error-container":"#93000a","on-primary":"#ffffff","primary-fixed":"#abedff","surface-container-highest":"#d7e4f0","surface-tint":"#00687a","on-error":"#ffffff","error-container":"#ffdad6","outline-variant":"#bec8cc","primary-fixed-dim":"#82d2e7","secondary-fixed-dim":"#ccbdff","secondary":"#633cd5","tertiary":"#77440b","on-tertiary-container":"#ffe3cf","surface-container-low":"#eaf5ff","primary":"#005868","surface-container-high":"#dceaf5","on-tertiary":"#ffffff","inverse-surface":"#25323b","secondary-fixed":"#e7deff","on-primary-fixed":"#001f26","on-secondary-fixed":"#1f0060","on-primary-fixed-variant":"#004e5c","on-surface-variant":"#3f484b","on-secondary-fixed-variant":"#4d1ebf","on-surface":"#101d25","tertiary-fixed":"#ffdcc1","tertiary-fixed-dim":"#ffb779","primary-container":"#0b7285","tertiary-container":"#945b23","surface-variant":"#d7e4f0","surface-container-lowest":"#ffffff"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter-mobile":"0.75rem","space-lg":"1rem","space-md":"0.75rem","space-sm":"0.5rem",gutter:"1rem","space-xs":"0.25rem",margin:"1.5rem","space-xl":"1.5rem","margin-mobile":"1rem"},fontFamily:{"code-sm":["Be Vietnam Pro"],"title-sm":["Be Vietnam Pro"],"label-md":["Be Vietnam Pro"],"body-sm":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"label-sm":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"title-md":["Be Vietnam Pro"],"body-lg":["Be Vietnam Pro"]},fontSize:{"code-sm":["12px",{lineHeight:"16px",fontWeight:"500"}],"title-sm":["13px",{lineHeight:"18px",fontWeight:"600"}],"label-md":["12px",{lineHeight:"16px",fontWeight:"500"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-lg":["30px",{lineHeight:"38px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.02em",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.015em",fontWeight:"600"}],"body-md":["13px",{lineHeight:"19px",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"600"}],"title-md":["15px",{lineHeight:"20px",fontWeight:"600"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 left-0 right-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-7xl mx-auto px-margin flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-xl"><a class="flex items-center gap-space-sm" data-path="trang-chu" href="#"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-[20px]">chat_bubble</span></div><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-title-md text-title-md text-on-surface tracking-tight font-bold">CommentFlow</span><span class="px-1.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase">AI</span></div></div></a><nav class="hidden lg:flex items-center gap-space-xl" data-active-classes="text-primary font-bold"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="tinh-nang" href="#">Tính năng</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">Giải pháp</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="bang-gia" href="#">Bảng giá</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="vong-lap-ai" href="#">Vòng lặp AI</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="huong-dan" href="#">Hướng dẫn</a></nav></div><div class="flex items-center gap-space-md"><a class="hidden sm:inline-flex items-center justify-center px-space-md py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="dang-nhap" href="#">Đăng nhập</a><a class="inline-flex items-center gap-space-xs px-space-lg py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors shadow-[0_1px_8px_rgba(0,0,0,0.04)]" data-path="dung-thu-14-ngay-mien-phi" href="#"><span class="material-symbols-outlined text-[16px]">bolt</span><span>Dùng thử 14 ngày miễn phí</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-[calc(100vh-4rem)]"><div class="flex flex-col w-full">
+<!-- HERO SECTION -->
+<section class="relative overflow-hidden bg-gradient-to-b from-surface via-surface-container-low to-surface py-space-xl lg:py-24">
+<!-- Ambient Background Lighting Orbs -->
+<div class="absolute -top-40 -left-40 w-96 h-96 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute top-1/3 -right-32 w-80 h-80 bg-secondary-fixed/40 rounded-full blur-3xl pointer-events-none"></div>
+<div class="max-w-7xl mx-auto px-margin">
+<!-- Top Badge -->
+<div class="flex justify-center mb-space-lg">
+<div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container-high/90 shadow-sm backdrop-blur-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">
+            Meta Tech Partner Verified
+          </span>
+<span class="text-outline-variant font-body-sm">•</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">
+            AI Engine thế hệ mới cho Shop &amp; Agency Việt Nam
+          </span>
+</div>
+</div>
+<!-- Main Headline & Subtitle -->
+<div class="max-w-4xl mx-auto text-center flex flex-col items-center gap-space-md mb-space-xl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface lg:text-[44px] lg:leading-[52px] tracking-tight font-bold">
+          Trả lời khách nhanh hơn, <br class="hidden sm:inline"/>
+<span class="bg-gradient-to-r from-primary via-primary-container to-secondary bg-clip-text text-transparent">
+            vẫn chuẩn xác đúng giọng của shop
+          </span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
+          Tự động hóa phản hồi bình luận và tin nhắn trên Facebook, Instagram và TikTok tốc độ
+          <span class="font-semibold text-primary">&lt;1.5s</span> với trợ lý AI được huấn luyện từ chính dữ liệu sản phẩm, chính sách và bảng giá của cửa hàng bạn. Bạn hoàn toàn chủ động quyết định mức độ tự động.
+        </p>
+<!-- CTA Buttons -->
+<div class="flex flex-col sm:flex-row items-center gap-space-md mt-space-sm w-full sm:w-auto">
+<a class="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-3 rounded-lg bg-primary text-on-primary font-title-sm text-title-sm hover:bg-primary-container shadow-md hover:shadow-lg transition-all duration-200" data-path="dung-thu-14-ngay-mien-phi" href="#">
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+<span>Dùng thử 14 ngày miễn phí (Full tính năng)</span>
+</a>
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-3 rounded-lg bg-surface-container-highest text-on-surface font-title-sm text-title-sm hover:bg-surface-container transition-colors shadow-sm" id="trigger-demo-modal" type="button">
+<span class="material-symbols-outlined text-[20px] text-secondary">play_circle</span>
+<span>Xem demo thực tế (2 phút)</span>
+</button>
+</div>
+<!-- Trust Sub-badge -->
+<div class="flex flex-wrap items-center justify-center gap-x-space-lg gap-y-1 text-on-surface-variant font-label-md text-label-md mt-space-xs">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">credit_card_off</span>
+            Không cần thẻ tín dụng
+          </span>
+<span class="text-outline-variant">•</span>
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
+            Cài đặt trong 10 phút
+          </span>
+<span class="text-outline-variant">•</span>
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">lock</span>
+            Cam kết không tự ý đăng bài
+          </span>
+</div>
+</div>
+<!-- Hero Visual Showcase: Interactive Live 3-Stage Feed -->
+<div class="relative mt-space-lg max-w-6xl mx-auto">
+<!-- Floating Status Chips -->
+<div class="absolute -top-3 left-6 z-20 hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-lowest shadow-md text-on-surface font-label-sm text-label-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
+<span>Đang lắng nghe Webhook: Graph API v19.0</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-code-sm text-code-sm">Latency 0.8s</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-xl p-space-md lg:p-space-lg overflow-hidden">
+<div class="flex items-center justify-between pb-space-sm mb-space-md border-b border-surface-container">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="w-3 h-3 rounded-full bg-primary-fixed"></span>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold ml-2">Mô phỏng chu trình bảo vệ và chốt đơn thời gian thực</span>
+</div>
+<div class="flex items-center gap-space-xs bg-secondary-fixed text-on-secondary-fixed px-space-sm py-1 rounded-full font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+<span>Chế độ Auto-Pilot Đang Bật</span>
+</div>
+</div>
+<!-- 3-Column Visual Flow -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md relative">
+<!-- Stage 1: Incoming Comment with Phone Number -->
+<div class="flex flex-col bg-surface-container-low rounded-lg p-space-md">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">public</span> Facebook Ads Post
+                </span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">10:42:01 AM</span>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-lg shadow-sm mb-space-sm">
+<div class="flex items-center gap-2 mb-1.5">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-primary font-label-sm text-label-sm">
+                    TN
+                  </div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface font-semibold leading-tight">Thanh Nga</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Khách bình luận công khai</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug">
+                  Áo Blazer Linen be còn size M không shop? Ship về Cầu Giấy bn thế ạ? SĐT mình: <span class="bg-error-container text-on-error-container font-semibold px-1 rounded">0982.341.***</span> tư vấn giúp m nhé!
+                </p>
+</div>
+<div class="mt-auto flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">warning</span>
+<span>Nguy cơ: Đối thủ quét SĐT cướp đơn</span>
+</div>
+</div>
+<!-- Stage 2: Anti-Theft AI Hide Logic -->
+<div class="flex flex-col bg-surface-container-low rounded-lg p-space-md relative">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">shield</span> Chống cướp khách
+                </span>
+<span class="font-code-sm text-code-sm text-primary font-bold">Sau 0.8 giây</span>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-lg shadow-sm mb-space-sm">
+<div class="flex items-center gap-2 mb-2 text-primary font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[16px]">visibility_off</span>
+<span>Đã tự động ẨN bình luận công khai</span>
+</div>
+<div class="p-2 rounded bg-surface-container-highest/60 text-on-surface-variant font-body-sm text-body-sm italic mb-2">
+                  "Chỉ Admin và Thanh Nga nhìn thấy nội dung. Đối thủ hoàn toàn không thấy SĐT."
+                </div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Phân loại AI:</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold">
+                    [Hỏi giá + SĐT Lead]
+                  </span>
+</div>
+</div>
+<div class="mt-auto flex items-center justify-between text-on-surface font-label-sm text-label-sm">
+<span class="text-primary font-bold">Độ tin cậy: 98.6%</span>
+<span class="text-on-surface-variant">Tự tạo CRM Contact #8491</span>
+</div>
+</div>
+<!-- Stage 3: Instant Contextual AI Response + Inbox Hook -->
+<div class="flex flex-col bg-surface-container rounded-lg p-space-md">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">smart_toy</span> Phản hồi chuẩn xác
+                </span>
+<span class="font-code-sm text-code-sm text-on-secondary-fixed-variant font-semibold">Tự động gửi</span>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-lg shadow-sm mb-space-sm">
+<div class="flex items-center justify-between mb-1.5">
+<span class="font-label-sm text-label-sm text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">menu_book</span> Nguồn: Shopify Live Stock
+                  </span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">In-stock: 14</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug">
+                  Dạ chào chị Nga, Áo Blazer Linen tone Be size M bên em hiện vẫn còn sẵn ạ! Đơn Cầu Giấy được áp dụng Freeship đơn từ 500k. Em đã gửi bảng thông số chi tiết qua tin nhắn riêng cho chị rồi nha ❤️
+                </p>
+<div class="mt-2 pt-2 border-t border-surface-container flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">send</span> Đã mở Messenger riêng
+                  </span>
+<span class="material-symbols-outlined text-[16px] text-primary">done_all</span>
+</div>
+</div>
+<div class="mt-auto flex items-center gap-1 text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">inventory_2</span>
+<span class="font-medium text-primary">Đồng bộ tức thì vào bảng Quản lý Khách Hàng</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3 CORE BENEFITS SECTION -->
+<section class="py-space-xl lg:py-24 bg-surface max-w-7xl mx-auto px-margin w-full">
+<div class="text-center max-w-3xl mx-auto mb-space-xl">
+<span class="px-space-md py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm uppercase font-bold tracking-wider">
+        Giá trị cốt lõi
+      </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-space-sm mb-space-xs font-bold">
+        3 Lợi ích vượt trội cho Shop &amp; Agency
+      </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+        Không chỉ là chatbot trả lời sẵn theo mẫu khô khan. CommentFlow AI vận hành như một chuyên viên chăm sóc khách hàng giàu kinh nghiệm, bảo vệ doanh thu từng giây.
+      </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<!-- Benefit 1 -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="w-12 h-12 rounded-xl bg-error-container text-on-error-container flex items-center justify-center mb-space-lg">
+<span class="material-symbols-outlined text-[26px]">shield_person</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold mb-space-xs">
+            Chống cướp khách 100%
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-space-md">
+            Quy tắc thông minh quét sạch và ẩn ngay lập tức bình luận chứa SĐT, mã vận đơn hoặc link spam mạo danh trong &lt;0.8 giây. Đồng thời tự động kích hoạt inbox tư vấn 1-1 và ghi thẳng vào CRM.
+          </p>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center justify-between text-on-surface font-label-sm text-label-sm mb-1">
+<span class="font-semibold text-primary">Tỉ lệ chặn đối thủ cướp Lead</span>
+<span class="font-bold text-on-surface">100.0%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full w-full"></div>
+</div>
+</div>
+</div>
+<!-- Benefit 2 -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center mb-space-lg">
+<span class="material-symbols-outlined text-[26px]">auto_stories</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold mb-space-xs">
+            Trả lời đúng 100% ngữ cảnh của shop
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-space-md">
+            Đồng bộ trực tiếp dữ liệu sản phẩm từ Shopify, kho hàng, link website hoặc file Excel bảng giá. AI chỉ nói những gì bạn đã phê duyệt, luôn minh bạch trích dẫn nguồn tài liệu tham chiếu.
+          </p>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px]">verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">
+            Không bịa đặt thông tin kho hay khuyến mãi ảo ngoài kịch bản shop cấp.
+          </span>
+</div>
+</div>
+<!-- Benefit 3 -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="w-12 h-12 rounded-xl bg-primary-fixed text-on-primary-fixed flex items-center justify-center mb-space-lg">
+<span class="material-symbols-outlined text-[26px]">tune</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold mb-space-xs">
+            Kiểm soát linh hoạt - Bạn là người làm chủ
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-space-md">
+            Lựa chọn 3 cấp độ: <strong>Tắt</strong> (Dừng hẳn) - <strong>Chạy thử</strong> (AI soạn, nhân viên duyệt 1-chạm) - <strong>Tự động</strong> (Auto-pilot). Trang bị nút Dừng khẩn cấp (Emergency Stop) 1-chạm ngay trên màn hình.
+          </p>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Emergency Stop</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-code-sm text-code-sm">Ngắt tức thì 0.1s</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 4-STEP AI CORE FLOW -->
+<section class="py-space-xl lg:py-24 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-margin">
+<div class="text-center max-w-3xl mx-auto mb-space-xl">
+<span class="px-space-md py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase font-bold tracking-wider">
+          Kiến trúc công nghệ
+        </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-space-sm mb-space-xs font-bold">
+          Vòng lặp vận hành AI 4 bước khép kín
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          Đảm bảo tốc độ phản hồi tính bằng mili-giây nhưng tuyệt đối tuân thủ chính sách nền tảng và kiểm soát chất lượng.
+        </p>
+</div>
+<!-- Flow Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Step 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-code-sm text-code-sm px-2 py-1 rounded bg-surface-container text-primary font-bold">BƯỚC 01</span>
+<span class="material-symbols-outlined text-primary text-[24px]">hub</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-bold mb-space-xs">
+              Tiếp nhận đa kênh
+            </h4>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              Lắng nghe và thu nạp bình luận &amp; tin nhắn Messenger, Instagram Direct, TikTok Shop Live Stream theo thời gian thực qua Webhooks chính thức.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">speed</span>
+<span>Độ trễ trung bình &lt;200ms</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-code-sm text-code-sm px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-bold">BƯỚC 02</span>
+<span class="material-symbols-outlined text-secondary text-[24px]">psychology</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-bold mb-space-xs">
+              AI phân loại thông minh
+            </h4>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              Tự động nhận diện ý định khách hàng và gán 1 trong 6 nhãn: <em>Hỏi giá, Tư vấn, Mua hàng, Khiếu nại, Spam, Khác</em> kèm chỉ số Confidence Score.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center gap-1 font-label-sm text-label-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">label</span>
+<span>6 nhãn hành vi người mua</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-code-sm text-code-sm px-2 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold">BƯỚC 03</span>
+<span class="material-symbols-outlined text-tertiary text-[24px]">rule_folder</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-bold mb-space-xs">
+              Soạn câu trả lời chuẩn xác
+            </h4>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              Truy vấn cơ sở tri thức (RAG) đối chiếu bài đăng quảng cáo, tồn kho thực tế, chương trình flash sale và chính sách giao hàng của shop để viết câu phản hồi tự nhiên.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center gap-1 font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span>Trích dẫn nguồn chính xác</span>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-code-sm text-code-sm px-2 py-1 rounded bg-primary-fixed text-on-primary-fixed font-bold">BƯỚC 04</span>
+<span class="material-symbols-outlined text-primary text-[24px]">send_and_archive</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-bold mb-space-xs">
+              Tự gửi an toàn / Duyệt 1-chạm
+            </h4>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              Gửi tin qua Meta Graph API &amp; TikTok Business API, tuân thủ cửa sổ 24h nhắn tin, tự động ghi vết nhật ký audit trail để quản lý toàn diện.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center gap-1 font-label-sm text-label-sm text-primary">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+<span>100% tuân thủ Graph API</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- PRICING TABLE SECTION -->
+<section class="py-space-xl lg:py-24 bg-surface max-w-7xl mx-auto px-margin w-full">
+<div class="text-center max-w-3xl mx-auto mb-space-xl">
+<span class="px-space-md py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm uppercase font-bold tracking-wider">
+        Bảng giá minh bạch
+      </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-space-sm mb-space-xs font-bold">
+        Đầu tư thông minh, bứt phá doanh số
+      </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+        Thanh toán tự động linh hoạt qua VietQR, kích hoạt ngay sau 1-3 phút. Không phí ẩn, hủy bất kỳ lúc nào.
+      </p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg items-stretch">
+<!-- Plan 1: STARTER -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">STARTER</h3>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Khởi nghiệp</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-lg">
+            Dành cho shop mới mở, lượng bình luận vừa phải, cần kiểm duyệt kỹ lưỡng trước khi gửi.
+          </p>
+<div class="mb-space-lg pb-space-md border-b border-surface-container">
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">299.000đ</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ tháng</span>
+</div>
+<p class="font-label-sm text-label-sm text-primary mt-1">Khoảng 9.900đ/ngày làm việc</p>
+</div>
+<!-- Features -->
+<ul class="flex flex-col gap-space-sm mb-space-xl">
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>1 Kênh kết nối</strong> (Fanpage Facebook)</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>1.000 lượt phản hồi AI</strong> / tháng</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>Gợi ý câu trả lời AI (Duyệt tay 1-chạm)</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>Chống cướp khách cơ bản (Ẩn SĐT tự động)</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-outline-variant text-[18px] mt-0.5">cancel</span>
+<span class="line-through">Tự động gửi (Auto-Pilot)</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-outline-variant text-[18px] mt-0.5">cancel</span>
+<span class="line-through">Đồng bộ Shopify &amp; Web Crawler</span>
+</li>
+</ul>
+</div>
+<a class="w-full inline-flex items-center justify-center py-2.5 rounded-lg bg-surface-container-highest text-on-surface font-title-sm text-title-sm hover:bg-surface-container transition-colors" data-path="dung-thu-14-ngay-mien-phi" href="#">
+          Chọn gói Starter
+        </a>
+</div>
+<!-- Plan 2: GROWTH (Featured) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-xl flex flex-col justify-between relative ring-2 ring-primary">
+<!-- Badge Khuyên Dùng -->
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-space-md py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm uppercase font-bold shadow-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">star</span>
+<span>Khuyên dùng nhiều nhất</span>
+</div>
+<div>
+<div class="flex items-center justify-between mb-space-sm pt-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">GROWTH</h3>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">Tăng trưởng nhanh</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-lg">
+            Hoàn hảo cho shop đang chạy quảng cáo mạnh, cần tự động hóa 24/7 cả bình luận và tin nhắn.
+          </p>
+<div class="mb-space-lg pb-space-md border-b border-surface-container">
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">699.000đ</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ tháng</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary font-bold mt-1">Dùng thử 14 ngày (Free 300 lượt AI)</p>
+</div>
+<!-- Features -->
+<ul class="flex flex-col gap-space-sm mb-space-xl">
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>3 Kênh kết nối</strong> (FB, Instagram, TikTok)</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>3.000 lượt phản hồi AI</strong> / tháng</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>Auto-pilot tự gửi 100%</strong> bình luận &amp; inbox</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>Đồng bộ <strong>Shopify &amp; Web Crawler dữ liệu</strong></span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>Phân quyền Nhân viên che SĐT chống tuồn khách</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>Hỗ trợ nút Dừng khẩn cấp Emergency Stop</span>
+</li>
+</ul>
+</div>
+<a class="w-full inline-flex items-center justify-center gap-space-xs py-3 rounded-lg bg-primary text-on-primary font-title-sm text-title-sm hover:bg-primary-container shadow-md transition-all" data-path="dung-thu-14-ngay-mien-phi" href="#">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span>Dùng thử 14 ngày miễn phí</span>
+</a>
+</div>
+<!-- Plan 3: BUSINESS -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">BUSINESS</h3>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Doanh nghiệp / Agency</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-lg">
+            Giải pháp chuyên sâu cho các nhãn hàng lớn và Agency vận hành nhiều nhãn hiệu song song.
+          </p>
+<div class="mb-space-lg pb-space-md border-b border-surface-container">
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">1.490.000đ</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ tháng</span>
+</div>
+<p class="font-label-sm text-label-sm text-primary mt-1">Đầy đủ quyền Quản trị đa Workspace</p>
+</div>
+<!-- Features -->
+<ul class="flex flex-col gap-space-sm mb-space-xl">
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>10 Kênh kết nối</strong> đa nền tảng</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>7.500 lượt phản hồi AI</strong> / tháng</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>Đa Workspace riêng biệt cho từng Brand khách hàng</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>API Tùy chỉnh &amp; Xuất Lead trực tiếp Webhook CRM</span>
+</li>
+<li class="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span>Đội ngũ Kỹ sư AI đồng hành thiết lập 1-1 riêng biệt</span>
+</li>
+</ul>
+</div>
+<a class="w-full inline-flex items-center justify-center py-2.5 rounded-lg bg-surface-container-highest text-on-surface font-title-sm text-title-sm hover:bg-surface-container transition-colors" data-path="dung-thu-14-ngay-mien-phi" href="#">
+          Chọn gói Business
+        </a>
+</div>
+</div>
+<!-- Extra Package & Payment Method Notice -->
+<div class="mt-space-xl p-space-lg rounded-xl bg-surface-container-low flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">add_circle</span>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-on-surface font-bold">Gói nạp thêm lượt AI linh hoạt</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Chỉ <strong>149.000đ / +1.000 lượt AI</strong>. Khi hết hạn ngạch tháng, tin nhắn và bình luận vẫn đổ về đầy đủ 100%, không bao giờ mất tương tác khách hàng.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">qr_code_2</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">VietQR Kích hoạt 1-3 phút</span>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ SECTION -->
+<section class="py-space-xl lg:py-24 bg-surface-container-low">
+<div class="max-w-4xl mx-auto px-margin">
+<div class="text-center mb-space-xl">
+<span class="px-space-md py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase font-bold tracking-wider">
+          Giải đáp thắc mắc
+        </span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-space-sm mb-space-xs font-bold">
+          Câu hỏi thường gặp (FAQ)
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          Những điều các chủ shop thường quan tâm nhất trước khi tích hợp trợ lý AI vào quy trình.
+        </p>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- FAQ 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="faq-toggle w-full text-left flex items-center justify-between gap-space-sm" type="button">
+<span class="font-title-md text-title-md text-on-surface font-bold">
+              AI có tự ý trả lời bậy bạ hoặc vi phạm chính sách làm mất Fanpage không?
+            </span>
+<span class="material-symbols-outlined text-primary text-[24px] transition-transform duration-200">expand_more</span>
+</button>
+<div class="faq-content mt-space-sm pt-space-sm border-t border-surface-container text-on-surface-variant font-body-md text-body-md leading-relaxed">
+            Hoàn toàn không. CommentFlow AI sử dụng kiến trúc giới hạn tri thức đóng (Strict RAG Guardrails). AI chỉ trả lời dựa trên tài liệu sản phẩm và chính sách cửa hàng bạn nạp vào. Bạn có thể bật chế độ "Chạy thử (Duyệt tay)" trong những ngày đầu để quan sát trước khi bật "Auto-pilot". Hơn nữa, nút <strong>Emergency Stop</strong> cho phép bạn ngắt toàn bộ tự động trong 0.1 giây chỉ với 1 cú click.
+          </div>
+</div>
+<!-- FAQ 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="faq-toggle w-full text-left flex items-center justify-between gap-space-sm" type="button">
+<span class="font-title-md text-title-md text-on-surface font-bold">
+              Dữ liệu khách hàng và sản phẩm của shop có bị chia sẻ cho đối thủ không?
+            </span>
+<span class="material-symbols-outlined text-primary text-[24px] transition-transform duration-200">expand_more</span>
+</button>
+<div class="faq-content mt-space-sm pt-space-sm border-t border-surface-container text-on-surface-variant font-body-md text-body-md leading-relaxed hidden">
+            Dữ liệu của bạn được mã hóa hoàn toàn theo từng không gian độc lập (Isolated Tenant). CommentFlow AI cam kết không bao giờ dùng dữ liệu đơn hàng hay thông tin liên hệ của shop bạn để huấn luyện mô hình chung cho bên thứ ba. Hệ thống tuân thủ chặt chẽ tiêu chuẩn bảo mật dữ liệu doanh nghiệp và Meta Developer Terms.
+          </div>
+</div>
+<!-- FAQ 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="faq-toggle w-full text-left flex items-center justify-between gap-space-sm" type="button">
+<span class="font-title-md text-title-md text-on-surface font-bold">
+              Chính sách cửa sổ 24 giờ của Facebook Messenger hoạt động thế nào?
+            </span>
+<span class="material-symbols-outlined text-primary text-[24px] transition-transform duration-200">expand_more</span>
+</button>
+<div class="faq-content mt-space-sm pt-space-sm border-t border-surface-container text-on-surface-variant font-body-md text-body-md leading-relaxed hidden">
+            Theo quy định của Meta, Trang chỉ được gửi tin nhắn trực tiếp nếu khách hàng đã chủ động nhắn tin trong vòng 24 giờ qua. CommentFlow AI tự động nhận biết trạng thái của cửa sổ này: nếu trong 24h, AI phản hồi lập tức; nếu quá 24h, hệ thống sẽ tự động dùng thẻ Tin nhắn hỗ trợ nhân sự hoặc thông báo nhân viên tiếp quản thủ công, bảo vệ an toàn 100% cho Trang không bao giờ bị khóa tính năng nhắn tin.
+          </div>
+</div>
+<!-- FAQ 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<button class="faq-toggle w-full text-left flex items-center justify-between gap-space-sm" type="button">
+<span class="font-title-md text-title-md text-on-surface font-bold">
+              Hết hạn 14 ngày dùng thử có bị tự động trừ tiền không?
+            </span>
+<span class="material-symbols-outlined text-primary text-[24px] transition-transform duration-200">expand_more</span>
+</button>
+<div class="faq-content mt-space-sm pt-space-sm border-t border-surface-container text-on-surface-variant font-body-md text-body-md leading-relaxed hidden">
+            Chắc chắn không! Khi đăng ký dùng thử 14 ngày, chúng tôi không yêu cầu nhập thẻ tín dụng hay bất kỳ phương thức thanh toán tự gia hạn nào. Hết 14 ngày, nếu hài lòng, bạn chủ động thanh toán qua mã VietQR để tiếp tục sử dụng. Nếu không, tài khoản chỉ tạm dừng chế độ AI mà không phát sinh bất kỳ khoản phí nào.
+          </div>
+</div>
+</div>
+</div>
+</section>
+<!-- FINAL CTA (BOTTOM BANNER) -->
+<section class="py-space-xl lg:py-24 bg-surface max-w-7xl mx-auto px-margin w-full">
+<div class="relative rounded-2xl bg-gradient-to-br from-primary to-primary-container p-space-xl lg:p-16 text-on-primary shadow-xl overflow-hidden">
+<!-- Decorative Backdrop Circles -->
+<div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
+<div class="absolute top-0 right-1/3 w-64 h-64 rounded-full bg-secondary/20 blur-3xl pointer-events-none"></div>
+<div class="relative z-10 max-w-3xl flex flex-col items-start gap-space-md">
+<span class="px-3 py-1 rounded-full bg-on-primary-container text-primary font-label-sm text-label-sm uppercase font-bold tracking-wider">
+          Sẵn sàng bứt phá ngay hôm nay
+        </span>
+<h2 class="font-headline-lg text-headline-lg lg:text-[38px] lg:leading-[46px] font-bold text-on-primary">
+          Sẵn sàng nhân 4 tốc độ chốt đơn và bảo vệ khách hàng của bạn ngay hôm nay?
+        </h2>
+<p class="font-body-lg text-body-lg text-on-primary-container max-w-2xl leading-relaxed">
+          Đăng ký cài đặt trong 10 phút. Đầy đủ tính năng cao cấp của gói Growth. Không cần thẻ tín dụng, trải nghiệm miễn phí 14 ngày trọn vẹn.
+        </p>
+<div class="flex flex-col sm:flex-row items-center gap-space-md mt-space-sm w-full sm:w-auto">
+<a class="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-3.5 rounded-lg bg-surface-container-lowest text-primary font-title-md text-title-md hover:bg-surface-bright shadow-lg transition-transform active:scale-95 font-bold" data-path="dung-thu-14-ngay-mien-phi" href="#">
+<span class="material-symbols-outlined text-[22px]">rocket_launch</span>
+<span>Bắt đầu dùng thử 14 ngày - Không cần thẻ tín dụng</span>
+</a>
+</div>
+<div class="pt-space-md border-t border-on-primary/10 flex flex-wrap items-center gap-space-lg text-on-primary-container font-label-sm text-label-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">support_agent</span>
+<span>Hotline Kỹ thuật: <strong>1900 6886</strong> (8:00 - 22:00)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+<span>Zalo Kỹ thuật viên hỗ trợ 1-1: <strong>@commentflow.vn</strong></span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">security</span>
+<span>Bảo mật chuẩn Meta Graph API v19</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- INTERACTIVE DEMO MODAL -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/60 backdrop-blur-sm hidden p-4" id="demo-modal">
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl max-w-2xl w-full p-space-lg relative animate-in fade-in zoom-in-95 duration-200">
+<button class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface" id="close-demo-modal" type="button">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+<div class="flex items-center gap-2 mb-space-sm">
+<span class="material-symbols-outlined text-secondary text-[24px]">smart_toy</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Thử nghiệm phản hồi AI trực tiếp</h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+        Nhập bình luận thử nghiệm từ góc độ khách hàng để kiểm tra thời gian xử lý và khả năng phát hiện số điện thoại tự động của AI Engine.
+      </p>
+<div class="space-y-space-md">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface font-bold block mb-1">Bình luận của khách hàng:</label>
+<div class="flex gap-2">
+<input class="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary" id="demo-input" type="text" value="Báo giá cho mình đôi giày sneaker trắng sz 39 nhé, ship qua Cầu Giấy sđt 0912.888.999"/>
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg font-title-sm text-title-sm hover:bg-primary-container shrink-0 flex items-center gap-1" id="run-simulation" type="button">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span> Chạy test
+            </button>
+</div>
+</div>
+<!-- Simulation Result Box -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-2" id="simulation-result">
+<div class="flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm">
+<span class="flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">security</span> Phát hiện SĐT: Đã tự động kích hoạt Lệnh Ẩn
+            </span>
+<span class="text-on-surface font-bold">Thời gian: 0.76s</span>
+</div>
+<div class="p-2 rounded bg-surface-container-lowest font-body-sm text-body-sm text-on-surface">
+<strong>AI Soạn Trả Lời:</strong> "Chào bạn, mẫu Sneaker Trắng size 39 hiện đang có sẵn với ưu đãi giảm 15% còn 480k, được freeship Cầu Giấy ạ! Mình đã inbox gửi ảnh chụp cận cảnh và phiếu bảo hành 6 tháng qua hộp thư cho bạn nhé!"
+          </div>
+<div class="flex items-center gap-2 font-label-sm text-label-sm text-secondary font-medium">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+<span>Độ tin cậy: 99.1% • Nguồn tham chiếu: Bảng giá Giày 2024 &amp; Shopify Inventory</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+    (function() {
+      // FAQ Accordion
+      const toggles = document.querySelectorAll('.faq-toggle');
+      toggles.forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          const content = toggle.nextElementSibling;
+          const icon = toggle.querySelector('.material-symbols-outlined');
+          const isHidden = content.classList.contains('hidden');
+
+          // Close all
+          document.querySelectorAll('.faq-content').forEach(c => c.classList.add('hidden'));
+          document.querySelectorAll('.faq-toggle .material-symbols-outlined').forEach(i => i.classList.remove('rotate-180'));
+
+          if (isHidden) {
+            content.classList.remove('hidden');
+            icon.classList.add('rotate-180');
+          }
+        });
+      });
+
+      // Demo Modal controls
+      const modal = document.getElementById('demo-modal');
+      const openBtn = document.getElementById('trigger-demo-modal');
+      const closeBtn = document.getElementById('close-demo-modal');
+      const runBtn = document.getElementById('run-simulation');
+      const simResult = document.getElementById('simulation-result');
+
+      if (openBtn && modal && closeBtn) {
+        openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+        closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.add('hidden');
+        });
+      }
+
+      if (runBtn && simResult) {
+        runBtn.addEventListener('click', () => {
+          simResult.style.opacity = '0.5';
+          setTimeout(() => {
+            simResult.style.opacity = '1';
+          }, 300);
+        });
+      }
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="max-w-7xl mx-auto px-margin pt-space-xl pb-margin"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl pb-space-xl"><div class="lg:col-span-2 flex flex-col gap-space-md pr-space-lg"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-[18px]">chat_bubble</span></div><span class="font-title-md text-title-md text-on-surface font-bold">CommentFlow AI</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Hệ thống tự động hóa phản hồi hội thoại &amp; bình luận đa kênh thời gian thực dành cho doanh nghiệp bán lẻ và thương mại điện tử.</p><div class="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container-low max-w-sm"><span class="material-symbols-outlined text-primary text-[20px]">verified</span><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface font-bold">Meta Tech Partner Verified</span><span class="font-body-sm text-body-sm text-on-surface-variant">Tuân thủ tiêu chuẩn bảo mật Graph API &amp; Webhooks</span></div></div></div><div class="flex flex-col gap-space-sm"><span class="font-title-sm text-title-sm text-on-surface uppercase tracking-wider">Giải pháp</span><ul class="flex flex-col gap-space-xs"><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">Tự động hóa Fanpage</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">Quản trị Instagram Direct</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">TikTok Shop Live Stream</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="vong-lap-ai" href="#">Vòng lặp AI Tự Học</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-title-sm text-title-sm text-on-surface uppercase tracking-wider">Tài nguyên</span><ul class="flex flex-col gap-space-xs"><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="huong-dan" href="#">Tài liệu API &amp; Webhook</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="huong-dan" href="#">Cẩm nang triển khai CSKH</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="bang-gia" href="#">Bảng so sánh gói dịch vụ</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="tinh-nang" href="#">Cập nhật phiên bản</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-title-sm text-title-sm text-on-surface uppercase tracking-wider">Pháp lý &amp; Bảo mật</span><ul class="flex flex-col gap-space-xs"><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="chinh-sach-bao-mat" href="#">Chính sách bảo mật</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="dieu-khoan-dich-vu" href="#">Điều khoản dịch vụ</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="yeu-cau-xoa-du-lieu" href="#">Xóa dữ liệu người dùng</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="trang-thai-he-thong" href="#">Trạng thái máy chủ (Status)</a></li></ul></div></div><div class="pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface-container-lowest"><p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">© 2024 CommentFlow AI Corp. Bảo lưu mọi quyền. Tuân thủ khuôn khổ bảo vệ dữ liệu cá nhân &amp; Meta Developer Terms.</p><div class="flex items-center gap-space-md"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="chinh-sach-bao-mat" href="#">Bảo mật</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="dieu-khoan-dich-vu" href="#">Điều khoản</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="yeu-cau-xoa-du-lieu" href="#">User Data Deletion</a></div></div></div></footer></body></html>

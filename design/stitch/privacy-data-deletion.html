@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-primary-container":"#bdf0ff","on-background":"#101d25","secondary-container":"#7c59ef","surface-bright":"#f5faff","background":"#f5faff","on-secondary":"#ffffff","on-tertiary-fixed":"#2e1500","surface-container":"#e2f0fb","surface":"#f5faff","outline":"#6f797c","inverse-primary":"#82d2e7","on-secondary-container":"#fffbff","inverse-on-surface":"#e5f3fe","surface-dim":"#cedce7","on-tertiary-fixed-variant":"#6c3a02","error":"#ba1a1a","on-error-container":"#93000a","on-primary":"#ffffff","primary-fixed":"#abedff","surface-container-highest":"#d7e4f0","surface-tint":"#00687a","on-error":"#ffffff","error-container":"#ffdad6","outline-variant":"#bec8cc","primary-fixed-dim":"#82d2e7","secondary-fixed-dim":"#ccbdff","secondary":"#633cd5","tertiary":"#77440b","on-tertiary-container":"#ffe3cf","surface-container-low":"#eaf5ff","primary":"#005868","surface-container-high":"#dceaf5","on-tertiary":"#ffffff","inverse-surface":"#25323b","secondary-fixed":"#e7deff","on-primary-fixed":"#001f26","on-secondary-fixed":"#1f0060","on-primary-fixed-variant":"#004e5c","on-surface-variant":"#3f484b","on-secondary-fixed-variant":"#4d1ebf","on-surface":"#101d25","tertiary-fixed":"#ffdcc1","tertiary-fixed-dim":"#ffb779","primary-container":"#0b7285","tertiary-container":"#945b23","surface-variant":"#d7e4f0","surface-container-lowest":"#ffffff"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter-mobile":"0.75rem","space-lg":"1rem","space-md":"0.75rem","space-sm":"0.5rem",gutter:"1rem","space-xs":"0.25rem",margin:"1.5rem","space-xl":"1.5rem","margin-mobile":"1rem"},fontFamily:{"code-sm":["Be Vietnam Pro"],"title-sm":["Be Vietnam Pro"],"label-md":["Be Vietnam Pro"],"body-sm":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"label-sm":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"title-md":["Be Vietnam Pro"],"body-lg":["Be Vietnam Pro"]},fontSize:{"code-sm":["12px",{lineHeight:"16px",fontWeight:"500"}],"title-sm":["13px",{lineHeight:"18px",fontWeight:"600"}],"label-md":["12px",{lineHeight:"16px",fontWeight:"500"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-lg":["30px",{lineHeight:"38px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.02em",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.015em",fontWeight:"600"}],"body-md":["13px",{lineHeight:"19px",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"600"}],"title-md":["15px",{lineHeight:"20px",fontWeight:"600"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 left-0 right-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-7xl mx-auto px-margin flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-xl"><a class="flex items-center gap-space-sm" data-path="trang-chu" href="#"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-[20px]">chat_bubble</span></div><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-title-md text-title-md text-on-surface tracking-tight font-bold">CommentFlow</span><span class="px-1.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase">AI</span></div></div></a><nav class="hidden lg:flex items-center gap-space-xl" data-active-classes="text-primary font-bold"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="tinh-nang" href="#">Tính năng</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">Giải pháp</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="bang-gia" href="#">Bảng giá</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="vong-lap-ai" href="#">Vòng lặp AI</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="huong-dan" href="#">Hướng dẫn</a></nav></div><div class="flex items-center gap-space-md"><a class="hidden sm:inline-flex items-center justify-center px-space-md py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="dang-nhap" href="#">Đăng nhập</a><a class="inline-flex items-center gap-space-xs px-space-lg py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors shadow-[0_1px_8px_rgba(0,0,0,0.04)]" data-path="dung-thu-14-ngay-mien-phi" href="#"><span class="material-symbols-outlined text-[16px]">bolt</span><span>Dùng thử 14 ngày miễn phí</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-[calc(100vh-4rem)]"><div class="flex flex-col w-full">
+<!-- Compliance Verification Banner -->
+<section class="w-full bg-surface-container-high py-space-sm px-margin">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+</span>
+<div class="flex flex-wrap items-center gap-x-space-sm gap-y-0 text-on-surface">
+<span class="font-label-md text-label-md font-bold uppercase tracking-wider text-primary">Chứng nhận Tuân thủ Toàn cầu</span>
+<span class="hidden sm:inline text-outline-variant">•</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Tương thích Meta Graph API v19.0, TikTok Business API, Tiêu chuẩn mã hóa AES-256 &amp; Webhook Callback Điều 3 Chính sách Nền tảng Meta.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm shadow-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          Meta Data Deletion Callback: Active
+        </span>
+<span class="text-on-surface-variant font-code-sm text-code-sm">v2.4 (Rev. 2024.11)</span>
+</div>
+</div>
+</section>
+<!-- Interactive Hero & Tab Switcher -->
+<section class="w-full bg-surface-container-low pt-space-xl pb-space-lg px-margin">
+<div class="max-w-7xl mx-auto">
+<div class="max-w-3xl mb-space-lg">
+<div class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase tracking-wider mb-space-xs font-semibold">
+<span class="material-symbols-outlined text-[14px]">shield</span>
+          Cổng Pháp lý &amp; Quyền riêng tư Khách hàng
+        </div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+          Minh bạch Dữ liệu, Điều khoản &amp; Tra cứu Yêu cầu Xóa Dữ liệu
+        </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-xs">
+          CommentFlow AI cam kết tôn trọng quyền riêng tư người dùng theo chuẩn Meta App Review, TikTok Developer Terms và Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân.
+        </p>
+</div>
+<!-- Tab Buttons -->
+<div class="flex items-center gap-space-sm p-1 rounded-xl bg-surface-container w-fit shadow-sm">
+<button class="flex items-center gap-space-xs px-space-lg py-2.5 rounded-lg bg-surface-container-lowest text-primary font-title-sm text-title-sm shadow-sm transition-all" id="tab-btn-tracker" onclick="switchTab('tracker')">
+<span class="material-symbols-outlined text-[18px]">manage_search</span>
+<span>Tra cứu xóa dữ liệu (Deletion Tracker)</span>
+<span class="px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">Meta Review</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-lg py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface font-title-sm text-title-sm transition-all" id="tab-btn-policy" onclick="switchTab('policy')">
+<span class="material-symbols-outlined text-[18px]">gavel</span>
+<span>Chính sách quyền riêng tư &amp; Thỏa thuận DPA</span>
+</button>
+</div>
+</div>
+</section>
+<!-- TAB CONTENT 1: DATA DELETION TRACKER -->
+<section class="w-full py-space-xl px-margin transition-opacity duration-300" id="tab-content-tracker">
+<div class="max-w-7xl mx-auto flex flex-col gap-space-xl">
+<!-- Search Input Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-md flex flex-col gap-space-lg">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="max-w-2xl">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Công cụ bắt buộc theo quy chế Meta Developer</span>
+<h2 class="font-headline-md text-headline-md text-on-surface mt-1">Kiểm tra tiến trình hủy bỏ &amp; xóa dữ liệu người dùng</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+              Nhập mã định danh yêu cầu xóa dữ liệu (Confirmation Code) được cấp từ Facebook Business Integrations hoặc cung cấp sau khi gửi đơn yêu cầu xóa thủ công.
+            </p>
+</div>
+<div class="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container-low shrink-0">
+<span class="material-symbols-outlined text-secondary text-[24px]">sync_saved_locally</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Cơ chế Callback tự động</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Phản hồi HTTP 200 JSON tức thì</span>
+</div>
+</div>
+</div>
+<!-- Form Input -->
+<div class="flex flex-col sm:flex-row items-stretch gap-space-sm">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[20px]">fingerprint</span>
+<input class="w-full pl-11 pr-space-md py-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline font-code-sm text-code-sm focus:outline-none focus:bg-surface-container-lowest shadow-inner transition-colors" id="deletion-code-input" placeholder="Ví dụ: DEL-FB-98421 hoặc CF-REQ-2024..." type="text" value="DEL-FB-98421"/>
+</div>
+<button class="flex items-center justify-center gap-space-xs px-space-xl py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-colors shadow-sm shrink-0" onclick="handleLookup()">
+<span class="material-symbols-outlined text-[18px]">search</span>
+<span>Tra cứu trạng thái ngay</span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[16px]">check_circle</span>
+            Mã mẫu thử nghiệm:
+          </span>
+<button class="underline hover:text-primary font-code-sm" onclick="fillCode('DEL-FB-98421')">DEL-FB-98421 (Đã hoàn tất)</button>
+<span class="text-outline-variant">•</span>
+<button class="underline hover:text-primary font-code-sm" onclick="fillCode('DEL-IG-10492')">DEL-IG-10492 (Đang xử lý)</button>
+<span class="text-outline-variant">•</span>
+<button class="underline hover:text-primary font-code-sm" onclick="fillCode('DEL-TT-00215')">DEL-TT-00215 (Đã tiếp nhận)</button>
+</div>
+</div>
+<!-- Result Visual Panel -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-md flex flex-col gap-space-lg" id="tracker-result-panel">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md pb-space-md bg-surface-container-lowest">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined text-[26px]">task_alt</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold" id="result-code-display">DEL-FB-98421</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-bold uppercase" id="result-status-badge">
+                  ĐÃ HOÀN TẤT XÓA VĨNH VIỄN
+                </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Yêu cầu xóa dữ liệu tự động phát sinh qua Meta Webhook Data Deletion Request Callback.
+              </p>
+</div>
+</div>
+<button class="inline-flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors shadow-sm" onclick="mockDownloadPdf()">
+<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
+<span>Tải Biên bản xác nhận (PDF)</span>
+</button>
+</div>
+<!-- Metric Details Bento Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-medium">Nền tảng khởi tạo</span>
+<div class="flex items-center gap-space-xs mt-space-sm">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold font-code-sm text-code-sm">f</div>
+<span class="font-title-md text-title-md text-on-surface" id="result-platform">Facebook Fanpage Graph API</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-2">App Scoped User ID (ASID)</span>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-medium">Thời điểm tiếp nhận Webhook</span>
+<div class="flex items-center gap-space-xs mt-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">schedule</span>
+<span class="font-title-md text-title-md text-on-surface font-code-sm" id="result-time-received">2024-11-18 09:21:44 UTC</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-2">IP Máy chủ Meta Inc: Xác thực hợp lệ</span>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-medium">Thời điểm hoàn tất xóa sạch</span>
+<div class="flex items-center gap-space-xs mt-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+<span class="font-title-md text-title-md text-on-surface font-code-sm" id="result-time-completed">2024-11-18 09:21:52 UTC</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-2">Thời gian xử lý: 8.2 giây</span>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-medium">Mã hàm băm kiểm toán (Audit Hash)</span>
+<div class="flex items-center gap-space-xs mt-space-sm truncate font-code-sm text-code-sm text-primary font-bold">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span class="truncate" id="result-hash">sha256:7f83b1657ff...912a</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-2">Lưu vết bất biến 30 ngày theo quy chế</span>
+</div>
+</div>
+<!-- Purged Inventory Table -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Báo cáo kiểm kê các khối dữ liệu đã tiêu hủy</h3>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Quy chuẩn Zero-Footprint Sanitization</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container text-on-surface font-label-md text-label-md">
+<th class="py-2.5 px-3 rounded-l-lg">Hạng mục dữ liệu</th>
+<th class="py-2.5 px-3">Phạm vi tác động</th>
+<th class="py-2.5 px-3">Phương thức xử lý</th>
+<th class="py-2.5 px-3 rounded-r-lg text-right">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface-variant">
+<tr class="hover:bg-surface-container/50">
+<td class="py-2.5 px-3 font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">key_off</span>
+                    Page Access Tokens &amp; User Token
+                  </td>
+<td class="py-2.5 px-3">Toàn bộ token xác thực Graph API của Fanpage &amp; Quyền quản trị viên</td>
+<td class="py-2.5 px-3 font-code-sm">Thu hồi và ghi đè Crypto-shredding</td>
+<td class="py-2.5 px-3 text-right">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold">Đã tiêu hủy 100%</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/50">
+<td class="py-2.5 px-3 font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">forum</span>
+                    Bộ nhớ đệm tin nhắn &amp; Lịch sử bình luận
+                  </td>
+<td class="py-2.5 px-3">ID bình luận, nội dung văn bản khách hỏi, hình ảnh đính kèm tạm thời</td>
+<td class="py-2.5 px-3 font-code-sm">Xóa vĩnh viễn khỏi Redis Cache &amp; PostgreSQL DB</td>
+<td class="py-2.5 px-3 text-right">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold">Đã tiêu hủy 100%</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/50">
+<td class="py-2.5 px-3 font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">psychology</span>
+                    Dữ liệu ngữ cảnh AI &amp; Vector Embeddings
+                  </td>
+<td class="py-2.5 px-3">Vector tri thức sinh ra từ kịch bản hội thoại của trang doanh nghiệp</td>
+<td class="py-2.5 px-3 font-code-sm">Hard delete từ Vector Database</td>
+<td class="py-2.5 px-3 text-right">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold">Đã tiêu hủy 100%</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/50">
+<td class="py-2.5 px-3 font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">link_off</span>
+                    Webhook Subscriptions
+                  </td>
+<td class="py-2.5 px-3">Đăng ký sự kiện feed, messages, mentions</td>
+<td class="py-2.5 px-3 font-code-sm">Gửi lệnh Unsubscribe qua Meta Graph API</td>
+<td class="py-2.5 px-3 text-right">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold">Đã hủy liên kết</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Step by Step Instructions on Facebook Settings -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-md flex flex-col gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined text-[22px]">settings_applications</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+            Cách gỡ ứng dụng &amp; Kích hoạt xóa dữ liệu tự động trên Facebook
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Người dùng sở hữu trang có thể chủ động hủy kết nối với CommentFlow AI bất kỳ lúc nào trực tiếp trên giao diện của Meta theo các bước sau:
+          </p>
+<ol class="flex flex-col gap-space-sm pl-0 list-none mt-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-space-sm">
+<span class="w-5 h-5 rounded-full bg-surface-container text-primary font-bold flex items-center justify-center shrink-0 text-xs">1</span>
+<span>Đăng nhập tài khoản cá nhân quản lý Fanpage trên Facebook máy tính hoặc ứng dụng di động.</span>
+</li>
+<li class="flex items-start gap-space-sm">
+<span class="w-5 h-5 rounded-full bg-surface-container text-primary font-bold flex items-center justify-center shrink-0 text-xs">2</span>
+<span>Truy cập <strong>Cài đặt &amp; Quyền riêng tư (Settings &amp; Privacy)</strong> &gt; chọn <strong>Cài đặt (Settings)</strong>.</span>
+</li>
+<li class="flex items-start gap-space-sm">
+<span class="w-5 h-5 rounded-full bg-surface-container text-primary font-bold flex items-center justify-center shrink-0 text-xs">3</span>
+<span>Tìm mục <strong>Tiện ích tích hợp cho doanh nghiệp (Business Integrations)</strong> hoặc <strong>Ứng dụng và Trang web (Apps and Websites)</strong>.</span>
+</li>
+<li class="flex items-start gap-space-sm">
+<span class="w-5 h-5 rounded-full bg-surface-container text-primary font-bold flex items-center justify-center shrink-0 text-xs">4</span>
+<span>Tìm <strong>CommentFlow AI</strong>, tích chọn và nhấn nút <strong>Gỡ (Remove)</strong>.</span>
+</li>
+<li class="flex items-start gap-space-sm">
+<span class="w-5 h-5 rounded-full bg-surface-container text-primary font-bold flex items-center justify-center shrink-0 text-xs">5</span>
+<span>Hệ thống của Meta sẽ lập tức kích hoạt URL Webhook Deletion Callback của CommentFlow AI, hoàn tất xóa sạch trong vòng vài giây và hiển thị mã xác nhận cho bạn.</span>
+</li>
+</ol>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-md flex flex-col gap-space-md justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[22px]">contact_support</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+              Gửi yêu cầu xóa dữ liệu trực tiếp đến Đội ngũ Kỹ thuật
+            </h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Nếu bạn không còn quyền truy cập tài khoản Facebook hoặc muốn yêu cầu xóa hồ sơ đại lý, hóa đơn và lịch sử trao đổi trên máy chủ CommentFlow AI, vui lòng gửi biểu mẫu xác minh:
+            </p>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs text-on-surface">
+<div class="flex items-center gap-space-xs text-primary font-title-sm text-title-sm">
+<span class="material-symbols-outlined text-[18px]">mail</span>
+<span>privacy@commentflow.vn</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Tiêu đề thư: <code>[Data Deletion Request] - &lt;Tên Fanpage hoặc TikTok Handle&gt;</code>. Cam kết xử lý và phản hồi bằng văn bản trong vòng tối đa <strong>24 giờ làm việc</strong>.
+              </p>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px]">security_update_good</span>
+<span class="font-body-sm text-body-sm text-on-surface">
+              Đáp ứng đầy đủ <strong>Chính sách Nền tảng của Meta (Mục 3.f)</strong> và quyền được xóa bỏ dữ liệu cá nhân theo Luật hiện hành.
+            </span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- TAB CONTENT 2: PRIVACY POLICY & TERMS (SPLIT TOC LAYOUT) -->
+<section class="hidden w-full py-space-xl px-margin transition-opacity duration-300" id="tab-content-policy">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+<!-- Left Column: Sticky Table of Contents -->
+<aside class="lg:col-span-4 sticky top-24 flex flex-col gap-space-md">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-md flex flex-col gap-space-md">
+<div class="flex items-center gap-space-xs text-primary font-title-sm text-title-sm">
+<span class="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+<span>Mục lục Văn bản Pháp lý</span>
+</div>
+<nav class="flex flex-col gap-1 font-body-sm text-body-sm">
+<a class="toc-link p-2 rounded-lg text-primary bg-surface-container font-semibold transition-colors" href="#sec-1">1. Giới thiệu &amp; Phạm vi áp dụng</a>
+<a class="toc-link p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#sec-2">2. Dữ liệu thu thập &amp; KHÔNG thu thập</a>
+<a class="toc-link p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#sec-3">3. Mục đích sử dụng &amp; Cam kết AI</a>
+<a class="toc-link p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#sec-4">4. Quyền của chủ thể &amp; Xóa dữ liệu</a>
+<a class="toc-link p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#sec-5">5. Tiêu chuẩn lưu trữ &amp; Mã hóa AES-256</a>
+<a class="toc-link p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#sec-6">6. Chia sẻ đối tác &amp; Kiểm toán bảo mật</a>
+<a class="toc-link p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" href="#sec-7">7. Thông tin liên hệ DPO &amp; Pháp lý</a>
+</nav>
+<div class="pt-space-sm bg-surface-container-lowest">
+<div class="p-space-sm rounded-lg bg-surface-container-low text-on-surface flex flex-col gap-1">
+<span class="font-label-sm text-label-sm uppercase text-outline font-semibold">Tình trạng văn bản</span>
+<span class="font-title-sm text-title-sm text-primary">Có hiệu lực từ: 01/01/2024</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Phiên bản: v2.4 (Tuân thủ App Review)</span>
+</div>
+</div>
+</div>
+<!-- Meta Partner Badge Micro-Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[28px]">verified</span>
+<div>
+<div class="font-title-sm text-title-sm text-on-surface font-bold">Meta Tech Partner</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Chứng nhận ứng dụng an toàn cho nhà bán hàng</div>
+</div>
+</div>
+</aside>
+<!-- Right Column: Legal Text Content -->
+<article class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-space-xl shadow-md flex flex-col gap-space-xl">
+<!-- Section 1 -->
+<section class="flex flex-col gap-space-sm scroll-mt-24" id="sec-1">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-bold uppercase tracking-wider">
+<span>Mục 01</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">1. Giới thiệu &amp; Phạm vi áp dụng</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            Chào mừng bạn đến với <strong>CommentFlow AI</strong> (được vận hành bởi Công ty Cổ phần Công nghệ CommentFlow AI, sau đây gọi là "Chúng tôi", "Hệ thống"). Thỏa thuận này chi phối việc thu thập, lưu trữ, xử lý thông tin cá nhân và dữ liệu nền tảng khi khách hàng kết nối Fanpage Facebook, tài khoản chuyên nghiệp Instagram, hoặc tài khoản TikTok Shop vào nền tảng tự động hóa bình luận và hội thoại của chúng tôi.
+          </p>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            Bằng việc cấp quyền ủy quyền tài khoản qua Meta OAuth Dialog hoặc TikTok OAuth, bạn đồng ý vô điều kiện với Chính sách quyền riêng tư này cũng như Điều khoản dành cho nhà phát triển của Meta (Meta Platform Terms) và TikTok Business Developer Policy.
+          </p>
+</section>
+<!-- Section 2: What we collect & what we NEVER collect -->
+<section class="flex flex-col gap-space-sm scroll-mt-24" id="sec-2">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-bold uppercase tracking-wider">
+<span>Mục 02</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">2. Dữ liệu chúng tôi thu thập (và KHÔNG BAO GIỜ thu thập)</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md mt-space-xs">
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs text-primary font-title-sm text-title-sm font-bold">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span>Dữ liệu CHÚNG TÔI THU THẬP:</span>
+</div>
+<ul class="list-none pl-0 flex flex-col gap-1.5 font-body-sm text-body-sm text-on-surface-variant mt-1">
+<li>• Quyền truy cập API Token do Facebook / TikTok cấp phát có thời hạn.</li>
+<li>• ID bình luận công khai, ID bài viết, nội dung bình luận cần phản hồi tự động.</li>
+<li>• Tên người dùng hiển thị công khai (Public Name) và ID người dùng tạm thời theo ứng dụng (ASID).</li>
+<li>• Thời điểm gửi bình luận hoặc tin nhắn phục vụ tính toán độ trễ phản hồi SLA.</li>
+</ul>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs text-error font-title-sm text-title-sm font-bold">
+<span class="material-symbols-outlined text-[20px]">block</span>
+<span>Dữ liệu TUYỆT ĐỐI KHÔNG THU THẬP:</span>
+</div>
+<ul class="list-none pl-0 flex flex-col gap-1.5 font-body-sm text-body-sm text-on-surface-variant mt-1">
+<li>• Mật khẩu tài khoản cá nhân Facebook, Instagram hoặc TikTok.</li>
+<li>• Danh bạ điện thoại, vị trí địa lý GPS trực tiếp của người mua hàng.</li>
+<li>• Dữ liệu thẻ ngân hàng, CVV hoặc mã giao dịch thanh toán nội bộ.</li>
+<li>• Nội dung bài viết cá nhân ngoài các Fanpage được phân quyền quản trị rõ ràng.</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Section 3: AI Commitment & Guarantees -->
+<section class="flex flex-col gap-space-sm scroll-mt-24" id="sec-3">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-bold uppercase tracking-wider">
+<span>Mục 03</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">3. Mục đích sử dụng dữ liệu &amp; Cam kết đạo đức AI</h2>
+<div class="p-space-lg rounded-xl bg-secondary-fixed text-on-secondary-fixed flex flex-col gap-space-xs shadow-sm">
+<div class="flex items-center gap-space-xs font-title-md text-title-md font-bold">
+<span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+<span>CAM KẾT BẢO MẬT AI ĐỘC QUYỀN (ENTERPRISE AI PLEDGE)</span>
+</div>
+<p class="font-body-md text-body-md leading-relaxed">
+              "CommentFlow AI chỉ đọc bình luận và tin nhắn qua Meta Graph API chính thức để gợi ý và hỗ trợ nhân viên tư vấn trả lời. Chúng tôi <strong>KHÔNG BAO GIỜ</strong> tự ý đăng bài, không bán dữ liệu khách hàng cho bất kỳ bên thứ ba hay mạng quảng cáo nào, và <strong>KHÔNG SỬ DỤNG</strong> dữ liệu hội thoại riêng tư của shop để huấn luyện (train) mô hình AI mở hay công cộng."
+            </p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-2">
+            Mục đích thu thập giới hạn nghiêm ngặt ở các tác vụ:
+          </p>
+<ul class="list-none pl-0 flex flex-col gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+<span>Gợi ý câu trả lời chính xác dựa theo bảng giá, tồn kho và kho tri thức sản phẩm do chính doanh nghiệp thiết lập.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">filter_alt</span>
+<span>Lọc và ẩn bình luận chứa số điện thoại để chống cướp khách hàng trên livestream Facebook theo cấu hình bảo vệ của shop.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">query_stats</span>
+<span>Báo cáo hiệu suất thời gian phản hồi (Average Response Time) của tổng đài viên CSKH.</span>
+</li>
+</ul>
+</section>
+<!-- Section 4: Data Subject Rights & Deletion -->
+<section class="flex flex-col gap-space-sm scroll-mt-24" id="sec-4">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-bold uppercase tracking-wider">
+<span>Mục 04</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">4. Quyền của chủ thể dữ liệu &amp; Cơ chế xóa dữ liệu</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            Chủ sở hữu dữ liệu có toàn quyền yêu cầu: truy cập, chỉnh sửa, hạn chế xử lý hoặc yêu cầu xóa bỏ hoàn toàn thông tin của mình. Để phục vụ việc xóa dữ liệu theo Điều 3 Chính sách nền tảng Meta:
+          </p>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<span class="font-title-sm text-title-sm text-on-surface font-bold">Cơ chế Data Deletion Callback URL:</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              CommentFlow AI cung cấp Endpoint chính thức đã được Meta phê duyệt: <code class="font-code-sm bg-surface-container-highest px-1.5 py-0.5 rounded text-on-surface">https://api.commentflow.vn/v1/meta/data-deletion-callback</code>. Khi quản trị viên gỡ bỏ ứng dụng, hệ thống xử lý ký mã băm HMAC-SHA256, xóa toàn bộ bản ghi đệm và trả về URL theo dõi trạng thái kèm Confirmation Code định dạng <code class="font-code-sm bg-surface-container-highest px-1.5 py-0.5 rounded text-on-surface">DEL-FB-xxxxx</code>.
+            </p>
+</div>
+</section>
+<!-- Section 5: Encryption & Storage Standard -->
+<section class="flex flex-col gap-space-sm scroll-mt-24" id="sec-5">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-bold uppercase tracking-wider">
+<span>Mục 05</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">5. Tiêu chuẩn lưu trữ &amp; Mã hóa bảo mật</h2>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary text-[24px]">lock</span>
+<span class="font-title-sm text-title-sm text-on-surface font-bold">Mã hóa AES-256</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Áp dụng cho mọi Access Token và dữ liệu nghỉ (Data at Rest).</span>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary text-[24px]">vpn_lock</span>
+<span class="font-title-sm text-title-sm text-on-surface font-bold">TLS 1.3 / SSL</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Toàn bộ dữ liệu truyền tải (Data in Transit) được mã hóa chuẩn cao nhất.</span>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-1">
+<span class="material-symbols-outlined text-primary text-[24px]">database</span>
+<span class="font-title-sm text-title-sm text-on-surface font-bold">Máy chủ đặt tại VN</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Trung tâm dữ liệu tiêu chuẩn Tier III tuân thủ Luật An ninh mạng.</span>
+</div>
+</div>
+</section>
+<!-- Section 6: Third-party Sharing & Audit -->
+<section class="flex flex-col gap-space-sm scroll-mt-24" id="sec-6">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-bold uppercase tracking-wider">
+<span>Mục 06</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">6. Cơ chế kiểm toán và chia sẻ bên thứ ba</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            Chúng tôi không cho thuê hoặc chuyển nhượng cơ sở dữ liệu khách hàng. Việc chia sẻ dữ liệu chỉ phát sinh với các đối tác hạ tầng thiết yếu (như dịch vụ máy chủ đám mây AWS Singapore/Viettel IDC) dưới các điều khoản cam kết xử lý dữ liệu chặt chẽ (Data Processing Agreement - DPA). Định kỳ mỗi 6 tháng, hệ thống được kiểm thử xâm nhập (Penetration Test) bởi bên thứ ba độc lập.
+          </p>
+</section>
+<!-- Section 7: Contact DPO -->
+<section class="flex flex-col gap-space-sm scroll-mt-24" id="sec-7">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-bold uppercase tracking-wider">
+<span>Mục 07</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">7. Thông tin liên hệ Cán bộ bảo vệ dữ liệu (DPO)</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            Mọi thắc mắc về quyền bảo mật dữ liệu, thực hiện quyền chủ thể hoặc khiếu nại liên quan đến Meta Developer Data Use Policy vui lòng gửi trực tiếp đến văn phòng DPO theo thông tin tại mục bên dưới.
+          </p>
+</section>
+</article>
+</div>
+</section>
+<!-- Legal Contact & DPO Office Section -->
+<section class="w-full bg-surface-container py-space-xl px-margin">
+<div class="max-w-7xl mx-auto flex flex-col gap-space-lg">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm">
+<div>
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Văn phòng Tuân thủ &amp; Khiếu nại</span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold mt-1">Đội ngũ Bảo vệ Dữ liệu (Data Protection Officer)</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-md">
+          Được thành lập chuyên trách giải quyết các phản ánh về an toàn thông tin, yêu cầu trích xuất hồ sơ và phối hợp kiểm toán nền tảng.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Box 1 -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[28px]">mark_email_read</span>
+<span class="font-title-sm text-title-sm text-on-surface font-bold mt-space-xs">Email Pháp lý &amp; DPO</span>
+<a class="font-body-md text-body-md text-primary font-semibold hover:underline" href="mailto:privacy@commentflow.vn">privacy@commentflow.vn</a>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Phản hồi chính thức &lt; 24 giờ</span>
+</div>
+<!-- Box 2 -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[28px]">support_agent</span>
+<span class="font-title-sm text-title-sm text-on-surface font-bold mt-space-xs">Hotline Giải quyết Khiếu nại</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">1900 6886 (Nhánh 4)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">08:30 - 18:00 (Thứ 2 - Thứ 6)</span>
+</div>
+<!-- Box 3 -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[28px]">apartment</span>
+<span class="font-title-sm text-title-sm text-on-surface font-bold mt-space-xs">Trụ sở Công ty</span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Tầng 12, Tòa nhà TechHub Building</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Quận Cầu Giấy, TP. Hà Nội, Việt Nam</span>
+</div>
+<!-- Box 4 -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[28px]">badge</span>
+<span class="font-title-sm text-title-sm text-on-surface font-bold mt-space-xs">Đăng ký Doanh nghiệp</span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Mã số thuế: 0109842109</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Cấp bởi Sở KH&amp;ĐT TP. Hà Nội</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive JavaScript -->
+<script>
+    const mockDatabase = {
+      'DEL-FB-98421': {
+        code: 'DEL-FB-98421',
+        platform: 'Facebook Fanpage Graph API',
+        status: 'ĐÃ HOÀN TẤT XÓA VĨNH VIỄN',
+        statusClass: 'bg-surface-container-high text-primary',
+        received: '2024-11-18 09:21:44 UTC',
+        completed: '2024-11-18 09:21:52 UTC',
+        hash: 'sha256:7f83b1657ff1850371b15971ec8...912a'
+      },
+      'DEL-IG-10492': {
+        code: 'DEL-IG-10492',
+        platform: 'Instagram Direct & Comments',
+        status: 'ĐANG XỬ LÝ (QUEUE DRAIN)',
+        statusClass: 'bg-secondary-fixed text-on-secondary-fixed',
+        received: '2024-11-18 10:02:11 UTC',
+        completed: 'Dự kiến hoàn tất trong 15 giây...',
+        hash: 'sha256:889bf16c802100ae43f1190bc1...cc4b'
+      },
+      'DEL-TT-00215': {
+        code: 'DEL-TT-00215',
+        platform: 'TikTok Business Shop API',
+        status: 'ĐÃ TIẾP NHẬN YÊU CẦU',
+        statusClass: 'bg-surface-container text-on-surface',
+        received: '2024-11-18 10:14:05 UTC',
+        completed: 'Đang xếp hàng xác thực Webhook...',
+        hash: 'sha256:01af89b6574fec998342111003...e910'
+      }
+    };
+
+    function switchTab(tabId) {
+      const trackerContent = document.getElementById('tab-content-tracker');
+      const policyContent = document.getElementById('tab-content-policy');
+      const trackerBtn = document.getElementById('tab-btn-tracker');
+      const policyBtn = document.getElementById('tab-btn-policy');
+
+      if (tabId === 'tracker') {
+        trackerContent.classList.remove('hidden');
+        policyContent.classList.add('hidden');
+
+        trackerBtn.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+        trackerBtn.classList.remove('text-on-surface-variant');
+
+        policyBtn.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+        policyBtn.classList.add('text-on-surface-variant');
+      } else {
+        policyContent.classList.remove('hidden');
+        trackerContent.classList.add('hidden');
+
+        policyBtn.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+        policyBtn.classList.remove('text-on-surface-variant');
+
+        trackerBtn.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+        trackerBtn.classList.add('text-on-surface-variant');
+      }
+    }
+
+    function fillCode(code) {
+      document.getElementById('deletion-code-input').value = code;
+      handleLookup();
+    }
+
+    function handleLookup() {
+      const inputVal = document.getElementById('deletion-code-input').value.trim();
+      const codeKey = mockDatabase[inputVal] ? inputVal : 'DEL-FB-98421';
+      const record = mockDatabase[codeKey];
+
+      document.getElementById('result-code-display').textContent = record.code;
+      const statusBadge = document.getElementById('result-status-badge');
+      statusBadge.textContent = record.status;
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold uppercase ' + record.statusClass;
+
+      document.getElementById('result-platform').textContent = record.platform;
+      document.getElementById('result-time-received').textContent = record.received;
+      document.getElementById('result-time-completed').textContent = record.completed;
+      document.getElementById('result-hash').textContent = record.hash;
+
+      const panel = document.getElementById('tracker-result-panel');
+      panel.classList.add('ring-2', 'ring-primary', 'transition-all');
+      setTimeout(() => {
+        panel.classList.remove('ring-2', 'ring-primary');
+      }, 700);
+    }
+
+    function mockDownloadPdf() {
+      const code = document.getElementById('result-code-display').textContent;
+      alert('Đang kết xuất biên bản hủy dữ liệu được chứng nhận điện tử (Certificate of Data Sanitization) cho mã: ' + code + '.\n\nTài liệu đáp ứng yêu cầu kiểm toán Meta App Review.');
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="max-w-7xl mx-auto px-margin pt-space-xl pb-margin"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl pb-space-xl"><div class="lg:col-span-2 flex flex-col gap-space-md pr-space-lg"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-[18px]">chat_bubble</span></div><span class="font-title-md text-title-md text-on-surface font-bold">CommentFlow AI</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Hệ thống tự động hóa phản hồi hội thoại &amp; bình luận đa kênh thời gian thực dành cho doanh nghiệp bán lẻ và thương mại điện tử.</p><div class="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container-low max-w-sm"><span class="material-symbols-outlined text-primary text-[20px]">verified</span><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface font-bold">Meta Tech Partner Verified</span><span class="font-body-sm text-body-sm text-on-surface-variant">Tuân thủ tiêu chuẩn bảo mật Graph API &amp; Webhooks</span></div></div></div><div class="flex flex-col gap-space-sm"><span class="font-title-sm text-title-sm text-on-surface uppercase tracking-wider">Giải pháp</span><ul class="flex flex-col gap-space-xs"><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">Tự động hóa Fanpage</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">Quản trị Instagram Direct</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="giai-phap" href="#">TikTok Shop Live Stream</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="vong-lap-ai" href="#">Vòng lặp AI Tự Học</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-title-sm text-title-sm text-on-surface uppercase tracking-wider">Tài nguyên</span><ul class="flex flex-col gap-space-xs"><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="huong-dan" href="#">Tài liệu API &amp; Webhook</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="huong-dan" href="#">Cẩm nang triển khai CSKH</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="bang-gia" href="#">Bảng so sánh gói dịch vụ</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="tinh-nang" href="#">Cập nhật phiên bản</a></li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-title-sm text-title-sm text-on-surface uppercase tracking-wider">Pháp lý &amp; Bảo mật</span><ul class="flex flex-col gap-space-xs"><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="chinh-sach-bao-mat" href="#">Chính sách bảo mật</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="dieu-khoan-dich-vu" href="#">Điều khoản dịch vụ</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="yeu-cau-xoa-du-lieu" href="#">Xóa dữ liệu người dùng</a></li><li class="list-none"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="trang-thai-he-thong" href="#">Trạng thái máy chủ (Status)</a></li></ul></div></div><div class="pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface-container-lowest"><p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">© 2024 CommentFlow AI Corp. Bảo lưu mọi quyền. Tuân thủ khuôn khổ bảo vệ dữ liệu cá nhân &amp; Meta Developer Terms.</p><div class="flex items-center gap-space-md"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="chinh-sach-bao-mat" href="#">Bảo mật</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="dieu-khoan-dich-vu" href="#">Điều khoản</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="yeu-cau-xoa-du-lieu" href="#">User Data Deletion</a></div></div></div></footer></body></html>
