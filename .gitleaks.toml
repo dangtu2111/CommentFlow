@@ -1,0 +1,9 @@
+# Quét bí mật bằng bộ luật mặc định của gitleaks (AGENTS.md: không commit khóa/token).
+title = "CommentFlow gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Giá trị mẫu cố ý trong .env.example (không phải bí mật thật)"
+paths = ['''(^|/)\.env\.example$''']

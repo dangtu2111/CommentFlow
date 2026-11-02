@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    name: Node (lint, typecheck, test, ranh giới, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Bật corepack (ghim pnpm theo trường packageManager)
+        run: corepack enable
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Biome (lint + format)
+        run: pnpm lint
+      - name: Chuỗi giao diện viết cứng (ESLint, chỉ apps/web)
+        run: pnpm lint:i18n
+      - run: pnpm typecheck
+      - name: Test (gồm test khớp khóa vi/en)
+        run: pnpm test
+      - name: Ranh giới gói (dependency-cruiser)
+        run: pnpm depcruise
+      - run: pnpm build
+
+  python:
+    name: Python (ml)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ml
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cài uv (ghim phiên bản)
+        run: pipx install uv==0.13.6
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+
+  gitleaks:
+    name: Quét bí mật (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Tải gitleaks và kiểm checksum
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+      - name: Quét toàn bộ lịch sử git
+        run: ./gitleaks git --config .gitleaks.toml --redact --verbose .
