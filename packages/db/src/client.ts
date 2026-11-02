@@ -34,8 +34,19 @@ export type FlowDb = {
    * Bảng nghiệp vụ trả về 0 dòng hoặc bị chặn bởi RLS khi đi đường này.
    */
   readonly system: Database;
+  /**
+   * Đăng ký nhận NOTIFY của Postgres trên kênh `channel` bằng một kết nối riêng.
+   * Trả về hàm hủy đăng ký (đóng kết nối). `onError` (tuỳ chọn) được gọi khi kết nối lỗi/đứt.
+   */
+  listen(
+    channel: string,
+    onNotify: (payload: string) => void,
+    onError?: (error: Error) => void,
+  ): Promise<() => Promise<void>>;
   close(): Promise<void>;
 };
+
+const CHANNEL_PATTERN = /^[a-z_][a-z0-9_]{0,62}$/;
 
 type Settings = Record<string, string>;
 
@@ -83,6 +94,20 @@ export function createDb(options: { connectionString: string; max?: number }): F
       runInTransaction(pool, { 'app.user_id': assertUuid(userId, 'userId') }, fn),
     withSystem: (fn) => runInTransaction(pool, {}, fn),
     system: drizzle(pool, { schema }),
+    listen: async (channel, onNotify, onError) => {
+      // Tên kênh được ghép vào câu LISTEN (không dùng được tham số) nên phải kiểm chặt.
+      if (!CHANNEL_PATTERN.test(channel)) {
+        throw new AppError('VALIDATION_FAILED', 'Tên kênh LISTEN không hợp lệ.');
+      }
+      const client = new pg.Client({ connectionString: options.connectionString });
+      client.on('notification', (message) => {
+        if (message.channel === channel) onNotify(message.payload ?? '');
+      });
+      client.on('error', (error) => onError?.(error));
+      await client.connect();
+      await client.query(`LISTEN ${channel}`);
+      return () => client.end();
+    },
     close: () => pool.end(),
   };
 }
