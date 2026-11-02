@@ -1,8 +1,6 @@
 # Bí mật — không bao giờ commit
 .env
 .env.*
-!.env.example
-!.env.*.example
 *.pem
 *.key
 

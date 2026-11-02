@@ -24,6 +24,7 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - Test toàn bộ: `pnpm test` (ml: `cd services/ml && uv run pytest`)
 - Lint / typecheck: `pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm depcruise` (ml: `uv run ruff check .`)
 - Migration (local/staging): `TODO`
+- Mẫu biến môi trường **đặt tên không có dấu chấm đầu, vĩnh viễn**: `env.example` (máy code) và `infra/env.cf-dev.example` (máy ảo); chỉ có tên biến + mô tả. File thật `.env` (máy code) và `.env.cf-dev` (máy ảo) không bao giờ commit. Chủ dự án tạo `.env` bằng `ssh cf "~/CommentFlow/infra/scripts/print-dev-env.sh" > .env` — **agent không chạy script này**.
 
 ## Nguyên tắc bất biến
 

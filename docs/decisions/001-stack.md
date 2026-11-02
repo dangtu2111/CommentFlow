@@ -138,3 +138,7 @@ Phát hiện khi dựng (đã sửa trong compose):
 - LiteLLM `/health` cần khóa (401, và gọi cả các model) → kiểm không khóa bằng `/health/liveliness` và `/health/readiness`.
 - Langfuse v4: `/api/public/traces` không còn; đọc trace qua `/api/public/v2/observations`. Đã xác nhận: gọi `mock-llm` qua LiteLLM tạo observation `litellm-acompletion` trong Langfuse.
 - SeaweedFS 4.52 chạy được với Langfuse (tạo bucket `langfuse` bằng `weed shell`, S3 có xác thực).
+
+## 9. Quy ước tên file mẫu biến môi trường (chốt 03/11/2026)
+
+Mẫu **không có dấu chấm đầu, vĩnh viễn**: `env.example` (máy code) và `infra/env.cf-dev.example` (máy ảo). Lý do: quy tắc quyền của máy code chặn đọc/ghi `.env*`. `.gitignore` không còn ngoại lệ `!.env.example`. `.env` của máy code do chủ dự án sinh bằng `infra/scripts/print-dev-env.sh` chạy trên máy ảo (agent không chạy script này vì đầu ra chứa mật khẩu).

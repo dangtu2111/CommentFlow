@@ -91,7 +91,7 @@ Không tạo ở khung này: `packages/connectors`, `evals/`, design tokens (`08
 | H4 | `ml` image + `scripts/cf-dev.mjs` (up/down/ps/logs, chỉ `cf-dev`) + `stack-check.mjs` (từ máy code gọi mọi URL trong `.env`) | `pnpm stack:check` xanh toàn bộ; Valkey đúng prefix `dev:` |
 | H5 | `docker-compose.staging.yml` + Dockerfile web/worker/ml (nhiều tầng, user thường). **Không chạy**, chỉ kiểm cú pháp: `ssh cf "cd ~/CommentFlow && docker compose -p cf-dev -f … -f docker-compose.staging.yml config -q"` | Lệnh `config -q` thoát 0; xác nhận Postgres/Valkey của staging không có `ports:` |
 
-> **Trạng thái nhóm H (03/11/2026):** H1–H4 xong và kiểm từ máy code (`pnpm stack:check` 7/7). H5 (staging, Dockerfile web/worker) **chưa làm** — chờ lệnh riêng. Số đo RAM thật ở `001-stack.md` §8.
+> **Trạng thái nhóm H (03/11/2026):** H1–H4 xong và kiểm từ máy code (`pnpm stack:check` 7/7). H5 (compose staging, Dockerfile web/worker, runner, Cloudflare Tunnel) **HOÃN đến khi có tên miền** (chủ dự án chốt 03/11). Số đo RAM thật ở `001-stack.md` §8.
 
 ### Giai đoạn 3 — Lõi dùng chung (cần `cf-dev`; chỉ khung hạ tầng, không nghiệp vụ sản phẩm)
 
