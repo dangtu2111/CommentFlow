@@ -155,3 +155,41 @@ Quên mật khẩu · 2FA TOTP + mã dự phòng · giới hạn đăng nhập s
 7. TypeScript **6.0.3** ngay từ đầu. Node **24 LTS** thống nhất máy code, máy ảo, Docker, CI; máy code chưa có Node 24 thì **dừng ở S1 và báo**.
 8. C0 (Better Auth và `sessions.token_hash`): khảo sát trước; nếu lệch spec thì đề xuất bằng lời, chờ duyệt.
 9. Báo cáo: sau mỗi bước chạy kiểm tra của bước đó; xong mỗi nhóm (S, H, C) báo ≤ 8 dòng.
+
+## Đề xuất thay đổi — kết quả C0 (Better Auth vs `10` §3.1) — CHỜ CHỦ DỰ ÁN DUYỆT
+
+Trạng thái: **đã khảo sát, chưa viết code auth.** Bằng chứng đọc từ mã nguồn `better-auth@1.7.15` (tải về thư mục tạm, chỉ đọc) và tài liệu chính thức.
+
+| # | Spec (`10` §3.1) | Better Auth thực tế | Mức lệch |
+|---|---|---|---|
+| 1 | `sessions.token_hash` (DB chỉ lưu băm) | Token phiên sinh bằng `generateId(32)` và lưu **thô** ở `session.token`; tra cứu `WHERE token = …` (`dist/db/internal-adapter.mjs:285,355-362`). Không có tuỳ chọn băm token phiên (chỉ `verification.storeIdentifier` cho bảng `verification`). Cookie = token + **chữ ký HMAC** bằng `BETTER_AUTH_SECRET`, kiểm chữ ký trước khi tra DB (`dist/cookies/index.mjs:174`) | **Lệch** |
+| 2 | `users.password_hash` | Mật khẩu ở bảng `account` (`providerId: "credential"`, cột `password`) (`dist/api/routes/sign-up.mjs:237-239`); email được hạ chữ thường | Lệch cấu trúc (cần thêm bảng) |
+| 3 | `users.totp_secret_enc`, `totp_enabled` | Plugin 2FA dùng bảng `twoFactor` + `user.twoFactorEnabled`; mã dự phòng có tuỳ chọn `storeBackupCodes: "plain" \| "encrypted" \| {…}` | Lệch (để nhánh 2FA) |
+| 4 | `admin_impersonations` (30 phút, `read_only`, lý do) | Plugin admin tạo **phiên thật** của người dùng, mặc định 1 giờ, không có read-only | Không dùng plugin admin; tự làm sau |
+| 5 | 2FA bắt buộc cho Owner/Admin | Không có cơ chế bắt buộc theo vai trò | Tự thêm hook ở nhánh 2FA |
+| 6 | `sessions.last_seen_at` | Chỉ có `updatedAt`, cập nhật theo chu kỳ `updateAge` | Gần đúng (đặt `updateAge` ngắn) |
+| 7 | `id uuid default gen_random_uuid()`, schema `core`, tên bảng `users`/`sessions` | Khớp được: `advanced.database.generateId: false` (để DB sinh) hoặc `"uuid"`; `modelName`/`fields` đổi tên bảng/cột; `additionalFields` cho `locale`, `is_admin_session`…; Drizzle adapter nhận đối tượng schema Drizzle nên `pgSchema('core')` đi theo Drizzle | Khớp (cần xác nhận bằng test thật ở C5) |
+
+**Hệ quả an toàn của #1:** nếu lộ **riêng** bảng `sessions`, kẻ tấn công **không** dựng được cookie hợp lệ vì thiếu khóa ký `BETTER_AUTH_SECRET` (chỉ nằm trong biến môi trường). Mất lợi ích "băm" chỉ khi lộ **cả** DB lẫn khóa ký.
+
+### Phương án
+
+| | Mô tả | Ưu | Nhược |
+|---|---|---|---|
+| **A (khuyến nghị)** | Giữ Better Auth, lưu token thô; bù bằng: cookie ký HMAC, `BETTER_AUTH_SECRET` chỉ ở env, **tắt `cookieCache`** (thu hồi phiên có hiệu lực ngay), `updateAge` ngắn, xoá phiên khi đăng xuất/đổi mật khẩu (`revokeOtherSessions`), không bao giờ log token, quyền SELECT bảng `sessions` chỉ cho role ứng dụng | Ít mã nhất, đúng quyết định #1 | Phải sửa spec `10` §3.1 (xem dưới) |
+| B | Bọc adapter để băm token trước khi ghi/tra | Đúng chữ spec | Cookie cần token thô nhưng DB chỉ giữ băm → phải giữ token thô tạm ở nơi khác; mã phức tạp, dễ vỡ khi nâng cấp |
+| C | Đổi quyết định #1: tự viết auth mỏng | Đúng spec, kiểm soát hoàn toàn | Nhiều mã bảo mật tự viết/bảo trì |
+| D | Better Auth + `secondaryStorage` (Valkey) giữ phiên, không ghi phiên vào Postgres | DB không chứa token | Đăng nhập phụ thuộc Valkey (mất Valkey = mất phiên); thu hồi theo người dùng phức tạp hơn |
+
+### Nếu chọn A — sửa spec bằng lời (tôi không tự sửa `docs/01–16`)
+
+1. `10` §3.1 `sessions`: đổi `token_hash` → `token` (chuỗi ngẫu nhiên 32 ký tự, cookie ký HMAC); giữ `ip`, `user_agent`, `expires_at`, `is_admin_session`; `last_seen_at` ← `updated_at` (cập nhật theo `updateAge`).
+2. `10` §3.1 `users`: bỏ `password_hash` (mật khẩu ở `core.accounts`); `totp_secret_enc`/`totp_enabled` chuyển sang bảng `core.two_factors` + `users.two_factor_enabled` khi làm 2FA.
+3. Thêm hai bảng `core.accounts` và `core.verifications` vào danh sách bảng saas-core (`09` §3.1 mục `auth`).
+4. `13` §2: ghi rõ mô hình phiên "token thô trong DB + cookie ký HMAC".
+
+### Cần bạn quyết định
+
+1. Chọn A, B, C hay D (khuyến nghị **A**).
+2. Nếu A: đồng ý nội dung sửa spec ở trên (tôi chỉ ghi vào `docs/decisions/`, bạn tự sửa `docs/10`, `docs/09`, `docs/13`)?
+3. Đặt `updateAge` (chu kỳ ghi `last_seen_at`) = 1 giờ và thời hạn phiên 7 ngày (mặc định của Better Auth)? Hay theo `13` §2 (tôi không được đọc mục này trong phạm vi hiện tại)?
