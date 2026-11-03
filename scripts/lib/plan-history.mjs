@@ -14,6 +14,9 @@ export function plansAddedSince(base, cwd = process.cwd()) {
       [
         'log',
         `${base}..HEAD`,
+        // Không "đơn giản hóa lịch sử": ở CI pull_request HEAD là commit merge có cây docs/plans trùng main (plan đã
+        // xóa), mặc định Git sẽ bỏ qua cả nhánh và không thấy plan từng được thêm.
+        '--full-history',
         '--diff-filter=A',
         '--name-only',
         '--pretty=format:',
