@@ -8,9 +8,11 @@ Mã gap matrix: (mới) `LANES` · Spec: `docs/workflows/` (quy trình), `AGENTS
 
 ## Điểm chưa rõ
 
-[CẦN LÀM RÕ: Số làn tối đa chạy cùng lúc? Khuyến nghị: **3 làn** (a, b, c) — khớp RAM/CPU máy ảo và số nhánh bạn duyệt nổi cùng lúc; thêm làn sau chỉ cần chạy một lệnh.]
+Quyết định của chủ dự án (đồng ý khuyến nghị):
 
-[CẦN LÀM RÕ: Quy tắc "mỗi thời điểm chỉ một nhánh có migration" đặt ở đâu? Khuyến nghị: ghi vào `docs/workflows/parallel.md` + cổng CI kiểm số migration liên tục không trùng (không khóa cứng bằng công cụ vì nhánh có migration vẫn cần rebase tay khi nhánh khác merge trước).]
+1. Quyết định: **3 làn** (a, b, c). Agent được tự chạy `pnpm cf:dev add-test-db a|b|c` (chỉ project cf-dev, đã được cho phép).
+2. Quyết định: quy tắc "mỗi thời điểm chỉ một nhánh có migration" ghi ở `docs/workflows/parallel.md`; CI chỉ kiểm số migration liên tục, không khóa cứng.
+3. Bổ sung: thêm **một dòng vào `AGENTS.md`** § Phối hợp nhiều agent trỏ tới `docs/workflows/parallel.md`.
 
 ## Tiêu chí nghiệm thu
 
@@ -83,7 +85,7 @@ Không có (không thêm thư viện, không thêm tầng trừu tượng; scrip
 
 ## Checklist plan
 
-- [ ] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
+- [x] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
 - [x] Mỗi tiêu chí nghiệm thu kiểm được và có cách kiểm
 - [x] Logic quy tắc đã có test viết trước
 - [x] Đã đánh dấu diff nhạy cảm (cần verifier hay không)
@@ -92,4 +94,4 @@ Không có (không thêm thư viện, không thêm tầng trừu tượng; scrip
 
 ## Trạng thái duyệt
 
-**Chờ duyệt.** Chưa sửa code.
+**Đã duyệt** (chủ dự án, 03/11/2026: đồng ý khuyến nghị kèm bổ sung ở mục "Điểm chưa rõ").
