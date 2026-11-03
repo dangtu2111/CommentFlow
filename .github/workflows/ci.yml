@@ -65,6 +65,16 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      # Valkey cho test tích hợp rate limit (cùng phiên bản với cf-dev/cf-staging)
+      valkey:
+        image: valkey/valkey:8.1.11-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       APP_ENV: ci
       PGHOST: localhost
@@ -97,6 +107,8 @@ jobs:
             echo "TEST_DATABASE_AUTH_URL=postgresql://cf_auth:$AUTH_PW@localhost:5432/cf_ci"
             echo "DATABASE_AUTH_URL=postgresql://cf_auth:$AUTH_PW@localhost:5432/cf_ci"
             echo "DATABASE_URL=postgresql://cf_app:$APP_PW@localhost:5432/cf_ci"
+            echo "REDIS_URL=redis://localhost:6379/0"
+            echo "REDIS_KEY_PREFIX=ci:"
           } >> "$GITHUB_ENV"
       - name: Tạo role và database như trên máy ảo (cùng script khởi tạo)
         env:

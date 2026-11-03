@@ -1,7 +1,8 @@
-import { accounts, sessions, users, verifications } from '@flow/db/schema/core';
+import { accounts, sessions, twoFactors, users, verifications } from '@flow/db/schema/core';
 import { AppError, isLocale, type Locale, maskPii } from '@flow/shared';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { twoFactor } from 'better-auth/plugins';
 import { type Notifier, RESET_PASSWORD_HOURS, VERIFY_EMAIL_HOURS } from '../notify';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
 import { hashPassword, verifyPassword } from './password';
@@ -79,6 +80,14 @@ export function createAuth(options: AuthOptions) {
       console.warn(JSON.stringify({ event: 'auth_log', ...entry })));
 
   return betterAuth({
+    plugins: [
+      // 2FA TOTP (ADR 004 §4): 10 mã dự phòng (13 §2), secret và mã dự phòng được plugin MÃ HÓA khi lưu (ADR 003).
+      twoFactor({
+        issuer: 'CommentFlow AI',
+        totpOptions: { digits: 6, period: 30 },
+        backupCodeOptions: { amount: 10, storeBackupCodes: 'encrypted' },
+      }),
+    ],
     logger: {
       level: 'warn',
       log: (level, message) => writeLog({ level, message: maskPii(String(message)) }),
@@ -88,7 +97,13 @@ export function createAuth(options: AuthOptions) {
     // Pool role cf_auth: mọi kết nối mở với app.ctx = 'auth' (cần cả role lẫn ngữ cảnh mới vào được bảng xác thực).
     database: drizzleAdapter(unwrapAuthDb(options.authDb).db, {
       provider: 'pg',
-      schema: { user: users, session: sessions, account: accounts, verification: verifications },
+      schema: {
+        user: users,
+        session: sessions,
+        account: accounts,
+        verification: verifications,
+        twoFactor: twoFactors,
+      },
     }),
     emailAndPassword: {
       enabled: true,
@@ -138,13 +153,14 @@ export function createAuth(options: AuthOptions) {
         locale: { type: 'string', required: false, defaultValue: 'vi', input: true },
         isAdmin: { type: 'boolean', required: false, defaultValue: false, input: false },
         adminRole: { type: 'string', required: false, input: false },
-        totpEnabled: { type: 'boolean', required: false, defaultValue: false, input: false },
       },
     },
     advanced: {
       // Để Postgres sinh uuid bằng gen_random_uuid() (docs/10 §1).
       database: { generateId: false },
       useSecureCookies: secureCookies,
+      // Chỉ đọc IP từ x-forwarded-for (web xóa header của client rồi tự đặt lại bằng IP đã tin cậy); không để thư viện đọc header khác.
+      ipAddress: { ipAddressHeaders: ['x-forwarded-for'] },
     },
     databaseHooks: {
       session: {

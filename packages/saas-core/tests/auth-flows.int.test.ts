@@ -1,12 +1,20 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { eq } from '@flow/db';
 import type { AuthDb } from '@flow/db/auth-db';
 import { sessions } from '@flow/db/schema/core';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { type Auth, type AuthFlows, createAuth, createAuthFlows } from '../src/auth';
+import {
+  type Auth,
+  type AuthFlows,
+  createAuth,
+  createAuthFlows,
+  createPasswordPolicy,
+  createTwoFactorFlows,
+} from '../src/auth';
 import { wrapAuthDb } from '../src/auth/auth-db';
 import { createMemoryTransport, createNotifier, type MailMessage } from '../src/notify';
+import { createMemoryStore, createRateLimiter } from '../src/ratelimit';
 import { createTestAuthDb } from './helpers';
 
 const BASE_URL = 'http://localhost:3000';
@@ -14,10 +22,23 @@ const PASSWORD = 'mat-khau-dai-du-10';
 const TEST_SECRET = randomBytes(32).toString('hex');
 
 const transport = createMemoryTransport();
+/** Bộ giới hạn mới (kho bộ nhớ) cho mỗi bộ luồng: các test không ảnh hưởng nhau. */
+/** Kiểm mật khẩu chỉ bằng danh sách cục bộ (test không gọi mạng). */
+const localPolicy = createPasswordPolicy({ pwnedEnabled: false });
+const freshLimiter = () => createRateLimiter({ store: createMemoryStore(), secret: TEST_SECRET });
 let authDb: AuthDb;
 let auth: Auth;
 let flows: AuthFlows;
 let owner: pg.Pool;
+/** Luồng 2FA riêng cho mỗi bộ luồng (cùng auth, bộ giới hạn mới). */
+const makeTwoFactor = () =>
+  createTwoFactorFlows({
+    auth,
+    authDb: wrapAuthDb(authDb),
+    limiter: freshLimiter(),
+    secret: TEST_SECRET,
+    workspaceRoles: async () => [],
+  });
 
 beforeAll(() => {
   authDb = createTestAuthDb();
@@ -28,7 +49,13 @@ beforeAll(() => {
     baseURL: BASE_URL,
     appEnv: 'test',
   });
-  flows = createAuthFlows({ auth, minResponseMs: 0 });
+  flows = createAuthFlows({
+    auth,
+    limiter: freshLimiter(),
+    passwordPolicy: localPolicy,
+    twoFactor: makeTwoFactor(),
+    minResponseMs: 0,
+  });
   owner = new pg.Pool({ connectionString: process.env.TEST_DATABASE_ADMIN_URL, max: 2 });
 });
 afterAll(async () => {
@@ -205,18 +232,171 @@ describe('xác minh email và đăng nhập', () => {
     await expectNoMail(unknown);
   });
 
-  it('cổng đăng nhập (chừa chỗ rate limit): bị từ chối → rate_limited, KHÔNG gọi Better Auth; nhận email đã chuẩn hóa + ip', async () => {
+  it('đăng nhập: vượt ngưỡng → rate_limited kèm thời gian chờ, và đúng mật khẩu trong lúc bị chặn vẫn bị từ chối', async () => {
     const email = await registerVerified();
-    const gate = vi.fn().mockResolvedValue({ allowed: false, retryAfterSeconds: 900 });
-    const gated = createAuthFlows({ auth, loginGate: gate, minResponseMs: 0 });
-    const result = await gated.signIn({
-      email: email.toUpperCase(),
-      password: PASSWORD,
-      headers: new Headers(),
-      ip: '203.0.113.7',
+    const limited = createAuthFlows({
+      auth,
+      limiter: freshLimiter(),
+      passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 0,
     });
-    expect(result).toEqual({ status: 'rate_limited', retryAfterSeconds: 900 });
-    expect(gate).toHaveBeenCalledWith({ email: email.toLowerCase(), ip: '203.0.113.7' });
+    const attempt = (password: string) =>
+      limited.signIn({ email, password, headers: new Headers(), ip: '203.0.113.7' });
+    for (let i = 0; i < 5; i++)
+      expect((await attempt('sai-mat-khau-hoan-toan')).status).toBe('invalid_credentials');
+    const blocked = await attempt('sai-mat-khau-hoan-toan');
+    expect(blocked).toMatchObject({ status: 'rate_limited' });
+    if (blocked.status === 'rate_limited') {
+      expect(blocked.retryAfterSeconds).toBeGreaterThan(0);
+      expect(blocked.retryAfterSeconds).toBeLessThanOrEqual(900);
+    }
+    expect((await attempt(PASSWORD)).status).toBe('rate_limited'); // đúng mật khẩu cũng không qua
+  });
+
+  it('đổi IP không vượt được: 11 lần từ 11 IP khác nhau cho cùng một email vẫn bị chặn bởi xô theo email', async () => {
+    const email = await registerVerified();
+    const limited = createAuthFlows({
+      auth,
+      limiter: freshLimiter(),
+      passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 0,
+    });
+    const statuses: string[] = [];
+    for (let i = 1; i <= 11; i++) {
+      const result = await limited.signIn({
+        email,
+        password: 'sai-mat-khau-hoan-toan',
+        headers: new Headers(),
+        ip: `198.51.100.${i}`,
+      });
+      statuses.push(result.status);
+    }
+    expect(statuses.slice(0, 10).every((s) => s === 'invalid_credentials')).toBe(true);
+    expect(statuses[10]).toBe('rate_limited');
+  });
+
+  it('dev (không có IP): chỉ xô email; trạng thái bị chặn GIỐNG HỆT cho email có thật và email lạ; người khác không bị ảnh hưởng', async () => {
+    const real = await registerVerified();
+    const unknown = newEmail();
+    const limited = createAuthFlows({
+      auth,
+      limiter: freshLimiter(),
+      passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 0,
+    });
+    const lastResult = async (email: string) => {
+      let last = await limited.signIn({
+        email,
+        password: 'sai-mat-khau-hoan-toan',
+        headers: new Headers(),
+      });
+      for (let i = 0; i < 10; i++) {
+        last = await limited.signIn({
+          email,
+          password: 'sai-mat-khau-hoan-toan',
+          headers: new Headers(),
+        });
+      }
+      return last;
+    };
+    const [a, b] = [await lastResult(real), await lastResult(unknown)];
+    expect(a.status).toBe('rate_limited');
+    expect(b.status).toBe('rate_limited');
+    expect(Object.keys(a).sort()).toEqual(Object.keys(b).sort());
+    // không có khóa chung "unknown": email thứ ba không bị chặn
+    const other = await registerVerified();
+    expect(
+      (await limited.signIn({ email: other, password: PASSWORD, headers: new Headers() })).status,
+    ).toBe('ok');
+  });
+
+  it('đăng nhập thành công xóa bộ đếm: 4 lần sai, 1 lần đúng, rồi lại được thử đủ 5 lần', async () => {
+    const email = await registerVerified();
+    const limited = createAuthFlows({
+      auth,
+      limiter: freshLimiter(),
+      passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 0,
+    });
+    const attempt = (password: string) =>
+      limited.signIn({ email, password, headers: new Headers(), ip: '203.0.113.8' });
+    for (let i = 0; i < 4; i++) await attempt('sai-mat-khau-hoan-toan');
+    expect((await attempt(PASSWORD)).status).toBe('ok');
+    for (let i = 0; i < 5; i++)
+      expect((await attempt('sai-mat-khau-hoan-toan')).status).toBe('invalid_credentials');
+  });
+
+  it('quên mật khẩu / gửi lại thư / đăng ký bị chặn: trả CÙNG kết quả trung tính và KHÔNG gửi thư thêm', async () => {
+    const email = await registerVerified();
+    const limited = createAuthFlows({
+      auth,
+      limiter: freshLimiter(),
+      passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 0,
+    });
+    const before = mailsTo(email).length;
+
+    const forgot: unknown[] = [];
+    for (let i = 0; i < 5; i++) forgot.push(await limited.requestPasswordReset({ email }));
+    expect(new Set(forgot.map((r) => JSON.stringify(r))).size).toBe(1); // kể cả sau khi bị chặn
+    await waitForMails(email, before + 3); // chỉ 3 thư (ngưỡng 3 lần/giờ)
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(mailsTo(email)).toHaveLength(before + 3);
+
+    const resend: unknown[] = [];
+    for (let i = 0; i < 5; i++) resend.push(await limited.resendVerification({ email }));
+    expect(new Set(resend.map((r) => JSON.stringify(r))).size).toBe(1);
+
+    const fresh = newEmail();
+    const registers: unknown[] = [];
+    for (let i = 0; i < 5; i++) {
+      registers.push(
+        await limited.register({ email: fresh, password: PASSWORD, name: 'Linh', locale: 'vi' }),
+      );
+    }
+    expect(new Set(registers.map((r) => JSON.stringify(r))).size).toBe(1);
+    await waitForMails(fresh, 3); // ngưỡng đăng ký 3 lần/giờ/email: chỉ 3 thư xác minh/"đã có tài khoản"
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(mailsTo(fresh)).toHaveLength(3);
+  });
+
+  it('kho giới hạn hỏng: đăng nhập vẫn chạy (dự phòng) và quên mật khẩu/đăng ký KHÔNG gửi thư, đều có cảnh báo không PII', async () => {
+    const warnings: unknown[] = [];
+    const broken = createRateLimiter({
+      store: {
+        hit: async () => {
+          throw new Error('ECONNREFUSED');
+        },
+        reset: async () => {
+          throw new Error('ECONNREFUSED');
+        },
+      },
+      secret: TEST_SECRET,
+      onWarn: (w) => warnings.push(w),
+    });
+    const degraded = createAuthFlows({
+      auth,
+      limiter: broken,
+      passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 0,
+    });
+    const email = await registerVerified();
+    const before = mailsTo(email).length;
+    expect(
+      (await degraded.signIn({ email, password: PASSWORD, headers: new Headers() })).status,
+    ).toBe('ok');
+    expect(await degraded.requestPasswordReset({ email })).toEqual({ status: 'sent_if_exists' });
+    expect(await degraded.resendVerification({ email })).toEqual({ status: 'sent_if_exists' });
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(mailsTo(email)).toHaveLength(before); // không gửi thư
+    expect(warnings.length).toBeGreaterThanOrEqual(3);
+    expect(JSON.stringify(warnings)).not.toMatch(/@|ECONNREFUSED|sys:/);
   });
 
   it('đăng xuất: xóa phiên phía server và trả cookie hết hạn', async () => {
@@ -332,7 +512,13 @@ describe('quên và đặt lại mật khẩu', () => {
 
 describe('thời gian phản hồi (chống dò email qua thời gian)', () => {
   it('đăng ký, gửi lại thư, quên mật khẩu: email lạ và email có thật đều chờ ít nhất ngưỡng tối thiểu', async () => {
-    const slow = createAuthFlows({ auth, minResponseMs: 300 });
+    const slow = createAuthFlows({
+      auth,
+      limiter: freshLimiter(),
+      passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 300,
+    });
     const existing = await registerVerified();
     const timed = async (run: () => Promise<unknown>) => {
       const start = performance.now();
@@ -372,7 +558,13 @@ describe('log của Better Auth không chứa email thô', () => {
         appEnv: 'test',
         logger: (entry) => entries.push(entry),
       });
-      const probeFlows = createAuthFlows({ auth: probe, minResponseMs: 0 });
+      const probeFlows = createAuthFlows({
+        auth: probe,
+        limiter: freshLimiter(),
+        passwordPolicy: localPolicy,
+        twoFactor: makeTwoFactor(),
+        minResponseMs: 0,
+      });
       const existing = await registerVerified();
       await probeFlows.requestPasswordReset({ email: newEmail() });
       await probeFlows.register({
@@ -392,5 +584,119 @@ describe('log của Better Auth không chứa email thô', () => {
     } finally {
       for (const spy of spies) spy.mockRestore();
     }
+  });
+});
+
+describe('mật khẩu đã lộ / quá phổ biến (ADR 004 §3)', () => {
+  const sha1 = (text: string) =>
+    createHash('sha1').update(text, 'utf8').digest('hex').toUpperCase();
+  const pwnedPassword = `Mk-${randomUUID()}-Pw1!`;
+  /** HIBP giả: trả về hậu tố của đúng `pwnedPassword` khi tiền tố khớp; ghi lại mọi URL được gọi. */
+  const calls: string[] = [];
+  const fakeHibp = (async (url: string) => {
+    calls.push(url);
+    const lines = ['0018A45C4D1DEF81644B54AB7F969B88D65:3'];
+    if (url.endsWith(sha1(pwnedPassword).slice(0, 5)))
+      lines.push(`${sha1(pwnedPassword).slice(5)}:99`);
+    return new Response(lines.join('\r\n'));
+  }) as unknown as typeof fetch;
+  const withHibp = (fetchImpl: typeof fetch) =>
+    createAuthFlows({
+      auth,
+      limiter: freshLimiter(),
+      passwordPolicy: createPasswordPolicy({ fetchImpl }),
+      twoFactor: makeTwoFactor(),
+      minResponseMs: 0,
+    });
+
+  it('đăng ký với mật khẩu phổ biến → invalid "common", KHÔNG tạo người dùng, KHÔNG gửi thư', async () => {
+    const email = newEmail();
+    expect(
+      await flows.register({ email, password: 'qwertyuiop', name: 'Linh', locale: 'vi' }),
+    ).toEqual({
+      status: 'invalid',
+      problem: { field: 'password', reason: 'common' },
+    });
+    await expectNoMail(email);
+    expect(await userRow(email)).toBeUndefined();
+  });
+
+  it('đăng ký với mật khẩu có trong HIBP → invalid "pwned"; không tạo người dùng, không gửi thư; chỉ tiền tố SHA-1 rời máy', async () => {
+    const email = newEmail();
+    calls.length = 0;
+    const result = await withHibp(fakeHibp).register({
+      email,
+      password: pwnedPassword,
+      name: 'Linh',
+      locale: 'vi',
+    });
+    expect(result).toEqual({ status: 'invalid', problem: { field: 'password', reason: 'pwned' } });
+    await expectNoMail(email);
+    expect(await userRow(email)).toBeUndefined();
+    expect(calls).toEqual([
+      `https://api.pwnedpasswords.com/range/${sha1(pwnedPassword).slice(0, 5)}`,
+    ]);
+  });
+
+  it('HIBP sập/timeout → vẫn đăng ký được (cho qua + cảnh báo)', async () => {
+    const email = newEmail();
+    const down = (async () => {
+      throw new TypeError('fetch failed');
+    }) as unknown as typeof fetch;
+    expect(
+      await withHibp(down).register({
+        email,
+        password: `Mk-${randomUUID()}-Nw1!`,
+        name: 'Linh',
+        locale: 'vi',
+      }),
+    ).toEqual({ status: 'check_email' });
+    await waitForMails(email, 1);
+  });
+
+  it('kết quả bị từ chối KHÔNG phụ thuộc email có tồn tại hay không (đăng ký email có thật và email lạ đều "pwned")', async () => {
+    const existing = await registerVerified();
+    const hibp = withHibp(fakeHibp);
+    const [a, b] = [
+      await hibp.register({ email: existing, password: pwnedPassword, name: 'A', locale: 'vi' }),
+      await hibp.register({ email: newEmail(), password: pwnedPassword, name: 'B', locale: 'vi' }),
+    ];
+    expect(a).toEqual(b);
+  });
+
+  it('đặt lại mật khẩu bằng mật khẩu đã lộ → invalid "pwned" và token KHÔNG bị tiêu: đặt lại bằng mật khẩu tốt vẫn được', async () => {
+    const email = await registerVerified();
+    const before = mailsTo(email).length;
+    await flows.requestPasswordReset({ email });
+    await waitForMails(email, before + 1);
+    const response = await clickLink(linkIn(mailsTo(email).at(-1) as MailMessage));
+    const token = new URL(response.headers.get('location') ?? '', BASE_URL).searchParams.get(
+      'token',
+    ) as string;
+
+    const hibp = withHibp(fakeHibp);
+    expect(await hibp.resetPassword({ token, newPassword: pwnedPassword })).toEqual({
+      status: 'invalid',
+      problem: { field: 'password', reason: 'pwned' },
+    });
+    expect(await flows.resetPassword({ token, newPassword: 'qwertyuiop' })).toEqual({
+      status: 'invalid',
+      problem: { field: 'password', reason: 'common' },
+    });
+    expect(await flows.resetPassword({ token, newPassword: `Mk-${randomUUID()}-Gd1!` })).toEqual({
+      status: 'ok',
+    });
+  });
+
+  it('không kiểm khi đăng nhập: tài khoản có mật khẩu cũ yếu vẫn đăng nhập được', async () => {
+    const email = newEmail();
+    // tạo tài khoản bằng mật khẩu "yếu" qua chính Better Auth (bỏ qua flows) rồi xác minh
+    await auth.api.signUpEmail({ body: { email, password: 'qwertyuiop', name: 'Cũ' } });
+    await owner.query('UPDATE core.users SET email_verified = true WHERE email = $1', [
+      email.toLowerCase(),
+    ]);
+    expect(
+      (await flows.signIn({ email, password: 'qwertyuiop', headers: new Headers() })).status,
+    ).toBe('ok');
   });
 });

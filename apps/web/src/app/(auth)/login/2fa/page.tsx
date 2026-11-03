@@ -1,0 +1,27 @@
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import { TwoFactorForm } from '../../../../components/auth/two-factor-form';
+import { getAuthRuntime } from '../../../../server/auth';
+import { getCurrentUser } from '../../../../server/session';
+
+export async function generateMetadata() {
+  const t = await getTranslations('auth');
+  return { title: `${t('twoFactor.title')} · ${t('brand')}` };
+}
+
+/** Bước nhập mã 2FA. Không có cookie chờ hợp lệ (chưa qua bước mật khẩu, hoặc hết hạn) → về /login. */
+export default async function TwoFactorPage() {
+  if (await getCurrentUser()) redirect('/app');
+  if (!getAuthRuntime().twoFactor.hasPending(await headers())) redirect('/login');
+  const t = await getTranslations('auth.twoFactor');
+  return (
+    <>
+      <div className="stack">
+        <h1 className="auth-title">{t('title')}</h1>
+        <p className="auth-subtitle">{t('subtitle')}</p>
+      </div>
+      <TwoFactorForm />
+    </>
+  );
+}

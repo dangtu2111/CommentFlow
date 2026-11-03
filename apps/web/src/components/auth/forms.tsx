@@ -18,7 +18,8 @@ import { SubmitButton } from '../ui/submit-button';
 /** Lỗi gắn với một ô thì hiện dưới ô đó; lỗi chung (sai mật khẩu, quá nhiều lần...) hiện ở dải trên form. */
 function useFormErrors(state: FormState) {
   const t = useTranslations('auth.errors');
-  const message = state.status === 'error' ? t(state.message) : undefined;
+  const message =
+    state.status === 'error' ? t(state.message, { minutes: state.retryMinutes ?? 15 }) : undefined;
   const field = state.status === 'error' ? state.field : undefined;
   return {
     banner: state.status === 'error' && !field ? message : undefined,

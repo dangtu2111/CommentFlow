@@ -13,13 +13,18 @@ export {
   createAuthFlows,
   type FieldProblem,
   type ForgotResult,
-  type LoginGate,
   type RegisterResult,
   type ResendResult,
   type ResetResult,
   type SignInResult,
 } from './flows';
 export { hashPassword, verifyPassword } from './password';
+export {
+  createPasswordPolicy,
+  type PasswordPolicy,
+  type PasswordPolicyWarning,
+  type PasswordVerdict,
+} from './password-policy';
 export { changePasswordAndRevokeAll, revokeAllSessionsOfUser } from './revoke';
 export { readSession } from './session';
 export {
@@ -30,3 +35,14 @@ export {
   isSessionPastHardLimit,
   SESSION_UPDATE_AGE_SECONDS,
 } from './session-policy';
+export {
+  createTwoFactorFlows,
+  type ReauthResult,
+  requiresTwoFactor,
+  type SecurityOverview,
+  type SessionItem,
+  TWO_FACTOR_PENDING_COOKIE,
+  type TwoFactorFlows,
+  type VerifyTwoFactorResult,
+} from './two-factor';
+export type { BrowserKind, OsKind } from './ua';

@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
   // Gói nội bộ được dùng thẳng từ mã nguồn TypeScript (không build riêng).
   transpilePackages: ['@flow/shared', '@flow/saas-core', '@flow/db'],
   // Thư viện Node chạy phía server, không đóng gói vào bundle.
-  serverExternalPackages: ['nodemailer', 'pg'],
+  serverExternalPackages: ['nodemailer', 'pg', 'ioredis'],
   // Bản chạy độc lập cho Docker (cf-staging); cần gốc monorepo để gom đúng gói nội bộ.
   output: 'standalone',
   outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),

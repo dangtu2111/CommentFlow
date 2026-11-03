@@ -32,7 +32,7 @@ Chạy `/stitch-sync` trong Claude Code ở GĐ0 (MCP Stitch đã cấu hình s�
 |---|---|---|---|---|
 | Chào mừng nhân viên mới | staff-welcome.html, staff-welcome.png | chưa khớp | |  |
 | Lỗi 403 Staff vs Owner | error-403.html, error-403.png | 7.8 | |  |
-| Cài đặt – Xác nhận tắt 2FA | settings-2fa-disable-modal.png | 7.6 | | thiếu .html |
+| Cài đặt – Xác nhận tắt 2FA | settings-2fa-disable-modal.png | 7.6 | | thiếu .html; **nội dung bịa, không dùng:** "Meta Tech Partner / tạm ngưng sau 24 giờ", "8 mã dự phòng" (thật: 10 mã, tắt đòi mật khẩu, Owner/Admin không được tắt — ADR 004 §4) |
 | Cài đặt – Tài khoản & Bảo mật | settings-security.png | 7.6 | | thiếu .html |
 | Brand Guideline & Component Library | brand-guideline.html, brand-guideline.png | 4, 8 | |  |
 | Báo cáo – Hiệu suất AI & SLA | reports.html, reports.png | 7.6b | |  |

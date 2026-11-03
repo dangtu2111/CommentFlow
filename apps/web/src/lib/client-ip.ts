@@ -1,16 +1,17 @@
-const IP_PATTERN = /^[0-9a-fA-F:.]{2,45}$/;
+import { isIP } from 'node:net';
 
 /**
- * IP khách từ `X-Forwarded-For`, CHỈ tin phần tử do proxy tin cậy của ta ghi: với `trustedHops` proxy nối vào
- * cuối danh sách, khách là phần tử thứ `trustedHops` tính từ PHẢI (phần tử đầu do khách tự đặt được → không tin).
- * `trustedHops = 0` (mặc định, không có proxy) hoặc danh sách ngắn hơn số proxy → không biết IP (undefined).
+ * Nguồn địa chỉ IP của khách (ADR 004 §2):
+ * - `none` (dev/LAN, mặc định): KHÔNG lấy IP. Next ở dev tự đặt `X-Forwarded-For` nhưng giữ nguyên giá trị client tự đặt,
+ *   nên không có IP kết nối đáng tin; rate limit chỉ dùng xô theo email.
+ * - `cf-connecting-ip` (chỉ staging): header do Cloudflare ghi đè. Chỉ đúng khi cổng web KHÔNG truy cập được
+ *   trực tiếp ngoài `cloudflared` (nếu truy cập được, client tự đặt header này).
+ * Không bao giờ đọc `X-Forwarded-For`/`X-Real-IP`. Không có IP → undefined (không dùng khóa chung "unknown").
  */
-export function clientIpFrom(forwardedFor: string | null, trustedHops: number): string | undefined {
-  if (!forwardedFor || trustedHops <= 0) return undefined;
-  const parts = forwardedFor
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean);
-  const candidate = parts[parts.length - trustedHops];
-  return candidate && IP_PATTERN.test(candidate) ? candidate : undefined;
+export type ClientIpSource = 'none' | 'cf-connecting-ip';
+
+export function clientIpFrom(headers: Headers, source: ClientIpSource): string | undefined {
+  if (source === 'none') return undefined;
+  const value = headers.get('cf-connecting-ip')?.trim();
+  return value && isIP(value) ? value : undefined;
 }

@@ -47,10 +47,15 @@ describe('signInToState', () => {
   });
 
   it('các nhánh chừa chỗ cho nhánh sau (rate limit, 2FA) đã có thông báo', () => {
-    expect(signInToState({ status: 'rate_limited' }, 'a@example.test')).toMatchObject({
-      message: 'rateLimited',
-    });
-    expect(signInToState({ status: 'two_factor_required' }, 'a@example.test')).toMatchObject({
+    expect(
+      signInToState({ status: 'rate_limited', retryAfterSeconds: 610 }, 'a@example.test'),
+    ).toMatchObject({ message: 'rateLimited', retryMinutes: 11 });
+    expect(
+      signInToState({ status: 'rate_limited', retryAfterSeconds: 5 }, 'a@example.test'),
+    ).toMatchObject({ retryMinutes: 1 });
+    expect(
+      signInToState({ status: 'two_factor_required', cookies: [] }, 'a@example.test'),
+    ).toMatchObject({
       message: 'twoFactorRequired',
     });
   });
@@ -69,6 +74,14 @@ describe('problemToState', () => {
     });
     expect(problemToState({ field: 'password', reason: 'too_long' })).toMatchObject({
       message: 'passwordTooLong',
+    });
+    expect(problemToState({ field: 'password', reason: 'common' })).toMatchObject({
+      message: 'passwordCommon',
+      field: 'password',
+    });
+    expect(problemToState({ field: 'password', reason: 'pwned' })).toMatchObject({
+      message: 'passwordPwned',
+      field: 'password',
     });
     expect(problemToState({ field: 'name', reason: 'invalid' })).toMatchObject({
       message: 'nameInvalid',

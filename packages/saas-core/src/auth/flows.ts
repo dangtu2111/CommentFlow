@@ -1,8 +1,11 @@
 import { AppError, isLocale, type Locale } from '@flow/shared';
 import { z } from 'zod';
+import type { RateLimiter } from '../ratelimit';
 import type { Auth } from './auth';
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from './auth';
 import { type CookieSpec, cookiesFromResponse } from './cookies';
+import type { PasswordPolicy } from './password-policy';
+import type { TwoFactorFlows } from './two-factor';
 
 /**
  * Các luồng đăng ký / đăng nhập / quên mật khẩu cho giao diện. Mọi kết quả đều TRUNG TÍNH về việc email có
@@ -12,7 +15,7 @@ import { type CookieSpec, cookiesFromResponse } from './cookies';
 
 export type FieldProblem = {
   field: 'email' | 'password' | 'name';
-  reason: 'invalid' | 'too_short' | 'too_long';
+  reason: 'invalid' | 'too_short' | 'too_long' | 'common' | 'pwned';
 };
 
 export type RegisterResult =
@@ -23,10 +26,10 @@ export type SignInResult =
   | { status: 'ok'; cookies: CookieSpec[]; locale: Locale }
   | { status: 'invalid_credentials' }
   | { status: 'email_not_verified' }
-  /** Chừa chỗ cho nhánh 2FA: chưa có đường nào sinh ra kết quả này. */
-  | { status: 'two_factor_required' }
-  /** Chừa chỗ cho nhánh rate limit: sinh ra khi `loginGate` từ chối. */
-  | { status: 'rate_limited'; retryAfterSeconds?: number }
+  /** Mật khẩu đúng nhưng tài khoản bật 2FA: CHƯA có phiên; `cookies` chỉ chứa cookie chờ (plugin + cookie ký của ta). */
+  | { status: 'two_factor_required'; cookies: CookieSpec[] }
+  /** Bộ giới hạn từ chối (ADR 004): sinh ra khi đăng nhập vượt ngưỡng. */
+  | { status: 'rate_limited'; retryAfterSeconds: number }
   | { status: 'invalid'; problem: FieldProblem };
 
 export type ForgotResult =
@@ -38,14 +41,6 @@ export type ResetResult =
   | { status: 'ok' }
   | { status: 'invalid_token' }
   | { status: 'invalid'; problem: FieldProblem };
-
-/** Cổng chặn trước khi thử đăng nhập. Hiện luôn cho qua; nhánh rate limit gắn Valkey vào đây. */
-export type LoginGate = (input: {
-  email: string;
-  ip?: string;
-}) => Promise<{ allowed: true } | { allowed: false; retryAfterSeconds?: number }>;
-
-const allowAll: LoginGate = async () => ({ allowed: true });
 
 const emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(254));
 const nameSchema = z.string().trim().min(1).max(80);
@@ -77,7 +72,20 @@ export function createAuthFlows(options: {
   auth: Auth;
   /** Địa chỉ gốc của web (ví dụ http://localhost:3000) — dùng cho các đường dẫn quay lại sau khi bấm link trong thư. */
   appUrl?: string;
-  loginGate?: LoginGate;
+  /**
+   * Bộ giới hạn số lần thử (ADR 004). BẮT BUỘC: không có giá trị mặc định "cho qua" để không quên gắn.
+   * Đăng nhập bị chặn → `rate_limited`; đăng ký, quên mật khẩu, gửi lại thư bị chặn → trả kết quả TRUNG TÍNH như
+   * bình thường nhưng KHÔNG gửi thư (không lộ "đang bị chặn" hay "email có thật").
+   */
+  limiter: RateLimiter;
+  /**
+   * Kiểm mật khẩu đã lộ / quá phổ biến khi ĐĂNG KÝ và ĐẶT LẠI mật khẩu (ADR 004 §3). BẮT BUỘC như `limiter`.
+   * Đăng ký: kiểm SAU cổng rate limit (không để kẻ xấu dùng đăng ký làm máy gọi HIBP không giới hạn); đặt lại: kiểm trước
+   * khi dùng token nên mật khẩu bị từ chối KHÔNG làm mất token.
+   */
+  passwordPolicy: PasswordPolicy;
+  /** Luồng 2FA: tạo cookie chờ ký khi mật khẩu đúng mà tài khoản đã bật 2FA. BẮT BUỘC. */
+  twoFactor: TwoFactorFlows;
   /**
    * Thời gian phản hồi tối thiểu (ms) của các luồng có thể lộ "email có tồn tại không" qua thời gian
    * (đăng ký, gửi lại thư, quên mật khẩu): email mới phải ghi DB + ký token, email đã có thì không — nên
@@ -86,7 +94,7 @@ export function createAuthFlows(options: {
   minResponseMs?: number;
 }) {
   const { auth } = options;
-  const loginGate = options.loginGate ?? allowAll;
+  const { limiter, passwordPolicy, twoFactor } = options;
   const minResponseMs = options.minResponseMs ?? 600;
 
   const padded =
@@ -113,6 +121,8 @@ export function createAuthFlows(options: {
       password: string;
       name: string;
       locale: string;
+      /** IP đã tin cậy (xem ADR 004 §2); không có thì chỉ dùng xô email. */
+      ip?: string;
     }): Promise<RegisterResult> {
       const email = checkEmail(input.email);
       if (!email.ok) return { status: 'invalid', problem: email.problem };
@@ -122,6 +132,17 @@ export function createAuthFlows(options: {
       const passwordProblem = checkPassword(input.password);
       if (passwordProblem) return { status: 'invalid', problem: passwordProblem };
       const locale: Locale = isLocale(input.locale) ? input.locale : 'vi';
+
+      const gate = await limiter.check('register', {
+        email: email.value,
+        ...(input.ip ? { ip: input.ip } : {}),
+      });
+      if (!gate.allowed) return { status: 'check_email' }; // trung tính: không tạo tài khoản, không gửi thư
+
+      const verdict = await passwordPolicy.check(input.password);
+      if (!verdict.ok) {
+        return { status: 'invalid', problem: { field: 'password', reason: verdict.reason } };
+      }
 
       try {
         await auth.api.signUpEmail({
@@ -153,15 +174,10 @@ export function createAuthFlows(options: {
         return { status: 'invalid_credentials' };
       }
 
-      const gate = await loginGate({ email: email.value, ...(input.ip ? { ip: input.ip } : {}) });
-      if (!gate.allowed) {
-        return {
-          status: 'rate_limited',
-          ...(gate.retryAfterSeconds === undefined
-            ? {}
-            : { retryAfterSeconds: gate.retryAfterSeconds }),
-        };
-      }
+      const identity = { email: email.value, ...(input.ip ? { ip: input.ip } : {}) };
+      const gate = await limiter.check('login', identity);
+      if (!gate.allowed)
+        return { status: 'rate_limited', retryAfterSeconds: gate.retryAfterSeconds };
 
       let response: Response;
       try {
@@ -182,7 +198,17 @@ export function createAuthFlows(options: {
         twoFactorRedirect?: boolean;
         user?: { locale?: unknown };
       } | null;
-      if (body?.twoFactorRedirect) return { status: 'two_factor_required' };
+      if (body?.twoFactorRedirect) {
+        const cookies = cookiesFromResponse(response).filter((cookie) => cookie.maxAge !== 0);
+        const plugin = cookies.find((cookie) => cookie.name.endsWith('two_factor'));
+        // Mật khẩu đúng: xóa bộ đếm đăng nhập (bước 2 có bộ đếm riêng 'twofa').
+        await limiter.reset('login', identity);
+        return {
+          status: 'two_factor_required',
+          cookies: [...cookies, twoFactor.pendingCookieFor(email.value, plugin)],
+        };
+      }
+      await limiter.reset('login', identity); // đăng nhập thành công: xóa bộ đếm của danh tính này
       return {
         status: 'ok',
         cookies: cookiesFromResponse(response),
@@ -191,9 +217,14 @@ export function createAuthFlows(options: {
     },
 
     /** Gửi lại thư xác minh. Luôn trả cùng một kết quả dù email có tồn tại hay không. */
-    async resendVerification(input: { email: string }): Promise<ResendResult> {
+    async resendVerification(input: { email: string; ip?: string }): Promise<ResendResult> {
       const email = checkEmail(input.email);
       if (!email.ok) return { status: 'invalid', problem: email.problem };
+      const gate = await limiter.check('resend', {
+        email: email.value,
+        ...(input.ip ? { ip: input.ip } : {}),
+      });
+      if (!gate.allowed) return { status: 'sent_if_exists' }; // trung tính, không gửi
       try {
         await auth.api.sendVerificationEmail({
           body: { email: email.value, callbackURL: '/verify-email?status=ok' },
@@ -205,9 +236,14 @@ export function createAuthFlows(options: {
     },
 
     /** Quên mật khẩu: luôn trả cùng một kết quả (thư chỉ gửi nếu email có thật). */
-    async requestPasswordReset(input: { email: string }): Promise<ForgotResult> {
+    async requestPasswordReset(input: { email: string; ip?: string }): Promise<ForgotResult> {
       const email = checkEmail(input.email);
       if (!email.ok) return { status: 'invalid', problem: email.problem };
+      const gate = await limiter.check('forgot', {
+        email: email.value,
+        ...(input.ip ? { ip: input.ip } : {}),
+      });
+      if (!gate.allowed) return { status: 'sent_if_exists' }; // trung tính, không gửi
       try {
         await auth.api.requestPasswordReset({
           body: { email: email.value, redirectTo: '/reset-password' },
@@ -223,6 +259,10 @@ export function createAuthFlows(options: {
       const problem = checkPassword(input.newPassword);
       if (problem) return { status: 'invalid', problem };
       if (input.token.length === 0 || input.token.length > 512) return { status: 'invalid_token' };
+      const verdict = await passwordPolicy.check(input.newPassword);
+      if (!verdict.ok) {
+        return { status: 'invalid', problem: { field: 'password', reason: verdict.reason } };
+      }
       try {
         await auth.api.resetPassword({
           body: { newPassword: input.newPassword, token: input.token },
@@ -259,7 +299,7 @@ export function createAuthFlows(options: {
 function mapSignInStatus(status: number | undefined, cause: unknown): SignInResult {
   if (status === 401 || status === 400 || status === 404) return { status: 'invalid_credentials' };
   if (status === 403) return { status: 'email_not_verified' };
-  if (status === 429) return { status: 'rate_limited' };
+  if (status === 429) return { status: 'rate_limited', retryAfterSeconds: 60 }; // giới hạn riêng của Better Auth
   throw new AppError('INTERNAL', 'Không đăng nhập được.', { cause });
 }
 

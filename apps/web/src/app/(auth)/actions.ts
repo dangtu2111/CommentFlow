@@ -6,10 +6,10 @@ import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { applyCookies } from '../../lib/apply-cookies';
 import { errorState, type FormState, problemToState, signInToState } from '../../lib/auth-form';
-import { clientIpFrom } from '../../lib/client-ip';
 import { setLocaleCookie } from '../../lib/locale-cookie';
 import { PENDING_EMAIL_COOKIE } from '../../lib/pending-email';
 import { getAuthRuntime } from '../../server/auth';
+import { requestContext } from '../../server/request-context';
 
 /**
  * Server Action của các trang xác thực. Chỉ làm 3 việc: đọc form, gọi `flows` của saas-core, đổi kết quả thành
@@ -21,19 +21,6 @@ const text = (data: FormData, key: string): string => {
   return typeof value === 'string' ? value : '';
 };
 
-/**
- * IP khách chỉ lấy từ phần tử do proxy tin cậy ghi (xem lib/client-ip.ts) và header gửi cho Better Auth được
- * ghi đè theo đó — nên `sessions.ip` và cổng rate limit sau này không bị giả bằng X-Forwarded-For tự đặt.
- */
-async function requestContext(): Promise<{ ip: string | undefined; headers: Headers }> {
-  const incoming = await headers();
-  const ip = clientIpFrom(incoming.get('x-forwarded-for'), getAuthRuntime().trustedProxyHops);
-  const forwarded = new Headers(incoming);
-  if (ip) forwarded.set('x-forwarded-for', ip);
-  else forwarded.delete('x-forwarded-for');
-  return { ip, headers: forwarded };
-}
-
 export async function loginAction(_previous: FormState, data: FormData): Promise<FormState> {
   const email = text(data, 'email');
   const { ip, headers: requestHeaders } = await requestContext();
@@ -43,6 +30,11 @@ export async function loginAction(_previous: FormState, data: FormData): Promise
     headers: requestHeaders,
     ...(ip ? { ip } : {}),
   });
+  if (result.status === 'two_factor_required') {
+    // Mật khẩu đúng nhưng CHƯA có phiên: chỉ đặt cookie chờ (plugin + cookie ký của ta) rồi sang bước nhập mã.
+    applyCookies(await cookies(), result.cookies);
+    redirect('/login/2fa');
+  }
   if (result.status !== 'ok') return signInToState(result, email.trim());
 
   const jar = await cookies();
@@ -52,15 +44,51 @@ export async function loginAction(_previous: FormState, data: FormData): Promise
   redirect('/app');
 }
 
+/** Bước 2 của đăng nhập: nhập mã TOTP hoặc mã dự phòng. Chỉ khi mã đúng mới có phiên. */
+export async function verifyTwoFactorAction(
+  _previous: FormState,
+  data: FormData,
+): Promise<FormState> {
+  const kind = text(data, 'kind') === 'backup' ? 'backup' : 'totp';
+  const { headers: requestHeaders } = await requestContext();
+  const result = await getAuthRuntime().twoFactor.verifyLogin({
+    code: text(data, 'code'),
+    kind,
+    headers: requestHeaders,
+  });
+  switch (result.status) {
+    case 'invalid_code':
+      return errorState(kind === 'backup' ? 'invalidBackupCode' : 'invalidCode');
+    case 'rate_limited':
+      return {
+        ...errorState('rateLimited'),
+        retryMinutes: Math.max(1, Math.ceil(result.retryAfterSeconds / 60)),
+      } as FormState;
+    case 'expired': {
+      redirect('/login');
+      break;
+    }
+    case 'ok': {
+      const jar = await cookies();
+      applyCookies(jar, result.cookies);
+      setLocaleCookie(jar, result.locale);
+      jar.delete(PENDING_EMAIL_COOKIE);
+      redirect('/app');
+    }
+  }
+}
+
 export async function registerAction(_previous: FormState, data: FormData): Promise<FormState> {
   const email = text(data, 'email');
   const name = text(data, 'name');
   const locale: Locale = await getLocale().then((value) => (isLocale(value) ? value : 'vi'));
+  const { ip } = await requestContext();
   const result = await getAuthRuntime().flows.register({
     email,
     name,
     password: text(data, 'password'),
     locale,
+    ...(ip ? { ip } : {}),
   });
   if (result.status === 'invalid') return problemToState(result.problem, { email, name });
 
@@ -81,7 +109,11 @@ export async function resendVerificationAction(
   _previous: FormState,
   data: FormData,
 ): Promise<FormState> {
-  const result = await getAuthRuntime().flows.resendVerification({ email: text(data, 'email') });
+  const { ip } = await requestContext();
+  const result = await getAuthRuntime().flows.resendVerification({
+    email: text(data, 'email'),
+    ...(ip ? { ip } : {}),
+  });
   return result.status === 'invalid' ? problemToState(result.problem) : { status: 'sent' };
 }
 
@@ -90,7 +122,11 @@ export async function forgotPasswordAction(
   data: FormData,
 ): Promise<FormState> {
   const email = text(data, 'email');
-  const result = await getAuthRuntime().flows.requestPasswordReset({ email });
+  const { ip } = await requestContext();
+  const result = await getAuthRuntime().flows.requestPasswordReset({
+    email,
+    ...(ip ? { ip } : {}),
+  });
   return result.status === 'invalid'
     ? problemToState(result.problem, { email })
     : { status: 'sent' };

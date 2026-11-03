@@ -175,8 +175,7 @@ describe('check-rls', () => {
 
   it('bắt bảng xác thực (two_factors) có policy nhưng không dựa vào ngữ cảnh auth', async () => {
     const v = await violationsAfter(`
-      CREATE TABLE core.two_factors (id int, user_id uuid);
-      ALTER TABLE core.two_factors ENABLE ROW LEVEL SECURITY;
+      DROP POLICY two_factors_auth_access ON core.two_factors;
       CREATE POLICY tuy_tien ON core.two_factors FOR SELECT
         USING (user_id = (SELECT core.current_user_id()));
       GRANT SELECT ON core.two_factors TO cf_app`);
@@ -186,6 +185,26 @@ describe('check-rls', () => {
         message: expect.stringContaining('không được có quyền nào'),
       }),
     );
+  });
+
+  it('bắt two_factors mất policy auth (chỉ gỡ policy, không cấp gì cho cf_app)', async () => {
+    const v = await violationsAfter('DROP POLICY two_factors_auth_access ON core.two_factors');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.two_factors' }));
+  });
+
+  it('bắt two_factors bị tắt RLS', async () => {
+    const v = await violationsAfter('ALTER TABLE core.two_factors DISABLE ROW LEVEL SECURITY');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.two_factors',
+        message: expect.stringContaining('RLS'),
+      }),
+    );
+  });
+
+  it('bắt cf_auth được sửa user_id của two_factors', async () => {
+    const v = await violationsAfter('GRANT UPDATE (user_id) ON core.two_factors TO cf_auth');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.two_factors' }));
   });
 
   it('bắt bảng xác thực bị tắt RLS (sessions)', async () => {

@@ -1,25 +1,45 @@
 import { describe, expect, it } from 'vitest';
 import { clientIpFrom } from './client-ip';
 
-describe('clientIpFrom', () => {
-  it('không có proxy tin cậy → bỏ qua header (khách tự đặt được)', () => {
-    expect(clientIpFrom('1.2.3.4', 0)).toBeUndefined();
-    expect(clientIpFrom('6.6.6.6, 1.2.3.4', 0)).toBeUndefined();
+const headersOf = (init: Record<string, string>) => new Headers(init);
+
+describe('clientIpFrom — nguồn none (dev/LAN)', () => {
+  it('KHÔNG lấy IP từ bất kỳ header nào, kể cả khi client giả X-Forwarded-For / X-Real-IP / CF-Connecting-IP', () => {
+    const spoofed = headersOf({
+      'x-forwarded-for': '6.6.6.6, 7.7.7.7',
+      'x-real-ip': '8.8.8.8',
+      'cf-connecting-ip': '9.9.9.9',
+    });
+    expect(clientIpFrom(spoofed, 'none')).toBeUndefined();
+    expect(clientIpFrom(headersOf({}), 'none')).toBeUndefined();
+  });
+});
+
+describe('clientIpFrom — nguồn cf-connecting-ip (staging)', () => {
+  it('lấy IP từ CF-Connecting-IP (IPv4 và IPv6)', () => {
+    expect(clientIpFrom(headersOf({ 'cf-connecting-ip': '203.0.113.9' }), 'cf-connecting-ip')).toBe(
+      '203.0.113.9',
+    );
+    expect(
+      clientIpFrom(headersOf({ 'cf-connecting-ip': ' 2001:db8::1 ' }), 'cf-connecting-ip'),
+    ).toBe('2001:db8::1');
   });
 
-  it('một proxy tin cậy → phần tử cuối; giá trị giả đứng trước bị bỏ qua', () => {
-    expect(clientIpFrom('203.0.113.9', 1)).toBe('203.0.113.9');
-    expect(clientIpFrom('6.6.6.6, 203.0.113.9', 1)).toBe('203.0.113.9');
+  it('bỏ qua X-Forwarded-For / X-Real-IP dù có mặt; thiếu header → undefined', () => {
+    expect(
+      clientIpFrom(
+        headersOf({ 'x-forwarded-for': '6.6.6.6', 'x-real-ip': '8.8.8.8' }),
+        'cf-connecting-ip',
+      ),
+    ).toBeUndefined();
   });
 
-  it('hai proxy (CDN + cân bằng tải) → phần tử thứ hai từ phải', () => {
-    expect(clientIpFrom('6.6.6.6, 203.0.113.9, 10.0.0.2', 2)).toBe('203.0.113.9');
-  });
-
-  it('danh sách ngắn hơn số proxy, thiếu header, hoặc giá trị không phải IP → undefined', () => {
-    expect(clientIpFrom('203.0.113.9', 2)).toBeUndefined();
-    expect(clientIpFrom(null, 1)).toBeUndefined();
-    expect(clientIpFrom('<script>', 1)).toBeUndefined();
-    expect(clientIpFrom('2001:db8::1', 1)).toBe('2001:db8::1');
+  it('giá trị không phải một IP (danh sách, chữ, mã độc, rỗng) → undefined', () => {
+    for (const bad of ['', 'abc', '1.2.3.4, 5.6.7.8', '<script>', '999.1.1.1', '1.2.3.4:80']) {
+      expect(
+        clientIpFrom(headersOf({ 'cf-connecting-ip': bad }), 'cf-connecting-ip'),
+        bad,
+      ).toBeUndefined();
+    }
   });
 });
