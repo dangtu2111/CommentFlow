@@ -216,6 +216,11 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.accounts', 'access_token', 'SELECT'],
   ['cf_app', 'core.accounts', 'refresh_token', 'SELECT'],
   ['cf_app', 'core.accounts', 'id_token', 'SELECT'],
+  // cf_app không đọc trạng thái nhạy cảm của users (lấy từ phiên Better Auth phía server)
+  ['cf_app', 'core.users', 'is_admin', 'SELECT'],
+  ['cf_app', 'core.users', 'admin_role', 'SELECT'],
+  ['cf_app', 'core.users', 'email_verified', 'SELECT'],
+  ['cf_app', 'core.users', 'totp_enabled', 'SELECT'],
   // cf_app chỉ ghi users.name/image/locale/updated_at; không ghi/chèn phiên, tài khoản
   ['cf_app', 'core.users', 'email', 'UPDATE'],
   ['cf_app', 'core.users', 'email_verified', 'UPDATE'],

@@ -1,12 +1,9 @@
 import { defineConfig } from 'vitest/config';
+import { loadRepoEnv } from '../../scripts/lib/load-env.mjs';
 
 // Test tích hợp: chạy trên DB test thật (TEST_DATABASE_URL / TEST_DATABASE_ADMIN_URL → cf_test).
-// Biến lấy từ môi trường hoặc file .env ở gốc repo (Node đọc, không in ra). Thiếu biến → thất bại rõ ràng.
-try {
-  process.loadEnvFile(new URL('../../.env', import.meta.url));
-} catch {
-  // Không có .env (ví dụ CI): dùng biến môi trường sẵn có.
-}
+// Biến lấy từ môi trường, `.env.local` rồi `.env` ở gốc repo (Node đọc, không in ra). Thiếu biến → thất bại rõ ràng.
+loadRepoEnv(new URL('../../', import.meta.url));
 
 export default defineConfig({
   test: {

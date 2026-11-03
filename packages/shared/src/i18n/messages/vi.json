@@ -7,5 +7,100 @@
     "label": "Ngôn ngữ",
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "auth": {
+    "brand": "CommentFlow AI",
+    "tabs": {
+      "label": "Chọn thao tác",
+      "login": "Đăng nhập",
+      "register": "Đăng ký"
+    },
+    "fields": {
+      "email": "Email",
+      "emailPlaceholder": "ten@congty.vn",
+      "password": "Mật khẩu",
+      "passwordHint": "Tối thiểu 10 ký tự.",
+      "passwordConfirm": "Nhập lại mật khẩu",
+      "newPassword": "Mật khẩu mới",
+      "name": "Họ và tên",
+      "namePlaceholder": "Nguyễn Văn A",
+      "showPassword": "Hiện mật khẩu",
+      "hidePassword": "Ẩn mật khẩu"
+    },
+    "login": {
+      "title": "Chào mừng bạn trở lại",
+      "subtitle": "Đăng nhập để xem và duyệt câu trả lời cho bình luận, tin nhắn của shop.",
+      "submit": "Đăng nhập",
+      "forgot": "Quên mật khẩu?"
+    },
+    "register": {
+      "title": "Tạo tài khoản",
+      "subtitle": "Bắt đầu quản lý bình luận Fanpage cùng trợ lý AI.",
+      "submit": "Tạo tài khoản"
+    },
+    "checkEmail": {
+      "title": "Kiểm tra email của bạn",
+      "body": "Nếu địa chỉ {email} nhận được thư, hãy bấm liên kết trong thư để kích hoạt tài khoản.",
+      "bodyNoEmail": "Nếu địa chỉ email của bạn nhận được thư, hãy bấm liên kết trong thư để kích hoạt tài khoản.",
+      "hint": "Không thấy thư? Kiểm tra mục Spam hoặc gửi lại. Thư có thể mất vài phút.",
+      "resend": "Gửi lại thư",
+      "resent": "Đã gửi lại thư (nếu địa chỉ hợp lệ). Thư có thể mất vài phút.",
+      "back": "Quay lại đăng nhập"
+    },
+    "verify": {
+      "successTitle": "Email đã được xác minh",
+      "successBody": "Tài khoản đã sẵn sàng. Bạn có thể đăng nhập ngay.",
+      "errorTitle": "Liên kết không dùng được",
+      "errorBody": "Liên kết đã hết hạn hoặc không hợp lệ. Hãy đăng nhập để nhận thư xác minh mới.",
+      "toLogin": "Đến trang đăng nhập"
+    },
+    "forgot": {
+      "title": "Quên mật khẩu?",
+      "subtitle": "Nhập email của bạn, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu.",
+      "submit": "Gửi hướng dẫn",
+      "sent": "Nếu email này có tài khoản, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu. Thư có thể mất vài phút.",
+      "back": "Quay lại đăng nhập"
+    },
+    "reset": {
+      "title": "Đặt mật khẩu mới",
+      "subtitle": "Chọn mật khẩu mới cho tài khoản. Mọi thiết bị đang đăng nhập sẽ bị đăng xuất.",
+      "submit": "Lưu mật khẩu mới",
+      "invalidTitle": "Liên kết không dùng được",
+      "invalidBody": "Liên kết đặt lại mật khẩu đã hết hạn hoặc đã được dùng. Hãy yêu cầu liên kết mới.",
+      "requestNew": "Yêu cầu liên kết mới"
+    },
+    "banners": {
+      "verified": "Email đã được xác minh. Hãy đăng nhập.",
+      "resetDone": "Mật khẩu đã được đổi. Hãy đăng nhập bằng mật khẩu mới.",
+      "loggedOut": "Bạn đã đăng xuất."
+    },
+    "errors": {
+      "invalidCredentials": "Email hoặc mật khẩu không đúng. Hãy kiểm tra lại, hoặc đặt lại mật khẩu nếu bạn quên.",
+      "emailNotVerified": "Email này chưa được xác minh. Mở thư xác minh trong hộp thư, hoặc gửi lại thư bên dưới.",
+      "rateLimited": "Bạn đã thử quá nhiều lần. Hãy đợi một lúc rồi thử lại.",
+      "twoFactorRequired": "Tài khoản này cần mã xác thực 2 bước để đăng nhập.",
+      "emailInvalid": "Email chưa đúng định dạng, ví dụ ten@congty.vn.",
+      "passwordTooShort": "Mật khẩu cần tối thiểu 10 ký tự.",
+      "passwordTooLong": "Mật khẩu tối đa 128 ký tự.",
+      "passwordMismatch": "Hai mật khẩu chưa giống nhau. Hãy nhập lại.",
+      "nameInvalid": "Hãy nhập họ tên (tối đa 80 ký tự).",
+      "required": "Hãy điền ô này.",
+      "generic": "Có lỗi xảy ra phía chúng tôi. Hãy thử lại sau ít phút."
+    },
+    "app": {
+      "greeting": "Xin chào, {name}",
+      "body": "Bạn đã đăng nhập. Tạo workspace và kết nối Fanpage sẽ có ở bước tiếp theo.",
+      "logout": "Đăng xuất"
+    },
+    "panel": {
+      "title": "Trả lời bình luận và tin nhắn Fanpage nhanh hơn — bạn vẫn là người quyết định.",
+      "subtitle": "Trợ lý AI soạn câu trả lời từ cơ sở kiến thức của shop; nhân viên duyệt trước khi gửi.",
+      "officialApi": "Chỉ dùng API chính thức của Meta.",
+      "humanInControl": "AI chỉ soạn câu; chỉ tự gửi khi chủ shop bật.",
+      "bilingual": "Giao diện tiếng Việt và tiếng Anh."
+    },
+    "footer": {
+      "rights": "© {year} CommentFlow AI. Bảo lưu mọi quyền."
+    }
   }
 }

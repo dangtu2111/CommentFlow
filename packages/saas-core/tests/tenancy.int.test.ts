@@ -239,3 +239,34 @@ describe('addMember', () => {
     }
   });
 });
+
+describe('listMembers (HARDEN-3: chỉ trả cột cần cho danh sách)', () => {
+  it('trả đúng thành viên của workspace với đúng 5 trường, không lộ cột nhạy cảm, không lẫn workspace khác', async () => {
+    const owner = await createTestUser('Bình');
+    const staff = await createTestUser('An');
+    const outsider = await createTestUser('Ngoài');
+    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop A' });
+    const other = await tenancy.createWorkspace({ userId: outsider, name: 'Shop B' });
+    await tenancy.addMember({
+      workspaceId: ws.id,
+      actorUserId: owner,
+      userId: staff,
+      role: 'staff',
+    });
+
+    const list = await tenancy.listMembers(ws.id);
+    expect(list.map((m) => [m.name, m.role])).toEqual([
+      ['An', 'staff'],
+      ['Bình', 'owner'],
+    ]);
+    for (const member of list) {
+      expect(Object.keys(member).sort()).toEqual(['email', 'image', 'name', 'role', 'userId']);
+    }
+    expect(list.map((m) => m.userId)).not.toContain(outsider);
+    expect((await tenancy.listMembers(other.id)).map((m) => m.userId)).toEqual([outsider]);
+  });
+
+  it('workspaceId không hợp lệ → VALIDATION_FAILED', async () => {
+    expect(await codeOf(tenancy.listMembers('khong-phai-uuid'))).toBe('VALIDATION_FAILED');
+  });
+});

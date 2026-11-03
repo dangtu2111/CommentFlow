@@ -1,7 +1,8 @@
 import { accounts, sessions, users, verifications } from '@flow/db/schema/core';
-import { AppError } from '@flow/shared';
+import { AppError, isLocale, type Locale } from '@flow/shared';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { type Notifier, RESET_PASSWORD_HOURS, VERIFY_EMAIL_HOURS } from '../notify';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
 import { hashPassword, verifyPassword } from './password';
 import {
@@ -18,6 +19,8 @@ const MIN_SECRET_LENGTH = 32;
 export type AuthOptions = {
   /** Pool role cf_auth (`openAuthDb`): chỉ chạm users/sessions/accounts/verifications, trong ngữ cảnh app.ctx = 'auth'. */
   authDb: AuthHandle;
+  /** Gửi thư xác minh / đặt lại mật khẩu / "đã có tài khoản" (SMTP ở production, bộ nhớ ở test). */
+  notifier: Notifier;
   /** BETTER_AUTH_SECRET: khóa ký cookie phiên, chỉ ở env/secret manager, không bao giờ trong DB. */
   secret: string;
   baseURL: string;
@@ -59,6 +62,12 @@ export function createAuth(options: AuthOptions) {
     );
   }
 
+  const appUrl = options.baseURL.replace(/\/+$/, '');
+  const recipientOf = (user: { email: string; name: string; locale?: unknown }) => {
+    const locale: Locale = isLocale(user.locale) ? user.locale : 'vi';
+    return { email: user.email, name: user.name, locale };
+  };
+
   return betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
@@ -76,6 +85,29 @@ export function createAuth(options: AuthOptions) {
         verify: ({ hash, password }) => verifyPassword({ hash, password }),
       },
       revokeSessionsOnPasswordReset: true,
+      // Chưa xác minh email thì không đăng nhập được; đăng ký trùng email trả phản hồi y như đăng ký mới
+      // (Better Auth làm vậy khi requireEmailVerification bật) và gọi onExistingUserSignUp bên dưới.
+      requireEmailVerification: true,
+      resetPasswordTokenExpiresIn: RESET_PASSWORD_HOURS * 3600,
+      // Gửi KHÔNG chờ: thời gian phản hồi không phụ thuộc email có tồn tại hay không.
+      sendResetPassword: async ({ user, url }) => {
+        options.notifier.sendInBackground(recipientOf(user), { kind: 'reset-password', url });
+      },
+      onExistingUserSignUp: async ({ user }) => {
+        options.notifier.sendInBackground(recipientOf(user), {
+          kind: 'account-exists',
+          loginUrl: `${appUrl}/login`,
+          resetUrl: `${appUrl}/forgot-password`,
+        });
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      expiresIn: VERIFY_EMAIL_HOURS * 3600,
+      autoSignInAfterVerification: false,
+      sendVerificationEmail: async ({ user, url }) => {
+        options.notifier.sendInBackground(recipientOf(user), { kind: 'verify-email', url });
+      },
     },
     session: {
       expiresIn: APP_SESSION_SECONDS,
@@ -88,7 +120,8 @@ export function createAuth(options: AuthOptions) {
     },
     user: {
       additionalFields: {
-        locale: { type: 'string', required: false, defaultValue: 'vi', input: false },
+        // Cho nhận từ form đăng ký (nơi gọi phải kiểm vi|en; DB cũng có CHECK).
+        locale: { type: 'string', required: false, defaultValue: 'vi', input: true },
         isAdmin: { type: 'boolean', required: false, defaultValue: false, input: false },
         adminRole: { type: 'string', required: false, input: false },
         totpEnabled: { type: 'boolean', required: false, defaultValue: false, input: false },

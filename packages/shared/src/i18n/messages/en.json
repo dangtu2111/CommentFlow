@@ -7,5 +7,100 @@
     "label": "Language",
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "auth": {
+    "brand": "CommentFlow AI",
+    "tabs": {
+      "label": "Choose an action",
+      "login": "Sign in",
+      "register": "Sign up"
+    },
+    "fields": {
+      "email": "Email",
+      "emailPlaceholder": "name@company.com",
+      "password": "Password",
+      "passwordHint": "At least 10 characters.",
+      "passwordConfirm": "Confirm password",
+      "newPassword": "New password",
+      "name": "Full name",
+      "namePlaceholder": "Alex Nguyen",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to review and approve replies to your shop's comments and messages.",
+      "submit": "Sign in",
+      "forgot": "Forgot password?"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Start managing Fanpage comments with an AI assistant.",
+      "submit": "Create account"
+    },
+    "checkEmail": {
+      "title": "Check your email",
+      "body": "If {email} can receive email, select the link in the message to activate your account.",
+      "bodyNoEmail": "If your email address can receive email, select the link in the message to activate your account.",
+      "hint": "Can't find it? Check your spam folder or resend. It may take a few minutes.",
+      "resend": "Resend email",
+      "resent": "Email sent again (if the address is valid). It may take a few minutes.",
+      "back": "Back to sign in"
+    },
+    "verify": {
+      "successTitle": "Email verified",
+      "successBody": "Your account is ready. You can sign in now.",
+      "errorTitle": "This link can't be used",
+      "errorBody": "The link has expired or is not valid. Sign in to get a new verification email.",
+      "toLogin": "Go to sign in"
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email and we'll send instructions to reset your password.",
+      "submit": "Send instructions",
+      "sent": "If this email has an account, we've sent instructions to reset the password. It may take a few minutes.",
+      "back": "Back to sign in"
+    },
+    "reset": {
+      "title": "Set a new password",
+      "subtitle": "Choose a new password for your account. Every signed-in device will be signed out.",
+      "submit": "Save new password",
+      "invalidTitle": "This link can't be used",
+      "invalidBody": "The password reset link has expired or was already used. Request a new one.",
+      "requestNew": "Request a new link"
+    },
+    "banners": {
+      "verified": "Email verified. Please sign in.",
+      "resetDone": "Your password was changed. Sign in with the new password.",
+      "loggedOut": "You have been signed out."
+    },
+    "errors": {
+      "invalidCredentials": "Email or password is incorrect. Check them again, or reset your password if you forgot it.",
+      "emailNotVerified": "This email isn't verified yet. Open the verification email in your inbox, or resend it below.",
+      "rateLimited": "Too many attempts. Wait a while, then try again.",
+      "twoFactorRequired": "This account needs a two-step verification code to sign in.",
+      "emailInvalid": "That email doesn't look right, for example name@company.com.",
+      "passwordTooShort": "Password needs at least 10 characters.",
+      "passwordTooLong": "Password can be at most 128 characters.",
+      "passwordMismatch": "The two passwords don't match. Enter them again.",
+      "nameInvalid": "Enter your full name (up to 80 characters).",
+      "required": "Fill in this field.",
+      "generic": "Something went wrong on our side. Try again in a few minutes."
+    },
+    "app": {
+      "greeting": "Hello, {name}",
+      "body": "You're signed in. Creating a workspace and connecting a Fanpage come in the next step.",
+      "logout": "Sign out"
+    },
+    "panel": {
+      "title": "Reply to Fanpage comments and messages faster — you still decide.",
+      "subtitle": "The AI assistant drafts replies from your shop's knowledge base; staff review them before sending.",
+      "officialApi": "Official Meta APIs only.",
+      "humanInControl": "AI only drafts; it sends on its own only when the shop owner turns that on.",
+      "bilingual": "Vietnamese and English interface."
+    },
+    "footer": {
+      "rights": "© {year} CommentFlow AI. All rights reserved."
+    }
   }
 }

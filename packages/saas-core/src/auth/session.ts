@@ -1,4 +1,4 @@
-import { eq } from '@flow/db';
+import { eq } from '@flow/db/runtime';
 import { sessions } from '@flow/db/schema/core';
 import type { Auth } from './auth';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';

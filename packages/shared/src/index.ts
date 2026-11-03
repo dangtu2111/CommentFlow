@@ -6,6 +6,7 @@ export {
   LOCALE_COOKIE,
   LOCALES,
   type Locale,
+  negotiateLocale,
   resolveLocale,
 } from './i18n/locales';
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';

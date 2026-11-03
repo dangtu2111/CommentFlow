@@ -40,7 +40,8 @@ Chạy `/stitch-sync` trong Claude Code ở GĐ0 (MCP Stitch đã cấu hình s�
 | Trang chủ & Bảng giá | landing-pricing.html, landing-pricing.png | 7.7 | |  |
 | Bình luận | comments.html, comments.png | 7.1 | |  |
 | Tự động hóa | automation.png | 7.3c | | thiếu .html |
-| Đăng nhập & Đăng ký | auth-login-register.png | chưa khớp | | thiếu .html |
+| Đăng nhập & Đăng ký | auth-login-register.png | 7.7 (Công khai) | Đã dựng (`feat/auth-ui`) | thiếu .html. **Đã bỏ khi dựng (chủ dự án 03/11):** nút Facebook/Google, "Ghi nhớ 30 ngày", huy hiệu "Meta Tech Partner Certified", thống kê 500+/98.6%/18 giờ, "Dùng thử 14 ngày" |
+| Kiểm tra email · Xác minh email · Quên mật khẩu · Đặt lại mật khẩu · 3 thư (xác minh, đặt lại, đã có tài khoản) | (chưa vẽ) | 7.7 (Công khai) | Dựng tạm theo khung thẻ của màn đăng nhập (`feat/auth-ui`) | **Chưa có thiết kế Stitch** — cần vẽ rồi `/stitch-sync` để so lại |
 | Quy tắc spam | spam-rules.png | 7.4 | | thiếu .html |
 | Onboarding 5 bước | onboarding.png | 7.2 | | thiếu .html |
 | Email mời thành viên | email-invite.png | chưa khớp | | thiếu .html |
@@ -64,7 +65,7 @@ Chạy `/stitch-sync` trong Claude Code ở GĐ0 (MCP Stitch đã cấu hình s�
 
 | Thuộc tính | Stitch | `08_UI_UX_Specification.md` | Chốt |
 |---|---|---|---|
-| Màu chính | primary `#005868`, primary-container `#0B7285` (guideline Stitch ghi `#0B7285` là primary-600) | primary-600 `#0B7285` | |
+| Màu chính | primary `#005868`, primary-container `#0B7285` (guideline Stitch ghi `#0B7285` là primary-600); nút "Đăng nhập vào Workspace" trong `auth-login-register.png` dùng `#005868` | primary-600 `#0B7285` | **Chốt 03/11 (chủ dự án): theo `08` §2 — nút chính `#0B7285`**; token ở `apps/web/src/styles/tokens.css` |
 | Màu AI | secondary `#633CD5` (token), `#6741D9` (guideline) | ai-600 `#6741D9` | |
 | Nền trang | `#F5FAFF` | bg `#F6F8F9` | |
 | Chữ chính | `#101D25` | text `#0F1C24` | |

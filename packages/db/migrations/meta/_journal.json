@@ -85,6 +85,13 @@
       "when": 1793681009382,
       "tag": "0011_cf_auth_no_admin_insert",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793683197066,
+      "tag": "0012_users_select_columns",
+      "breakpoints": true
     }
   ]
 }
