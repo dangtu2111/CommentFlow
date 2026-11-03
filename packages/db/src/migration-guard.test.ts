@@ -79,3 +79,43 @@ describe('assertTestResetAllowed', () => {
     ).toBe('FORBIDDEN');
   });
 });
+
+describe('DB test theo làn (cf_test_<làn>)', () => {
+  it('cho migrate và xóa-tạo lại trên cf_test_b, cf_test_a1', () => {
+    for (const db of ['cf_test_a', 'cf_test_b', 'cf_test_c', 'cf_test_a1', 'cf_test_abcdefgh']) {
+      expect(assertMigrationAllowed({ appEnv: 'test', databaseUrl: url(db) })).toBe(db);
+      expect(assertTestResetAllowed({ appEnv: 'test', databaseUrl: url(db) })).toBe(db);
+    }
+  });
+
+  it('từ chối tên lạ: cf_test_, cf_testx, hoa, quá dài, ký tự đặc biệt', () => {
+    for (const db of [
+      'cf_test_',
+      'cf_testx',
+      'cf_test_B',
+      'cf_test_abcdefghi',
+      'cf_test_a-b',
+      'cf_test_a_b',
+      'cf_dev_a',
+      'commentflow',
+    ]) {
+      expect(codeOf(() => assertMigrationAllowed({ appEnv: 'test', databaseUrl: url(db) }))).toBe(
+        'FORBIDDEN',
+      );
+      expect(codeOf(() => assertTestResetAllowed({ appEnv: 'test', databaseUrl: url(db) }))).toBe(
+        'FORBIDDEN',
+      );
+    }
+  });
+
+  it('cf_dev vẫn không được reset; staging/production vẫn bị chặn theo APP_ENV', () => {
+    expect(
+      codeOf(() => assertTestResetAllowed({ appEnv: 'dev', databaseUrl: url('cf_dev') })),
+    ).toBe('FORBIDDEN');
+    for (const appEnv of ['staging', 'production']) {
+      expect(
+        codeOf(() => assertMigrationAllowed({ appEnv, databaseUrl: url('cf_test_b') })),
+      ).toBe('FORBIDDEN');
+    }
+  });
+});
