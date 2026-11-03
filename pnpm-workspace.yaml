@@ -3,3 +3,4 @@ packages:
   - packages/*
   - tools/*
   - scripts
+  - e2e

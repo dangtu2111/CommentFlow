@@ -14,6 +14,7 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/workspace-members` · Gói
 | Cổng kế hoạch | `pnpm check:plans` | plan đã duyệt không còn thẻ `[CẦN LÀM RÕ]`/ô trống (`scripts/lib/plan-gate.mjs`); mẫu: `docs/plans/TEMPLATE.md` |
 | Cổng số migration | `pnpm check:migrations` | số liên tục/không trùng, khớp `_journal.json` (`scripts/lib/migrations-check.mjs`); chạy ở CI |
 | Chạy song song (làn) | `CF_LANE=a pnpm test:db` · `pnpm cf:dev add-test-db a` | DB test riêng `cf_test_<làn>` (`scripts/lib/load-env.mjs`, `infra/scripts/cf-dev-add-test-db.sh`); quy trình: `docs/workflows/parallel.md` |
+| E2E cổng 0 (trình duyệt thật) | `pnpm e2e [tham số playwright]` | Playwright (`e2e/`), cần máy ảo + Mailpit + Valkey bật và Chromium cài một lần (`pnpm --filter @flow/e2e exec playwright install chromium`); DB `cf_test` (hoặc `cf_test_<CF_LANE>`); `scripts/e2e.mjs` + `scripts/lib/e2e-env.mjs`; KHÔNG nằm trong `pnpm test` |
 | Ranh giới gói | `pnpm depcruise` | luật ở `.dependency-cruiser.cjs`, test luật ở `tools/boundaries` |
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |
@@ -33,7 +34,8 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/workspace-members` · Gói
 | `packages/saas-core/` | `auth` (Better Auth + `flows`), `notify` (gửi thư), `tenancy`, `flags` — không biết gì về sản phẩm |
 | `packages/ai/` | `createLlmClient().call()` → LiteLLM + ghi `ai_usage` (chưa có pipeline) |
 | `infra/` | Compose (`docker-compose.yml` nền + `.dev.yml`), `postgres/init`, `litellm/config.yaml`, `scripts/print-dev-env.sh` |
-| `scripts/`, `tools/boundaries/` | Script vận hành (`cf-dev*`, `stack-check`) và test luật depcruise |
+| `e2e/` | Kịch bản Playwright cổng 0 (`tests/gate0.spec.ts`, vi+en) và `support/{totp,mailpit,i18n,env,flows}.ts` (test đơn vị cạnh file); không import gói nội bộ, không nằm trong depcruise |
+| `scripts/`, `tools/boundaries/` | Script vận hành (`cf-dev*`, `stack-check`, `e2e`) và test luật depcruise |
 | `env.example`, `infra/env.cf-dev.example` | Tên biến `.env` (máy code) và `.env.cf-dev` (máy ảo); không có giá trị thật |
 
 ## Bản đồ theo miền

@@ -1,0 +1,17 @@
+{
+  "name": "@flow/e2e",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Kịch bản E2E cổng 0 bằng Playwright (chạy qua `pnpm e2e` ở gốc). Không import gói nội bộ; `pnpm test` chỉ chạy test đơn vị của support/.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.19.2",
+    "vitest": "5.0.5"
+  }
+}
