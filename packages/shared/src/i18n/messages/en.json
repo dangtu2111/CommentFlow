@@ -87,7 +87,12 @@
       "passwordMismatch": "The two passwords don't match. Enter them again.",
       "nameInvalid": "Enter your full name (up to 80 characters).",
       "required": "Fill in this field.",
-      "generic": "Something went wrong on our side. Try again in a few minutes."
+      "generic": "Something went wrong on our side. Try again in a few minutes.",
+      "invalidCode": "That code is not correct. Check the latest code in your authenticator app.",
+      "invalidBackupCode": "That backup code is not valid or was already used. Each code works once.",
+      "twoFactorExpired": "The verification session expired. Please sign in again.",
+      "wrongPassword": "That password is not correct.",
+      "twoFactorRequiredNoDisable": "Workspace owners and administrators must keep two-step verification on, so it cannot be turned off."
     },
     "app": {
       "greeting": "Hello, {name}",
@@ -103,6 +108,78 @@
     },
     "footer": {
       "rights": "© {year} CommentFlow AI. All rights reserved."
+    },
+    "twoFactor": {
+      "title": "Two-step verification",
+      "subtitle": "Enter the 6-digit code from the authenticator app on your phone.",
+      "codeLabel": "Verification code",
+      "codeHint": "The code changes every 30 seconds.",
+      "submit": "Verify",
+      "useBackup": "Use a backup code",
+      "useApp": "Use the authenticator app",
+      "backupLabel": "Backup code",
+      "backupHint": "Looks like xxxxx-xxxxx. Each code works once.",
+      "back": "Back to sign in"
+    },
+    "security": {
+      "pageTitle": "Account security",
+      "title": "Account security",
+      "subtitle": "Manage two-step verification and the devices signed in to your account.",
+      "requiredBanner": "Workspace owners and administrators must turn on two-step verification. Turn it on now to keep using the app.",
+      "backToApp": "Back to the app",
+      "twoFactor": {
+        "title": "Two-step verification (TOTP)",
+        "offBody": "Add a second layer of protection: besides your password you need a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password...).",
+        "onBody": "On. Each sign-in also needs a code from your authenticator app.",
+        "statusOn": "On",
+        "statusOff": "Off",
+        "passwordLabel": "Current password",
+        "passwordHint": "Enter your password again to confirm it is you.",
+        "start": "Turn on two-step verification",
+        "scanTitle": "Scan the QR code",
+        "scanBody": "Open your authenticator app, add an account and scan the code below.",
+        "qrAlt": "QR code for adding the account to an authenticator app",
+        "manualKey": "Can't scan? Enter this key:",
+        "confirmLabel": "The 6-digit code shown in the app",
+        "confirm": "Confirm and turn on",
+        "backupTitle": "Save your backup codes",
+        "backupBody": "Use them if you lose your phone. Each code works once and is shown only now. Keep them somewhere safe.",
+        "copy": "Copy all",
+        "copied": "Copied",
+        "saved": "I saved these codes",
+        "regenTitle": "Regenerate backup codes",
+        "regenBody": "Old codes stop working immediately.",
+        "regen": "Generate new codes",
+        "disableTitle": "Turn off two-step verification",
+        "disableBody": "Your account will be protected by the password only. All existing backup codes will be deleted.",
+        "disable": "Turn off two-step verification"
+      },
+      "sessions": {
+        "title": "Signed-in devices",
+        "body": "Your own sign-in sessions. If you see a device you do not recognize, sign it out and change your password.",
+        "current": "This device",
+        "lastUsed": "Last active: {date}",
+        "signOut": "Sign out this device",
+        "empty": "No sessions.",
+        "device": "{browser} on {os}",
+        "browser": {
+          "edge": "Edge",
+          "opera": "Opera",
+          "firefox": "Firefox",
+          "chrome": "Chrome",
+          "safari": "Safari",
+          "other": "Other browser"
+        },
+        "os": {
+          "windows": "Windows",
+          "macos": "macOS",
+          "ios": "iOS",
+          "android": "Android",
+          "chromeos": "ChromeOS",
+          "linux": "Linux",
+          "other": "another system"
+        }
+      }
     }
   }
 }

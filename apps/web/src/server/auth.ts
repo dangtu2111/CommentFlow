@@ -7,8 +7,11 @@ import {
   createNotifier,
   createPasswordPolicy,
   createSmtpTransport,
+  createTwoFactorFlows,
   createValkeyRateLimiter,
   openAuthDb,
+  openTenancy,
+  type TwoFactorFlows,
 } from '@flow/saas-core';
 import type { ClientIpSource } from '../lib/client-ip';
 import { loadServerEnv } from './env';
@@ -21,6 +24,7 @@ export type AuthRuntime = {
   auth: Auth;
   authHandle: AuthHandle;
   flows: AuthFlows;
+  twoFactor: TwoFactorFlows;
   appUrl: string;
   clientIpSource: ClientIpSource;
 };
@@ -53,6 +57,7 @@ function createRuntime(): AuthRuntime {
     // Chỉ sự kiện + lý do; không có mật khẩu, băm hay tiền tố băm.
     onWarn: (warning) => console.warn(JSON.stringify(warning)),
   });
+  const tenancy = openTenancy({ connectionString: env.DATABASE_URL });
   const auth = createAuth({
     authDb: authHandle,
     notifier,
@@ -60,10 +65,19 @@ function createRuntime(): AuthRuntime {
     baseURL: env.BETTER_AUTH_URL,
     appEnv: env.APP_ENV,
   });
+  const twoFactor = createTwoFactorFlows({
+    auth,
+    authDb: authHandle,
+    limiter,
+    secret: env.BETTER_AUTH_SECRET,
+    workspaceRoles: async (userId) =>
+      (await tenancy.listWorkspacesOfUser(userId)).map((w) => w.role),
+  });
   return {
     auth,
     authHandle,
-    flows: createAuthFlows({ auth, limiter, passwordPolicy }),
+    flows: createAuthFlows({ auth, limiter, passwordPolicy, twoFactor }),
+    twoFactor,
     appUrl: env.BETTER_AUTH_URL,
     clientIpSource: env.CLIENT_IP_SOURCE,
   };

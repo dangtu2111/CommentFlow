@@ -87,7 +87,12 @@
       "passwordMismatch": "Hai mật khẩu chưa giống nhau. Hãy nhập lại.",
       "nameInvalid": "Hãy nhập họ tên (tối đa 80 ký tự).",
       "required": "Hãy điền ô này.",
-      "generic": "Có lỗi xảy ra phía chúng tôi. Hãy thử lại sau ít phút."
+      "generic": "Có lỗi xảy ra phía chúng tôi. Hãy thử lại sau ít phút.",
+      "invalidCode": "Mã chưa đúng. Hãy kiểm tra lại mã mới nhất trong ứng dụng xác thực.",
+      "invalidBackupCode": "Mã dự phòng chưa đúng hoặc đã được dùng. Mỗi mã chỉ dùng được một lần.",
+      "twoFactorExpired": "Phiên xác minh đã hết hạn. Hãy đăng nhập lại.",
+      "wrongPassword": "Mật khẩu chưa đúng.",
+      "twoFactorRequiredNoDisable": "Tài khoản của chủ workspace hoặc quản trị viên bắt buộc có xác thực 2 bước nên không thể tắt."
     },
     "app": {
       "greeting": "Xin chào, {name}",
@@ -103,6 +108,78 @@
     },
     "footer": {
       "rights": "© {year} CommentFlow AI. Bảo lưu mọi quyền."
+    },
+    "twoFactor": {
+      "title": "Xác thực 2 bước",
+      "subtitle": "Nhập mã 6 chữ số từ ứng dụng xác thực trên điện thoại của bạn.",
+      "codeLabel": "Mã xác thực",
+      "codeHint": "Mã đổi sau mỗi 30 giây.",
+      "submit": "Xác nhận",
+      "useBackup": "Dùng mã dự phòng",
+      "useApp": "Dùng ứng dụng xác thực",
+      "backupLabel": "Mã dự phòng",
+      "backupHint": "Dạng xxxxx-xxxxx. Mỗi mã chỉ dùng được một lần.",
+      "back": "Quay lại đăng nhập"
+    },
+    "security": {
+      "pageTitle": "Bảo mật tài khoản",
+      "title": "Bảo mật tài khoản",
+      "subtitle": "Quản lý xác thực 2 bước và các thiết bị đang đăng nhập.",
+      "requiredBanner": "Tài khoản của chủ workspace hoặc quản trị viên bắt buộc bật xác thực 2 bước. Hãy bật ngay để tiếp tục sử dụng.",
+      "backToApp": "Về trang chính",
+      "twoFactor": {
+        "title": "Xác thực 2 bước (TOTP)",
+        "offBody": "Thêm một lớp bảo vệ: ngoài mật khẩu, bạn cần mã 6 chữ số từ ứng dụng xác thực (Google Authenticator, Microsoft Authenticator, 1Password...).",
+        "onBody": "Đang bật. Mỗi lần đăng nhập cần thêm mã từ ứng dụng xác thực.",
+        "statusOn": "Đang bật",
+        "statusOff": "Chưa bật",
+        "passwordLabel": "Mật khẩu hiện tại",
+        "passwordHint": "Nhập lại mật khẩu để xác nhận đây là bạn.",
+        "start": "Bật xác thực 2 bước",
+        "scanTitle": "Quét mã QR",
+        "scanBody": "Mở ứng dụng xác thực, chọn thêm tài khoản và quét mã bên dưới.",
+        "qrAlt": "Mã QR để thêm tài khoản vào ứng dụng xác thực",
+        "manualKey": "Không quét được? Nhập khóa này:",
+        "confirmLabel": "Mã 6 chữ số hiện trong ứng dụng",
+        "confirm": "Xác nhận và bật",
+        "backupTitle": "Lưu mã dự phòng",
+        "backupBody": "Dùng khi mất điện thoại. Mỗi mã chỉ dùng được một lần và chỉ hiện lần này. Hãy lưu ở nơi an toàn.",
+        "copy": "Sao chép tất cả",
+        "copied": "Đã sao chép",
+        "saved": "Tôi đã lưu các mã này",
+        "regenTitle": "Tạo lại mã dự phòng",
+        "regenBody": "Mã cũ sẽ mất hiệu lực ngay.",
+        "regen": "Tạo mã mới",
+        "disableTitle": "Tắt xác thực 2 bước",
+        "disableBody": "Tài khoản sẽ chỉ còn mật khẩu bảo vệ. Toàn bộ mã dự phòng hiện có sẽ bị hủy.",
+        "disable": "Tắt xác thực 2 bước"
+      },
+      "sessions": {
+        "title": "Thiết bị đang đăng nhập",
+        "body": "Các phiên đăng nhập của riêng bạn. Nếu thấy thiết bị lạ, hãy đăng xuất nó và đổi mật khẩu.",
+        "current": "Thiết bị này",
+        "lastUsed": "Hoạt động gần nhất: {date}",
+        "signOut": "Đăng xuất thiết bị này",
+        "empty": "Không có phiên nào.",
+        "device": "{browser} trên {os}",
+        "browser": {
+          "edge": "Edge",
+          "opera": "Opera",
+          "firefox": "Firefox",
+          "chrome": "Chrome",
+          "safari": "Safari",
+          "other": "Trình duyệt khác"
+        },
+        "os": {
+          "windows": "Windows",
+          "macos": "macOS",
+          "ios": "iOS",
+          "android": "Android",
+          "chromeos": "ChromeOS",
+          "linux": "Linux",
+          "other": "hệ điều hành khác"
+        }
+      }
     }
   }
 }

@@ -57,10 +57,14 @@ Trạng thái: **Đã chốt** (chủ dự án, 03/11). Căn cứ: `docs/13_Secu
 
 ## 4. 2FA (mốc M3)
 
-- Plugin `twoFactor` của Better Auth, `storeBackupCodes: "encrypted"` (ADR 003), **10 mã dự phòng** (theo `13` §2; Stitch vẽ 8 — bỏ), mã TOTP 6 số / 30 giây; bắt buộc với Owner và mọi Admin (guard chuyển về `/app/security?required=1`); Staff tùy chọn.
-- Tắt 2FA và tạo lại mã dự phòng đòi mật khẩu. Đổi `BETTER_AUTH_SECRET` làm hỏng secret 2FA đã lưu (ADR 003).
-- QR sinh trên server (`qrcode`, MIT), không dịch vụ ngoài.
-- `/app/security` hiện **phiên thật của chính người dùng** (trình duyệt/hệ điều hành suy từ `user_agent`, lần dùng cuối, đăng xuất từng phiên); không hiện IP/vị trí.
+- Plugin `twoFactor` của Better Auth 1.7, `storeBackupCodes: "encrypted"` (ADR 003), **10 mã dự phòng** (theo `13` §2; Stitch vẽ 8 — bỏ), TOTP 6 số / 30 giây, issuer "CommentFlow AI". Bảng `core.two_factors` (migration 0013): chỉ `cf_auth` trong `app.ctx='auth'`, `cf_app` không có quyền nào; `secret` và `backup_codes` được plugin mã hóa trước khi lưu (đã kiểm: không chứa mã thô). Cột `core.users.totp_enabled` giữ tên SQL, thuộc tính Drizzle/Better Auth là `twoFactorEnabled`.
+- **Đăng nhập hai bước:** đúng mật khẩu mà đã bật 2FA → CHƯA có phiên (đã kiểm: không dòng `sessions`, `getSession` = null); web đặt cookie chờ của plugin + **cookie ký của ta** (`cf-2fa-pending`, HMAC bằng `BETTER_AUTH_SECRET`, 10 phút, chứa email người vừa qua bước mật khẩu) rồi chuyển sang `/login/2fa`. Chỉ khi mã TOTP/mã dự phòng đúng mới cấp phiên.
+- **Rate limit nhập mã:** 5 lần / 15 phút theo email lấy từ cookie ký (không từ dữ liệu client — client không giả được để né giới hạn; đổi IP không giúp), cộng khóa tạm riêng theo người dùng của plugin. Ở trang bảo mật, mọi thao tác đòi mật khẩu (bật, tắt, tạo lại mã) dùng xô `reauth` 5 lần / 15 phút theo `userId` (phiên bị đánh cắp không dò được mật khẩu).
+- **Mã dự phòng** dùng đúng một lần, giữ dấu gạch ngang (`xxxxx-xxxxx`); tạo lại thì mã cũ mất hiệu lực. Tắt 2FA và tạo lại mã đòi mật khẩu. Đổi `BETTER_AUTH_SECRET` làm hỏng secret 2FA đã lưu (ADR 003).
+- **Bắt buộc với Owner của workspace và quản trị nền tảng (`is_admin`)**; Staff tùy chọn. Cổng ở `app/app/(guarded)/layout.tsx` chuyển về `/app/security`; trạng thái đọc phía server từ phiên + vai trò thật (qua RLS, `listWorkspacesOfUser`). Owner/Admin không tắt được 2FA (`required`). Lưu ý: `members.role` hiện chỉ có `owner|staff`; "Admin" của spec = `users.is_admin`.
+- QR sinh trên server (`qrcode` 1.5.4, MIT), không dịch vụ ngoài; khóa nhập tay hiện kèm QR.
+- `/app/security` (tạm, giao diện Cài đặt đầy đủ làm sau) hiện **phiên thật của chính người dùng**: trình duyệt/hệ điều hành suy từ `user_agent` bằng bộ nhận dạng tự viết (`ua-parser-js` 2.x là AGPL nên không dùng), lần dùng cuối, đánh dấu phiên hiện tại, đăng xuất từng phiên khác (kiểm phiên thuộc về người dùng — không đăng xuất được phiên của người khác, cũng không qua đường này đăng xuất phiên hiện tại); **không hiện IP/vị trí**.
+- Nội dung bịa trong Stitch (cảnh báo Meta Tech Partner, "tạm ngưng sau 24 giờ", "8 mã") đã bỏ; trang dùng chuỗi thật vi/en.
 
 ## 5. Phụ thuộc mới
 

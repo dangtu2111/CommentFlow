@@ -8,6 +8,8 @@ Kế hoạch: `docs/plans/feat-auth-security.md` (đã duyệt 03/11) · ADR: `d
 
 - **M2 (mật khẩu lộ) xong:** `password-policy.ts` (danh sách cục bộ SecLists 10k MIT + HIBP k-anonymity, timeout 2s cho qua + log, bộ nhớ đệm theo tiền tố), `createAuthFlows` nhận `passwordPolicy` bắt buộc (đăng ký sau cổng rate limit; đặt lại kiểm trước khi dùng token), thông báo vi/en, `PWNED_CHECK` (off chỉ dev/test/ci), ADR 004 §3 có nguồn + giấy phép, `docs/third-party/SecLists-LICENSE.txt`.
 
+- **M3 (2FA + trang bảo mật) xong:** migration `0013_two_factors.sql` (bảng chỉ `cf_auth`), plugin `twoFactor`, `saas-core/src/auth/two-factor.ts` (bật/xác nhận/tắt/tạo lại mã, nhập mã khi đăng nhập, `overview`/`posture`/`revokeSession`, `requiresTwoFactor`), `pending.ts` (cookie ký chờ 2FA), `ua.ts` (nhận dạng trình duyệt tự viết), xô `twofa` và `reauth` ở limiter; web: `/login/2fa`, `/app/security`, cổng `app/app/(guarded)/layout.tsx`, `DATABASE_URL` (cf_app) thành bắt buộc cho web, chuỗi vi/en; test tích hợp `two-factor.int.test.ts` (15 ca, gồm Owner/`is_admin` bắt buộc, IDOR phiên, rate limit) + test RLS `two_factors`.
+
 ## Đã đọc và rút ra
 | File / nguồn | Điều cần nhớ |
 |---|---|
@@ -15,13 +17,17 @@ Kế hoạch: `docs/plans/feat-auth-security.md` (đã duyệt 03/11) · ADR: `d
 | ioredis 6.0.0 | `keyPrefix` áp dụng cả cho KEYS của `eval`; `redis.keys()` trả tên ĐẦY ĐỦ (có tiền tố) khi client không đặt `keyPrefix` — khi dọn khóa phải xóa đúng tên đầy đủ |
 | next-intl | HTML của mọi trang chứa TOÀN BỘ chuỗi dịch trong payload → test HTTP không được dò câu chữ thông báo bằng `includes` trên chuỗi cố định; dò câu đã render (ví dụ có số) |
 | Thư mục `_x` trong `app/` | Next coi là private (không tạo route) |
+| Better Auth 1.7.15 `twoFactor` | `enableTwoFactor` tạo secret + 10 mã nhưng `verified=false`/`totp_enabled=false` cho đến khi `verifyTOTP` đúng; đúng mật khẩu khi đã bật 2FA trả `twoFactorRedirect`, KHÔNG tạo phiên, đặt cookie `better-auth.two_factor` (10 phút); `verifyBackupCode` giữ dấu gạch của mã; plugin tự có rate limit 3 lần/10 giây ở `/two-factor/*` và khóa tạm theo người dùng; bảng cần thêm cột `verified`, `failed_verification_count`, `locked_until` |
+| `apps/web` build | Không import `@flow/db` gốc (kéo `../migrations`, Turbopack lỗi) — dùng `@flow/db/runtime`; Server Action `'use server'` chỉ export hàm async |
+| `.env` | Agent KHÔNG được đọc (kể cả đếm dòng). Khi chạy thử web thủ công thiếu `SMTP_FROM`/`BETTER_AUTH_URL` → truyền qua biến môi trường ở dòng lệnh |
 
 ## Quyết định đã chốt trong phiên
 - Không dựng server tùy biến lấy IP; dev chỉ xô theo email; staging/production `CF-Connecting-IP`; không khóa chung "unknown"; Valkey sập: log cảnh báo (không PII).
 
 ## Còn lại (theo thứ tự)
-1. **M3 2FA:** migration `0013_two_factors.sql`, plugin `twoFactor` (10 mã, `storeBackupCodes: 'encrypted'`), trang `/login/2fa`, `/app/security` (QR `qrcode`, wizard 3 bước, tắt 2FA/tạo lại mã đòi mật khẩu, danh sách phiên thật của người dùng + đăng xuất từng phiên; không IP/vị trí), xô 2FA 5/15 phút/người dùng, ép Owner/Admin (dữ liệu gieo chỉ `cf_test`).
-2. Cuối nhánh: `verifier-security` + `verifier-db` MỘT lần trên diff nhánh + các sửa sau verifier của `feat/auth-ui` (trọng tâm: client không giả IP vượt rate limit); cập nhật gap matrix/codemap; xóa plan + handoff khi xong.
+1. Cuối nhánh: `verifier-security` + `verifier-db` MỘT lần trên diff nhánh + các sửa sau verifier của `feat/auth-ui` (trọng tâm: client không giả IP vượt rate limit; cookie ký chờ 2FA; IDOR phiên); sửa mọi mục "Chặn merge"; cập nhật gap matrix/codemap; xóa plan + handoff khi xong; mở PR khi chủ dự án đồng ý.
+2. Việc ngoài nhánh (đã ghi gap matrix): giao diện Cài đặt đầy đủ, đổi mật khẩu/ngôn ngữ trong Cài đặt, quy trình khôi phục mất 2FA, Dockerfile web staging + cloudflared.
+3. Chưa chạy trình duyệt thật cho UI 2FA (chỉ kiểm: luồng ở test tích hợp + build + chuyển hướng khi chưa đăng nhập). Chủ dự án thử tay: đăng ký → /app/security → bật 2FA → đăng xuất → đăng nhập.
 
 ## Lệnh test liên quan
 ```

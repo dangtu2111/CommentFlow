@@ -6,6 +6,7 @@ const BASE = {
   BETTER_AUTH_SECRET: 'x'.repeat(40),
   BETTER_AUTH_URL: 'http://localhost:3000',
   DATABASE_AUTH_URL: 'postgresql://cf_auth:x@localhost:5432/db',
+  DATABASE_URL: 'postgresql://cf_app:x@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379/0',
   SMTP_HOST: 'localhost',
   SMTP_PORT: '1025',

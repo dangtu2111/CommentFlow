@@ -224,6 +224,55 @@ describe('đăng ký, quên mật khẩu, gửi lại thư', () => {
   });
 });
 
+describe('nhập mã 2FA và xác nhận lại (twofa, reauth)', () => {
+  it('twofa: 5 lần/15 phút theo email; lần thứ 6 bị chặn; người khác không bị ảnh hưởng', async () => {
+    const { limiter } = limiterWith();
+    for (let i = 0; i < 5; i++)
+      expect((await limiter.check('twofa', { email: 'a@example.test' })).allowed).toBe(true);
+    expect((await limiter.check('twofa', { email: 'a@example.test' })).allowed).toBe(false);
+    expect((await limiter.check('twofa', { email: 'b@example.test' })).allowed).toBe(true);
+  });
+
+  it('twofa: đổi IP không né được (xô theo email không dùng IP)', async () => {
+    const { limiter } = limiterWith();
+    const results = [];
+    for (let i = 1; i <= 6; i++)
+      results.push(
+        await limiter.check('twofa', { email: 'a@example.test', ip: `198.51.100.${i}` }),
+      );
+    expect(results.slice(0, 5).every((r) => r.allowed)).toBe(true);
+    expect(results[5]?.allowed).toBe(false);
+  });
+
+  it('twofa/reauth: cũng có xô theo userId; reauth chỉ dùng userId; không có danh tính thì không có xô (không khóa chung)', async () => {
+    const { limiter } = limiterWith();
+    for (let i = 0; i < 5; i++)
+      expect((await limiter.check('reauth', { userId: 'u1' })).allowed).toBe(true);
+    expect((await limiter.check('reauth', { userId: 'u1' })).allowed).toBe(false);
+    expect((await limiter.check('reauth', { userId: 'u2' })).allowed).toBe(true);
+    for (let i = 0; i < 20; i++) expect((await limiter.check('reauth', {})).allowed).toBe(true);
+    // reset sau khi thành công
+    await limiter.reset('reauth', { userId: 'u1' });
+    expect((await limiter.check('reauth', { userId: 'u1' })).allowed).toBe(true);
+  });
+
+  it('kho hỏng: twofa và reauth dùng bộ đếm dự phòng trong bộ nhớ (vẫn giới hạn) + cảnh báo', async () => {
+    const broken: RateStore = {
+      hit: vi.fn().mockRejectedValue(new Error('down')),
+      reset: vi.fn().mockRejectedValue(new Error('down')),
+    };
+    const { limiter, warnings } = limiterWith({ store: broken });
+    for (let i = 0; i < 5; i++)
+      expect((await limiter.check('twofa', { email: 'a@example.test' })).allowed).toBe(true);
+    expect((await limiter.check('twofa', { email: 'a@example.test' })).allowed).toBe(false);
+    expect(warnings[0]).toEqual({
+      event: 'ratelimit_store_unavailable',
+      action: 'twofa',
+      mode: 'memory',
+    });
+  });
+});
+
 describe('khi kho (Valkey) không dùng được', () => {
   const broken: RateStore = {
     hit: vi.fn().mockRejectedValue(new Error('ECONNREFUSED 10.0.0.1:6379 password=hunter2')),

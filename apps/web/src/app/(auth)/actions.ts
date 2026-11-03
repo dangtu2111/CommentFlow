@@ -44,6 +44,11 @@ export async function loginAction(_previous: FormState, data: FormData): Promise
     headers: requestHeaders,
     ...(ip ? { ip } : {}),
   });
+  if (result.status === 'two_factor_required') {
+    // Mật khẩu đúng nhưng CHƯA có phiên: chỉ đặt cookie chờ (plugin + cookie ký của ta) rồi sang bước nhập mã.
+    applyCookies(await cookies(), result.cookies);
+    redirect('/login/2fa');
+  }
   if (result.status !== 'ok') return signInToState(result, email.trim());
 
   const jar = await cookies();
@@ -51,6 +56,40 @@ export async function loginAction(_previous: FormState, data: FormData): Promise
   setLocaleCookie(jar, result.locale);
   jar.delete(PENDING_EMAIL_COOKIE); // đã xong bước xác minh/đăng nhập: không giữ email tạm
   redirect('/app');
+}
+
+/** Bước 2 của đăng nhập: nhập mã TOTP hoặc mã dự phòng. Chỉ khi mã đúng mới có phiên. */
+export async function verifyTwoFactorAction(
+  _previous: FormState,
+  data: FormData,
+): Promise<FormState> {
+  const kind = text(data, 'kind') === 'backup' ? 'backup' : 'totp';
+  const { headers: requestHeaders } = await requestContext();
+  const result = await getAuthRuntime().twoFactor.verifyLogin({
+    code: text(data, 'code'),
+    kind,
+    headers: requestHeaders,
+  });
+  switch (result.status) {
+    case 'invalid_code':
+      return errorState(kind === 'backup' ? 'invalidBackupCode' : 'invalidCode');
+    case 'rate_limited':
+      return {
+        ...errorState('rateLimited'),
+        retryMinutes: Math.max(1, Math.ceil(result.retryAfterSeconds / 60)),
+      } as FormState;
+    case 'expired': {
+      redirect('/login');
+      break;
+    }
+    case 'ok': {
+      const jar = await cookies();
+      applyCookies(jar, result.cookies);
+      setLocaleCookie(jar, result.locale);
+      jar.delete(PENDING_EMAIL_COOKIE);
+      redirect('/app');
+    }
+  }
 }
 
 export async function registerAction(_previous: FormState, data: FormData): Promise<FormState> {

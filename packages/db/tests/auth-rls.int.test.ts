@@ -4,7 +4,7 @@ import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { AuthDb } from '../src/auth-db';
 import type { FlowDb } from '../src/client';
-import { accounts, sessions, users, verifications } from '../src/schema/core';
+import { accounts, sessions, twoFactors, users, verifications } from '../src/schema/core';
 import {
   createAdminPool,
   createAppDb,
@@ -105,6 +105,42 @@ describe('cf_app KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính
           .values({ identifier: 'x', value: 'y', expiresAt: new Date(Date.now() + HOUR) }),
       ),
     ).toBe(RLS_OR_PRIVILEGE_DENIED);
+  });
+
+  it('two_factors (secret TOTP + mã dự phòng đã mã hóa): cf_app không có quyền nào, kể cả đọc dòng của chính mình', async () => {
+    await admin.query(
+      "INSERT INTO core.two_factors (user_id, secret, backup_codes) VALUES ($1, 'bi-mat-gia', 'ma-gia')",
+      [u1],
+    );
+    expect(await expectRejectCode(db.system.select().from(twoFactors))).toBe(
+      RLS_OR_PRIVILEGE_DENIED,
+    );
+    expect(await expectRejectCode(db.withUser(u1, (tx) => tx.select().from(twoFactors)))).toBe(
+      RLS_OR_PRIVILEGE_DENIED,
+    );
+    expect(await expectRejectCode(db.withWorkspace(ws, (tx) => tx.select().from(twoFactors)))).toBe(
+      RLS_OR_PRIVILEGE_DENIED,
+    );
+    expect(
+      await expectRejectCode(
+        db.system.insert(twoFactors).values({ userId: u1, secret: 'x', backupCodes: 'y' }),
+      ),
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
+  });
+
+  it('two_factors: cf_auth chỉ đọc/ghi được khi có app.ctx = auth (thiếu ngữ cảnh → 0 dòng, ghi bị từ chối)', async () => {
+    const withCtx = await authDb.transaction((tx) =>
+      tx.select({ id: twoFactors.id }).from(twoFactors).where(eq(twoFactors.userId, u1)),
+    );
+    expect(withCtx.length).toBeGreaterThan(0);
+    const { rows } = await authNoCtx.query('SELECT count(*)::int AS n FROM core.two_factors');
+    expect(rows[0].n).toBe(0);
+    await expect(
+      authNoCtx.query(
+        "INSERT INTO core.two_factors (user_id, secret, backup_codes) VALUES ($1, 'x', 'y')",
+        [u1],
+      ),
+    ).rejects.toMatchObject({ code: RLS_OR_PRIVILEGE_DENIED });
   });
 
   it('không ghi được: chèn users/sessions/accounts bị từ chối; sửa users 0 dòng; xóa sessions bị từ chối', async () => {
@@ -256,7 +292,7 @@ describe('withUser(u): chỉ ĐỌC dòng của mình; chỉ GHI users.name/imag
     for (const change of [
       { email: `${randomUUID()}@example.test` },
       { emailVerified: true },
-      { totpEnabled: true },
+      { twoFactorEnabled: true },
       { isAdmin: true },
       { adminRole: 'super' },
     ]) {
@@ -435,7 +471,7 @@ describe('cf_app không đọc cột nhạy cảm của users (migration 0012, H
     ['is_admin', { v: users.isAdmin }],
     ['admin_role', { v: users.adminRole }],
     ['email_verified', { v: users.emailVerified }],
-    ['totp_enabled', { v: users.totpEnabled }],
+    ['totp_enabled', { v: users.twoFactorEnabled }],
   ] as const;
 
   it.each(sensitive)(

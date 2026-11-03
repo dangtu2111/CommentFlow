@@ -1,10 +1,10 @@
 import { bucketKey, normalizeEmail, normalizeIp } from './keys';
 import { createMemoryStore, type RateStore } from './store';
 
-export type RateAction = 'login' | 'register' | 'resend' | 'forgot';
+export type RateAction = 'login' | 'register' | 'resend' | 'forgot' | 'twofa' | 'reauth';
 
 /** Danh tính của một lần thử. Không có IP (dev không tin header nào) thì xô cần IP bị BỎ QUA — không có khóa chung "unknown". */
-export type RateIdentity = { email?: string; ip?: string };
+export type RateIdentity = { email?: string; ip?: string; userId?: string };
 
 type BucketPolicy = {
   bucket: string;
@@ -42,6 +42,20 @@ export const RATE_POLICIES: Record<
     buckets: [{ bucket: 'email', needs: ['email'], max: 3, windowSeconds: 3600 }],
     onStoreFailure: 'deny',
   },
+  // Nhập mã 2FA (TOTP/mã dự phòng) khi đăng nhập: 5 lần/15 phút. `email` lấy từ cookie KÝ của ta (chỉ cấp sau khi qua
+  // bước mật khẩu), không từ dữ liệu client. Plugin còn có khóa tạm riêng theo người dùng (lớp thứ hai).
+  twofa: {
+    buckets: [
+      { bucket: 'email', needs: ['email'], max: 5, windowSeconds: 15 * 60 },
+      { bucket: 'user', needs: ['userId'], max: 5, windowSeconds: 15 * 60 },
+    ],
+    onStoreFailure: 'memory',
+  },
+  // Xác nhận lại bằng mật khẩu/mã trong trang bảo mật (bật/tắt 2FA, tạo lại mã dự phòng): chống dò mật khẩu bằng phiên bị đánh cắp.
+  reauth: {
+    buckets: [{ bucket: 'user', needs: ['userId'], max: 5, windowSeconds: 15 * 60 }],
+    onStoreFailure: 'memory',
+  },
 };
 
 export type RateDecision =
@@ -75,7 +89,11 @@ export function createRateLimiter(options: {
   function keysFor(action: RateAction, identity: RateIdentity) {
     const email = identity.email ? normalizeEmail(identity.email) : undefined;
     const ip = normalizeIp(identity.ip);
-    const values: Record<keyof RateIdentity, string | undefined> = { email, ip };
+    const values: Record<keyof RateIdentity, string | undefined> = {
+      email,
+      ip,
+      userId: identity.userId?.trim() || undefined,
+    };
     return RATE_POLICIES[action].buckets.flatMap((policy) => {
       if (policy.needs.some((need) => values[need] === undefined)) return [];
       const identityText = policy.needs.map((need) => values[need]).join('|');

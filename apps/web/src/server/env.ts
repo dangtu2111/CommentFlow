@@ -10,6 +10,8 @@ const envSchema = z
     BETTER_AUTH_URL: z.url(),
     /** Role cf_auth — chỉ module auth dùng; KHÔNG phải DATABASE_URL (cf_app). */
     DATABASE_AUTH_URL: z.string().min(1),
+    /** Role cf_app — đọc vai trò workspace (để biết ai bắt buộc 2FA); chịu RLS như mọi truy vấn nghiệp vụ. */
+    DATABASE_URL: z.string().min(1),
     /** Valkey cho rate limit (khóa `sys:rl:…`, ADR 004). */
     REDIS_URL: z.string().min(1),
     /** Tiền tố khóa của môi trường (`dev:`, `ci:`…); khóa của dev luôn có tiền tố. */

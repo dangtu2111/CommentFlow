@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { CircleAlert, Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useId, useState } from 'react';
 
@@ -115,6 +115,39 @@ export function PasswordField(props: Omit<FieldProps, 'icon' | 'defaultValue' | 
         >
           {visible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
         </button>
+      </div>
+    </FieldShell>
+  );
+}
+
+/** Ô nhập mã xác thực: bàn phím số, gợi ý điền mã một lần của hệ điều hành; `backup` cho mã dự phòng dạng chữ-số. */
+export function CodeField(props: {
+  name: string;
+  label: string;
+  hint?: string;
+  error?: string;
+  variant?: 'totp' | 'backup';
+}) {
+  const id = useId();
+  const backup = props.variant === 'backup';
+  return (
+    <FieldShell id={id} label={props.label} hint={props.hint} error={props.error}>
+      <div className="input-wrap">
+        <ShieldCheck className="input-icon" size={18} aria-hidden="true" />
+        <input
+          id={id}
+          className="input code-input"
+          name={props.name}
+          type="text"
+          inputMode={backup ? 'text' : 'numeric'}
+          autoComplete="one-time-code"
+          maxLength={backup ? 16 : 10}
+          required
+          aria-invalid={props.error ? true : undefined}
+          aria-describedby={describedBy(id, props.hint, props.error)}
+          autoCapitalize="none"
+          spellCheck={false}
+        />
       </div>
     </FieldShell>
   );

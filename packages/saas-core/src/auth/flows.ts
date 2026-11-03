@@ -5,6 +5,7 @@ import type { Auth } from './auth';
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from './auth';
 import { type CookieSpec, cookiesFromResponse } from './cookies';
 import type { PasswordPolicy } from './password-policy';
+import type { TwoFactorFlows } from './two-factor';
 
 /**
  * Các luồng đăng ký / đăng nhập / quên mật khẩu cho giao diện. Mọi kết quả đều TRUNG TÍNH về việc email có
@@ -25,8 +26,8 @@ export type SignInResult =
   | { status: 'ok'; cookies: CookieSpec[]; locale: Locale }
   | { status: 'invalid_credentials' }
   | { status: 'email_not_verified' }
-  /** Chừa chỗ cho nhánh 2FA: chưa có đường nào sinh ra kết quả này. */
-  | { status: 'two_factor_required' }
+  /** Mật khẩu đúng nhưng tài khoản bật 2FA: CHƯA có phiên; `cookies` chỉ chứa cookie chờ (plugin + cookie ký của ta). */
+  | { status: 'two_factor_required'; cookies: CookieSpec[] }
   /** Bộ giới hạn từ chối (ADR 004): sinh ra khi đăng nhập vượt ngưỡng. */
   | { status: 'rate_limited'; retryAfterSeconds: number }
   | { status: 'invalid'; problem: FieldProblem };
@@ -83,6 +84,8 @@ export function createAuthFlows(options: {
    * khi dùng token nên mật khẩu bị từ chối KHÔNG làm mất token.
    */
   passwordPolicy: PasswordPolicy;
+  /** Luồng 2FA: tạo cookie chờ ký khi mật khẩu đúng mà tài khoản đã bật 2FA. BẮT BUỘC. */
+  twoFactor: TwoFactorFlows;
   /**
    * Thời gian phản hồi tối thiểu (ms) của các luồng có thể lộ "email có tồn tại không" qua thời gian
    * (đăng ký, gửi lại thư, quên mật khẩu): email mới phải ghi DB + ký token, email đã có thì không — nên
@@ -91,7 +94,7 @@ export function createAuthFlows(options: {
   minResponseMs?: number;
 }) {
   const { auth } = options;
-  const { limiter, passwordPolicy } = options;
+  const { limiter, passwordPolicy, twoFactor } = options;
   const minResponseMs = options.minResponseMs ?? 600;
 
   const padded =
@@ -195,7 +198,16 @@ export function createAuthFlows(options: {
         twoFactorRedirect?: boolean;
         user?: { locale?: unknown };
       } | null;
-      if (body?.twoFactorRedirect) return { status: 'two_factor_required' };
+      if (body?.twoFactorRedirect) {
+        const cookies = cookiesFromResponse(response).filter((cookie) => cookie.maxAge !== 0);
+        const plugin = cookies.find((cookie) => cookie.name.endsWith('two_factor'));
+        // Mật khẩu đúng: xóa bộ đếm đăng nhập (bước 2 có bộ đếm riêng 'twofa').
+        await limiter.reset('login', identity);
+        return {
+          status: 'two_factor_required',
+          cookies: [...cookies, twoFactor.pendingCookieFor(email.value, plugin)],
+        };
+      }
       await limiter.reset('login', identity); // đăng nhập thành công: xóa bộ đếm của danh tính này
       return {
         status: 'ok',

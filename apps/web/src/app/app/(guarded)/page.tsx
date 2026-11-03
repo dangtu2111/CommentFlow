@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { LocaleSwitcher } from '../../components/locale-switcher';
-import { SubmitButton } from '../../components/ui/submit-button';
-import { getCurrentUser } from '../../server/session';
-import { logoutAction } from '../(auth)/actions';
+import { LocaleSwitcher } from '../../../components/locale-switcher';
+import { SubmitButton } from '../../../components/ui/submit-button';
+import { getCurrentUser } from '../../../server/session';
+import { logoutAction } from '../../(auth)/actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');

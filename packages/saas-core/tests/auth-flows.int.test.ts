@@ -10,6 +10,7 @@ import {
   createAuth,
   createAuthFlows,
   createPasswordPolicy,
+  createTwoFactorFlows,
 } from '../src/auth';
 import { wrapAuthDb } from '../src/auth/auth-db';
 import { createMemoryTransport, createNotifier, type MailMessage } from '../src/notify';
@@ -29,6 +30,15 @@ let authDb: AuthDb;
 let auth: Auth;
 let flows: AuthFlows;
 let owner: pg.Pool;
+/** Luồng 2FA riêng cho mỗi bộ luồng (cùng auth, bộ giới hạn mới). */
+const makeTwoFactor = () =>
+  createTwoFactorFlows({
+    auth,
+    authDb: wrapAuthDb(authDb),
+    limiter: freshLimiter(),
+    secret: TEST_SECRET,
+    workspaceRoles: async () => [],
+  });
 
 beforeAll(() => {
   authDb = createTestAuthDb();
@@ -43,6 +53,7 @@ beforeAll(() => {
     auth,
     limiter: freshLimiter(),
     passwordPolicy: localPolicy,
+    twoFactor: makeTwoFactor(),
     minResponseMs: 0,
   });
   owner = new pg.Pool({ connectionString: process.env.TEST_DATABASE_ADMIN_URL, max: 2 });
@@ -227,6 +238,7 @@ describe('xác minh email và đăng nhập', () => {
       auth,
       limiter: freshLimiter(),
       passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
       minResponseMs: 0,
     });
     const attempt = (password: string) =>
@@ -248,6 +260,7 @@ describe('xác minh email và đăng nhập', () => {
       auth,
       limiter: freshLimiter(),
       passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
       minResponseMs: 0,
     });
     const statuses: string[] = [];
@@ -271,6 +284,7 @@ describe('xác minh email và đăng nhập', () => {
       auth,
       limiter: freshLimiter(),
       passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
       minResponseMs: 0,
     });
     const lastResult = async (email: string) => {
@@ -305,6 +319,7 @@ describe('xác minh email và đăng nhập', () => {
       auth,
       limiter: freshLimiter(),
       passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
       minResponseMs: 0,
     });
     const attempt = (password: string) =>
@@ -321,6 +336,7 @@ describe('xác minh email và đăng nhập', () => {
       auth,
       limiter: freshLimiter(),
       passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
       minResponseMs: 0,
     });
     const before = mailsTo(email).length;
@@ -367,6 +383,7 @@ describe('xác minh email và đăng nhập', () => {
       auth,
       limiter: broken,
       passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
       minResponseMs: 0,
     });
     const email = await registerVerified();
@@ -499,6 +516,7 @@ describe('thời gian phản hồi (chống dò email qua thời gian)', () => {
       auth,
       limiter: freshLimiter(),
       passwordPolicy: localPolicy,
+      twoFactor: makeTwoFactor(),
       minResponseMs: 300,
     });
     const existing = await registerVerified();
@@ -544,6 +562,7 @@ describe('log của Better Auth không chứa email thô', () => {
         auth: probe,
         limiter: freshLimiter(),
         passwordPolicy: localPolicy,
+        twoFactor: makeTwoFactor(),
         minResponseMs: 0,
       });
       const existing = await registerVerified();
@@ -586,6 +605,7 @@ describe('mật khẩu đã lộ / quá phổ biến (ADR 004 §3)', () => {
       auth,
       limiter: freshLimiter(),
       passwordPolicy: createPasswordPolicy({ fetchImpl }),
+      twoFactor: makeTwoFactor(),
       minResponseMs: 0,
     });
 

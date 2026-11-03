@@ -175,8 +175,7 @@ describe('check-rls', () => {
 
   it('bắt bảng xác thực (two_factors) có policy nhưng không dựa vào ngữ cảnh auth', async () => {
     const v = await violationsAfter(`
-      CREATE TABLE core.two_factors (id int, user_id uuid);
-      ALTER TABLE core.two_factors ENABLE ROW LEVEL SECURITY;
+      DROP POLICY two_factors_auth_access ON core.two_factors;
       CREATE POLICY tuy_tien ON core.two_factors FOR SELECT
         USING (user_id = (SELECT core.current_user_id()));
       GRANT SELECT ON core.two_factors TO cf_app`);

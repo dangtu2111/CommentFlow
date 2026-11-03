@@ -53,7 +53,9 @@ describe('signInToState', () => {
     expect(
       signInToState({ status: 'rate_limited', retryAfterSeconds: 5 }, 'a@example.test'),
     ).toMatchObject({ retryMinutes: 1 });
-    expect(signInToState({ status: 'two_factor_required' }, 'a@example.test')).toMatchObject({
+    expect(
+      signInToState({ status: 'two_factor_required', cookies: [] }, 'a@example.test'),
+    ).toMatchObject({
       message: 'twoFactorRequired',
     });
   });
