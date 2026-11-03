@@ -1,0 +1,80 @@
+/**
+ * Dựng biến môi trường cho `pnpm e2e` (scripts/e2e.mjs): web chạy với DB TEST (`cf_test`, hoặc `cf_test_<làn>` khi có
+ * `CF_LANE`), không bao giờ `cf_dev`. Hàm thuần — không đọc file, không in giá trị biến (chỉ nêu TÊN biến thiếu).
+ */
+
+/** Biến phải có (sau khi nạp `.env.local` + `.env`) để chạy E2E. */
+export const REQUIRED_VARS = [
+  'TEST_DATABASE_URL',
+  'TEST_DATABASE_ADMIN_URL',
+  'TEST_DATABASE_AUTH_URL',
+  'REDIS_URL',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'MAILPIT_URL',
+  'BETTER_AUTH_SECRET',
+];
+
+const TEST_DB_PATTERN = /^cf_test(_[a-z0-9]+)*$/;
+const LANE_PATTERN = /^[a-z0-9]{1,16}$/;
+
+/** Tên database ở phần đường dẫn của URL Postgres (không bao giờ ném lỗi chứa URL/mật khẩu). */
+export function databaseNameOf(url) {
+  try {
+    return decodeURIComponent(new URL(url).pathname.replace(/^\//, ''));
+  } catch {
+    throw new Error('Một chuỗi kết nối database không đúng định dạng URL.');
+  }
+}
+
+/**
+ * Chuỗi kết nối tới DB test của làn: `cf_test` → `cf_test_<lane>` khi có lane. Từ chối DB không phải `cf_test*`.
+ * DB `cf_test_<lane>` phải có sẵn (script không tạo database).
+ */
+export function testDatabaseUrl(url, lane) {
+  const name = databaseNameOf(url);
+  if (!TEST_DB_PATTERN.test(name)) {
+    throw new Error(`E2E chỉ chạy trên DB test (cf_test*), nhưng chuỗi kết nối trỏ tới "${name}".`);
+  }
+  if (!lane) return url;
+  if (!LANE_PATTERN.test(lane)) {
+    throw new Error('CF_LANE chỉ gồm chữ thường/số, tối đa 16 ký tự (ví dụ "b").');
+  }
+  const parsed = new URL(url);
+  parsed.pathname = `/${name === 'cf_test' ? `cf_test_${lane}` : name}`;
+  return parsed.toString();
+}
+
+/**
+ * @param {Record<string, string | undefined>} source biến hiện có (`process.env` sau `loadRepoEnv`)
+ * @param {{ port: number, lane?: string }} options
+ * @returns {Record<string, string>} biến cho web, migration và Playwright (đã gộp, ưu tiên giá trị E2E)
+ */
+export function buildE2eEnv(source, { port, lane }) {
+  const missing = REQUIRED_VARS.filter((name) => !source[name]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Thiếu biến môi trường cho E2E: ${missing.join(', ')}. Tạo .env bằng print-dev-env.sh và .env.local (BETTER_AUTH_SECRET).`,
+    );
+  }
+  const laneName = lane || source.CF_LANE || '';
+  const at = (name) => testDatabaseUrl(/** @type {string} */ (source[name]), laneName);
+  const baseUrl = `http://localhost:${port}`;
+  return {
+    ...Object.fromEntries(Object.entries(source).filter(([, value]) => value !== undefined)),
+    APP_ENV: 'test',
+    DATABASE_URL: at('TEST_DATABASE_URL'),
+    DATABASE_ADMIN_URL: at('TEST_DATABASE_ADMIN_URL'),
+    DATABASE_AUTH_URL: at('TEST_DATABASE_AUTH_URL'),
+    // Tiền tố riêng: rate limit của E2E không dùng chung khóa với web dev (`dev:`).
+    REDIS_KEY_PREFIX: source.E2E_REDIS_KEY_PREFIX || 'e2e:',
+    // Người gửi thư thử (Mailpit): không phải bí mật; mặc định khi .env chưa có.
+    SMTP_FROM: source.SMTP_FROM || 'CommentFlow AI <no-reply@commentflow.local>',
+    // Dev/test không ra internet; vẫn còn danh sách mật khẩu phổ biến cục bộ.
+    PWNED_CHECK: 'off',
+    CLIENT_IP_SOURCE: 'none',
+    BETTER_AUTH_URL: baseUrl,
+    E2E_BASE_URL: baseUrl,
+    PORT: String(port),
+  };
+}
