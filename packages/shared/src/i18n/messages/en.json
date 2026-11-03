@@ -82,6 +82,8 @@
       "emailInvalid": "That email doesn't look right, for example name@company.com.",
       "passwordTooShort": "Password needs at least 10 characters.",
       "passwordTooLong": "Password can be at most 128 characters.",
+      "passwordCommon": "This password is too common and easy to guess. Choose a different one.",
+      "passwordPwned": "This password has appeared in data breaches. Choose a different one.",
       "passwordMismatch": "The two passwords don't match. Enter them again.",
       "nameInvalid": "Enter your full name (up to 80 characters).",
       "required": "Fill in this field.",

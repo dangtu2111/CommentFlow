@@ -19,6 +19,12 @@ export {
   type SignInResult,
 } from './flows';
 export { hashPassword, verifyPassword } from './password';
+export {
+  createPasswordPolicy,
+  type PasswordPolicy,
+  type PasswordPolicyWarning,
+  type PasswordVerdict,
+} from './password-policy';
 export { changePasswordAndRevokeAll, revokeAllSessionsOfUser } from './revoke';
 export { readSession } from './session';
 export {

@@ -9,6 +9,8 @@ export const MESSAGE_KEYS = [
   'emailInvalid',
   'passwordTooShort',
   'passwordTooLong',
+  'passwordCommon',
+  'passwordPwned',
   'passwordMismatch',
   'nameInvalid',
   'required',
@@ -53,6 +55,8 @@ export function problemToState(problem: FieldProblem, values?: FormValues): Form
   if (problem.field === 'name') return errorState('nameInvalid', 'name', values);
   if (problem.reason === 'too_short') return errorState('passwordTooShort', 'password', values);
   if (problem.reason === 'too_long') return errorState('passwordTooLong', 'password', values);
+  if (problem.reason === 'common') return errorState('passwordCommon', 'password', values);
+  if (problem.reason === 'pwned') return errorState('passwordPwned', 'password', values);
   return errorState('generic', 'password', values);
 }
 

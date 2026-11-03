@@ -4,6 +4,7 @@ import type { RateLimiter } from '../ratelimit';
 import type { Auth } from './auth';
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from './auth';
 import { type CookieSpec, cookiesFromResponse } from './cookies';
+import type { PasswordPolicy } from './password-policy';
 
 /**
  * Các luồng đăng ký / đăng nhập / quên mật khẩu cho giao diện. Mọi kết quả đều TRUNG TÍNH về việc email có
@@ -13,7 +14,7 @@ import { type CookieSpec, cookiesFromResponse } from './cookies';
 
 export type FieldProblem = {
   field: 'email' | 'password' | 'name';
-  reason: 'invalid' | 'too_short' | 'too_long';
+  reason: 'invalid' | 'too_short' | 'too_long' | 'common' | 'pwned';
 };
 
 export type RegisterResult =
@@ -77,6 +78,12 @@ export function createAuthFlows(options: {
    */
   limiter: RateLimiter;
   /**
+   * Kiểm mật khẩu đã lộ / quá phổ biến khi ĐĂNG KÝ và ĐẶT LẠI mật khẩu (ADR 004 §3). BẮT BUỘC như `limiter`.
+   * Đăng ký: kiểm SAU cổng rate limit (không để kẻ xấu dùng đăng ký làm máy gọi HIBP không giới hạn); đặt lại: kiểm trước
+   * khi dùng token nên mật khẩu bị từ chối KHÔNG làm mất token.
+   */
+  passwordPolicy: PasswordPolicy;
+  /**
    * Thời gian phản hồi tối thiểu (ms) của các luồng có thể lộ "email có tồn tại không" qua thời gian
    * (đăng ký, gửi lại thư, quên mật khẩu): email mới phải ghi DB + ký token, email đã có thì không — nên
    * chờ cho đủ ngưỡng này (cộng một ít ngẫu nhiên) rồi mới trả. Mặc định 600; đặt 0 để tắt (test).
@@ -84,7 +91,7 @@ export function createAuthFlows(options: {
   minResponseMs?: number;
 }) {
   const { auth } = options;
-  const { limiter } = options;
+  const { limiter, passwordPolicy } = options;
   const minResponseMs = options.minResponseMs ?? 600;
 
   const padded =
@@ -128,6 +135,11 @@ export function createAuthFlows(options: {
         ...(input.ip ? { ip: input.ip } : {}),
       });
       if (!gate.allowed) return { status: 'check_email' }; // trung tính: không tạo tài khoản, không gửi thư
+
+      const verdict = await passwordPolicy.check(input.password);
+      if (!verdict.ok) {
+        return { status: 'invalid', problem: { field: 'password', reason: verdict.reason } };
+      }
 
       try {
         await auth.api.signUpEmail({
@@ -235,6 +247,10 @@ export function createAuthFlows(options: {
       const problem = checkPassword(input.newPassword);
       if (problem) return { status: 'invalid', problem };
       if (input.token.length === 0 || input.token.length > 512) return { status: 'invalid_token' };
+      const verdict = await passwordPolicy.check(input.newPassword);
+      if (!verdict.ok) {
+        return { status: 'invalid', problem: { field: 'password', reason: verdict.reason } };
+      }
       try {
         await auth.api.resetPassword({
           body: { newPassword: input.newPassword, token: input.token },

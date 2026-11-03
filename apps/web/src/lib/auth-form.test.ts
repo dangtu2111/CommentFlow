@@ -73,6 +73,14 @@ describe('problemToState', () => {
     expect(problemToState({ field: 'password', reason: 'too_long' })).toMatchObject({
       message: 'passwordTooLong',
     });
+    expect(problemToState({ field: 'password', reason: 'common' })).toMatchObject({
+      message: 'passwordCommon',
+      field: 'password',
+    });
+    expect(problemToState({ field: 'password', reason: 'pwned' })).toMatchObject({
+      message: 'passwordPwned',
+      field: 'password',
+    });
     expect(problemToState({ field: 'name', reason: 'invalid' })).toMatchObject({
       message: 'nameInvalid',
       field: 'name',

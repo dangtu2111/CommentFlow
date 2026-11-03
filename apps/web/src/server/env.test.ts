@@ -38,6 +38,16 @@ describe('loadServerEnv — nguồn IP (ADR 004 §2)', () => {
     );
   });
 
+  it('PWNED_CHECK mặc định on; off chỉ được ở dev/test/ci', () => {
+    expect(loadServerEnv(BASE).PWNED_CHECK).toBe('on');
+    expect(loadServerEnv({ ...BASE, PWNED_CHECK: 'off' }).PWNED_CHECK).toBe('off');
+    for (const appEnv of ['staging', 'production']) {
+      expect(() => loadServerEnv({ ...BASE, APP_ENV: appEnv, PWNED_CHECK: 'off' }), appEnv).toThrow(
+        /PWNED_CHECK/,
+      );
+    }
+  });
+
   it('thiếu REDIS_URL → lỗi nêu đúng tên biến (không in giá trị)', () => {
     const { REDIS_URL: _omit, ...withoutRedis } = BASE;
     expect(() => loadServerEnv(withoutRedis)).toThrow(/REDIS_URL/);

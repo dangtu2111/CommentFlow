@@ -38,6 +38,7 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/auth-ui` · Gói nội b�
 | Miền | Đường dẫn | Vai trò (1 dòng) | Spec liên quan |
 |---|---|---|---|
 | Auth / phiên | `packages/saas-core/src/auth/` | Better Auth (adapter dùng pool role `cf_auth` từ `openAuthDb`): argon2id, phiên 14 ngày, cookie ký HMAC; hạn 8 giờ phiên Admin ép bằng trigger DB, `readSession` là lớp thứ hai | 13 §2 · ADR 003 |
+| Mật khẩu lộ / phổ biến | `packages/saas-core/src/auth/password-policy.ts` | `createPasswordPolicy`: danh sách cục bộ + HIBP k-anonymity (cho qua + log khi lỗi); `createAuthFlows` BẮT BUỘC có `passwordPolicy` (đăng ký, đặt lại) | 13 §2 · ADR 004 §3 |
 | Rate limit | `packages/saas-core/src/ratelimit/` | Bộ giới hạn theo cửa sổ cố định: khóa `sys:rl:<hành động>:<xô>:<HMAC>` (không email/IP thô), kho Valkey (`ioredis`, script Lua nguyên tử) + dự phòng bộ nhớ; đăng nhập/2FA dự phòng bộ nhớ, đăng ký/quên/gửi lại thì từ chối khi Valkey sập (ADR 004) | 13 §2 |
 | Gửi thư (notify) | `packages/saas-core/src/notify/` | `MailTransport` (SMTP bằng nodemailer; bộ nhớ cho test), mẫu thư vi/en (xác minh, đặt lại, đã có tài khoản), gửi nền không chờ | FR-119 · 08 §6 |
 | Giao diện xác thực (web) | `apps/web/src/app/(auth)/` + `components/auth/` | Đăng ký, kiểm tra/xác minh email, đăng nhập, quên/đặt lại mật khẩu; Server Action ở `(auth)/actions.ts`; `/app` tạm + đăng xuất; chỉ 2 đường GET `/api/auth/*` mở (`lib/auth-route-guard.ts`) | 08 §6, §8 · 13 §2 |

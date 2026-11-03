@@ -19,6 +19,8 @@ const envSchema = z
      * Cloudflare Tunnel và cổng web không truy cập được trực tiếp).
      */
     CLIENT_IP_SOURCE: z.enum(['none', 'cf-connecting-ip']).default('none'),
+    /** Kiểm mật khẩu lộ bằng Have I Been Pwned (ADR 004 §3). `off` chỉ cho dev/test/ci (dev không ra internet); luôn còn danh sách cục bộ. */
+    PWNED_CHECK: z.enum(['on', 'off']).default('on'),
     SMTP_HOST: z.string().min(1),
     SMTP_PORT: z.coerce.number().int().min(1).max(65535),
     SMTP_FROM: z.string().min(3),
@@ -30,6 +32,13 @@ const envSchema = z
     SMTP_PASS: z.string().min(1).optional(),
   })
   .superRefine((env, ctx) => {
+    if (env.PWNED_CHECK === 'off' && !['dev', 'test', 'ci'].includes(env.APP_ENV)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['PWNED_CHECK'],
+        message: 'PWNED_CHECK=off chỉ được dùng khi APP_ENV là dev/test/ci',
+      });
+    }
     // Tin CF-Connecting-IP ở môi trường không đứng sau Cloudflare cho phép client tự đặt IP để vượt rate limit.
     if (env.CLIENT_IP_SOURCE === 'cf-connecting-ip' && env.APP_ENV !== 'staging') {
       ctx.addIssue({

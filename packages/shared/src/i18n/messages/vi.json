@@ -82,6 +82,8 @@
       "emailInvalid": "Email chưa đúng định dạng, ví dụ ten@congty.vn.",
       "passwordTooShort": "Mật khẩu cần tối thiểu 10 ký tự.",
       "passwordTooLong": "Mật khẩu tối đa 128 ký tự.",
+      "passwordCommon": "Mật khẩu này quá phổ biến nên dễ bị đoán. Hãy chọn mật khẩu khác.",
+      "passwordPwned": "Mật khẩu này đã xuất hiện trong các vụ lộ dữ liệu. Hãy chọn mật khẩu khác.",
       "passwordMismatch": "Hai mật khẩu chưa giống nhau. Hãy nhập lại.",
       "nameInvalid": "Hãy nhập họ tên (tối đa 80 ký tự).",
       "required": "Hãy điền ô này.",

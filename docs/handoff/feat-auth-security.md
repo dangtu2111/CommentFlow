@@ -6,6 +6,8 @@ Kế hoạch: `docs/plans/feat-auth-security.md` (đã duyệt 03/11) · ADR: `d
 ## Đã làm
 - **M1 (rate limit) xong:** `packages/saas-core/src/ratelimit/` (khóa băm, kho Valkey + bộ nhớ, bộ giới hạn, chính sách theo ADR 004 §1); `createAuthFlows` nhận `limiter` bắt buộc; đăng nhập trả `rate_limited` + số phút; đăng ký/quên/gửi lại bị chặn trả kết quả trung tính và không gửi thư; web: `REDIS_URL`, `REDIS_KEY_PREFIX`, `CLIENT_IP_SOURCE` (none | cf-connecting-ip chỉ staging), header IP của client bị xóa trước khi gửi cho Better Auth; CI có Valkey; kiểm thật 9/9 (script e2e ở scratchpad, không commit).
 
+- **M2 (mật khẩu lộ) xong:** `password-policy.ts` (danh sách cục bộ SecLists 10k MIT + HIBP k-anonymity, timeout 2s cho qua + log, bộ nhớ đệm theo tiền tố), `createAuthFlows` nhận `passwordPolicy` bắt buộc (đăng ký sau cổng rate limit; đặt lại kiểm trước khi dùng token), thông báo vi/en, `PWNED_CHECK` (off chỉ dev/test/ci), ADR 004 §3 có nguồn + giấy phép, `docs/third-party/SecLists-LICENSE.txt`.
+
 ## Đã đọc và rút ra
 | File / nguồn | Điều cần nhớ |
 |---|---|
@@ -18,9 +20,8 @@ Kế hoạch: `docs/plans/feat-auth-security.md` (đã duyệt 03/11) · ADR: `d
 - Không dựng server tùy biến lấy IP; dev chỉ xô theo email; staging/production `CF-Connecting-IP`; không khóa chung "unknown"; Valkey sập: log cảnh báo (không PII).
 
 ## Còn lại (theo thứ tự)
-1. **M2 mật khẩu lộ:** HIBP k-anonymity (5 ký tự SHA-1, `Add-Padding: true`, timeout 2s → cho qua + log) + danh sách cục bộ (**ghi nguồn + giấy phép vào ADR 004 §3**, đối chiếu giấy phép gốc khi lấy về); áp dụng khi đăng ký và đặt lại mật khẩu.
-2. **M3 2FA:** migration `0013_two_factors.sql`, plugin `twoFactor` (10 mã, `storeBackupCodes: 'encrypted'`), trang `/login/2fa`, `/app/security` (QR `qrcode`, wizard 3 bước, tắt 2FA/tạo lại mã đòi mật khẩu, danh sách phiên thật của người dùng + đăng xuất từng phiên; không IP/vị trí), xô 2FA 5/15 phút/người dùng, ép Owner/Admin (dữ liệu gieo chỉ `cf_test`).
-3. Cuối nhánh: `verifier-security` + `verifier-db` MỘT lần trên diff nhánh + các sửa sau verifier của `feat/auth-ui` (trọng tâm: client không giả IP vượt rate limit); cập nhật gap matrix/codemap; xóa plan + handoff khi xong.
+1. **M3 2FA:** migration `0013_two_factors.sql`, plugin `twoFactor` (10 mã, `storeBackupCodes: 'encrypted'`), trang `/login/2fa`, `/app/security` (QR `qrcode`, wizard 3 bước, tắt 2FA/tạo lại mã đòi mật khẩu, danh sách phiên thật của người dùng + đăng xuất từng phiên; không IP/vị trí), xô 2FA 5/15 phút/người dùng, ép Owner/Admin (dữ liệu gieo chỉ `cf_test`).
+2. Cuối nhánh: `verifier-security` + `verifier-db` MỘT lần trên diff nhánh + các sửa sau verifier của `feat/auth-ui` (trọng tâm: client không giả IP vượt rate limit); cập nhật gap matrix/codemap; xóa plan + handoff khi xong.
 
 ## Lệnh test liên quan
 ```

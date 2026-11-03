@@ -42,11 +42,18 @@ Trạng thái: **Đã chốt** (chủ dự án, 03/11). Căn cứ: `docs/13_Secu
 
 → ở dev, Next **không cung cấp IP kết nối đáng tin** (header có thể do client đặt), đúng điều kiện chủ dự án đã định trước ("Next không cho IP kết nối ở dev → chỉ xô theo email").
 
-## 3. Mật khẩu đã lộ (mốc M2)
+## 3. Mật khẩu đã lộ (mốc M2, đã làm)
 
-- Áp dụng khi đăng ký và đặt lại mật khẩu; **không** áp dụng khi đăng nhập.
-- **Have I Been Pwned k-anonymity** (đã duyệt gọi dịch vụ ngoài): `GET https://api.pwnedpasswords.com/range/<5 ký tự đầu của SHA-1 viết hoa>` với `Add-Padding: true`; chỉ 5 ký tự băm rời máy, không gửi mật khẩu; timeout **2 giây** → cho qua và **ghi log cảnh báo** (không chặn đăng ký vì dịch vụ ngoài sập).
-- **Danh sách cục bộ** các mật khẩu phổ biến (chạy được khi mất mạng, vẫn chặn khi HIBP lỗi). *Nguồn và giấy phép: ghi ở mục này khi lấy danh sách (ứng viên: SecLists `Passwords/Common-Credentials/10k-most-common.txt`; phải đối chiếu giấy phép trong kho gốc tại thời điểm lấy, không giả định).*
+- Áp dụng khi **đăng ký** và **đặt lại mật khẩu**; **không** áp dụng khi đăng nhập (tài khoản cũ có mật khẩu yếu vẫn vào được; nên đổi sau). Đăng ký: kiểm **sau** cổng rate limit (không để đăng ký thành máy gọi HIBP không giới hạn) và kết quả không phụ thuộc email có tồn tại; đặt lại: kiểm **trước** khi dùng token nên mật khẩu bị từ chối không làm mất token.
+- **Have I Been Pwned k-anonymity** (đã duyệt gọi dịch vụ ngoài): `GET https://api.pwnedpasswords.com/range/<5 ký tự đầu của SHA-1 viết hoa>`, `Add-Padding: true`, `redirect: 'error'`, host cố định (không SSRF); chỉ 5 ký tự băm rời máy, mật khẩu và 35 ký tự còn lại **không bao giờ** rời máy; dòng đệm (số lần = 0) bị bỏ qua. Phản hồi tối đa 2 MB; có bộ nhớ đệm theo tiền tố 10 phút (tối đa 2000 tiền tố). **Timeout 2 giây / lỗi mạng / HTTP không 200 / phản hồi quá lớn → cho qua và ghi cảnh báo** (`pwned_check_unavailable` + lý do; không chứa mật khẩu, băm hay tiền tố băm) — không chặn đăng ký chỉ vì dịch vụ ngoài sập.
+- **Danh sách cục bộ** (`packages/saas-core/src/auth/common-passwords.ts`, 2 087 mục): chạy được khi mất mạng và vẫn chặn khi HIBP lỗi.
+  - **Nguồn:** SecLists `Passwords/Common-Credentials/10k-most-common.txt` (https://github.com/danielmiessler/SecLists), commit `913b327317` của file này.
+  - **Giấy phép:** **MIT**, Copyright (c) 2018 Daniel Miessler — đã đối chiếu `LICENSE` trong kho gốc (và GitHub báo SPDX `MIT`); nguyên văn ở `docs/third-party/SecLists-LICENSE.txt` (MIT yêu cầu giữ thông báo bản quyền và nội dung giấy phép).
+  - **Chọn lọc:** chữ thường, giữ mục dài ≥ 8 ký tự, bỏ trùng.
+  - **Giới hạn cần biết:** file gốc có 10 001 dòng nhưng chỉ **51 mục dài ≥ 10 ký tự** (độ dài tối thiểu hiện tại), nên với chính sách hiện nay danh sách cục bộ chỉ là lưới an toàn nhỏ khi mất mạng; **bảo vệ chính là HIBP**. Muốn lưới cục bộ mạnh hơn cần danh sách lớn hơn và một quyết định giấy phép riêng.
+- Đối chiếu thực tế (03/11): HIBP trả `HTTP 200` trong ~0,5 giây, phản hồi ~2 100 dòng CRLF trong đó ~190 dòng đệm `:0` (khớp định dạng mã dựa vào).
+- `PWNED_CHECK=off` chỉ được ở `APP_ENV` dev/test/ci (dev không ra internet); luôn còn danh sách cục bộ.
+- **Rủi ro còn lại đã chấp nhận:** `resetPassword` gọi HIBP trước khi kiểm token nên kẻ xấu có thể kích hoạt nhiều lần gọi HIBP bằng token giả với mật khẩu ngẫu nhiên (token rỗng/quá dài bị loại trước); bộ nhớ đệm không giúp vì tiền tố ngẫu nhiên. Giảm nhẹ: timeout 2 giây, host cố định, cho qua khi lỗi; sẽ xem lại cùng xô giới hạn cho đặt lại mật khẩu nếu cần.
 
 ## 4. 2FA (mốc M3)
 
