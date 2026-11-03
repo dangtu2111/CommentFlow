@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   interpretPostgresReply,
+  interpretSmtpBanner,
   interpretValkeyReply,
   passwordFromRedisUrl,
 } from './stack-check.mjs';
@@ -32,5 +33,18 @@ describe('passwordFromRedisUrl', () => {
   it('không có mật khẩu hoặc URL sai → undefined', () => {
     expect(passwordFromRedisUrl('redis://host:6380/0')).toBeUndefined();
     expect(passwordFromRedisUrl('không phải url')).toBeUndefined();
+  });
+});
+
+describe('interpretSmtpBanner', () => {
+  it('banner 220 là máy chủ SMTP sẵn sàng', () => {
+    expect(interpretSmtpBanner('220 mailpit ESMTP Service ready\r\n').ok).toBe(true);
+    expect(interpretSmtpBanner('220-nhieu dong\r\n220 xong\r\n').ok).toBe(true);
+  });
+
+  it('mã khác 220 (từ chối, lỗi) hoặc không phải SMTP → lỗi', () => {
+    expect(interpretSmtpBanner('554 khong gui duoc\r\n').ok).toBe(false);
+    expect(interpretSmtpBanner('HTTP/1.1 400 Bad Request').ok).toBe(false);
+    expect(interpretSmtpBanner('').ok).toBe(false);
   });
 });

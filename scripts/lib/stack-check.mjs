@@ -17,6 +17,12 @@ export function interpretValkeyReply(text) {
   return { ok: false, detail: `phản hồi lạ: ${text.slice(0, 40).trim()}` };
 }
 
+/** Máy chủ SMTP mở đầu bằng dòng "220 ..." (RFC 5321). */
+export function interpretSmtpBanner(text) {
+  if (/^220[ -]/.test(text)) return { ok: true, detail: 'SMTP sẵn sàng (220)' };
+  return { ok: false, detail: `banner lạ: ${text.slice(0, 40).trim()}` };
+}
+
 /** Lấy mật khẩu từ redis://:mật-khẩu@host:port/0 (không bao giờ in ra). */
 export function passwordFromRedisUrl(url) {
   try {
@@ -51,6 +57,27 @@ function tcpExchange(host, port, payloads, readCount) {
       }
     });
     socket.once('connect', () => socket.write(payloads[0]));
+  });
+}
+
+/** SMTP nói trước: kết nối, đọc banner 220, gửi QUIT rồi đóng. */
+export function checkSmtp(host, port) {
+  return new Promise((resolve, reject) => {
+    const socket = net.connect({ host, port });
+    const timer = setTimeout(() => {
+      socket.destroy();
+      reject(new Error('hết thời gian chờ'));
+    }, TIMEOUT_MS);
+    socket.once('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    socket.once('data', (data) => {
+      clearTimeout(timer);
+      socket.write('QUIT\r\n');
+      socket.end();
+      resolve(interpretSmtpBanner(String(data)));
+    });
   });
 }
 

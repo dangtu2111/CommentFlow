@@ -1,8 +1,14 @@
 #!/usr/bin/env node
-// Từ MÁY CODE, kiểm 5 dịch vụ cf-dev qua LAN (không cần mật khẩu).
+// Từ MÁY CODE, kiểm các dịch vụ cf-dev (7 cổng) qua LAN (không cần mật khẩu).
 //   pnpm stack:check
 //   node --env-file=.env scripts/stack-check.mjs   (kiểm thêm AUTH Valkey nếu .env có REDIS_URL)
-import { checkHttp, checkPostgres, checkValkey, passwordFromRedisUrl } from './lib/stack-check.mjs';
+import {
+  checkHttp,
+  checkPostgres,
+  checkSmtp,
+  checkValkey,
+  passwordFromRedisUrl,
+} from './lib/stack-check.mjs';
 
 const host = process.env.CF_DEV_HOST ?? '192.168.1.124';
 const valkeyPassword = process.env.REDIS_URL
@@ -19,6 +25,8 @@ const checks = [
   ['LiteLLM   :4000', () => checkHttp(`http://${host}:4000/health/liveliness`)],
   ['LiteLLM   :4000 (readiness)', () => checkHttp(`http://${host}:4000/health/readiness`)],
   ['Langfuse  :3100 (health)', () => checkHttp(`http://${host}:3100/api/public/health`)],
+  ['Mailpit   :1025 (SMTP)', () => checkSmtp(host, 1025)],
+  ['Mailpit   :8025 (giao diện)', () => checkHttp(`http://${host}:8025/readyz`)],
   ['Langfuse  :3100 (giao diện)', () => checkHttp(`http://${host}:3100/auth/sign-in`)],
 ];
 
