@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { checkPlan, isApproved } from './plan-gate.mjs';
+import {
+  checkBranchPlan,
+  checkPlan,
+  isApproved,
+  planFileFor,
+  planRequirement,
+} from './plan-gate.mjs';
 
 const plan = (status, body = '') => `# Kế hoạch\n\n${body}\n## Trạng thái duyệt\n\n${status}\n`;
 
@@ -54,5 +60,74 @@ describe('checkPlan', () => {
 
   it('plan cũ không có mục mới (Checklist, Tiêu chí) vẫn đạt nếu không còn thẻ', () => {
     expect(checkPlan(plan('**Đã duyệt**'))).toEqual([]);
+  });
+});
+
+describe('planRequirement — nhánh nào cần plan', () => {
+  it('feat/* và chore/* bắt buộc có plan', () => {
+    expect(planRequirement('feat/auth-ui')).toBe('required');
+    expect(planRequirement('chore/workflow-plan-gates')).toBe('required');
+  });
+
+  it('mech/*, ops/*, fix/* được miễn (fix/* nhỏ tạo từ /fix-issues)', () => {
+    expect(planRequirement('mech/tach-chuoi-vi-en')).toBe('exempt');
+    expect(planRequirement('ops/deploy-staging')).toBe('exempt');
+    expect(planRequirement('fix/harden-2')).toBe('exempt');
+    expect(planRequirement('fix/issue-42')).toBe('exempt');
+  });
+
+  it('main và tiền tố lạ được miễn; tiền tố phải khớp đúng (feature/ không phải feat/)', () => {
+    for (const branch of [
+      'main',
+      'dependabot/npm_and_yarn/x',
+      'feature/x',
+      'feat',
+      'features/x',
+      '',
+    ]) {
+      expect(planRequirement(branch), branch).toBe('exempt');
+    }
+  });
+});
+
+describe('planFileFor', () => {
+  it('đổi / thành - theo quy ước của feature.md', () => {
+    expect(planFileFor('feat/fr-034')).toBe('feat-fr-034.md');
+    expect(planFileFor('chore/a/b')).toBe('chore-a-b.md');
+  });
+});
+
+describe('checkBranchPlan', () => {
+  const base = { branch: 'feat/auth-ui', existingPlans: [], addedPlans: [] };
+
+  it('nhánh feat/* không có plan nào → đỏ, nêu đúng tên file cần có', () => {
+    const problems = checkBranchPlan(base);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain('docs/plans/feat-auth-ui.md');
+    expect(problems[0]).toContain('mech/*, ops/*, fix/*');
+  });
+
+  it('plan đang tồn tại → đạt', () => {
+    expect(checkBranchPlan({ ...base, existingPlans: ['feat-auth-ui.md'] })).toEqual([]);
+  });
+
+  it('plan đã bị xóa lúc kết thúc nhưng từng được thêm trong lịch sử nhánh → đạt', () => {
+    expect(checkBranchPlan({ ...base, addedPlans: ['feat-auth-ui.md'] })).toEqual([]);
+  });
+
+  it('plan của nhánh KHÁC không tính', () => {
+    expect(
+      checkBranchPlan({ ...base, existingPlans: ['feat-khac.md'], addedPlans: ['feat-khac.md'] }),
+    ).toHaveLength(1);
+  });
+
+  it('không đọc được lịch sử (addedPlans = null) → không báo lỗi oan', () => {
+    expect(checkBranchPlan({ ...base, addedPlans: null })).toEqual([]);
+  });
+
+  it('nhánh miễn (mech/ops/fix/main) không có plan → đạt', () => {
+    for (const branch of ['mech/x', 'ops/y', 'fix/z', 'main']) {
+      expect(checkBranchPlan({ branch, existingPlans: [], addedPlans: [] }), branch).toEqual([]);
+    }
   });
 });

@@ -49,3 +49,43 @@ export function checkPlan(text) {
   }
   return problems;
 }
+
+// ---------- Nhánh nào cần kế hoạch ----------
+
+/** Nhánh BẮT BUỘC có kế hoạch (docs/plans/<nhánh với / → ->.md). */
+export const PLAN_REQUIRED_PREFIXES = ['feat/', 'chore/'];
+/**
+ * Nhánh MIỄN kế hoạch: việc cơ học (`mech/*`), hạ tầng (`ops/*`) và sửa lỗi nhỏ tạo từ `/fix-issues` (`fix/*`).
+ * Miễn là không bắt buộc CÓ plan; nếu nhánh vẫn có file plan thì file đó vẫn bị kiểm như mọi plan khác.
+ * Mọi tiền tố lạ (main, dependabot/…, v.v.) cũng được miễn — cổng chỉ ép các nhánh làm tính năng.
+ */
+export const PLAN_EXEMPT_PREFIXES = ['mech/', 'ops/', 'fix/'];
+
+/** @returns {'required' | 'exempt'} */
+export function planRequirement(branch) {
+  if (PLAN_EXEMPT_PREFIXES.some((prefix) => branch.startsWith(prefix))) return 'exempt';
+  return PLAN_REQUIRED_PREFIXES.some((prefix) => branch.startsWith(prefix)) ? 'required' : 'exempt';
+}
+
+/** `feat/fr-034` → `feat-fr-034.md` */
+export function planFileFor(branch) {
+  return `${branch.replace(/\//g, '-')}.md`;
+}
+
+/**
+ * Nhánh bắt buộc có plan phải CÓ plan của mình: đang tồn tại, hoặc đã từng được thêm trong lịch sử nhánh
+ * (plan bị xóa ở commit kết thúc việc — `docs/workflows/finish.md` bước 6 — nên chỉ xét file hiện có là sai).
+ * @param {{ branch: string, existingPlans: Iterable<string>, addedPlans: Iterable<string> | null }} input
+ *   `addedPlans = null` nghĩa là không đọc được lịch sử (clone nông): chỉ dựa vào file hiện có, không báo lỗi oan.
+ * @returns {string[]}
+ */
+export function checkBranchPlan({ branch, existingPlans, addedPlans }) {
+  if (planRequirement(branch) === 'exempt') return [];
+  const file = planFileFor(branch);
+  if (new Set(existingPlans).has(file)) return [];
+  if (addedPlans === null) return []; // không biết lịch sử → không phán
+  if (new Set(addedPlans).has(file)) return [];
+  return [
+    `nhánh ${branch} cần kế hoạch docs/plans/${file} (theo docs/workflows/feature.md); lịch sử nhánh chưa từng thêm file này. Nhánh mech/*, ops/*, fix/* được miễn.`,
+  ];
+}

@@ -3,6 +3,8 @@
 > Tên file theo nhánh: thay `/` bằng `-` (nhánh `feat/fr-034` → `docs/plans/feat-fr-034.md`, `docs/handoff/feat-fr-034.md`).
 > Quy trình này mượn ba ý của Spec-Driven Development (github/spec-kit) mà không cài công cụ của họ: **không code khi còn điểm chưa rõ**, **tiêu chí nghiệm thu kiểm được**, **ghi lý do khi vi phạm nguyên tắc**. Cổng kiểm do công cụ làm (`pnpm check:plans`), không dùng AI.
 
+> Nhánh `mech/*`, `ops/*` và `fix/*` nhỏ (từ `/fix-issues`) **không cần plan**; `feat/*` và `chore/*` bắt buộc (cổng `pnpm check:plans` kiểm lịch sử nhánh).
+
 Việc: `<mã gap matrix>` (người dùng cung cấp)
 
 1. Nếu có `docs/handoff/<nhánh hiện tại>.md` → đọc trước, dùng lại "Đã đọc và rút ra", không đọc lại các file đó trừ khi đã đổi.
