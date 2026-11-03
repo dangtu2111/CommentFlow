@@ -87,6 +87,34 @@ describe('createLogger', () => {
     expect(output).toContain('Request failed'); // thông tin chẩn đoán còn giữ
   });
 
+  it('che đường lỗi HTTP lồng sâu: err.response.config.headers, err.response.data.access_token, err.config.params/url, err.request._header', () => {
+    const { logger, lines } = captureLogger();
+    logger.error(
+      {
+        err: {
+          message: 'Request failed with status 400',
+          config: {
+            url: 'https://graph.example/me?access_token=sq-1',
+            params: { access_token: 'sq-2' },
+          },
+          response: {
+            status: 400,
+            config: { headers: { Authorization: 'Bearer sq-3' }, data: 'client_secret=sq-4' },
+            data: { access_token: 'sq-5', refresh_token: 'sq-6' },
+          },
+          request: {
+            _header: 'GET /me HTTP/1.1\r\nAuthorization: Bearer sq-7\r\n',
+            path: '/me?access_token=sq-8',
+          },
+        },
+      },
+      'lỗi Graph API',
+    );
+    const output = lines.join('');
+    for (let i = 1; i <= 8; i++) expect(output).not.toContain(`sq-${i}`);
+    expect(output).toContain('Request failed with status 400'); // còn thông tin chẩn đoán
+  });
+
   it('giữ nguyên các trường không nhạy cảm', () => {
     const { logger, lines } = captureLogger();
     logger.info({ jobId: 'abc-1' }, 'ok');

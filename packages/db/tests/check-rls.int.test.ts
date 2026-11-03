@@ -197,4 +197,48 @@ describe('check-rls', () => {
       }),
     );
   });
+
+  it('bắt cf_app được cấp quyền ghi trên bảng hệ thống feature_flags', async () => {
+    const v = await violationsAfter('GRANT INSERT ON core.feature_flags TO cf_app');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.feature_flags',
+        message: expect.stringContaining('chỉ cho cf_app quyền SELECT'),
+      }),
+    );
+  });
+
+  it('bắt cf_app được cấp TRUNCATE', async () => {
+    const v = await violationsAfter('GRANT TRUNCATE ON core.members TO cf_app');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.members',
+        message: expect.stringContaining('TRUNCATE'),
+      }),
+    );
+  });
+
+  it('bắt hàm mới trong core còn EXECUTE cho PUBLIC (quên REVOKE)', async () => {
+    const v = await violationsAfter(
+      'CREATE FUNCTION core.ham_cong_khai() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$',
+    );
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.ham_cong_khai',
+        message: expect.stringContaining('EXECUTE'),
+      }),
+    );
+  });
+
+  it('bắt policy của bảng "của mình" (sessions) mở toang kiểu OR 1 = 1', async () => {
+    const v = await violationsAfter(`
+      CREATE POLICY mo_toang ON core.sessions USING (true);
+      `);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.sessions',
+        message: expect.stringContaining('mo_toang'),
+      }),
+    );
+  });
 });

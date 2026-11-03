@@ -46,6 +46,16 @@ export const REDACT_PATHS = [
   'error.config.headers.*',
   'error.config.data',
   'error.request.headers.*',
+  // axios lồng config trong response; Graph API gửi access_token trên query string.
+  'err.response.config.headers.*',
+  'err.response.config.data',
+  'err.response.data.access_token',
+  'err.response.data.refresh_token',
+  'err.response.data.client_secret',
+  'err.config.params',
+  'err.config.url',
+  'err.request._header',
+  'err.request.path',
 ];
 
 export function createLogger(options: { level: string }, destination?: NodeJS.WritableStream) {

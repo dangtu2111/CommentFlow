@@ -30,9 +30,12 @@ type PolicyClass = { label: string; isScoped: (expr: unknown) => boolean };
 // pg_get_expr in biểu thức dạng "(workspace_id = ( SELECT core.current_workspace_id() AS current_workspace_id))".
 const WORKSPACE_SHAPE = /\b(workspace_id|id)\s*=\s*\(\s*SELECT\s+core\.current_workspace_id\(\)/i;
 const AUTH_SHAPE = /core\.in_auth_context\(\)/i;
-const USER_SHAPE = /core\.current_user_id\(\)/i;
-/** Chặn các biểu thức mở toang (`true`, `... OR true`). */
-const hasTrueLiteral = (expr: string): boolean => /\btrue\b/i.test(expr);
+// Nhánh "của mình": (user_id|id) = ( SELECT core.current_user_id() ...) VÀ ( SELECT core.current_workspace_id() ...) IS NULL.
+const OWN_ROW_SHAPE = /\b(user_id|id)\s*=\s*\(\s*SELECT\s+core\.current_user_id\(\)/i;
+const NO_WORKSPACE_SHAPE = /core\.current_workspace_id\(\)(\s+AS\s+\w+)?\)\s+IS\s+NULL/i;
+/** Chặn các biểu thức mở toang (`true`, `1 = 1`, `NOT false`, `... OR true`). */
+const hasTrueLiteral = (expr: string): boolean =>
+  /\btrue\b|\b1\s*=\s*1\b|\bnot\s+false\b/i.test(expr);
 
 const workspaceClass: PolicyClass = {
   label: 'current_workspace_id()',
@@ -40,11 +43,12 @@ const workspaceClass: PolicyClass = {
     typeof expr === 'string' && WORKSPACE_SHAPE.test(expr) && !hasTrueLiteral(expr),
 };
 const ownUserClass: PolicyClass = {
-  label: 'in_auth_context() và current_user_id()',
+  label: 'in_auth_context() hoặc (không workspace, user_id/id = current_user_id())',
   isScoped: (expr) =>
     typeof expr === 'string' &&
     AUTH_SHAPE.test(expr) &&
-    USER_SHAPE.test(expr) &&
+    OWN_ROW_SHAPE.test(expr) &&
+    NO_WORKSPACE_SHAPE.test(expr) &&
     !hasTrueLiteral(expr),
 };
 const authOnlyClass: PolicyClass = {
@@ -106,14 +110,18 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
            has_any_column_privilege('${APP_ROLE}', c.oid, 'SELECT') AS can_select,
            has_any_column_privilege('${APP_ROLE}', c.oid, 'INSERT') AS can_insert,
            has_any_column_privilege('${APP_ROLE}', c.oid, 'UPDATE') AS can_update,
-           has_table_privilege('${APP_ROLE}', c.oid, 'DELETE') AS can_delete
+           has_table_privilege('${APP_ROLE}', c.oid, 'DELETE') AS can_delete,
+           has_table_privilege('${APP_ROLE}', c.oid, 'TRUNCATE') AS can_truncate,
+           has_table_privilege('${APP_ROLE}', c.oid, 'TRIGGER') AS can_trigger,
+           has_table_privilege('${APP_ROLE}', c.oid, 'REFERENCES') AS can_references
     FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE c.relkind IN ('r', 'p') AND n.nspname IN ('core', 'cf')`);
   const policies = await db.query(`/* policies */
     SELECT n.nspname || '.' || c.relname AS name, p.polname, p.polcmd,
            p.polpermissive AS permissive,
            (0 = ANY(p.polroles)
-            OR EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname = '${APP_ROLE}' AND r.oid = ANY(p.polroles))) AS applies_to_app,
+            OR EXISTS (SELECT 1 FROM unnest(p.polroles) AS rid
+                       WHERE rid <> 0 AND pg_has_role('${APP_ROLE}', rid, 'MEMBER'))) AS applies_to_app,
            pg_get_expr(p.polqual, p.polrelid) AS qual,
            pg_get_expr(p.polwithcheck, p.polrelid) AS withcheck
     FROM pg_policy p JOIN pg_class c ON c.oid = p.polrelid JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -121,6 +129,25 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
 
   for (const row of privileges.rows) {
     const name = String(row.name);
+    for (const [key, label] of [
+      ['can_truncate', 'TRUNCATE'],
+      ['can_trigger', 'TRIGGER'],
+      ['can_references', 'REFERENCES'],
+    ] as const) {
+      if (row[key] === true) {
+        violations.push({ subject: name, message: `${APP_ROLE} không được có quyền ${label}` });
+      }
+    }
+    // Bảng hệ thống không RLS (feature_flags): cf_app chỉ được SELECT (ghi cờ là việc của role Admin).
+    if (
+      SYSTEM_TABLES.includes(name) &&
+      (row.can_insert === true || row.can_update === true || row.can_delete === true)
+    ) {
+      violations.push({
+        subject: name,
+        message: `bảng hệ thống chỉ cho ${APP_ROLE} quyền SELECT (đang có quyền ghi)`,
+      });
+    }
     const klass = rlsTables.get(name);
     if (!klass) continue;
     const granted: Record<Command, boolean> = {
@@ -214,6 +241,20 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
         violations.push({ subject: APP_ROLE, message: `có quyền CREATE trên ${label}` });
       }
     }
+  }
+
+  // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
+  const functions = await db.query(`/* public-functions */
+    SELECT n.nspname || '.' || p.proname AS name
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname IN ('core', 'cf') AND p.prorettype <> 'trigger'::regtype
+      AND (p.proacl IS NULL
+           OR EXISTS (SELECT 1 FROM aclexplode(p.proacl) a WHERE a.grantee = 0 AND a.privilege_type = 'EXECUTE'))`);
+  for (const row of functions.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: 'PUBLIC đang có quyền EXECUTE trên hàm (cần REVOKE ALL ... FROM PUBLIC)',
+    });
   }
 
   // --- PUBLIC không được có quyền bảng ---

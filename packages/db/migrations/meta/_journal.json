@@ -64,6 +64,13 @@
       "when": 1793676659011,
       "tag": "0008_auth_context_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793678237041,
+      "tag": "0009_session_insert_hardening",
+      "breakpoints": true
     }
   ]
 }

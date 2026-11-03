@@ -17,6 +17,10 @@ beforeAll(async () => {
   admin = createAdminPool();
   db = createAppDb();
   userId = await seedUser(admin);
+  // Phiên Admin chỉ tạo được cho người dùng có is_admin = true (0009).
+  await admin.query("UPDATE core.users SET is_admin = true, admin_role = 'super' WHERE id = $1", [
+    userId,
+  ]);
 });
 afterAll(async () => {
   await db.close();
@@ -160,5 +164,70 @@ describe('quyền cột của cf_app trên core.sessions', () => {
     );
     const after = await fetchRow(created[0]?.id as string);
     expect(after.expires_at.getTime()).toBe(after.created_at.getTime() + 8 * HOUR);
+  });
+});
+
+describe('đường INSERT của trigger (kiểm chứng lần ba)', () => {
+  it('cf_app KHÔNG chèn được phiên Admin với created_at ở tương lai để kéo dài hạn', async () => {
+    const created = await db.withAuthContext((tx) =>
+      tx
+        .insert(sessions)
+        .values({
+          userId,
+          token: randomUUID(),
+          expiresAt: new Date(Date.now() + 400 * 24 * HOUR),
+          createdAt: new Date(Date.now() + 365 * 24 * HOUR),
+          isAdminSession: true,
+        })
+        .returning({ id: sessions.id }),
+    );
+    const row = await fetchRow(created[0]?.id as string);
+    expect(row.created_at.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+    expect(row.expires_at.getTime()).toBeLessThanOrEqual(Date.now() + 8 * HOUR + 1000);
+  });
+
+  it('phiên Admin chỉ được TẠO cho người dùng is_admin = true (cả chủ sở hữu lẫn cf_app) → từ chối', async () => {
+    const normalUser = await seedUser(admin);
+    expect(
+      await expectRejectCode(
+        admin.query(
+          "INSERT INTO core.sessions (user_id, token, expires_at, is_admin_session) VALUES ($1, $2, now() + interval '1 hour', true)",
+          [normalUser, randomUUID()],
+        ),
+      ),
+    ).toBe(PERMISSION_DENIED);
+    expect(
+      await expectRejectCode(
+        db.withAuthContext((tx) =>
+          tx.insert(sessions).values({
+            userId: normalUser,
+            token: randomUUID(),
+            expiresAt: new Date(Date.now() + HOUR),
+            isAdminSession: true,
+          }),
+        ),
+      ),
+    ).toBe(PERMISSION_DENIED);
+  });
+
+  it('không bật được cờ Admin bằng UPDATE cho người dùng không phải Admin; với Admin thì được', async () => {
+    const normalUser = await seedUser(admin);
+    const normal = await admin.query(
+      "INSERT INTO core.sessions (user_id, token, expires_at) VALUES ($1, $2, now() + interval '1 day') RETURNING id",
+      [normalUser, randomUUID()],
+    );
+    expect(
+      await expectRejectCode(
+        admin.query('UPDATE core.sessions SET is_admin_session = true WHERE id = $1', [
+          normal.rows[0].id,
+        ]),
+      ),
+    ).toBe(PERMISSION_DENIED);
+
+    const row = await insertAsOwner({ isAdmin: false, expiresInHours: 24 });
+    await admin.query('UPDATE core.sessions SET is_admin_session = true WHERE id = $1', [row.id]);
+    const after = await fetchRow(row.id);
+    expect(after.is_admin_session).toBe(true);
+    expect(after.expires_at.getTime()).toBeLessThanOrEqual(after.created_at.getTime() + 8 * HOUR);
   });
 });

@@ -63,6 +63,12 @@ const CHANNEL_PATTERN = /^[a-z_][a-z0-9_]{0,62}$/;
 
 type Settings = Record<string, string>;
 
+/**
+ * Mỗi giao dịch ĐẶT LẠI mọi biến ngữ cảnh rồi mới đặt biến của đường đang dùng: nếu một kết nối trong pool bị
+ * `SET` ở cấp phiên (lỗi mã hoặc tấn công), ngữ cảnh đó không đi vào giao dịch thường (phòng thủ lớp hai).
+ */
+const NO_CONTEXT: Settings = { 'app.workspace_id': '', 'app.user_id': '', 'app.ctx': '' };
+
 async function runInTransaction<T>(
   pool: pg.Pool,
   settings: Settings,
@@ -103,11 +109,15 @@ export function createDb(options: { connectionString: string; max?: number }): F
   let authDb: Database | undefined;
   return {
     withWorkspace: async (workspaceId, fn) =>
-      runInTransaction(pool, { 'app.workspace_id': assertUuid(workspaceId, 'workspaceId') }, fn),
+      runInTransaction(
+        pool,
+        { ...NO_CONTEXT, 'app.workspace_id': assertUuid(workspaceId, 'workspaceId') },
+        fn,
+      ),
     withUser: async (userId, fn) =>
-      runInTransaction(pool, { 'app.user_id': assertUuid(userId, 'userId') }, fn),
-    withSystem: (fn) => runInTransaction(pool, {}, fn),
-    withAuthContext: (fn) => runInTransaction(pool, { 'app.ctx': 'auth' }, fn),
+      runInTransaction(pool, { ...NO_CONTEXT, 'app.user_id': assertUuid(userId, 'userId') }, fn),
+    withSystem: (fn) => runInTransaction(pool, NO_CONTEXT, fn),
+    withAuthContext: (fn) => runInTransaction(pool, { ...NO_CONTEXT, 'app.ctx': 'auth' }, fn),
     get auth() {
       authDb ??= drizzle(authPool, { schema });
       return authDb;

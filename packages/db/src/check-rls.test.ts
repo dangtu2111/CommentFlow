@@ -12,6 +12,7 @@ function fakeDb(parts: {
   role?: Row | null;
   create?: Row;
   publicGrants?: Row[];
+  functions?: Row[];
 }): Queryable {
   const noCreate = { core_create: false, cf_create: false, public_create: false, db_create: false };
   return {
@@ -31,6 +32,7 @@ function fakeDb(parts: {
       }
       if (text.includes('/* create-privileges */')) return { rows: [parts.create ?? noCreate] };
       if (text.includes('/* public-grants */')) return { rows: parts.publicGrants ?? [] };
+      if (text.includes('/* public-functions */')) return { rows: parts.functions ?? [] };
       throw new Error(`câu truy vấn lạ: ${text.slice(0, 40)}`);
     },
   };
@@ -333,6 +335,84 @@ describe('checkRls — nhóm bảng, role, quyền', () => {
       expect.objectContaining({
         subject: 'core.users',
         message: expect.stringContaining('PUBLIC'),
+      }),
+    );
+  });
+});
+
+describe('checkRls — kiểm chứng lần ba', () => {
+  const S = 'core.sessions';
+  const authPolicy = (expr: string) => [
+    {
+      name: S,
+      polname: 'sessions_access',
+      polcmd: '*',
+      permissive: true,
+      applies_to_app: true,
+      qual: expr,
+      withcheck: expr,
+    },
+  ];
+  const run = (expr: string) =>
+    checkRls(fakeDb({ tables: [table(S)], privileges: [grant(S)], policies: authPolicy(expr) }));
+
+  it('nhóm "của mình" mở toang theo kiểu khác (OR current_user_id() IS NOT NULL, OR 1 = 1, OR NOT false) → đỏ', async () => {
+    const holes = [
+      '(( SELECT core.in_auth_context() AS in_auth_context) OR (( SELECT core.current_user_id() AS current_user_id) IS NOT NULL))',
+      `(${AUTH_OWN} OR (1 = 1))`,
+      `(${AUTH_OWN} OR (NOT false))`,
+    ];
+    for (const expr of holes) {
+      expect(await run(expr), expr).toContainEqual(expect.objectContaining({ subject: S }));
+    }
+  });
+
+  it('nhóm "của mình" thiếu điều kiện "không có workspace" → đỏ', async () => {
+    const noWorkspaceGuard =
+      '(( SELECT core.in_auth_context() AS in_auth_context) OR (user_id = ( SELECT core.current_user_id() AS current_user_id)))';
+    expect(await run(noWorkspaceGuard)).toContainEqual(expect.objectContaining({ subject: S }));
+  });
+
+  it('bảng hệ thống feature_flags: cf_app có quyền ghi → đỏ; chỉ SELECT → đạt', async () => {
+    const F = 'core.feature_flags';
+    const t = table(F, { rls: false, has_workspace_id: false, policies: 0 });
+    const ok = await checkRls(
+      fakeDb({
+        tables: [t],
+        privileges: [grant(F, { can_insert: false, can_update: false, can_delete: false })],
+      }),
+    );
+    expect(ok).toEqual([]);
+    const bad = await checkRls(
+      fakeDb({ tables: [t], privileges: [grant(F, { can_insert: true })] }),
+    );
+    expect(bad).toContainEqual(
+      expect.objectContaining({
+        subject: F,
+        message: expect.stringContaining('chỉ cho cf_app quyền SELECT'),
+      }),
+    );
+  });
+
+  it('cf_app có TRUNCATE / TRIGGER / REFERENCES trên bất kỳ bảng nào → đỏ', async () => {
+    for (const [field, label] of [
+      ['can_truncate', 'TRUNCATE'],
+      ['can_trigger', 'TRIGGER'],
+      ['can_references', 'REFERENCES'],
+    ] as const) {
+      const v = await checkRls(fakeDb({ ...base, privileges: [grant(M, { [field]: true })] }));
+      expect(v).toContainEqual(
+        expect.objectContaining({ subject: M, message: expect.stringContaining(label) }),
+      );
+    }
+  });
+
+  it('hàm trong core/cf còn EXECUTE cho PUBLIC → đỏ', async () => {
+    const v = await checkRls(fakeDb({ ...base, functions: [{ name: 'core.ham_cong_khai' }] }));
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.ham_cong_khai',
+        message: expect.stringContaining('EXECUTE'),
       }),
     );
   });

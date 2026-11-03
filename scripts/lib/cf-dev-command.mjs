@@ -26,6 +26,7 @@ const FORBIDDEN_FLAGS = new Set([
   '--file',
   '--env-file',
   '--profile',
+  '--project-directory',
 ]);
 const SAFE_ARG = /^[A-Za-z0-9_.:=/@-]+$/;
 // Không cho bắt đầu bằng '-' để tên nhánh không bị git hiểu thành tùy chọn.

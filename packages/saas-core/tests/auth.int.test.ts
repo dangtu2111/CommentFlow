@@ -39,6 +39,12 @@ afterAll(async () => {
   await owner.end();
 });
 
+/** Phiên Admin chỉ tạo/bật được cho người dùng is_admin = true (trigger, migration 0009). */
+const makeAdmin = (userId: string) =>
+  owner.query("UPDATE core.users SET is_admin = true, admin_role = 'super' WHERE id = $1", [
+    userId,
+  ]);
+
 const newEmail = () => `${randomUUID()}@Example.Test`;
 
 /** Lấy status dù Better Auth trả Response hay ném APIError. */
@@ -214,6 +220,7 @@ describe('đăng nhập và phiên', () => {
 describe('phiên Admin (is_admin_session)', () => {
   it('hết hạn sau 8 giờ, ngắn hơn phiên app', async () => {
     const { userId } = await signUp();
+    await makeAdmin(userId);
     const context = await auth.$context;
     // Tham số thứ 4 (overrideAll = true) bắt buộc: nếu không Better Auth ghi đè bằng giá trị mặc định (false).
     await context.internalAdapter.createSession(userId, false, { isAdminSession: true }, true);
@@ -225,12 +232,25 @@ describe('phiên Admin (is_admin_session)', () => {
   });
 });
 
+describe('phiên Admin chỉ dành cho người dùng Admin', () => {
+  it('tạo phiên Admin cho người dùng thường qua adapter Better Auth bị database từ chối', async () => {
+    const { userId } = await signUp();
+    const context = await auth.$context;
+    await expect(
+      context.internalAdapter.createSession(userId, false, { isAdminSession: true }, true),
+    ).rejects.toBeDefined();
+    const rows = await sessionRows(userId);
+    expect(rows.some((r) => r.isAdminSession)).toBe(false);
+  });
+});
+
 describe('hạn 8 giờ của phiên Admin được ép ở DATABASE (mọi đường đọc/làm mới)', () => {
   const HOUR = 3600 * 1000;
 
   /** Biến phiên vừa đăng nhập thành phiên Admin đã tạo cách đây N giờ (bằng quyền chủ sở hữu). */
   async function adminSession(createdHoursAgo: number, refreshedHoursAgo: number) {
     const { email, userId } = await signUp();
+    await makeAdmin(userId);
     const { cookie } = await signIn(email);
     // Người dùng có 2 phiên (đăng ký + đăng nhập): chọn đúng phiên ứng với cookie theo token.
     const token = decodeURIComponent(cookie.split('session_token=')[1] ?? '').split('.')[0] ?? '';
@@ -279,6 +299,7 @@ describe('hạn 8 giờ của phiên Admin được ép ở DATABASE (mọi đư
 
   it('hằng số 8 giờ trong SQL khớp ADMIN_SESSION_SECONDS', async () => {
     const { userId } = await signUp();
+    await makeAdmin(userId);
     const { rows } = await owner.query(
       `INSERT INTO core.sessions (user_id, token, expires_at, is_admin_session)
        VALUES ($1, $2, now() + interval '14 days', true) RETURNING created_at, expires_at`,

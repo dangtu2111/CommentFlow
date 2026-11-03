@@ -28,6 +28,11 @@ describe('buildRemoteCommand', () => {
     expect(() => buildRemoteCommand(['ps', '-f', 'x.yml'])).toThrow(/Cờ bị cấm/);
   });
 
+  it('từ chối --project-directory (đổi nơi tính đường dẫn bind mount / build context)', () => {
+    expect(() => buildRemoteCommand(['up', '--project-directory', '/tmp'])).toThrow(/Cờ bị cấm/);
+    expect(() => buildRemoteCommand(['up', '--project-directory=/tmp'])).toThrow(/Cờ bị cấm/);
+  });
+
   it('từ chối cờ nguy hiểm dạng --flag=giá-trị', () => {
     expect(() => buildRemoteCommand(['down', '--volumes=true'])).toThrow(/Cờ bị cấm/);
     expect(() => buildRemoteCommand(['ps', '--project-name=cf-x'])).toThrow(/Cờ bị cấm/);
