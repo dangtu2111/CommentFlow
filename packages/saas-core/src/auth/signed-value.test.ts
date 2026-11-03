@@ -46,7 +46,9 @@ describe('createSignedValueCodec', () => {
       'base64url',
     );
     expect(codec().verify(`${forged}.${sig}`)).toBeNull();
-    expect(codec().verify(`${payload}.${sig.slice(0, -1)}A`)).toBeNull();
+    // Đổi ký tự cuối sang một ký tự KHÁC (không cố định 'A': nếu chữ ký thật đã kết thúc bằng 'A' thì chữ ký không đổi và test sai ngẫu nhiên).
+    const last = sig.at(-1) === 'A' ? 'B' : 'A';
+    expect(codec().verify(`${payload}.${sig.slice(0, -1)}${last}`)).toBeNull();
   });
 
   it('khóa của mục đích khác hoặc secret khác không kiểm được', () => {
