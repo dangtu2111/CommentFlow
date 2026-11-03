@@ -73,3 +73,12 @@ Chạy `/stitch-sync` trong Claude Code ở GĐ0 (MCP Stitch đã cấu hình s�
 | Thang chữ | 11/12/13/15/18/22/30px | 12/14/16/20/24/32–40 | |
 | Icon | Material Symbols | Lucide | |
 | Trạng thái (success/warning/danger) | `#237A36` / `#B35C00` / `#C92A2A` | giống | Khớp |
+
+## Đã bỏ khi dựng workspace / thành viên / lời mời (`feat/workspace-members`, chủ dự án 03/11)
+
+Dựng tối giản, không chờ Stitch; các nội dung dưới đây trong `settings-workspace-members.png`, `accept-invite.png`, `onboarding.png` là **bịa hoặc ngoài phạm vi**, không đưa vào sản phẩm:
+
+- Trang Thành viên: khối kênh đã kết nối, gói cước/hạn mức AI, "Chuyển khoản QR (VietQR)", "Xóa vĩnh viễn Workspace", "Ma trận đối chiếu quyền hạn" tĩnh, phân công kênh phụ trách khi mời, công tắc "Che bot số điện thoại" khi mời, tên/ảnh mẫu, cột "Quyền thao tác" văn bản bịa.
+- Nhận lời mời: huy hiệu "Meta Tech Partner • ISO/IEC 27001", "Gateway SSL Active", "Bảo mật cấp doanh nghiệp Meta API Partner", hiển thị token mời, danh sách kênh/phạm vi quyền bịa, ô "Kích hoạt 2FA (Khuyên dùng)" trong form nhận lời mời (2FA làm ở trang bảo mật; Owner bắt buộc), quy tắc mật khẩu "8 ký tự" (thật: **tối thiểu 10**), đặt mật khẩu ngay trên trang mời (người chưa có tài khoản đăng ký ở trang đăng ký thường).
+- Onboarding: chỉ dựng bước 1 (tạo workspace) — chưa có thiết kế Stitch riêng cho bước này; các bước 2–5 (kênh, kiến thức...) làm ở nhánh sau.
+- Bộ chuyển workspace trong Stitch có tìm kiếm + số cần xử lý: bản này chỉ liệt kê (gap matrix `FR-005-SEARCH`).

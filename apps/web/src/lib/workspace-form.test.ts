@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseWorkspaceForm } from './workspace-form';
+import { parseWorkspaceForm } from './workspace-form-parse';
 
 const ok = { name: '  Shop An  ', timezone: 'Asia/Ho_Chi_Minh', defaultLang: 'en' };
 

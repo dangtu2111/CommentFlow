@@ -2,7 +2,8 @@
 
 import { isAppError } from '@flow/shared';
 import { redirect } from 'next/navigation';
-import { parseWorkspaceForm, type WorkspaceFormState } from '../../../../lib/workspace-form';
+import type { WorkspaceFormState } from '../../../../lib/workspace-form';
+import { parseWorkspaceForm } from '../../../../lib/workspace-form-parse';
 import { getAuthRuntime } from '../../../../server/auth';
 import { requireAppUser } from '../../../../server/require-app-user';
 import { rememberWorkspace } from '../../../../server/workspace-cookie';
