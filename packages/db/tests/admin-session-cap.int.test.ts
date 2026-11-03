@@ -14,6 +14,7 @@ import {
 } from './helpers';
 
 const HOUR = 3600 * 1000;
+/** Máy chạy test và DB (máy ảo) có thể lệch đồng hồ vài giây; trigger tự dùng now() của DB nên không có dung sai. */ const CLOCK_SKEW_TOLERANCE_MS = 5000;
 const PERMISSION_DENIED = '42501';
 
 let admin: pg.Pool;
@@ -192,8 +193,10 @@ describe('đường INSERT của trigger (kiểm chứng lần ba)', () => {
         .returning({ id: sessions.id }),
     );
     const row = await fetchRow(created[0]?.id as string);
-    expect(row.created_at.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
-    expect(row.expires_at.getTime()).toBeLessThanOrEqual(Date.now() + 8 * HOUR + 1000);
+    expect(row.created_at.getTime()).toBeLessThanOrEqual(Date.now() + CLOCK_SKEW_TOLERANCE_MS);
+    expect(row.expires_at.getTime()).toBeLessThanOrEqual(
+      Date.now() + 8 * HOUR + CLOCK_SKEW_TOLERANCE_MS,
+    );
   });
 
   it('phiên Admin chỉ được TẠO cho người dùng is_admin = true (cả chủ sở hữu lẫn cf_auth) → từ chối', async () => {

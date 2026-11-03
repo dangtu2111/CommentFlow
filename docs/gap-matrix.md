@@ -59,6 +59,6 @@ Trạng thái: Đã có · Một phần · Khác spec · Thiếu · Không chắ
 |---|---|---|---|---|
 | 2026-11-03 | (chưa ghi) | 9 (GĐ0 khung) | 2 (`verifier-security` + `verifier-db`, một lần cuối nhánh, 0 mục "Chặn merge") | Phiên dài; `node_modules` bị chặn đọc nên phải `npm pack` vào thư mục tạm |
 
-| MEMBER-LEAVE | Thành viên tự rời workspace (Owner cuối cùng không rời được) | Thiếu (loại khỏi phạm vi feat/workspace-members) | — | Hành động + thư báo Owner | | 1 | — |
-| RLS-ACTOR-CTX | Bảo vệ sâu: `withWorkspace` không đặt `app.user_id` nên DB không biết người gọi; "chỉ Owner" của members/invitations hiện do dịch vụ ép (chỉ Owner cuối cùng có trigger DB) | Thiếu (đề xuất) | `packages/saas-core/src/tenancy/workspace-admin.ts` | Đặt `app.user_id` cùng `withWorkspace` + policy theo vai trò | | 2 | — |
-| FR-005-SEARCH | Bộ chuyển workspace có tìm kiếm và số việc cần xử lý | Thiếu (bản tối giản chỉ liệt kê) | `apps/web/src/components/app/workspace-switcher.tsx` | Ô tìm kiếm; số cần xử lý khi có dữ liệu bình luận | | 1 | — |
+| MEMBER-LEAVE | Thành viên tự rời workspace (Owner cuối cùng không rời được) | Thiếu (loại khỏi phạm vi feat/workspace-members) | — | Hành động + thư báo Owner | | 1 (làm sau) | — |
+| RLS-ACTOR-CTX | **Ưu tiên ĐẦU GĐ1 (trước khi kết nối kênh; chủ dự án 03/11):** bảo vệ sâu ở DB cho thao tác chỉ-Owner. `withWorkspace` không đặt `app.user_id` nên DB không biết người gọi; "chỉ Owner" của members/invitations hiện do dịch vụ ép (chỉ Owner cuối cùng có trigger DB) | Thiếu — làm đầu GĐ1 | `packages/saas-core/src/tenancy/workspace-admin.ts` | Đặt `app.user_id` cùng `withWorkspace` + policy/trigger theo vai trò Owner cho members/invitations | | 1 (đầu) | — |
+| FR-005-SEARCH | Bộ chuyển workspace có tìm kiếm và số việc cần xử lý | Thiếu (bản tối giản chỉ liệt kê) | `apps/web/src/components/app/workspace-switcher.tsx` | Ô tìm kiếm; số cần xử lý khi có dữ liệu bình luận | | 1 (làm sau) | — |
