@@ -1,0 +1,121 @@
+import { randomUUID } from 'node:crypto';
+import type { FlowDb } from '@flow/db';
+import { and, asc, eq } from '@flow/db';
+import { members, workspaces } from '@flow/db/schema/core';
+import { AppError } from '@flow/shared';
+import { z } from 'zod';
+import { uniqueSlug } from './slug';
+
+export type MemberRole = 'owner' | 'staff';
+
+export type WorkspaceMembership = { id: string; name: string; slug: string; role: MemberRole };
+
+const nameSchema = z.string().trim().min(1).max(80);
+const uuidSchema = z.uuid();
+const roleSchema = z.enum(['owner', 'staff']);
+
+function parse<T>(schema: z.ZodType<T>, value: unknown, message: string): T {
+  const result = schema.safeParse(value);
+  if (!result.success) throw new AppError('VALIDATION_FAILED', message);
+  return result.data;
+}
+
+/** Postgres 23505 = vi phạm ràng buộc duy nhất (Drizzle bọc lỗi gốc trong `cause`). */
+function isUniqueViolation(error: unknown): boolean {
+  const e = error as { code?: string; cause?: { code?: string } };
+  return (e?.cause?.code ?? e?.code) === '23505';
+}
+
+/** Workspace, thành viên, vai trò. Mọi truy vấn đi qua withWorkspace()/withUser() (RLS). */
+export function createTenancy(db: FlowDb) {
+  async function getRole(workspaceId: string, userId: string): Promise<MemberRole | null> {
+    const wsId = parse(uuidSchema, workspaceId, 'workspaceId không hợp lệ.');
+    const uid = parse(uuidSchema, userId, 'userId không hợp lệ.');
+    const rows = await db.withWorkspace(wsId, (tx) =>
+      tx
+        .select({ role: members.role })
+        .from(members)
+        .where(
+          and(eq(members.workspaceId, wsId), eq(members.userId, uid), eq(members.status, 'active')),
+        ),
+    );
+    return (rows[0]?.role as MemberRole | undefined) ?? null;
+  }
+
+  return {
+    getRole,
+
+    /** Tạo workspace; người tạo là owner. id sinh ở ứng dụng để khớp ngữ cảnh RLS. */
+    async createWorkspace(input: { userId: string; name: string }): Promise<WorkspaceMembership> {
+      const userId = parse(uuidSchema, input.userId, 'userId không hợp lệ.');
+      const name = parse(nameSchema, input.name, 'Tên workspace phải có từ 1 đến 80 ký tự.');
+      const id = randomUUID();
+      const slug = uniqueSlug(name);
+      await db.withWorkspace(id, async (tx) => {
+        await tx.insert(workspaces).values({ id, name, slug });
+        await tx.insert(members).values({ workspaceId: id, userId, role: 'owner' });
+      });
+      return { id, name, slug, role: 'owner' };
+    },
+
+    /** Chỉ owner của workspace mới thêm được thành viên. */
+    async addMember(input: {
+      workspaceId: string;
+      actorUserId: string;
+      userId: string;
+      role: MemberRole;
+    }): Promise<void> {
+      const workspaceId = parse(uuidSchema, input.workspaceId, 'workspaceId không hợp lệ.');
+      const actorUserId = parse(uuidSchema, input.actorUserId, 'actorUserId không hợp lệ.');
+      const userId = parse(uuidSchema, input.userId, 'userId không hợp lệ.');
+      const role = parse(roleSchema, input.role, 'Vai trò phải là owner hoặc staff.');
+
+      try {
+        await db.withWorkspace(workspaceId, async (tx) => {
+          const actor = await tx
+            .select({ role: members.role })
+            .from(members)
+            .where(
+              and(
+                eq(members.workspaceId, workspaceId),
+                eq(members.userId, actorUserId),
+                eq(members.status, 'active'),
+              ),
+            );
+          if (actor[0]?.role !== 'owner') {
+            throw new AppError('FORBIDDEN', 'Chỉ chủ workspace (owner) mới được thêm thành viên.');
+          }
+          await tx.insert(members).values({ workspaceId, userId, role, invitedBy: actorUserId });
+        });
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          throw new AppError('CONFLICT', 'Người dùng này đã là thành viên của workspace.', {
+            cause: error,
+          });
+        }
+        throw error;
+      }
+    },
+
+    /** Workspace mà người dùng là thành viên (để chuyển workspace), kèm vai trò. */
+    async listWorkspacesOfUser(userId: string): Promise<WorkspaceMembership[]> {
+      const uid = parse(uuidSchema, userId, 'userId không hợp lệ.');
+      const rows = await db.withUser(uid, (tx) =>
+        tx
+          .select({
+            id: workspaces.id,
+            name: workspaces.name,
+            slug: workspaces.slug,
+            role: members.role,
+          })
+          .from(members)
+          .innerJoin(workspaces, eq(workspaces.id, members.workspaceId))
+          .where(and(eq(members.userId, uid), eq(members.status, 'active')))
+          .orderBy(asc(workspaces.name)),
+      );
+      return rows.map((r) => ({ ...r, role: r.role as MemberRole }));
+    },
+  };
+}
+
+export type Tenancy = ReturnType<typeof createTenancy>;

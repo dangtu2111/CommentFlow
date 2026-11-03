@@ -1,0 +1,25 @@
+# LiteLLM proxy — cấu hình khung. Chưa có khóa nhà cung cấp LLM thật.
+# `mock-llm` trả lời cố định, không gọi nhà cung cấp, không tốn tiền (dùng cho test/CI).
+model_list:
+  - model_name: mock-llm
+    litellm_params:
+      model: openai/mock-llm
+      api_key: mock-not-a-real-key
+      mock_response: "Đây là phản hồi giả để kiểm thử."
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+
+litellm_settings:
+  # Cache dùng Valkey; mọi khóa có tiền tố theo môi trường (dev:… / staging:…).
+  cache: true
+  cache_params:
+    type: redis
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
+    namespace: os.environ/CACHE_NAMESPACE
+  # Gửi trace sang Langfuse (đọc LANGFUSE_HOST / LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY từ môi trường).
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]

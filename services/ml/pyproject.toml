@@ -1,0 +1,26 @@
+[project]
+name = "flow-ml"
+version = "0.0.0"
+description = "Dịch vụ ml của CommentFlow (FastAPI). Giai đoạn khung: chỉ có /health, chưa nạp model."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.162.0",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.2.0",
+    "httpx==0.28.1",
+    "ruff==0.17.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

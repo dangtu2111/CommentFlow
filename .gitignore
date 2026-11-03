@@ -1,7 +1,6 @@
 # Bí mật — không bao giờ commit
 .env
 .env.*
-!.env.example
 *.pem
 *.key
 
@@ -31,3 +30,4 @@ volumes/
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+next-env.d.ts

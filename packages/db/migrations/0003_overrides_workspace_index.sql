@@ -1,0 +1,1 @@
+CREATE INDEX "feature_flag_overrides_workspace_idx" ON "core"."feature_flag_overrides" USING btree ("workspace_id");

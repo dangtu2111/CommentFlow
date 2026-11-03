@@ -1,6 +1,6 @@
 # 10 — Thiết kế Database & ERD
 
-> Phiên bản 1.1 · 02/11/2026 (biến thể câu, object extract, thành phần độ tin cậy, đánh dấu cài lệnh FR-161–165; thang xử lý khi không chắc, gộp bình luận, bảng size, xung đột giá… FR-147–160; nhiều nhãn, tệp đính kèm, trả lời một phần, xưng hô, `kb_gaps`, độ sẵn sàng FR-141–146; halfvec FR-139, cột định tuyến/viết lại câu hỏi FR-136–137; bổ sung tìm kiếm: tìm sản phẩm gần đúng, bí danh, bảng biến thể, đoạn có ngữ cảnh, hạn hiệu lực, câu mẫu, nhật ký tìm kiếm, cache theo giá; sửa truy vấn full-text; trước đó: saas-core, feature flag, đối soát Shopify, bảo vệ Meta App, kiểm tra lại trước khi gửi) · PostgreSQL 16 + pgvector 0.8.x, extension `unaccent`, `pg_trgm`. Bảng nào đã có trong source hiện tại cần **đối chiếu và migration bổ sung**, không tạo lại. Mọi bảng nghiệp vụ có `workspace_id` + RLS.
+> Phiên bản 1.2 · 03/11/2026 (auth theo Better Auth: `sessions.token`, thêm `accounts`, `verifications`, `two_factors` — ADR 003; biến thể câu, object extract, thành phần độ tin cậy, đánh dấu cài lệnh FR-161–165; thang xử lý khi không chắc, gộp bình luận, bảng size, xung đột giá… FR-147–160; nhiều nhãn, tệp đính kèm, trả lời một phần, xưng hô, `kb_gaps`, độ sẵn sàng FR-141–146; halfvec FR-139, cột định tuyến/viết lại câu hỏi FR-136–137; bổ sung tìm kiếm: tìm sản phẩm gần đúng, bí danh, bảng biến thể, đoạn có ngữ cảnh, hạn hiệu lực, câu mẫu, nhật ký tìm kiếm, cache theo giá; sửa truy vấn full-text; trước đó: saas-core, feature flag, đối soát Shopify, bảo vệ Meta App, kiểm tra lại trước khi gửi) · PostgreSQL 16 + pgvector 0.8.x, extension `unaccent`, `pg_trgm`. Bảng nào đã có trong source hiện tại cần **đối chiếu và migration bổ sung**, không tạo lại. Mọi bảng nghiệp vụ có `workspace_id` + RLS.
 
 ## 1. Quy ước
 
@@ -10,7 +10,7 @@
 - Xóa mềm (`deleted_at`) cho dữ liệu người dùng tạo; dữ liệu nền tảng xóa cứng khi có yêu cầu xóa.
 - Token mã hóa AES-GCM: cột `*_enc bytea` + `key_version int`.
 - Enum dùng `text` + CHECK để dễ migration.
-- **Schema theo sản phẩm** (`09_System_Architecture.md` §3.1): bảng dùng chung ở schema `core` (users, sessions, workspaces, members, invitations, plans, subscriptions, invoices, payments, usage_counters, feature_flags, feature_flag_overrides, action_logs, admin_impersonations, notification_prefs, push_subscriptions, data_exports); bảng CommentFlow ở schema `cf`; ExcelFlow sau này ở `xf`. Bảng `core` không có khóa ngoại trỏ sang `cf`/`xf`.
+- **Schema theo sản phẩm** (`09_System_Architecture.md` §3.1): bảng dùng chung ở schema `core` (users, sessions, accounts, verifications, two_factors, workspaces, members, invitations, plans, subscriptions, invoices, payments, usage_counters, feature_flags, feature_flag_overrides, action_logs, admin_impersonations, notification_prefs, push_subscriptions, data_exports); bảng CommentFlow ở schema `cf`; ExcelFlow sau này ở `xf`. Bảng `core` không có khóa ngoại trỏ sang `cf`/`xf`.
 
 ## 2. ERD tổng quan
 
@@ -51,10 +51,13 @@ erDiagram
 
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `users` | id, email (unique, citext), name, password_hash / auth provider, totp_secret_enc, totp_enabled, locale, is_admin, admin_role (`super`/`support`/`finance`) | Không có workspace_id |
-| `workspaces` | id, name, slug, timezone (mặc định Asia/Ho_Chi_Minh), default_lang, ai_enabled, emergency_stopped_at, ai_cost_cap_usd, status (`trial`/`active`/`past_due`/`suspended`/`deleted`) | |
-| `sessions` | user_id, token_hash, created_at, expires_at, last_seen_at, ip, user_agent, is_admin_session | Không có workspace_id; xóa khi đăng xuất/đổi mật khẩu |
-| `members` | workspace_id, user_id, role (`owner`/`staff`), invited_by, status | unique (workspace_id, user_id) |
+| `users` | id, email (unique, citext), name, email_verified, image, ~~password_hash~~ (→ `accounts`), ~~totp_secret_enc~~ (→ `two_factors`), totp_enabled, locale, is_admin, admin_role (`super`/`support`/`finance`) | Không có workspace_id |
+| `workspaces` | id, name, slug, timezone (mặc định Asia/Ho_Chi_Minh), default_lang, ai_enabled (mặc định `true` — chỉ cho phép gợi ý; tự gửi vẫn tắt theo `automation_settings`), emergency_stopped_at, ai_cost_cap_usd, status (`trial`/`active`/`past_due`/`suspended`/`deleted`) | |
+| `sessions` | user_id, token (ngẫu nhiên, **lưu thô theo Better Auth** — chốt 03/11, ADR 003), created_at, expires_at, last_seen_at (= `updated_at`, ghi tối đa 1 lần/giờ), ip, user_agent, is_admin_session | Không có workspace_id; xóa khi đăng xuất/đổi mật khẩu/đổi quyền. Bù cho token thô: cookie ký HMAC bằng `BETTER_AUTH_SECRET` (khóa ngoài DB, kiểm chữ ký trước khi tra DB), tắt cookie cache, phiên có hạn (13 §2). Bản spec cũ ghi `token_hash` — thay bằng quyết định này |
+| `accounts` | user_id, provider_id (`credential`/…), account_id, password (argon2id), access/refresh token (mã hóa nếu có OAuth), created_at, updated_at | Bảng của Better Auth (03/11); mật khẩu nằm ở đây thay cho `users.password_hash` |
+| `verifications` | identifier, value, expires_at | Bảng của Better Auth: mã xác minh email, quên mật khẩu |
+| `two_factors` | user_id, secret (mã hóa), backup_codes (mã hóa hoặc băm — theo khả năng plugin, ADR 003) | Plugin 2FA của Better Auth; thay cho `users.totp_secret_enc`; `users.totp_enabled` giữ làm cờ |
+| `members` | workspace_id, user_id, role (`owner`/`staff`), invited_by, status (`active`/`suspended`/`removed`; CHECK) | unique (workspace_id, user_id). `removed` **giữ dòng, không xóa** (`cf_app` không có quyền DELETE); chỉ thành viên `active` có quyền |
 | `invitations` | workspace_id, email, role, token_hash, expires_at, accepted_at | |
 
 ### 3.2 Kênh & nội dung nền tảng
@@ -164,6 +167,11 @@ create policy ws_isolation on comments
 - Mỗi request/job đặt `set local app.workspace_id = ...` trong transaction.
 - Role DB của app **không** có `BYPASSRLS`; Admin dùng role riêng + ghi nhật ký.
 - Test CI: mỗi bảng có `workspace_id` phải có policy (script kiểm `pg_policies`).
+- **Ngữ cảnh người dùng `app.user_id`** (do `withUser()` đặt): dùng để liệt kê dữ liệu **của chính mình**. Policy theo `current_user_id()` cho các bảng của chính người dùng: `users`, `sessions`, `accounts`, `two_factors`, `members` — chỉ thấy dòng của mình. *Trạng thái:* đã áp cho `members` và `workspaces`; **chưa áp** cho `users`/`sessions`/`accounts`/`two_factors` (gap `AUTH-RLS-OWN`).
+- **Đọc chéo workspace** (thấy các workspace khác của chính mình) **chỉ khi không có `app.workspace_id`**; trong `withWorkspace(A)` chỉ thấy A. Thành viên không `active` không được liệt kê.
+- Hàm `core.current_workspace_id()` / `core.current_user_id()` dùng `NULLIF(current_setting(..., true), '')`: thiếu giá trị → NULL → 0 dòng (sau COMMIT/ROLLBACK biến tùy chỉnh về chuỗi rỗng, không phải NULL).
+- Quyền của `cf_app`: **không DELETE** trên `workspaces`, `users`, `members` (xóa mềm bằng `status`); **không UPDATE** `users.is_admin`/`admin_role` (chỉ role Admin riêng); `action_logs`, `ai_usage` chỉ SELECT + INSERT. `check-rls` kiểm mỗi quyền của `cf_app` có policy đúng lệnh và dựa vào `current_workspace_id()`.
+- Policy tách theo lệnh (SELECT/INSERT/UPDATE/DELETE) thay cho một policy `ws_isolation` duy nhất như mẫu trên.
 
 ## 5. Truy vấn tìm kiến thức (hybrid)
 

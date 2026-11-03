@@ -1,0 +1,13 @@
+# Ghi đè cho project cf-dev: publish ĐÚNG 5 cổng ra LAN (máy code dùng qua IP máy phụ + portproxy).
+# Mọi dịch vụ còn lại (ClickHouse, SeaweedFS, Langfuse worker…) chỉ nằm trong mạng nội bộ của Compose.
+services:
+  postgres:
+    ports: ["5433:5432"]
+  valkey:
+    ports: ["6380:6379"]
+  ml:
+    ports: ["8001:8000"]
+  litellm:
+    ports: ["4000:4000"]
+  langfuse-web:
+    ports: ["3100:3000"]

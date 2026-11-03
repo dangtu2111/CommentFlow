@@ -1,0 +1,29 @@
+{
+  "name": "commentflow",
+  "private": true,
+  "version": "0.0.0",
+  "description": "CommentFlow AI — monorepo (xem docs/09_System_Architecture.md §3)",
+  "packageManager": "pnpm@10.24.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "build": "pnpm -r --if-present run build",
+    "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "lint:i18n": "pnpm --filter @flow/web run lint:i18n",
+    "cf:dev": "node scripts/cf-dev.mjs",
+    "stack:check": "node scripts/stack-check.mjs",
+    "test:db": "pnpm -r --workspace-concurrency=1 --if-present run test:db",
+    "db:migrate": "pnpm --filter @flow/db run db:migrate",
+    "db:check-rls": "pnpm --filter @flow/db run db:check-rls"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.4",
+    "dependency-cruiser": "18.7.1",
+    "typescript": "6.0.3"
+  }
+}
