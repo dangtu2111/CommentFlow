@@ -37,13 +37,31 @@ describe('check-rls', () => {
   });
 
   it('bắt được bảng bật RLS nhưng xóa hết policy', async () => {
-    const v = await violationsAfter('DROP POLICY invitations_isolation ON core.invitations');
+    const v = await violationsAfter(
+      [
+        'DROP POLICY invitations_select ON core.invitations',
+        'DROP POLICY invitations_insert ON core.invitations',
+        'DROP POLICY invitations_update ON core.invitations',
+      ].join('; '),
+    );
     expect(v).toContainEqual(
       expect.objectContaining({
         subject: 'core.invitations',
         message: expect.stringContaining('policy'),
       }),
     );
+  });
+
+  it('bắt được khi gỡ policy UPDATE của invitations (cf_app còn quyền UPDATE cột revoked_at)', async () => {
+    const v = await violationsAfter('DROP POLICY invitations_update ON core.invitations');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
+  });
+
+  it('bắt được khi cf_app lấy lại quyền DELETE hoặc UPDATE rộng trên invitations', async () => {
+    const del = await violationsAfter('GRANT DELETE ON core.invitations TO cf_app');
+    expect(del).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
+    const upd = await violationsAfter('GRANT UPDATE (token_hash) ON core.invitations TO cf_app');
+    expect(upd).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
   });
 
   it('bắt được bảng mới không có workspace_id và chưa khai báo là bảng hệ thống', async () => {

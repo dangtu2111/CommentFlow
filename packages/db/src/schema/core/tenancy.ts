@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, numeric, text, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  index,
+  numeric,
+  text,
+  unique,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { citext, core, createdAt, timestamptz, updatedAt } from './common';
 
@@ -65,10 +74,17 @@ export const invitations = core.table(
     tokenHash: text('token_hash').notNull().unique(),
     expiresAt: timestamptz('expires_at').notNull(),
     acceptedAt: timestamptz('accepted_at'),
+    // Thu hồi = đặt revoked_at (cf_app không DELETE). Mời lại cùng email thu hồi lời mời đang chờ trước.
+    revokedAt: timestamptz('revoked_at'),
+    invitedBy: uuid('invited_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
   },
   (t) => [
     check('invitations_role_check', sql`${t.role} in ('owner', 'staff')`),
     index('invitations_workspace_id_idx').on(t.workspaceId),
+    // Mỗi (workspace, email) chỉ có MỘT lời mời đang chờ (email là citext nên không phân biệt hoa thường).
+    uniqueIndex('invitations_pending_email_unique')
+      .on(t.workspaceId, t.email)
+      .where(sql`${t.acceptedAt} is null and ${t.revokedAt} is null`),
   ],
 );

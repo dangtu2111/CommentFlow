@@ -229,6 +229,13 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.users', 'admin_role', 'UPDATE'],
   ['cf_app', 'core.users', 'email', 'INSERT'],
   ['cf_app', 'core.accounts', 'password', 'UPDATE'],
+  // lời mời: sau khi tạo chỉ thu hồi được (revoked_at); không sửa token/email/vai trò/hạn/đã-dùng
+  ['cf_app', 'core.invitations', 'token_hash', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'email', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'role', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'expires_at', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'accepted_at', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'workspace_id', 'UPDATE'],
   ['cf_app', 'core.sessions', 'is_admin_session', 'UPDATE'],
   ['cf_app', 'core.sessions', 'created_at', 'UPDATE'],
   ['cf_app', 'core.sessions', 'expires_at', 'UPDATE'],

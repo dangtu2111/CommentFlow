@@ -1,10 +1,18 @@
 import { bucketKey, normalizeEmail, normalizeIp } from './keys';
 import { createMemoryStore, type RateStore } from './store';
 
-export type RateAction = 'login' | 'register' | 'resend' | 'forgot' | 'twofa' | 'reauth';
+export type RateAction =
+  | 'login'
+  | 'register'
+  | 'resend'
+  | 'forgot'
+  | 'twofa'
+  | 'reauth'
+  | 'invite'
+  | 'inviteAccept';
 
 /** Danh tính của một lần thử. Không có IP (dev không tin header nào) thì xô cần IP bị BỎ QUA — không có khóa chung "unknown". */
-export type RateIdentity = { email?: string; ip?: string; userId?: string };
+export type RateIdentity = { email?: string; ip?: string; userId?: string; workspaceId?: string };
 
 type BucketPolicy = {
   bucket: string;
@@ -56,6 +64,20 @@ export const RATE_POLICIES: Record<
     buckets: [{ bucket: 'user', needs: ['userId'], max: 5, windowSeconds: 15 * 60 }],
     onStoreFailure: 'memory',
   },
+  // Gửi lời mời qua email (chống dùng hệ thống gửi thư rác): 20/giờ cho mỗi workspace và 3/ngày cho mỗi email
+  // được mời (xuyên workspace). Kho lỗi → từ chối (thà không gửi còn hơn gửi không giới hạn).
+  invite: {
+    buckets: [
+      { bucket: 'workspace', needs: ['workspaceId'], max: 20, windowSeconds: 3600 },
+      { bucket: 'email', needs: ['email'], max: 3, windowSeconds: 24 * 3600 },
+    ],
+    onStoreFailure: 'deny',
+  },
+  // Nhận lời mời (chống dò token): 10 lần/15 phút cho mỗi người dùng đã đăng nhập.
+  inviteAccept: {
+    buckets: [{ bucket: 'user', needs: ['userId'], max: 10, windowSeconds: 15 * 60 }],
+    onStoreFailure: 'memory',
+  },
 };
 
 export type RateDecision =
@@ -93,6 +115,7 @@ export function createRateLimiter(options: {
       email,
       ip,
       userId: identity.userId?.trim() || undefined,
+      workspaceId: identity.workspaceId?.trim() || undefined,
     };
     return RATE_POLICIES[action].buckets.flatMap((policy) => {
       if (policy.needs.some((need) => values[need] === undefined)) return [];

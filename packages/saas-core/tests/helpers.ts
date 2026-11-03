@@ -20,18 +20,34 @@ export function createTestAuthDb(max = 5): AuthDb {
 }
 
 /** Tạo người dùng bằng quyền chủ sở hữu (cf_app không còn quyền chèn users). */
-export async function createTestUser(name = 'Người dùng thử'): Promise<string> {
+export async function createTestUser(
+  name = 'Người dùng thử',
+  options: { email?: string; verified?: boolean } = {},
+): Promise<string> {
   const id = randomUUID();
   const client = new pg.Client({ connectionString: requireEnv('TEST_DATABASE_ADMIN_URL') });
   await client.connect();
   try {
-    await client.query('INSERT INTO core.users (id, email, name) VALUES ($1, $2, $3)', [
-      id,
-      `${id}@example.test`,
-      name,
-    ]);
+    await client.query(
+      'INSERT INTO core.users (id, email, name, email_verified) VALUES ($1, $2, $3, $4)',
+      [id, options.email ?? `${id}@example.test`, name, options.verified ?? false],
+    );
   } finally {
     await client.end();
   }
   return id;
+}
+
+/** Chạy một câu SQL bằng quyền chủ sở hữu (gieo/đổi dữ liệu thử, ví dụ làm hết hạn lời mời). */
+export async function adminQuery<T extends pg.QueryResultRow = pg.QueryResultRow>(
+  text: string,
+  values: unknown[] = [],
+): Promise<T[]> {
+  const client = new pg.Client({ connectionString: requireEnv('TEST_DATABASE_ADMIN_URL') });
+  await client.connect();
+  try {
+    return (await client.query<T>(text, values)).rows;
+  } finally {
+    await client.end();
+  }
 }

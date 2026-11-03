@@ -17,3 +17,15 @@ import { createTenancy as makeTenancy } from './tenancy';
 export function openTenancy(options: { connectionString: string; max?: number }) {
   return makeTenancy(createDb(options));
 }
+export {
+  type AcceptResult,
+  createWorkspaceAdmin,
+  hashInvitationToken,
+  INVITATION_TTL_DAYS,
+  type InvitationPreview,
+  type InviteResult,
+  type MemberRow,
+  type MemberStatus,
+  type PendingInvitation,
+  type WorkspaceAdmin,
+} from './workspace-admin';
