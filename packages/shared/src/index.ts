@@ -9,3 +9,4 @@ export {
   resolveLocale,
 } from './i18n/locales';
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
+export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';

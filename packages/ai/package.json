@@ -1,0 +1,24 @@
+{
+  "name": "@flow/ai",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Lớp bọc gọi LLM qua LiteLLM + ghi ai_usage. Giai đoạn khung: chưa có pipeline.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:db": "vitest run --config vitest.int.config.ts"
+  },
+  "dependencies": {
+    "@flow/db": "workspace:*",
+    "@flow/shared": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "vitest": "5.0.5"
+  }
+}

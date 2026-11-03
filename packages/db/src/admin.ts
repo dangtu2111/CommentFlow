@@ -19,12 +19,12 @@ export async function runMigrations({ appEnv, adminUrl }: AdminInput): Promise<v
   }
 }
 
-/** Xoá toàn bộ schema ứng dụng của DB test (core, cf, drizzle) — chỉ cf_test / cf_ci. */
+/** Xoá toàn bộ schema ứng dụng của DB test (core, cf, drizzle, pgboss) — chỉ cf_test / cf_ci. */
 export async function resetTestSchemas({ appEnv, adminUrl }: AdminInput): Promise<void> {
   assertTestResetAllowed({ appEnv, databaseUrl: adminUrl });
   const pool = new pg.Pool({ connectionString: adminUrl, max: 1 });
   try {
-    await pool.query('DROP SCHEMA IF EXISTS core, cf, drizzle CASCADE');
+    await pool.query('DROP SCHEMA IF EXISTS core, cf, drizzle, pgboss CASCADE');
   } finally {
     await pool.end();
   }

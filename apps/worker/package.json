@@ -4,19 +4,25 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
-    "start": "tsx src/main.ts",
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/main.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "queue:install": "tsx --env-file-if-exists=../../.env src/cli/queue-install.ts",
+    "test:db": "vitest run --config vitest.int.config.ts"
   },
   "dependencies": {
+    "@flow/db": "workspace:*",
     "@flow/shared": "workspace:*",
+    "pg-boss": "12.38.0",
     "pino": "10.4.0",
     "tsx": "4.23.15",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@types/pg": "8.23.1",
+    "pg": "8.23.1",
     "vitest": "5.0.5"
   }
 }
