@@ -40,13 +40,14 @@ export const members = core.table(
       .references(() => users.id, { onDelete: 'cascade' }),
     role: text('role').notNull(),
     invitedBy: uuid('invited_by').references(() => users.id, { onDelete: 'set null' }),
-    // Giá trị của status chưa có trong spec (docs/10 §3.1) nên chưa đặt CHECK; mặc định 'active'.
+    // active | suspended | removed (chốt 03/11). `removed` GIỮ dòng, không xóa (cf_app không có DELETE).
     status: text('status').notNull().default('active'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     check('members_role_check', sql`${t.role} in ('owner', 'staff')`),
+    check('members_status_check', sql`${t.status} in ('active', 'suspended', 'removed')`),
     unique('members_workspace_user_unique').on(t.workspaceId, t.userId),
     index('members_user_id_idx').on(t.userId),
   ],

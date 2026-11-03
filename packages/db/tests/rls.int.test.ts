@@ -72,11 +72,39 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
     expect(rows[0].role).toBe('staff');
   });
 
-  it('A không xóa được dòng của B', async () => {
-    const deleted = await db.withWorkspace(wsA, (tx) =>
-      tx.delete(members).where(eq(members.workspaceId, wsB)).returning(),
+  it('KHÔNG xóa cứng được dòng members (kể cả của mình): gỡ thành viên = status "removed", giữ dòng', async () => {
+    for (const ws of [wsA, wsB]) {
+      expect(
+        await expectRejectCode(
+          db.withWorkspace(ws, (tx) => tx.delete(members).where(eq(members.workspaceId, ws))),
+        ),
+      ).toBe(RLS_VIOLATION);
+    }
+    // Gỡ thành viên bằng status: dòng còn nguyên.
+    const user = await seedUser(admin);
+    const id = await seedMember(admin, wsA, user, 'staff');
+    await db.withWorkspace(wsA, (tx) =>
+      tx.update(members).set({ status: 'removed' }).where(eq(members.id, id)),
     );
-    expect(deleted).toHaveLength(0);
+    const { rows } = await admin.query('SELECT status FROM core.members WHERE id = $1', [id]);
+    expect(rows).toEqual([{ status: 'removed' }]);
+  });
+
+  it('members.status chỉ nhận active | suspended | removed (CHECK)', async () => {
+    const user = await seedUser(admin);
+    const id = await seedMember(admin, wsA, user, 'staff');
+    for (const ok of ['active', 'suspended', 'removed']) {
+      await db.withWorkspace(wsA, (tx) =>
+        tx.update(members).set({ status: ok }).where(eq(members.id, id)),
+      );
+    }
+    expect(
+      await expectRejectCode(
+        db.withWorkspace(wsA, (tx) =>
+          tx.update(members).set({ status: 'bogus' }).where(eq(members.id, id)),
+        ),
+      ),
+    ).toBe('23514'); // check_violation
   });
 
   it('A không chèn được dòng mang workspace_id của B (vi phạm RLS)', async () => {

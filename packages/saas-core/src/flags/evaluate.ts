@@ -19,12 +19,14 @@ export function rolloutBucket(flagKey: string, workspaceId: string): number {
 }
 
 /**
- * Thứ tự quyết định (docs/09 §10):
- * override theo workspace → kill_switch toàn hệ thống → gói cước → rollout → default_on.
- * Quy ước CHIỀU NGHĨA của flag `kill_switch`: `true` = tính năng được phép chạy, `false` = đã bị tắt khẩn.
- * (Vì thế `isEnabled(..., { failClosed: true })` trả false khi lỗi đọc nghĩa là "không cho chạy".)
- * Lưu ý: override đứng đầu nên một override "bật" có thể vượt qua kill_switch — công cụ Admin
- * phải cảnh báo khi đặt override cho flag loại kill_switch.
+ * Thứ tự quyết định (docs/09 §10, chốt 03/11):
+ * kill_switch toàn hệ thống → override theo workspace → gói cước → rollout → default_on.
+ *
+ * Quy ước CHIỀU NGHĨA của flag `kill_switch`: `default_on = true` = tính năng được phép chạy,
+ * `default_on = false` = đang bị chặn toàn hệ thống. Khi đang chặn thì TẮT cho mọi workspace và
+ * override `enabled = true` KHÔNG bật lại được; override `enabled = false` vẫn tắt riêng một workspace
+ * khi kill_switch không chặn. (Vì thế `isEnabled(..., { failClosed: true })` trả false khi lỗi đọc
+ * nghĩa là "không cho chạy".)
  */
 export function evaluateFlag(input: {
   flag: FlagRow;
@@ -33,9 +35,12 @@ export function evaluateFlag(input: {
 }): boolean {
   const { flag, override, context } = input;
 
-  if (override !== undefined) return override;
+  if (flag.kind === 'kill_switch') {
+    if (!flag.defaultOn) return false;
+    return override ?? true;
+  }
 
-  if (flag.kind === 'kill_switch') return flag.defaultOn;
+  if (override !== undefined) return override;
 
   if (flag.plans && flag.plans.length > 0) {
     if (!context.plan || !flag.plans.includes(context.plan)) return false;

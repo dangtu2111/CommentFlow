@@ -13,7 +13,7 @@ const flag = (overrides: Partial<FlagRow> = {}): FlagRow => ({
 });
 
 describe('evaluateFlag — thứ tự quyết định (docs/09 §10)', () => {
-  it('1. override theo workspace thắng mọi thứ (cả bật và tắt)', () => {
+  it('1. override theo workspace thắng gói/rollout/default_on (cả bật và tắt) với flag thường', () => {
     expect(evaluateFlag({ flag: flag({ defaultOn: false }), override: true, context: {} })).toBe(
       true,
     );
@@ -22,24 +22,40 @@ describe('evaluateFlag — thứ tự quyết định (docs/09 §10)', () => {
     );
     expect(
       evaluateFlag({
-        flag: flag({ kind: 'kill_switch', defaultOn: false }),
+        flag: flag({ plans: ['pro'], defaultOn: false }),
         override: true,
-        context: { workspaceId: WS_A },
+        context: { workspaceId: WS_A, plan: 'free' },
       }),
     ).toBe(true);
   });
 
-  it('2. kill_switch toàn hệ thống: lấy giá trị default_on, bỏ qua rollout và gói', () => {
-    const killed = flag({
+  it('2. kill_switch toàn hệ thống ĐANG CHẶN (default_on = false) → tắt; override enabled=true KHÔNG bật lại được', () => {
+    const blocking = flag({
       kind: 'kill_switch',
       defaultOn: false,
       rolloutPercent: 100,
       plans: ['pro'],
     });
-    expect(evaluateFlag({ flag: killed, context: { workspaceId: WS_A, plan: 'pro' } })).toBe(false);
+    expect(evaluateFlag({ flag: blocking, context: { workspaceId: WS_A, plan: 'pro' } })).toBe(
+      false,
+    );
+    expect(evaluateFlag({ flag: blocking, override: true, context: { workspaceId: WS_A } })).toBe(
+      false,
+    );
+    expect(evaluateFlag({ flag: blocking, override: false, context: { workspaceId: WS_A } })).toBe(
+      false,
+    );
+  });
+
+  it('2b. kill_switch KHÔNG chặn (default_on = true): bật; override enabled=false vẫn tắt được riêng workspace đó', () => {
     const running = flag({ kind: 'kill_switch', defaultOn: true, plans: ['pro'] });
+    // Bỏ qua gói và rollout: kill_switch chỉ là công tắc toàn hệ thống.
     expect(evaluateFlag({ flag: running, context: { workspaceId: WS_A, plan: 'free' } })).toBe(
       true,
+    );
+    expect(evaluateFlag({ flag: running, override: true, context: {} })).toBe(true);
+    expect(evaluateFlag({ flag: running, override: false, context: { workspaceId: WS_A } })).toBe(
+      false,
     );
   });
 

@@ -84,7 +84,7 @@ describe('flags trên DB thật', () => {
     expect(await flags.isEnabled(f, { workspaceId: wsB })).toBe(false);
   });
 
-  it('kill_switch: default_on = false tắt toàn hệ thống dù rollout 100%; override vẫn thắng', async () => {
+  it('kill_switch đang chặn: tắt toàn hệ thống dù rollout 100%; override enabled=true KHÔNG bật lại được', async () => {
     const ws = await seedWorkspace();
     const f = key('kill');
     await seedFlag(f, { kind: 'kill_switch', defaultOn: false, rollout: 100 });
@@ -93,7 +93,21 @@ describe('flags trên DB thật', () => {
       'INSERT INTO core.feature_flag_overrides (flag_key, workspace_id, enabled) VALUES ($1, $2, true)',
       [f, ws],
     );
-    await waitUntil(async () => (await flags.isEnabled(f, { workspaceId: ws })) === true, 1500);
+    flags.invalidate();
+    expect(await flags.isEnabled(f, { workspaceId: ws })).toBe(false);
+  });
+
+  it('kill_switch không chặn: override enabled=false vẫn tắt riêng workspace đó, workspace khác vẫn chạy', async () => {
+    const [wsOff, wsOn] = [await seedWorkspace(), await seedWorkspace()];
+    const f = key('killok');
+    await seedFlag(f, { kind: 'kill_switch', defaultOn: true });
+    await admin.query(
+      'INSERT INTO core.feature_flag_overrides (flag_key, workspace_id, enabled) VALUES ($1, $2, false)',
+      [f, wsOff],
+    );
+    flags.invalidate();
+    expect(await flags.isEnabled(f, { workspaceId: wsOff })).toBe(false);
+    expect(await flags.isEnabled(f, { workspaceId: wsOn })).toBe(true);
   });
 
   it('gói cước: chỉ bật cho workspace thuộc gói trong danh sách', async () => {

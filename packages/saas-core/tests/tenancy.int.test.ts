@@ -1,4 +1,5 @@
-import type { FlowDb } from '@flow/db';
+import { and, eq, type FlowDb } from '@flow/db';
+import { members } from '@flow/db/schema/core';
 import { isAppError } from '@flow/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTenancy } from '../src/tenancy';
@@ -194,5 +195,47 @@ describe('addMember', () => {
         }),
       ),
     ).toBe('VALIDATION_FAILED');
+  });
+
+  it('thành viên không còn active (suspended/removed) mất quyền: getRole null, không thấy workspace, không thêm được người', async () => {
+    const owner = await createTestUser(db);
+    const other = await createTestUser(db);
+    const target = await createTestUser(db);
+    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Gỡ Quyền' });
+    await tenancy.addMember({
+      workspaceId: ws.id,
+      actorUserId: owner,
+      userId: other,
+      role: 'owner',
+    });
+
+    for (const status of ['suspended', 'removed']) {
+      await db.withWorkspace(ws.id, (tx) =>
+        tx
+          .update(members)
+          .set({ status })
+          .where(and(eq(members.workspaceId, ws.id), eq(members.userId, other))),
+      );
+      expect(await tenancy.getRole(ws.id, other)).toBeNull();
+      expect((await tenancy.listWorkspacesOfUser(other)).map((w) => w.id)).not.toContain(ws.id);
+      expect(
+        await codeOf(
+          tenancy.addMember({
+            workspaceId: ws.id,
+            actorUserId: other,
+            userId: target,
+            role: 'staff',
+          }),
+        ),
+      ).toBe('FORBIDDEN');
+      // Dòng vẫn còn trong DB (không xóa).
+      const rows = await db.withWorkspace(ws.id, (tx) =>
+        tx
+          .select()
+          .from(members)
+          .where(and(eq(members.workspaceId, ws.id), eq(members.userId, other))),
+      );
+      expect(rows).toHaveLength(1);
+    }
   });
 });

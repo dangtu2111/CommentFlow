@@ -1,0 +1,1 @@
+ALTER TABLE "core"."members" ADD CONSTRAINT "members_status_check" CHECK ("core"."members"."status" in ('active', 'suspended', 'removed'));

@@ -35,7 +35,9 @@ export function createTenancy(db: FlowDb) {
       tx
         .select({ role: members.role })
         .from(members)
-        .where(and(eq(members.workspaceId, wsId), eq(members.userId, uid))),
+        .where(
+          and(eq(members.workspaceId, wsId), eq(members.userId, uid), eq(members.status, 'active')),
+        ),
     );
     return (rows[0]?.role as MemberRole | undefined) ?? null;
   }
@@ -73,7 +75,13 @@ export function createTenancy(db: FlowDb) {
           const actor = await tx
             .select({ role: members.role })
             .from(members)
-            .where(and(eq(members.workspaceId, workspaceId), eq(members.userId, actorUserId)));
+            .where(
+              and(
+                eq(members.workspaceId, workspaceId),
+                eq(members.userId, actorUserId),
+                eq(members.status, 'active'),
+              ),
+            );
           if (actor[0]?.role !== 'owner') {
             throw new AppError('FORBIDDEN', 'Chỉ chủ workspace (owner) mới được thêm thành viên.');
           }
@@ -102,7 +110,7 @@ export function createTenancy(db: FlowDb) {
           })
           .from(members)
           .innerJoin(workspaces, eq(workspaces.id, members.workspaceId))
-          .where(eq(members.userId, uid))
+          .where(and(eq(members.userId, uid), eq(members.status, 'active')))
           .orderBy(asc(workspaces.name)),
       );
       return rows.map((r) => ({ ...r, role: r.role as MemberRole }));
