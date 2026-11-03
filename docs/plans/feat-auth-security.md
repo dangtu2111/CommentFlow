@@ -17,7 +17,7 @@ Không có — mọi thẻ đã được chủ dự án trả lời (03/11). Cá
 3. **Ngưỡng:** đăng nhập 5 lần/15 phút/(IP+email) theo spec; thêm **xô riêng theo email** ngưỡng **cao hơn** xô IP (đăng nhập 10 lần/15 phút/email), **chỉ khóa tạm** (tự hết, không khóa tài khoản vĩnh viễn) và **phản hồi giống hệt** dù email có tồn tại hay không (chống kẻ xấu khóa tài khoản người khác để dò). Quên mật khẩu 3 lần/giờ; đăng ký 5 lần/giờ/IP và 3 lần/giờ/email; gửi lại thư 3 lần/giờ/email; mã 2FA 5 lần/15 phút/người dùng.
 4. **Khi bị chặn:** đăng nhập và nhập mã 2FA báo "thử quá nhiều lần, đợi N phút" (không nhắc email); đăng ký, quên mật khẩu, gửi lại thư trả **cùng thông báo trung tính** như bình thường và **không gửi thư**.
 5. **Valkey sập:** đăng nhập/2FA dùng bộ đếm trong bộ nhớ tiến trình; đăng ký/quên mật khẩu/gửi lại thư **không gửi thư**; **ghi log cảnh báo** (không có PII).
-6. **Nguồn IP:** *Dev/LAN:* IP của kết nối trực tiếp, **không tin bất kỳ header nào** (bỏ hẳn `X-Forwarded-For` và `TRUSTED_PROXY_HOPS` đã làm ở `feat/auth-ui`). *Staging:* tin `CF-Connecting-IP`, **chỉ khi `APP_ENV=staging`** (cấu hình ở môi trường khác bị từ chối khi khởi động); điều kiện hạ tầng: cổng web **không publish**, chỉ `cloudflared` cùng mạng Docker truy cập được web. Nếu không lấy được IP: bỏ xô IP, chỉ dùng xô email (không gom mọi người vào một khóa "unknown").
+6. **Nguồn IP (chốt lại 03/11, sau khi kiểm thực tế):** KHÔNG dựng server tùy biến để lấy IP. Đã kiểm Next 16.4.4: ở dev Next tự đặt `x-forwarded-for` bằng IP socket nhưng **giữ nguyên giá trị client tự đặt** và không có trường IP riêng → không có IP kết nối đáng tin → *Dev/LAN (không ra internet):* **chỉ dùng xô theo email**, không tin bất kỳ header nào (bỏ hẳn `X-Forwarded-For` và `TRUSTED_PROXY_HOPS` làm ở `feat/auth-ui`). *Staging/production (qua Cloudflare):* tin `CF-Connecting-IP`, **chỉ khi `APP_ENV=staging`** (production khi triển khai, kèm quyết định riêng; cấu hình ở môi trường khác bị từ chối lúc khởi động); điều kiện hạ tầng: cổng web **không publish**, chỉ `cloudflared` cùng mạng Docker truy cập được web. **Không dùng khóa chung "unknown"**: không có IP thì bỏ xô IP. Chi tiết và bằng chứng: ADR 004.
 7. **Mật khẩu lộ:** duyệt gọi **HIBP k-anonymity** (`api.pwnedpasswords.com/range/<5 ký tự SHA-1>`, `Add-Padding: true`, timeout 2 giây → **cho qua + log cảnh báo**); thêm **danh sách cục bộ** các mật khẩu phổ biến (chạy được khi mất mạng); **ghi nguồn + giấy phép vào ADR 004** (ứng viên: SecLists `10k-most-common.txt` — kiểm lại giấy phép gốc khi lấy về, không giả định); áp dụng khi đăng ký và đặt lại mật khẩu, không áp dụng khi đăng nhập.
 8. **Dữ liệu gieo** (Owner/Admin giả để thử ép 2FA) chỉ trong `cf_test`.
 9. **Khác:** **10 mã dự phòng** (theo `13` §2; ghi khác biệt với Stitch "8 mã"); **bỏ mọi nội dung bịa** của Stitch ("Meta Tech Partner Tier 1", "ISO 27001", "Điểm bảo mật 100/100", thiết bị mẫu, banner kiểu chứng nhận); **danh sách thiết bị = phiên thật của chính người dùng** (trình duyệt/hệ điều hành, lần dùng cuối, đăng xuất phiên đó; không hiện IP/vị trí vì không bịa "Hà Nội" và giảm PII); giao diện tạm ở `/app/security`; ép 2FA cho Owner/Admin bằng hàm kiểm + chuyển hướng về `/app/security?required=1`.
@@ -27,7 +27,7 @@ Không có — mọi thẻ đã được chủ dự án trả lời (03/11). Cá
 1. Đăng nhập sai quá ngưỡng (IP+email) → `rate_limited` kèm thời gian chờ; đúng mật khẩu trong lúc đang bị chặn vẫn bị từ chối — kiểm bằng: test tích hợp Valkey thật.
 2. **Đổi IP không vượt được:** 11 lần đăng nhập sai cho một email từ 11 IP khác nhau vẫn bị chặn bởi xô theo email — kiểm bằng: test.
 3. **Xô email không lộ email có tồn tại:** nội dung, mã HTTP, chuyển hướng và thời gian phản hồi của trạng thái bị chặn giống nhau cho email có thật và email lạ — kiểm bằng: test so sánh hai trường hợp.
-4. **Nguồn IP:** khi cấu hình socket, mọi header (`X-Forwarded-For`, `CF-Connecting-IP`, `X-Real-IP`) do client gửi đều bị bỏ qua; `CF-Connecting-IP` chỉ có tác dụng khi `APP_ENV=staging` và cấu hình như vậy ở môi trường khác làm khởi động báo lỗi; IPv6 cùng /64, hoa/thường, dạng `::ffff:1.2.3.4` quy về cùng một khóa; không lấy được IP thì không dùng xô IP — kiểm bằng: test đơn vị + test qua Server Action. **Điều kiện kỹ thuật cần xác minh ở đầu M1:** Next có cung cấp IP kết nối trực tiếp cho Server Action hay không; nếu không, phương án thay thế (máy chủ tùy biến/tầng đệm cục bộ) phải nêu cho chủ dự án trước khi làm tiếp.
+4. **Nguồn IP:** ở dev/LAN không có xô IP (mọi header IP của client bị bỏ qua, kể cả `X-Forwarded-For` giả — đã kiểm ở Next thật); `CF-Connecting-IP` chỉ có tác dụng khi `APP_ENV=staging` và cấu hình nguồn này ở môi trường khác làm khởi động báo lỗi; IPv6 cùng /64, hoa/thường, dạng `::ffff:1.2.3.4` quy về cùng một khóa; không có IP thì không dùng xô IP và không có khóa chung "unknown" (hai người dùng khác nhau không chặn nhau) — kiểm bằng: test đơn vị + test qua Server Action.
 5. Đăng ký, quên mật khẩu, gửi lại thư bị chặn vẫn trả đúng cùng thông báo như bình thường và **không gửi thư**; khóa Valkey chứa **băm** email/IP (không thô), có tiền tố `sys:` và TTL — kiểm bằng: test (so phản hồi, đếm thư, quét khóa).
 6. Valkey không dùng được: đăng nhập vẫn hoạt động (giới hạn trong bộ nhớ) và có log cảnh báo; đăng ký/quên mật khẩu/gửi lại thư không gửi thư — kiểm bằng: test với kết nối hỏng.
 7. Mật khẩu có trong danh sách cục bộ hoặc HIBP bị từ chối khi đăng ký/đặt lại; HIBP timeout/lỗi → cho qua + log (danh sách cục bộ vẫn chặn); chỉ 5 ký tự SHA-1 và `Add-Padding: true` rời máy — kiểm bằng: test với `fetch` giả kiểm yêu cầu gửi đi.
@@ -47,7 +47,7 @@ Không có — mọi thẻ đã được chủ dự án trả lời (03/11). Cá
 3. `packages/db/src/check-rls.ts`, migration 0010–0012 — mẫu cho `two_factors` (đã đọc).
 4. Tài liệu plugin `twoFactor` của Better Auth 1.7.15 — kiểu và hành vi (`enable`, `verifyTotp`, `verifyBackupCode`, `generateBackupCodes`, `disable`).
 5. `design/stitch/settings-2fa-disable-modal.png` — màn còn lại chưa xem.
-6. Cách Next 16 cung cấp IP kết nối trực tiếp cho Server Action — kiểm ở đầu M1.
+6. ~~Cách Next 16 cung cấp IP kết nối trực tiếp cho Server Action~~ — đã kiểm xong (ADR 004).
 
 ## File sẽ sửa / tạo
 
@@ -57,14 +57,14 @@ Không có — mọi thẻ đã được chủ dự án trả lời (03/11). Cá
 | `packages/saas-core/src/auth/{password-policy.ts,common-passwords.ts}` | Mật khẩu lộ: danh sách cục bộ + HIBP k-anonymity |
 | `packages/saas-core/src/auth/{auth.ts,flows.ts,sessions.ts}` | Plugin `twoFactor` (10 mã, `storeBackupCodes: 'encrypted'`), `loginGate` thật, cổng cho đăng ký/quên/gửi lại, kiểm mật khẩu lộ, luồng 2FA, `listSessions`/`revokeSession` (chỉ của chính người dùng) |
 | `packages/db/migrations/0013_two_factors.sql`, `src/schema/core/auth.ts` | `core.two_factors` + RLS (chỉ `cf_auth` trong `app.ctx='auth'`) |
-| `apps/web/src/lib/client-ip.ts` (+ test) | Rút gọn: nguồn `socket` hoặc `cf-connecting-ip` (chỉ staging); bỏ `X-Forwarded-For`/`TRUSTED_PROXY_HOPS`; chuẩn hóa IP |
+| `apps/web/src/lib/client-ip.ts` (+ test) | Chỉ nguồn `none` (dev) hoặc `cf-connecting-ip` (chỉ staging); bỏ `X-Forwarded-For`/`TRUSTED_PROXY_HOPS`; chuẩn hóa IP |
 | `apps/web/src/server/{env,auth}.ts` | `REDIS_URL`, `CLIENT_IP_SOURCE`, tạo bộ giới hạn |
 | `apps/web/src/app/(auth)/login/2fa/page.tsx`, `actions.ts`, `components/auth/*` | Trang nhập mã 2FA/mã dự phòng; thông báo bị chặn |
 | `apps/web/src/app/app/security/page.tsx`, `components/security/*` | Thẻ 2FA (wizard 3 bước, tắt 2FA, tạo lại mã), danh sách phiên của tôi |
 | Guard trong `getCurrentUser`/`app/app/layout.tsx` | Ép 2FA cho Owner/Admin |
 | `packages/shared/src/i18n/messages/{vi,en}.json` | Chuỗi mới (cả hai ngôn ngữ) |
 | `.github/workflows/ci.yml` | Service `valkey` cho job Database |
-| `docs/decisions/004-bao-ve-tai-khoan.md` | ADR: rate limit, nguồn IP, mật khẩu lộ (nguồn + giấy phép danh sách cục bộ), 2FA |
+| `docs/decisions/004-bao-ve-tai-khoan.md` | ADR (đã tạo ở đầu M1): rate limit, nguồn IP + bằng chứng, mật khẩu lộ (điền nguồn + giấy phép danh sách cục bộ ở M2), 2FA |
 | `env.example`, `infra/scripts/print-dev-env.sh` | `REDIS_URL` (đã có), `CLIENT_IP_SOURCE` |
 | `docs/gap-matrix.md`, `docs/codemap.md`, `design/stitch/README.md`, `docs/handoff/feat-auth-security.md` | Cập nhật; thêm dòng gap: Dockerfile + service `web` của `cf-staging` không publish cổng, chỉ `cloudflared` cùng mạng |
 
@@ -92,7 +92,7 @@ pnpm --filter @flow/db test:db && pnpm db:check-rls
 ## Rủi ro / câu hỏi cho chủ dự án
 
 - **Thứ tự:** nhánh này dựa trên `feat/auth-ui` chưa merge. **Chỉ bắt đầu code sau khi `feat/auth-ui` merge và nhánh này đã rebase lên `main`** (có thể xung đột `gap-matrix.md`/`codemap.md`).
-- Next có thể không đưa IP kết nối trực tiếp cho Server Action (xem tiêu chí 4); sẽ kiểm ở đầu M1 và báo trước nếu cần máy chủ tùy biến.
+- ~~Next có thể không đưa IP kết nối trực tiếp cho Server Action~~ → **đã kiểm: không đưa** (ADR 004); quyết định: không dựng server tùy biến, dev chỉ dùng xô theo email.
 - Đổi `BETTER_AUTH_SECRET` làm hỏng mọi secret 2FA đã lưu (ADR 003) — ghi cảnh báo vận hành.
 - Nhiều người cùng một IP (NAT): xô email/IP+email giảm chặn oan, nhưng xô IP riêng có thể chặn chung; ngưỡng sẽ ghi ở ADR 004.
 - Mất điện thoại và hết mã dự phòng: chưa có đường khôi phục (Admin hỗ trợ) — ghi gap matrix.
@@ -123,4 +123,4 @@ pnpm --filter @flow/db test:db && pnpm db:check-rls
 
 ## Trạng thái duyệt
 
-**Đã duyệt** (chủ dự án, 03/11) với các quyết định ở mục "Điểm chưa rõ". **Chưa bắt đầu code:** chờ `feat/auth-ui` merge, rồi rebase nhánh này lên `main` và bắt đầu từ M1.
+**Đã duyệt** (chủ dự án, 03/11) với các quyết định ở mục "Điểm chưa rõ". `feat/auth-ui` đã merge (PR #3), nhánh này đã rebase lên `main`: **đang làm M1**. Chốt bổ sung 03/11 (không cần hỏi lại): không dựng server tùy biến lấy IP; dev chỉ dùng xô theo email; staging/production dùng `CF-Connecting-IP`; không khóa chung "unknown".
