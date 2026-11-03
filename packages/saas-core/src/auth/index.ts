@@ -6,7 +6,7 @@ export {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
 } from './auth';
-export { type AuthDb, openAuthDb } from './auth-db';
+export { type AuthHandle, openAuthDb } from './auth-db';
 export { hashPassword, verifyPassword } from './password';
 export { changePasswordAndRevokeAll, revokeAllSessionsOfUser } from './revoke';
 export { readSession } from './session';

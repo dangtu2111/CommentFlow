@@ -14,6 +14,7 @@ import {
   readSession,
   revokeAllSessionsOfUser,
 } from '../src/auth';
+import { wrapAuthDb } from '../src/auth/auth-db';
 import { createTestAuthDb } from './helpers';
 
 // Khóa ký thử sinh ngẫu nhiên mỗi lần chạy (không có chuỗi cố định trong mã nguồn).
@@ -21,14 +22,16 @@ const TEST_SECRET = randomBytes(32).toString('hex');
 const PASSWORD = 'mat-khau-dai-du-10';
 
 let authDb: AuthDb;
+let authHandle: ReturnType<typeof wrapAuthDb>;
 let auth: Auth;
 /** Kết nối chủ sở hữu (cf_owner): chỉ để gieo dữ liệu thử mà cf_auth không có quyền sửa (is_admin). */
 let owner: pg.Pool;
 
 beforeAll(() => {
   authDb = createTestAuthDb();
+  authHandle = wrapAuthDb(authDb);
   auth = createAuth({
-    authDb,
+    authDb: authHandle,
     secret: TEST_SECRET,
     baseURL: 'http://localhost:3000',
     appEnv: 'test',
@@ -171,7 +174,7 @@ describe('đăng nhập và phiên', () => {
     const { cookie } = await signIn(email);
     const headers = new Headers({ cookie });
     expect(await auth.api.getSession({ headers })).not.toBeNull();
-    await revokeAllSessionsOfUser(authDb, userId);
+    await revokeAllSessionsOfUser(authHandle, userId);
     expect(await auth.api.getSession({ headers })).toBeNull();
   });
 
@@ -273,7 +276,7 @@ describe('hạn 8 giờ của phiên Admin được ép ở DATABASE (mọi đư
   it('phiên Admin quá 8 giờ kể từ lúc tạo: hết hạn ở mọi đường — gọi thẳng auth.api.getSession và readSession đều null', async () => {
     const { headers } = await adminSession(9, 9);
     expect(await auth.api.getSession({ headers })).toBeNull();
-    expect(await readSession(auth, authDb, headers)).toBeNull();
+    expect(await readSession(auth, authHandle, headers)).toBeNull();
   });
 
   it('Better Auth làm mới phiên Admin (+14 ngày) qua auth.api.getSession GỌI THẲNG: DB vẫn cắt về created_at + 8 giờ', async () => {
@@ -318,18 +321,18 @@ describe('hạn 8 giờ của phiên Admin được ép ở DATABASE (mọi đư
       "UPDATE core.sessions SET created_at = now() - interval '9 hours' WHERE user_id = $1",
       [userId],
     );
-    expect(await readSession(auth, authDb, new Headers({ cookie }))).not.toBeNull();
+    expect(await readSession(auth, authHandle, new Headers({ cookie }))).not.toBeNull();
     expect(await auth.api.getSession({ headers: new Headers({ cookie }) })).not.toBeNull();
     expect(HOUR).toBeGreaterThan(0);
   });
 
   it('không có cookie → null', async () => {
-    expect(await readSession(auth, authDb, new Headers())).toBeNull();
+    expect(await readSession(auth, authHandle, new Headers())).toBeNull();
   });
 });
 
 describe('cookie Secure và appEnv', () => {
-  const base = () => ({ authDb, secret: TEST_SECRET });
+  const base = () => ({ authDb: authHandle, secret: TEST_SECRET });
 
   it('mặc định bật khi baseURL là https, tắt khi http (ở dev/test/ci)', async () => {
     const https = createAuth({ ...base(), baseURL: 'https://app.example.test', appEnv: 'test' });
@@ -362,7 +365,7 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
     await signIn(email);
     await signIn(email);
     const count = (await sessionRows(userId)).length;
-    expect(await revokeAllSessionsOfUser(authDb, userId)).toBe(count);
+    expect(await revokeAllSessionsOfUser(authHandle, userId)).toBe(count);
     expect(await sessionRows(userId)).toHaveLength(0);
   });
 
@@ -372,7 +375,7 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
     const { cookie } = await signIn(email);
     const newPassword = 'mat-khau-moi-dai-du-20';
 
-    await changePasswordAndRevokeAll(auth, authDb, {
+    await changePasswordAndRevokeAll(auth, authHandle, {
       headers: new Headers({ cookie }),
       currentPassword: PASSWORD,
       newPassword,
@@ -386,7 +389,7 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
 
   it('đổi mật khẩu khi chưa đăng nhập → UNAUTHENTICATED', async () => {
     await expect(
-      changePasswordAndRevokeAll(auth, authDb, {
+      changePasswordAndRevokeAll(auth, authHandle, {
         headers: new Headers(),
         currentPassword: PASSWORD,
         newPassword: 'mat-khau-moi-dai-du-20',
@@ -398,7 +401,12 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
 describe('cấu hình', () => {
   it('từ chối khóa ký ngắn hơn 32 ký tự', () => {
     expect(() =>
-      createAuth({ authDb, secret: 'ngan', baseURL: 'http://localhost:3000', appEnv: 'test' }),
+      createAuth({
+        authDb: authHandle,
+        secret: 'ngan',
+        baseURL: 'http://localhost:3000',
+        appEnv: 'test',
+      }),
     ).toThrow(/BETTER_AUTH_SECRET/);
   });
 

@@ -78,6 +78,13 @@
       "when": 1793679966715,
       "tag": "0010_cf_auth_role_and_narrow_app",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793681009382,
+      "tag": "0011_cf_auth_no_admin_insert",
+      "breakpoints": true
     }
   ]
 }

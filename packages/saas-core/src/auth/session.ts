@@ -1,7 +1,7 @@
 import { eq } from '@flow/db';
-import type { AuthDb } from '@flow/db/auth-db';
 import { sessions } from '@flow/db/schema/core';
 import type { Auth } from './auth';
+import { type AuthHandle, unwrapAuthDb } from './auth-db';
 import { isSessionPastHardLimit } from './session-policy';
 
 /**
@@ -11,7 +11,7 @@ import { isSessionPastHardLimit } from './session-policy';
  */
 export async function readSession(
   auth: Auth,
-  authDb: AuthDb,
+  authDb: AuthHandle,
   headers: Headers,
   now: Date = new Date(),
 ) {
@@ -31,7 +31,9 @@ export async function readSession(
       now,
     })
   ) {
-    await authDb.transaction((tx) => tx.delete(sessions).where(eq(sessions.id, session.id)));
+    await unwrapAuthDb(authDb).transaction((tx) =>
+      tx.delete(sessions).where(eq(sessions.id, session.id)),
+    );
     return null;
   }
   return current;

@@ -15,6 +15,7 @@ function fakeDb(parts: {
   functions?: Row[];
   authRole?: Row | null;
   authPrivileges?: Row[];
+  sensitive?: Row[];
 }): Queryable {
   const noCreate = { core_create: false, cf_create: false, public_create: false, db_create: false };
   return {
@@ -44,6 +45,7 @@ function fakeDb(parts: {
         };
         return { rows: parts.authRole === null ? [] : [parts.authRole ?? ok] };
       }
+      if (text.includes('/* sensitive-columns */')) return { rows: parts.sensitive ?? [] };
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       throw new Error(`câu truy vấn lạ: ${text.slice(0, 40)}`);
@@ -283,7 +285,9 @@ describe('checkRls — bảng xác thực của cf_app', () => {
         policies: [],
       }),
     );
-    expect(v.map((x) => x.message).join('|')).toContain('không có policy nào áp cho cf_app');
+    expect(v.map((x) => x.message).join('|')).toContain(
+      'không được có quyền nào trên bảng chỉ dành cho cf_auth',
+    );
   });
 });
 
@@ -537,5 +541,83 @@ describe('checkRls — role cf_auth', () => {
     expect(await run({ authRole: { ...flags, owner_member: true } })).toContainEqual(
       expect.objectContaining({ subject: 'cf_auth', message: expect.stringContaining('cf_owner') }),
     );
+  });
+});
+
+describe('checkRls — kiểm chứng sau 0010', () => {
+  const S = 'core.sessions';
+  const none = { can_select: false, can_insert: false, can_update: false, can_delete: false };
+  const authPriv = {
+    name: S,
+    ...none,
+    can_select: true,
+    can_truncate: false,
+    can_trigger: false,
+    can_references: false,
+  };
+  const policyWith = (expr: string) => ({
+    name: S,
+    polname: 'sessions_auth_access',
+    polcmd: 'r',
+    permissive: true,
+    applies_to_app: false,
+    applies_to_auth: true,
+    qual: expr,
+    withcheck: null,
+  });
+  const run = (expr: string) =>
+    checkRls(
+      fakeDb({
+        tables: [table(S)],
+        privileges: [grant(S, none)],
+        authPrivileges: [authPriv],
+        policies: [policyWith(expr)],
+      }),
+    );
+
+  it('policy cf_auth chỉ đạt khi biểu thức CHÍNH XÁC là in_auth_context(); OR/NOT/AND thêm → đỏ', async () => {
+    expect(await run(AUTH_ONLY)).toEqual([]);
+    for (const expr of [
+      `(${AUTH_ONLY} OR (id IS NOT NULL))`,
+      `(NOT ${AUTH_ONLY})`,
+      `(${AUTH_ONLY} AND (user_id IS NOT NULL))`,
+    ]) {
+      expect(await run(expr), expr).toContainEqual(
+        expect.objectContaining({
+          subject: S,
+          message: expect.stringContaining('cf_auth có quyền'),
+        }),
+      );
+    }
+  });
+
+  it('cf_auth làm chủ bảng → đỏ', async () => {
+    const v = await checkRls(fakeDb({ ...base, tables: [table(M, { owner: 'cf_auth' })] }));
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: M,
+        message: expect.stringContaining('cf_auth không được sở hữu'),
+      }),
+    );
+  });
+
+  it('quyền theo cột nhạy cảm (cf_app đọc sessions.token, cf_auth sửa users.is_admin) → đỏ', async () => {
+    const v = await checkRls(
+      fakeDb({
+        ...base,
+        sensitive: [
+          { role: 'cf_app', tbl: 'core.sessions', col: 'token', priv: 'SELECT' },
+          { role: 'cf_auth', tbl: 'core.users', col: 'is_admin', priv: 'UPDATE' },
+        ],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.sessions',
+      message: 'cf_app không được có quyền SELECT trên cột token',
+    });
+    expect(v).toContainEqual({
+      subject: 'core.users',
+      message: 'cf_auth không được có quyền UPDATE trên cột is_admin',
+    });
   });
 });

@@ -388,6 +388,27 @@ describe('withWorkspace(W): không thấy phiên/tài khoản; users chỉ thàn
   });
 });
 
+describe('cf_auth không tạo được tài khoản Admin (policy RESTRICTIVE, migration 0011)', () => {
+  it('INSERT users với is_admin = true hoặc admin_role khác null → từ chối; người dùng thường vẫn chèn được', async () => {
+    for (const extra of [
+      { isAdmin: true },
+      { isAdmin: true, adminRole: 'super' },
+      { adminRole: 'super' },
+    ]) {
+      const id = randomUUID();
+      expect(
+        await expectRejectCode(
+          authDb.db.insert(users).values({ id, email: `${id}@example.test`, name: 'x', ...extra }),
+        ),
+        JSON.stringify(extra),
+      ).toBe(RLS_OR_PRIVILEGE_DENIED);
+    }
+    const ok = randomUUID();
+    await authDb.db.insert(users).values({ id: ok, email: `${ok}@example.test`, name: 'thường' });
+    expect(await authDb.db.select().from(users).where(eq(users.id, ok))).toHaveLength(1);
+  });
+});
+
 describe('quyền cột trên users vẫn còn (RLS không thay thế GRANT)', () => {
   it('cf_auth không đổi được is_admin / admin_role (cấp quyền Admin không đi qua adapter)', async () => {
     expect(

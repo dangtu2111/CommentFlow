@@ -1,12 +1,12 @@
 import { eq } from '@flow/db';
-import type { AuthDb } from '@flow/db/auth-db';
 import { sessions } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import type { Auth } from './auth';
+import { type AuthHandle, unwrapAuthDb } from './auth-db';
 
 /** Xóa MỌI phiên của một người dùng (đổi mật khẩu, đổi quyền, nghi ngờ bị chiếm tài khoản). */
-export async function revokeAllSessionsOfUser(authDb: AuthDb, userId: string): Promise<number> {
-  const removed = await authDb.transaction((tx) =>
+export async function revokeAllSessionsOfUser(authDb: AuthHandle, userId: string): Promise<number> {
+  const removed = await unwrapAuthDb(authDb).transaction((tx) =>
     tx.delete(sessions).where(eq(sessions.userId, userId)).returning({ id: sessions.id }),
   );
   return removed.length;
@@ -18,7 +18,7 @@ export async function revokeAllSessionsOfUser(authDb: AuthDb, userId: string): P
  */
 export async function changePasswordAndRevokeAll(
   auth: Auth,
-  authDb: AuthDb,
+  authDb: AuthHandle,
   input: { headers: Headers; currentPassword: string; newPassword: string },
 ): Promise<void> {
   const current = await auth.api.getSession({ headers: input.headers });

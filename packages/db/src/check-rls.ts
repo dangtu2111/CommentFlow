@@ -14,9 +14,10 @@ const SYSTEM_TABLES = ['core.feature_flags'];
 /** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace. */
 const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
 /** Bảng "của chính mình" với cf_app: policy chỉ cho dòng có user_id/id = current_user_id() (không workspace). */
-const OWN_USER_TABLES = ['core.users', 'core.sessions', 'core.accounts', 'core.two_factors'];
+const OWN_USER_TABLES = ['core.users', 'core.sessions', 'core.accounts'];
 /** Bảng cf_app KHÔNG được có quyền nào (chỉ cf_auth). */
-const AUTH_ONLY_TABLES = ['core.verifications'];
+// two_factors chứa secret TOTP và mã dự phòng: cf_app không được chạm (cf_auth cấp riêng khi tạo bảng).
+const AUTH_ONLY_TABLES = ['core.verifications', 'core.two_factors'];
 /** Mọi bảng xác thực: cf_auth chỉ được chạm các bảng này. */
 const AUTH_TABLES = [...OWN_USER_TABLES, ...AUTH_ONLY_TABLES];
 
@@ -37,6 +38,11 @@ const AUTH_SHAPE = /core\.in_auth_context\(\)/i;
 // Nhánh "của mình": (user_id|id) = ( SELECT core.current_user_id() ...) VÀ ( SELECT core.current_workspace_id() ...) IS NULL.
 const OWN_ROW_SHAPE = /\b(user_id|id)\s*=\s*\(\s*SELECT\s+core\.current_user_id\(\)/i;
 const NO_WORKSPACE_SHAPE = /core\.current_workspace_id\(\)(\s+AS\s+\w+)?\)\s+IS\s+NULL/i;
+/** Biểu thức CHỈ gồm `( SELECT core.in_auth_context() [AS ...])` — không cho OR/NOT/AND thêm gì khác. */
+const isExactAuthContext = (expr: string): boolean =>
+  /^\(*selectcore\.in_auth_context\(\)(asin_auth_context)?\)*$/.test(
+    expr.replace(/\s+/g, '').toLowerCase(),
+  );
 /** Chặn các biểu thức mở toang (`true`, `1 = 1`, `NOT false`, `... OR true`). */
 const hasTrueLiteral = (expr: string): boolean =>
   /\btrue\b|\b1\s*=\s*1\b|\bnot\s+false\b/i.test(expr);
@@ -186,8 +192,7 @@ async function checkAuthRolePrivileges(
           const using = typeof p.qual === 'string' ? p.qual : null;
           const check = typeof p.withcheck === 'string' ? p.withcheck : null;
           const needsCheck = command === 'INSERT' || command === 'UPDATE';
-          const exprOk = (e: string | null) =>
-            e !== null && AUTH_SHAPE.test(e) && !hasTrueLiteral(e);
+          const exprOk = (e: string | null) => e !== null && isExactAuthContext(e);
           if (command === 'INSERT') return exprOk(check);
           return exprOk(using) && (!needsCheck || check === null || exprOk(check));
         });
@@ -198,6 +203,53 @@ async function checkAuthRolePrivileges(
         });
       }
     }
+  }
+}
+
+/** Quyền theo cột KHÔNG được có (has_column_privilege tính cả quyền cấp mức bảng). */
+const FORBIDDEN_COLUMN_PRIVILEGES: Array<
+  [role: string, table: string, column: string, priv: string]
+> = [
+  // cf_app không đọc bí mật xác thực dù là của chính mình
+  ['cf_app', 'core.sessions', 'token', 'SELECT'],
+  ['cf_app', 'core.accounts', 'password', 'SELECT'],
+  ['cf_app', 'core.accounts', 'access_token', 'SELECT'],
+  ['cf_app', 'core.accounts', 'refresh_token', 'SELECT'],
+  ['cf_app', 'core.accounts', 'id_token', 'SELECT'],
+  // cf_app chỉ ghi users.name/image/locale/updated_at; không ghi/chèn phiên, tài khoản
+  ['cf_app', 'core.users', 'email', 'UPDATE'],
+  ['cf_app', 'core.users', 'email_verified', 'UPDATE'],
+  ['cf_app', 'core.users', 'totp_enabled', 'UPDATE'],
+  ['cf_app', 'core.users', 'is_admin', 'UPDATE'],
+  ['cf_app', 'core.users', 'admin_role', 'UPDATE'],
+  ['cf_app', 'core.users', 'email', 'INSERT'],
+  ['cf_app', 'core.accounts', 'password', 'UPDATE'],
+  ['cf_app', 'core.sessions', 'is_admin_session', 'UPDATE'],
+  ['cf_app', 'core.sessions', 'created_at', 'UPDATE'],
+  ['cf_app', 'core.sessions', 'expires_at', 'UPDATE'],
+  // cf_auth không đổi quyền Admin và không sửa mốc/khóa của phiên
+  ['cf_auth', 'core.users', 'is_admin', 'UPDATE'],
+  ['cf_auth', 'core.users', 'admin_role', 'UPDATE'],
+  ['cf_auth', 'core.sessions', 'is_admin_session', 'UPDATE'],
+  ['cf_auth', 'core.sessions', 'created_at', 'UPDATE'],
+  ['cf_auth', 'core.sessions', 'user_id', 'UPDATE'],
+  ['cf_auth', 'core.sessions', 'token', 'UPDATE'],
+];
+
+async function checkSensitiveColumns(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const values = FORBIDDEN_COLUMN_PRIVILEGES.map(
+    ([role, table, column, priv]) => `('${role}', '${table}', '${column}', '${priv}')`,
+  ).join(', ');
+  const found = await db.query(`/* sensitive-columns */
+    SELECT v.r AS role, v.t AS tbl, v.c AS col, v.p AS priv
+    FROM (VALUES ${values}) AS v(r, t, c, p)
+    WHERE CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = v.r)
+               THEN has_column_privilege(v.r, v.t, v.c, v.p) ELSE false END`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.tbl),
+      message: `${String(row.role)} không được có quyền ${String(row.priv)} trên cột ${String(row.col)}`,
+    });
   }
 }
 
@@ -235,8 +287,10 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
         violations.push({ subject: name, message: 'chưa có policy nào' });
       }
     }
-    if (row.owner === APP_ROLE) {
-      violations.push({ subject: name, message: `role ${APP_ROLE} không được sở hữu bảng` });
+    for (const roleName of [APP_ROLE, AUTH_ROLE]) {
+      if (row.owner === roleName) {
+        violations.push({ subject: name, message: `role ${roleName} không được sở hữu bảng` });
+      }
     }
   }
 
@@ -366,6 +420,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkRole(db, APP_ROLE, '', violations);
   await checkRole(db, AUTH_ROLE, 'auth-', violations);
   await checkAuthRolePrivileges(db, policies.rows, violations);
+  await checkSensitiveColumns(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

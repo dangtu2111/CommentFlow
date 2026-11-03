@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const SCAN_DIRS = ['apps', 'packages', 'scripts', 'tools'];
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'coverage', 'migrations', 'fixtures']);
-const POOL_USAGE = /\bcreateAuthDb\b|@flow\/db\/auth-db|\bAuthDb\b/;
+const POOL_USAGE = /\bcreateAuthDb\b|@flow\/db\/auth-db|\bAuthDb\b|\bunwrapAuthDb\b|\bwrapAuthDb\b/;
 const REMOVED_API = /\bwithAuthContext\b|\bdb\.auth\b/;
 
 function* sourceFiles(dir: string): Generator<string> {

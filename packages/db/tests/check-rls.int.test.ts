@@ -183,7 +183,7 @@ describe('check-rls', () => {
     expect(v).toContainEqual(
       expect.objectContaining({
         subject: 'core.two_factors',
-        message: expect.stringContaining('quyền SELECT nhưng không có policy SELECT'),
+        message: expect.stringContaining('không được có quyền nào'),
       }),
     );
   });
@@ -294,5 +294,21 @@ describe('check-rls', () => {
         message: expect.stringContaining('qua_ctx'),
       }),
     );
+  });
+
+  it('bắt cf_app được cấp lại SELECT cả bảng sessions (lộ cột token)', async () => {
+    const v = await violationsAfter('GRANT SELECT ON core.sessions TO cf_app');
+    expect(v).toContainEqual({
+      subject: 'core.sessions',
+      message: 'cf_app không được có quyền SELECT trên cột token',
+    });
+  });
+
+  it('bắt cf_auth được cấp UPDATE cột users.is_admin', async () => {
+    const v = await violationsAfter('GRANT UPDATE (is_admin) ON core.users TO cf_auth');
+    expect(v).toContainEqual({
+      subject: 'core.users',
+      message: 'cf_auth không được có quyền UPDATE trên cột is_admin',
+    });
   });
 });

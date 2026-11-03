@@ -30,14 +30,14 @@ if [[ ! "$PW" =~ ^[0-9a-zA-Z_-]+$ ]]; then
   exit 1
 fi
 
-# Truyền mật khẩu bằng biến môi trường của exec (không nằm trong dòng lệnh của host).
-"${COMPOSE[@]}" exec -T -e CF_AUTH_PASSWORD="$PW" postgres sh -c '
+# Mật khẩu đi qua biến môi trường (export + `-e TÊN` không kèm giá trị) và heredoc — KHÔNG nằm trong argv
+# của docker/psql (xem được bằng `ps`). Giá trị đã được kiểm regex hex ở trên nên an toàn khi ghép vào SQL.
+export CF_AUTH_PASSWORD="$PW"
+"${COMPOSE[@]}" exec -T -e CF_AUTH_PASSWORD postgres sh -c '
   set -e
-  psql -v ON_ERROR_STOP=1 -v pw="$CF_AUTH_PASSWORD" --username "$POSTGRES_USER" --dbname postgres <<SQL
-SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '"'"'cf_auth'"'"')
-  THEN '"'"'ALTER ROLE cf_auth LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '"'"' || quote_literal(:'"'"'pw'"'"')
-  ELSE '"'"'CREATE ROLE cf_auth LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '"'"' || quote_literal(:'"'"'pw'"'"')
-END AS stmt \\gexec
+  if psql --username "$POSTGRES_USER" --dbname postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname = '"'"'cf_auth'"'"'" | grep -q 1; then verb=ALTER; else verb=CREATE; fi
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<SQL
+$verb ROLE cf_auth LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '"'"'$CF_AUTH_PASSWORD'"'"';
 SQL
 '
 

@@ -178,7 +178,7 @@ describe('quyền cột của cf_auth trên core.sessions', () => {
 });
 
 describe('đường INSERT của trigger (kiểm chứng lần ba)', () => {
-  it('cf_app KHÔNG chèn được phiên Admin với created_at ở tương lai để kéo dài hạn', async () => {
+  it('cf_auth KHÔNG chèn được phiên Admin với created_at ở tương lai để kéo dài hạn', async () => {
     const created = await authDb.transaction((tx) =>
       tx
         .insert(sessions)
@@ -196,7 +196,7 @@ describe('đường INSERT của trigger (kiểm chứng lần ba)', () => {
     expect(row.expires_at.getTime()).toBeLessThanOrEqual(Date.now() + 8 * HOUR + 1000);
   });
 
-  it('phiên Admin chỉ được TẠO cho người dùng is_admin = true (cả chủ sở hữu lẫn cf_app) → từ chối', async () => {
+  it('phiên Admin chỉ được TẠO cho người dùng is_admin = true (cả chủ sở hữu lẫn cf_auth) → từ chối', async () => {
     const normalUser = await seedUser(admin);
     expect(
       await expectRejectCode(
