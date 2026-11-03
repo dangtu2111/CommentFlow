@@ -15,7 +15,7 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |
 | Cài hàng đợi pg-boss | `pnpm --filter @flow/worker queue:install` | chạy bằng `cf_owner`; worker chạy bằng `cf_app` |
-| Máy ảo `cf-dev` | `pnpm cf:dev <up\|ps\|logs\|stats\|sync\|env-init…>` · `pnpm stack:check` | chỉ project `cf-dev`; xem `scripts/lib/cf-dev-command.mjs` |
+| Máy ảo `cf-dev` | `pnpm cf:dev <up\|ps\|logs\|stats\|sync\|env-init…>` · `pnpm stack:check` | chỉ project `cf-dev`; 7 cổng (có Mailpit 1025/8025); xem `scripts/lib/cf-dev-command.mjs` |
 | Python (ml) | `cd services/ml && uv run pytest` · `uv run ruff check .` | |
 
 ## Cây thư mục (3 tầng, rút gọn)
@@ -37,7 +37,7 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 
 | Miền | Đường dẫn | Vai trò (1 dòng) | Spec liên quan |
 |---|---|---|---|
-| Auth / phiên | `packages/saas-core/src/auth/` | Better Auth: argon2id, phiên 14 ngày, cookie ký HMAC, `readSession` áp hạn cứng 8 giờ cho phiên Admin | 13 §2 · ADR 003 |
+| Auth / phiên | `packages/saas-core/src/auth/` | Better Auth (adapter dùng `db.auth`): argon2id, phiên 14 ngày, cookie ký HMAC; hạn 8 giờ phiên Admin ép bằng trigger DB, `readSession` là lớp thứ hai | 13 §2 · ADR 003 |
 | Workspace / thành viên | `packages/saas-core/src/tenancy/` | Tạo workspace (owner), thêm thành viên (chỉ owner), liệt kê workspace của người dùng | 09 §3.1 |
 | Feature flag | `packages/saas-core/src/flags/` | `evaluateFlag` thuần + `createFlags` (cache 30 giây, `NOTIFY flags_changed`) | 09 §10 |
 | DB client / migrations / RLS | `packages/db/` | `withWorkspace`/`withUser`/`withSystem`, policy RLS (migration 0001, 0004), `checkRls` | 10 §4 |
@@ -74,6 +74,8 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 
 - **Ngữ cảnh RLS** do `set_config(..., true)` đặt trong giao dịch; sau khi giao dịch kết thúc biến về `''` (không phải NULL) → hàm `core.current_workspace_id()` dùng `NULLIF`. `withWorkspace` không cho `tx.transaction()` lồng.
 - **Liệt kê workspace của tôi** chỉ qua `withUser` (không có ngữ cảnh workspace); trong `withWorkspace(A)` không bao giờ thấy workspace khác.
+- **Bảng xác thực** (`users`, `sessions`, `accounts`, `verifications`) chỉ thấy được trong ngữ cảnh `app.ctx = 'auth'` (`db.withAuthContext`, hoặc `db.auth` cho adapter Better Auth); `db.system`/`withSystem` không thấy dòng nào. `withUser` → dòng của mình; `withWorkspace` → không thấy sessions/accounts, `users` chỉ thành viên `active`.
+- **Phiên Admin:** trigger `core.cap_admin_session` ép hạn 8 giờ; `cf_app` không UPDATE `is_admin_session`/`created_at`. Gieo dữ liệu thử cho các cột đó phải dùng pool chủ sở hữu (`TEST_DATABASE_ADMIN_URL`).
 - **`cf_app` không có DELETE trên `workspaces`/`users`**, không UPDATE `users.is_admin/admin_role`; `action_logs`/`ai_usage` chỉ thêm. Bảng mới phải khai báo quyền + policy (`check-rls` sẽ đỏ nếu thiếu).
 - **Token phiên lưu thô** (Better Auth, ADR 003); cookie ký bằng `BETTER_AUTH_SECRET`. Luôn đọc phiên bằng `readSession`; tạo phiên Admin bằng `internalAdapter.createSession(userId, false, { isAdminSession: true }, true)` (tham số cuối `true` bắt buộc, nếu không bị ghi đè mặc định).
 - **Flag `kill_switch`:** `default_on = true` = được phép chạy, `false` = đang chặn; đang chặn thì override bật KHÔNG bật lại được (override tắt vẫn có hiệu lực). Thứ tự: kill_switch → override → plan → rollout → default_on.

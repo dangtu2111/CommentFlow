@@ -86,7 +86,8 @@ Kiểm quyền ở server (middleware theo route + kiểm trong service), không
 | Page/IG/TikTok/Shopify/Google/Haravan/Sapo/KiotViet/Pancake token, API key | AES-256-GCM, nonce ngẫu nhiên, `key_version`; khóa trong env/secret manager, không trong DB |
 | TOTP secret | XChaCha20-Poly1305 của Better Auth (khóa dẫn xuất từ `BETTER_AUTH_SECRET`; chấp nhận thay AES-GCM, ADR 003). Đổi `BETTER_AUTH_SECRET` làm hỏng secret 2FA đã lưu → chỉ xoay khi có quy trình mã hóa lại hoặc buộc cài lại 2FA |
 | SĐT khách tiềm năng | Mã hóa + lưu `phone_last4` để tìm |
-| Mật khẩu, mã dự phòng, token mời | Hash |
+| Mật khẩu, token mời | Hash (mật khẩu: argon2id) |
+| Mã dự phòng 2FA | Mã hóa bởi plugin 2FA của Better Auth (XChaCha20-Poly1305, khóa dẫn xuất từ `BETTER_AUTH_SECRET`) — plugin không hỗ trợ lưu băm, chấp nhận 03/11 (ADR 003) |
 | Truyền tải | TLS 1.2+ (Caddy tự cấp chứng chỉ), HSTS |
 | Sao lưu | Mã hóa trước khi đẩy lên lưu trữ ngoài |
 

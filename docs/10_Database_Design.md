@@ -167,7 +167,15 @@ create policy ws_isolation on comments
 - Mỗi request/job đặt `set local app.workspace_id = ...` trong transaction.
 - Role DB của app **không** có `BYPASSRLS`; Admin dùng role riêng + ghi nhật ký.
 - Test CI: mỗi bảng có `workspace_id` phải có policy (script kiểm `pg_policies`).
-- **Ngữ cảnh người dùng `app.user_id`** (do `withUser()` đặt): dùng để liệt kê dữ liệu **của chính mình**. Policy theo `current_user_id()` cho các bảng của chính người dùng: `users`, `sessions`, `accounts`, `two_factors`, `members` — chỉ thấy dòng của mình. *Trạng thái:* đã áp cho `members` và `workspaces`; **chưa áp** cho `users`/`sessions`/`accounts`/`two_factors` (gap `AUTH-RLS-OWN`).
+- **Ba ngữ cảnh + ngữ cảnh xác thực** (đặt bằng `set local` trong giao dịch): `app.workspace_id` (`withWorkspace`), `app.user_id` (`withUser`, dữ liệu **của chính mình**), `app.ctx = 'auth'` (`withAuthContext`, và pool riêng `db.auth` dành cho adapter Better Auth). *Trạng thái:* **đã áp** cho `members`, `workspaces`, `users`, `sessions`, `accounts`, `verifications`; `two_factors` áp ngay khi tạo bảng (bắt buộc cùng mẫu `sessions`; `check-rls` đỏ nếu thiếu). **Không có ngữ cảnh → không thấy dòng nào** của các bảng xác thực.
+
+  | Bảng | Không ngữ cảnh | `app.ctx = 'auth'` | `withUser(u)` | `withWorkspace(W)` |
+  |---|---|---|---|---|
+  | `sessions`, `accounts` | 0 dòng | thấy/ghi tất cả | chỉ dòng của mình | 0 dòng |
+  | `verifications` | 0 dòng | thấy/ghi tất cả | 0 dòng | 0 dòng |
+  | `users` | 0 dòng | thấy/ghi tất cả | chỉ dòng của mình | chỉ thành viên `active` của W; không ghi |
+
+  Điều kiện "của mình" luôn đòi không có `app.workspace_id` và có `app.user_id` (đặt cả hai vẫn không mở rộng quyền). Phiên Admin: trigger `core.cap_admin_session` ép `expires_at ≤ created_at + 8 giờ` ở INSERT/UPDATE; `cf_app` không UPDATE được `is_admin_session`/`created_at` (ADR 003).
 - **Đọc chéo workspace** (thấy các workspace khác của chính mình) **chỉ khi không có `app.workspace_id`**; trong `withWorkspace(A)` chỉ thấy A. Thành viên không `active` không được liệt kê.
 - Hàm `core.current_workspace_id()` / `core.current_user_id()` dùng `NULLIF(current_setting(..., true), '')`: thiếu giá trị → NULL → 0 dòng (sau COMMIT/ROLLBACK biến tùy chỉnh về chuỗi rỗng, không phải NULL).
 - Quyền của `cf_app`: **không DELETE** trên `workspaces`, `users`, `members` (xóa mềm bằng `status`); **không UPDATE** `users.is_admin`/`admin_role` (chỉ role Admin riêng); `action_logs`, `ai_usage` chỉ SELECT + INSERT. `check-rls` kiểm mỗi quyền của `cf_app` có policy đúng lệnh và dựa vào `current_workspace_id()`.

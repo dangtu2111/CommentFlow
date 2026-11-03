@@ -50,3 +50,10 @@ Trạng thái: **Đã chốt** (phương án A của bước C0). Bổ sung cho 
 - **Mã hóa 2FA:** chấp nhận XChaCha20-Poly1305 của Better Auth cho secret TOTP (và mã dự phòng) thay cho AES-256-GCM + `key_version` ở `13` §5; spec `13` §5 đã sửa dòng TOTP secret.
 - **Xoay `BETTER_AUTH_SECRET`:** khóa mã hóa 2FA được dẫn xuất từ chính khóa này, nên **đổi `BETTER_AUTH_SECRET` sẽ làm hỏng mọi secret 2FA đã lưu** (và mọi cookie phiên đang có hiệu lực). Chỉ xoay khi có quy trình **mã hóa lại** (giải mã bằng khóa cũ, mã hóa bằng khóa mới) hoặc chấp nhận **buộc mọi người dùng cài lại 2FA**. Chưa có quy trình mã hóa lại → coi `BETTER_AUTH_SECRET` là khóa dài hạn, không xoay định kỳ; lộ khóa thì buộc cài lại 2FA + đăng nhập lại toàn bộ.
 - Dòng `13` §5 "Mật khẩu, mã dự phòng, token mời | Hash" còn ghi mã dự phòng là hash; thực tế theo mục 3 ở trên mã dự phòng được **mã hóa** (plugin cần giải mã để so khớp và xóa mã đã dùng). Chưa sửa dòng này vì chưa được yêu cầu.
+
+## Bổ sung (03/11/2026, nhánh `fix/harden-2`)
+
+- **Hạn 8 giờ phiên Admin ép ở database:** trigger `core.cap_admin_session` (migration 0007) cắt `expires_at` về `created_at + 8 giờ` ở INSERT và UPDATE, `created_at` chỉ được lùi; `cf_app` chỉ UPDATE được `expires_at`, `updated_at`, `ip`, `user_agent` của `sessions` (không đổi được `is_admin_session`). Đúng cho mọi đường, kể cả route `/api/auth/*` của Better Auth. `readSession` còn là lớp thứ hai.
+- **RLS bảng xác thực theo ngữ cảnh rõ ràng** (migration 0008): chỉ `app.ctx = 'auth'` thấy hết; không ngữ cảnh → 0 dòng. Adapter Better Auth dùng `db.auth` (pool riêng, mọi kết nối mở với `app.ctx = auth`); mã của mình dùng `withAuthContext` (`set local`). Hạn chế: ngữ cảnh `app.*` chống lỗi của mã, không chống kẻ đã chạy được SQL tùy ý.
+- **Tạo phiên Admin:** `internalAdapter.createSession(userId, false, { isAdminSession: true }, true)` (INSERT qua `db.auth`); không có đường nào đổi cờ này bằng UPDATE từ `cf_app`.
+- `createAuth` yêu cầu `appEnv`; chỉ dev/test/ci được tắt cookie `Secure`.
