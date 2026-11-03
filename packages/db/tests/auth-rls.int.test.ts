@@ -2,22 +2,27 @@ import { randomUUID } from 'node:crypto';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { AuthDb } from '../src/auth-db';
 import type { FlowDb } from '../src/client';
 import { accounts, sessions, users, verifications } from '../src/schema/core';
 import {
   createAdminPool,
   createAppDb,
+  createAuthTestDb,
+  createContextlessAuthPool,
   expectRejectCode,
   seedMember,
   seedUser,
   seedWorkspace,
 } from './helpers';
 
-const RLS_VIOLATION = '42501';
+const RLS_OR_PRIVILEGE_DENIED = '42501';
 const HOUR = 3600 * 1000;
 
 let admin: pg.Pool;
-let db: FlowDb;
+let db: FlowDb; // cf_app
+let authDb: AuthDb; // cf_auth + app.ctx = 'auth'
+let authNoCtx: pg.Pool; // cf_auth nhưng KHÔNG có app.ctx
 let u1: string; // thành viên active của W
 let u2: string; // thành viên đã removed của W
 let u3: string; // người ngoài W (thành viên của W2)
@@ -41,6 +46,8 @@ async function seedAccount(userId: string) {
 beforeAll(async () => {
   admin = createAdminPool();
   db = createAppDb(1); // 1 kết nối: ép dùng lại cùng kết nối để bắt rò ngữ cảnh
+  authDb = createAuthTestDb(2);
+  authNoCtx = createContextlessAuthPool();
   [u1, u2, u3] = [await seedUser(admin), await seedUser(admin), await seedUser(admin)];
   ws = await seedWorkspace(admin);
   ws2 = await seedWorkspace(admin);
@@ -63,133 +70,175 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await db.close();
+  await authDb.close();
+  await authNoCtx.end();
   await admin.end();
 });
 
-const mine = [() => u1, () => u2, () => u3];
-const seededUsers = () => mine.map((f) => f());
+const seededUsers = () => [u1, u2, u3];
 
-describe('KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính)', () => {
-  it('db.system và withSystem đọc users/sessions/accounts/verifications đều 0 dòng', async () => {
+// Cột cf_app được đọc (không gồm token / mật khẩu).
+const safeSession = { userId: sessions.userId };
+const safeAccount = { userId: accounts.userId };
+
+describe('cf_app KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính)', () => {
+  it('db.system và withSystem đọc users/sessions/accounts đều 0 dòng', async () => {
     expect(await db.system.select().from(users)).toHaveLength(0);
-    expect(await db.system.select().from(sessions)).toHaveLength(0);
-    expect(await db.system.select().from(accounts)).toHaveLength(0);
-    expect(await db.system.select().from(verifications)).toHaveLength(0);
+    expect(await db.system.select(safeSession).from(sessions)).toHaveLength(0);
+    expect(await db.system.select(safeAccount).from(accounts)).toHaveLength(0);
     const viaSystem = await db.withSystem(async (tx) => ({
       u: await tx.select().from(users),
-      s: await tx.select().from(sessions),
-      a: await tx.select().from(accounts),
-      v: await tx.select().from(verifications),
+      s: await tx.select(safeSession).from(sessions),
+      a: await tx.select(safeAccount).from(accounts),
     }));
-    expect([
-      viaSystem.u.length,
-      viaSystem.s.length,
-      viaSystem.a.length,
-      viaSystem.v.length,
-    ]).toEqual([0, 0, 0, 0]);
+    expect([viaSystem.u.length, viaSystem.s.length, viaSystem.a.length]).toEqual([0, 0, 0]);
   });
 
-  it('không ngữ cảnh không ghi được vào bốn bảng (vi phạm RLS)', async () => {
-    const id = randomUUID();
-    expect(
-      await expectRejectCode(
-        db.system.insert(users).values({ id, email: `${id}@example.test`, name: 'x' }),
-      ),
-    ).toBe(RLS_VIOLATION);
-    expect(
-      await expectRejectCode(
-        db.system
-          .insert(sessions)
-          .values({ userId: u1, token: randomUUID(), expiresAt: new Date(Date.now() + HOUR) }),
-      ),
-    ).toBe(RLS_VIOLATION);
-    expect(
-      await expectRejectCode(
-        db.system.insert(accounts).values({ userId: u1, providerId: 'x', accountId: randomUUID() }),
-      ),
-    ).toBe(RLS_VIOLATION);
+  it('verifications: cf_app không có quyền nào (từ chối quyền, không chỉ 0 dòng)', async () => {
+    expect(await expectRejectCode(db.system.select().from(verifications))).toBe(
+      RLS_OR_PRIVILEGE_DENIED,
+    );
     expect(
       await expectRejectCode(
         db.system
           .insert(verifications)
           .values({ identifier: 'x', value: 'y', expiresAt: new Date(Date.now() + HOUR) }),
       ),
-    ).toBe(RLS_VIOLATION);
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
   });
 
-  it('không sửa/xóa được dòng nào (0 dòng bị ảnh hưởng)', async () => {
+  it('không ghi được: chèn users/sessions/accounts bị từ chối; sửa users 0 dòng; xóa sessions bị từ chối', async () => {
+    const id = randomUUID();
+    expect(
+      await expectRejectCode(
+        db.system.insert(users).values({ id, email: `${id}@example.test`, name: 'x' }),
+      ),
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
+    expect(
+      await expectRejectCode(
+        db.system
+          .insert(sessions)
+          .values({ userId: u1, token: randomUUID(), expiresAt: new Date(Date.now() + HOUR) }),
+      ),
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
+    expect(
+      await expectRejectCode(
+        db.system.insert(accounts).values({ userId: u1, providerId: 'x', accountId: randomUUID() }),
+      ),
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
     expect(
       await db.system.update(users).set({ name: 'đổi' }).where(eq(users.id, u1)).returning(),
     ).toHaveLength(0);
-    expect(
-      await db.system.delete(sessions).where(eq(sessions.userId, u1)).returning(),
-    ).toHaveLength(0);
+    expect(await expectRejectCode(db.system.delete(sessions).where(eq(sessions.userId, u1)))).toBe(
+      RLS_OR_PRIVILEGE_DENIED,
+    );
   });
 
-  it('ngữ cảnh auth không rò sang lần dùng lại kết nối (pool 1 kết nối)', async () => {
-    expect(
-      (
-        await db.withAuthContext((tx) =>
-          tx.select().from(sessions).where(inArray(sessions.userId, seededUsers())),
-        )
-      ).length,
-    ).toBe(3);
-    // Cùng kết nối, giao dịch mới, không ngữ cảnh → lại 0 dòng.
-    expect(await db.withSystem((tx) => tx.select().from(sessions))).toHaveLength(0);
-    const setting = await db.withSystem((tx) =>
-      tx.execute(sql`select current_setting('app.ctx', true) as ctx`),
-    );
-    expect([null, '']).toContain(setting.rows[0]?.ctx);
+  it('cf_app không thể tự vào ngữ cảnh auth bằng cách đặt app.ctx (không còn policy nào đọc app.ctx cho cf_app)', async () => {
+    const r = await db.withSystem(async (tx) => {
+      await tx.execute(sql`select set_config('app.ctx', 'auth', true)`);
+      return {
+        u: await tx.select().from(users).where(inArray(users.id, seededUsers())),
+        s: await tx.select(safeSession).from(sessions),
+        a: await tx.select(safeAccount).from(accounts),
+      };
+    });
+    expect([r.u.length, r.s.length, r.a.length]).toEqual([0, 0, 0]);
   });
 });
 
-describe('ngữ cảnh auth (withAuthContext và db.auth) thấy và ghi được tất cả', () => {
-  it('withAuthContext thấy đủ bốn bảng', async () => {
-    const all = await db.withAuthContext(async (tx) => ({
+describe('cf_auth cần CẢ role lẫn app.ctx', () => {
+  it('pool cf_auth có app.ctx = auth thấy và ghi được tất cả (đọc cả token/băm mật khẩu)', async () => {
+    const all = await authDb.transaction(async (tx) => ({
       u: await tx.select().from(users).where(inArray(users.id, seededUsers())),
       s: await tx.select().from(sessions).where(inArray(sessions.userId, seededUsers())),
       a: await tx.select().from(accounts).where(inArray(accounts.userId, seededUsers())),
       v: await tx.select().from(verifications).where(inArray(verifications.id, verificationIds)),
     }));
     expect([all.u.length, all.s.length, all.a.length, all.v.length]).toEqual([3, 3, 3, 2]);
-  });
-
-  it('db.auth (pool riêng cho adapter Better Auth) cũng thấy tất cả và ghi được', async () => {
-    const rows = await db.auth
-      .select()
-      .from(sessions)
-      .where(inArray(sessions.userId, seededUsers()));
-    expect(rows).toHaveLength(3);
     const id = randomUUID();
-    await db.auth.insert(users).values({ id, email: `${id}@example.test`, name: 'Qua adapter' });
-    expect(await db.auth.select().from(users).where(eq(users.id, id))).toHaveLength(1);
+    await authDb.db.insert(users).values({ id, email: `${id}@example.test`, name: 'Qua adapter' });
+    expect(await authDb.db.select().from(users).where(eq(users.id, id))).toHaveLength(1);
   });
 
-  it('db.auth và db.system là hai pool khác nhau: system vẫn không thấy gì', async () => {
-    expect(await db.system.select().from(sessions)).toHaveLength(0);
+  it('cf_auth nhưng KHÔNG có app.ctx → 0 dòng ở mọi bảng xác thực, và không chèn được', async () => {
+    for (const table of ['users', 'sessions', 'accounts', 'verifications']) {
+      const { rows } = await authNoCtx.query(`SELECT count(*)::int AS n FROM core.${table}`);
+      expect(rows[0].n, table).toBe(0);
+    }
+    const id = randomUUID();
+    expect(
+      await expectRejectCode(
+        authNoCtx.query('INSERT INTO core.users (id, email, name) VALUES ($1, $2, $3)', [
+          id,
+          `${id}@example.test`,
+          'x',
+        ]),
+      ),
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
+  });
+
+  it('app.ctx đặt trong giao dịch không rò sang giao dịch sau (pool 1 kết nối)', async () => {
+    const single = createAuthTestDb(1);
+    try {
+      await single.transaction((tx) => tx.select().from(sessions));
+      const setting = await single.db.execute(sql`select current_setting('app.ctx', true) as ctx`);
+      // Pool cf_auth luôn có app.ctx = auth ở cấp kết nối (tham số khởi động) — đây là thiết kế;
+      // điều cần bảo đảm là NO_CONTEXT đặt lại các biến workspace/user:
+      expect(setting.rows[0]?.ctx).toBe('auth');
+      const ws2Setting = await single.transaction((tx) =>
+        tx.execute(sql`select current_setting('app.workspace_id', true) as w`),
+      );
+      expect([null, '']).toContain(ws2Setting.rows[0]?.w);
+    } finally {
+      await single.close();
+    }
   });
 });
 
-describe('withUser(u): chỉ dòng của mình', () => {
-  it('thấy đúng dòng của mình ở users/sessions/accounts; verifications không thấy', async () => {
+describe('withUser(u): chỉ ĐỌC dòng của mình; chỉ GHI users.name/image/locale', () => {
+  it('thấy đúng dòng của mình ở users/sessions/accounts (cột không nhạy cảm)', async () => {
     const r = await db.withUser(u1, async (tx) => ({
       u: await tx.select({ id: users.id }).from(users),
-      s: await tx.select({ userId: sessions.userId }).from(sessions),
-      a: await tx.select({ userId: accounts.userId }).from(accounts),
-      v: await tx.select().from(verifications),
+      s: await tx.select(safeSession).from(sessions),
+      a: await tx.select(safeAccount).from(accounts),
     }));
     expect(r.u.map((x) => x.id)).toEqual([u1]);
     expect(r.s.every((x) => x.userId === u1)).toBe(true);
     expect(r.s.length).toBeGreaterThan(0);
     expect(r.a.every((x) => x.userId === u1)).toBe(true);
     expect(r.a.length).toBeGreaterThan(0);
-    expect(r.v).toHaveLength(0);
   });
 
-  it('sửa được dòng của mình nhưng không sửa/xóa được dòng của người khác', async () => {
+  it('KHÔNG đọc được cột nhạy cảm của chính mình: sessions.token, accounts.password / access_token / refresh_token / id_token', async () => {
+    for (const run of [
+      () => db.withUser(u1, (tx) => tx.select({ t: sessions.token }).from(sessions)),
+      () => db.withUser(u1, (tx) => tx.select({ p: accounts.password }).from(accounts)),
+      () => db.withUser(u1, (tx) => tx.select({ p: accounts.accessToken }).from(accounts)),
+      () => db.withUser(u1, (tx) => tx.select({ p: accounts.refreshToken }).from(accounts)),
+      () => db.withUser(u1, (tx) => tx.select({ p: accounts.idToken }).from(accounts)),
+      // select() không cột = chọn tất cả cột, gồm cột nhạy cảm
+      () => db.withUser(u1, (tx) => tx.select().from(sessions)),
+      () => db.withUser(u1, (tx) => tx.select().from(accounts)),
+    ]) {
+      expect(await expectRejectCode(run())).toBe(RLS_OR_PRIVILEGE_DENIED);
+    }
+  });
+
+  it('verifications: không có quyền nào', async () => {
+    expect(await expectRejectCode(db.withUser(u1, (tx) => tx.select().from(verifications)))).toBe(
+      RLS_OR_PRIVILEGE_DENIED,
+    );
+  });
+
+  it('sửa được users.name / image / locale của mình; không sửa được dòng của người khác', async () => {
     expect(
       await db.withUser(u1, (tx) =>
-        tx.update(users).set({ name: 'Tên mới' }).where(eq(users.id, u1)).returning(),
+        tx
+          .update(users)
+          .set({ name: 'Tên mới', image: 'https://example.test/a.png', locale: 'en' })
+          .where(eq(users.id, u1))
+          .returning({ id: users.id }),
       ),
     ).toHaveLength(1);
     expect(
@@ -197,48 +246,77 @@ describe('withUser(u): chỉ dòng của mình', () => {
         tx.update(users).set({ name: 'Hack' }).where(eq(users.id, u3)).returning(),
       ),
     ).toHaveLength(0);
-    expect(
-      await db.withUser(u1, (tx) => tx.delete(sessions).where(eq(sessions.userId, u3)).returning()),
-    ).toHaveLength(0);
   });
 
-  it('thu hồi được phiên của chính mình (xóa dòng của mình)', async () => {
-    const u = await seedUser(admin);
-    await seedSession(u);
-    expect(
-      await db.withUser(u, (tx) => tx.delete(sessions).where(eq(sessions.userId, u)).returning()),
-    ).toHaveLength(1);
-  });
-
-  it('không chèn được người dùng/phiên cho người khác (WITH CHECK)', async () => {
-    const id = randomUUID();
-    expect(
-      await expectRejectCode(
-        db.withUser(u1, (tx) =>
-          tx.insert(users).values({ id, email: `${id}@example.test`, name: 'x' }),
+  it('KHÔNG sửa được email, email_verified, totp_enabled, is_admin, admin_role (từ chối quyền cột)', async () => {
+    for (const change of [
+      { email: `${randomUUID()}@example.test` },
+      { emailVerified: true },
+      { totpEnabled: true },
+      { isAdmin: true },
+      { adminRole: 'super' },
+    ]) {
+      expect(
+        await expectRejectCode(
+          db.withUser(u1, (tx) => tx.update(users).set(change).where(eq(users.id, u1))),
         ),
-      ),
-    ).toBe(RLS_VIOLATION);
-    expect(
-      await expectRejectCode(
+        JSON.stringify(change),
+      ).toBe(RLS_OR_PRIVILEGE_DENIED);
+    }
+  });
+
+  it('KHÔNG đổi được mật khẩu / ghi accounts, KHÔNG tạo hay xóa phiên, KHÔNG chèn/xóa users', async () => {
+    const id = randomUUID();
+    const attempts = [
+      () =>
+        db.withUser(u1, (tx) =>
+          tx.update(accounts).set({ password: 'hash-moi' }).where(eq(accounts.userId, u1)),
+        ),
+      () =>
+        db.withUser(u1, (tx) =>
+          tx.insert(accounts).values({ userId: u1, providerId: 'x', accountId: randomUUID() }),
+        ),
+      () => db.withUser(u1, (tx) => tx.delete(accounts).where(eq(accounts.userId, u1))),
+      () =>
         db.withUser(u1, (tx) =>
           tx
             .insert(sessions)
-            .values({ userId: u3, token: randomUUID(), expiresAt: new Date(Date.now() + HOUR) }),
+            .values({ userId: u1, token: randomUUID(), expiresAt: new Date(Date.now() + HOUR) }),
         ),
-      ),
-    ).toBe(RLS_VIOLATION);
+      () =>
+        db.withUser(u1, (tx) =>
+          tx.update(sessions).set({ ipAddress: '1.1.1.1' }).where(eq(sessions.userId, u1)),
+        ),
+      () => db.withUser(u1, (tx) => tx.delete(sessions).where(eq(sessions.userId, u1))),
+      () =>
+        db.withUser(u1, (tx) =>
+          tx.insert(users).values({ id, email: `${id}@example.test`, name: 'x' }),
+        ),
+      () => db.withUser(u1, (tx) => tx.delete(users).where(eq(users.id, u1))),
+    ];
+    for (const attempt of attempts) {
+      expect(await expectRejectCode(attempt())).toBe(RLS_OR_PRIVILEGE_DENIED);
+    }
+    // Không có gì bị đổi: băm mật khẩu và phiên của u1 còn nguyên.
+    const { rows } = await admin.query(
+      'SELECT (SELECT count(*)::int FROM core.sessions WHERE user_id = $1) AS s, (SELECT password FROM core.accounts WHERE user_id = $1) AS p',
+      [u1],
+    );
+    expect(rows[0].s).toBeGreaterThan(0);
+    expect(rows[0].p).toBe('hash-gia');
   });
 });
 
 describe('withWorkspace(W): không thấy phiên/tài khoản; users chỉ thành viên active', () => {
-  it('sessions, accounts, verifications đều 0 dòng', async () => {
+  it('sessions, accounts 0 dòng; verifications bị từ chối quyền', async () => {
     const r = await db.withWorkspace(ws, async (tx) => ({
-      s: await tx.select().from(sessions),
-      a: await tx.select().from(accounts),
-      v: await tx.select().from(verifications),
+      s: await tx.select(safeSession).from(sessions),
+      a: await tx.select(safeAccount).from(accounts),
     }));
-    expect([r.s.length, r.a.length, r.v.length]).toEqual([0, 0, 0]);
+    expect([r.s.length, r.a.length]).toEqual([0, 0]);
+    expect(
+      await expectRejectCode(db.withWorkspace(ws, (tx) => tx.select().from(verifications))),
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
   });
 
   it('users: chỉ thành viên active của W (không thấy removed, không thấy người ngoài W)', async () => {
@@ -281,7 +359,7 @@ describe('withWorkspace(W): không thấy phiên/tài khoản; users chỉ thàn
           tx.insert(users).values({ id, email: `${id}@example.test`, name: 'x' }),
         ),
       ),
-    ).toBe(RLS_VIOLATION);
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
     expect(
       await expectRejectCode(
         db.withWorkspace(ws, (tx) =>
@@ -290,7 +368,7 @@ describe('withWorkspace(W): không thấy phiên/tài khoản; users chỉ thàn
             .values({ userId: u1, token: randomUUID(), expiresAt: new Date(Date.now() + HOUR) }),
         ),
       ),
-    ).toBe(RLS_VIOLATION);
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
   });
 
   it('đặt cả workspace lẫn người dùng (lỗi tầng ứng dụng) vẫn không thấy sessions/accounts', async () => {
@@ -299,8 +377,8 @@ describe('withWorkspace(W): không thấy phiên/tài khoản; users chỉ thàn
         sql`select set_config('app.workspace_id', ${ws}, true), set_config('app.user_id', ${u1}, true)`,
       );
       return {
-        s: await tx.select().from(sessions),
-        a: await tx.select().from(accounts),
+        s: await tx.select(safeSession).from(sessions),
+        a: await tx.select(safeAccount).from(accounts),
         u: await tx.select({ id: users.id }).from(users).where(inArray(users.id, seededUsers())),
       };
     });
@@ -311,11 +389,18 @@ describe('withWorkspace(W): không thấy phiên/tài khoản; users chỉ thàn
 });
 
 describe('quyền cột trên users vẫn còn (RLS không thay thế GRANT)', () => {
-  it('trong ngữ cảnh auth vẫn không đổi được is_admin / admin_role', async () => {
+  it('cf_auth không đổi được is_admin / admin_role (cấp quyền Admin không đi qua adapter)', async () => {
     expect(
       await expectRejectCode(
-        db.withAuthContext((tx) => tx.update(users).set({ isAdmin: true }).where(eq(users.id, u1))),
+        authDb.transaction((tx) => tx.update(users).set({ isAdmin: true }).where(eq(users.id, u1))),
       ),
-    ).toBe(RLS_VIOLATION);
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
+    expect(
+      await expectRejectCode(
+        authDb.transaction((tx) =>
+          tx.update(users).set({ adminRole: 'super' }).where(eq(users.id, u1)),
+        ),
+      ),
+    ).toBe(RLS_OR_PRIVILEGE_DENIED);
   });
 });

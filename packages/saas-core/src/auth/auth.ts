@@ -1,4 +1,4 @@
-import type { FlowDb } from '@flow/db';
+import type { AuthDb } from '@flow/db/auth-db';
 import { accounts, sessions, users, verifications } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import { betterAuth } from 'better-auth';
@@ -16,7 +16,8 @@ export const MAX_PASSWORD_LENGTH = 128;
 const MIN_SECRET_LENGTH = 32;
 
 export type AuthOptions = {
-  db: FlowDb;
+  /** Pool role cf_auth (`openAuthDb`): chỉ chạm users/sessions/accounts/verifications, trong ngữ cảnh app.ctx = 'auth'. */
+  authDb: AuthDb;
   /** BETTER_AUTH_SECRET: khóa ký cookie phiên, chỉ ở env/secret manager, không bao giờ trong DB. */
   secret: string;
   baseURL: string;
@@ -61,8 +62,8 @@ export function createAuth(options: AuthOptions) {
   return betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
-    // Pool riêng `db.auth`: mọi kết nối mở với app.ctx = 'auth' (RLS các bảng xác thực chỉ mở cho ngữ cảnh này).
-    database: drizzleAdapter(options.db.auth, {
+    // Pool role cf_auth: mọi kết nối mở với app.ctx = 'auth' (cần cả role lẫn ngữ cảnh mới vào được bảng xác thực).
+    database: drizzleAdapter(options.authDb.db, {
       provider: 'pg',
       schema: { user: users, session: sessions, account: accounts, verification: verifications },
     }),

@@ -1,4 +1,5 @@
-import { eq, type FlowDb } from '@flow/db';
+import { eq } from '@flow/db';
+import type { AuthDb } from '@flow/db/auth-db';
 import { sessions } from '@flow/db/schema/core';
 import type { Auth } from './auth';
 import { isSessionPastHardLimit } from './session-policy';
@@ -10,7 +11,7 @@ import { isSessionPastHardLimit } from './session-policy';
  */
 export async function readSession(
   auth: Auth,
-  db: FlowDb,
+  authDb: AuthDb,
   headers: Headers,
   now: Date = new Date(),
 ) {
@@ -30,7 +31,7 @@ export async function readSession(
       now,
     })
   ) {
-    await db.withAuthContext((tx) => tx.delete(sessions).where(eq(sessions.id, session.id)));
+    await authDb.transaction((tx) => tx.delete(sessions).where(eq(sessions.id, session.id)));
     return null;
   }
   return current;

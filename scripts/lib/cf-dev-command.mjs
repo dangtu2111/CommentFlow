@@ -61,6 +61,11 @@ export function buildRemoteCommand(argv) {
   if (sub === 'env-init') {
     return `cd ${REMOTE_DIR} && bash scripts/cf-dev-env-init.sh`;
   }
+  if (sub === 'add-auth-role') {
+    // Thêm role cf_auth vào volume Postgres ĐÃ có (script khởi tạo chỉ chạy lúc volume trống). Chỉ chạy script cố định trong repo.
+    if (rest.length > 0) throw new CfDevCommandError('add-auth-role không nhận tham số');
+    return `cd ${REMOTE_DIR} && bash infra/scripts/cf-dev-add-auth-role.sh`;
+  }
   if (sub === 'sync') {
     const branch = rest[0];
     if (rest.length !== 1 || !branch || !SAFE_BRANCH.test(branch) || branch.includes('staging')) {

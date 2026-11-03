@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import pg from 'pg';
+import { type AuthDb, createAuthDb } from '../src/auth-db';
 import { createDb, type FlowDb } from '../src/client';
 
 function requireEnv(name: string): string {
@@ -16,6 +17,16 @@ export function createAdminPool(): pg.Pool {
 /** Kết nối bằng role ứng dụng (cf_app) — chịu RLS như production. */
 export function createAppDb(max = 5): FlowDb {
   return createDb({ connectionString: requireEnv('TEST_DATABASE_URL'), max });
+}
+
+/** Pool role cf_auth (adapter Better Auth) với app.ctx = 'auth' — chỉ chạm bảng xác thực. */
+export function createAuthTestDb(max = 5): AuthDb {
+  return createAuthDb({ connectionString: requireEnv('TEST_DATABASE_AUTH_URL'), max });
+}
+
+/** Pool role cf_auth KHÔNG có app.ctx: chứng minh cần cả role lẫn ngữ cảnh. */
+export function createContextlessAuthPool(): pg.Pool {
+  return new pg.Pool({ connectionString: requireEnv('TEST_DATABASE_AUTH_URL'), max: 1 });
 }
 
 export const newId = (): string => randomUUID();

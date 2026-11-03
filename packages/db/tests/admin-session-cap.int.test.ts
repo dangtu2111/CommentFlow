@@ -2,20 +2,29 @@ import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { AuthDb } from '../src/auth-db';
 import type { FlowDb } from '../src/client';
 import { sessions } from '../src/schema/core';
-import { createAdminPool, createAppDb, expectRejectCode, seedUser } from './helpers';
+import {
+  createAdminPool,
+  createAppDb,
+  createAuthTestDb,
+  expectRejectCode,
+  seedUser,
+} from './helpers';
 
 const HOUR = 3600 * 1000;
 const PERMISSION_DENIED = '42501';
 
 let admin: pg.Pool;
-let db: FlowDb;
+let db: FlowDb; // cf_app
+let authDb: AuthDb; // cf_auth (adapter Better Auth)
 let userId: string;
 
 beforeAll(async () => {
   admin = createAdminPool();
   db = createAppDb();
+  authDb = createAuthTestDb();
   userId = await seedUser(admin);
   // Phiên Admin chỉ tạo được cho người dùng có is_admin = true (0009).
   await admin.query("UPDATE core.users SET is_admin = true, admin_role = 'super' WHERE id = $1", [
@@ -24,6 +33,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await db.close();
+  await authDb.close();
   await admin.end();
 });
 
@@ -94,20 +104,20 @@ describe('trigger hạn phiên Admin (INSERT và UPDATE)', () => {
   });
 });
 
-describe('quyền cột của cf_app trên core.sessions', () => {
+describe('quyền cột của cf_auth trên core.sessions', () => {
   it('KHÔNG đổi được is_admin_session (cả nâng lên lẫn hạ xuống) → từ chối quyền', async () => {
     const normal = await insertAsOwner({ isAdmin: false, expiresInHours: 24 });
     const privileged = await insertAsOwner({ isAdmin: true, expiresInHours: 4 });
     expect(
       await expectRejectCode(
-        db.withAuthContext((tx) =>
+        authDb.transaction((tx) =>
           tx.update(sessions).set({ isAdminSession: true }).where(eq(sessions.id, normal.id)),
         ),
       ),
     ).toBe(PERMISSION_DENIED);
     expect(
       await expectRejectCode(
-        db.withAuthContext((tx) =>
+        authDb.transaction((tx) =>
           tx.update(sessions).set({ isAdminSession: false }).where(eq(sessions.id, privileged.id)),
         ),
       ),
@@ -125,7 +135,7 @@ describe('quyền cột của cf_app trên core.sessions', () => {
     ]) {
       expect(
         await expectRejectCode(
-          db.withAuthContext((tx) =>
+          authDb.transaction((tx) =>
             tx.update(sessions).set(change).where(eq(sessions.id, row.id)),
           ),
         ),
@@ -135,7 +145,7 @@ describe('quyền cột của cf_app trên core.sessions', () => {
 
   it('vẫn đổi được expires_at, updated_at, ip, user_agent (việc Better Auth cần); phiên Admin vẫn bị cắt hạn', async () => {
     const row = await insertAsOwner({ isAdmin: true, expiresInHours: 1 });
-    await db.withAuthContext((tx) =>
+    await authDb.transaction((tx) =>
       tx
         .update(sessions)
         .set({
@@ -151,7 +161,7 @@ describe('quyền cột của cf_app trên core.sessions', () => {
   });
 
   it('cf_app chèn được phiên Admin qua đường xác thực (tạo phiên Admin) và hạn bị cắt 8 giờ', async () => {
-    const created = await db.withAuthContext((tx) =>
+    const created = await authDb.transaction((tx) =>
       tx
         .insert(sessions)
         .values({
@@ -169,7 +179,7 @@ describe('quyền cột của cf_app trên core.sessions', () => {
 
 describe('đường INSERT của trigger (kiểm chứng lần ba)', () => {
   it('cf_app KHÔNG chèn được phiên Admin với created_at ở tương lai để kéo dài hạn', async () => {
-    const created = await db.withAuthContext((tx) =>
+    const created = await authDb.transaction((tx) =>
       tx
         .insert(sessions)
         .values({
@@ -198,7 +208,7 @@ describe('đường INSERT của trigger (kiểm chứng lần ba)', () => {
     ).toBe(PERMISSION_DENIED);
     expect(
       await expectRejectCode(
-        db.withAuthContext((tx) =>
+        authDb.transaction((tx) =>
           tx.insert(sessions).values({
             userId: normalUser,
             token: randomUUID(),
@@ -229,5 +239,27 @@ describe('đường INSERT của trigger (kiểm chứng lần ba)', () => {
     const after = await fetchRow(row.id);
     expect(after.is_admin_session).toBe(true);
     expect(after.expires_at.getTime()).toBeLessThanOrEqual(after.created_at.getTime() + 8 * HOUR);
+  });
+});
+
+describe('cf_app KHÔNG có quyền UPDATE trên core.sessions (is_admin_session, created_at, ...)', () => {
+  it('cf_app (withUser) không sửa được bất kỳ cột nào của sessions, kể cả phiên của chính mình', async () => {
+    const row = await insertAsOwner({ isAdmin: false, expiresInHours: 24 });
+    for (const change of [
+      { isAdminSession: true },
+      { createdAt: new Date(Date.now() - HOUR) },
+      { expiresAt: new Date(Date.now() + 365 * 24 * HOUR) },
+    ]) {
+      expect(
+        await expectRejectCode(
+          db.withUser(userId, (tx) =>
+            tx.update(sessions).set(change).where(eq(sessions.id, row.id)),
+          ),
+        ),
+        JSON.stringify(change),
+      ).toBe(PERMISSION_DENIED);
+    }
+    const after = await fetchRow(row.id);
+    expect(after.is_admin_session).toBe(false);
   });
 });

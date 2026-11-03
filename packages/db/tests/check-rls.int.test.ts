@@ -241,4 +241,58 @@ describe('check-rls', () => {
       }),
     );
   });
+
+  it('bắt cf_auth được cấp quyền trên bảng nghiệp vụ', async () => {
+    const v = await violationsAfter('GRANT SELECT ON core.members TO cf_auth');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.members',
+        message: expect.stringContaining('chỉ được truy cập bảng xác thực'),
+      }),
+    );
+  });
+
+  it('bắt policy của cf_auth trên bảng xác thực bị gỡ (quyền còn, policy mất)', async () => {
+    const v = await violationsAfter('DROP POLICY sessions_auth_access ON core.sessions');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.sessions',
+        message: expect.stringContaining('cf_auth có quyền'),
+      }),
+    );
+  });
+
+  it('bắt policy của cf_auth mở toang (không đòi app.ctx)', async () => {
+    const v = await violationsAfter(
+      'CREATE POLICY mo_cho_auth ON core.sessions FOR SELECT TO cf_auth USING (true)',
+    );
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.sessions',
+        message: expect.stringContaining('cf_auth có quyền SELECT'),
+      }),
+    );
+  });
+
+  it('bắt cf_app được cấp quyền trên verifications (chỉ cf_auth được)', async () => {
+    const v = await violationsAfter('GRANT SELECT ON core.verifications TO cf_app');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.verifications',
+        message: expect.stringContaining('không được có quyền nào'),
+      }),
+    );
+  });
+
+  it('bắt policy của cf_app trên sessions dựa vào app.ctx (cf_app tự vào ngữ cảnh auth)', async () => {
+    const v = await violationsAfter(
+      'CREATE POLICY qua_ctx ON core.sessions FOR SELECT TO cf_app USING ((SELECT core.in_auth_context()))',
+    );
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.sessions',
+        message: expect.stringContaining('qua_ctx'),
+      }),
+    );
+  });
 });

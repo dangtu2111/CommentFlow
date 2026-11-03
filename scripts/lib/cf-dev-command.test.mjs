@@ -28,6 +28,13 @@ describe('buildRemoteCommand', () => {
     expect(() => buildRemoteCommand(['ps', '-f', 'x.yml'])).toThrow(/Cờ bị cấm/);
   });
 
+  it('add-auth-role chạy đúng script cố định, không nhận tham số', () => {
+    expect(buildRemoteCommand(['add-auth-role'])).toBe(
+      'cd ~/CommentFlow && bash infra/scripts/cf-dev-add-auth-role.sh',
+    );
+    expect(() => buildRemoteCommand(['add-auth-role', 'x'])).toThrow(/không nhận tham số/);
+  });
+
   it('từ chối --project-directory (đổi nơi tính đường dẫn bind mount / build context)', () => {
     expect(() => buildRemoteCommand(['up', '--project-directory', '/tmp'])).toThrow(/Cờ bị cấm/);
     expect(() => buildRemoteCommand(['up', '--project-directory=/tmp'])).toThrow(/Cờ bị cấm/);

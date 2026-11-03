@@ -6,15 +6,19 @@ export type Queryable = {
 export type RlsViolation = { subject: string; message: string };
 
 const APP_ROLE = 'cf_app';
+/** Role riêng của adapter Better Auth: chỉ chạm các bảng xác thực, và chỉ trong ngữ cảnh app.ctx = 'auth'. */
+const AUTH_ROLE = 'cf_auth';
 
 /** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
 const SYSTEM_TABLES = ['core.feature_flags'];
 /** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace. */
 const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
-/** Bảng "của chính mình": policy phải dựa vào ngữ cảnh auth VÀ current_user_id(). */
+/** Bảng "của chính mình" với cf_app: policy chỉ cho dòng có user_id/id = current_user_id() (không workspace). */
 const OWN_USER_TABLES = ['core.users', 'core.sessions', 'core.accounts', 'core.two_factors'];
-/** Bảng chỉ ngữ cảnh auth mới đọc/ghi được. */
+/** Bảng cf_app KHÔNG được có quyền nào (chỉ cf_auth). */
 const AUTH_ONLY_TABLES = ['core.verifications'];
+/** Mọi bảng xác thực: cf_auth chỉ được chạm các bảng này. */
+const AUTH_TABLES = [...OWN_USER_TABLES, ...AUTH_ONLY_TABLES];
 
 type Command = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE';
 const POLICY_LETTER: Record<Command, string> = {
@@ -43,17 +47,18 @@ const workspaceClass: PolicyClass = {
     typeof expr === 'string' && WORKSPACE_SHAPE.test(expr) && !hasTrueLiteral(expr),
 };
 const ownUserClass: PolicyClass = {
-  label: 'in_auth_context() hoặc (không workspace, user_id/id = current_user_id())',
+  label: '(không workspace, user_id/id = current_user_id()) và KHÔNG dựa vào in_auth_context()',
   isScoped: (expr) =>
     typeof expr === 'string' &&
-    AUTH_SHAPE.test(expr) &&
+    !AUTH_SHAPE.test(expr) &&
     OWN_ROW_SHAPE.test(expr) &&
     NO_WORKSPACE_SHAPE.test(expr) &&
     !hasTrueLiteral(expr),
 };
+// Bảng chỉ cf_auth: mọi policy áp cho cf_app đều sai (cf_app không được có quyền nào, kiểm ở dưới).
 const authOnlyClass: PolicyClass = {
-  label: 'in_auth_context()',
-  isScoped: (expr) => typeof expr === 'string' && AUTH_SHAPE.test(expr) && !hasTrueLiteral(expr),
+  label: 'không có quyền nào cho cf_app',
+  isScoped: () => false,
 };
 
 function classify(name: string, hasWorkspaceId: boolean): PolicyClass | 'system' | 'unknown' {
@@ -62,6 +67,138 @@ function classify(name: string, hasWorkspaceId: boolean): PolicyClass | 'system'
   if (AUTH_ONLY_TABLES.includes(name)) return authOnlyClass;
   if (SYSTEM_TABLES.includes(name)) return 'system';
   return 'unknown';
+}
+
+/** Thuộc tính nguy hiểm + quyền CREATE + tư cách thành viên role chủ sở hữu của một role ứng dụng. */
+async function checkRole(
+  db: Queryable,
+  roleName: string,
+  tagPrefix: string,
+  violations: RlsViolation[],
+): Promise<void> {
+  const role = await db.query(`/* ${tagPrefix}role */
+    SELECT rolsuper, rolbypassrls, rolcreatedb, rolcreaterole,
+           EXISTS (SELECT 1 FROM pg_roles o WHERE o.rolname <> '${roleName}'
+                   AND o.rolname IN ('cf_owner', 'postgres') AND pg_has_role('${roleName}', o.oid, 'MEMBER')) AS owner_member
+    FROM pg_roles WHERE rolname = '${roleName}'`);
+  const found = role.rows[0];
+  if (!found) {
+    violations.push({ subject: roleName, message: 'role không tồn tại' });
+    return;
+  }
+  if (found.rolsuper === true) violations.push({ subject: roleName, message: 'là superuser' });
+  if (found.rolbypassrls === true) violations.push({ subject: roleName, message: 'có BYPASSRLS' });
+  if (found.rolcreatedb === true)
+    violations.push({ subject: roleName, message: 'có quyền CREATEDB' });
+  if (found.rolcreaterole === true)
+    violations.push({ subject: roleName, message: 'có quyền CREATEROLE' });
+  if (found.owner_member === true) {
+    violations.push({ subject: roleName, message: 'là thành viên của role chủ sở hữu (cf_owner)' });
+  }
+
+  // Không được tạo đối tượng trong schema ứng dụng hoặc trong database.
+  const create = await db.query(`/* ${tagPrefix}create-privileges */
+    SELECT has_schema_privilege('${roleName}', 'core', 'CREATE') AS core_create,
+           has_schema_privilege('${roleName}', 'cf', 'CREATE') AS cf_create,
+           has_schema_privilege('${roleName}', 'public', 'CREATE') AS public_create,
+           has_database_privilege('${roleName}', current_database(), 'CREATE') AS db_create`);
+  const grants = create.rows[0] ?? {};
+  for (const [key, label] of [
+    ['core_create', 'schema core'],
+    ['cf_create', 'schema cf'],
+    ['public_create', 'schema public'],
+    ['db_create', 'database'],
+  ] as const) {
+    if (grants[key] === true) {
+      violations.push({ subject: roleName, message: `có quyền CREATE trên ${label}` });
+    }
+  }
+}
+
+/**
+ * cf_auth chỉ được chạm bảng xác thực; mọi quyền có trên bảng xác thực phải được một policy áp cho cf_auth
+ * kèm điều kiện in_auth_context() (role + ngữ cảnh: thiếu một trong hai là không vào được).
+ */
+async function checkAuthRolePrivileges(
+  db: Queryable,
+  policyRows: Record<string, unknown>[],
+  violations: RlsViolation[],
+): Promise<void> {
+  const privileges = await db.query(`/* auth-privileges */
+    SELECT n.nspname || '.' || c.relname AS name,
+           has_any_column_privilege('${AUTH_ROLE}', c.oid, 'SELECT') AS can_select,
+           has_any_column_privilege('${AUTH_ROLE}', c.oid, 'INSERT') AS can_insert,
+           has_any_column_privilege('${AUTH_ROLE}', c.oid, 'UPDATE') AS can_update,
+           has_table_privilege('${AUTH_ROLE}', c.oid, 'DELETE') AS can_delete,
+           has_table_privilege('${AUTH_ROLE}', c.oid, 'TRUNCATE') AS can_truncate,
+           has_table_privilege('${AUTH_ROLE}', c.oid, 'TRIGGER') AS can_trigger,
+           has_table_privilege('${AUTH_ROLE}', c.oid, 'REFERENCES') AS can_references
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind IN ('r', 'p') AND n.nspname IN ('core', 'cf')`);
+  for (const row of privileges.rows) {
+    const name = String(row.name);
+    const hasAny =
+      row.can_select === true ||
+      row.can_insert === true ||
+      row.can_update === true ||
+      row.can_delete === true;
+    if (!AUTH_TABLES.includes(name)) {
+      if (
+        hasAny ||
+        row.can_truncate === true ||
+        row.can_trigger === true ||
+        row.can_references === true
+      ) {
+        violations.push({
+          subject: name,
+          message: `${AUTH_ROLE} chỉ được truy cập bảng xác thực (đang có quyền trên bảng này)`,
+        });
+      }
+      continue;
+    }
+    for (const [key, label] of [
+      ['can_truncate', 'TRUNCATE'],
+      ['can_trigger', 'TRIGGER'],
+      ['can_references', 'REFERENCES'],
+    ] as const) {
+      if (row[key] === true) {
+        violations.push({ subject: name, message: `${AUTH_ROLE} không được có quyền ${label}` });
+      }
+    }
+    const granted: Record<Command, boolean> = {
+      SELECT: row.can_select === true,
+      INSERT: row.can_insert === true,
+      UPDATE: row.can_update === true,
+      DELETE: row.can_delete === true,
+    };
+    for (const command of Object.keys(granted) as Command[]) {
+      if (!granted[command]) continue;
+      const relevant = policyRows.filter(
+        (p) =>
+          String(p.name) === name &&
+          p.permissive === true &&
+          p.applies_to_auth === true &&
+          (String(p.polcmd) === POLICY_LETTER[command] || String(p.polcmd) === '*'),
+      );
+      const ok =
+        relevant.length > 0 &&
+        relevant.every((p) => {
+          const using = typeof p.qual === 'string' ? p.qual : null;
+          const check = typeof p.withcheck === 'string' ? p.withcheck : null;
+          const needsCheck = command === 'INSERT' || command === 'UPDATE';
+          const exprOk = (e: string | null) =>
+            e !== null && AUTH_SHAPE.test(e) && !hasTrueLiteral(e);
+          if (command === 'INSERT') return exprOk(check);
+          return exprOk(using) && (!needsCheck || check === null || exprOk(check));
+        });
+      if (!ok) {
+        violations.push({
+          subject: name,
+          message: `${AUTH_ROLE} có quyền ${command} nhưng không có policy ${command} dựa vào in_auth_context() (hoặc policy mở quá rộng)`,
+        });
+      }
+    }
+  }
 }
 
 export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
@@ -122,6 +259,10 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
            (0 = ANY(p.polroles)
             OR EXISTS (SELECT 1 FROM unnest(p.polroles) AS rid
                        WHERE rid <> 0 AND pg_has_role('${APP_ROLE}', rid, 'MEMBER'))) AS applies_to_app,
+           (0 = ANY(p.polroles)
+            OR EXISTS (SELECT 1 FROM unnest(p.polroles) AS rid
+                       WHERE rid <> 0 AND pg_has_role('${AUTH_ROLE}', rid, 'MEMBER'))
+           ) AS applies_to_auth,
            pg_get_expr(p.polqual, p.polrelid) AS qual,
            pg_get_expr(p.polwithcheck, p.polrelid) AS withcheck
     FROM pg_policy p JOIN pg_class c ON c.oid = p.polrelid JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -146,6 +287,18 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
       violations.push({
         subject: name,
         message: `bảng hệ thống chỉ cho ${APP_ROLE} quyền SELECT (đang có quyền ghi)`,
+      });
+    }
+    if (
+      AUTH_ONLY_TABLES.includes(name) &&
+      (row.can_select === true ||
+        row.can_insert === true ||
+        row.can_update === true ||
+        row.can_delete === true)
+    ) {
+      violations.push({
+        subject: name,
+        message: `${APP_ROLE} không được có quyền nào trên bảng chỉ dành cho ${AUTH_ROLE}`,
       });
     }
     const klass = rlsTables.get(name);
@@ -209,39 +362,10 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
     });
   }
 
-  // --- Role ứng dụng ---
-  const role = await db.query(`/* role */
-    SELECT rolsuper, rolbypassrls, rolcreatedb, rolcreaterole FROM pg_roles WHERE rolname = '${APP_ROLE}'`);
-  const appRole = role.rows[0];
-  if (!appRole) {
-    violations.push({ subject: APP_ROLE, message: 'role không tồn tại' });
-  } else {
-    if (appRole.rolsuper === true) violations.push({ subject: APP_ROLE, message: 'là superuser' });
-    if (appRole.rolbypassrls === true)
-      violations.push({ subject: APP_ROLE, message: 'có BYPASSRLS' });
-    if (appRole.rolcreatedb === true)
-      violations.push({ subject: APP_ROLE, message: 'có quyền CREATEDB' });
-    if (appRole.rolcreaterole === true)
-      violations.push({ subject: APP_ROLE, message: 'có quyền CREATEROLE' });
-
-    // Không được tạo đối tượng trong schema ứng dụng hoặc trong database.
-    const create = await db.query(`/* create-privileges */
-      SELECT has_schema_privilege('${APP_ROLE}', 'core', 'CREATE') AS core_create,
-             has_schema_privilege('${APP_ROLE}', 'cf', 'CREATE') AS cf_create,
-             has_schema_privilege('${APP_ROLE}', 'public', 'CREATE') AS public_create,
-             has_database_privilege('${APP_ROLE}', current_database(), 'CREATE') AS db_create`);
-    const grants = create.rows[0] ?? {};
-    for (const [key, label] of [
-      ['core_create', 'schema core'],
-      ['cf_create', 'schema cf'],
-      ['public_create', 'schema public'],
-      ['db_create', 'database'],
-    ] as const) {
-      if (grants[key] === true) {
-        violations.push({ subject: APP_ROLE, message: `có quyền CREATE trên ${label}` });
-      }
-    }
-  }
+  // --- Role ứng dụng và role xác thực ---
+  await checkRole(db, APP_ROLE, '', violations);
+  await checkRole(db, AUTH_ROLE, 'auth-', violations);
+  await checkAuthRolePrivileges(db, policies.rows, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

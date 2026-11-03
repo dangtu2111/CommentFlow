@@ -8,7 +8,7 @@ import { createAdminPool, createAppDb, seedMember, seedUser, seedWorkspace } fro
 let admin: pg.Pool;
 let db: FlowDb;
 
-/** Mọi bảng có RLS mà cf_app đọc được (workspace + xác thực). */
+/** Mọi bảng có RLS mà cf_app đọc được (workspace + xác thực). verifications: cf_app không có quyền nào (xem auth-rls). */
 const RLS_TABLES = [
   'core.workspaces',
   'core.members',
@@ -19,8 +19,8 @@ const RLS_TABLES = [
   'core.users',
   'core.sessions',
   'core.accounts',
-  'core.verifications',
 ];
+const ALL_TABLES_WITH_DATA = [...RLS_TABLES, 'core.verifications'];
 
 beforeAll(async () => {
   admin = createAdminPool();
@@ -73,7 +73,7 @@ const count = async (
 
 describe('mọi bảng RLS: không ngữ cảnh / ngữ cảnh lạ → 0 dòng (dù chủ sở hữu thấy dữ liệu thật)', () => {
   it('chủ sở hữu thấy dữ liệu ở mọi bảng (bảo đảm phép thử có ý nghĩa)', async () => {
-    for (const table of RLS_TABLES) {
+    for (const table of ALL_TABLES_WITH_DATA) {
       const { rows } = await admin.query(`SELECT count(*)::int AS n FROM ${table}`);
       expect(rows[0].n, table).toBeGreaterThan(0);
     }
@@ -109,7 +109,6 @@ describe('ngữ cảnh bị "đầu độc" ở cấp phiên không đi vào gia
     await db.system.execute(sql`select set_config('app.ctx', 'auth', false)`);
     await db.system.execute(sql`select set_config('app.user_id', ${randomUUID()}, false)`);
     expect(await db.withSystem((tx) => count('core.sessions', (q) => tx.execute(q)))).toBe(0);
-    expect(await db.withSystem((tx) => count('core.verifications', (q) => tx.execute(q)))).toBe(0);
     expect(
       await db.withWorkspace(randomUUID(), (tx) => count('core.users', (q) => tx.execute(q))),
     ).toBe(0);

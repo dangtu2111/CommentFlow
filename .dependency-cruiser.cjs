@@ -44,6 +44,16 @@ module.exports = {
       to: { path: '^(packages/(saas-core|ai|connectors)/|apps/)' },
     },
     {
+      name: 'chi-auth-import-auth-db',
+      comment:
+        'Pool role cf_auth (packages/db/src/auth-db) mở TOÀN BỘ bảng xác thực (băm mật khẩu, token phiên thô): chỉ packages/saas-core/src/auth/, chính packages/db và test được import. Nơi khác dùng qua API của saas-core.',
+      severity: 'error',
+      from: {
+        pathNot: '^packages/(saas-core/(src/auth/|tests/)|db/)|\\.test\\.(ts|tsx|mjs)$',
+      },
+      to: { path: '^packages/db/src/auth-db' },
+    },
+    {
       name: 'apps-khong-import-nhau',
       comment: 'Các ứng dụng độc lập: web không import worker và ngược lại.',
       severity: 'error',

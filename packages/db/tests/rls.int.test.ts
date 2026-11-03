@@ -319,42 +319,47 @@ describe('workspaces và members: liệt kê workspace của chính người dù
   });
 });
 
-describe('bảng xác thực dùng được qua ngữ cảnh auth (adapter Better Auth)', () => {
-  it('đọc/ghi users qua db.auth', async () => {
-    const id = newId();
-    await db.auth.insert(users).values({ id, email: `${id}@example.test`, name: 'Hệ thống' });
-    const rows = await db.auth.select().from(users).where(eq(users.id, id));
-    expect(rows).toHaveLength(1);
-  });
-});
-
 describe('quyền trên core.users và hàm ngữ cảnh', () => {
-  it('cf_app đổi được tên/ngôn ngữ nhưng KHÔNG tự đặt is_admin/admin_role, không xóa người dùng', async () => {
+  it('cf_app (withUser) đổi được tên/ngôn ngữ của mình nhưng KHÔNG tự đặt is_admin/admin_role, không xóa người dùng', async () => {
     const id = await seedUser(admin);
-    await db.withAuthContext((tx) =>
+    await db.withUser(id, (tx) =>
       tx.update(users).set({ name: 'Tên mới', locale: 'en' }).where(eq(users.id, id)),
     );
-    const [row] = await db.withAuthContext((tx) => tx.select().from(users).where(eq(users.id, id)));
+    const [row] = await db.withUser(id, (tx) => tx.select().from(users).where(eq(users.id, id)));
     expect(row).toMatchObject({ name: 'Tên mới', locale: 'en', isAdmin: false });
 
     expect(
-      await expectRejectCode(db.auth.update(users).set({ isAdmin: true }).where(eq(users.id, id))),
+      await expectRejectCode(
+        db.withUser(id, (tx) => tx.update(users).set({ isAdmin: true }).where(eq(users.id, id))),
+      ),
     ).toBe(RLS_VIOLATION);
     expect(
       await expectRejectCode(
-        db.auth.update(users).set({ adminRole: 'super' }).where(eq(users.id, id)),
+        db.withUser(id, (tx) =>
+          tx.update(users).set({ adminRole: 'super' }).where(eq(users.id, id)),
+        ),
       ),
     ).toBe(RLS_VIOLATION);
-    expect(await expectRejectCode(db.auth.delete(users).where(eq(users.id, id)))).toBe(
-      RLS_VIOLATION,
-    );
+    expect(
+      await expectRejectCode(db.withUser(id, (tx) => tx.delete(users).where(eq(users.id, id)))),
+    ).toBe(RLS_VIOLATION);
   });
 
-  it('PUBLIC không có quyền EXECUTE trên hàm ngữ cảnh; cf_app có', async () => {
+  it('PUBLIC không có quyền EXECUTE trên hàm ngữ cảnh; cf_app có hàm workspace/user nhưng KHÔNG có in_auth_context; cf_auth có in_auth_context', async () => {
     const { rows } = await admin.query(`
       SELECT has_function_privilege('public', 'core.current_workspace_id()', 'execute') AS pub_ws,
              has_function_privilege('public', 'core.current_user_id()', 'execute') AS pub_user,
-             has_function_privilege('cf_app', 'core.current_workspace_id()', 'execute') AS app_ws`);
-    expect(rows[0]).toEqual({ pub_ws: false, pub_user: false, app_ws: true });
+             has_function_privilege('public', 'core.in_auth_context()', 'execute') AS pub_ctx,
+             has_function_privilege('cf_app', 'core.current_workspace_id()', 'execute') AS app_ws,
+             has_function_privilege('cf_app', 'core.in_auth_context()', 'execute') AS app_ctx,
+             has_function_privilege('cf_auth', 'core.in_auth_context()', 'execute') AS auth_ctx`);
+    expect(rows[0]).toEqual({
+      pub_ws: false,
+      pub_user: false,
+      pub_ctx: false,
+      app_ws: true,
+      app_ctx: false,
+      auth_ctx: true,
+    });
   });
 });

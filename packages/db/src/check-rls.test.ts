@@ -13,6 +13,8 @@ function fakeDb(parts: {
   create?: Row;
   publicGrants?: Row[];
   functions?: Row[];
+  authRole?: Row | null;
+  authPrivileges?: Row[];
 }): Queryable {
   const noCreate = { core_create: false, cf_create: false, public_create: false, db_create: false };
   return {
@@ -33,6 +35,17 @@ function fakeDb(parts: {
       if (text.includes('/* create-privileges */')) return { rows: [parts.create ?? noCreate] };
       if (text.includes('/* public-grants */')) return { rows: parts.publicGrants ?? [] };
       if (text.includes('/* public-functions */')) return { rows: parts.functions ?? [] };
+      if (text.includes('/* auth-role */')) {
+        const ok = {
+          rolsuper: false,
+          rolbypassrls: false,
+          rolcreatedb: false,
+          rolcreaterole: false,
+        };
+        return { rows: parts.authRole === null ? [] : [parts.authRole ?? ok] };
+      }
+      if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
+      if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       throw new Error(`câu truy vấn lạ: ${text.slice(0, 40)}`);
     },
   };
@@ -40,8 +53,9 @@ function fakeDb(parts: {
 
 // --- Dữ liệu mẫu giống đầu ra thật của pg_get_expr ---
 const WS = '(workspace_id = ( SELECT core.current_workspace_id() AS current_workspace_id))';
-const AUTH_OWN =
-  '(( SELECT core.in_auth_context() AS in_auth_context) OR ((( SELECT core.current_workspace_id() AS current_workspace_id) IS NULL) AND (user_id = ( SELECT core.current_user_id() AS current_user_id))))';
+// Điều kiện "của mình" cho cf_app (KHÔNG dựa vào app.ctx).
+const OWN =
+  '((( SELECT core.current_workspace_id() AS current_workspace_id) IS NULL) AND (user_id = ( SELECT core.current_user_id() AS current_user_id)))';
 const AUTH_ONLY = '( SELECT core.in_auth_context() AS in_auth_context)';
 
 const table = (name: string, over: Row = {}) => ({
@@ -190,52 +204,67 @@ describe('checkRls — bảng workspace', () => {
   });
 });
 
-describe('checkRls — bảng xác thực (ngữ cảnh auth)', () => {
+describe('checkRls — bảng xác thực của cf_app', () => {
   const S = 'core.sessions';
-  const authPolicies = (name: string, expr: string) => [
+  const noWrite = { can_insert: false, can_update: false, can_delete: false };
+  const selectPolicy = (name: string, expr: string) => [
     {
       name,
-      polname: `${name}_access`,
-      polcmd: '*',
+      polname: `${name}_own_select`,
+      polcmd: 'r',
       permissive: true,
       applies_to_app: true,
       qual: expr,
-      withcheck: expr,
+      withcheck: null,
     },
   ];
 
-  it('sessions đúng mẫu (auth hoặc của chính mình) → không vi phạm', async () => {
+  it('sessions: cf_app chỉ SELECT dòng của mình → không vi phạm', async () => {
     const v = await checkRls(
       fakeDb({
         tables: [table(S)],
-        privileges: [grant(S)],
-        policies: authPolicies(S, AUTH_OWN),
+        privileges: [grant(S, noWrite)],
+        policies: selectPolicy(S, OWN),
       }),
     );
     expect(v).toEqual([]);
   });
 
-  it('sessions thiếu nhánh "của chính mình" (chỉ in_auth_context) → đỏ', async () => {
+  it('sessions: policy cho cf_app dựa vào in_auth_context() (cf_app không được vào ngữ cảnh auth) → đỏ', async () => {
     const v = await checkRls(
       fakeDb({
         tables: [table(S)],
-        privileges: [grant(S)],
-        policies: authPolicies(S, AUTH_ONLY),
+        privileges: [grant(S, noWrite)],
+        policies: selectPolicy(S, AUTH_ONLY),
       }),
     );
     expect(v).toContainEqual(expect.objectContaining({ subject: S }));
   });
 
-  it('verifications chỉ cần in_auth_context; policy dùng current_workspace_id thay vì auth → đỏ', async () => {
-    const V = 'core.verifications';
-    const ok = await checkRls(
-      fakeDb({ tables: [table(V)], privileges: [grant(V)], policies: authPolicies(V, AUTH_ONLY) }),
+  it('sessions: cf_app có quyền ghi (INSERT/UPDATE/DELETE) mà chỉ có policy SELECT → đỏ', async () => {
+    const v = await checkRls(
+      fakeDb({ tables: [table(S)], privileges: [grant(S)], policies: selectPolicy(S, OWN) }),
     );
+    const text = v.map((x) => x.message).join('|');
+    for (const c of ['INSERT', 'UPDATE', 'DELETE']) {
+      expect(text).toContain(`quyền ${c} nhưng không có policy ${c}`);
+    }
+  });
+
+  it('verifications: cf_app có BẤT KỲ quyền nào → đỏ; không có quyền → đạt', async () => {
+    const V = 'core.verifications';
+    const none = { can_select: false, can_insert: false, can_update: false, can_delete: false };
+    const ok = await checkRls(fakeDb({ tables: [table(V)], privileges: [grant(V, none)] }));
     expect(ok).toEqual([]);
     const bad = await checkRls(
-      fakeDb({ tables: [table(V)], privileges: [grant(V)], policies: authPolicies(V, WS) }),
+      fakeDb({ tables: [table(V)], privileges: [grant(V, { ...none, can_select: true })] }),
     );
-    expect(bad).toContainEqual(expect.objectContaining({ subject: V }));
+    expect(bad).toContainEqual(
+      expect.objectContaining({
+        subject: V,
+        message: expect.stringContaining('không được có quyền nào trên bảng chỉ dành cho cf_auth'),
+      }),
+    );
   });
 
   it('bảng xác thực tắt RLS hoặc không có policy → đỏ', async () => {
@@ -359,8 +388,8 @@ describe('checkRls — kiểm chứng lần ba', () => {
   it('nhóm "của mình" mở toang theo kiểu khác (OR current_user_id() IS NOT NULL, OR 1 = 1, OR NOT false) → đỏ', async () => {
     const holes = [
       '(( SELECT core.in_auth_context() AS in_auth_context) OR (( SELECT core.current_user_id() AS current_user_id) IS NOT NULL))',
-      `(${AUTH_OWN} OR (1 = 1))`,
-      `(${AUTH_OWN} OR (NOT false))`,
+      `(${OWN} OR (1 = 1))`,
+      `(${OWN} OR (NOT false))`,
     ];
     for (const expr of holes) {
       expect(await run(expr), expr).toContainEqual(expect.objectContaining({ subject: S }));
@@ -368,8 +397,7 @@ describe('checkRls — kiểm chứng lần ba', () => {
   });
 
   it('nhóm "của mình" thiếu điều kiện "không có workspace" → đỏ', async () => {
-    const noWorkspaceGuard =
-      '(( SELECT core.in_auth_context() AS in_auth_context) OR (user_id = ( SELECT core.current_user_id() AS current_user_id)))';
+    const noWorkspaceGuard = '(user_id = ( SELECT core.current_user_id() AS current_user_id))';
     expect(await run(noWorkspaceGuard)).toContainEqual(expect.objectContaining({ subject: S }));
   });
 
@@ -414,6 +442,100 @@ describe('checkRls — kiểm chứng lần ba', () => {
         subject: 'core.ham_cong_khai',
         message: expect.stringContaining('EXECUTE'),
       }),
+    );
+  });
+});
+
+describe('checkRls — role cf_auth', () => {
+  const S = 'core.sessions';
+  const none = { can_select: false, can_insert: false, can_update: false, can_delete: false };
+  const authPriv = (name: string, over: Row = {}) => ({
+    name,
+    ...none,
+    can_truncate: false,
+    can_trigger: false,
+    can_references: false,
+    ...over,
+  });
+  const authPolicy = (over: Row = {}) => ({
+    name: S,
+    polname: 'sessions_auth_access',
+    polcmd: '*',
+    permissive: true,
+    applies_to_app: false,
+    applies_to_auth: true,
+    qual: AUTH_ONLY,
+    withcheck: AUTH_ONLY,
+    ...over,
+  });
+  const run = (parts: { priv?: Row[]; policies?: Row[]; authRole?: Row | null }) =>
+    checkRls(
+      fakeDb({
+        tables: [table(S)],
+        privileges: [grant(S, none)],
+        policies: parts.policies ?? [authPolicy()],
+        authPrivileges: parts.priv ?? [authPriv(S, { can_select: true, can_insert: true })],
+        ...(parts.authRole !== undefined ? { authRole: parts.authRole } : {}),
+      }),
+    );
+
+  it('cf_auth có quyền trên bảng xác thực kèm policy in_auth_context() → không vi phạm', async () => {
+    expect(await run({})).toEqual([]);
+  });
+
+  it('cf_auth có quyền trên bảng nghiệp vụ (core.members) → đỏ', async () => {
+    const v = await run({ priv: [authPriv('core.members', { can_select: true })] });
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.members',
+        message: expect.stringContaining('chỉ được truy cập bảng xác thực'),
+      }),
+    );
+  });
+
+  it('cf_auth có quyền nhưng policy của nó mở toang (USING true) hoặc thiếu in_auth_context() → đỏ', async () => {
+    for (const expr of ['true', '(user_id IS NOT NULL)']) {
+      const v = await run({ policies: [authPolicy({ qual: expr, withcheck: expr })] });
+      expect(v, expr).toContainEqual(
+        expect.objectContaining({
+          subject: S,
+          message: expect.stringContaining('cf_auth có quyền'),
+        }),
+      );
+    }
+  });
+
+  it('cf_auth có quyền nhưng không policy nào áp cho cf_auth → đỏ', async () => {
+    const v = await run({ policies: [authPolicy({ applies_to_auth: false })] });
+    expect(v).toContainEqual(
+      expect.objectContaining({ subject: S, message: expect.stringContaining('cf_auth có quyền') }),
+    );
+  });
+
+  it('cf_auth có TRUNCATE trên bảng xác thực → đỏ', async () => {
+    const v = await run({ priv: [authPriv(S, { can_select: true, can_truncate: true })] });
+    expect(v).toContainEqual(
+      expect.objectContaining({ subject: S, message: expect.stringContaining('TRUNCATE') }),
+    );
+  });
+
+  it('cf_auth không tồn tại hoặc có BYPASSRLS / là thành viên cf_owner → đỏ', async () => {
+    expect(await run({ authRole: null })).toContainEqual({
+      subject: 'cf_auth',
+      message: 'role không tồn tại',
+    });
+    const flags = {
+      rolsuper: false,
+      rolbypassrls: false,
+      rolcreatedb: false,
+      rolcreaterole: false,
+    };
+    expect(await run({ authRole: { ...flags, rolbypassrls: true } })).toContainEqual({
+      subject: 'cf_auth',
+      message: 'có BYPASSRLS',
+    });
+    expect(await run({ authRole: { ...flags, owner_member: true } })).toContainEqual(
+      expect.objectContaining({ subject: 'cf_auth', message: expect.stringContaining('cf_owner') }),
     );
   });
 });
