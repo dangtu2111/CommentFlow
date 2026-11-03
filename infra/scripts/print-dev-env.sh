@@ -27,10 +27,19 @@ get() {
   printf '%s' "$value"
 }
 
+# Khóa ảo LiteLLM của dev (tuỳ chọn; tạo bằng scripts/cf-dev-litellm-key.sh). Thiếu → để trống.
+optional() {
+  local value
+  value="$(grep -m1 -E "^$1=" "$ENV_FILE" | cut -d= -f2- || true)"
+  printf '%s' "${value//\"/}"
+}
+
 HOST="$(get LAN_HOST)"
 APP_PW="$(get CF_APP_PASSWORD)"
 OWNER_PW="$(get CF_OWNER_PASSWORD)"
 CACHE_PW="$(get VALKEY_PASSWORD)"
+LITELLM_KEY="$(optional LITELLM_DEV_KEY)"
+[[ -z "$LITELLM_KEY" ]] && echo "Lưu ý: chưa có LITELLM_DEV_KEY (chạy scripts/cf-dev-litellm-key.sh trên máy ảo); LITELLM_API_KEY để trống." >&2
 
 cat <<EOF
 # Sinh bởi infra/scripts/print-dev-env.sh — KHÔNG commit (đã nằm trong .gitignore).
@@ -48,6 +57,6 @@ REDIS_KEY_PREFIX=dev:
 
 ML_URL=http://${HOST}:8001
 LITELLM_BASE_URL=http://${HOST}:4000
-LITELLM_API_KEY=
+LITELLM_API_KEY=${LITELLM_KEY}
 LANGFUSE_HOST=http://${HOST}:3100
 EOF
