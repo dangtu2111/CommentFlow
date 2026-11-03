@@ -40,6 +40,7 @@ Trạng thái: Đã có · Một phần · Khác spec · Thiếu · Không chắ
 | CLI-PARSEENV | CLI đọc `process.env` trực tiếp, chưa qua `parseEnv` (Zod) | Thiếu | `packages/db/src/cli/*`, `apps/worker/src/cli/*` | Dùng `parseEnv` | | 1 | |
 | STAGING-DEPLOY | Compose `cf-staging`, Dockerfile web/worker, runner GitHub tự host, Cloudflare Tunnel | Thiếu | — | **Hoãn đến khi có tên miền** (chủ dự án chốt 03/11) | | 3 | |
 | DESIGN-TOKENS | Design tokens từ `08` §2 | ✅ Xong | `apps/web/src/styles/tokens.css` | Khi có trang mới chỉ dùng biến ở đây; khác biệt Stitch ghi ở `design/stitch/README.md` | | 0 | feat/auth-ui (claude) |
+| LANES | Chạy song song nhiều nhánh: DB test riêng theo làn (`CF_LANE`), `cf:dev add-test-db`, cổng `check:migrations`, quy trình `parallel.md` | ✅ Xong | `scripts/lib/load-env.mjs`, `packages/db/src/migration-guard.ts`, `scripts/lib/migrations-check.mjs`, `docs/workflows/parallel.md` | Chủ dự án chạy `cf:dev add-test-db a b c` sau khi nhánh lên origin | | 0 | chore/parallel-lanes (claude) |
 
 ## Quyết định cần chủ dự án
 

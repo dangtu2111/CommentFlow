@@ -11,3 +11,8 @@ paths = ['''(^|/)env\.example$''', '''(^|/)infra/env\.cf-dev\.example$''']
 [[allowlists]]
 description = "Khóa ký GIẢ cho test auth đã nằm trong lịch sử git (commit db5de97); nay test sinh khóa ngẫu nhiên lúc chạy"
 regexes = ['''khoa-thu-nghiem-khong-phai-bi-mat-that-0123456789''']
+
+[[allowlists]]
+description = "Vector thử CÔNG KHAI của RFC 6238 (ASCII '12345678901234567890' dạng base32) trong test TOTP của e2e — không phải bí mật; chỉ áp cho đúng file test"
+paths = ['''(^|/)e2e/support/totp\.test\.ts$''']
+regexes = ['''GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ''']

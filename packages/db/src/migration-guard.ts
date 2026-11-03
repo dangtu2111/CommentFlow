@@ -5,6 +5,8 @@ const MIGRATION_ENVS = ['dev', 'test', 'ci'];
 const MIGRATION_DATABASES = ['cf_dev', 'cf_test', 'cf_ci'];
 /** Chỉ các DB này được xóa-tạo lại schema. */
 const RESET_DATABASES = ['cf_test', 'cf_ci'];
+/** DB test của một làn song song (docs/workflows/parallel.md): `cf_test_<làn>`, làn = chữ thường/số, 1–8 ký tự. */
+const LANE_TEST_DATABASE = /^cf_test_[a-z0-9]{1,8}$/;
 
 type GuardInput = { appEnv: string | undefined; databaseUrl: string | undefined };
 
@@ -28,7 +30,7 @@ function assertAllowed(input: GuardInput, allowedDatabases: string[], purpose: s
     );
   }
   const name = databaseNameOf(input.databaseUrl);
-  if (!allowedDatabases.includes(name)) {
+  if (!allowedDatabases.includes(name) && !LANE_TEST_DATABASE.test(name)) {
     throw new AppError(
       'FORBIDDEN',
       `Từ chối ${purpose}: database "${name}" không nằm trong danh sách cho phép (${allowedDatabases.join(', ')}).`,
