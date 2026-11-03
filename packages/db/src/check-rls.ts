@@ -5,19 +5,16 @@ export type Queryable = {
 };
 export type RlsViolation = { subject: string; message: string };
 
-/** Bảng hệ thống KHÔNG có workspace_id, không RLS theo workspace (đăng nhập, cờ tính năng). */
-const SYSTEM_TABLES = [
-  'core.users',
-  'core.sessions',
-  'core.accounts',
-  'core.verifications',
-  'core.feature_flags',
-];
-/** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace: bắt buộc có RLS + policy. */
-const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
 const APP_ROLE = 'cf_app';
-/** Mọi policy bảo vệ dữ liệu workspace phải dựa vào hàm này (không chấp nhận `USING (true)`). */
-const CONTEXT_FUNCTION = 'current_workspace_id';
+
+/** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
+const SYSTEM_TABLES = ['core.feature_flags'];
+/** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace. */
+const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
+/** Bảng "của chính mình": policy phải dựa vào ngữ cảnh auth VÀ current_user_id(). */
+const OWN_USER_TABLES = ['core.users', 'core.sessions', 'core.accounts', 'core.two_factors'];
+/** Bảng chỉ ngữ cảnh auth mới đọc/ghi được. */
+const AUTH_ONLY_TABLES = ['core.verifications'];
 
 type Command = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE';
 const POLICY_LETTER: Record<Command, string> = {
@@ -27,13 +24,46 @@ const POLICY_LETTER: Record<Command, string> = {
   DELETE: 'd',
 };
 
-const referencesContext = (expr: unknown): boolean =>
-  typeof expr === 'string' && expr.includes(CONTEXT_FUNCTION);
+/** Một nhóm bảng RLS: mẫu biểu thức chuẩn mà MỌI policy permissive áp cho cf_app phải thỏa. */
+type PolicyClass = { label: string; isScoped: (expr: unknown) => boolean };
+
+// pg_get_expr in biểu thức dạng "(workspace_id = ( SELECT core.current_workspace_id() AS current_workspace_id))".
+const WORKSPACE_SHAPE = /\b(workspace_id|id)\s*=\s*\(\s*SELECT\s+core\.current_workspace_id\(\)/i;
+const AUTH_SHAPE = /core\.in_auth_context\(\)/i;
+const USER_SHAPE = /core\.current_user_id\(\)/i;
+/** Chặn các biểu thức mở toang (`true`, `... OR true`). */
+const hasTrueLiteral = (expr: string): boolean => /\btrue\b/i.test(expr);
+
+const workspaceClass: PolicyClass = {
+  label: 'current_workspace_id()',
+  isScoped: (expr) =>
+    typeof expr === 'string' && WORKSPACE_SHAPE.test(expr) && !hasTrueLiteral(expr),
+};
+const ownUserClass: PolicyClass = {
+  label: 'in_auth_context() và current_user_id()',
+  isScoped: (expr) =>
+    typeof expr === 'string' &&
+    AUTH_SHAPE.test(expr) &&
+    USER_SHAPE.test(expr) &&
+    !hasTrueLiteral(expr),
+};
+const authOnlyClass: PolicyClass = {
+  label: 'in_auth_context()',
+  isScoped: (expr) => typeof expr === 'string' && AUTH_SHAPE.test(expr) && !hasTrueLiteral(expr),
+};
+
+function classify(name: string, hasWorkspaceId: boolean): PolicyClass | 'system' | 'unknown' {
+  if (hasWorkspaceId || RLS_BY_OWN_ID_TABLES.includes(name)) return workspaceClass;
+  if (OWN_USER_TABLES.includes(name)) return ownUserClass;
+  if (AUTH_ONLY_TABLES.includes(name)) return authOnlyClass;
+  if (SYSTEM_TABLES.includes(name)) return 'system';
+  return 'unknown';
+}
 
 export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   const violations: RlsViolation[] = [];
 
-  // --- Bảng: RLS bật + có policy (tag /* tables */ để DB giả trong test nhận ra) ---
+  // --- Bảng: RLS bật + có policy (thẻ /* ... */ để DB giả trong test nhận ra) ---
   const tables = await db.query(`/* tables */
     SELECT n.nspname || '.' || c.relname AS name,
            c.relrowsecurity AS rls,
@@ -45,40 +75,45 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
     WHERE c.relkind IN ('r', 'p') AND n.nspname IN ('core', 'cf')
     ORDER BY 1`);
 
-  const rlsTables: string[] = [];
+  const rlsTables = new Map<string, PolicyClass>();
   for (const row of tables.rows) {
     const name = String(row.name);
-    const hasWorkspaceId = row.has_workspace_id === true;
-    const rls = row.rls === true;
-    const policies = Number(row.policies);
-    if (hasWorkspaceId || RLS_BY_OWN_ID_TABLES.includes(name)) {
-      rlsTables.push(name);
-      if (!rls)
-        violations.push({ subject: name, message: 'chưa bật RLS (ENABLE ROW LEVEL SECURITY)' });
-      if (policies === 0) violations.push({ subject: name, message: 'chưa có policy nào' });
-    } else if (!SYSTEM_TABLES.includes(name)) {
+    const klass = classify(name, row.has_workspace_id === true);
+    if (klass === 'unknown') {
       violations.push({
         subject: name,
         message:
-          'không có cột workspace_id và không nằm trong danh sách bảng hệ thống (check-rls.ts)',
+          'không có cột workspace_id và không thuộc nhóm bảng đã khai báo trong check-rls.ts (hệ thống / xác thực)',
       });
+    } else if (klass !== 'system') {
+      rlsTables.set(name, klass);
+      if (row.rls !== true) {
+        violations.push({ subject: name, message: 'chưa bật RLS (ENABLE ROW LEVEL SECURITY)' });
+      }
+      if (Number(row.policies) === 0) {
+        violations.push({ subject: name, message: 'chưa có policy nào' });
+      }
     }
     if (row.owner === APP_ROLE) {
       violations.push({ subject: name, message: `role ${APP_ROLE} không được sở hữu bảng` });
     }
   }
 
-  // --- Quyền của cf_app trên từng bảng RLS phải có policy ĐÚNG LỆNH, dựa vào current_workspace_id() ---
+  // --- Mỗi quyền của cf_app trên bảng RLS phải có policy ĐÚNG LỆNH và đúng mẫu ---
+  // has_any_column_privilege gồm cả quyền cấp theo cột (GRANT UPDATE (cột) ...).
   const privileges = await db.query(`/* privileges */
     SELECT n.nspname || '.' || c.relname AS name,
-           has_table_privilege('${APP_ROLE}', c.oid, 'SELECT') AS can_select,
-           has_table_privilege('${APP_ROLE}', c.oid, 'INSERT') AS can_insert,
-           has_table_privilege('${APP_ROLE}', c.oid, 'UPDATE') AS can_update,
+           has_any_column_privilege('${APP_ROLE}', c.oid, 'SELECT') AS can_select,
+           has_any_column_privilege('${APP_ROLE}', c.oid, 'INSERT') AS can_insert,
+           has_any_column_privilege('${APP_ROLE}', c.oid, 'UPDATE') AS can_update,
            has_table_privilege('${APP_ROLE}', c.oid, 'DELETE') AS can_delete
     FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE c.relkind IN ('r', 'p') AND n.nspname IN ('core', 'cf')`);
   const policies = await db.query(`/* policies */
     SELECT n.nspname || '.' || c.relname AS name, p.polname, p.polcmd,
+           p.polpermissive AS permissive,
+           (0 = ANY(p.polroles)
+            OR EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname = '${APP_ROLE}' AND r.oid = ANY(p.polroles))) AS applies_to_app,
            pg_get_expr(p.polqual, p.polrelid) AS qual,
            pg_get_expr(p.polwithcheck, p.polrelid) AS withcheck
     FROM pg_policy p JOIN pg_class c ON c.oid = p.polrelid JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -86,7 +121,8 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
 
   for (const row of privileges.rows) {
     const name = String(row.name);
-    if (!rlsTables.includes(name)) continue;
+    const klass = rlsTables.get(name);
+    if (!klass) continue;
     const granted: Record<Command, boolean> = {
       SELECT: row.can_select === true,
       INSERT: row.can_insert === true,
@@ -95,23 +131,41 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
     };
     for (const command of Object.keys(granted) as Command[]) {
       if (!granted[command]) continue;
-      const matching = policies.rows.filter(
+      // Chỉ policy permissive áp cho cf_app (policy permissive cộng dồn bằng OR nên MỌI cái phải chặt).
+      const relevant = policies.rows.filter(
         (p) =>
           String(p.name) === name &&
+          p.permissive === true &&
+          p.applies_to_app === true &&
           (String(p.polcmd) === POLICY_LETTER[command] || String(p.polcmd) === '*'),
       );
-      // INSERT chỉ có WITH CHECK; các lệnh còn lại dựa vào USING (UPDATE cần cả hai nếu có WITH CHECK).
-      const ok = matching.some((p) =>
-        command === 'INSERT'
-          ? referencesContext(p.withcheck) ||
-            (String(p.polcmd) === '*' && referencesContext(p.qual))
-          : referencesContext(p.qual),
-      );
-      if (!ok) {
+      const prefix = `${APP_ROLE} có quyền ${command} nhưng không có policy ${command}`;
+      if (relevant.length === 0) {
         violations.push({
           subject: name,
-          message: `${APP_ROLE} có quyền ${command} nhưng không có policy ${command} dựa vào ${CONTEXT_FUNCTION}()`,
+          message: `${prefix} dựa vào ${klass.label} (không có policy nào áp cho ${APP_ROLE})`,
         });
+        continue;
+      }
+      for (const p of relevant) {
+        const isAll = String(p.polcmd) === '*';
+        const usingOk = klass.isScoped(p.qual);
+        // WITH CHECK: nếu có thì phải chặt; nếu thiếu, PostgreSQL dùng USING làm điều kiện ghi.
+        const checkOk = p.withcheck == null ? usingOk : klass.isScoped(p.withcheck);
+        let ok: boolean;
+        if (command === 'INSERT') {
+          ok = p.withcheck != null ? klass.isScoped(p.withcheck) : isAll && usingOk;
+        } else if (command === 'UPDATE') {
+          ok = usingOk && checkOk;
+        } else {
+          ok = usingOk;
+        }
+        if (!ok) {
+          violations.push({
+            subject: name,
+            message: `${prefix} hợp lệ dựa vào ${klass.label}: policy "${String(p.polname)}" mở quá rộng hoặc sai mẫu`,
+          });
+        }
       }
     }
   }

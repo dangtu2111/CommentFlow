@@ -108,4 +108,93 @@ describe('check-rls', () => {
     const v = await violationsAfter('CREATE VIEW core.v_lo_du_lieu AS SELECT id FROM core.users');
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.v_lo_du_lieu' }));
   });
+
+  it('bắt một policy mở toang đi kèm một policy đúng (permissive cộng dồn bằng OR)', async () => {
+    const v = await violationsAfter(`
+      CREATE TABLE cf.hai_policy (id int, workspace_id uuid);
+      ALTER TABLE cf.hai_policy ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY dung ON cf.hai_policy FOR SELECT
+        USING (workspace_id = (SELECT core.current_workspace_id()));
+      CREATE POLICY mo_het ON cf.hai_policy FOR SELECT USING (true);
+      GRANT SELECT ON cf.hai_policy TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.hai_policy',
+        message: expect.stringContaining('policy "mo_het" mở quá rộng'),
+      }),
+    );
+  });
+
+  it('bắt UPDATE có USING đúng nhưng WITH CHECK (true) (chuyển dữ liệu sang workspace khác)', async () => {
+    const v = await violationsAfter(`
+      CREATE TABLE cf.check_ho (id int, workspace_id uuid);
+      ALTER TABLE cf.check_ho ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY doc ON cf.check_ho FOR SELECT
+        USING (workspace_id = (SELECT core.current_workspace_id()));
+      CREATE POLICY sua ON cf.check_ho FOR UPDATE
+        USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (true);
+      GRANT SELECT, UPDATE ON cf.check_ho TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.check_ho',
+        message: expect.stringContaining('quyền UPDATE nhưng không có policy UPDATE'),
+      }),
+    );
+  });
+
+  it('bắt quyền cấp THEO CỘT (GRANT UPDATE (cột)) khi bảng thiếu policy UPDATE', async () => {
+    const v = await violationsAfter(`
+      CREATE TABLE cf.quyen_cot (id int, workspace_id uuid, ghi_chu text);
+      ALTER TABLE cf.quyen_cot ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY doc ON cf.quyen_cot FOR SELECT
+        USING (workspace_id = (SELECT core.current_workspace_id()));
+      GRANT SELECT ON cf.quyen_cot TO cf_app;
+      GRANT UPDATE (ghi_chu) ON cf.quyen_cot TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.quyen_cot',
+        message: expect.stringContaining('quyền UPDATE nhưng không có policy UPDATE'),
+      }),
+    );
+  });
+
+  it('policy chỉ áp cho vai trò khác (TO cf_owner) không được tính là phủ cf_app', async () => {
+    const v = await violationsAfter(`
+      CREATE TABLE cf.chi_cho_owner (id int, workspace_id uuid);
+      ALTER TABLE cf.chi_cho_owner ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY rieng ON cf.chi_cho_owner FOR SELECT TO cf_owner
+        USING (workspace_id = (SELECT core.current_workspace_id()));
+      GRANT SELECT ON cf.chi_cho_owner TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.chi_cho_owner',
+        message: expect.stringContaining('không có policy nào áp cho cf_app'),
+      }),
+    );
+  });
+
+  it('bắt bảng xác thực (two_factors) có policy nhưng không dựa vào ngữ cảnh auth', async () => {
+    const v = await violationsAfter(`
+      CREATE TABLE core.two_factors (id int, user_id uuid);
+      ALTER TABLE core.two_factors ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY tuy_tien ON core.two_factors FOR SELECT
+        USING (user_id = (SELECT core.current_user_id()));
+      GRANT SELECT ON core.two_factors TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.two_factors',
+        message: expect.stringContaining('quyền SELECT nhưng không có policy SELECT'),
+      }),
+    );
+  });
+
+  it('bắt bảng xác thực bị tắt RLS (sessions)', async () => {
+    const v = await violationsAfter('ALTER TABLE core.sessions DISABLE ROW LEVEL SECURITY');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.sessions',
+        message: expect.stringContaining('RLS'),
+      }),
+    );
+  });
 });
