@@ -54,13 +54,14 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 
 ## Không làm trùng việc
 
-- Mỗi việc chỉ một lần lập kế hoạch, lưu ở `docs/plans/<nhánh>.md`; agent nào làm tiếp cũng dùng kế hoạch đó, không lập lại. Một lần kiểm chứng cuối nhánh, không review từng commit.
-- Kiểm tra máy móc dùng công cụ, không dùng AI: lint, typecheck, test, `dependency-cruiser` (ranh giới saas-core), script kiểm RLS policy, gitleaks. AI chỉ xem phần công cụ không bắt được.
+- Mỗi việc chỉ một lần lập kế hoạch (mẫu `docs/plans/TEMPLATE.md`), lưu ở `docs/plans/<nhánh>.md`; agent nào làm tiếp cũng dùng kế hoạch đó, không lập lại. Một lần kiểm chứng cuối nhánh, không review từng commit.
+- Kiểm tra máy móc dùng công cụ, không dùng AI: lint, typecheck, test, `dependency-cruiser` (ranh giới saas-core), script kiểm RLS policy, gitleaks, `pnpm check:plans` (cổng kế hoạch). AI chỉ xem phần công cụ không bắt được.
 - Chạy test đúng phạm vi đã đổi; lọc output (chỉ lỗi). Không chạy lại cả bộ khi chưa sửa gì.
 - Không tóm tắt lại kết quả mà công cụ đã in rõ.
 
 ## Cách làm việc
 
+- **Kế hoạch có cổng:** mọi chỗ mơ hồ ghi thành thẻ `[CẦN LÀM RÕ: câu hỏi]` và **không code khi còn thẻ chưa được chủ dự án trả lời**; plan có "Tiêu chí nghiệm thu" kiểm được, và "Complexity tracking" khi đi ngược một nguyên tắc ở file này. `/finish` đối chiếu từng tiêu chí với bằng chứng. Chi tiết: `docs/workflows/feature.md`, `finish.md`.
 - Mỗi việc một nhánh. Bắt đầu theo `docs/workflows/feature.md`, kết thúc theo `docs/workflows/finish.md`.
 - Logic quy tắc (cổng tự gửi, sendRecheck, hạn mức, cửa sổ 24 giờ, che PII, nhận ngôn ngữ): viết test trước.
 - Sửa bằng thay đổi nhỏ; không viết lại cả file khi không cần.

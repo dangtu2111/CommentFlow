@@ -33,6 +33,8 @@ jobs:
         run: pnpm test
       - name: Ranh giới gói (dependency-cruiser)
         run: pnpm depcruise
+      - name: Cổng kế hoạch (không còn điểm chưa rõ khi plan đã duyệt)
+        run: pnpm check:plans
       - run: pnpm build
 
   python:
