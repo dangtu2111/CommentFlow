@@ -65,7 +65,6 @@ describe('pg-boss với role ứng dụng (cf_app)', () => {
   it('job theo workspace chạy trong ngữ cảnh RLS: ghi ai_usage đúng workspace, không lẫn', async () => {
     const [wsA, wsB] = [await newWorkspace(), await newWorkspace()];
     const schema = z.object({ workspaceId: z.uuid(), step: z.string() });
-    let done = 0;
     await boss.work(
       TEST_WORKSPACE_QUEUE,
       FAST,
@@ -74,16 +73,19 @@ describe('pg-boss với role ứng dụng (cf_app)', () => {
         schema,
         handler: async ({ tx, payload, workspaceId }) => {
           await tx.insert(aiUsage).values({ workspaceId, step: payload.step, model: 'mock-llm' });
-          done++;
         },
       }),
     );
     await boss.send(TEST_WORKSPACE_QUEUE, { workspaceId: wsA, step: 'job-a' });
     await boss.send(TEST_WORKSPACE_QUEUE, { workspaceId: wsB, step: 'job-b' });
-    await waitFor(() => done >= 2);
+    // Chờ tới khi dữ liệu THỰC SỰ hiện ra ở cả hai workspace: biến đếm tăng trong handler trước khi giao dịch
+    // COMMIT, nên chỉ đếm biến đó làm test đọc sớm và chập chờn.
+    const readRows = (workspaceId: string) =>
+      db.withWorkspace(workspaceId, (tx) => tx.select().from(aiUsage));
+    await waitFor(async () => (await readRows(wsA)).length > 0 && (await readRows(wsB)).length > 0);
 
-    const rowsA = await db.withWorkspace(wsA, (tx) => tx.select().from(aiUsage));
-    const rowsB = await db.withWorkspace(wsB, (tx) => tx.select().from(aiUsage));
+    const rowsA = await readRows(wsA);
+    const rowsB = await readRows(wsB);
     expect(rowsA.map((r) => r.step)).toEqual(['job-a']);
     expect(rowsB.map((r) => r.step)).toEqual(['job-b']);
   });
