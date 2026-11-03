@@ -11,6 +11,7 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/auth-ui` · Gói nội b�
 | Cài đặt | `corepack enable && pnpm install --frozen-lockfile` | Node 24 (`.nvmrc`) |
 | Lint + format | `pnpm lint` (Biome) · `pnpm lint:i18n` (ESLint một luật, chỉ `apps/web`) | Biome bỏ qua `docs/`, `*.md` |
 | Typecheck / test đơn vị / build | `pnpm typecheck` · `pnpm test` · `pnpm build` | test đơn vị **không cần** máy ảo |
+| Cổng kế hoạch | `pnpm check:plans` | plan đã duyệt không còn thẻ `[CẦN LÀM RÕ]`/ô trống (`scripts/lib/plan-gate.mjs`); mẫu: `docs/plans/TEMPLATE.md` |
 | Ranh giới gói | `pnpm depcruise` | luật ở `.dependency-cruiser.cjs`, test luật ở `tools/boundaries` |
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |

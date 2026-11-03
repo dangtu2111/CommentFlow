@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # cổng kế hoạch đọc lịch sử nhánh (plan từng được thêm)
       - name: Bật corepack (ghim pnpm theo trường packageManager)
         run: corepack enable
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -33,6 +35,8 @@ jobs:
         run: pnpm test
       - name: Ranh giới gói (dependency-cruiser)
         run: pnpm depcruise
+      - name: Cổng kế hoạch (plan đã duyệt hết điểm chưa rõ; nhánh feat/*, chore/* có plan)
+        run: pnpm check:plans
       - run: pnpm build
 
   python:
