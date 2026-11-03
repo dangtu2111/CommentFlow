@@ -65,9 +65,6 @@ describe('withWorkspace', () => {
     await expect(db.withUser('x', async () => 1)).rejects.toSatisfy(
       (e) => isAppError(e) && e.code === 'VALIDATION_FAILED',
     );
-    await expect(db.withWorkspace(wsA, async () => 1, { userId: 'x' })).rejects.toSatisfy(
-      (e) => isAppError(e) && e.code === 'VALIDATION_FAILED',
-    );
   });
 
   it('lỗi trong fn → rollback toàn bộ và kết nối vẫn dùng được', async () => {

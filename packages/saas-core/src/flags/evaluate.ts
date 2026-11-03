@@ -21,6 +21,8 @@ export function rolloutBucket(flagKey: string, workspaceId: string): number {
 /**
  * Thứ tự quyết định (docs/09 §10):
  * override theo workspace → kill_switch toàn hệ thống → gói cước → rollout → default_on.
+ * Quy ước CHIỀU NGHĨA của flag `kill_switch`: `true` = tính năng được phép chạy, `false` = đã bị tắt khẩn.
+ * (Vì thế `isEnabled(..., { failClosed: true })` trả false khi lỗi đọc nghĩa là "không cho chạy".)
  * Lưu ý: override đứng đầu nên một override "bật" có thể vượt qua kill_switch — công cụ Admin
  * phải cảnh báo khi đặt override cho flag loại kill_switch.
  */

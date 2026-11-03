@@ -18,7 +18,8 @@ async function main(): Promise<void> {
   const health = await startHealthServer({ port: config.port, isReady: () => ready });
 
   await boss.start();
-  await boss.work(SYSTEM_PING_QUEUE, createPingHandler(db, logger));
+  // batchSize 1: một job lỗi không làm các job đã chạy xong trong cùng lô bị thử lại (tránh tác dụng phụ lặp, ví dụ gửi trùng).
+  await boss.work(SYSTEM_PING_QUEUE, { batchSize: 1 }, createPingHandler(db, logger));
   ready = true;
   logger.info({ port: config.port }, 'worker đã khởi động');
 

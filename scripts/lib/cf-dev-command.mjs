@@ -28,14 +28,18 @@ const FORBIDDEN_FLAGS = new Set([
   '--profile',
 ]);
 const SAFE_ARG = /^[A-Za-z0-9_.:=/@-]+$/;
-const SAFE_BRANCH = /^[A-Za-z0-9._/-]+$/;
+// Không cho bắt đầu bằng '-' để tên nhánh không bị git hiểu thành tùy chọn.
+const SAFE_BRANCH = /^[A-Za-z0-9._/][A-Za-z0-9._/-]*$/;
 
 export class CfDevCommandError extends Error {}
 
 function assertSafeArgs(args) {
   for (const arg of args) {
     if (!SAFE_ARG.test(arg)) throw new CfDevCommandError(`Tham số không hợp lệ: ${arg}`);
-    if (FORBIDDEN_FLAGS.has(arg)) throw new CfDevCommandError(`Cờ bị cấm: ${arg}`);
+    // So khớp cả dạng `--volumes=true` (phần trước dấu = là tên cờ).
+    if (FORBIDDEN_FLAGS.has(arg.split('=')[0] ?? arg)) {
+      throw new CfDevCommandError(`Cờ bị cấm: ${arg}`);
+    }
     if (arg.includes('staging')) throw new CfDevCommandError('Không được nhắc tới cf-staging');
   }
 }
@@ -56,7 +60,7 @@ export function buildRemoteCommand(argv) {
     if (rest.length !== 1 || !branch || !SAFE_BRANCH.test(branch) || branch.includes('staging')) {
       throw new CfDevCommandError('sync cần đúng một tên nhánh hợp lệ');
     }
-    return `cd ${REMOTE_DIR} && git fetch origin && git checkout ${branch} && git pull --ff-only origin ${branch}`;
+    return `cd ${REMOTE_DIR} && git fetch origin && git checkout ${branch} -- && git pull --ff-only origin ${branch}`;
   }
   if (!COMPOSE_SUBCOMMANDS.has(sub)) {
     throw new CfDevCommandError(`Lệnh không được phép: ${sub}`);

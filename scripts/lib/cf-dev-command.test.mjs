@@ -28,6 +28,20 @@ describe('buildRemoteCommand', () => {
     expect(() => buildRemoteCommand(['ps', '-f', 'x.yml'])).toThrow(/Cờ bị cấm/);
   });
 
+  it('từ chối cờ nguy hiểm dạng --flag=giá-trị', () => {
+    expect(() => buildRemoteCommand(['down', '--volumes=true'])).toThrow(/Cờ bị cấm/);
+    expect(() => buildRemoteCommand(['ps', '--project-name=cf-x'])).toThrow(/Cờ bị cấm/);
+    expect(() => buildRemoteCommand(['up', '--file=x.yml'])).toThrow(/Cờ bị cấm/);
+  });
+
+  it('tên nhánh không được bắt đầu bằng dấu - và lệnh checkout có "--" chặn hiểu nhầm thành đường dẫn', () => {
+    expect(() => buildRemoteCommand(['sync', '-f'])).toThrow(CfDevCommandError);
+    expect(() => buildRemoteCommand(['sync', '--force'])).toThrow(CfDevCommandError);
+    expect(buildRemoteCommand(['sync', 'chore/scaffold'])).toContain(
+      'git checkout chore/scaffold --',
+    );
+  });
+
   it('từ chối mọi nhắc tới staging và ký tự điều khiển shell', () => {
     expect(() => buildRemoteCommand(['ps', 'cf-staging'])).toThrow(CfDevCommandError);
     expect(() => buildRemoteCommand(['logs', 'web; rm -rf /'])).toThrow(/không hợp lệ/);

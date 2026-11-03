@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FlowDb } from '../src/client';
@@ -210,16 +210,40 @@ describe('workspaces và members: liệt kê workspace của chính người dù
     expect(mine.map((r) => r.id)).toEqual([wsB]);
   });
 
-  it('quyền ĐỌC chéo không kéo theo quyền GHI: không tự nâng vai trò ở workspace khác', async () => {
-    const updated = await db.withWorkspace(
-      wsA,
-      (tx) =>
-        tx
-          .update(members)
-          .set({ role: 'owner' })
-          .where(and(eq(members.id, memberBOfBoth), eq(members.userId, userBoth)))
-          .returning(),
-      { userId: userBoth },
+  it('đọc chéo chỉ khi KHÔNG có ngữ cảnh workspace: trong withWorkspace(A) không thấy B, kể cả khi app.user_id cũng được đặt', async () => {
+    // Trường hợp xấu nhất: cả hai biến cùng được đặt (ví dụ lỗi ở tầng ứng dụng).
+    const both = await db.withSystem(async (tx) => {
+      await tx.execute(
+        sql`select set_config('app.workspace_id', ${wsA}, true), set_config('app.user_id', ${userBoth}, true)`,
+      );
+      return {
+        ws: await tx.select({ id: workspaces.id }).from(workspaces),
+        ms: await tx.select({ id: members.id, workspaceId: members.workspaceId }).from(members),
+      };
+    });
+    expect(both.ws.map((r) => r.id)).toEqual([wsA]);
+    expect(both.ms.every((m) => m.workspaceId === wsA)).toBe(true);
+  });
+
+  it('thành viên không còn active (status khác active) không được liệt kê qua withUser', async () => {
+    const user = await seedUser(admin);
+    const ws = await seedWorkspace(admin);
+    const id = await seedMember(admin, ws, user, 'staff');
+    expect(
+      (await db.withUser(user, (tx) => tx.select().from(workspaces))).map((r) => r.id),
+    ).toEqual([ws]);
+    await admin.query("UPDATE core.members SET status = 'removed' WHERE id = $1", [id]);
+    expect(await db.withUser(user, (tx) => tx.select().from(workspaces))).toHaveLength(0);
+    expect(await db.withUser(user, (tx) => tx.select().from(members))).toHaveLength(0);
+  });
+
+  it('không tự nâng vai trò ở workspace khác (ghi chỉ trong workspace hiện tại)', async () => {
+    const updated = await db.withWorkspace(wsA, (tx) =>
+      tx
+        .update(members)
+        .set({ role: 'owner' })
+        .where(and(eq(members.id, memberBOfBoth), eq(members.userId, userBoth)))
+        .returning(),
     );
     expect(updated).toHaveLength(0);
     const { rows } = await admin.query('SELECT role FROM core.members WHERE id = $1', [
@@ -228,20 +252,19 @@ describe('workspaces và members: liệt kê workspace của chính người dù
     expect(rows[0].role).toBe('staff');
   });
 
-  it('không sửa/xóa được workspace khác dù là thành viên', async () => {
-    const updated = await db.withWorkspace(
-      wsA,
-      (tx) =>
-        tx.update(workspaces).set({ name: 'đổi tên' }).where(eq(workspaces.id, wsB)).returning(),
-      { userId: userBoth },
+  it('không sửa được workspace khác; KHÔNG xóa cứng được workspace nào (không có quyền DELETE)', async () => {
+    const updated = await db.withWorkspace(wsA, (tx) =>
+      tx.update(workspaces).set({ name: 'đổi tên' }).where(eq(workspaces.id, wsB)).returning(),
     );
     expect(updated).toHaveLength(0);
-    const deleted = await db.withWorkspace(
-      wsA,
-      (tx) => tx.delete(workspaces).where(eq(workspaces.id, wsB)).returning(),
-      { userId: userBoth },
-    );
-    expect(deleted).toHaveLength(0);
+    // Ngay cả workspace của chính mình cũng không xóa cứng được từ role ứng dụng (xóa mềm bằng status).
+    expect(
+      await expectRejectCode(
+        db.withWorkspace(wsA, (tx) => tx.delete(workspaces).where(eq(workspaces.id, wsA))),
+      ),
+    ).toBe(RLS_VIOLATION);
+    const { rows } = await admin.query('SELECT 1 FROM core.workspaces WHERE id = $1', [wsA]);
+    expect(rows).toHaveLength(1);
   });
 
   it('tạo workspace: id phải trùng ngữ cảnh; thêm người tạo làm owner trong cùng giao dịch', async () => {
@@ -274,5 +297,36 @@ describe('bảng hệ thống (xác thực) dùng được qua đường system'
     await db.system.insert(users).values({ id, email: `${id}@example.test`, name: 'Hệ thống' });
     const rows = await db.system.select().from(users).where(eq(users.id, id));
     expect(rows).toHaveLength(1);
+  });
+});
+
+describe('quyền trên core.users và hàm ngữ cảnh', () => {
+  it('cf_app đổi được tên/ngôn ngữ nhưng KHÔNG tự đặt is_admin/admin_role, không xóa người dùng', async () => {
+    const id = await seedUser(admin);
+    await db.system.update(users).set({ name: 'Tên mới', locale: 'en' }).where(eq(users.id, id));
+    const [row] = await db.system.select().from(users).where(eq(users.id, id));
+    expect(row).toMatchObject({ name: 'Tên mới', locale: 'en', isAdmin: false });
+
+    expect(
+      await expectRejectCode(
+        db.system.update(users).set({ isAdmin: true }).where(eq(users.id, id)),
+      ),
+    ).toBe(RLS_VIOLATION);
+    expect(
+      await expectRejectCode(
+        db.system.update(users).set({ adminRole: 'super' }).where(eq(users.id, id)),
+      ),
+    ).toBe(RLS_VIOLATION);
+    expect(await expectRejectCode(db.system.delete(users).where(eq(users.id, id)))).toBe(
+      RLS_VIOLATION,
+    );
+  });
+
+  it('PUBLIC không có quyền EXECUTE trên hàm ngữ cảnh; cf_app có', async () => {
+    const { rows } = await admin.query(`
+      SELECT has_function_privilege('public', 'core.current_workspace_id()', 'execute') AS pub_ws,
+             has_function_privilege('public', 'core.current_user_id()', 'execute') AS pub_user,
+             has_function_privilege('cf_app', 'core.current_workspace_id()', 'execute') AS app_ws`);
+    expect(rows[0]).toEqual({ pub_ws: false, pub_user: false, app_ws: true });
   });
 });

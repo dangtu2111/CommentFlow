@@ -42,6 +42,25 @@ describe('createLogger', () => {
     expect(output).toContain('sự kiện thử');
   });
 
+  it('che thêm cookie, apiKey, idToken, chuỗi kết nối và header cookie lồng nhau', () => {
+    const { logger, lines } = captureLogger();
+    logger.info(
+      {
+        cookie: 'session_token=tuyet-mat-1',
+        apiKey: 'sk-tuyet-mat-2',
+        idToken: 'idtoken-tuyet-mat-3',
+        connectionString: 'postgresql://u:tuyet-mat-4@h/db',
+        databaseUrl: 'postgresql://u:tuyet-mat-5@h/db',
+        req: { headers: { cookie: 'a=tuyet-mat-6', authorization: 'Bearer tuyet-mat-7' } },
+        res: { headers: { 'set-cookie': 'b=tuyet-mat-8' } },
+        nested: { apiKey: 'sk-tuyet-mat-9' },
+      },
+      'sự kiện',
+    );
+    const output = lines.join('');
+    for (let i = 1; i <= 9; i++) expect(output).not.toContain(`tuyet-mat-${i}`);
+  });
+
   it('giữ nguyên các trường không nhạy cảm', () => {
     const { logger, lines } = captureLogger();
     logger.info({ jobId: 'abc-1' }, 'ok');

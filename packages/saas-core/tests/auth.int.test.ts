@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { eq, type FlowDb } from '@flow/db';
+import { and, eq, type FlowDb } from '@flow/db';
 import { accounts, sessions, users } from '@flow/db/schema/core';
 import { isAppError } from '@flow/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -9,6 +9,7 @@ import {
   type Auth,
   changePasswordAndRevokeAll,
   createAuth,
+  readSession,
   revokeAllSessionsOfUser,
 } from '../src/auth';
 import { createTestDb } from './helpers';
@@ -211,6 +212,86 @@ describe('phiên Admin (is_admin_session)', () => {
     expect(admin).toBeDefined();
     const lifetime = (admin?.expiresAt.getTime() ?? 0) - Date.now();
     expect(Math.abs(lifetime - ADMIN_SESSION_SECONDS * 1000)).toBeLessThan(60_000);
+  });
+});
+
+describe('readSession: hạn cứng 8 giờ của phiên Admin', () => {
+  const HOUR = 3600 * 1000;
+
+  async function adminSessionCookie(createdHoursAgo: number, refreshedHoursAgo: number) {
+    const { email, userId } = await signUp();
+    const { cookie } = await signIn(email);
+    // Người dùng có 2 phiên (đăng ký + đăng nhập): chọn đúng phiên ứng với cookie theo token.
+    const token = decodeURIComponent(cookie.split('session_token=')[1] ?? '').split('.')[0] ?? '';
+    const [row] = await db.system
+      .select()
+      .from(sessions)
+      .where(and(eq(sessions.userId, userId), eq(sessions.token, token)));
+    // Biến phiên vừa đăng nhập thành phiên Admin tạo cách đây N giờ, đã quá updateAge để buộc làm mới.
+    await db.system
+      .update(sessions)
+      .set({
+        isAdminSession: true,
+        createdAt: new Date(Date.now() - createdHoursAgo * HOUR),
+        updatedAt: new Date(Date.now() - refreshedHoursAgo * HOUR),
+      })
+      .where(eq(sessions.id, row?.id as string));
+    return { cookie, sessionId: row?.id as string };
+  }
+
+  it('phiên Admin quá 8 giờ kể từ lúc tạo bị loại và xóa khỏi DB, dù hạn lưu còn 14 ngày', async () => {
+    const { cookie, sessionId } = await adminSessionCookie(9, 9);
+    expect(await readSession(auth, db, new Headers({ cookie }))).toBeNull();
+    const rows = await db.system.select().from(sessions).where(eq(sessions.id, sessionId));
+    expect(rows).toHaveLength(0);
+  });
+
+  it('phiên Admin dưới 8 giờ còn dùng được; hạn trong DB bị kéo về createdAt + 8 giờ sau khi làm mới', async () => {
+    const { cookie, sessionId } = await adminSessionCookie(1, 2); // quá updateAge (1h) → Better Auth làm mới
+    const session = await readSession(auth, db, new Headers({ cookie }));
+    expect(session).not.toBeNull();
+    const [row] = await db.system.select().from(sessions).where(eq(sessions.id, sessionId));
+    const deadline = (row?.createdAt.getTime() ?? 0) + ADMIN_SESSION_SECONDS * 1000;
+    expect(row?.expiresAt.getTime()).toBeLessThanOrEqual(deadline);
+  });
+
+  it('phiên app (không Admin) không bị áp trần 8 giờ', async () => {
+    const { email, userId } = await signUp();
+    const { cookie } = await signIn(email);
+    await db.system
+      .update(sessions)
+      .set({ createdAt: new Date(Date.now() - 9 * HOUR) })
+      .where(eq(sessions.userId, userId));
+    expect(await readSession(auth, db, new Headers({ cookie }))).not.toBeNull();
+  });
+
+  it('không có cookie → null', async () => {
+    expect(await readSession(auth, db, new Headers())).toBeNull();
+  });
+});
+
+describe('cookie Secure', () => {
+  it('mặc định bật khi baseURL là https, tắt khi http', async () => {
+    const https = createAuth({ db, secret: TEST_SECRET, baseURL: 'https://app.example.test' });
+    const http = createAuth({ db, secret: TEST_SECRET, baseURL: 'http://localhost:3000' });
+    expect((await https.$context).options.advanced?.useSecureCookies).toBe(true);
+    expect((await http.$context).options.advanced?.useSecureCookies).toBe(false);
+  });
+
+  it('staging/production mà cookie không Secure → CONFIG_INVALID', () => {
+    for (const appEnv of ['staging', 'production']) {
+      expect(() =>
+        createAuth({ db, secret: TEST_SECRET, baseURL: 'http://localhost:3000', appEnv }),
+      ).toThrow(/Secure/);
+    }
+    expect(() =>
+      createAuth({
+        db,
+        secret: TEST_SECRET,
+        baseURL: 'https://app.example.test',
+        appEnv: 'production',
+      }),
+    ).not.toThrow();
   });
 });
 

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   ADMIN_SESSION_SECONDS,
   APP_SESSION_SECONDS,
+  adminSessionDeadline,
   capSessionExpiry,
+  isSessionPastHardLimit,
   SESSION_UPDATE_AGE_SECONDS,
 } from './session-policy';
 
@@ -41,5 +43,39 @@ describe('chính sách phiên (docs/13 §2, ADR 003)', () => {
     expect(
       capSessionExpiry({ expiresAt: plus(APP_SESSION_SECONDS * 3), isAdminSession: false, now }),
     ).toEqual(plus(APP_SESSION_SECONDS));
+  });
+});
+
+describe('hạn cứng của phiên Admin (tính từ lúc tạo, không bị làm mới kéo dài)', () => {
+  const created = new Date('2026-11-03T00:00:00.000Z');
+
+  it('adminSessionDeadline = createdAt + 8 giờ', () => {
+    expect(adminSessionDeadline(created)).toEqual(
+      new Date(created.getTime() + ADMIN_SESSION_SECONDS * 1000),
+    );
+  });
+
+  it('phiên Admin quá 8 giờ kể từ lúc tạo là hết hạn cứng; phiên app không bị áp trần này', () => {
+    const after9h = new Date(created.getTime() + 9 * 3600 * 1000);
+    const after7h = new Date(created.getTime() + 7 * 3600 * 1000);
+    expect(isSessionPastHardLimit({ isAdminSession: true, createdAt: created, now: after9h })).toBe(
+      true,
+    );
+    expect(isSessionPastHardLimit({ isAdminSession: true, createdAt: created, now: after7h })).toBe(
+      false,
+    );
+    expect(
+      isSessionPastHardLimit({ isAdminSession: false, createdAt: created, now: after9h }),
+    ).toBe(false);
+  });
+
+  it('chấp nhận createdAt dạng chuỗi ISO', () => {
+    expect(
+      isSessionPastHardLimit({
+        isAdminSession: true,
+        createdAt: '2026-11-03T00:00:00.000Z',
+        now: new Date('2026-11-03T09:00:00.000Z'),
+      }),
+    ).toBe(true);
   });
 });

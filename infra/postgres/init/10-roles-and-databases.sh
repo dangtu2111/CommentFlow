@@ -4,6 +4,14 @@
 # toàn bộ là chuỗi hex nên an toàn khi đặt trong câu SQL.
 set -euo pipefail
 
+# Mật khẩu được ghép vào câu SQL nên phải là chuỗi hex (script sinh bí mật dùng openssl rand -hex).
+for var in CF_OWNER_PASSWORD CF_APP_PASSWORD LITELLM_DB_PASSWORD LANGFUSE_DB_PASSWORD; do
+  if [[ ! "${!var:-}" =~ ^[0-9a-zA-Z_-]+$ ]]; then
+    echo "${var} chỉ được chứa chữ, số, '_' hoặc '-' (khuyến nghị hex)." >&2
+    exit 1
+  fi
+done
+
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<SQL
 CREATE ROLE cf_owner LOGIN PASSWORD '${CF_OWNER_PASSWORD}';
 CREATE ROLE cf_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${CF_APP_PASSWORD}';
@@ -11,6 +19,10 @@ CREATE ROLE litellm LOGIN PASSWORD '${LITELLM_DB_PASSWORD}';
 CREATE ROLE langfuse LOGIN PASSWORD '${LANGFUSE_DB_PASSWORD}';
 CREATE DATABASE litellm OWNER litellm;
 CREATE DATABASE langfuse OWNER langfuse;
+-- Role ứng dụng không được kết nối vào database của LiteLLM/Langfuse/postgres.
+REVOKE CONNECT ON DATABASE litellm, langfuse, postgres FROM PUBLIC;
+GRANT CONNECT ON DATABASE litellm TO litellm;
+GRANT CONNECT ON DATABASE langfuse TO langfuse;
 SQL
 
 # CF_DATABASES: danh sách DB ứng dụng (dev: "cf_dev cf_test"; staging: "commentflow").

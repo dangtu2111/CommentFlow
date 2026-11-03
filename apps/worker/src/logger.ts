@@ -9,10 +9,15 @@ const SENSITIVE_FIELDS = [
   'token',
   'accessToken',
   'refreshToken',
+  'idToken',
+  'apiKey',
   'password',
   'secret',
   'email',
   'phone',
+  'cookie',
+  'connectionString',
+  'databaseUrl',
 ];
 
 export const REDACT_PATHS = [
@@ -22,6 +27,10 @@ export const REDACT_PATHS = [
   '*.authorization',
   'headers.authorization',
   'headers.cookie',
+  'headers["set-cookie"]',
+  'req.headers.authorization',
+  'req.headers.cookie',
+  'res.headers["set-cookie"]',
 ];
 
 export function createLogger(options: { level: string }, destination?: NodeJS.WritableStream) {

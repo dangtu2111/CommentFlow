@@ -17,13 +17,13 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 
 ## Lệnh
 
-<!-- TODO(GĐ0): agent điền mục này sau khi đọc package.json / pyproject; không đoán. -->
 - Cài đặt: `corepack enable` rồi `pnpm install --frozen-lockfile` (Node 24; `.nvmrc`)
 - Chạy dev: `pnpm --filter @flow/web dev` (cổng 3000), `pnpm --filter @flow/worker dev` (health ở cổng 3001)
 - Test một file: `pnpm --filter <gói> exec vitest run <đường-dẫn-file>`; ml: `cd services/ml && uv run pytest tests/<file>`
 - Test toàn bộ: `pnpm test` (ml: `cd services/ml && uv run pytest`)
 - Lint / typecheck: `pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm depcruise` (ml: `uv run ruff check .`)
-- Migration (local/staging): `TODO`
+- Test tích hợp (DB thật `cf_test` trên máy phụ): `pnpm test:db` (cần `.env` + máy phụ bật)
+- Migration (dev/test/ci): `pnpm db:migrate` · kiểm RLS: `pnpm db:check-rls` · hàng đợi: `pnpm --filter @flow/worker queue:install`. Chỉ DB `cf_dev`/`cf_test`/`cf_ci`; staging/production chỉ qua CI có duyệt
 - Mẫu biến môi trường **đặt tên không có dấu chấm đầu, vĩnh viễn**: `env.example` (máy code) và `infra/env.cf-dev.example` (máy ảo); chỉ có tên biến + mô tả. File thật `.env` (máy code) và `.env.cf-dev` (máy ảo) không bao giờ commit. Chủ dự án tạo `.env` bằng `ssh cf "~/CommentFlow/infra/scripts/print-dev-env.sh" > .env` — **agent không chạy script này**.
 
 ## Nguyên tắc bất biến

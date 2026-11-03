@@ -18,13 +18,10 @@ export type FlowDb = {
   /**
    * Chạy `fn` trong MỘT giao dịch có ngữ cảnh workspace (RLS dùng `app.workspace_id`).
    * Đây là đường truy cập duy nhất cho bảng nghiệp vụ (nguyên tắc bất biến #2).
-   * `userId` (tuỳ chọn) đặt thêm `app.user_id` để liệt kê workspace của chính người đó.
+   * Lưu ý: `tx` KHÔNG phải giao dịch của Drizzle — đừng gọi `tx.transaction()` (BEGIN/COMMIT lồng nhau
+   * sẽ kết thúc sớm giao dịch ngoài và mất ngữ cảnh workspace).
    */
-  withWorkspace<T>(
-    workspaceId: string,
-    fn: (tx: Database) => Promise<T>,
-    options?: { userId?: string },
-  ): Promise<T>;
+  withWorkspace<T>(workspaceId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
   /** Giao dịch chỉ có ngữ cảnh người dùng (liệt kê workspace của họ); không có workspace. */
   withUser<T>(userId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
   /** Giao dịch không ngữ cảnh: chỉ chạm được bảng hệ thống (job không có workspace). */
@@ -81,15 +78,8 @@ async function runInTransaction<T>(
 export function createDb(options: { connectionString: string; max?: number }): FlowDb {
   const pool = new pg.Pool({ connectionString: options.connectionString, max: options.max ?? 10 });
   return {
-    withWorkspace: async (workspaceId, fn, opts) =>
-      runInTransaction(
-        pool,
-        {
-          'app.workspace_id': assertUuid(workspaceId, 'workspaceId'),
-          ...(opts?.userId ? { 'app.user_id': assertUuid(opts.userId, 'userId') } : {}),
-        },
-        fn,
-      ),
+    withWorkspace: async (workspaceId, fn) =>
+      runInTransaction(pool, { 'app.workspace_id': assertUuid(workspaceId, 'workspaceId') }, fn),
     withUser: async (userId, fn) =>
       runInTransaction(pool, { 'app.user_id': assertUuid(userId, 'userId') }, fn),
     withSystem: (fn) => runInTransaction(pool, {}, fn),

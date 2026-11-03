@@ -47,6 +47,14 @@ describe('trigger NOTIFY flags_changed', () => {
     await stop();
   });
 
+  it('TRUNCATE cũng phát thông báo', async () => {
+    const received: string[] = [];
+    const stop = await db.listen('flags_changed', (p) => received.push(p));
+    await admin.query('TRUNCATE core.feature_flag_overrides');
+    await waitFor(() => received.includes('feature_flag_overrides'));
+    await stop();
+  });
+
   it('không phát thông báo khi giao dịch bị ROLLBACK', async () => {
     const received: string[] = [];
     const stop = await db.listen('flags_changed', (p) => received.push(p));

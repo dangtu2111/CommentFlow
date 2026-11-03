@@ -47,7 +47,11 @@ export const featureFlagOverrides = core.table(
     setBy: uuid('set_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
   },
-  (t) => [unique('feature_flag_overrides_flag_workspace_unique').on(t.flagKey, t.workspaceId)],
+  (t) => [
+    unique('feature_flag_overrides_flag_workspace_unique').on(t.flagKey, t.workspaceId),
+    // Policy RLS và khóa ngoại cascade đều lọc theo workspace_id.
+    index('feature_flag_overrides_workspace_idx').on(t.workspaceId),
+  ],
 );
 
 /** Nhật ký hành động — chỉ thêm, không sửa/xóa (cf_app chỉ có SELECT + INSERT). */

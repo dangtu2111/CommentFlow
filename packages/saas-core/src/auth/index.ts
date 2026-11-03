@@ -7,9 +7,12 @@ export {
 } from './auth';
 export { hashPassword, verifyPassword } from './password';
 export { changePasswordAndRevokeAll, revokeAllSessionsOfUser } from './revoke';
+export { readSession } from './session';
 export {
   ADMIN_SESSION_SECONDS,
   APP_SESSION_SECONDS,
+  adminSessionDeadline,
   capSessionExpiry,
+  isSessionPastHardLimit,
   SESSION_UPDATE_AGE_SECONDS,
 } from './session-policy';

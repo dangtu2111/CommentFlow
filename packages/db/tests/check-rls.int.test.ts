@@ -67,4 +67,45 @@ describe('check-rls', () => {
       }),
     );
   });
+
+  it('bắt policy USING (true): có policy nhưng không dựa vào current_workspace_id()', async () => {
+    const v = await violationsAfter(`
+      CREATE TABLE cf.policy_long_leo (id int, workspace_id uuid);
+      ALTER TABLE cf.policy_long_leo ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY mo_het ON cf.policy_long_leo USING (true);
+      GRANT SELECT ON cf.policy_long_leo TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.policy_long_leo',
+        message: expect.stringContaining('quyền SELECT nhưng không có policy SELECT'),
+      }),
+    );
+  });
+
+  it('bắt cf_app có quyền UPDATE nhưng bảng chỉ có policy SELECT (lỗi im lặng)', async () => {
+    const v = await violationsAfter(`
+      CREATE TABLE cf.thieu_policy_update (id int, workspace_id uuid);
+      ALTER TABLE cf.thieu_policy_update ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY chi_doc ON cf.thieu_policy_update FOR SELECT
+        USING (workspace_id = (SELECT core.current_workspace_id()));
+      GRANT SELECT, UPDATE ON cf.thieu_policy_update TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.thieu_policy_update',
+        message: expect.stringContaining('quyền UPDATE nhưng không có policy UPDATE'),
+      }),
+    );
+  });
+
+  it('bắt cf_app được cấp CREATE trên schema', async () => {
+    const v = await violationsAfter('GRANT CREATE ON SCHEMA core TO cf_app');
+    expect(v).toContainEqual(
+      expect.objectContaining({ subject: 'cf_app', message: 'có quyền CREATE trên schema core' }),
+    );
+  });
+
+  it('bắt view trong core/cf', async () => {
+    const v = await violationsAfter('CREATE VIEW core.v_lo_du_lieu AS SELECT id FROM core.users');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.v_lo_du_lieu' }));
+  });
 });

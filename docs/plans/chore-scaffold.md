@@ -1,6 +1,8 @@
 # Kế hoạch dựng khung (chore-scaffold) — bản 2 (02/11/2026)
 
-Trạng thái: **ĐÃ DUYỆT 02/11/2026** (kèm điều chỉnh ở mục "Quyết định đã chốt" cuối file). Làm trên nhánh `chore/scaffold`. Căn cứ: `000`, `001-stack.md` (bản 2), `002-hai-may.md`, `09` §2–3.1 và §10, `10` §1/§3.1/§3.7/§3.8/§4, `13` §4, `15` §4, `16` §3–3.1, `08` §8.
+Trạng thái: **ĐÃ DUYỆT 02/11/2026** (kèm điều chỉnh ở mục "Quyết định đã chốt" cuối file). Làm trên nhánh `chore/scaffold`.
+
+> **Kết quả (03/11/2026):** nhóm S (S1–S8), H (H1–H4) và C (C0–C10) đã xong; H5 hoãn đến khi có tên miền. Chi tiết, việc còn lại và bẫy đã biết: `docs/handoff/chore-scaffold.md`, `docs/codemap.md`, `docs/gap-matrix.md`. Căn cứ: `000`, `001-stack.md` (bản 2), `002-hai-may.md`, `09` §2–3.1 và §10, `10` §1/§3.1/§3.7/§3.8/§4, `13` §4, `15` §4, `16` §3–3.1, `08` §8.
 
 ## Tóm tắt (đọc phần này trước)
 

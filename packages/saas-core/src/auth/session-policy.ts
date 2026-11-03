@@ -18,3 +18,22 @@ export function capSessionExpiry(input: {
   const ceiling = new Date(input.now.getTime() + ceilingSeconds * 1000);
   return input.expiresAt.getTime() <= ceiling.getTime() ? input.expiresAt : ceiling;
 }
+
+/** Hạn cứng của phiên Admin: createdAt + 8 giờ (cố định, không trượt khi phiên được làm mới). */
+export function adminSessionDeadline(createdAt: Date | string): Date {
+  return new Date(new Date(createdAt).getTime() + ADMIN_SESSION_SECONDS * 1000);
+}
+
+/**
+ * Better Auth đặt lại `expiresAt = now + expiresIn` mỗi lần làm mới phiên, nên trần 8 giờ của phiên
+ * Admin phải kiểm theo `createdAt` ở lúc đọc phiên. Phiên app không có trần này (chỉ hạn 14 ngày).
+ */
+export function isSessionPastHardLimit(input: {
+  isAdminSession: boolean;
+  createdAt: Date | string;
+  now: Date;
+}): boolean {
+  return (
+    input.isAdminSession && input.now.getTime() > adminSessionDeadline(input.createdAt).getTime()
+  );
+}
