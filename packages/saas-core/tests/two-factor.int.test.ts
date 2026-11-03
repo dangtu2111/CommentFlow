@@ -406,6 +406,20 @@ describe('bắt buộc 2FA cho Owner/Admin (dữ liệu seed chỉ ở cf_test)'
     const staffJar = await loginAs(staff);
     expect((await twoFactor.overview(bossJar.headers))?.required).toBe(true);
     expect((await twoFactor.overview(staffJar.headers))?.required).toBe(false);
+    // principal(): trạng thái lấy phía server; Owner bị ép 2FA, Staff thì không; không phiên → null.
+    expect(await twoFactor.principal(bossJar.headers)).toMatchObject({
+      id: boss.userId,
+      email: boss.email,
+      emailVerified: true,
+      isAdmin: false,
+      twoFactorEnabled: true,
+      twoFactorRequired: true,
+    });
+    expect(await twoFactor.principal(staffJar.headers)).toMatchObject({
+      id: staff.userId,
+      twoFactorRequired: false,
+    });
+    expect(await twoFactor.principal(new Headers())).toBeNull();
     expect(await twoFactor.disable({ password: boss.password, headers: bossJar.headers })).toEqual({
       status: 'required',
     });
@@ -431,6 +445,10 @@ describe('bắt buộc 2FA cho Owner/Admin (dữ liệu seed chỉ ở cf_test)'
     if (ok.status !== 'ok') throw new Error(ok.status);
     const jar = new Jar().apply(signIn.cookies).apply(ok.cookies);
     expect((await twoFactor.overview(jar.headers))?.required).toBe(true);
+    expect(await twoFactor.principal(jar.headers)).toMatchObject({
+      isAdmin: true,
+      twoFactorRequired: true,
+    });
   });
 });
 

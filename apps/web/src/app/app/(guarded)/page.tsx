@@ -1,8 +1,7 @@
-import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { LocaleSwitcher } from '../../../components/locale-switcher';
 import { SubmitButton } from '../../../components/ui/submit-button';
-import { getCurrentUser } from '../../../server/session';
+import { requireAppUser } from '../../../server/require-app-user';
 import { logoutAction } from '../../(auth)/actions';
 
 export async function generateMetadata() {
@@ -12,8 +11,7 @@ export async function generateMetadata() {
 
 /** Trang tạm sau đăng nhập: workspace, kết nối Fanpage và onboarding làm ở nhánh sau. */
 export default async function AppHomePage() {
-  const user = await getCurrentUser();
-  if (!user) redirect('/login');
+  const { user } = await requireAppUser({ workspace: 'optional' });
   const t = await getTranslations('auth');
   return (
     <main className="app-page">

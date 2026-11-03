@@ -6,6 +6,7 @@ import { TwoFactorCard } from '../../../components/security/two-factor-card';
 import { Banner } from '../../../components/ui/banner';
 import { SubmitButton } from '../../../components/ui/submit-button';
 import { getAuthRuntime } from '../../../server/auth';
+import { requireAppUser } from '../../../server/require-app-user';
 import { revokeSessionAction } from './actions';
 
 export async function generateMetadata() {
@@ -18,6 +19,7 @@ export async function generateMetadata() {
  * Nằm NGOÀI nhóm `(guarded)` nên Owner/Admin chưa bật 2FA vẫn vào được để bật.
  */
 export default async function SecurityPage() {
+  await requireAppUser({ workspace: 'optional', twoFactor: 'skip' });
   const overview = await getAuthRuntime().twoFactor.overview(await headers());
   if (!overview) redirect('/login');
   const [t, format] = await Promise.all([getTranslations('auth.security'), getFormatter()]);

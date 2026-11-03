@@ -35,7 +35,9 @@ export {
   isSessionPastHardLimit,
   SESSION_UPDATE_AGE_SECONDS,
 } from './session-policy';
+export { createSignedValueCodec, deriveKey, type SignedValueCodec } from './signed-value';
 export {
+  type AppPrincipal,
   createTwoFactorFlows,
   type ReauthResult,
   requiresTwoFactor,

@@ -1,15 +1,11 @@
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { getAuthRuntime } from '../../../server/auth';
+import { requireAppUser } from '../../../server/require-app-user';
 
 /**
- * Cổng bắt buộc 2FA (docs/13 §2): Owner của workspace và quản trị nền tảng chưa bật 2FA chỉ vào được
- * /app/security. Trạng thái đọc phía server từ phiên + vai trò thật, không bao giờ từ client.
+ * Cổng của nhóm `(guarded)` (docs/13 §2): phiên, email đã xác minh, 2FA bắt buộc cho Owner/Admin. Mỗi trang con
+ * VẪN tự gọi `requireAppUser` (layout không chạy lại khi chuyển trang trong cùng nhóm).
  */
 export default async function GuardedAppLayout({ children }: { children: ReactNode }) {
-  const posture = await getAuthRuntime().twoFactor.posture(await headers());
-  if (!posture) redirect('/login');
-  if (posture.required && !posture.twoFactorEnabled) redirect('/app/security');
+  await requireAppUser({ workspace: 'optional' });
   return children;
 }

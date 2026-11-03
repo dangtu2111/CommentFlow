@@ -6,15 +6,19 @@ import {
   createAuthFlows,
   createNotifier,
   createPasswordPolicy,
+  createSignedValueCodec,
   createSmtpTransport,
   createTwoFactorFlows,
   createValkeyRateLimiter,
   openAuthDb,
   openTenancy,
+  type SignedValueCodec,
+  type Tenancy,
   type TwoFactorFlows,
 } from '@flow/saas-core';
 import type { ClientIpSource } from '../lib/client-ip';
 import { loadServerEnv } from './env';
+import { WORKSPACE_COOKIE_LABEL, WORKSPACE_COOKIE_TTL_SECONDS } from './workspace-selection';
 
 /**
  * Gốc lắp ráp của phần xác thực: đọc env, mở pool role cf_auth, dựng SMTP + notifier + Better Auth + luồng.
@@ -25,6 +29,9 @@ export type AuthRuntime = {
   authHandle: AuthHandle;
   flows: AuthFlows;
   twoFactor: TwoFactorFlows;
+  tenancy: Tenancy;
+  /** Ký cookie lựa chọn workspace (khóa HKDF nhãn riêng, không dùng secret gốc). */
+  workspaceCookie: SignedValueCodec;
   appUrl: string;
   clientIpSource: ClientIpSource;
 };
@@ -78,6 +85,12 @@ function createRuntime(): AuthRuntime {
     authHandle,
     flows: createAuthFlows({ auth, limiter, passwordPolicy, twoFactor }),
     twoFactor,
+    tenancy,
+    workspaceCookie: createSignedValueCodec({
+      secret: env.BETTER_AUTH_SECRET,
+      label: WORKSPACE_COOKIE_LABEL,
+      ttlSeconds: WORKSPACE_COOKIE_TTL_SECONDS,
+    }),
     appUrl: env.BETTER_AUTH_URL,
     clientIpSource: env.CLIENT_IP_SOURCE,
   };

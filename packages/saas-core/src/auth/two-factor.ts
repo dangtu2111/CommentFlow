@@ -50,6 +50,17 @@ export type SessionItem = {
   current: boolean;
 };
 
+export type AppPrincipal = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  isAdmin: boolean;
+  twoFactorEnabled: boolean;
+  /** Owner của một workspace hoặc quản trị nền tảng → bắt buộc bật 2FA. */
+  twoFactorRequired: boolean;
+};
+
 export type SecurityOverview = {
   twoFactorEnabled: boolean;
   /** Tài khoản thuộc diện bắt buộc 2FA (Owner của workspace hoặc quản trị nền tảng). */
@@ -114,9 +125,19 @@ export function createTwoFactorFlows(options: {
   async function currentUser(headers: Headers) {
     const current = await auth.api.getSession({ headers });
     if (!current) return null;
-    const user = current.user as { id: string; twoFactorEnabled?: boolean; isAdmin?: boolean };
+    const user = current.user as {
+      id: string;
+      name?: string;
+      email?: string;
+      emailVerified?: boolean;
+      twoFactorEnabled?: boolean;
+      isAdmin?: boolean;
+    };
     return {
       id: user.id,
+      name: user.name ?? '',
+      email: user.email ?? '',
+      emailVerified: user.emailVerified === true,
       twoFactorEnabled: user.twoFactorEnabled === true,
       isAdmin: user.isAdmin === true,
       session: current.session,
@@ -231,6 +252,24 @@ export function createTwoFactorFlows(options: {
         status: 'ok',
         cookies: [...cookiesFromResponse(response), clearPendingCookie()],
         locale: isLocale(body?.user?.locale) ? body.user.locale : 'vi',
+      };
+    },
+
+    /**
+     * Người dùng đã xác thực của phiên hiện tại, MỌI trạng thái lấy phía server (không từ client): dùng cho
+     * `requireAppUser()` của web. null nếu chưa đăng nhập.
+     */
+    async principal(headers: Headers): Promise<AppPrincipal | null> {
+      const user = await currentUser(headers);
+      if (!user) return null;
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        isAdmin: user.isAdmin,
+        twoFactorEnabled: user.twoFactorEnabled,
+        twoFactorRequired: await isRequiredFor(user),
       };
     },
 
