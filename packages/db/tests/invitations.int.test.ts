@@ -43,6 +43,13 @@ async function verifiedUser(email?: string): Promise<{ id: string; email: string
   return { id, email: address };
 }
 
+/** Người gọi hợp lệ cho thao tác ghi chỉ-Owner (withActor). */
+async function ownerOf(workspaceId: string): Promise<string> {
+  const id = await seedUser(admin);
+  await seedMember(admin, workspaceId, id, 'owner');
+  return id;
+}
+
 async function seedInvitation(
   workspaceId: string,
   email: string,
@@ -265,8 +272,9 @@ describe('quyền của cf_app trên invitations', () => {
   it('chỉ thu hồi được (revoked_at): không sửa token/email/vai trò/hạn/đã-dùng, không xóa, không tạo sẵn lời mời đã dùng', async () => {
     const ws = await seedWorkspace(admin);
     const { id } = await seedInvitation(ws, 'x@example.test');
+    const owner = await ownerOf(ws);
     const run = (text: string) =>
-      expectRejectCode(db.withWorkspace(ws, (tx) => tx.execute(sql.raw(text))));
+      expectRejectCode(db.withActor(ws, owner, (tx) => tx.execute(sql.raw(text))));
     expect(await run(`UPDATE core.invitations SET token_hash = 'a' WHERE id = '${id}'`)).toBe(
       PERMISSION_DENIED,
     );
@@ -286,7 +294,7 @@ describe('quyền của cf_app trên invitations', () => {
       await run(`UPDATE core.invitations SET revoked_at = now() WHERE id = '${id}'`),
     ).toBeUndefined();
     const code = await expectRejectCode(
-      db.withWorkspace(ws, (tx) =>
+      db.withActor(ws, owner, (tx) =>
         tx.execute(sql`INSERT INTO core.invitations (workspace_id, email, role, token_hash, expires_at, accepted_at)
           VALUES (${ws}, 'y@example.test', 'staff', ${hashOf(newToken())}, now() + interval '1 day', now())`),
       ),
@@ -351,22 +359,23 @@ describe('sau kiểm chứng độc lập: các siết bổ sung của 0015', ()
   it('thu hồi là một chiều: cf_app không bỏ thu hồi (revoked_at = NULL) và không thu hồi lời mời đã dùng', async () => {
     const ws = await seedWorkspace(admin);
     const { id } = await seedInvitation(ws, 'revoke@example.test');
+    const owner = await ownerOf(ws);
     const revoke = () =>
-      db.withWorkspace(ws, (tx) =>
+      db.withActor(ws, owner, (tx) =>
         tx.execute(
           sql`UPDATE core.invitations SET revoked_at = now() WHERE id = ${id} RETURNING id`,
         ),
       );
     expect((await revoke()).rows).toHaveLength(1);
     // đã thu hồi: không đặt lại NULL (USING chặn dòng đã thu hồi → 0 dòng bị sửa)
-    const reset = await db.withWorkspace(ws, (tx) =>
+    const reset = await db.withActor(ws, owner, (tx) =>
       tx.execute(sql`UPDATE core.invitations SET revoked_at = NULL WHERE id = ${id} RETURNING id`),
     );
     expect(reset.rows).toHaveLength(0);
     // lời mời đã dùng: không thu hồi được
     const used = await seedInvitation(ws, 'used@example.test');
     await admin.query('UPDATE core.invitations SET accepted_at = now() WHERE id = $1', [used.id]);
-    const again = await db.withWorkspace(ws, (tx) =>
+    const again = await db.withActor(ws, owner, (tx) =>
       tx.execute(
         sql`UPDATE core.invitations SET revoked_at = now() WHERE id = ${used.id} RETURNING id`,
       ),

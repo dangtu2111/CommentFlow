@@ -30,6 +30,7 @@ let wsA: string;
 let wsB: string;
 let userBoth: string; // thành viên của cả A và B
 let userOnlyB: string;
+let ownerA: string; // Owner của A (người gọi hợp lệ cho các thao tác ghi chỉ-Owner)
 let memberAOfBoth: string;
 let memberBOfBoth: string;
 let usageB: string;
@@ -44,6 +45,8 @@ beforeAll(async () => {
   memberAOfBoth = await seedMember(admin, wsA, userBoth, 'staff');
   memberBOfBoth = await seedMember(admin, wsB, userBoth, 'staff');
   await seedMember(admin, wsB, userOnlyB, 'owner');
+  ownerA = await seedUser(admin);
+  await seedMember(admin, wsA, ownerA, 'owner');
   usageB = await seedAiUsage(admin, wsB, 'cua-b');
   await seedAiUsage(admin, wsA, 'cua-a');
 });
@@ -83,7 +86,7 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
     // Gỡ thành viên bằng status: dòng còn nguyên.
     const user = await seedUser(admin);
     const id = await seedMember(admin, wsA, user, 'staff');
-    await db.withWorkspace(wsA, (tx) =>
+    await db.withActor(wsA, ownerA, (tx) =>
       tx.update(members).set({ status: 'removed' }).where(eq(members.id, id)),
     );
     const { rows } = await admin.query('SELECT status FROM core.members WHERE id = $1', [id]);
@@ -94,13 +97,13 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
     const user = await seedUser(admin);
     const id = await seedMember(admin, wsA, user, 'staff');
     for (const ok of ['active', 'suspended', 'removed']) {
-      await db.withWorkspace(wsA, (tx) =>
+      await db.withActor(wsA, ownerA, (tx) =>
         tx.update(members).set({ status: ok }).where(eq(members.id, id)),
       );
     }
     expect(
       await expectRejectCode(
-        db.withWorkspace(wsA, (tx) =>
+        db.withActor(wsA, ownerA, (tx) =>
           tx.update(members).set({ status: 'bogus' }).where(eq(members.id, id)),
         ),
       ),
@@ -118,7 +121,7 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
 
   it('A không chuyển được dòng của mình sang workspace B (WITH CHECK)', async () => {
     const code = await expectRejectCode(
-      db.withWorkspace(wsA, (tx) =>
+      db.withActor(wsA, ownerA, (tx) =>
         tx.update(members).set({ workspaceId: wsB }).where(eq(members.id, memberAOfBoth)),
       ),
     );
@@ -126,7 +129,7 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
   });
 
   it('invitations: cô lập theo workspace cả đọc lẫn ghi', async () => {
-    const insertedB = await db.withWorkspace(wsB, (tx) =>
+    const insertedB = await db.withActor(wsB, userOnlyB, (tx) =>
       tx
         .insert(invitations)
         .values({
@@ -139,9 +142,11 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
         .returning({ id: invitations.id }),
     );
     expect(insertedB).toHaveLength(1);
-    expect(await db.withWorkspace(wsA, (tx) => tx.select().from(invitations))).toHaveLength(0);
+    expect(
+      await db.withActor(wsA, ownerA, (tx) => tx.select({ id: invitations.id }).from(invitations)),
+    ).toHaveLength(0);
     const code = await expectRejectCode(
-      db.withWorkspace(wsA, (tx) =>
+      db.withActor(wsA, ownerA, (tx) =>
         tx.insert(invitations).values({
           workspaceId: wsB,
           email: 'x@example.test',
@@ -298,7 +303,7 @@ describe('workspaces và members: liệt kê workspace của chính người dù
   it('tạo workspace: id phải trùng ngữ cảnh; thêm người tạo làm owner trong cùng giao dịch', async () => {
     const owner = await seedUser(admin);
     const newWs = newId();
-    await db.withWorkspace(newWs, async (tx) => {
+    await db.withActor(newWs, owner, async (tx) => {
       await tx.insert(workspaces).values({ id: newWs, name: 'Mới', slug: `moi-${newWs}` });
       await tx.insert(members).values({ workspaceId: newWs, userId: owner, role: 'owner' });
     });

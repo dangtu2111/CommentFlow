@@ -24,6 +24,13 @@ export type FlowDb = {
    */
   withWorkspace<T>(workspaceId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
   /**
+   * Như `withWorkspace` nhưng DB còn biết NGƯỜI ĐANG THAO TÁC (`app.user_id`): các policy chỉ-Owner
+   * (`members` ghi, `invitations`, `workspaces` sửa) chỉ cho qua khi người đó là Owner `active` của workspace.
+   * `userId` PHẢI lấy từ phiên đã xác thực phía server, không từ form/URL. Giới hạn (ADR 005 §3): chống quên kiểm quyền
+   * và sai id, không chống tiến trình web đã bị chiếm hoàn toàn (kẻ đó tự đặt được `app.user_id`).
+   */
+  withActor<T>(workspaceId: string, userId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
+  /**
    * Giao dịch chỉ có ngữ cảnh người dùng (liệt kê workspace của họ); không có workspace.
    * Chỉ ĐỌC dòng của mình ở users/sessions/accounts (cột không nhạy cảm) và chỉ GHI users.name/image/locale;
    * đổi mật khẩu, email, xác minh, 2FA, phiên chỉ qua luồng Better Auth (`AuthDb`, role cf_auth).
@@ -97,6 +104,16 @@ export function createDb(options: { connectionString: string; max?: number }): F
       runInTransaction(
         pool,
         { ...NO_CONTEXT, 'app.workspace_id': assertUuid(workspaceId, 'workspaceId') },
+        fn,
+      ),
+    withActor: async (workspaceId, userId, fn) =>
+      runInTransaction(
+        pool,
+        {
+          ...NO_CONTEXT,
+          'app.workspace_id': assertUuid(workspaceId, 'workspaceId'),
+          'app.user_id': assertUuid(userId, 'userId'),
+        },
         fn,
       ),
     withUser: async (userId, fn) =>

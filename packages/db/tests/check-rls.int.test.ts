@@ -105,6 +105,53 @@ describe('check-rls', () => {
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
   });
 
+  it('bắt được khi policy chỉ-Owner bị thay bằng policy chỉ theo workspace', async () => {
+    const downgrade = (table: string, policy: string, cmd: string, expr: string) =>
+      `DROP POLICY ${policy} ON core.${table}; CREATE POLICY ${policy} ON core.${table} FOR ${cmd} ${expr}`;
+    for (const [table, ddl] of [
+      [
+        'members',
+        downgrade(
+          'members',
+          'members_update',
+          'UPDATE',
+          'USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
+        ),
+      ],
+      [
+        'invitations',
+        downgrade(
+          'invitations',
+          'invitations_select',
+          'SELECT',
+          'USING (workspace_id = (SELECT core.current_workspace_id()))',
+        ),
+      ],
+      [
+        'workspaces',
+        downgrade(
+          'workspaces',
+          'workspaces_update',
+          'UPDATE',
+          'USING (id = (SELECT core.current_workspace_id())) WITH CHECK (id = (SELECT core.current_workspace_id()))',
+        ),
+      ],
+    ] as const) {
+      const v = await violationsAfter(ddl);
+      expect(v, table).toContainEqual(
+        expect.objectContaining({
+          subject: `core.${table}`,
+          message: expect.stringContaining('người gọi'),
+        }),
+      );
+    }
+  });
+
+  it('bắt được khi cf_app lấy lại quyền đọc token_hash', async () => {
+    const v = await violationsAfter('GRANT SELECT (token_hash) ON core.invitations TO cf_app');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
+  });
+
   it('bắt được bảng mới không có workspace_id và chưa khai báo là bảng hệ thống', async () => {
     const v = await violationsAfter('CREATE TABLE core.bang_la (id int)');
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.bang_la' }));

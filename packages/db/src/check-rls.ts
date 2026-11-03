@@ -231,6 +231,8 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.accounts', 'password', 'UPDATE'],
   // lời mời: sau khi tạo chỉ thu hồi được (revoked_at); không sửa token/email/vai trò/hạn/đã-dùng
   ['cf_app', 'core.invitations', 'token_hash', 'UPDATE'],
+  // băm token mời: chỉ hàm DEFINER (0015) so khớp; cf_app không đọc được (kể cả Owner)
+  ['cf_app', 'core.invitations', 'token_hash', 'SELECT'],
   ['cf_app', 'core.invitations', 'email', 'UPDATE'],
   ['cf_app', 'core.invitations', 'role', 'UPDATE'],
   ['cf_app', 'core.invitations', 'expires_at', 'UPDATE'],
@@ -361,6 +363,40 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
       subject: String(row.name),
       message:
         'thiếu trigger members_guard_last_owner (hoặc đang bị tắt): workspace có thể mất Owner cuối cùng',
+    });
+  }
+}
+
+/**
+ * Policy "người gọi" (migration 0016): mỗi lệnh dưới đây phải có policy permissive dựa vào hàm kiểm Owner/thành viên.
+ * Câu truy vấn chỉ trả các cặp VI PHẠM (rỗng = đạt).
+ */
+const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: string]> = [
+  ['members', 'a', 'is_workspace_owner'], // INSERT
+  ['members', 'w', 'is_workspace_owner'], // UPDATE
+  ['invitations', 'r', 'is_workspace_owner'], // SELECT
+  ['invitations', 'a', 'is_workspace_owner'],
+  ['invitations', 'w', 'is_workspace_owner'],
+  ['workspaces', 'w', 'is_workspace_owner'],
+  ['action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+];
+
+async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const values = ACTOR_POLICIES.map(([t, c, m]) => `('${t}', '${c}', '${m}')`).join(', ');
+  const bad = await db.query(`/* actor-policies */
+    SELECT v.t AS tbl, v.c AS cmd, v.m AS marker
+    FROM (VALUES ${values}) AS v(t, c, m)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_policy p
+      WHERE p.polrelid = ('core.' || v.t)::regclass
+        AND p.polpermissive
+        AND p.polcmd = v.c::"char"
+        AND (coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), ''))
+            LIKE '%' || v.m || '%')`);
+  for (const row of bad.rows) {
+    violations.push({
+      subject: `core.${String(row.tbl)}`,
+      message: `thiếu policy "người gọi" (${String(row.marker)}) cho lệnh '${String(row.cmd)}': thao tác chỉ-Owner không còn được DB ép`,
     });
   }
 }
@@ -536,6 +572,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkUsersColumnAllowlist(db, violations);
   await checkAdminInsertGuard(db, violations);
   await checkDefinerFunctions(db, violations);
+  await checkActorPolicies(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

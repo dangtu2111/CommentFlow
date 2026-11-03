@@ -105,7 +105,8 @@ export function createTenancy(db: FlowDb) {
       );
       const id = randomUUID();
       const slug = uniqueSlug(name);
-      await db.withWorkspace(id, async (tx) => {
+      // withActor: DB cần biết người tạo để cho đường khởi tạo Owner đầu tiên (migration 0016).
+      await db.withActor(id, userId, async (tx) => {
         await tx.insert(workspaces).values({ id, name, slug, timezone, defaultLang });
         await tx.insert(members).values({ workspaceId: id, userId, role: 'owner' });
         await writeActionLog(tx, {
@@ -133,7 +134,7 @@ export function createTenancy(db: FlowDb) {
       const role = parse(roleSchema, input.role, 'Vai trò phải là owner hoặc staff.');
 
       try {
-        await db.withWorkspace(workspaceId, async (tx) => {
+        await db.withActor(workspaceId, actorUserId, async (tx) => {
           const actor = await tx
             .select({ role: members.role })
             .from(members)

@@ -232,21 +232,19 @@ describe('thành viên: danh sách, vai trò, trạng thái', () => {
     );
     expect(owners).toHaveLength(1);
 
-    // Chạm thẳng DB bằng cf_app: hạ/khóa/gỡ Owner còn lại đều bị trigger chặn.
-    const survivor = owners.length
-      ? await adminQuery<{ id: string }>(
-          "SELECT id FROM core.members WHERE workspace_id = $1 AND role = 'owner' AND status = 'active'",
-          [ws.id],
-        )
-      : [];
-    const id = survivor[0]?.id as string;
+    // Chạm thẳng DB bằng cf_app (bỏ qua dịch vụ): Owner còn lại tự hạ/khóa/gỡ chính mình đều bị trigger chặn.
+    const survivor = await adminQuery<{ id: string; user_id: string }>(
+      "SELECT id, user_id FROM core.members WHERE workspace_id = $1 AND role = 'owner' AND status = 'active'",
+      [ws.id],
+    );
+    const { id, user_id: survivorUser } = survivor[0] as { id: string; user_id: string };
     for (const sqlText of [
       "UPDATE core.members SET role = 'staff' WHERE id = $1",
       "UPDATE core.members SET status = 'suspended' WHERE id = $1",
       "UPDATE core.members SET status = 'removed' WHERE id = $1",
     ]) {
       await expect(
-        db.withWorkspace(ws.id, async (tx) => {
+        db.withActor(ws.id, survivorUser, async (tx) => {
           const { sql } = await import('@flow/db');
           await tx.execute(sql.raw(sqlText.replace('$1', `'${id}'`)));
         }),
@@ -725,5 +723,49 @@ describe('sau kiểm chứng độc lập: hạn mức mời và nhận lời m�
         role: 'staff',
       }),
     ).toEqual({ status: 'sent' });
+  });
+});
+
+describe('DB ép chỉ-Owner độc lập với mã kiểm quyền (feat/rls-actor-ctx)', () => {
+  it('bỏ qua createWorkspaceAdmin: Staff gọi thẳng withActor hoặc withWorkspace vẫn không ghi được members/invitations', async () => {
+    const { ws, staff, owner } = await setup(1);
+    const [s1] = staff as [string];
+    const target = await memberIdOf(ws.id, owner);
+    const { sql } = await import('@flow/db');
+    const denied = async (run: () => Promise<unknown>) => {
+      try {
+        await run();
+      } catch (error) {
+        const code = (error as { cause?: { code?: string }; code?: string }).cause?.code;
+        return code === '42501';
+      }
+      return false;
+    };
+    // UPDATE bị USING ẩn dòng → 0 dòng; INSERT bị chặn bằng lỗi RLS
+    const updated = await db.withActor(ws.id, s1, (tx) =>
+      tx.execute(sql`UPDATE core.members SET role = 'staff' WHERE id = ${target} RETURNING id`),
+    );
+    expect(updated.rows).toHaveLength(0);
+    expect(
+      await denied(() =>
+        db.withActor(ws.id, s1, (tx) =>
+          tx.execute(
+            sql`INSERT INTO core.invitations (workspace_id, email, role, token_hash, expires_at)
+                VALUES (${ws.id}, 'x@example.test', 'owner', ${`h-${randomUUID()}`}, now() + interval '1 day')`,
+          ),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      await denied(() =>
+        db.withWorkspace(ws.id, (tx) =>
+          tx.execute(
+            sql`INSERT INTO core.members (workspace_id, user_id, role) VALUES (${ws.id}, ${s1}, 'owner')`,
+          ),
+        ),
+      ),
+    ).toBe(true);
+    expect(await tenancy.getRole(ws.id, owner)).toBe('owner');
+    expect(await tenancy.getRole(ws.id, s1)).toBe('staff');
   });
 });
