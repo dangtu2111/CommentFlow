@@ -96,7 +96,7 @@
     },
     "app": {
       "greeting": "Hello, {name}",
-      "body": "You're signed in. Creating a workspace and connecting a Fanpage come in the next step.",
+      "body": "You are signed in to the workspace “{workspace}”. Connecting your Page comes in the next step.",
       "logout": "Sign out"
     },
     "panel": {
@@ -180,6 +180,37 @@
           "other": "another system"
         }
       }
+    }
+  },
+  "workspace": {
+    "create": {
+      "title": "Create your workspace",
+      "subtitle": "A workspace is where your whole team handles the shop’s comments. You will be its Owner.",
+      "name": "Workspace name",
+      "nameHint": "For example your shop or brand name (1–80 characters).",
+      "timezone": "Time zone",
+      "language": "Default language",
+      "languageHint": "Used for emails to members and the workspace’s default content.",
+      "twoFactorNote": "After creating it you need to turn on two-step verification (2FA). It is required for Owners to protect customer data.",
+      "submit": "Create workspace"
+    },
+    "errors": {
+      "nameInvalid": "The workspace name must be 1 to 80 characters.",
+      "timezoneInvalid": "Invalid time zone. Please choose one from the list.",
+      "generic": "Could not create the workspace. Please try again in a few minutes."
+    },
+    "switcher": {
+      "label": "Switch workspace",
+      "create": "+ Create a new workspace",
+      "role": {
+        "owner": "Owner",
+        "staff": "Staff"
+      }
+    },
+    "header": {
+      "brand": "CommentFlow AI",
+      "nav": "Main navigation",
+      "security": "Security"
     }
   }
 }

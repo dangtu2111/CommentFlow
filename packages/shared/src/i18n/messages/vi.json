@@ -96,7 +96,7 @@
     },
     "app": {
       "greeting": "Xin chào, {name}",
-      "body": "Bạn đã đăng nhập. Tạo workspace và kết nối Fanpage sẽ có ở bước tiếp theo.",
+      "body": "Bạn đã đăng nhập vào workspace “{workspace}”. Kết nối Fanpage sẽ có ở bước tiếp theo.",
       "logout": "Đăng xuất"
     },
     "panel": {
@@ -180,6 +180,37 @@
           "other": "hệ điều hành khác"
         }
       }
+    }
+  },
+  "workspace": {
+    "create": {
+      "title": "Tạo workspace của bạn",
+      "subtitle": "Workspace là nơi cả nhóm cùng xử lý bình luận của cửa hàng. Bạn sẽ là Owner (chủ sở hữu) của workspace này.",
+      "name": "Tên workspace",
+      "nameHint": "Ví dụ: tên cửa hàng hoặc thương hiệu (1–80 ký tự).",
+      "timezone": "Múi giờ",
+      "language": "Ngôn ngữ mặc định",
+      "languageHint": "Dùng cho thư gửi thành viên và nội dung mặc định của workspace.",
+      "twoFactorNote": "Sau khi tạo, bạn cần bật xác thực 2 bước (2FA). Đây là yêu cầu bắt buộc với Owner để bảo vệ dữ liệu khách hàng.",
+      "submit": "Tạo workspace"
+    },
+    "errors": {
+      "nameInvalid": "Tên workspace cần từ 1 đến 80 ký tự.",
+      "timezoneInvalid": "Múi giờ không hợp lệ. Vui lòng chọn lại trong danh sách.",
+      "generic": "Chưa tạo được workspace. Vui lòng thử lại sau ít phút."
+    },
+    "switcher": {
+      "label": "Chuyển workspace",
+      "create": "+ Tạo workspace mới",
+      "role": {
+        "owner": "Owner",
+        "staff": "Staff"
+      }
+    },
+    "header": {
+      "brand": "CommentFlow AI",
+      "nav": "Điều hướng chính",
+      "security": "Bảo mật"
     }
   }
 }

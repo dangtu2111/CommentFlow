@@ -1,9 +1,12 @@
 export { slugify, uniqueSlug } from './slug';
 export {
   createTenancy,
+  DEFAULT_TIME_ZONE,
+  isValidTimeZone,
   type MemberListItem,
   type MemberRole,
   type Tenancy,
+  WORKSPACE_TIME_ZONES,
   type WorkspaceMembership,
 } from './tenancy';
 

@@ -9,14 +9,14 @@ export async function generateMetadata() {
   return { title: t('brand') };
 }
 
-/** Trang tạm sau đăng nhập: workspace, kết nối Fanpage và onboarding làm ở nhánh sau. */
+/** Trang tạm sau đăng nhập: kết nối Fanpage và onboarding tiếp theo làm ở nhánh sau. */
 export default async function AppHomePage() {
-  const { user } = await requireAppUser({ workspace: 'optional' });
+  const { user, workspace } = await requireAppUser({});
   const t = await getTranslations('auth');
   return (
     <main className="app-page">
       <h1 className="auth-title">{t('app.greeting', { name: user.name })}</h1>
-      <p className="auth-subtitle">{t('app.body')}</p>
+      <p className="auth-subtitle">{t('app.body', { workspace: workspace.name })}</p>
       <form action={logoutAction}>
         <SubmitButton variant="secondary" block={false}>
           {t('app.logout')}
