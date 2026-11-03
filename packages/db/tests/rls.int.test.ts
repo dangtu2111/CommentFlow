@@ -319,11 +319,11 @@ describe('workspaces và members: liệt kê workspace của chính người dù
   });
 });
 
-describe('bảng hệ thống (xác thực) dùng được qua đường system', () => {
-  it('đọc/ghi users qua db.system', async () => {
+describe('bảng xác thực dùng được qua ngữ cảnh auth (adapter Better Auth)', () => {
+  it('đọc/ghi users qua db.auth', async () => {
     const id = newId();
-    await db.system.insert(users).values({ id, email: `${id}@example.test`, name: 'Hệ thống' });
-    const rows = await db.system.select().from(users).where(eq(users.id, id));
+    await db.auth.insert(users).values({ id, email: `${id}@example.test`, name: 'Hệ thống' });
+    const rows = await db.auth.select().from(users).where(eq(users.id, id));
     expect(rows).toHaveLength(1);
   });
 });
@@ -331,21 +331,21 @@ describe('bảng hệ thống (xác thực) dùng được qua đường system'
 describe('quyền trên core.users và hàm ngữ cảnh', () => {
   it('cf_app đổi được tên/ngôn ngữ nhưng KHÔNG tự đặt is_admin/admin_role, không xóa người dùng', async () => {
     const id = await seedUser(admin);
-    await db.system.update(users).set({ name: 'Tên mới', locale: 'en' }).where(eq(users.id, id));
-    const [row] = await db.system.select().from(users).where(eq(users.id, id));
+    await db.withAuthContext((tx) =>
+      tx.update(users).set({ name: 'Tên mới', locale: 'en' }).where(eq(users.id, id)),
+    );
+    const [row] = await db.withAuthContext((tx) => tx.select().from(users).where(eq(users.id, id)));
     expect(row).toMatchObject({ name: 'Tên mới', locale: 'en', isAdmin: false });
 
     expect(
-      await expectRejectCode(
-        db.system.update(users).set({ isAdmin: true }).where(eq(users.id, id)),
-      ),
+      await expectRejectCode(db.auth.update(users).set({ isAdmin: true }).where(eq(users.id, id))),
     ).toBe(RLS_VIOLATION);
     expect(
       await expectRejectCode(
-        db.system.update(users).set({ adminRole: 'super' }).where(eq(users.id, id)),
+        db.auth.update(users).set({ adminRole: 'super' }).where(eq(users.id, id)),
       ),
     ).toBe(RLS_VIOLATION);
-    expect(await expectRejectCode(db.system.delete(users).where(eq(users.id, id)))).toBe(
+    expect(await expectRejectCode(db.auth.delete(users).where(eq(users.id, id)))).toBe(
       RLS_VIOLATION,
     );
   });

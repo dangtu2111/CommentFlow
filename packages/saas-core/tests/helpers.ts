@@ -8,9 +8,9 @@ export function createTestDb(max = 5): FlowDb {
   return createDb({ connectionString: url, max });
 }
 
-/** Tạo người dùng qua đường hệ thống (bảng users không có RLS theo workspace). */
+/** Tạo người dùng qua ngữ cảnh xác thực (bảng users cần ngữ cảnh auth). */
 export async function createTestUser(db: FlowDb, name = 'Người dùng thử'): Promise<string> {
   const id = randomUUID();
-  await db.system.insert(users).values({ id, email: `${id}@example.test`, name });
+  await db.auth.insert(users).values({ id, email: `${id}@example.test`, name });
   return id;
 }

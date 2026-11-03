@@ -1,5 +1,6 @@
 import { AppError } from '@flow/shared';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+
 import pg from 'pg';
 import { schema } from './schema';
 
@@ -24,11 +25,26 @@ export type FlowDb = {
   withWorkspace<T>(workspaceId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
   /** Giao dịch chỉ có ngữ cảnh người dùng (liệt kê workspace của họ); không có workspace. */
   withUser<T>(userId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
-  /** Giao dịch không ngữ cảnh: chỉ chạm được bảng hệ thống (job không có workspace). */
+  /**
+   * Giao dịch không ngữ cảnh: chỉ chạm được bảng hệ thống KHÔNG có RLS (ví dụ `feature_flags`).
+   * Không thấy dòng nào của bảng nghiệp vụ và của bảng xác thực (`users`, `sessions`, `accounts`,
+   * `verifications`) — các bảng đó cần ngữ cảnh rõ ràng.
+   */
   withSystem<T>(fn: (tx: Database) => Promise<T>): Promise<T>;
   /**
-   * Drizzle trên pool, không giao dịch/ngữ cảnh — CHỈ cho bảng hệ thống (xác thực).
-   * Bảng nghiệp vụ trả về 0 dòng hoặc bị chặn bởi RLS khi đi đường này.
+   * Giao dịch có ngữ cảnh xác thực (`set local app.ctx = 'auth'`): thấy và ghi được toàn bộ
+   * `users`, `sessions`, `accounts`, `verifications`. Chỉ dùng trong mã xác thực của saas-core.
+   */
+  withAuthContext<T>(fn: (tx: Database) => Promise<T>): Promise<T>;
+  /**
+   * Drizzle trên một pool RIÊNG mà mọi kết nối mở với `app.ctx = 'auth'`. CHỈ truyền cho adapter
+   * Better Auth (adapter tự gọi nhiều truy vấn rời rạc nên không bọc từng lệnh bằng `set local` được).
+   * Không dùng cho truy vấn khác. Pool chỉ được tạo khi truy cập lần đầu.
+   */
+  readonly auth: Database;
+  /**
+   * Drizzle trên pool chung, không giao dịch/ngữ cảnh — KHÔNG thấy bảng nghiệp vụ lẫn bảng xác thực.
+   * Chỉ còn dùng cho bảng hệ thống không có RLS.
    */
   readonly system: Database;
   /**
@@ -77,12 +93,25 @@ async function runInTransaction<T>(
 
 export function createDb(options: { connectionString: string; max?: number }): FlowDb {
   const pool = new pg.Pool({ connectionString: options.connectionString, max: options.max ?? 10 });
+  // Pool riêng cho adapter Better Auth: mọi kết nối mở với app.ctx = 'auth' (tham số khởi động).
+  // pg.Pool chỉ mở kết nối khi có truy vấn đầu tiên nên tạo sẵn không tốn tài nguyên.
+  const authPool = new pg.Pool({
+    connectionString: options.connectionString,
+    max: Math.min(options.max ?? 10, 5),
+    options: '-c app.ctx=auth',
+  });
+  let authDb: Database | undefined;
   return {
     withWorkspace: async (workspaceId, fn) =>
       runInTransaction(pool, { 'app.workspace_id': assertUuid(workspaceId, 'workspaceId') }, fn),
     withUser: async (userId, fn) =>
       runInTransaction(pool, { 'app.user_id': assertUuid(userId, 'userId') }, fn),
     withSystem: (fn) => runInTransaction(pool, {}, fn),
+    withAuthContext: (fn) => runInTransaction(pool, { 'app.ctx': 'auth' }, fn),
+    get auth() {
+      authDb ??= drizzle(authPool, { schema });
+      return authDb;
+    },
     system: drizzle(pool, { schema }),
     listen: async (channel, onNotify, onError) => {
       // Tên kênh được ghép vào câu LISTEN (không dùng được tham số) nên phải kiểm chặt.
@@ -98,6 +127,8 @@ export function createDb(options: { connectionString: string; max?: number }): F
       await client.query(`LISTEN ${channel}`);
       return () => client.end();
     },
-    close: () => pool.end(),
+    close: async () => {
+      await Promise.all([pool.end(), authPool.end()]);
+    },
   };
 }

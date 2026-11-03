@@ -50,6 +50,20 @@
       "when": 1793673739441,
       "tag": "0006_members_no_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793676658037,
+      "tag": "0007_admin_session_cap",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793676659011,
+      "tag": "0008_auth_context_rls",
+      "breakpoints": true
     }
   ]
 }

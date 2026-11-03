@@ -5,10 +5,9 @@ import type { Auth } from './auth';
 
 /** Xóa MỌI phiên của một người dùng (đổi mật khẩu, đổi quyền, nghi ngờ bị chiếm tài khoản). */
 export async function revokeAllSessionsOfUser(db: FlowDb, userId: string): Promise<number> {
-  const removed = await db.system
-    .delete(sessions)
-    .where(eq(sessions.userId, userId))
-    .returning({ id: sessions.id });
+  const removed = await db.withAuthContext((tx) =>
+    tx.delete(sessions).where(eq(sessions.userId, userId)).returning({ id: sessions.id }),
+  );
   return removed.length;
 }
 
