@@ -76,13 +76,15 @@ Kiểm quyền ở server (middleware theo route + kiểm trong service), không
 - Worker đặt `app.workspace_id` cho từng job; job không có workspace → chỉ chạy được bảng hệ thống.
 - Cache key, khóa Redis, tên file lưu trữ, virtual key LiteLLM **luôn chứa `workspace_id`**.
 - Test CI: (1) mọi bảng có policy; (2) user workspace A gọi mọi endpoint với id của B → 404.
+- Ngữ cảnh người dùng `app.user_id` (do `withUser()` đặt) chỉ để liệt kê dữ liệu **của chính mình**; đọc chéo workspace chỉ khi **không** có `app.workspace_id` (chi tiết và trạng thái áp dụng: `10_Database_Design.md` §4).
+- Role `cf_app` không có quyền DELETE trên `workspaces`/`users`/`members` và không UPDATE `users.is_admin`/`admin_role`.
 
 ## 5. Mã hóa & bí mật
 
 | Dữ liệu | Cách bảo vệ |
 |---|---|
 | Page/IG/TikTok/Shopify/Google/Haravan/Sapo/KiotViet/Pancake token, API key | AES-256-GCM, nonce ngẫu nhiên, `key_version`; khóa trong env/secret manager, không trong DB |
-| TOTP secret | AES-256-GCM như trên |
+| TOTP secret | XChaCha20-Poly1305 của Better Auth (khóa dẫn xuất từ `BETTER_AUTH_SECRET`; chấp nhận thay AES-GCM, ADR 003). Đổi `BETTER_AUTH_SECRET` làm hỏng secret 2FA đã lưu → chỉ xoay khi có quy trình mã hóa lại hoặc buộc cài lại 2FA |
 | SĐT khách tiềm năng | Mã hóa + lưu `phone_last4` để tìm |
 | Mật khẩu, mã dự phòng, token mời | Hash |
 | Truyền tải | TLS 1.2+ (Caddy tự cấp chứng chỉ), HSTS |

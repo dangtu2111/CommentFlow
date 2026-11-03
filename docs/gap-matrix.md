@@ -15,6 +15,7 @@ Trạng thái: Đã có · Một phần · Khác spec · Thiếu · Không chắ
 | GĐ0-AI-WRAPPER | Lớp bọc LLM + `ai_usage` (FR-034 phần lớp bọc) | ✅ Xong | `packages/ai/src/llm-client.ts:101` | Khóa ảo theo workspace (`AI-VIRTUALKEY`); test gọi LiteLLM thật cần `LITELLM_API_KEY` trong `.env` | | 0 | chore/scaffold (claude) |
 | GĐ0-QUEUE | pg-boss: cài bằng `cf_owner`, worker chạy bằng `cf_app`, `workspaceJob`/`systemJob` | ✅ Xong | `apps/worker/src/jobs/run-job.ts:33` | Đường cài cho staging/production (`QUEUE-PROD-INSTALL`) | | 0 | chore/scaffold (claude) |
 | GĐ0-I18N | next-intl vi/en (cookie), test khớp khóa, kiểm chuỗi viết cứng (FR-119 khung) | ✅ Xong (khung) | `packages/shared/src/i18n/`, `apps/web/eslint.config.mjs` | Dịch toàn bộ giao diện theo từng trang | | 0 | chore/scaffold (claude) |
+| AUTH-RLS-OWN | Policy theo `current_user_id()` cho `users`/`sessions`/`accounts`/`two_factors` (chỉ thấy dòng của mình khi có `app.user_id`; ngữ cảnh hệ thống như Better Auth vẫn phải đọc được theo email/token) — mô tả ở `10` §4 | Thiếu | `packages/db/migrations/` | Policy cho phép khi `app.user_id` NULL hoặc khớp; cần xem lại luồng đăng nhập của Better Auth | | 1 | |
 | UI-AUTH | Trang đăng ký, đăng nhập, chuyển workspace, 2 ngôn ngữ (cần `design/stitch` + design tokens `08` §2) | Thiếu | — | `/stitch-sync` rồi dựng giao diện | | 0 | |
 | AUTH-2FA | 2FA TOTP + 10 mã dự phòng, bắt buộc Owner/Admin (13 §2, ADR 003) | Thiếu | — | Plugin twoFactor (`storeBackupCodes: "encrypted"`), bảng `two_factors`, middleware ép Owner/Admin | | 0 | chore/scaffold (chừa chỗ) |
 | AUTH-RATELIMIT | Rate limit đăng nhập 5 lần/15 phút theo IP+email (Valkey, khóa `sys:`); quên mật khẩu 3 lần/giờ (13 §2). **Bắt buộc có trước khi mở endpoint ra ngoài** (argon2 tốn 19 MiB RAM mỗi lần) | Thiếu | — | Lớp tự làm trên Valkey nếu rate limiter của Better Auth không khóa theo email | | 0 | chore/scaffold (chừa chỗ) |
@@ -35,11 +36,11 @@ Trạng thái: Đã có · Một phần · Khác spec · Thiếu · Không chắ
 
 | # | Spec nói | Code đang làm | Đề xuất | Quyết định |
 |---|---|---|---|---|
-| 1 | `09` §10: override theo workspace đứng TRƯỚC `kill_switch` | Làm đúng thứ tự spec → override "bật" vượt được kill switch toàn hệ thống (verifier-security nêu) | Với flag `kill_switch`, override chỉ được TẮT, không được BẬT; sửa `09` §10 và `evaluateFlag` | Chờ |
-| 2 | `10` §3.1: `members.status` không nêu giá trị | Không có CHECK; mặc định `active`; policy chỉ liệt kê thành viên `active` | Chốt tập giá trị (ví dụ `active`/`suspended`/`removed`) và thêm CHECK | Chờ |
-| 3 | `10` §4, `13` §4 chưa mô tả ngữ cảnh `app.user_id`; mẫu policy chưa có `current_setting(..., true)` | Policy tách theo lệnh, dùng `app.user_id` chỉ khi không có ngữ cảnh workspace | Cập nhật `10` §4, `13` §4 theo migration 0001/0004 (cần chủ dự án cho phép sửa spec) | Chờ |
-| 4 | `10` §3.1 không nêu mặc định `workspaces.ai_enabled` | Mặc định `true` | Xác nhận | Chờ |
-| 5 | `13` §5: mã hóa AES-256-GCM + `key_version` | 2FA dùng mã hóa XChaCha20-Poly1305 của Better Auth (ADR 003 §3) | Chấp nhận hoặc ghi ADR đồng nhất | Chờ |
+| 1 | `09` §10: kill_switch chặn thì override bật không bật lại được | `evaluateFlag`: kill_switch → override → plan → rollout → default_on | — | **Đã chốt 03/11** và làm xong |
+| 2 | `10` §3.1: `members.status` ∈ active/suspended/removed, `removed` giữ dòng | CHECK (migration 0005) + `cf_app` không DELETE members (0006) + tenancy chỉ tính `active` | — | **Đã chốt 03/11** và làm xong |
+| 3 | `10` §4, `13` §4: mô tả `app.user_id` | Đã ghi vào spec; áp cho `members`/`workspaces` | Áp policy "của chính mình" cho `users`/`sessions`/`accounts`/`two_factors` (`AUTH-RLS-OWN`) | Spec **đã chốt 03/11**; phần áp dụng còn thiếu |
+| 4 | `workspaces.ai_enabled` mặc định `true` (chỉ gợi ý) | Đúng | — | **Đã chốt 03/11** |
+| 5 | XChaCha20-Poly1305 cho 2FA | Đúng | Xoay `BETTER_AUTH_SECRET` làm hỏng secret 2FA (ADR 003) | **Đã chốt 03/11** |
 
 ## Theo dõi chi phí Claude Code (cuối tuần)
 

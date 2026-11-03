@@ -76,6 +76,8 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 - **Liệt kê workspace của tôi** chỉ qua `withUser` (không có ngữ cảnh workspace); trong `withWorkspace(A)` không bao giờ thấy workspace khác.
 - **`cf_app` không có DELETE trên `workspaces`/`users`**, không UPDATE `users.is_admin/admin_role`; `action_logs`/`ai_usage` chỉ thêm. Bảng mới phải khai báo quyền + policy (`check-rls` sẽ đỏ nếu thiếu).
 - **Token phiên lưu thô** (Better Auth, ADR 003); cookie ký bằng `BETTER_AUTH_SECRET`. Luôn đọc phiên bằng `readSession`; tạo phiên Admin bằng `internalAdapter.createSession(userId, false, { isAdminSession: true }, true)` (tham số cuối `true` bắt buộc, nếu không bị ghi đè mặc định).
+- **Flag `kill_switch`:** `default_on = true` = được phép chạy, `false` = đang chặn; đang chặn thì override bật KHÔNG bật lại được (override tắt vẫn có hiệu lực). Thứ tự: kill_switch → override → plan → rollout → default_on.
+- **Thành viên bị gỡ** = `members.status = 'removed'`, giữ dòng (`cf_app` không DELETE); `tenancy` chỉ tính thành viên `active`.
 - **Drizzle phải là một bản duy nhất:** gói khác lấy toán tử (`eq`, `and`…) từ `@flow/db`, không import `drizzle-orm` trực tiếp (hai bản làm kiểu không khớp).
 - **Test tích hợp cần máy phụ bật** và `.env` do chủ dự án sinh bằng `infra/scripts/print-dev-env.sh`; agent không chạy script đó.
 - **Healthcheck container** phải gọi qua `$HOSTNAME`/IP container (SeaweedFS, Langfuse không nghe `localhost`).

@@ -28,7 +28,7 @@
 - Tự động hóa song ngữ (FR-120): cấu hình và hiệu chuẩn tách theo ngôn ngữ; ngôn ngữ chưa đạt đánh giá không bật được Tự động.
 - Hạn mức: 80% cảnh báo 1 lần; 100% → dừng soạn, vẫn nhận bình luận.
 - `sendRecheck`: mỗi điều kiện R1–R9 có test trượt riêng; test đua (race): Dừng khẩn cấp bấm giữa lúc job `send` đang chạy → không gửi; nhân viên trả lời tay trong khoảng trễ → câu AI bị hủy; giá Shopify đổi sau khi soạn → về "Chờ duyệt" với lý do "Giá đã đổi".
-- Feature flag: thứ tự quyết định (override → kill switch → gói → rollout → mặc định); băm rollout ổn định; lỗi đọc flag → tự gửi tắt.
+- Feature flag: thứ tự quyết định (kill switch → override → gói → rollout → mặc định); override bật không vượt được kill switch đang chặn, override tắt vẫn có hiệu lực; băm rollout ổn định; lỗi đọc flag → tự gửi tắt.
 - Giới hạn tốc độ: token bucket theo Page/bài/nội dung lặp; vượt → hoãn, không tính lỗi; mức dùng app ≥ 90% → chỉ gửi câu do người bấm.
 - Nguồn sản phẩm (FR-121, FR-122): mỗi connector (Google Sheets, Shopify, Haravan, Sapo, KiotViet, Pancake) có contract test trên fixture đã ghi — map đúng tên/giá/tồn kho/biến thể; dòng lỗi trong Sheets bị bỏ qua có báo cáo, không ghi đè dữ liệu cũ; token hết hạn → trạng thái "Mất kết nối".
 - Tìm kiếm chính xác (FR-127–135):

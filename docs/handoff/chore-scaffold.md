@@ -23,8 +23,8 @@ Kế hoạch: `docs/plans/chore-scaffold.md`
 - Máy code không có Docker; test tích hợp dùng `cf_test` trên máy ảo; migrate chỉ DB `cf_dev`/`cf_test`/`cf_ci`.
 
 ## Còn lại (theo thứ tự)
-1. Chủ dự án quyết các mục ở "Quyết định cần chủ dự án" trong gap matrix (kill_switch override, `members.status`, spec `10` §4/`13` §4, `ai_enabled`).
-2. Merge `chore/scaffold` → `main` (chưa merge/push `main`).
+1. ~~Quyết định kill_switch/`members.status`/spec `10` §4 `13` §4/`ai_enabled`/2FA~~ — **đã chốt và làm xong 03/11** (migration 0005, 0006; spec `09`, `10`, `13`, `14`; ADR 003). Còn mở: `AUTH-RLS-OWN` (áp policy "của chính mình" cho bảng xác thực).
+2. Merge `chore/scaffold` → `main` bằng PR (giữ lịch sử, không squash).
 3. `UI-AUTH` + design tokens (cần `/stitch-sync` và đọc `08` §2), `AUTH-RATELIMIT` (bắt buộc trước khi mở endpoint), `AUTH-2FA`, `AUTH-FORGOT`, `AUTH-INVITE`.
 4. Khi có tên miền: `STAGING-DEPLOY` (H5), `QUEUE-PROD-INSTALL`, `DB-BOOTSTRAP`.
 

@@ -44,3 +44,9 @@ Trạng thái: **Đã chốt** (phương án A của bước C0). Bổ sung cho 
 - Lộ đồng thời DB và `BETTER_AUTH_SECRET` → chiếm được mọi phiên chưa hết hạn. Giảm bằng: khóa ngoài DB, phiên Admin 8 giờ, xoay khóa khi nghi ngờ (làm mọi phiên mất hiệu lực).
 - Better Auth có thể đổi hành vi giữa các bản: ghim đúng `1.7.15`, đọc changelog trước khi nâng.
 - Điểm chưa chạy thật: ánh xạ schema `core` qua Drizzle adapter, hook tạo phiên Admin 8 giờ → test ở C5.
+
+## Bổ sung (03/11/2026, chủ dự án chốt)
+
+- **Mã hóa 2FA:** chấp nhận XChaCha20-Poly1305 của Better Auth cho secret TOTP (và mã dự phòng) thay cho AES-256-GCM + `key_version` ở `13` §5; spec `13` §5 đã sửa dòng TOTP secret.
+- **Xoay `BETTER_AUTH_SECRET`:** khóa mã hóa 2FA được dẫn xuất từ chính khóa này, nên **đổi `BETTER_AUTH_SECRET` sẽ làm hỏng mọi secret 2FA đã lưu** (và mọi cookie phiên đang có hiệu lực). Chỉ xoay khi có quy trình **mã hóa lại** (giải mã bằng khóa cũ, mã hóa bằng khóa mới) hoặc chấp nhận **buộc mọi người dùng cài lại 2FA**. Chưa có quy trình mã hóa lại → coi `BETTER_AUTH_SECRET` là khóa dài hạn, không xoay định kỳ; lộ khóa thì buộc cài lại 2FA + đăng nhập lại toàn bộ.
+- Dòng `13` §5 "Mật khẩu, mã dự phòng, token mời | Hash" còn ghi mã dự phòng là hash; thực tế theo mục 3 ở trên mã dự phòng được **mã hóa** (plugin cần giải mã để so khớp và xóa mã đã dùng). Chưa sửa dòng này vì chưa được yêu cầu.

@@ -285,8 +285,8 @@ Dùng để bật dần tính năng mới, rollback nhanh mà không deploy lạ
 | Thành phần | Mô tả |
 |---|---|
 | `feature_flags` | `key`, `product`, `description`, `kind` (`release` / `ops` / `kill_switch` / `plan`), `default_on`, `rollout_percent` (0–100), `owner`, `expires_at` (bắt buộc với `release`) |
-| `feature_flag_overrides` | `flag_key`, `workspace_id`, `enabled`, `reason`, `set_by` — ưu tiên cao nhất |
-| Thứ tự quyết định | Override theo workspace → `kill_switch` toàn hệ thống → gói cước (`plan`) → `rollout_percent` (băm ổn định `workspace_id`) → `default_on` |
+| `feature_flag_overrides` | `flag_key`, `workspace_id`, `enabled`, `reason`, `set_by` — ưu tiên cao nhất, trừ khi `kill_switch` toàn hệ thống đang chặn (khi đó override `enabled=true` không bật lại được; `enabled=false` vẫn tắt được) |
+| Thứ tự quyết định | `kill_switch` toàn hệ thống → override theo workspace → gói cước (`plan`) → `rollout_percent` (băm ổn định `workspace_id`) → `default_on` |
 | Đọc | `isEnabled(key, ctx)`; cache trong bộ nhớ 30 giây + xóa ngay qua `NOTIFY flags_changed` |
 | Ghi | Chỉ Super Admin qua trang Admin "Feature flags"; mọi thay đổi ghi `action_logs` |
 | Lỗi đọc | Không đọc được → dùng `default_on` (mã nguồn khai báo); flag `kill_switch` mặc định là **không chặn** nhưng mọi đường tự gửi coi lỗi đọc là **tắt tự gửi** |
