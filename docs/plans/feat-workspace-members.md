@@ -18,15 +18,19 @@ Chia 5 mốc (commit riêng trong cùng nhánh; chạy trọn kịch bản cổn
 
 ## Điểm chưa rõ
 
-[CẦN LÀM RÕ: Owner có được mời người khác làm **Owner** (không chỉ Staff) không? FR-003 ghi vai trò Owner/Staff, `members.role` cho phép cả hai. Khuyến nghị: **có** — Owner mới vẫn bị cổng 2FA bắt buộc bật 2FA trước khi làm được gì; Owner cuối cùng không bao giờ bị gỡ/hạ vai trò.]
+Không còn thẻ chưa trả lời.
 
-[CẦN LÀM RÕ: "Lưu lựa chọn workspace phía server" làm thế nào? Khuyến nghị: **cookie httpOnly ký HMAC chỉ chứa id workspace đã chọn**; mỗi request server tra lại bảng `members` (còn `active` không) và bỏ lựa chọn nếu không còn → quay về workspace đầu tiên của bạn. Không thêm cột/bảng mới; không bao giờ nhận `workspace_id` từ form/URL. Phương án thay: cột `last_workspace_id` — cần cấp thêm quyền ghi cột `users` cho `cf_app`, nên loại.]
+Quyết định của chủ dự án (đồng ý khuyến nghị cả 5 thẻ, kèm bổ sung):
 
-[CẦN LÀM RÕ: Người **chưa có tài khoản** nhận lời mời: vẫn bắt xác minh email như đăng ký thường (khuyến nghị — đơn giản, một đường đi duy nhất; sau khi xác minh thì tự quay lại chấp nhận lời mời), hay coi việc bấm link mời là đã xác minh email để bỏ một bước? Khuyến nghị: **vẫn bắt xác minh**.]
-
-[CẦN LÀM RÕ: Hạn mức gửi lời mời. Khuyến nghị: **20 lời mời/giờ/workspace** và **3 lời mời/ngày cho mỗi email** (chống dùng hệ thống để gửi thư rác tới một người); quá hạn mức → báo "thử lại sau". Nhận lời mời: 10 lần thử/15 phút/người dùng (chống dò token).]
-
-[CẦN LÀM RÕ: Có cần chức năng "tự rời workspace" trong nhánh này không? Khuyến nghị: **không** (ngoài phạm vi 1–6; Owner gỡ người khác, Owner cuối cùng không rời được). Ghi gap matrix `MEMBER-LEAVE` làm sau.]
+1. Quyết định: **Owner được mời Owner.** Owner mới vẫn bị cổng 2FA chặn tới khi bật 2FA; Owner cuối cùng không bao giờ bị gỡ/hạ vai trò.
+2. Quyết định: **Lựa chọn workspace = cookie httpOnly ký HMAC chỉ chứa id workspace**, mỗi request tra lại `members` (còn `active`), không thêm cột DB, không nhận `workspace_id` từ client. **Bổ sung:** khóa ký cookie **dẫn xuất từ `BETTER_AUTH_SECRET` bằng HKDF với nhãn riêng** (`commentflow/workspace-cookie/v1`), không dùng trực tiếp secret gốc; cookie lời mời đang chờ (`cf-invite`) cũng dùng khóa dẫn xuất với nhãn riêng của nó.
+3. Quyết định: **Người mới vẫn phải xác minh email**, sau đó tự quay lại chấp nhận lời mời.
+4. Quyết định: **20 lời mời/giờ/workspace; 3 lời mời/ngày/email; nhận lời mời 10 lần/15 phút/người dùng.**
+5. Quyết định: **Không có "tự rời workspace" trong nhánh này**; ghi gap matrix `MEMBER-LEAVE`.
+6. Bổ sung (chủ dự án): **mỗi khi thêm / đổi vai trò / gỡ một Owner → gửi email báo TẤT CẢ Owner đang hoạt động của workspace + ghi `action_logs`** (thư gửi nền qua `notify`, không chặn thao tác; mẫu thư vi/en theo ngôn ngữ người nhận; không chứa token). "Thêm Owner" gồm cả nhận lời mời vai trò Owner; "đổi vai trò" gồm hạ Owner → Staff và nâng Staff → Owner.
+7. Bổ sung (chủ dự án) — **hàm DB nhận lời mời (0015) là trọng tâm của verifier**: `SECURITY DEFINER` với `search_path` cố định; **email so khớp lấy từ phiên phía server, không nhận email làm tham số** — hàm chỉ nhận `p_token_hash`, người dùng lấy từ `app.user_id` do `withUser()` đặt từ phiên đã xác thực, rồi đọc `users.email` + `email_verified` bên trong hàm; chỉ `GRANT EXECUTE` cho role cần (`cf_app`), `REVOKE ALL FROM PUBLIC`; mọi ca lỗi trả cùng một kết quả.
+8. Bổ sung (chủ dự án): **giao diện dựng tối giản, không chờ Stitch**; bỏ nội dung bịa và ghi vào `design/stitch/README.md`; **mật khẩu tối thiểu 10 ký tự** (13 §2), không phải 8.
+9. Bổ sung (chủ dự án): được phép sửa `docs/10` §3.1 (`invitations`), `docs/13` §3.1 và viết ADR 005; báo lại nội dung đã đổi để chủ dự án cập nhật bản trên Project.
 
 Mặc định tôi sẽ áp dụng (không cần quyết định, sửa được nếu bạn muốn khác): hết hạn lời mời **7 ngày**; chỉ **Owner** thấy trang Thành viên và gọi được các hành động thành viên/lời mời (13 §3.1 "Kênh, thành viên … ❌ Staff"); thành viên `suspended`/`removed` không còn thấy workspace đó trong bộ chuyển, và nếu hết sạch workspace thì gặp màn tạo workspace; ngôn ngữ mặc định của workspace chỉ `vi`/`en` (ràng buộc CHECK sẵn có); múi giờ chọn trong danh sách IANA hợp lệ (mặc định `Asia/Ho_Chi_Minh`).
 
@@ -83,7 +87,7 @@ Mặc định tôi sẽ áp dụng (không cần quyết định, sửa được
 `0015_invitations_hardening.sql` — **chỉ chạy `cf_dev`/`cf_test`/`cf_ci`**:
 1. `invitations`: thêm `invited_by uuid REFERENCES core.users(id) ON DELETE SET NULL`, `revoked_at timestamptz`; chỉ mục duy nhất `(workspace_id, email) WHERE accepted_at IS NULL AND revoked_at IS NULL`.
 2. Quyền `cf_app` trên `invitations`: `REVOKE UPDATE, DELETE`; `GRANT UPDATE (revoked_at)` (thu hồi). Policy tách theo lệnh (SELECT/INSERT/UPDATE) dựa vào `current_workspace_id()` như mẫu của `check-rls`.
-3. `core.invitation_preview(p_token_hash text)` và `core.accept_invitation(p_token_hash text, p_user_id uuid)`: `SECURITY DEFINER`, `SET search_path = pg_catalog, core`, chủ sở hữu `cf_owner`, `REVOKE ALL … FROM PUBLIC`, `GRANT EXECUTE … TO cf_app`. `accept_invitation` trong một giao dịch: khóa dòng lời mời (`FOR UPDATE`), kiểm chưa hết hạn/chưa dùng/chưa thu hồi, **đọc `users.email` + `email_verified` của `p_user_id` bên trong hàm và so với email lời mời**, rồi thêm/kích hoạt `members` (nếu từng `removed` thì kích hoạt lại với vai trò mới; nếu đang `suspended` thì **không** tự mở khóa → coi như không hợp lệ), đánh dấu `accepted_at`, ghi `action_logs`. Trả về một kết quả duy nhất `workspace_id` hoặc NULL (mọi lý do thất bại giống nhau).
+3. `core.invitation_preview(p_token_hash text)` và `core.accept_invitation(p_token_hash text)`: `SECURITY DEFINER`, `SET search_path = pg_catalog, core`, chủ sở hữu `cf_owner`, `REVOKE ALL … FROM PUBLIC`, `GRANT EXECUTE … TO cf_app`. `accept_invitation` trong một giao dịch: khóa dòng lời mời (`FOR UPDATE`), kiểm chưa hết hạn/chưa dùng/chưa thu hồi, **lấy người dùng từ `core.current_user_id()` (`app.user_id` do `withUser()` đặt từ phiên server; hàm KHÔNG nhận email hay user id làm tham số), đọc `users.email` + `email_verified` bên trong hàm và so với email lời mời**, rồi thêm/kích hoạt `members` (nếu từng `removed` thì kích hoạt lại với vai trò mới; nếu đang `suspended` thì **không** tự mở khóa → coi như không hợp lệ), đánh dấu `accepted_at`, ghi `action_logs`. Trả về một kết quả duy nhất `workspace_id` hoặc NULL (mọi lý do thất bại giống nhau).
 4. Trigger `BEFORE UPDATE ON core.members` từ chối thay đổi làm workspace không còn Owner `active` nào; khóa ghi trên dòng `workspaces` để hai giao dịch song song không cùng vượt qua.
 
 Đường lùi: `DROP FUNCTION`, `DROP TRIGGER`, bỏ chỉ mục/cột, `GRANT UPDATE, DELETE ON core.invitations TO cf_app` (như 0001). Không thêm bảng nên không cần policy bảng mới; hai cột mới rỗng/NULL cho dữ liệu cũ.
@@ -136,7 +140,7 @@ Bằng lời, chờ bạn duyệt (không tự sửa `docs/01–16`):
 
 ## Checklist plan
 
-- [ ] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
+- [x] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
 - [x] Mỗi tiêu chí nghiệm thu kiểm được và có cách kiểm
 - [x] Logic quy tắc đã có test viết trước
 - [x] Đã đánh dấu diff nhạy cảm (cần verifier hay không)
@@ -145,4 +149,4 @@ Bằng lời, chờ bạn duyệt (không tự sửa `docs/01–16`):
 
 ## Trạng thái duyệt
 
-**Chờ duyệt.** Chưa sửa code. (Còn 5 thẻ cần bạn trả lời; mỗi thẻ có khuyến nghị — trả lời "đồng ý khuyến nghị" là đủ.)
+**Đã duyệt** (chủ dự án, 03/11/2026: đồng ý khuyến nghị cả 5 thẻ kèm bổ sung 6–9 ở mục "Điểm chưa rõ"). Bắt đầu M1.
