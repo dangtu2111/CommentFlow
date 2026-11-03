@@ -11,7 +11,7 @@ export async function rememberWorkspace(workspaceId: string): Promise<void> {
     name: WORKSPACE_COOKIE,
     value: getAuthRuntime().workspaceCookie.sign(workspaceId),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: getAuthRuntime().secureCookies,
     sameSite: 'lax',
     path: '/',
     maxAge: WORKSPACE_COOKIE_TTL_SECONDS,

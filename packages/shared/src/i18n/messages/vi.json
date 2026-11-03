@@ -197,7 +197,8 @@
     "errors": {
       "nameInvalid": "Tên workspace cần từ 1 đến 80 ký tự.",
       "timezoneInvalid": "Múi giờ không hợp lệ. Vui lòng chọn lại trong danh sách.",
-      "generic": "Chưa tạo được workspace. Vui lòng thử lại sau ít phút."
+      "generic": "Chưa tạo được workspace. Vui lòng thử lại sau ít phút.",
+      "rateLimited": "Bạn đã tạo quá nhiều workspace trong 24 giờ qua. Vui lòng thử lại sau."
     },
     "switcher": {
       "label": "Chuyển workspace",

@@ -1,7 +1,7 @@
 ALTER TABLE "core"."invitations" ADD COLUMN "revoked_at" timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "core"."invitations" ADD COLUMN "invited_by" uuid;--> statement-breakpoint
 ALTER TABLE "core"."invitations" ADD CONSTRAINT "invitations_invited_by_users_id_fk" FOREIGN KEY ("invited_by") REFERENCES "core"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "invitations_pending_email_unique" ON "core"."invitations" USING btree ("workspace_id","email") WHERE "core"."invitations"."accepted_at" is null and "core"."invitations"."revoked_at" is null;
+CREATE UNIQUE INDEX "invitations_pending_email_unique" ON "core"."invitations" USING btree ("workspace_id","email") WHERE "core"."invitations"."accepted_at" is null and "core"."invitations"."revoked_at" is null;--> statement-breakpoint
 -- ===================================================================================================
 -- Phần viết tay (feat/workspace-members). Đường lùi ở cuối file.
 --
@@ -33,8 +33,15 @@ CREATE POLICY invitations_insert ON core.invitations FOR INSERT
   );
 --> statement-breakpoint
 CREATE POLICY invitations_update ON core.invitations FOR UPDATE
-  USING (workspace_id = (SELECT core.current_workspace_id()))
-  WITH CHECK (workspace_id = (SELECT core.current_workspace_id()));
+  USING (
+    workspace_id = (SELECT core.current_workspace_id())
+    AND accepted_at IS NULL
+    AND revoked_at IS NULL
+  )
+  WITH CHECK (
+    workspace_id = (SELECT core.current_workspace_id())
+    AND revoked_at IS NOT NULL
+  );
 --> statement-breakpoint
 
 -- Xem trước lời mời (trang /invite/<token> trước khi đăng nhập): chỉ tên workspace + vai trò, và chỉ khi lời
@@ -44,7 +51,7 @@ RETURNS TABLE (workspace_name text, role text)
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = pg_catalog, core
+SET search_path = pg_catalog, core, pg_temp
 AS $$
   SELECT w.name, i.role
   FROM core.invitations i
@@ -70,7 +77,7 @@ CREATE FUNCTION core.accept_invitation(p_token_hash text)
 RETURNS TABLE (accepted_workspace_id uuid, accepted_role text, previous_role text, inviter_id uuid)
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, core
+SET search_path = pg_catalog, core, pg_temp
 AS $$
 DECLARE
   v_user uuid := core.current_user_id();
@@ -91,6 +98,7 @@ BEGIN
     AND i.accepted_at IS NULL
     AND i.revoked_at IS NULL
     AND i.expires_at > now()
+    AND EXISTS (SELECT 1 FROM core.workspaces w WHERE w.id = i.workspace_id AND w.status <> 'deleted')
   FOR UPDATE;
   IF NOT FOUND THEN
     RETURN;
@@ -112,7 +120,10 @@ BEGIN
     v_prev_role := v_member.role;
     v_prev_status := v_member.status;
     UPDATE core.members m
-    SET role = v_inv.role, status = 'active', invited_by = v_inv.invited_by, updated_at = now()
+    SET role = CASE WHEN v_member.status = 'active' AND v_member.role = 'owner' THEN 'owner' ELSE v_inv.role END,
+        status = 'active',
+        invited_by = COALESCE(v_inv.invited_by, v_member.invited_by),
+        updated_at = now()
     WHERE m.id = v_member.id;
   ELSE
     INSERT INTO core.members (workspace_id, user_id, role, invited_by, status)
@@ -126,11 +137,11 @@ BEGIN
     v_inv.workspace_id, 'user', v_user, 'invitation.accepted', 'invitation', v_inv.id::text,
     CASE WHEN v_prev_role IS NULL THEN NULL
          ELSE jsonb_build_object('role', v_prev_role, 'status', v_prev_status) END,
-    jsonb_build_object('role', v_inv.role, 'status', 'active')
+    jsonb_build_object('role', CASE WHEN v_prev_status = 'active' AND v_prev_role = 'owner' THEN 'owner' ELSE v_inv.role END, 'status', 'active')
   );
 
   accepted_workspace_id := v_inv.workspace_id;
-  accepted_role := v_inv.role;
+  accepted_role := CASE WHEN v_prev_status = 'active' AND v_prev_role = 'owner' THEN 'owner' ELSE v_inv.role END;
   previous_role := CASE WHEN v_prev_status = 'active' THEN v_prev_role ELSE NULL END;
   inviter_id := v_inv.invited_by;
   RETURN NEXT;
@@ -146,7 +157,7 @@ GRANT EXECUTE ON FUNCTION core.accept_invitation(text) TO cf_app;
 CREATE FUNCTION core.guard_last_owner() RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, core
+SET search_path = pg_catalog, core, pg_temp
 AS $$
 DECLARE
   v_remaining integer;
@@ -158,8 +169,10 @@ BEGIN
   IF OLD.role = 'owner' AND OLD.status = 'active'
      AND (TG_OP = 'DELETE' OR NEW.role <> 'owner' OR NEW.status <> 'active' OR NEW.workspace_id <> OLD.workspace_id)
   THEN
-    -- Tuần tự hóa các giao dịch cùng gỡ/hạ Owner của một workspace.
-    PERFORM 1 FROM core.workspaces w WHERE w.id = OLD.workspace_id FOR UPDATE;
+    -- Tuần tự hóa các giao dịch cùng gỡ/hạ Owner của một workspace. FOR NO KEY UPDATE (không phải FOR UPDATE) để không
+    -- xung đột với khóa FOR KEY SHARE của INSERT vào bảng con (members, action_logs...) → không deadlock. Thứ tự khóa: workspace rồi members.
+    -- Chỉ đúng ở READ COMMITTED (mặc định của withWorkspace/withUser).
+    PERFORM 1 FROM core.workspaces w WHERE w.id = OLD.workspace_id FOR NO KEY UPDATE;
     SELECT count(*) INTO v_remaining
     FROM core.members m
     WHERE m.workspace_id = OLD.workspace_id AND m.role = 'owner' AND m.status = 'active' AND m.id <> OLD.id;

@@ -423,7 +423,7 @@ export function createWorkspaceAdmin(options: {
 
       // Kiểm quyền TRƯỚC khi đếm hạn mức (người không phải Owner không được tiêu hạn mức của workspace).
       await db.withWorkspace(workspaceId, (tx) => assertOwner(tx, workspaceId, actor));
-      const decision = await limiter.check('invite', { workspaceId, email });
+      const decision = await limiter.check('invite', { workspaceId, email, userId: actor });
       if (!decision.allowed) {
         return { status: 'rate_limited', retryAfterSeconds: decision.retryAfterSeconds };
       }
@@ -601,7 +601,8 @@ export function createWorkspaceAdmin(options: {
       if (!row) return { status: 'invalid' };
       await limiter.reset('inviteAccept', { userId });
 
-      if (row.accepted_role === 'owner' || row.previous_role === 'owner') {
+      // Chỉ báo Owner khi thật sự thêm một Owner mới (lời mời không bao giờ hạ vai trò thành viên đang hoạt động).
+      if (row.accepted_role === 'owner' && row.previous_role !== 'owner') {
         await api.notifyAcceptedOwnerChange({
           workspaceId: row.accepted_workspace_id,
           userId,

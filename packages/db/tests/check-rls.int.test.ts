@@ -64,6 +64,47 @@ describe('check-rls', () => {
     expect(upd).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
   });
 
+  it('bắt được hàm SECURITY DEFINER mất search_path cố định hoặc thiếu pg_temp', async () => {
+    const noPath = await violationsAfter(
+      'ALTER FUNCTION core.accept_invitation(text) RESET search_path',
+    );
+    expect(noPath).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.accept_invitation',
+        message: expect.stringContaining('search_path'),
+      }),
+    );
+    const noTemp = await violationsAfter(
+      'ALTER FUNCTION core.invitation_preview(text) SET search_path = pg_catalog, core',
+    );
+    expect(noTemp).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.invitation_preview',
+        message: expect.stringContaining('pg_temp'),
+      }),
+    );
+  });
+
+  it('bắt được khi trigger Owner cuối cùng bị tắt hoặc gỡ', async () => {
+    for (const ddl of [
+      'ALTER TABLE core.members DISABLE TRIGGER members_guard_last_owner',
+      'DROP TRIGGER members_guard_last_owner ON core.members',
+    ]) {
+      const v = await violationsAfter(ddl);
+      expect(v).toContainEqual(
+        expect.objectContaining({
+          subject: 'core.members',
+          message: expect.stringContaining('members_guard_last_owner'),
+        }),
+      );
+    }
+  });
+
+  it('bắt được khi cf_app lấy lại quyền sửa invited_by của lời mời', async () => {
+    const v = await violationsAfter('GRANT UPDATE (invited_by) ON core.invitations TO cf_app');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
+  });
+
   it('bắt được bảng mới không có workspace_id và chưa khai báo là bảng hệ thống', async () => {
     const v = await violationsAfter('CREATE TABLE core.bang_la (id int)');
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.bang_la' }));

@@ -12,7 +12,7 @@ export async function rememberInvite(token: string): Promise<void> {
     name: INVITE_COOKIE,
     value: getAuthRuntime().inviteCookie.sign(token),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: getAuthRuntime().secureCookies,
     sameSite: 'lax',
     path: '/',
     maxAge: INVITE_COOKIE_TTL_SECONDS,

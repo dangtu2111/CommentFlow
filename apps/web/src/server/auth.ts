@@ -12,6 +12,7 @@ import {
   createValkeyRateLimiter,
   openAuthDb,
   openWorkspaceServices,
+  type RateLimiter,
   type SignedValueCodec,
   type Tenancy,
   type TwoFactorFlows,
@@ -39,6 +40,9 @@ export type AuthRuntime = {
   /** Ký cookie nhớ lời mời đang chờ qua bước đăng nhập/đăng ký/xác minh (khóa HKDF nhãn riêng). */
   inviteCookie: SignedValueCodec;
   appUrl: string;
+  /** Cờ `secure` của cookie do ta đặt: lấy từ URL công khai đã cấu hình (https), không từ NODE_ENV. */
+  secureCookies: boolean;
+  limiter: RateLimiter;
   clientIpSource: ClientIpSource;
 };
 
@@ -109,6 +113,8 @@ function createRuntime(): AuthRuntime {
       ttlSeconds: INVITE_COOKIE_TTL_SECONDS,
     }),
     appUrl: env.BETTER_AUTH_URL,
+    secureCookies: env.BETTER_AUTH_URL.startsWith('https:'),
+    limiter,
     clientIpSource: env.CLIENT_IP_SOURCE,
   };
 }

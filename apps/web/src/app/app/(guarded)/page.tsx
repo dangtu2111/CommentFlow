@@ -15,8 +15,8 @@ export async function generateMetadata() {
 export default async function AppHomePage() {
   const { user, workspace } = await requireAppUser({});
   // Người vừa đăng nhập/xác minh sau khi bấm link mời: quay lại trang chấp nhận lời mời.
-  const pendingInvite = await pendingInviteToken();
-  if (pendingInvite) redirect(`/invite/${pendingInvite}`);
+  // Route /invite/resume dùng cookie MỘT lần (xóa ngay) rồi mới chuyển tới trang lời mời.
+  if (await pendingInviteToken()) redirect('/invite/resume');
   const t = await getTranslations('auth');
   return (
     <main className="app-page">

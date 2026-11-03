@@ -197,7 +197,8 @@
     "errors": {
       "nameInvalid": "The workspace name must be 1 to 80 characters.",
       "timezoneInvalid": "Invalid time zone. Please choose one from the list.",
-      "generic": "Could not create the workspace. Please try again in a few minutes."
+      "generic": "Could not create the workspace. Please try again in a few minutes.",
+      "rateLimited": "You have created too many workspaces in the last 24 hours. Please try again later."
     },
     "switcher": {
       "label": "Switch workspace",

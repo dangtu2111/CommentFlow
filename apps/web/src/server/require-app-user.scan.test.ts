@@ -21,6 +21,9 @@ function listFiles(dir: string): string[] {
 }
 
 const isEntry = (file: string) => /(^|[\\/])(page|layout)\.tsx$|(^|[\\/])route\.tsx?$/.test(file);
+/** Bỏ chú thích để một dòng comment nhắc tới requireAppUser( không đánh lừa bộ quét. */
+const stripComments = (text: string) =>
+  text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 const startsWithUseServer = (text: string) => /^\s*(['"])use server\1/.test(text);
 
 /** Tách thân từng `export async function` thành [tên, thân] (đến hàm export kế tiếp hoặc hết file). */
@@ -33,7 +36,8 @@ function exportedActionBodies(text: string): Array<[string, string]> {
   ]);
 }
 
-function violationsOf(file: string, text: string): string[] {
+function violationsOf(file: string, source: string): string[] {
+  const text = stripComments(source);
   const out: string[] = [];
   if (startsWithUseServer(text)) {
     const bodies = exportedActionBodies(text);
@@ -119,5 +123,14 @@ export async function b() { await requireAppUser({}); }`;
 export const X = 1;
 export async function a() { await requireAppUser({}); }`;
     expect(violationsOf('x/actions.ts', text).length).toBeGreaterThan(0);
+  });
+});
+
+describe('violationsOf: chú thích không đánh lừa bộ quét', () => {
+  it('requireAppUser( chỉ nằm trong comment → vẫn báo thiếu', () => {
+    const page = `// TODO: gọi requireAppUser() sau\nexport default function P() { return null; }`;
+    expect(violationsOf('x/page.tsx', page)).toHaveLength(1);
+    const action = `'use server';\nexport async function a() {\n  /* await requireAppUser({}); */\n  return 1;\n}`;
+    expect(violationsOf('x/actions.ts', action)).toHaveLength(1);
   });
 });

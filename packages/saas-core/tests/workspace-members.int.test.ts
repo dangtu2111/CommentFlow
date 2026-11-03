@@ -676,3 +676,54 @@ describe('cô lập chéo workspace: user của A dùng id của B → không th
     ).toHaveLength(1);
   });
 });
+
+describe('sau kiểm chứng độc lập: hạn mức mời và nhận lời mời của Owner', () => {
+  it('hạn mức theo người mời: tạo thêm workspace không nhân hạn mức 20 thư/giờ', async () => {
+    const a = await setup(0);
+    const second = await tenancy.createWorkspace({ userId: a.owner, name: 'Workspace thứ hai' });
+    let limited = 0;
+    for (let i = 0; i < 25; i++) {
+      const workspaceId = i % 2 === 0 ? a.ws.id : second.id;
+      const r = await admin.createInvitation({
+        workspaceId,
+        actorUserId: a.owner,
+        email: `${randomUUID()}@example.test`,
+        role: 'staff',
+      });
+      if (r.status === 'rate_limited') limited++;
+    }
+    expect(limited).toBe(5); // 20 thư cho cả người mời, dù chia hai workspace
+  });
+
+  it('workspace khác không chặn được việc mời cùng một email của workspace thật', async () => {
+    const victim = `${randomUUID()}@example.test`;
+    const attacker = await setup(0);
+    for (let i = 0; i < 3; i++) {
+      await admin.createInvitation({
+        workspaceId: attacker.ws.id,
+        actorUserId: attacker.owner,
+        email: victim,
+        role: 'staff',
+      });
+    }
+    expect(
+      await admin.createInvitation({
+        workspaceId: attacker.ws.id,
+        actorUserId: attacker.owner,
+        email: victim,
+        role: 'staff',
+      }),
+    ).toMatchObject({ status: 'rate_limited' });
+    // cùng bộ giới hạn (không gọi setup() vì nó tạo bộ mới): workspace thật + Owner khác vẫn mời được
+    const realOwner = await person('Chủ shop thật');
+    const real = await tenancy.createWorkspace({ userId: realOwner, name: 'Shop thật' });
+    expect(
+      await admin.createInvitation({
+        workspaceId: real.id,
+        actorUserId: realOwner,
+        email: victim,
+        role: 'staff',
+      }),
+    ).toEqual({ status: 'sent' });
+  });
+});

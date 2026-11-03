@@ -97,7 +97,7 @@ describe('hàm nhận lời mời: cấu hình bảo mật', () => {
     ]);
     for (const row of rows) {
       expect(row.prosecdef).toBe(true);
-      expect(row.proconfig).toContain('search_path=pg_catalog, core');
+      expect(row.proconfig).toContain('search_path=pg_catalog, core, pg_temp');
       expect(row.acl).not.toMatch(/(^|[{,])=X/); // không có quyền cho PUBLIC
       expect(row.auth_ok).toBe(false);
     }
@@ -344,5 +344,85 @@ describe('trigger giữ Owner cuối cùng', () => {
     await expect(
       admin.query('DELETE FROM core.workspaces WHERE id = $1', [ws]),
     ).resolves.toBeTruthy();
+  });
+});
+
+describe('sau kiểm chứng độc lập: các siết bổ sung của 0015', () => {
+  it('thu hồi là một chiều: cf_app không bỏ thu hồi (revoked_at = NULL) và không thu hồi lời mời đã dùng', async () => {
+    const ws = await seedWorkspace(admin);
+    const { id } = await seedInvitation(ws, 'revoke@example.test');
+    const revoke = () =>
+      db.withWorkspace(ws, (tx) =>
+        tx.execute(
+          sql`UPDATE core.invitations SET revoked_at = now() WHERE id = ${id} RETURNING id`,
+        ),
+      );
+    expect((await revoke()).rows).toHaveLength(1);
+    // đã thu hồi: không đặt lại NULL (USING chặn dòng đã thu hồi → 0 dòng bị sửa)
+    const reset = await db.withWorkspace(ws, (tx) =>
+      tx.execute(sql`UPDATE core.invitations SET revoked_at = NULL WHERE id = ${id} RETURNING id`),
+    );
+    expect(reset.rows).toHaveLength(0);
+    // lời mời đã dùng: không thu hồi được
+    const used = await seedInvitation(ws, 'used@example.test');
+    await admin.query('UPDATE core.invitations SET accepted_at = now() WHERE id = $1', [used.id]);
+    const again = await db.withWorkspace(ws, (tx) =>
+      tx.execute(
+        sql`UPDATE core.invitations SET revoked_at = now() WHERE id = ${used.id} RETURNING id`,
+      ),
+    );
+    expect(again.rows).toHaveLength(0);
+    const row = await admin.query('SELECT revoked_at FROM core.invitations WHERE id = $1', [id]);
+    expect(row.rows[0].revoked_at).not.toBeNull();
+  });
+
+  it('lời mời của workspace đã xóa mềm không nhận được (giống xem trước)', async () => {
+    const ws = await seedWorkspace(admin);
+    const user = await verifiedUser();
+    const { token } = await seedInvitation(ws, user.email);
+    await admin.query("UPDATE core.workspaces SET status = 'deleted' WHERE id = $1", [ws]);
+    expect(await accept(user.id, token)).toEqual([]);
+    expect(
+      (
+        await db.withSystem((tx) =>
+          tx.execute(sql`SELECT * FROM core.invitation_preview(${hashOf(token)})`),
+        )
+      ).rows,
+    ).toHaveLength(0);
+  });
+
+  it('Owner đang hoạt động nhận lời mời vai trò Staff: KHÔNG bị hạ (không lỗi trigger), lời mời vẫn được đánh dấu đã dùng', async () => {
+    const ws = await seedWorkspace(admin);
+    const owner = await verifiedUser();
+    await seedMember(admin, ws, owner.id, 'owner'); // Owner duy nhất
+    const { token, id } = await seedInvitation(ws, owner.email, { role: 'staff' });
+    expect(await accept(owner.id, token)).toMatchObject([
+      { accepted_role: 'owner', previous_role: 'owner' },
+    ]);
+    const member = await admin.query(
+      'SELECT role, status FROM core.members WHERE workspace_id = $1 AND user_id = $2',
+      [ws, owner.id],
+    );
+    expect(member.rows[0]).toEqual({ role: 'owner', status: 'active' });
+    const inv = await admin.query('SELECT accepted_at FROM core.invitations WHERE id = $1', [id]);
+    expect(inv.rows[0].accepted_at).not.toBeNull();
+  });
+
+  it('nhận lời mời không xóa người mời cũ của thành viên đã có', async () => {
+    const ws = await seedWorkspace(admin);
+    const boss = await seedUser(admin);
+    await seedMember(admin, ws, boss, 'owner');
+    const user = await verifiedUser();
+    await seedMember(admin, ws, user.id, 'staff');
+    await admin.query('UPDATE core.members SET invited_by = $1 WHERE user_id = $2', [
+      boss,
+      user.id,
+    ]);
+    const { token } = await seedInvitation(ws, user.email, { role: 'owner' }); // không có invited_by
+    await accept(user.id, token);
+    const row = await admin.query('SELECT invited_by FROM core.members WHERE user_id = $1', [
+      user.id,
+    ]);
+    expect(row.rows[0].invited_by).toBe(boss);
   });
 });

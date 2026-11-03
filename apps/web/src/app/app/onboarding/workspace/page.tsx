@@ -15,8 +15,7 @@ export async function generateMetadata() {
 export default async function CreateWorkspacePage() {
   await requireAppUser({ workspace: 'optional' });
   // Có lời mời đang chờ (người mới đăng ký từ link mời): nhận lời mời trước, không bắt tạo workspace riêng.
-  const pendingInvite = await pendingInviteToken();
-  if (pendingInvite) redirect(`/invite/${pendingInvite}`);
+  if (await pendingInviteToken()) redirect('/invite/resume');
   const [t, locale] = await Promise.all([getTranslations('workspace.create'), getLocale()]);
   return (
     <main className="app-page">

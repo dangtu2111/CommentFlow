@@ -21,6 +21,15 @@ export async function createWorkspaceAction(
   });
   if (!parsed.ok) return { status: 'error', message: parsed.message, values: parsed.values };
 
+  const decision = await getAuthRuntime().limiter.check('workspaceCreate', { userId: user.id });
+  if (!decision.allowed) {
+    return {
+      status: 'error',
+      message: 'rateLimited',
+      values: { name: parsed.name, timezone: parsed.timezone, defaultLang: parsed.defaultLang },
+    };
+  }
+
   let workspaceId: string;
   try {
     const created = await getAuthRuntime().tenancy.createWorkspace({

@@ -9,7 +9,8 @@ export type RateAction =
   | 'twofa'
   | 'reauth'
   | 'invite'
-  | 'inviteAccept';
+  | 'inviteAccept'
+  | 'workspaceCreate';
 
 /** Danh tính của một lần thử. Không có IP (dev không tin header nào) thì xô cần IP bị BỎ QUA — không có khóa chung "unknown". */
 export type RateIdentity = { email?: string; ip?: string; userId?: string; workspaceId?: string };
@@ -69,8 +70,21 @@ export const RATE_POLICIES: Record<
   invite: {
     buckets: [
       { bucket: 'workspace', needs: ['workspaceId'], max: 20, windowSeconds: 3600 },
-      { bucket: 'email', needs: ['email'], max: 3, windowSeconds: 24 * 3600 },
+      // Theo người mời: một tài khoản không nhân hạn mức bằng cách tạo nhiều workspace.
+      { bucket: 'user', needs: ['userId'], max: 20, windowSeconds: 3600 },
+      // Theo (workspace, email): workspace khác không chặn được việc mời người này của workspace thật.
+      {
+        bucket: 'workspace-email',
+        needs: ['workspaceId', 'email'],
+        max: 3,
+        windowSeconds: 24 * 3600,
+      },
     ],
+    onStoreFailure: 'deny',
+  },
+  // Tạo workspace: chống một tài khoản tạo hàng loạt workspace (rồi dùng tên workspace trong thư mời).
+  workspaceCreate: {
+    buckets: [{ bucket: 'user', needs: ['userId'], max: 5, windowSeconds: 24 * 3600 }],
     onStoreFailure: 'deny',
   },
   // Nhận lời mời (chống dò token): 10 lần/15 phút cho mỗi người dùng đã đăng nhập.
