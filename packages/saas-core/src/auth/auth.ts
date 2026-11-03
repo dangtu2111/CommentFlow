@@ -159,6 +159,8 @@ export function createAuth(options: AuthOptions) {
       // Để Postgres sinh uuid bằng gen_random_uuid() (docs/10 §1).
       database: { generateId: false },
       useSecureCookies: secureCookies,
+      // Chỉ đọc IP từ x-forwarded-for (web xóa header của client rồi tự đặt lại bằng IP đã tin cậy); không để thư viện đọc header khác.
+      ipAddress: { ipAddressHeaders: ['x-forwarded-for'] },
     },
     databaseHooks: {
       session: {

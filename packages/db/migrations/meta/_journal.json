@@ -99,6 +99,13 @@
       "when": 1793699470629,
       "tag": "0013_two_factors",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793701342172,
+      "tag": "0014_two_factors_column_grants",
+      "breakpoints": true
     }
   ]
 }

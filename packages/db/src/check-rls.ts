@@ -239,6 +239,8 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_auth', 'core.sessions', 'created_at', 'UPDATE'],
   ['cf_auth', 'core.sessions', 'user_id', 'UPDATE'],
   ['cf_auth', 'core.sessions', 'token', 'UPDATE'],
+  // cf_auth không chuyển secret TOTP sang người khác
+  ['cf_auth', 'core.two_factors', 'user_id', 'UPDATE'],
 ];
 
 /** Cột của core.users mà cf_app được SELECT (migration 0012) — danh sách cho phép, không phải danh sách cấm. */

@@ -187,6 +187,26 @@ describe('check-rls', () => {
     );
   });
 
+  it('bắt two_factors mất policy auth (chỉ gỡ policy, không cấp gì cho cf_app)', async () => {
+    const v = await violationsAfter('DROP POLICY two_factors_auth_access ON core.two_factors');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.two_factors' }));
+  });
+
+  it('bắt two_factors bị tắt RLS', async () => {
+    const v = await violationsAfter('ALTER TABLE core.two_factors DISABLE ROW LEVEL SECURITY');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.two_factors',
+        message: expect.stringContaining('RLS'),
+      }),
+    );
+  });
+
+  it('bắt cf_auth được sửa user_id của two_factors', async () => {
+    const v = await violationsAfter('GRANT UPDATE (user_id) ON core.two_factors TO cf_auth');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.two_factors' }));
+  });
+
   it('bắt bảng xác thực bị tắt RLS (sessions)', async () => {
     const v = await violationsAfter('ALTER TABLE core.sessions DISABLE ROW LEVEL SECURITY');
     expect(v).toContainEqual(

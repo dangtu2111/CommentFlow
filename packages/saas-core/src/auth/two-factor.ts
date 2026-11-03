@@ -4,9 +4,10 @@ import { AppError, isLocale, type Locale } from '@flow/shared';
 import QRCode from 'qrcode';
 import type { RateLimiter } from '../ratelimit';
 import type { Auth } from './auth';
+import { MAX_PASSWORD_LENGTH } from './auth';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
 import { type CookieSpec, cookiesFromResponse } from './cookies';
-import { signPending, verifyPending } from './pending';
+import { bindingOf, signPending, verifyPending } from './pending';
 import { type BrowserKind, type OsKind, parseUserAgent } from './ua';
 
 /**
@@ -67,6 +68,17 @@ const codeOf = (error: unknown): string | undefined => {
   const code = (error as ApiError)?.body?.code;
   return typeof code === 'string' ? code : undefined;
 };
+
+/** Giá trị cookie `two_factor` của plugin (tên có thể có tiền tố `__Secure-`), đúng dạng mã hóa URL như ở Set-Cookie. */
+function pluginCookieValue(headers: Headers): string | undefined {
+  for (const part of (headers.get('cookie') ?? '').split(';')) {
+    const [key, ...rest] = part.trim().split('=');
+    if (key?.endsWith('two_factor')) return rest.join('=');
+  }
+  return undefined;
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Cookie `name=value` của header Cookie (không giải mã thêm). */
 function readCookie(headers: Headers, name: string): string | undefined {
@@ -131,10 +143,28 @@ export function createTwoFactorFlows(options: {
     return status === 400 || status === 401 || status === 403;
   };
 
+  /**
+   * Cookie chờ hợp lệ VÀ gắn đúng với cookie `two_factor` của plugin trong cùng request. Nhờ đó không ghép được cookie
+   * plugin của nạn nhân với cookie chờ của tài khoản khác để lấy thêm lượt thử (rate limit đếm theo email trong cookie ký).
+   */
+  const pendingOf = (headers: Headers): { email: string } | null => {
+    const pending = verifyPending(secret, readCookie(headers, TWO_FACTOR_PENDING_COOKIE), now);
+    if (!pending) return null;
+    const pluginValue = pluginCookieValue(headers);
+    return pluginValue !== undefined && bindingOf(pluginValue) === pending.binding
+      ? { email: pending.email }
+      : null;
+  };
+
+  const tooLong = (password: string): boolean => password.length > MAX_PASSWORD_LENGTH;
+
   const pendingCookieFor = (email: string, template: CookieSpec | undefined): CookieSpec => ({
     ...(template ?? {}),
     name: TWO_FACTOR_PENDING_COOKIE,
-    value: signPending(secret, email, { ttlSeconds: PENDING_SECONDS, now }),
+    value: signPending(secret, email, bindingOf(template?.value ?? ''), {
+      ttlSeconds: PENDING_SECONDS,
+      now,
+    }),
     path: '/',
     maxAge: PENDING_SECONDS,
     httpOnly: true,
@@ -156,7 +186,7 @@ export function createTwoFactorFlows(options: {
 
     /** Còn cookie chờ hợp lệ không (để trang /login/2fa chuyển về /login nếu hết hạn). */
     hasPending(headers: Headers): boolean {
-      return verifyPending(secret, readCookie(headers, TWO_FACTOR_PENDING_COOKIE), now) !== null;
+      return pendingOf(headers) !== null;
     },
 
     /** Nhập mã lúc đăng nhập (TOTP hoặc mã dự phòng). Mật khẩu đúng nhưng chưa nhập mã → chưa có phiên. */
@@ -165,12 +195,9 @@ export function createTwoFactorFlows(options: {
       kind: 'totp' | 'backup';
       headers: Headers;
     }): Promise<VerifyTwoFactorResult> {
-      const email = verifyPending(
-        secret,
-        readCookie(input.headers, TWO_FACTOR_PENDING_COOKIE),
-        now,
-      );
-      if (!email) return { status: 'expired' };
+      const pending = pendingOf(input.headers);
+      if (!pending) return { status: 'expired' };
+      const { email } = pending;
       const gate = await limiter.check('twofa', { email });
       if (!gate.allowed)
         return { status: 'rate_limited', retryAfterSeconds: gate.retryAfterSeconds };
@@ -251,6 +278,7 @@ export function createTwoFactorFlows(options: {
 
     /** Đăng xuất MỘT phiên của chính mình (không phải phiên hiện tại — dùng đăng xuất thường). Không đụng phiên người khác. */
     async revokeSession(input: { sessionId: string; headers: Headers }): Promise<boolean> {
+      if (!UUID_PATTERN.test(input.sessionId)) return false;
       const user = await currentUser(input.headers);
       if (!user) return false;
       if ((user.session as { id: string }).id === input.sessionId) return false;
@@ -270,6 +298,7 @@ export function createTwoFactorFlows(options: {
     }): Promise<ReauthResult<{ qrDataUrl: string; manualKey: string; backupCodes: string[] }>> {
       const user = await currentUser(input.headers);
       if (!user) return { status: 'unauthenticated' };
+      if (tooLong(input.password)) return { status: 'wrong_password' };
       if (user.twoFactorEnabled) return { status: 'already_enabled' };
       return guarded(user.id, async () => {
         try {
@@ -288,16 +317,22 @@ export function createTwoFactorFlows(options: {
     },
 
     /** Bước 2 bật 2FA: nhập mã đầu tiên từ ứng dụng xác thực → 2FA mới thật sự bật. */
-    async confirmEnrollment(input: { code: string; headers: Headers }): Promise<ReauthResult> {
+    async confirmEnrollment(input: {
+      code: string;
+      headers: Headers;
+    }): Promise<ReauthResult<{ cookies: CookieSpec[] }>> {
       const user = await currentUser(input.headers);
       if (!user) return { status: 'unauthenticated' };
-      return guarded(user.id, async () => {
+      return guarded(user.id, async (): Promise<ReauthResult<{ cookies: CookieSpec[] }>> => {
         try {
-          await auth.api.verifyTOTP({
+          // Plugin XOAY phiên khi bật 2FA (xóa phiên cũ, cấp phiên mới): phải trả cookie mới cho nơi gọi đặt lại.
+          const response = (await auth.api.verifyTOTP({
             body: { code: normalizeCode(input.code) },
             headers: input.headers,
-          });
-          return { status: 'ok' };
+            asResponse: true,
+          })) as Response;
+          if (!response.ok) return { status: 'invalid_code' };
+          return { status: 'ok', cookies: cookiesFromResponse(response) };
         } catch (error) {
           if (statusOf(error) === 401 || statusOf(error) === 400) return { status: 'invalid_code' };
           throw new AppError('INTERNAL', 'Không xác nhận được mã 2FA.', { cause: error });
@@ -306,17 +341,28 @@ export function createTwoFactorFlows(options: {
     },
 
     /** Tắt 2FA (cần mật khẩu). Việc có được phép tắt hay không (Owner/Admin bắt buộc) do nơi gọi quyết định bằng `requiresTwoFactor`. */
-    async disable(input: { password: string; headers: Headers }): Promise<ReauthResult> {
+    async disable(input: {
+      password: string;
+      headers: Headers;
+    }): Promise<ReauthResult<{ cookies: CookieSpec[] }>> {
       const user = await currentUser(input.headers);
       if (!user) return { status: 'unauthenticated' };
+      if (tooLong(input.password)) return { status: 'wrong_password' };
       if (await isRequiredFor(user)) return { status: 'required' };
-      return guarded(user.id, async () => {
+      return guarded(user.id, async (): Promise<ReauthResult<{ cookies: CookieSpec[] }>> => {
         try {
-          await auth.api.disableTwoFactor({
+          const response = (await auth.api.disableTwoFactor({
             body: { password: input.password },
             headers: input.headers,
-          });
-          return { status: 'ok' };
+            asResponse: true,
+          })) as Response;
+          if (!response.ok)
+            return {
+              status: wrongPassword({ status: response.status })
+                ? 'wrong_password'
+                : 'invalid_code',
+            };
+          return { status: 'ok', cookies: cookiesFromResponse(response) };
         } catch (error) {
           if (wrongPassword(error)) return { status: 'wrong_password' };
           throw new AppError('INTERNAL', 'Không tắt được 2FA.', { cause: error });
@@ -331,6 +377,7 @@ export function createTwoFactorFlows(options: {
     }): Promise<ReauthResult<{ backupCodes: string[] }>> {
       const user = await currentUser(input.headers);
       if (!user) return { status: 'unauthenticated' };
+      if (tooLong(input.password)) return { status: 'wrong_password' };
       return guarded(user.id, async () => {
         try {
           const result = (await auth.api.generateBackupCodes({

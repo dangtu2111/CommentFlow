@@ -25,7 +25,7 @@ Kế hoạch: `docs/plans/feat-auth-security.md` (đã duyệt 03/11) · ADR: `d
 - Không dựng server tùy biến lấy IP; dev chỉ xô theo email; staging/production `CF-Connecting-IP`; không khóa chung "unknown"; Valkey sập: log cảnh báo (không PII).
 
 ## Còn lại (theo thứ tự)
-1. Cuối nhánh: `verifier-security` + `verifier-db` MỘT lần trên diff nhánh + các sửa sau verifier của `feat/auth-ui` (trọng tâm: client không giả IP vượt rate limit; cookie ký chờ 2FA; IDOR phiên); sửa mọi mục "Chặn merge"; cập nhật gap matrix/codemap; xóa plan + handoff khi xong; mở PR khi chủ dự án đồng ý.
+1. Kiểm chứng độc lập ĐÃ CHẠY một lần (verifier-security + verifier-db): không có mục "Chặn merge"; đã sửa các mục "Nên sửa" (cookie chờ gắn cookie plugin, xoay phiên khi bật/tắt 2FA, header IP ở Server Action trang bảo mật, quyền UPDATE theo cột — migration 0014, ghim ipAddressHeaders, validate uuid/độ dài); phần còn lại ghi ở gap matrix `AUTH-HARDEN-4`. Việc kế: xóa plan + handoff khi `/finish`, mở PR khi chủ dự án đồng ý.
 2. Việc ngoài nhánh (đã ghi gap matrix): giao diện Cài đặt đầy đủ, đổi mật khẩu/ngôn ngữ trong Cài đặt, quy trình khôi phục mất 2FA, Dockerfile web staging + cloudflared.
 3. Chưa chạy trình duyệt thật cho UI 2FA (chỉ kiểm: luồng ở test tích hợp + build + chuyển hướng khi chưa đăng nhập). Chủ dự án thử tay: đăng ký → /app/security → bật 2FA → đăng xuất → đăng nhập.
 

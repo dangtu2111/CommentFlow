@@ -151,7 +151,7 @@ describe('bật 2FA', () => {
 
     expect(
       await twoFactor.confirmEnrollment({ code: totp(begin.manualKey), headers: jar.headers }),
-    ).toEqual({ status: 'ok' });
+    ).toMatchObject({ status: 'ok' });
     expect(
       (await owner.query('SELECT totp_enabled FROM core.users WHERE id = $1', [user.userId]))
         .rows[0].totp_enabled,
@@ -351,9 +351,9 @@ describe('quản lý 2FA trong trang bảo mật', () => {
     expect(
       await twoFactor.disable({ password: 'sai-hoan-toan', headers: user.jar.headers }),
     ).toEqual({ status: 'wrong_password' });
-    expect(await twoFactor.disable({ password: user.password, headers: user.jar.headers })).toEqual(
-      { status: 'ok' },
-    );
+    expect(
+      await twoFactor.disable({ password: user.password, headers: user.jar.headers }),
+    ).toMatchObject({ status: 'ok' });
     expect(
       (
         await owner.query('SELECT count(*)::int AS n FROM core.two_factors WHERE user_id = $1', [
@@ -415,7 +415,7 @@ describe('bắt buộc 2FA cho Owner/Admin (dữ liệu seed chỉ ở cf_test)'
     ).toBe(true);
     expect(
       await twoFactor.disable({ password: staff.password, headers: staffJar.headers }),
-    ).toEqual({ status: 'ok' });
+    ).toMatchObject({ status: 'ok' });
   });
 
   it('quản trị nền tảng (is_admin) cũng bắt buộc', async () => {
@@ -431,6 +431,73 @@ describe('bắt buộc 2FA cho Owner/Admin (dữ liệu seed chỉ ở cf_test)'
     if (ok.status !== 'ok') throw new Error(ok.status);
     const jar = new Jar().apply(signIn.cookies).apply(ok.cookies);
     expect((await twoFactor.overview(jar.headers))?.required).toBe(true);
+  });
+});
+
+describe('cookie chờ gắn với đúng lượt đăng nhập (verifier)', () => {
+  it('cookie chờ của tài khoản A ghép với cookie plugin của B (và ngược lại) → expired, không tốn lượt của ai', async () => {
+    const a = await userWithTwoFactor();
+    const b = await userWithTwoFactor();
+    const signA = await flows.signIn({ ...a, headers: new Headers() });
+    const signB = await flows.signIn({ ...b, headers: new Headers() });
+    if (signA.status !== 'two_factor_required' || signB.status !== 'two_factor_required')
+      throw new Error('cần two_factor_required');
+    const mixed = new Jar()
+      .apply(signB.cookies.filter((c) => c.name !== 'cf-2fa-pending'))
+      .apply(signA.cookies.filter((c) => c.name === 'cf-2fa-pending'));
+    // 20 lần thử sai với cookie ghép: không lần nào được tính (không bị rate_limited, luôn expired)
+    for (let i = 0; i < 20; i++) {
+      expect(
+        await twoFactor.verifyLogin({
+          code: wrongCode(b.totpKey),
+          kind: 'totp',
+          headers: mixed.headers,
+        }),
+      ).toEqual({ status: 'expired' });
+    }
+    // lượt đăng nhập hợp lệ của A vẫn còn đủ 5 lần thử
+    const jarA = new Jar().apply(signA.cookies);
+    expect(
+      await twoFactor.verifyLogin({
+        code: wrongCode(a.totpKey),
+        kind: 'totp',
+        headers: jarA.headers,
+      }),
+    ).toEqual({ status: 'invalid_code' });
+  });
+});
+
+describe('phiên còn dùng được sau khi bật/tắt 2FA và đầu vào bất thường (verifier)', () => {
+  it('bật rồi tắt 2FA không làm mất phiên hiện tại', async () => {
+    const user = await newUser();
+    const jar = await login(user);
+    const begin = await twoFactor.beginEnrollment({
+      password: user.password,
+      headers: jar.headers,
+    });
+    if (begin.status !== 'ok') throw new Error(begin.status);
+    const confirmed = await twoFactor.confirmEnrollment({
+      code: totp(begin.manualKey),
+      headers: jar.headers,
+    });
+    if (confirmed.status !== 'ok') throw new Error(confirmed.status);
+    jar.apply(confirmed.cookies); // plugin xoay phiên: dùng cookie mới
+    expect((await auth.api.getSession({ headers: jar.headers }))?.user.id).toBe(user.userId);
+    const disabled = await twoFactor.disable({ password: user.password, headers: jar.headers });
+    if (disabled.status !== 'ok') throw new Error(disabled.status);
+    jar.apply(disabled.cookies);
+    expect((await auth.api.getSession({ headers: jar.headers }))?.user.id).toBe(user.userId);
+  });
+
+  it('sessionId không phải uuid → false (không lỗi DB); mật khẩu quá dài → wrong_password', async () => {
+    const user = await newUser();
+    const jar = await login(user);
+    expect(await twoFactor.revokeSession({ sessionId: "x'; --", headers: jar.headers })).toBe(
+      false,
+    );
+    expect(
+      await twoFactor.beginEnrollment({ password: 'a'.repeat(5000), headers: jar.headers }),
+    ).toEqual({ status: 'wrong_password' });
   });
 });
 

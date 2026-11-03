@@ -6,10 +6,10 @@ import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { applyCookies } from '../../lib/apply-cookies';
 import { errorState, type FormState, problemToState, signInToState } from '../../lib/auth-form';
-import { clientIpFrom } from '../../lib/client-ip';
 import { setLocaleCookie } from '../../lib/locale-cookie';
 import { PENDING_EMAIL_COOKIE } from '../../lib/pending-email';
 import { getAuthRuntime } from '../../server/auth';
+import { requestContext } from '../../server/request-context';
 
 /**
  * Server Action của các trang xác thực. Chỉ làm 3 việc: đọc form, gọi `flows` của saas-core, đổi kết quả thành
@@ -20,20 +20,6 @@ const text = (data: FormData, key: string): string => {
   const value = data.get(key);
   return typeof value === 'string' ? value : '';
 };
-
-/**
- * IP khách chỉ lấy từ nguồn đã cấu hình (ADR 004 §2; dev: không có IP). Mọi header IP của client bị XÓA trước khi
- * gửi cho Better Auth, rồi chỉ đặt lại `x-forwarded-for` bằng IP đã tin cậy — nên `sessions.ip` và rate limit
- * không bị giả bằng header tự đặt.
- */
-async function requestContext(): Promise<{ ip: string | undefined; headers: Headers }> {
-  const incoming = await headers();
-  const ip = clientIpFrom(incoming, getAuthRuntime().clientIpSource);
-  const forwarded = new Headers(incoming);
-  for (const name of ['x-forwarded-for', 'x-real-ip', 'cf-connecting-ip']) forwarded.delete(name);
-  if (ip) forwarded.set('x-forwarded-for', ip);
-  return { ip, headers: forwarded };
-}
 
 export async function loginAction(_previous: FormState, data: FormData): Promise<FormState> {
   const email = text(data, 'email');

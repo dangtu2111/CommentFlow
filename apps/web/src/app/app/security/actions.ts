@@ -1,14 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { applyCookies } from '../../../lib/apply-cookies';
 import {
   reauthFailureToState,
   SECURITY_IDLE,
   type SecurityState,
 } from '../../../lib/security-form';
 import { getAuthRuntime } from '../../../server/auth';
+import { requestContext } from '../../../server/request-context';
 
 /**
  * Server Action của trang bảo mật. Mỗi hàm đọc phiên từ cookie (phía server) — không nhận userId từ form —
@@ -29,7 +31,7 @@ export async function beginTwoFactorAction(
 ): Promise<SecurityState> {
   const result = await flows().beginEnrollment({
     password: text(data, 'password'),
-    headers: await headers(),
+    headers: (await requestContext()).headers,
   });
   if (result.status === 'unauthenticated') redirect('/login');
   if (result.status !== 'ok') return reauthFailureToState(result);
@@ -48,10 +50,11 @@ export async function confirmTwoFactorAction(
 ): Promise<SecurityState> {
   const result = await flows().confirmEnrollment({
     code: text(data, 'code'),
-    headers: await headers(),
+    headers: (await requestContext()).headers,
   });
   if (result.status === 'unauthenticated') redirect('/login');
   if (result.status !== 'ok') return reauthFailureToState(result);
+  applyCookies(await cookies(), result.cookies); // plugin xoay phiên khi bật 2FA
   return { status: 'done' };
 }
 
@@ -61,7 +64,7 @@ export async function regenerateBackupCodesAction(
 ): Promise<SecurityState> {
   const result = await flows().regenerateBackupCodes({
     password: text(data, 'password'),
-    headers: await headers(),
+    headers: (await requestContext()).headers,
   });
   if (result.status === 'unauthenticated') redirect('/login');
   if (result.status !== 'ok') return reauthFailureToState(result);
@@ -74,10 +77,11 @@ export async function disableTwoFactorAction(
 ): Promise<SecurityState> {
   const result = await flows().disable({
     password: text(data, 'password'),
-    headers: await headers(),
+    headers: (await requestContext()).headers,
   });
   if (result.status === 'unauthenticated') redirect('/login');
   if (result.status !== 'ok') return reauthFailureToState(result);
+  applyCookies(await cookies(), result.cookies);
   revalidatePath('/app/security');
   return SECURITY_IDLE;
 }
@@ -86,8 +90,8 @@ export async function disableTwoFactorAction(
 export async function revokeSessionAction(data: FormData): Promise<void> {
   const ok = await flows().revokeSession({
     sessionId: text(data, 'sessionId'),
-    headers: await headers(),
+    headers: (await requestContext()).headers,
   });
-  if (!ok && !(await flows().posture(await headers()))) redirect('/login');
+  if (!ok && !(await flows().posture((await requestContext()).headers))) redirect('/login');
   revalidatePath('/app/security');
 }
