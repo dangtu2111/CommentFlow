@@ -8,11 +8,11 @@ Mã gap matrix: (mới) `E2E-GATE0` · Spec: `docs/14_Test_Plan.md` (E2E), `docs
 
 ## Điểm chưa rõ
 
-[CẦN LÀM RÕ: Chạy E2E ở đâu? Khuyến nghị: **chạy trên máy code bằng `pnpm e2e` (web chạy cục bộ, DB test + Mailpit + Valkey trên máy ảo); CHƯA đưa vào CI** ở nhánh này vì CI hiện chỉ có Postgres, thiếu Valkey/Mailpit/trình duyệt — thêm job CI là nhánh sau khi bạn thấy E2E ổn định (ghi gap matrix `E2E-CI`).]
+Quyết định của chủ dự án (đồng ý khuyến nghị):
 
-[CẦN LÀM RÕ: Thư viện Playwright (`@playwright/test`, giấy phép Apache-2.0) tải trình duyệt Chromium (~150 MB) vào thư mục người dùng khi cài. Đồng ý thêm? Khuyến nghị: **đồng ý** — phương án thay (Cypress, Puppeteer) nặng hơn hoặc ít tính năng hơn; lệnh cài trình duyệt do bạn chạy một lần (`pnpm exec playwright install chromium`), tôi không tự tải.]
-
-[CẦN LÀM RÕ: Dữ liệu thử nằm ở đâu? Khuyến nghị: **DB test (`cf_test`, hoặc `cf_test_<làn>` khi có `CF_LANE`)**, không phải `cf_dev`; mỗi lần chạy tạo người dùng email ngẫu nhiên `e2e-<mã>@example.test` (không xóa-tạo lại schema để không phá test tích hợp đang chạy), không dùng khách giả làm số liệu (đây là tài khoản thử, hợp lệ theo AGENTS.md "chỉ seed plans").]
+1. Quyết định: **E2E chạy trên máy code bằng `pnpm e2e`, chưa vào CI**. Bổ sung: ghi gap matrix `E2E-CI` ("E2E trên CI" với service container Valkey + Mailpit) làm nhánh sau.
+2. Quyết định: **thêm `@playwright/test` (Apache-2.0)**; trình duyệt cài một lần bằng `pnpm exec playwright install chromium`.
+3. Quyết định: **dữ liệu thử ở DB test** (`cf_test`/`cf_test_<làn>`), email ngẫu nhiên `e2e-<mã>@example.test`, không dùng `cf_dev`.
 
 ## Tiêu chí nghiệm thu
 
@@ -81,7 +81,7 @@ pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm depcruise && pnpm check:pl
 
 ## Checklist plan
 
-- [ ] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
+- [x] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
 - [x] Mỗi tiêu chí nghiệm thu kiểm được và có cách kiểm
 - [x] Logic quy tắc đã có test viết trước
 - [x] Đã đánh dấu diff nhạy cảm (cần verifier hay không)
@@ -90,4 +90,4 @@ pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm depcruise && pnpm check:pl
 
 ## Trạng thái duyệt
 
-**Chờ duyệt.** Chưa sửa code.
+**Đã duyệt** (chủ dự án, 03/11/2026: đồng ý khuyến nghị kèm bổ sung ở mục "Điểm chưa rõ").
