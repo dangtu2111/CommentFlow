@@ -1,15 +1,37 @@
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { MessageSquareText } from 'lucide-react';
+import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { WorkspaceSwitcher } from '../../../components/app/workspace-switcher';
 import { getAuthRuntime } from '../../../server/auth';
+import { requireAppUser } from '../../../server/require-app-user';
 
 /**
- * Cổng bắt buộc 2FA (docs/13 §2): Owner của workspace và quản trị nền tảng chưa bật 2FA chỉ vào được
- * /app/security. Trạng thái đọc phía server từ phiên + vai trò thật, không bao giờ từ client.
+ * Khung của nhóm `(guarded)`: cổng (phiên, email, 2FA Owner/Admin, workspace đang chọn) + đầu trang có bộ chuyển
+ * workspace. Mỗi trang con VẪN tự gọi `requireAppUser` (layout không chạy lại khi chuyển trang cùng nhóm).
  */
 export default async function GuardedAppLayout({ children }: { children: ReactNode }) {
-  const posture = await getAuthRuntime().twoFactor.posture(await headers());
-  if (!posture) redirect('/login');
-  if (posture.required && !posture.twoFactorEnabled) redirect('/app/security');
-  return children;
+  const { user, workspace } = await requireAppUser({});
+  const [memberships, t] = await Promise.all([
+    getAuthRuntime().tenancy.listWorkspacesOfUser(user.id),
+    getTranslations('workspace.header'),
+  ]);
+  return (
+    <>
+      <header className="app-header">
+        <Link href="/app" className="brand">
+          <span className="brand-mark" aria-hidden="true">
+            <MessageSquareText size={18} />
+          </span>
+          {t('brand')}
+        </Link>
+        <WorkspaceSwitcher current={workspace} memberships={memberships} />
+        <nav className="app-nav" aria-label={t('nav')}>
+          {workspace.role === 'owner' ? <Link href="/app/members">{t('members')}</Link> : null}
+          <Link href="/app/security">{t('security')}</Link>
+        </nav>
+      </header>
+      {children}
+    </>
+  );
 }

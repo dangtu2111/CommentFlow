@@ -1,12 +1,36 @@
 import type { Locale } from '@flow/shared';
 import type { MailMessage } from './transport';
 
-export type EmailKind = 'verify-email' | 'reset-password' | 'account-exists';
+type StaticEmailKind = 'verify-email' | 'reset-password' | 'account-exists';
+export type EmailKind = StaticEmailKind | 'workspace-invite' | 'owner-change';
+
+export type WorkspaceRole = 'owner' | 'staff';
+/** Thay đổi Owner cần báo cho mọi Owner (docs/13 §3.1): thêm / đổi vai trò / gỡ. */
+export type OwnerChange = 'added' | 'role_changed' | 'removed' | 'suspended' | 'restored';
 
 export type EmailInput =
   | { kind: 'verify-email'; url: string }
   | { kind: 'reset-password'; url: string }
-  | { kind: 'account-exists'; loginUrl: string; resetUrl: string };
+  | { kind: 'account-exists'; loginUrl: string; resetUrl: string }
+  | {
+      kind: 'workspace-invite';
+      /** Liên kết nhận lời mời (chứa token — không bao giờ ghi log). */
+      url: string;
+      workspaceName: string;
+      role: WorkspaceRole;
+      inviterName: string;
+      days: number;
+    }
+  | {
+      kind: 'owner-change';
+      /** Trang Thành viên của workspace. */
+      url: string;
+      workspaceName: string;
+      change: OwnerChange;
+      /** Tên người bị thay đổi và người thực hiện (tên hiển thị, không email). */
+      targetName: string;
+      actorName: string;
+    };
 
 type Copy = {
   subject: string;
@@ -24,7 +48,7 @@ const COLORS = { primary: '#0B7285', text: '#0F1C24', muted: '#4A5A66', border: 
 export const VERIFY_EMAIL_HOURS = 24;
 export const RESET_PASSWORD_HOURS = 1;
 
-const COPY: Record<Locale, Record<EmailKind, Copy>> = {
+const COPY: Record<Locale, Record<StaticEmailKind, Copy>> = {
   vi: {
     'verify-email': {
       subject: `Xác minh email của bạn — ${BRAND}`,
@@ -122,12 +146,83 @@ function primaryAction(input: EmailInput): string {
   return assertHttpUrl(input.kind === 'account-exists' ? input.loginUrl : input.url);
 }
 
+const ROLE_LABEL: Record<Locale, Record<WorkspaceRole, string>> = {
+  vi: { owner: 'Owner (chủ sở hữu)', staff: 'Staff (nhân viên)' },
+  en: { owner: 'Owner', staff: 'Staff' },
+};
+
+/** Nội dung thư có tham số (tên workspace, người thực hiện...). Mọi chuỗi động qua displayName() trước khi chèn. */
+function dynamicCopy(
+  input: Extract<EmailInput, { kind: 'workspace-invite' | 'owner-change' }>,
+  locale: Locale,
+): Copy {
+  const workspace = displayName(input.workspaceName);
+  if (input.kind === 'workspace-invite') {
+    const inviter = displayName(input.inviterName);
+    const role = ROLE_LABEL[locale][input.role];
+    return locale === 'vi'
+      ? {
+          subject: `${inviter} mời bạn vào workspace "${workspace}" — ${BRAND}`,
+          greeting: (name) => `Chào ${name},`,
+          intro: `${inviter} mời bạn tham gia workspace "${workspace}" trên ${BRAND} với vai trò ${role}. Liên kết dùng một lần và hết hạn sau ${input.days} ngày. Bạn cần đăng nhập (hoặc đăng ký) bằng đúng email nhận thư này.`,
+          action: 'Xem lời mời',
+          footer: 'Nếu bạn không mong đợi lời mời này, hãy bỏ qua thư — không có gì thay đổi.',
+        }
+      : {
+          subject: `${inviter} invited you to "${workspace}" — ${BRAND}`,
+          greeting: (name) => `Hi ${name},`,
+          intro: `${inviter} invited you to join the workspace "${workspace}" on ${BRAND} as ${role}. The link works once and expires in ${input.days} days. Sign in (or sign up) with the exact email that received this message.`,
+          action: 'View invitation',
+          footer: "If you weren't expecting this invitation, ignore this email — nothing changes.",
+        };
+  }
+  const actor = displayName(input.actorName);
+  const target = displayName(input.targetName);
+  const what = {
+    vi: {
+      added: `${actor} đã thêm ${target} làm Owner`,
+      role_changed: `${actor} đã đổi vai trò Owner của ${target}`,
+      removed: `${actor} đã gỡ Owner ${target}`,
+      suspended: `${actor} đã tạm khóa Owner ${target}`,
+      restored: `${actor} đã mở khóa Owner ${target}`,
+    },
+    en: {
+      added: `${actor} added ${target} as an Owner`,
+      role_changed: `${actor} changed the Owner role of ${target}`,
+      removed: `${actor} removed the Owner ${target}`,
+      suspended: `${actor} suspended the Owner ${target}`,
+      restored: `${actor} restored the Owner ${target}`,
+    },
+  }[locale][input.change];
+  return locale === 'vi'
+    ? {
+        subject: `Thay đổi Owner ở "${workspace}" — ${BRAND}`,
+        greeting: (name) => `Chào ${name},`,
+        intro: `${what} trong workspace "${workspace}". Bạn nhận thư này vì bạn là Owner của workspace.`,
+        action: 'Xem thành viên',
+        footer: 'Nếu bạn không nhận ra thay đổi này, hãy vào trang Thành viên để kiểm tra ngay.',
+      }
+    : {
+        subject: `Owner change in "${workspace}" — ${BRAND}`,
+        greeting: (name) => `Hi ${name},`,
+        intro: `${what} in the workspace "${workspace}". You receive this because you are an Owner of the workspace.`,
+        action: 'View members',
+        footer: "If you don't recognise this change, open the Members page and review it now.",
+      };
+}
+
+function copyFor(input: EmailInput, locale: Locale): Copy {
+  return input.kind === 'workspace-invite' || input.kind === 'owner-change'
+    ? dynamicCopy(input, locale)
+    : COPY[locale][input.kind];
+}
+
 export function renderEmail(
   input: EmailInput,
   locale: Locale,
   recipient: { name: string; email: string },
 ): MailMessage {
-  const copy = COPY[locale][input.kind];
+  const copy = copyFor(input, locale);
   const name = displayName(recipient.name);
   const url = primaryAction(input);
   const resetUrl = input.kind === 'account-exists' ? assertHttpUrl(input.resetUrl) : null;

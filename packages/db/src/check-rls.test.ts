@@ -15,6 +15,8 @@ function fakeDb(parts: {
   functions?: Row[];
   authRole?: Row | null;
   authPrivileges?: Row[];
+  definerFunctions?: Row[];
+  lastOwnerTrigger?: Row[];
   sensitive?: Row[];
   usersColumns?: Row[];
   adminGuard?: Row[];
@@ -61,6 +63,8 @@ function fakeDb(parts: {
       }
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
+      if (text.includes('/* definer-functions */')) return { rows: parts.definerFunctions ?? [] };
+      if (text.includes('/* last-owner-trigger */')) return { rows: parts.lastOwnerTrigger ?? [] };
       throw new Error(`câu truy vấn lạ: ${text.slice(0, 40)}`);
     },
   };
@@ -664,5 +668,23 @@ describe('checkRls — danh sách cho phép cột users và chốt chặn tạo 
         }),
       );
     }
+  });
+});
+
+describe('checkRls: hàm SECURITY DEFINER và trigger Owner cuối', () => {
+  it('báo hàm DEFINER thiếu search_path cố định và trigger Owner cuối bị mất', async () => {
+    const v = await checkRls(
+      fakeDb({
+        definerFunctions: [
+          { name: 'core.accept_invitation', problem: 'thiếu search_path cố định' },
+        ],
+        lastOwnerTrigger: [{ name: 'core.members' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.accept_invitation',
+      message: 'hàm SECURITY DEFINER không an toàn: thiếu search_path cố định',
+    });
+    expect(v.map((x) => x.message).join('\n')).toContain('members_guard_last_owner');
   });
 });

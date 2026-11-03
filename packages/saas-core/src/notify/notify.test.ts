@@ -148,3 +148,68 @@ describe('createNodemailerTransport', () => {
     });
   });
 });
+
+describe('thư mời workspace và báo đổi Owner', () => {
+  const invite: EmailInput = {
+    kind: 'workspace-invite',
+    url: 'https://app.example.test/invite/tok123',
+    workspaceName: 'Shop An',
+    role: 'staff',
+    inviterName: 'Linh',
+    days: 7,
+  };
+  const change = (name: string, actor = 'Minh'): EmailInput => ({
+    kind: 'owner-change',
+    url: 'https://app.example.test/app/members',
+    workspaceName: 'Shop An',
+    change: 'added',
+    targetName: name,
+    actorName: actor,
+  });
+
+  it('thư mời có tên workspace, vai trò, số ngày, link — cả vi và en', () => {
+    const vi = renderEmail(invite, 'vi', recipient);
+    const en = renderEmail(invite, 'en', recipient);
+    expect(vi.subject).toContain('Shop An');
+    expect(vi.text).toContain('7 ngày');
+    expect(vi.text).toContain('Staff (nhân viên)');
+    expect(en.text).toContain('7 days');
+    expect(en.text).toContain('Staff');
+    for (const mail of [vi, en]) {
+      expect(mail.text).toContain('https://app.example.test/invite/tok123');
+      expect(mail.html).toContain('<a href="https://app.example.test/invite/tok123"');
+    }
+  });
+
+  it('thư báo đổi Owner nêu người thực hiện, người bị đổi và đúng loại thay đổi', () => {
+    for (const kind of ['added', 'role_changed', 'removed'] as const) {
+      const mail = renderEmail({ ...change('Hà'), change: kind } as EmailInput, 'vi', recipient);
+      expect(mail.text).toContain('Minh');
+      expect(mail.text).toContain('Hà');
+      expect(mail.text).toContain('Shop An');
+    }
+    expect(renderEmail(change('Hà'), 'en', recipient).text).toContain('added Hà as an Owner');
+  });
+
+  it('tên động bị làm sạch: không chèn HTML hay xuống dòng vào chủ đề/nội dung', () => {
+    const hostile = renderEmail(
+      change('<img src=x onerror=alert(1)>\r\nBcc: a@b.c'),
+      'en',
+      recipient,
+    );
+    expect(hostile.html).not.toContain('<img');
+    expect(hostile.subject).not.toMatch(/[\r\n]/);
+    const badWorkspace = renderEmail(
+      { ...invite, workspaceName: 'A\r\nBcc: evil@x.y' } as EmailInput,
+      'vi',
+      recipient,
+    );
+    expect(badWorkspace.subject).not.toMatch(/[\r\n]/);
+  });
+
+  it('URL không phải http(s) bị từ chối', () => {
+    expect(() =>
+      renderEmail({ ...invite, url: 'javascript:alert(1)' } as EmailInput, 'vi', recipient),
+    ).toThrow();
+  });
+});

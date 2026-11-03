@@ -9,8 +9,10 @@ export { createNodemailerTransport, createSmtpTransport, type SmtpOptions } from
 export {
   type EmailInput,
   type EmailKind,
+  type OwnerChange,
   RESET_PASSWORD_HOURS,
   renderEmail,
   VERIFY_EMAIL_HOURS,
+  type WorkspaceRole,
 } from './templates';
 export { createMemoryTransport, type MailMessage, type MailTransport } from './transport';

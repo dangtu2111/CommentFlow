@@ -96,7 +96,7 @@
     },
     "app": {
       "greeting": "Xin chào, {name}",
-      "body": "Bạn đã đăng nhập. Tạo workspace và kết nối Fanpage sẽ có ở bước tiếp theo.",
+      "body": "Bạn đã đăng nhập vào workspace “{workspace}”. Kết nối Fanpage sẽ có ở bước tiếp theo.",
       "logout": "Đăng xuất"
     },
     "panel": {
@@ -180,6 +180,118 @@
           "other": "hệ điều hành khác"
         }
       }
+    }
+  },
+  "workspace": {
+    "create": {
+      "title": "Tạo workspace của bạn",
+      "subtitle": "Workspace là nơi cả nhóm cùng xử lý bình luận của cửa hàng. Bạn sẽ là Owner (chủ sở hữu) của workspace này.",
+      "name": "Tên workspace",
+      "nameHint": "Ví dụ: tên cửa hàng hoặc thương hiệu (1–80 ký tự).",
+      "timezone": "Múi giờ",
+      "language": "Ngôn ngữ mặc định",
+      "languageHint": "Dùng cho thư gửi thành viên và nội dung mặc định của workspace.",
+      "twoFactorNote": "Sau khi tạo, bạn cần bật xác thực 2 bước (2FA). Đây là yêu cầu bắt buộc với Owner để bảo vệ dữ liệu khách hàng.",
+      "submit": "Tạo workspace"
+    },
+    "errors": {
+      "nameInvalid": "Tên workspace cần từ 1 đến 80 ký tự.",
+      "timezoneInvalid": "Múi giờ không hợp lệ. Vui lòng chọn lại trong danh sách.",
+      "generic": "Chưa tạo được workspace. Vui lòng thử lại sau ít phút.",
+      "rateLimited": "Bạn đã tạo quá nhiều workspace trong 24 giờ qua. Vui lòng thử lại sau."
+    },
+    "switcher": {
+      "label": "Chuyển workspace",
+      "create": "+ Tạo workspace mới",
+      "role": {
+        "owner": "Owner",
+        "staff": "Staff"
+      }
+    },
+    "header": {
+      "brand": "CommentFlow AI",
+      "nav": "Điều hướng chính",
+      "security": "Bảo mật",
+      "members": "Thành viên"
+    }
+  },
+  "members": {
+    "title": "Thành viên",
+    "subtitle": "Quản lý người cùng làm việc trong workspace “{workspace}”. Chỉ Owner thấy trang này.",
+    "roles": {
+      "owner": "Owner (chủ sở hữu)",
+      "staff": "Staff (nhân viên)"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "suspended": "Tạm khóa"
+    },
+    "list": {
+      "title": "Danh sách thành viên",
+      "you": "Bạn",
+      "selfNote": "Bạn không thể tự đổi vai trò hay tự gỡ chính mình.",
+      "unknownName": "(chưa có tên)",
+      "emailHidden": "(email ẩn khi tạm khóa)"
+    },
+    "actions": {
+      "makeOwner": "Nâng lên Owner",
+      "makeStaff": "Hạ xuống Staff",
+      "suspend": "Tạm khóa",
+      "restore": "Mở khóa",
+      "remove": "Gỡ khỏi workspace",
+      "removeWarning": "Người này sẽ mất quyền truy cập ngay. Muốn thêm lại phải mời lại.",
+      "removeConfirm": "Xác nhận gỡ",
+      "lastOwner": "Đây là Owner đang hoạt động cuối cùng nên không thể hạ vai trò, khóa hoặc gỡ."
+    },
+    "invite": {
+      "title": "Mời thành viên",
+      "body": "Gửi lời mời qua email. Người nhận cần đăng nhập (hoặc đăng ký) bằng đúng email này. Liên kết dùng một lần, hết hạn sau 7 ngày.",
+      "email": "Email người được mời",
+      "emailPlaceholder": "ten@congty.vn",
+      "role": "Vai trò",
+      "roleHint": "Owner có toàn quyền và bắt buộc bật xác thực 2 bước. Staff xử lý bình luận, tin nhắn.",
+      "submit": "Gửi lời mời",
+      "sent": "Nếu email hợp lệ, lời mời đã được gửi. Bạn có thể theo dõi trong mục “Lời mời đang chờ”."
+    },
+    "pending": {
+      "title": "Lời mời đang chờ",
+      "empty": "Chưa có lời mời nào đang chờ.",
+      "waiting": "Đang chờ",
+      "expired": "Đã hết hạn",
+      "expiresAt": "Hết hạn: {date}",
+      "resend": "Gửi lại",
+      "revoke": "Thu hồi"
+    },
+    "errors": {
+      "emailInvalid": "Email chưa đúng định dạng.",
+      "roleInvalid": "Vai trò không hợp lệ.",
+      "rateLimited": "Bạn đã gửi quá nhiều lời mời. Vui lòng thử lại sau {minutes} phút.",
+      "lastOwner": "Workspace phải luôn còn ít nhất một Owner đang hoạt động.",
+      "invalid": "Thông tin chưa hợp lệ. Vui lòng tải lại trang rồi thử lại.",
+      "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
+    }
+  },
+  "invite": {
+    "title": "Lời mời tham gia",
+    "card": {
+      "title": "Bạn được mời vào “{workspace}”",
+      "role": "Vai trò: {role}",
+      "signedOut": "Đăng nhập hoặc đăng ký bằng đúng email nhận thư mời để tham gia.",
+      "signedIn": "Bạn đang đăng nhập. Chấp nhận lời mời để tham gia workspace này.",
+      "login": "Đăng nhập để tham gia",
+      "register": "Đăng ký tài khoản mới",
+      "accept": "Chấp nhận lời mời",
+      "later": "Để sau"
+    },
+    "invalid": {
+      "title": "Không dùng được lời mời này",
+      "body": "Lời mời có thể đã hết hạn, đã được dùng hoặc đã bị thu hồi. Hãy nhờ Owner gửi lại lời mời.",
+      "action": "Về trang chính"
+    },
+    "errors": {
+      "invalid": "Không thể chấp nhận lời mời này. Lời mời có thể đã hết hạn, đã được dùng hoặc bị thu hồi, hoặc tài khoản đang đăng nhập không dùng email được mời. Hãy kiểm tra email đang đăng nhập hoặc nhờ Owner gửi lại lời mời.",
+      "rateLimited": "Bạn thử quá nhiều lần. Vui lòng thử lại sau {minutes} phút.",
+      "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
     }
   }
 }

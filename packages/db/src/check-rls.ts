@@ -229,6 +229,16 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.users', 'admin_role', 'UPDATE'],
   ['cf_app', 'core.users', 'email', 'INSERT'],
   ['cf_app', 'core.accounts', 'password', 'UPDATE'],
+  // lời mời: sau khi tạo chỉ thu hồi được (revoked_at); không sửa token/email/vai trò/hạn/đã-dùng
+  ['cf_app', 'core.invitations', 'token_hash', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'email', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'role', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'expires_at', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'accepted_at', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'invited_by', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'id', 'UPDATE'],
+  ['cf_app', 'core.invitations', 'created_at', 'UPDATE'],
   ['cf_app', 'core.sessions', 'is_admin_session', 'UPDATE'],
   ['cf_app', 'core.sessions', 'created_at', 'UPDATE'],
   ['cf_app', 'core.sessions', 'expires_at', 'UPDATE'],
@@ -313,6 +323,44 @@ async function checkSensitiveColumns(db: Queryable, violations: RlsViolation[]):
     violations.push({
       subject: String(row.tbl),
       message: `${String(row.role)} không được có quyền ${String(row.priv)} trên cột ${String(row.col)}`,
+    });
+  }
+}
+
+/**
+ * Hàm SECURITY DEFINER trong core/cf: phải có search_path cố định CÓ pg_temp ở cuối và không do cf_app/cf_auth sở hữu;
+ * trigger giữ Owner cuối cùng phải tồn tại và đang bật. Câu truy vấn chỉ trả các dòng VI PHẠM (rỗng = đạt).
+ */
+async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const bad = await db.query(`/* definer-functions */
+    SELECT n.nspname || '.' || p.proname AS name,
+      CASE
+        WHEN pg_get_userbyid(p.proowner) IN ('${APP_ROLE}', '${AUTH_ROLE}') THEN 'do ' || pg_get_userbyid(p.proowner) || ' sở hữu'
+        WHEN NOT EXISTS (SELECT 1 FROM unnest(coalesce(p.proconfig, '{}'::text[])) c WHERE c LIKE 'search_path=%')
+          THEN 'thiếu search_path cố định'
+        ELSE 'search_path thiếu pg_temp ở cuối'
+      END AS problem
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname IN ('core', 'cf') AND p.prosecdef
+      AND (pg_get_userbyid(p.proowner) IN ('${APP_ROLE}', '${AUTH_ROLE}')
+           OR NOT EXISTS (SELECT 1 FROM unnest(coalesce(p.proconfig, '{}'::text[])) c
+                          WHERE c LIKE 'search_path=%' AND c LIKE '%pg_temp'))`);
+  for (const row of bad.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm SECURITY DEFINER không an toàn: ${String(row.problem)}`,
+    });
+  }
+  const trigger = await db.query(`/* last-owner-trigger */
+    SELECT 'core.members' AS name WHERE NOT EXISTS (
+      SELECT 1 FROM pg_trigger t
+      WHERE t.tgrelid = 'core.members'::regclass AND t.tgname = 'members_guard_last_owner'
+        AND NOT t.tgisinternal AND t.tgenabled = 'O')`);
+  for (const row of trigger.rows) {
+    violations.push({
+      subject: String(row.name),
+      message:
+        'thiếu trigger members_guard_last_owner (hoặc đang bị tắt): workspace có thể mất Owner cuối cùng',
     });
   }
 }
@@ -487,6 +535,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkSensitiveColumns(db, violations);
   await checkUsersColumnAllowlist(db, violations);
   await checkAdminInsertGuard(db, violations);
+  await checkDefinerFunctions(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

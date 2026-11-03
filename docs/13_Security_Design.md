@@ -46,7 +46,9 @@
 | Kiến thức: xuất bản, khôi phục | ✅ | ❌ |
 | Tự động hóa: đổi chế độ, ngưỡng | ✅ | ❌ |
 | Quy tắc spam | ✅ | ❌ |
-| Kênh, thành viên, thanh toán, xóa/xuất dữ liệu | ✅ | ❌ |
+| Kênh, thanh toán, xóa/xuất dữ liệu | ✅ | ❌ |
+| Thành viên: xem danh sách, mời, thu hồi/gửi lại lời mời, đổi vai trò, tạm khóa, gỡ (Owner phải đã bật 2FA; không tự đổi/gỡ mình; luôn còn ≥ 1 Owner; mỗi thay đổi Owner báo email cho mọi Owner + ghi nhật ký) | ✅ | ❌ |
+| Nhận lời mời | đúng email đã xác minh của tài khoản đang đăng nhập (mọi lý do thất bại cho cùng một phản hồi) | |
 | Báo cáo | ✅ | ✅ (không thấy chi phí) |
 | Nhật ký | ✅ | ❌ |
 

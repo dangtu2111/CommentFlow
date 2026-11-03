@@ -2,7 +2,7 @@
 
 > Lập **một lần** ở GĐ0 (lệnh `/codemap-init`), sau đó chỉ sửa dòng liên quan trong cùng commit thay đổi code. Mục đích: Claude đọc file này thay vì quét lại repo. Giữ dưới ~150 dòng; mỗi dòng một file/thư mục quan trọng.
 
-Cập nhật lần cuối: 2026-11-03 · nhánh `feat/auth-ui` · Gói nội bộ: `@flow/*` (dùng thẳng mã nguồn TS, không build riêng; Node 24, pnpm, TypeScript 6.0.3)
+Cập nhật lần cuối: 2026-11-03 · nhánh `feat/workspace-members` · Gói nội bộ: `@flow/*` (dùng thẳng mã nguồn TS, không build riêng; Node 24, pnpm, TypeScript 6.0.3)
 
 ## Lệnh & công cụ
 
@@ -44,7 +44,9 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/auth-ui` · Gói nội b�
 | Gửi thư (notify) | `packages/saas-core/src/notify/` | `MailTransport` (SMTP bằng nodemailer; bộ nhớ cho test), mẫu thư vi/en (xác minh, đặt lại, đã có tài khoản), gửi nền không chờ | FR-119 · 08 §6 |
 | 2FA + phiên của mình | `packages/saas-core/src/auth/two-factor.ts` (+ `pending.ts`, `ua.ts`), `apps/web/src/app/app/security/`, `app/(auth)/login/2fa/`, `app/app/(guarded)/layout.tsx`, `components/{auth/two-factor-form,security/two-factor-card}.tsx` | `createTwoFactorFlows` (bật/xác nhận/tắt/tạo lại mã, nhập mã khi đăng nhập, `overview`, `posture`, `revokeSession`); cookie ký `cf-2fa-pending` để đếm rate limit đúng người; `requiresTwoFactor` (Owner/`is_admin`); cổng `(guarded)` chuyển về `/app/security`; `apps/web/src/server/request-context.ts` (làm sạch header IP cho MỌI Server Action); bảng `core.two_factors` (chỉ `cf_auth`, UPDATE theo cột — 0014) | 13 §2 · ADR 004 §4 |
 | Giao diện xác thực (web) | `apps/web/src/app/(auth)/` + `components/auth/` | Đăng ký, kiểm tra/xác minh email, đăng nhập, quên/đặt lại mật khẩu; Server Action ở `(auth)/actions.ts`; `/app` tạm + đăng xuất; chỉ 2 đường GET `/api/auth/*` mở (`lib/auth-route-guard.ts`) | 08 §6, §8 · 13 §2 |
-| Workspace / thành viên | `packages/saas-core/src/tenancy/` | Tạo workspace (owner), thêm thành viên (chỉ owner), liệt kê workspace của người dùng | 09 §3.1 |
+| Workspace / thành viên | `packages/saas-core/src/tenancy/` | `tenancy.ts` (tạo workspace có múi giờ/ngôn ngữ + `action_logs`, liệt kê workspace); `workspace-admin.ts` `createWorkspaceAdmin` (danh sách/đổi vai trò/tạm khóa/gỡ thành viên, lời mời: tạo/thu hồi/gửi lại/xem trước/nhận; chỉ Owner; email báo Owner); `action-log.ts`; `openWorkspaceServices` (một pool cf_app) | 09 §3.1 · ADR 005 |
+| Cổng `/app` + chọn workspace | `apps/web/src/server/{require-app-user,app-access,workspace-selection,workspace-cookie,invite-cookie}.ts`, `lib/{members-form,workspace-form,invite-token}.ts` | `requireAppUser({workspace,role,twoFactor})` BẮT BUỘC cho mọi trang/route/Server Action dưới `app/app/**` (test quét `require-app-user.scan.test.ts`); quyết định thuần ở `decideAppAccess`; cookie ký `cf-workspace`/`cf-invite` dùng khóa HKDF (`createSignedValueCodec`, `auth/signed-value.ts`) | 13 §2–§4 · ADR 005 |
+| Giao diện workspace/thành viên/lời mời | `apps/web/src/app/app/onboarding/workspace/`, `app/app/(guarded)/members/`, `app/app/workspace/actions.ts`, `app/invite/[token]/` (+ `start`, `clear`), `components/app/` | Tạo workspace, bộ chuyển (`<details>`), trang Thành viên (Owner), nhận lời mời công khai; thư mời/báo Owner ở `notify/templates.ts` | 08 · UF-1 |
 | Feature flag | `packages/saas-core/src/flags/` | `evaluateFlag` thuần + `createFlags` (cache 30 giây, `NOTIFY flags_changed`) | 09 §10 |
 | DB client / migrations / RLS | `packages/db/` | `withWorkspace`/`withUser`/`withSystem`, policy RLS (migration 0001, 0004), `checkRls` | 10 §4 |
 | Hàng đợi | `apps/worker/src/{queue,jobs}/` | pg-boss: `installQueueSchema`, `createBoss`, `workspaceJob`/`systemJob` | 09 §9 |
@@ -81,6 +83,12 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/auth-ui` · Gói nội b�
 | Nhận webhook / gửi trả lời bình luận | Chưa có | |
 
 ## Bẫy đã biết
+
+- **Lời mời (ADR 005):** nhận lời mời chỉ qua `core.accept_invitation(token_hash)` (SECURITY DEFINER, gọi trong `withUser`, KHÔNG nhận email/user id, mọi lỗi → 0 dòng). Tên cột trả về khác tên cột bảng (plpgsql nhập nhằng). `cf_app` chỉ UPDATE `invitations.revoked_at`; không DELETE. Trong hàm DEFINER, `search_path` không có `public` nên citext phải so bằng `lower(x::text)`.
+- **Owner cuối cùng** được trigger `members_guard_last_owner` giữ; lỗi `23514` + constraint `members_last_owner` → `AppError('CONFLICT')`. Dùng `members.id` (không phải user id) làm khóa trong form; id lạ/workspace khác → `NOT_FOUND` → web trả 404.
+- **Server Component không đặt được cookie:** cookie `cf-workspace`/`cf-invite` chỉ ghi trong Server Action/route handler (`/invite/<token>/start`, `/invite/clear`).
+- `Intl.supportedValuesOf('timeZone')` KHÔNG có `Asia/Ho_Chi_Minh` — dùng `WORKSPACE_TIME_ZONES`.
+- **Đồng hồ máy ảo lệch ~1 giây** so với máy code làm test `admin-session-cap` ("created_at ở tương lai") đỏ — không liên quan mã; đồng bộ giờ máy ảo.
 
 - **Ngữ cảnh RLS** do `set_config(..., true)` đặt trong giao dịch; sau khi giao dịch kết thúc biến về `''` (không phải NULL) → hàm `core.current_workspace_id()` dùng `NULLIF`. `withWorkspace` không cho `tx.transaction()` lồng.
 - **Liệt kê workspace của tôi** chỉ qua `withUser` (không có ngữ cảnh workspace); trong `withWorkspace(A)` không bao giờ thấy workspace khác.

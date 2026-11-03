@@ -50,6 +50,35 @@ describe('plansAddedSince + currentBranch (repo git tạm)', () => {
     ).toHaveLength(1);
   });
 
+  it('commit MERGE kiểu PR (refs/pull/N/merge) không làm Git ẩn nhánh đã thêm rồi xóa plan', () => {
+    // Mô phỏng CI của pull_request: HEAD là commit merge của main + nhánh; cây docs/plans của merge trùng main
+    // (plan đã xóa) nên mặc định Git "đơn giản hóa lịch sử" và bỏ qua cả nhánh. Phải dùng --full-history.
+    git('checkout', '-q', '-b', 'feat/pr', 'base');
+    writeFileSync(join(repo, 'docs/plans/feat-pr.md'), '# plan\n');
+    commit('thêm plan');
+    rmSync(join(repo, 'docs/plans/feat-pr.md'));
+    writeFileSync(join(repo, 'pr-code.txt'), 'x\n');
+    commit('xong: xóa plan');
+    git('checkout', '-q', 'base');
+    git('checkout', '-q', '-b', 'main-moved', 'base');
+    writeFileSync(join(repo, 'main-change.txt'), 'm\n');
+    commit('main tiến thêm');
+    git('checkout', '-q', '-b', 'pr-merge', 'main-moved');
+    git(
+      '-c',
+      'user.name=t',
+      '-c',
+      'user.email=t@example.test',
+      'merge',
+      '--no-ff',
+      '-q',
+      '-m',
+      'merge pr',
+      'feat/pr',
+    );
+    expect(plansAddedSince('main-moved', repo)).toEqual(['feat-pr.md']);
+  });
+
   it('nhánh fix/* không có plan → được miễn', () => {
     git('checkout', '-q', '-b', 'fix/nho', 'base');
     writeFileSync(join(repo, 'code3.txt'), '3\n');

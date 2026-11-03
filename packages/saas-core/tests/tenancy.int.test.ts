@@ -1,5 +1,5 @@
 import { and, eq, type FlowDb } from '@flow/db';
-import { members } from '@flow/db/schema/core';
+import { actionLogs, members, workspaces } from '@flow/db/schema/core';
 import { isAppError } from '@flow/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTenancy } from '../src/tenancy';
@@ -44,6 +44,47 @@ describe('createWorkspace', () => {
     expect(await codeOf(tenancy.createWorkspace({ userId: owner, name: 'x'.repeat(81) }))).toBe(
       'VALIDATION_FAILED',
     );
+  });
+
+  it('lưu múi giờ + ngôn ngữ mặc định (mặc định Asia/Ho_Chi_Minh, vi) và ghi action_logs cùng giao dịch', async () => {
+    const owner = await createTestUser();
+    const def = await tenancy.createWorkspace({ userId: owner, name: 'Mặc định' });
+    const custom = await tenancy.createWorkspace({
+      userId: owner,
+      name: 'Tùy chọn',
+      timezone: 'America/New_York',
+      defaultLang: 'en',
+    });
+    const read = (id: string) =>
+      db.withWorkspace(id, async (tx) => ({
+        ws: (await tx.select().from(workspaces).where(eq(workspaces.id, id)))[0],
+        logs: await tx.select().from(actionLogs).where(eq(actionLogs.workspaceId, id)),
+      }));
+    const d = await read(def.id);
+    expect(d.ws).toMatchObject({ timezone: 'Asia/Ho_Chi_Minh', defaultLang: 'vi' });
+    expect(d.logs).toHaveLength(1);
+    expect(d.logs[0]).toMatchObject({
+      actorType: 'user',
+      actorId: owner,
+      action: 'workspace.created',
+      targetId: def.id,
+    });
+    const c = await read(custom.id);
+    expect(c.ws).toMatchObject({ timezone: 'America/New_York', defaultLang: 'en' });
+  });
+
+  it('từ chối múi giờ lạ hoặc sai chữ hoa, và ngôn ngữ ngoài vi/en', async () => {
+    const owner = await createTestUser();
+    for (const timezone of ['Mars/Olympus', 'asia/ho_chi_minh', '', '+07:00']) {
+      expect(await codeOf(tenancy.createWorkspace({ userId: owner, name: 'Shop', timezone }))).toBe(
+        'VALIDATION_FAILED',
+      );
+    }
+    expect(
+      await codeOf(
+        tenancy.createWorkspace({ userId: owner, name: 'Shop', defaultLang: 'fr' as 'vi' }),
+      ),
+    ).toBe('VALIDATION_FAILED');
   });
 
   it('từ chối userId không phải UUID', async () => {

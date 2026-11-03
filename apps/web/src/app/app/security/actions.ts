@@ -11,6 +11,7 @@ import {
 } from '../../../lib/security-form';
 import { getAuthRuntime } from '../../../server/auth';
 import { requestContext } from '../../../server/request-context';
+import { requireAppUser } from '../../../server/require-app-user';
 
 /**
  * Server Action của trang bảo mật. Mỗi hàm đọc phiên từ cookie (phía server) — không nhận userId từ form —
@@ -22,6 +23,9 @@ const text = (data: FormData, key: string): string => {
   return typeof value === 'string' ? value : '';
 };
 
+/** Trang bảo mật: Owner/Admin chưa bật 2FA vẫn phải vào được để bật; không cần workspace. */
+const SECURITY_ACCESS = { workspace: 'optional', twoFactor: 'skip' } as const;
+
 const flows = () => getAuthRuntime().twoFactor;
 
 /** Bước 1: nhập mật khẩu → QR + khóa nhập tay + mã dự phòng (chưa bật cho đến khi xác nhận mã đầu tiên). */
@@ -29,6 +33,7 @@ export async function beginTwoFactorAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
+  await requireAppUser(SECURITY_ACCESS);
   const result = await flows().beginEnrollment({
     password: text(data, 'password'),
     headers: (await requestContext()).headers,
@@ -48,6 +53,7 @@ export async function confirmTwoFactorAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
+  await requireAppUser(SECURITY_ACCESS);
   const result = await flows().confirmEnrollment({
     code: text(data, 'code'),
     headers: (await requestContext()).headers,
@@ -62,6 +68,7 @@ export async function regenerateBackupCodesAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
+  await requireAppUser(SECURITY_ACCESS);
   const result = await flows().regenerateBackupCodes({
     password: text(data, 'password'),
     headers: (await requestContext()).headers,
@@ -75,6 +82,7 @@ export async function disableTwoFactorAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
+  await requireAppUser(SECURITY_ACCESS);
   const result = await flows().disable({
     password: text(data, 'password'),
     headers: (await requestContext()).headers,
@@ -88,6 +96,7 @@ export async function disableTwoFactorAction(
 
 /** Đăng xuất MỘT phiên khác của chính mình (id từ form chỉ là gợi ý; saas-core kiểm phiên thuộc về người dùng). */
 export async function revokeSessionAction(data: FormData): Promise<void> {
+  await requireAppUser(SECURITY_ACCESS);
   const ok = await flows().revokeSession({
     sessionId: text(data, 'sessionId'),
     headers: (await requestContext()).headers,
