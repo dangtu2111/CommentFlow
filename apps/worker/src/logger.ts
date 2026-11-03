@@ -11,6 +11,13 @@ const SENSITIVE_FIELDS = [
   'refreshToken',
   'idToken',
   'apiKey',
+  'access_token',
+  'refresh_token',
+  'id_token',
+  'api_key',
+  'client_secret',
+  'Authorization',
+  'Cookie',
   'password',
   'secret',
   'email',
@@ -31,6 +38,14 @@ export const REDACT_PATHS = [
   'req.headers.authorization',
   'req.headers.cookie',
   'res.headers["set-cookie"]',
+  // Lỗi HTTP (axios-like) lồng header/dữ liệu yêu cầu sâu nhiều cấp.
+  'err.config.headers.*',
+  'err.config.data',
+  'err.request.headers.*',
+  'err.response.headers.*',
+  'error.config.headers.*',
+  'error.config.data',
+  'error.request.headers.*',
 ];
 
 export function createLogger(options: { level: string }, destination?: NodeJS.WritableStream) {

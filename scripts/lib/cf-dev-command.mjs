@@ -40,6 +40,11 @@ function assertSafeArgs(args) {
     if (FORBIDDEN_FLAGS.has(arg.split('=')[0] ?? arg)) {
       throw new CfDevCommandError(`Cờ bị cấm: ${arg}`);
     }
+    // Cờ ngắn viết dính (-pfoo, -fx.yml, -vt1): docker compose hiểu được các cụm này nên chặn mọi cụm
+    // chứa v/p/f (xóa volume / đổi project / đổi file).
+    if (/^-[A-Za-z]/.test(arg) && /[vpf]/.test(arg.slice(1))) {
+      throw new CfDevCommandError(`Cờ bị cấm: ${arg}`);
+    }
     if (arg.includes('staging')) throw new CfDevCommandError('Không được nhắc tới cf-staging');
   }
 }

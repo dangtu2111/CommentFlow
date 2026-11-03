@@ -34,6 +34,15 @@ describe('buildRemoteCommand', () => {
     expect(() => buildRemoteCommand(['up', '--file=x.yml'])).toThrow(/Cờ bị cấm/);
   });
 
+  it('từ chối cờ ngắn viết dính chứa v/p/f (-pfoo, -fx.yml, -vt1, -dv); vẫn cho -d, --build, --tail=50', () => {
+    for (const bad of ['-pfoo', '-fx.yml', '-vt1', '-dv', '-vf', '-pcf-x']) {
+      expect(() => buildRemoteCommand(['up', bad]), bad).toThrow(/Cờ bị cấm/);
+    }
+    expect(() => buildRemoteCommand(['up', '-d', '--build'])).not.toThrow();
+    expect(() => buildRemoteCommand(['logs', '--tail=50', 'litellm'])).not.toThrow();
+    expect(() => buildRemoteCommand(['logs', '-t', 'litellm'])).not.toThrow();
+  });
+
   it('tên nhánh không được bắt đầu bằng dấu - và lệnh checkout có "--" chặn hiểu nhầm thành đường dẫn', () => {
     expect(() => buildRemoteCommand(['sync', '-f'])).toThrow(CfDevCommandError);
     expect(() => buildRemoteCommand(['sync', '--force'])).toThrow(CfDevCommandError);

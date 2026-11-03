@@ -61,6 +61,32 @@ describe('createLogger', () => {
     for (let i = 1; i <= 9; i++) expect(output).not.toContain(`tuyet-mat-${i}`);
   });
 
+  it('che tên dạng snake_case, Authorization viết hoa và header lồng sâu trong lỗi HTTP (err.config.headers)', () => {
+    const { logger, lines } = captureLogger();
+    logger.error(
+      {
+        access_token: 'tm-1',
+        refresh_token: 'tm-2',
+        api_key: 'tm-3',
+        client_secret: 'tm-4',
+        Authorization: 'Bearer tm-5',
+        headers: { Authorization: 'Bearer tm-6' },
+        err: {
+          message: 'Request failed',
+          config: {
+            headers: { Authorization: 'Bearer tm-7', 'x-api-key': 'tm-8', cookie: 'a=tm-9' },
+            data: '{"access_token":"tm-10"}',
+          },
+          request: { headers: { Authorization: 'Bearer tm-11' } },
+        },
+      },
+      'lỗi gọi API',
+    );
+    const output = lines.join('');
+    for (let i = 1; i <= 11; i++) expect(output).not.toContain(`tm-${i}`);
+    expect(output).toContain('Request failed'); // thông tin chẩn đoán còn giữ
+  });
+
   it('giữ nguyên các trường không nhạy cảm', () => {
     const { logger, lines } = captureLogger();
     logger.info({ jobId: 'abc-1' }, 'ok');
