@@ -77,7 +77,7 @@
     "errors": {
       "invalidCredentials": "Email or password is incorrect. Check them again, or reset your password if you forgot it.",
       "emailNotVerified": "This email isn't verified yet. Open the verification email in your inbox, or resend it below.",
-      "rateLimited": "Too many attempts. Wait a while, then try again.",
+      "rateLimited": "Too many attempts. Wait about {minutes} minutes, then try again.",
       "twoFactorRequired": "This account needs a two-step verification code to sign in.",
       "emailInvalid": "That email doesn't look right, for example name@company.com.",
       "passwordTooShort": "Password needs at least 10 characters.",

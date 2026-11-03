@@ -77,7 +77,7 @@
     "errors": {
       "invalidCredentials": "Email hoặc mật khẩu không đúng. Hãy kiểm tra lại, hoặc đặt lại mật khẩu nếu bạn quên.",
       "emailNotVerified": "Email này chưa được xác minh. Mở thư xác minh trong hộp thư, hoặc gửi lại thư bên dưới.",
-      "rateLimited": "Bạn đã thử quá nhiều lần. Hãy đợi một lúc rồi thử lại.",
+      "rateLimited": "Bạn đã thử quá nhiều lần. Hãy đợi khoảng {minutes} phút rồi thử lại.",
       "twoFactorRequired": "Tài khoản này cần mã xác thực 2 bước để đăng nhập.",
       "emailInvalid": "Email chưa đúng định dạng, ví dụ ten@congty.vn.",
       "passwordTooShort": "Mật khẩu cần tối thiểu 10 ký tự.",

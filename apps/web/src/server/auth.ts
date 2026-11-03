@@ -6,8 +6,10 @@ import {
   createAuthFlows,
   createNotifier,
   createSmtpTransport,
+  createValkeyRateLimiter,
   openAuthDb,
 } from '@flow/saas-core';
+import type { ClientIpSource } from '../lib/client-ip';
 import { loadServerEnv } from './env';
 
 /**
@@ -19,7 +21,7 @@ export type AuthRuntime = {
   authHandle: AuthHandle;
   flows: AuthFlows;
   appUrl: string;
-  trustedProxyHops: number;
+  clientIpSource: ClientIpSource;
 };
 
 const holder = globalThis as typeof globalThis & { __cfAuthRuntime?: AuthRuntime };
@@ -38,6 +40,13 @@ function createRuntime(): AuthRuntime {
     // Chỉ loại thư + lý do đã lọc; không có địa chỉ, URL hay token.
     onFailure: (failure) => console.warn(JSON.stringify({ event: 'mail_failed', ...failure })),
   });
+  const { limiter } = createValkeyRateLimiter({
+    url: env.REDIS_URL,
+    keyPrefix: env.REDIS_KEY_PREFIX,
+    secret: env.BETTER_AUTH_SECRET,
+    // Chỉ loại sự kiện + hành động + chế độ; không có email, IP hay khóa.
+    onWarn: (warning) => console.warn(JSON.stringify(warning)),
+  });
   const auth = createAuth({
     authDb: authHandle,
     notifier,
@@ -48,9 +57,9 @@ function createRuntime(): AuthRuntime {
   return {
     auth,
     authHandle,
-    flows: createAuthFlows({ auth }),
+    flows: createAuthFlows({ auth, limiter }),
     appUrl: env.BETTER_AUTH_URL,
-    trustedProxyHops: env.TRUSTED_PROXY_HOPS,
+    clientIpSource: env.CLIENT_IP_SOURCE,
   };
 }
 

@@ -22,15 +22,16 @@ const text = (data: FormData, key: string): string => {
 };
 
 /**
- * IP khách chỉ lấy từ phần tử do proxy tin cậy ghi (xem lib/client-ip.ts) và header gửi cho Better Auth được
- * ghi đè theo đó — nên `sessions.ip` và cổng rate limit sau này không bị giả bằng X-Forwarded-For tự đặt.
+ * IP khách chỉ lấy từ nguồn đã cấu hình (ADR 004 §2; dev: không có IP). Mọi header IP của client bị XÓA trước khi
+ * gửi cho Better Auth, rồi chỉ đặt lại `x-forwarded-for` bằng IP đã tin cậy — nên `sessions.ip` và rate limit
+ * không bị giả bằng header tự đặt.
  */
 async function requestContext(): Promise<{ ip: string | undefined; headers: Headers }> {
   const incoming = await headers();
-  const ip = clientIpFrom(incoming.get('x-forwarded-for'), getAuthRuntime().trustedProxyHops);
+  const ip = clientIpFrom(incoming, getAuthRuntime().clientIpSource);
   const forwarded = new Headers(incoming);
+  for (const name of ['x-forwarded-for', 'x-real-ip', 'cf-connecting-ip']) forwarded.delete(name);
   if (ip) forwarded.set('x-forwarded-for', ip);
-  else forwarded.delete('x-forwarded-for');
   return { ip, headers: forwarded };
 }
 
@@ -56,11 +57,13 @@ export async function registerAction(_previous: FormState, data: FormData): Prom
   const email = text(data, 'email');
   const name = text(data, 'name');
   const locale: Locale = await getLocale().then((value) => (isLocale(value) ? value : 'vi'));
+  const { ip } = await requestContext();
   const result = await getAuthRuntime().flows.register({
     email,
     name,
     password: text(data, 'password'),
     locale,
+    ...(ip ? { ip } : {}),
   });
   if (result.status === 'invalid') return problemToState(result.problem, { email, name });
 
@@ -81,7 +84,11 @@ export async function resendVerificationAction(
   _previous: FormState,
   data: FormData,
 ): Promise<FormState> {
-  const result = await getAuthRuntime().flows.resendVerification({ email: text(data, 'email') });
+  const { ip } = await requestContext();
+  const result = await getAuthRuntime().flows.resendVerification({
+    email: text(data, 'email'),
+    ...(ip ? { ip } : {}),
+  });
   return result.status === 'invalid' ? problemToState(result.problem) : { status: 'sent' };
 }
 
@@ -90,7 +97,11 @@ export async function forgotPasswordAction(
   data: FormData,
 ): Promise<FormState> {
   const email = text(data, 'email');
-  const result = await getAuthRuntime().flows.requestPasswordReset({ email });
+  const { ip } = await requestContext();
+  const result = await getAuthRuntime().flows.requestPasswordReset({
+    email,
+    ...(ip ? { ip } : {}),
+  });
   return result.status === 'invalid'
     ? problemToState(result.problem, { email })
     : { status: 'sent' };

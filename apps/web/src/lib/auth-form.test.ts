@@ -47,9 +47,12 @@ describe('signInToState', () => {
   });
 
   it('các nhánh chừa chỗ cho nhánh sau (rate limit, 2FA) đã có thông báo', () => {
-    expect(signInToState({ status: 'rate_limited' }, 'a@example.test')).toMatchObject({
-      message: 'rateLimited',
-    });
+    expect(
+      signInToState({ status: 'rate_limited', retryAfterSeconds: 610 }, 'a@example.test'),
+    ).toMatchObject({ message: 'rateLimited', retryMinutes: 11 });
+    expect(
+      signInToState({ status: 'rate_limited', retryAfterSeconds: 5 }, 'a@example.test'),
+    ).toMatchObject({ retryMinutes: 1 });
     expect(signInToState({ status: 'two_factor_required' }, 'a@example.test')).toMatchObject({
       message: 'twoFactorRequired',
     });

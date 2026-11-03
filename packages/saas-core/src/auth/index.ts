@@ -13,7 +13,6 @@ export {
   createAuthFlows,
   type FieldProblem,
   type ForgotResult,
-  type LoginGate,
   type RegisterResult,
   type ResendResult,
   type ResetResult,

@@ -21,7 +21,14 @@ export type FieldName = 'email' | 'password' | 'passwordConfirm' | 'name';
 /** Trạng thái form do Server Action trả về (đọc bằng `useActionState`). */
 export type FormState =
   | { status: 'idle' }
-  | { status: 'error'; message: MessageKey; field?: FieldName; values?: FormValues }
+  | {
+      status: 'error';
+      message: MessageKey;
+      field?: FieldName;
+      values?: FormValues;
+      /** Số phút chờ (chỉ dùng cho thông báo `rateLimited`). */
+      retryMinutes?: number;
+    }
   | { status: 'sent' }
   /** Đăng nhập đúng nhưng email chưa xác minh: hiện nút gửi lại thư cho địa chỉ này. */
   | { status: 'unverified'; email: string };
@@ -61,7 +68,10 @@ export function signInToState(
     case 'email_not_verified':
       return { status: 'unverified', email };
     case 'rate_limited':
-      return errorState('rateLimited', undefined, values);
+      return {
+        ...errorState('rateLimited', undefined, values),
+        retryMinutes: Math.max(1, Math.ceil(result.retryAfterSeconds / 60)),
+      } as FormState;
     case 'two_factor_required':
       return errorState('twoFactorRequired', undefined, values);
     case 'invalid':
