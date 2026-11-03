@@ -68,7 +68,7 @@ Bong bóng hội thoại + đường chảy + chấm tím (AI). Biến thể: ng
 | Nhật ký | Bảng + drawer | Chỉ đọc |
 | Cài đặt | Kênh · Thành viên · Gói & thanh toán · Thông báo · Dữ liệu & quyền riêng tư · Tài khoản & bảo mật | 2FA |
 | Onboarding | Wizard 5 bước | < 30 phút; thanh **Độ sẵn sàng của AI** + danh sách mục còn thiếu (FR-146); bước Giọng văn có chọn xưng hô (FR-142) |
-| Công khai | Landing, chính sách, điều khoản, DPA, đăng nhập, trạng thái xóa dữ liệu | — |
+| Công khai | Landing, chính sách, điều khoản, DPA, **đăng ký, kiểm tra email, xác minh email, đăng nhập, quên mật khẩu, đặt lại mật khẩu**, trạng thái xóa dữ liệu | Xác thực ở GĐ0 chỉ **email + mật khẩu** (OAuth/SSO làm sau); không đưa số liệu hay huy hiệu/chứng nhận chưa có thật vào trang; mọi trang xác thực và thư có **bản tiếng Anh** (FR-119); thông báo lỗi và kết quả không lộ email có tồn tại hay không (§6) |
 | Admin | 11 mục | Dải ADMIN cố định |
 
 ## 5. Thư viện thành phần (chính)

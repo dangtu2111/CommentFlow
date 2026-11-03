@@ -1,4 +1,4 @@
-import { eq } from '@flow/db';
+import { eq } from '@flow/db/runtime';
 import { sessions } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import type { Auth } from './auth';

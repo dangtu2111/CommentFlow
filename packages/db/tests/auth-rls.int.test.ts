@@ -83,11 +83,11 @@ const safeAccount = { userId: accounts.userId };
 
 describe('cf_app KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính)', () => {
   it('db.system và withSystem đọc users/sessions/accounts đều 0 dòng', async () => {
-    expect(await db.system.select().from(users)).toHaveLength(0);
+    expect(await db.system.select({ id: users.id }).from(users)).toHaveLength(0);
     expect(await db.system.select(safeSession).from(sessions)).toHaveLength(0);
     expect(await db.system.select(safeAccount).from(accounts)).toHaveLength(0);
     const viaSystem = await db.withSystem(async (tx) => ({
-      u: await tx.select().from(users),
+      u: await tx.select({ id: users.id }).from(users),
       s: await tx.select(safeSession).from(sessions),
       a: await tx.select(safeAccount).from(accounts),
     }));
@@ -127,7 +127,11 @@ describe('cf_app KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính
       ),
     ).toBe(RLS_OR_PRIVILEGE_DENIED);
     expect(
-      await db.system.update(users).set({ name: 'đổi' }).where(eq(users.id, u1)).returning(),
+      await db.system
+        .update(users)
+        .set({ name: 'đổi' })
+        .where(eq(users.id, u1))
+        .returning({ id: users.id }),
     ).toHaveLength(0);
     expect(await expectRejectCode(db.system.delete(sessions).where(eq(sessions.userId, u1)))).toBe(
       RLS_OR_PRIVILEGE_DENIED,
@@ -138,7 +142,7 @@ describe('cf_app KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính
     const r = await db.withSystem(async (tx) => {
       await tx.execute(sql`select set_config('app.ctx', 'auth', true)`);
       return {
-        u: await tx.select().from(users).where(inArray(users.id, seededUsers())),
+        u: await tx.select({ id: users.id }).from(users).where(inArray(users.id, seededUsers())),
         s: await tx.select(safeSession).from(sessions),
         a: await tx.select(safeAccount).from(accounts),
       };
@@ -243,7 +247,7 @@ describe('withUser(u): chỉ ĐỌC dòng của mình; chỉ GHI users.name/imag
     ).toHaveLength(1);
     expect(
       await db.withUser(u1, (tx) =>
-        tx.update(users).set({ name: 'Hack' }).where(eq(users.id, u3)).returning(),
+        tx.update(users).set({ name: 'Hack' }).where(eq(users.id, u3)).returning({ id: users.id }),
       ),
     ).toHaveLength(0);
   });
@@ -350,7 +354,7 @@ describe('withWorkspace(W): không thấy phiên/tài khoản; users chỉ thàn
     const id = randomUUID();
     expect(
       await db.withWorkspace(ws, (tx) =>
-        tx.update(users).set({ name: 'x' }).where(eq(users.id, u1)).returning(),
+        tx.update(users).set({ name: 'x' }).where(eq(users.id, u1)).returning({ id: users.id }),
       ),
     ).toHaveLength(0);
     expect(
@@ -423,5 +427,47 @@ describe('quyền cột trên users vẫn còn (RLS không thay thế GRANT)', (
         ),
       ),
     ).toBe(RLS_OR_PRIVILEGE_DENIED);
+  });
+});
+
+describe('cf_app không đọc cột nhạy cảm của users (migration 0012, HARDEN-3)', () => {
+  const sensitive = [
+    ['is_admin', { v: users.isAdmin }],
+    ['admin_role', { v: users.adminRole }],
+    ['email_verified', { v: users.emailVerified }],
+    ['totp_enabled', { v: users.totpEnabled }],
+  ] as const;
+
+  it.each(sensitive)(
+    'withWorkspace và withUser đều bị từ chối khi đọc %s',
+    async (_name, columns) => {
+      expect(
+        await expectRejectCode(db.withWorkspace(ws, (tx) => tx.select(columns).from(users))),
+      ).toBe(RLS_OR_PRIVILEGE_DENIED);
+      expect(await expectRejectCode(db.withUser(u1, (tx) => tx.select(columns).from(users)))).toBe(
+        RLS_OR_PRIVILEGE_DENIED,
+      );
+    },
+  );
+
+  it('select() toàn cột bị từ chối; 7 cột cho phép vẫn đọc được (danh sách thành viên)', async () => {
+    expect(await expectRejectCode(db.withWorkspace(ws, (tx) => tx.select().from(users)))).toBe(
+      RLS_OR_PRIVILEGE_DENIED,
+    );
+    const rows = await db.withWorkspace(ws, (tx) =>
+      tx
+        .select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          image: users.image,
+          locale: users.locale,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        })
+        .from(users)
+        .where(eq(users.id, u1)),
+    );
+    expect(rows).toHaveLength(1);
   });
 });

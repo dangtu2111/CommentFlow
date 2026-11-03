@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Từ MÁY CODE, kiểm các dịch vụ cf-dev (7 cổng) qua LAN (không cần mật khẩu).
 //   pnpm stack:check
-//   node --env-file=.env scripts/stack-check.mjs   (kiểm thêm AUTH Valkey nếu .env có REDIS_URL)
+//   Tự nạp .env.local rồi .env ở gốc repo (kiểm thêm AUTH Valkey nếu có REDIS_URL).
+import { loadRepoEnv } from './lib/load-env.mjs';
 import {
   checkHttp,
   checkPostgres,
@@ -9,6 +10,8 @@ import {
   checkValkey,
   passwordFromRedisUrl,
 } from './lib/stack-check.mjs';
+
+loadRepoEnv(new URL('../', import.meta.url));
 
 const host = process.env.CF_DEV_HOST ?? '192.168.1.124';
 const valkeyPassword = process.env.REDIS_URL

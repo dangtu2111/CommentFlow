@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import type { FlowDb } from '@flow/db';
-import { and, asc, eq } from '@flow/db';
-import { members, workspaces } from '@flow/db/schema/core';
+import type { FlowDb } from '@flow/db/runtime';
+import { and, asc, eq } from '@flow/db/runtime';
+import { members, users, workspaces } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import { z } from 'zod';
 import { uniqueSlug } from './slug';
@@ -9,6 +9,15 @@ import { uniqueSlug } from './slug';
 export type MemberRole = 'owner' | 'staff';
 
 export type WorkspaceMembership = { id: string; name: string; slug: string; role: MemberRole };
+
+/** Một dòng của danh sách thành viên: CHỈ các trường giao diện cần (không email_verified, is_admin, 2FA...). */
+export type MemberListItem = {
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+  role: MemberRole;
+};
 
 const nameSchema = z.string().trim().min(1).max(80);
 const uuidSchema = z.uuid();
@@ -95,6 +104,29 @@ export function createTenancy(db: FlowDb) {
         }
         throw error;
       }
+    },
+
+    /**
+     * Thành viên đang hoạt động của workspace. Chỉ chọn cột cần cho danh sách (cf_app cũng không đọc được
+     * cột nhạy cảm của users — migration 0012). Việc kiểm quyền xem (FR-004) là của nơi gọi.
+     */
+    async listMembers(workspaceId: string): Promise<MemberListItem[]> {
+      const wsId = parse(uuidSchema, workspaceId, 'workspaceId không hợp lệ.');
+      const rows = await db.withWorkspace(wsId, (tx) =>
+        tx
+          .select({
+            userId: users.id,
+            name: users.name,
+            email: users.email,
+            image: users.image,
+            role: members.role,
+          })
+          .from(members)
+          .innerJoin(users, eq(users.id, members.userId))
+          .where(and(eq(members.workspaceId, wsId), eq(members.status, 'active')))
+          .orderBy(asc(users.name), asc(users.email)),
+      );
+      return rows.map((r) => ({ ...r, role: r.role as MemberRole }));
     },
 
     /** Workspace mà người dùng là thành viên (để chuyển workspace), kèm vai trò. */

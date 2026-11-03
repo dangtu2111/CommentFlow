@@ -16,6 +16,8 @@ function fakeDb(parts: {
   authRole?: Row | null;
   authPrivileges?: Row[];
   sensitive?: Row[];
+  usersColumns?: Row[];
+  adminGuard?: Row[];
 }): Queryable {
   const noCreate = { core_create: false, cf_create: false, public_create: false, db_create: false };
   return {
@@ -46,6 +48,17 @@ function fakeDb(parts: {
         return { rows: parts.authRole === null ? [] : [parts.authRole ?? ok] };
       }
       if (text.includes('/* sensitive-columns */')) return { rows: parts.sensitive ?? [] };
+      if (text.includes('/* users-columns */')) return { rows: parts.usersColumns ?? [] };
+      if (text.includes('/* admin-insert-guard */')) {
+        return {
+          rows: parts.adminGuard ?? [
+            {
+              polname: 'users_auth_no_admin_insert',
+              withcheck: '((NOT is_admin) AND (admin_role IS NULL))',
+            },
+          ],
+        };
+      }
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       throw new Error(`câu truy vấn lạ: ${text.slice(0, 40)}`);
@@ -619,5 +632,37 @@ describe('checkRls — kiểm chứng sau 0010', () => {
       subject: 'core.users',
       message: 'cf_auth không được có quyền UPDATE trên cột is_admin',
     });
+  });
+});
+
+describe('checkRls — danh sách cho phép cột users và chốt chặn tạo Admin', () => {
+  it('cf_app đọc cột users ngoài 7 cột cho phép (phone) → đỏ; đúng 7 cột → đạt', async () => {
+    const seven = ['id', 'email', 'name', 'image', 'locale', 'created_at', 'updated_at'].map(
+      (col) => ({ col }),
+    );
+    expect(await checkRls(fakeDb({ ...base, usersColumns: seven }))).toEqual([]);
+    const v = await checkRls(fakeDb({ ...base, usersColumns: [...seven, { col: 'phone' }] }));
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.users',
+        message: expect.stringContaining('cột phone'),
+      }),
+    );
+  });
+
+  it('thiếu policy RESTRICTIVE chặn cf_auth tạo Admin, hoặc điều kiện không nhắc is_admin/admin_role → đỏ', async () => {
+    for (const adminGuard of [
+      [],
+      [{ polname: 'x', withcheck: '(true)' }],
+      [{ polname: 'x', withcheck: '(NOT is_admin)' }],
+    ]) {
+      const v = await checkRls(fakeDb({ ...base, adminGuard }));
+      expect(v, JSON.stringify(adminGuard)).toContainEqual(
+        expect.objectContaining({
+          subject: 'core.users',
+          message: expect.stringContaining('thiếu policy RESTRICTIVE'),
+        }),
+      );
+    }
   });
 });

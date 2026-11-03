@@ -65,5 +65,9 @@ LANGFUSE_HOST=http://${HOST}:3100
 
 SMTP_HOST=${HOST}
 SMTP_PORT=1025
+SMTP_FROM="CommentFlow AI <no-reply@commentflow.local>"
 MAILPIT_URL=http://${HOST}:8025
+
+# Web: BETTER_AUTH_SECRET KHÔNG nằm ở đây — đặt trong .env.local (nạp sau .env, nên chạy lại script này không mất khóa).
+BETTER_AUTH_URL=http://localhost:3000
 EOF

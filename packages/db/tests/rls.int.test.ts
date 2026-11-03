@@ -325,8 +325,10 @@ describe('quyền trên core.users và hàm ngữ cảnh', () => {
     await db.withUser(id, (tx) =>
       tx.update(users).set({ name: 'Tên mới', locale: 'en' }).where(eq(users.id, id)),
     );
-    const [row] = await db.withUser(id, (tx) => tx.select().from(users).where(eq(users.id, id)));
-    expect(row).toMatchObject({ name: 'Tên mới', locale: 'en', isAdmin: false });
+    const [row] = await db.withUser(id, (tx) =>
+      tx.select({ name: users.name, locale: users.locale }).from(users).where(eq(users.id, id)),
+    );
+    expect(row).toMatchObject({ name: 'Tên mới', locale: 'en' });
 
     expect(
       await expectRejectCode(

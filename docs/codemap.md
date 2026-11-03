@@ -2,7 +2,7 @@
 
 > Lập **một lần** ở GĐ0 (lệnh `/codemap-init`), sau đó chỉ sửa dòng liên quan trong cùng commit thay đổi code. Mục đích: Claude đọc file này thay vì quét lại repo. Giữ dưới ~150 dòng; mỗi dòng một file/thư mục quan trọng.
 
-Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold`) · Gói nội bộ: `@flow/*` (dùng thẳng mã nguồn TS, không build riêng; Node 24, pnpm, TypeScript 6.0.3)
+Cập nhật lần cuối: 2026-11-03 · nhánh `feat/auth-ui` · Gói nội bộ: `@flow/*` (dùng thẳng mã nguồn TS, không build riêng; Node 24, pnpm, TypeScript 6.0.3)
 
 ## Lệnh & công cụ
 
@@ -22,12 +22,12 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 
 | Đường dẫn | Vai trò |
 |---|---|
-| `apps/web/` | Next.js 16 + next-intl (ngôn ngữ lưu cookie), `/api/health`, chọn ngôn ngữ |
+| `apps/web/` | Next.js 16 + next-intl (cookie `NEXT_LOCALE`, mặc định theo Accept-Language): trang xác thực `app/(auth)/`, `/app` tạm, `server/` (gốc lắp ráp auth), `components/{ui,auth}`, `styles/tokens.css`, `/api/health` |
 | `apps/worker/` | Worker pg-boss + `/health`; `src/jobs`, `src/queue`, `src/cli` |
 | `services/ml/` | FastAPI chỉ `/health` (chưa nạp model) |
 | `packages/shared/` | `AppError`, `parseEnv`, `maskPii`/`MaskedText`, locale + chuỗi vi/en (gói lá) |
 | `packages/db/` | Drizzle schema `core`/`cf`, `migrations/*.sql`, RLS, `createDb`, `check-rls`, CLI |
-| `packages/saas-core/` | `auth` (Better Auth), `tenancy`, `flags` — không biết gì về sản phẩm |
+| `packages/saas-core/` | `auth` (Better Auth + `flows`), `notify` (gửi thư), `tenancy`, `flags` — không biết gì về sản phẩm |
 | `packages/ai/` | `createLlmClient().call()` → LiteLLM + ghi `ai_usage` (chưa có pipeline) |
 | `infra/` | Compose (`docker-compose.yml` nền + `.dev.yml`), `postgres/init`, `litellm/config.yaml`, `scripts/print-dev-env.sh` |
 | `scripts/`, `tools/boundaries/` | Script vận hành (`cf-dev*`, `stack-check`) và test luật depcruise |
@@ -38,6 +38,8 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 | Miền | Đường dẫn | Vai trò (1 dòng) | Spec liên quan |
 |---|---|---|---|
 | Auth / phiên | `packages/saas-core/src/auth/` | Better Auth (adapter dùng pool role `cf_auth` từ `openAuthDb`): argon2id, phiên 14 ngày, cookie ký HMAC; hạn 8 giờ phiên Admin ép bằng trigger DB, `readSession` là lớp thứ hai | 13 §2 · ADR 003 |
+| Gửi thư (notify) | `packages/saas-core/src/notify/` | `MailTransport` (SMTP bằng nodemailer; bộ nhớ cho test), mẫu thư vi/en (xác minh, đặt lại, đã có tài khoản), gửi nền không chờ | FR-119 · 08 §6 |
+| Giao diện xác thực (web) | `apps/web/src/app/(auth)/` + `components/auth/` | Đăng ký, kiểm tra/xác minh email, đăng nhập, quên/đặt lại mật khẩu; Server Action ở `(auth)/actions.ts`; `/app` tạm + đăng xuất; chỉ 2 đường GET `/api/auth/*` mở (`lib/auth-route-guard.ts`) | 08 §6, §8 · 13 §2 |
 | Workspace / thành viên | `packages/saas-core/src/tenancy/` | Tạo workspace (owner), thêm thành viên (chỉ owner), liệt kê workspace của người dùng | 09 §3.1 |
 | Feature flag | `packages/saas-core/src/flags/` | `evaluateFlag` thuần + `createFlags` (cache 30 giây, `NOTIFY flags_changed`) | 09 §10 |
 | DB client / migrations / RLS | `packages/db/` | `withWorkspace`/`withUser`/`withSystem`, policy RLS (migration 0001, 0004), `checkRls` | 10 §4 |
@@ -62,6 +64,9 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 | Pool role `cf_auth` cho bảng xác thực (chỉ module auth import) | `createAuthDb` · `openAuthDb` | `packages/db/src/auth-db.ts:24` · `packages/saas-core/src/auth/auth-db.ts:9` |
 | Chặn migration nhầm môi trường | `assertMigrationAllowed` | `packages/db/src/migration-guard.ts:41` |
 | Kiểm RLS | `checkRls` | `packages/db/src/check-rls.ts:204` |
+| Luồng đăng ký/đăng nhập/quên mật khẩu (kết quả trung tính) | `createAuthFlows` | `packages/saas-core/src/auth/flows.ts:76` |
+| Gửi thư theo ngôn ngữ người nhận | `createNotifier` · `createSmtpTransport` · `renderEmail` | `packages/saas-core/src/notify/notifier.ts:17` · `smtp.ts:36` · `templates.ts:106` |
+| Gốc lắp ráp auth của web (lazy) | `getAuthRuntime` | `apps/web/src/server/auth.ts:50` |
 | Tạo cấu hình xác thực | `createAuth` | `packages/saas-core/src/auth/auth.ts:45` |
 | Đọc phiên (cách duy nhất được hỗ trợ) | `readSession` | `packages/saas-core/src/auth/session.ts:12` |
 | Tạo workspace / thêm thành viên | `createTenancy` → `createWorkspace`, `addMember` | `packages/saas-core/src/tenancy/tenancy.ts:30,47,60` |
@@ -78,6 +83,11 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 - **Bảng xác thực** (`users`, `sessions`, `accounts`, `verifications`) chỉ thấy toàn bộ qua pool role `cf_auth` + `app.ctx = 'auth'` (`openAuthDb` — chỉ module `saas-core/src/auth` được import `@flow/db/auth-db`, luật depcruise `chi-auth-import-auth-db`). `cf_app`: `withUser` chỉ ĐỌC dòng của mình (không cột token/mật khẩu) và chỉ ghi `users.name/image/locale`; `withWorkspace` không thấy sessions/accounts, `users` chỉ thành viên `active`; `verifications` không có quyền. Role `cf_auth` tạo bởi script khởi tạo Postgres (volume mới) hoặc `pnpm cf:dev add-auth-role` (volume cũ); migration 0010 báo lỗi nếu thiếu role.
 - **Phiên Admin:** trigger `core.cap_admin_session` ép hạn 8 giờ (INSERT + UPDATE), chỉ user `is_admin` mới có phiên Admin; `cf_app` không UPDATE `sessions`. Gieo dữ liệu thử cho các cột đó và tạo người dùng thử phải dùng pool chủ sở hữu (`TEST_DATABASE_ADMIN_URL`); test cần pool xác thực dùng `TEST_DATABASE_AUTH_URL`.
 - **`cf_app` không có DELETE trên `workspaces`/`users`**, không UPDATE `users.is_admin/admin_role`; `action_logs`/`ai_usage` chỉ thêm. Bảng mới phải khai báo quyền + policy (`check-rls` sẽ đỏ nếu thiếu).
+- **`@flow/db` có hai cửa:** `@flow/db/runtime` (truy vấn, `createDb`, schema — dùng trong web/worker/saas-core) và `@flow/db` (thêm `runMigrations`, `checkRls`... cho CLI/test). Web/saas-core KHÔNG import `@flow/db` gốc: mã migration kéo vào bundle Next và làm build lỗi.
+- **`cf_app` chỉ SELECT 7 cột `users`** (`id, email, name, image, locale, created_at, updated_at`); `email_verified`/`totp_enabled`/`is_admin` của người đang đăng nhập chỉ lấy từ phiên Better Auth phía server (`getCurrentUser`). Truy vấn `users` bằng `cf_app` phải chọn cột tường minh (`select()` toàn cột bị từ chối).
+- **Biến môi trường:** `.env.local` (khóa riêng như `BETTER_AUTH_SECRET`) được nạp SAU `.env` ở web, worker, script và test (`scripts/lib/load-env.mjs`); chạy lại `print-dev-env.sh` không làm mất khóa. Biến của hệ điều hành/CI thắng cả hai.
+- **Next 16 tự sinh `apps/web/AGENTS.md`** khi chạy dev; đã tắt bằng `agentRules: false` trong `next.config.ts`.
+- **Server Action trong `(auth)/actions.ts`** chỉ được xuất hàm async (hằng số để ở `lib/`). Form dùng `useActionState`; kết quả luôn là trạng thái trung tính (`lib/auth-form.ts`), không bao giờ là mã lỗi thô của Better Auth.
 - **Token phiên lưu thô** (Better Auth, ADR 003); cookie ký bằng `BETTER_AUTH_SECRET`. Luôn đọc phiên bằng `readSession`; tạo phiên Admin bằng `internalAdapter.createSession(userId, false, { isAdminSession: true }, true)` (tham số cuối `true` bắt buộc, nếu không bị ghi đè mặc định).
 - **Flag `kill_switch`:** `default_on = true` = được phép chạy, `false` = đang chặn; đang chặn thì override bật KHÔNG bật lại được (override tắt vẫn có hiệu lực). Thứ tự: kill_switch → override → plan → rollout → default_on.
 - **Thành viên bị gỡ** = `members.status = 'removed'`, giữ dòng (`cf_app` không DELETE); `tenancy` chỉ tính thành viên `active`.

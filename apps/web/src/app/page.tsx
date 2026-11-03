@@ -1,13 +1,7 @@
-import { getTranslations } from 'next-intl/server';
-import { LocaleSwitcher } from '../components/locale-switcher';
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '../server/session';
 
+/** Trang gốc: đã đăng nhập → /app, chưa → /login. */
 export default async function HomePage() {
-  const t = await getTranslations('home');
-  return (
-    <main>
-      <h1>{t('title')}</h1>
-      <p>{t('subtitle')}</p>
-      <LocaleSwitcher />
-    </main>
-  );
+  redirect((await getCurrentUser()) ? '/app' : '/login');
 }

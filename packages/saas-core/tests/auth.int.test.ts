@@ -15,12 +15,15 @@ import {
   revokeAllSessionsOfUser,
 } from '../src/auth';
 import { wrapAuthDb } from '../src/auth/auth-db';
+import { createMemoryTransport, createNotifier } from '../src/notify';
 import { createTestAuthDb } from './helpers';
 
 // Khóa ký thử sinh ngẫu nhiên mỗi lần chạy (không có chuỗi cố định trong mã nguồn).
 const TEST_SECRET = randomBytes(32).toString('hex');
 const PASSWORD = 'mat-khau-dai-du-10';
 
+// Thư gửi đi được giữ trong bộ nhớ (không gửi thật).
+const notifier = createNotifier({ transport: createMemoryTransport() });
 let authDb: AuthDb;
 let authHandle: ReturnType<typeof wrapAuthDb>;
 let auth: Auth;
@@ -32,6 +35,7 @@ beforeAll(() => {
   authHandle = wrapAuthDb(authDb);
   auth = createAuth({
     authDb: authHandle,
+    notifier,
     secret: TEST_SECRET,
     baseURL: 'http://localhost:3000',
     appEnv: 'test',
@@ -68,19 +72,18 @@ function cookieHeader(response: Response): string {
     .join('; ');
 }
 
+/**
+ * Đăng ký + xác minh email NGAY bằng quyền chủ sở hữu (bỏ qua bước bấm link, đã có test riêng ở
+ * auth-flows.int.test.ts): các test dưới đây kiểm phiên/hạn/token, không kiểm luồng thư.
+ */
 async function signUp(email = newEmail(), password = PASSWORD) {
   const response = (await auth.api.signUpEmail({
     body: { email, password, name: 'Người thử' },
     asResponse: true,
   })) as Response;
-  const body = (await response.clone().json()) as { token: string; user: { id: string } };
-  return {
-    response,
-    email,
-    userId: body.user.id,
-    token: body.token,
-    cookie: cookieHeader(response),
-  };
+  const body = (await response.clone().json()) as { user: { id: string } };
+  await owner.query('UPDATE core.users SET email_verified = true WHERE id = $1', [body.user.id]);
+  return { response, email, userId: body.user.id };
 }
 
 async function signIn(email: string, password = PASSWORD) {
@@ -119,10 +122,17 @@ describe('đăng ký', () => {
     expect(account?.password).not.toContain(PASSWORD);
   });
 
-  it('email đã tồn tại → bị từ chối', async () => {
-    const { email } = await signUp();
+  it('email đã tồn tại → phản hồi trung tính (200), không tạo người dùng/phiên thứ hai (chống dò email)', async () => {
+    const { email, userId } = await signUp();
+    const before = (await sessionRows(userId)).length;
     const again = auth.api.signUpEmail({ body: { email, password: PASSWORD, name: 'B' } });
-    expect(await statusOf(again)).toBeGreaterThanOrEqual(400);
+    expect(await statusOf(again)).toBe(200);
+    const { rows } = await owner.query(
+      'SELECT count(*)::int AS n FROM core.users WHERE email = $1',
+      [email.toLowerCase()],
+    );
+    expect(rows[0].n).toBe(1);
+    expect((await sessionRows(userId)).length).toBe(before);
   });
 });
 
@@ -184,7 +194,7 @@ describe('đăng nhập và phiên', () => {
     const b = await signIn(email);
     const tokens = (await sessionRows(userId)).map((r) => r.token);
     expect(new Set(tokens).size).toBe(tokens.length);
-    expect(tokens.length).toBeGreaterThanOrEqual(3); // 1 từ đăng ký + 2 đăng nhập
+    expect(tokens.length).toBe(2); // đăng ký không tạo phiên (chưa xác minh email); 2 lần đăng nhập
     expect(a.cookie).not.toBe(b.cookie);
   });
 
@@ -256,7 +266,7 @@ describe('hạn 8 giờ của phiên Admin được ép ở DATABASE (mọi đư
     const { email, userId } = await signUp();
     await makeAdmin(userId);
     const { cookie } = await signIn(email);
-    // Người dùng có 2 phiên (đăng ký + đăng nhập): chọn đúng phiên ứng với cookie theo token.
+    // Người dùng có nhiều phiên (mỗi lần đăng nhập một phiên): chọn đúng phiên ứng với cookie theo token.
     const token = decodeURIComponent(cookie.split('session_token=')[1] ?? '').split('.')[0] ?? '';
     const { rows } = await owner.query(
       `UPDATE core.sessions
@@ -332,7 +342,7 @@ describe('hạn 8 giờ của phiên Admin được ép ở DATABASE (mọi đư
 });
 
 describe('cookie Secure và appEnv', () => {
-  const base = () => ({ authDb: authHandle, secret: TEST_SECRET });
+  const base = () => ({ authDb: authHandle, notifier, secret: TEST_SECRET });
 
   it('mặc định bật khi baseURL là https, tắt khi http (ở dev/test/ci)', async () => {
     const https = createAuth({ ...base(), baseURL: 'https://app.example.test', appEnv: 'test' });
@@ -403,6 +413,7 @@ describe('cấu hình', () => {
     expect(() =>
       createAuth({
         authDb: authHandle,
+        notifier,
         secret: 'ngan',
         baseURL: 'http://localhost:3000',
         appEnv: 'test',

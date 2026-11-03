@@ -216,6 +216,11 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.accounts', 'access_token', 'SELECT'],
   ['cf_app', 'core.accounts', 'refresh_token', 'SELECT'],
   ['cf_app', 'core.accounts', 'id_token', 'SELECT'],
+  // cf_app không đọc trạng thái nhạy cảm của users (lấy từ phiên Better Auth phía server)
+  ['cf_app', 'core.users', 'is_admin', 'SELECT'],
+  ['cf_app', 'core.users', 'admin_role', 'SELECT'],
+  ['cf_app', 'core.users', 'email_verified', 'SELECT'],
+  ['cf_app', 'core.users', 'totp_enabled', 'SELECT'],
   // cf_app chỉ ghi users.name/image/locale/updated_at; không ghi/chèn phiên, tài khoản
   ['cf_app', 'core.users', 'email', 'UPDATE'],
   ['cf_app', 'core.users', 'email_verified', 'UPDATE'],
@@ -235,6 +240,63 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_auth', 'core.sessions', 'user_id', 'UPDATE'],
   ['cf_auth', 'core.sessions', 'token', 'UPDATE'],
 ];
+
+/** Cột của core.users mà cf_app được SELECT (migration 0012) — danh sách cho phép, không phải danh sách cấm. */
+const USERS_COLUMNS_FOR_APP = [
+  'id',
+  'email',
+  'name',
+  'image',
+  'locale',
+  'created_at',
+  'updated_at',
+] as const;
+
+/** cf_app chỉ đọc đúng 7 cột của users: cột mới thêm sau này (phone, deleted_at...) mặc định không được lộ. */
+async function checkUsersColumnAllowlist(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* users-columns */
+    SELECT a.attname AS col
+    FROM pg_attribute a
+    WHERE a.attrelid = 'core.users'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+      AND CASE WHEN EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${APP_ROLE}')
+               THEN has_column_privilege('${APP_ROLE}', a.attrelid, a.attnum, 'SELECT') ELSE false END`);
+  const allowed: readonly string[] = USERS_COLUMNS_FOR_APP;
+  for (const row of found.rows) {
+    const column = String(row.col);
+    if (!allowed.includes(column)) {
+      violations.push({
+        subject: 'core.users',
+        message: `${APP_ROLE} đọc được cột ${column} ngoài danh sách cho phép (${USERS_COLUMNS_FOR_APP.join(', ')})`,
+      });
+    }
+  }
+}
+
+/**
+ * cf_auth có INSERT mức bảng trên core.users nên chốt duy nhất chặn nó tạo Admin là policy RESTRICTIVE
+ * (migration 0011): phải còn tồn tại, áp cho INSERT/ALL, và điều kiện nhắc is_admin lẫn admin_role.
+ */
+async function checkAdminInsertGuard(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* admin-insert-guard */
+    SELECT p.polname, pg_get_expr(p.polwithcheck, p.polrelid) AS withcheck
+    FROM pg_policy p
+    WHERE p.polrelid = 'core.users'::regclass AND NOT p.polpermissive AND p.polcmd IN ('a', '*')
+      AND (0 = ANY(p.polroles)
+           OR EXISTS (SELECT 1 FROM unnest(p.polroles) AS rid
+                      WHERE rid <> 0 AND pg_has_role('${AUTH_ROLE}', rid, 'MEMBER')))`);
+  const guarded = found.rows.some(
+    (row) =>
+      typeof row.withcheck === 'string' &&
+      /\bis_admin\b/.test(row.withcheck) &&
+      /\badmin_role\b/.test(row.withcheck),
+  );
+  if (!guarded) {
+    violations.push({
+      subject: 'core.users',
+      message: `thiếu policy RESTRICTIVE chặn ${AUTH_ROLE} INSERT người dùng Admin (is_admin / admin_role)`,
+    });
+  }
+}
 
 async function checkSensitiveColumns(db: Queryable, violations: RlsViolation[]): Promise<void> {
   const values = FORBIDDEN_COLUMN_PRIVILEGES.map(
@@ -421,6 +483,8 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkRole(db, AUTH_ROLE, 'auth-', violations);
   await checkAuthRolePrivileges(db, policies.rows, violations);
   await checkSensitiveColumns(db, violations);
+  await checkUsersColumnAllowlist(db, violations);
+  await checkAdminInsertGuard(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

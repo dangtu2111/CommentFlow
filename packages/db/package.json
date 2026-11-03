@@ -6,6 +6,7 @@
   "description": "Truy cập dữ liệu: schema Drizzle (core, cf), migration SQL, RLS, withWorkspace(). Chỉ được phụ thuộc @flow/shared.",
   "exports": {
     ".": "./src/index.ts",
+    "./runtime": "./src/runtime.ts",
     "./auth-db": "./src/auth-db.ts",
     "./schema/core": "./src/schema/core/index.ts",
     "./schema/cf": "./src/schema/cf/index.ts"
@@ -15,9 +16,9 @@
     "test": "vitest run",
     "test:db": "vitest run --config vitest.int.config.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx --env-file-if-exists=../../.env src/cli/migrate.ts",
-    "db:test:reset": "tsx --env-file-if-exists=../../.env src/cli/test-reset.ts",
-    "db:check-rls": "tsx --env-file-if-exists=../../.env src/cli/check-rls.ts"
+    "db:migrate": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/migrate.ts",
+    "db:test:reset": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/test-reset.ts",
+    "db:check-rls": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/check-rls.ts"
   },
   "dependencies": {
     "@flow/shared": "workspace:*",

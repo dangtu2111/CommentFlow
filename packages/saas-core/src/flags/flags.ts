@@ -1,4 +1,4 @@
-import type { FlowDb } from '@flow/db';
+import type { FlowDb } from '@flow/db/runtime';
 import { featureFlagOverrides, featureFlags } from '@flow/db/schema/core';
 import { evaluateFlag, type FlagContext, type FlagKind, type FlagRow } from './evaluate';
 

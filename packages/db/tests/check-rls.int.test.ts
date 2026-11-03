@@ -311,4 +311,36 @@ describe('check-rls', () => {
       message: 'cf_auth không được có quyền UPDATE trên cột is_admin',
     });
   });
+
+  it('bắt cf_app được cấp lại SELECT cả bảng users (lộ is_admin, email_verified...)', async () => {
+    const v = await violationsAfter('GRANT SELECT ON core.users TO cf_app');
+    for (const column of ['is_admin', 'admin_role', 'email_verified', 'totp_enabled']) {
+      expect(v).toContainEqual({
+        subject: 'core.users',
+        message: `cf_app không được có quyền SELECT trên cột ${column}`,
+      });
+    }
+  });
+
+  it('bắt cột mới của users bị lộ cho cf_app khi ai đó cấp lại SELECT cả bảng (danh sách cho phép 7 cột)', async () => {
+    const v = await violationsAfter(`
+      ALTER TABLE core.users ADD COLUMN phone text;
+      GRANT SELECT ON core.users TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.users',
+        message: expect.stringContaining('cột phone'),
+      }),
+    );
+  });
+
+  it('bắt khi policy RESTRICTIVE chặn cf_auth tạo Admin bị gỡ', async () => {
+    const v = await violationsAfter('DROP POLICY users_auth_no_admin_insert ON core.users');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.users',
+        message: expect.stringContaining('thiếu policy RESTRICTIVE'),
+      }),
+    );
+  });
 });
