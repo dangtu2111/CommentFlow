@@ -71,8 +71,10 @@ describe('CF_LANE (DB test riêng cho mỗi làn)', () => {
     DATABASE_URL: 'postgresql://cf_app:p@h:5433/cf_dev',
   };
   const envText = Object.entries(urls)
-    .map(([k, v]) => `${k}=${v}
-`)
+    .map(
+      ([k, v]) => `${k}=${v}
+`,
+    )
     .join('');
 
   function load(lane) {

@@ -35,6 +35,21 @@ describe('buildRemoteCommand', () => {
     expect(() => buildRemoteCommand(['add-auth-role', 'x'])).toThrow(/không nhận tham số/);
   });
 
+  it('add-test-db <làn> chạy script cố định với đúng một tên làn hợp lệ', () => {
+    expect(buildRemoteCommand(['add-test-db', 'b'])).toBe(
+      'cd ~/CommentFlow && bash infra/scripts/cf-dev-add-test-db.sh b',
+    );
+    expect(buildRemoteCommand(['add-test-db', 'a1'])).toContain('cf-dev-add-test-db.sh a1');
+  });
+
+  it('add-test-db từ chối thiếu/thừa đối số và tên làn lạ', () => {
+    expect(() => buildRemoteCommand(['add-test-db'])).toThrow(/add-test-db/);
+    expect(() => buildRemoteCommand(['add-test-db', 'a', 'b'])).toThrow(/add-test-db/);
+    for (const lane of ['B', 'a;ls', 'a b', '../x', 'abcdefghi', 'a-b', '$(id)', '']) {
+      expect(() => buildRemoteCommand(['add-test-db', lane])).toThrow(/add-test-db/);
+    }
+  });
+
   it('từ chối --project-directory (đổi nơi tính đường dẫn bind mount / build context)', () => {
     expect(() => buildRemoteCommand(['up', '--project-directory', '/tmp'])).toThrow(/Cờ bị cấm/);
     expect(() => buildRemoteCommand(['up', '--project-directory=/tmp'])).toThrow(/Cờ bị cấm/);

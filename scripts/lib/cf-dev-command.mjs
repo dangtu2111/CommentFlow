@@ -28,6 +28,8 @@ const FORBIDDEN_FLAGS = new Set([
   '--profile',
   '--project-directory',
 ]);
+// Tên làn: khớp migration-guard (packages/db) và load-env (CF_LANE).
+const LANE_NAME = /^[a-z0-9]{1,8}$/;
 const SAFE_ARG = /^[A-Za-z0-9_.:=/@-]+$/;
 // Không cho bắt đầu bằng '-' để tên nhánh không bị git hiểu thành tùy chọn.
 const SAFE_BRANCH = /^[A-Za-z0-9._/][A-Za-z0-9._/-]*$/;
@@ -65,6 +67,16 @@ export function buildRemoteCommand(argv) {
     // Thêm role cf_auth vào volume Postgres ĐÃ có (script khởi tạo chỉ chạy lúc volume trống). Chỉ chạy script cố định trong repo.
     if (rest.length > 0) throw new CfDevCommandError('add-auth-role không nhận tham số');
     return `cd ${REMOTE_DIR} && bash infra/scripts/cf-dev-add-auth-role.sh`;
+  }
+  if (sub === 'add-test-db') {
+    // Tạo DB test riêng cho một làn song song (cf_test_<làn>). Chỉ chạy script cố định, tên làn đã kiểm regex.
+    const lane = rest[0];
+    if (rest.length !== 1 || !lane || !LANE_NAME.test(lane)) {
+      throw new CfDevCommandError(
+        'add-test-db cần đúng một tên làn (chữ thường/số, tối đa 8 ký tự), ví dụ: add-test-db a',
+      );
+    }
+    return `cd ${REMOTE_DIR} && bash infra/scripts/cf-dev-add-test-db.sh ${lane}`;
   }
   if (sub === 'sync') {
     const branch = rest[0];

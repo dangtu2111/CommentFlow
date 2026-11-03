@@ -113,9 +113,9 @@ describe('DB test theo làn (cf_test_<làn>)', () => {
       codeOf(() => assertTestResetAllowed({ appEnv: 'dev', databaseUrl: url('cf_dev') })),
     ).toBe('FORBIDDEN');
     for (const appEnv of ['staging', 'production']) {
-      expect(
-        codeOf(() => assertMigrationAllowed({ appEnv, databaseUrl: url('cf_test_b') })),
-      ).toBe('FORBIDDEN');
+      expect(codeOf(() => assertMigrationAllowed({ appEnv, databaseUrl: url('cf_test_b') }))).toBe(
+        'FORBIDDEN',
+      );
     }
   });
 });
