@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { eq, type FlowDb } from '@flow/db';
 import { accounts, sessions, users } from '@flow/db/schema/core';
 import { isAppError } from '@flow/shared';
@@ -13,8 +13,8 @@ import {
 } from '../src/auth';
 import { createTestDb } from './helpers';
 
-// Chuỗi thử cho môi trường test — KHÔNG phải bí mật thật.
-const TEST_SECRET = 'khoa-thu-nghiem-khong-phai-bi-mat-that-0123456789';
+// Khóa ký thử sinh ngẫu nhiên mỗi lần chạy (không có chuỗi cố định trong mã nguồn).
+const TEST_SECRET = randomBytes(32).toString('hex');
 const PASSWORD = 'mat-khau-dai-du-10';
 
 let db: FlowDb;
