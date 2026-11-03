@@ -20,6 +20,8 @@ async function seedFlag(
      VALUES ($1, 'commentflow', $2, $3, $4, $5, now() + interval '30 days')`,
     [flagKey, row.kind ?? 'ops', row.defaultOn ?? false, row.rollout ?? 0, row.plans ?? null],
   );
+  // Xác định hóa test: NOTIFY đến bất đồng bộ, nên xóa cache ngay thay vì chờ (test NOTIFY có riêng bên dưới).
+  flags.invalidate();
 }
 
 async function seedWorkspace(): Promise<string> {
