@@ -321,4 +321,26 @@ describe('check-rls', () => {
       });
     }
   });
+
+  it('bắt cột mới của users bị lộ cho cf_app khi ai đó cấp lại SELECT cả bảng (danh sách cho phép 7 cột)', async () => {
+    const v = await violationsAfter(`
+      ALTER TABLE core.users ADD COLUMN phone text;
+      GRANT SELECT ON core.users TO cf_app`);
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.users',
+        message: expect.stringContaining('cột phone'),
+      }),
+    );
+  });
+
+  it('bắt khi policy RESTRICTIVE chặn cf_auth tạo Admin bị gỡ', async () => {
+    const v = await violationsAfter('DROP POLICY users_auth_no_admin_insert ON core.users');
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.users',
+        message: expect.stringContaining('thiếu policy RESTRICTIVE'),
+      }),
+    );
+  });
 });

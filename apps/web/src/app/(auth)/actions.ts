@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { applyCookies } from '../../lib/apply-cookies';
 import { errorState, type FormState, problemToState, signInToState } from '../../lib/auth-form';
+import { clientIpFrom } from '../../lib/client-ip';
 import { setLocaleCookie } from '../../lib/locale-cookie';
 import { PENDING_EMAIL_COOKIE } from '../../lib/pending-email';
 import { getAuthRuntime } from '../../server/auth';
@@ -20,18 +21,26 @@ const text = (data: FormData, key: string): string => {
   return typeof value === 'string' ? value : '';
 };
 
-async function clientIp(): Promise<string | undefined> {
-  const forwarded = (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim();
-  return forwarded || undefined;
+/**
+ * IP khách chỉ lấy từ phần tử do proxy tin cậy ghi (xem lib/client-ip.ts) và header gửi cho Better Auth được
+ * ghi đè theo đó — nên `sessions.ip` và cổng rate limit sau này không bị giả bằng X-Forwarded-For tự đặt.
+ */
+async function requestContext(): Promise<{ ip: string | undefined; headers: Headers }> {
+  const incoming = await headers();
+  const ip = clientIpFrom(incoming.get('x-forwarded-for'), getAuthRuntime().trustedProxyHops);
+  const forwarded = new Headers(incoming);
+  if (ip) forwarded.set('x-forwarded-for', ip);
+  else forwarded.delete('x-forwarded-for');
+  return { ip, headers: forwarded };
 }
 
 export async function loginAction(_previous: FormState, data: FormData): Promise<FormState> {
   const email = text(data, 'email');
-  const ip = await clientIp();
+  const { ip, headers: requestHeaders } = await requestContext();
   const result = await getAuthRuntime().flows.signIn({
     email,
     password: text(data, 'password'),
-    headers: await headers(),
+    headers: requestHeaders,
     ...(ip ? { ip } : {}),
   });
   if (result.status !== 'ok') return signInToState(result, email.trim());
@@ -39,6 +48,7 @@ export async function loginAction(_previous: FormState, data: FormData): Promise
   const jar = await cookies();
   applyCookies(jar, result.cookies);
   setLocaleCookie(jar, result.locale);
+  jar.delete(PENDING_EMAIL_COOKIE); // đã xong bước xác minh/đăng nhập: không giữ email tạm
   redirect('/app');
 }
 

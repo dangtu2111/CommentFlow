@@ -37,6 +37,8 @@ export CF_AUTH_PASSWORD="$PW"
   set -e
   if psql --username "$POSTGRES_USER" --dbname postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname = '"'"'cf_auth'"'"'" | grep -q 1; then verb=ALTER; else verb=CREATE; fi
   psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<SQL
+SET log_statement = 'none';
+SET log_min_error_statement = 'panic';
 $verb ROLE cf_auth LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '"'"'$CF_AUTH_PASSWORD'"'"';
 SQL
 '

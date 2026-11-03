@@ -9,6 +9,8 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.url(),
   /** Role cf_auth — chỉ module auth dùng; KHÔNG phải DATABASE_URL (cf_app). */
   DATABASE_AUTH_URL: z.string().min(1),
+  /** Số proxy tin cậy đứng trước web (đọc X-Forwarded-For từ phải sang). 0 = không có proxy → không tin header. */
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   SMTP_HOST: z.string().min(1),
   SMTP_PORT: z.coerce.number().int().min(1).max(65535),
   SMTP_FROM: z.string().min(3),

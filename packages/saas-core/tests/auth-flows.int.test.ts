@@ -28,7 +28,7 @@ beforeAll(() => {
     baseURL: BASE_URL,
     appEnv: 'test',
   });
-  flows = createAuthFlows({ auth });
+  flows = createAuthFlows({ auth, minResponseMs: 0 });
   owner = new pg.Pool({ connectionString: process.env.TEST_DATABASE_ADMIN_URL, max: 2 });
 });
 afterAll(async () => {
@@ -208,7 +208,7 @@ describe('xác minh email và đăng nhập', () => {
   it('cổng đăng nhập (chừa chỗ rate limit): bị từ chối → rate_limited, KHÔNG gọi Better Auth; nhận email đã chuẩn hóa + ip', async () => {
     const email = await registerVerified();
     const gate = vi.fn().mockResolvedValue({ allowed: false, retryAfterSeconds: 900 });
-    const gated = createAuthFlows({ auth, loginGate: gate });
+    const gated = createAuthFlows({ auth, loginGate: gate, minResponseMs: 0 });
     const result = await gated.signIn({
       email: email.toUpperCase(),
       password: PASSWORD,
@@ -327,5 +327,70 @@ describe('quên và đặt lại mật khẩu', () => {
     expect((await flows.signIn({ email, password: PASSWORD, headers: new Headers() })).status).toBe(
       'ok',
     );
+  });
+});
+
+describe('thời gian phản hồi (chống dò email qua thời gian)', () => {
+  it('đăng ký, gửi lại thư, quên mật khẩu: email lạ và email có thật đều chờ ít nhất ngưỡng tối thiểu', async () => {
+    const slow = createAuthFlows({ auth, minResponseMs: 300 });
+    const existing = await registerVerified();
+    const timed = async (run: () => Promise<unknown>) => {
+      const start = performance.now();
+      await run();
+      return performance.now() - start;
+    };
+    const durations = await Promise.all([
+      timed(() => slow.requestPasswordReset({ email: existing })),
+      timed(() => slow.requestPasswordReset({ email: newEmail() })),
+      timed(() => slow.resendVerification({ email: existing })),
+      timed(() => slow.resendVerification({ email: newEmail() })),
+      timed(() =>
+        slow.register({ email: existing, password: PASSWORD, name: 'Kẻ lạ', locale: 'vi' }),
+      ),
+      timed(() =>
+        slow.register({ email: newEmail(), password: PASSWORD, name: 'Mới', locale: 'vi' }),
+      ),
+    ]);
+    for (const ms of durations) expect(ms).toBeGreaterThanOrEqual(295);
+    // và không chậm vô hạn: nhánh nào cũng nằm trong cùng một khoảng hẹp quanh ngưỡng
+    for (const ms of durations) expect(ms).toBeLessThan(2500);
+  });
+});
+
+describe('log của Better Auth không chứa email thô', () => {
+  it('đường email lạ / email trùng không ghi "@" vào log hay console', async () => {
+    const entries: Array<{ level: string; message: string }> = [];
+    const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((method) =>
+      vi.spyOn(console, method).mockImplementation(() => undefined),
+    );
+    try {
+      const probe = createAuth({
+        authDb: wrapAuthDb(authDb),
+        notifier: createNotifier({ transport: createMemoryTransport() }),
+        secret: TEST_SECRET,
+        baseURL: BASE_URL,
+        appEnv: 'test',
+        logger: (entry) => entries.push(entry),
+      });
+      const probeFlows = createAuthFlows({ auth: probe, minResponseMs: 0 });
+      const existing = await registerVerified();
+      await probeFlows.requestPasswordReset({ email: newEmail() });
+      await probeFlows.register({
+        email: existing,
+        password: PASSWORD,
+        name: 'Trùng',
+        locale: 'vi',
+      });
+      await probeFlows.signIn({ email: newEmail(), password: PASSWORD, headers: new Headers() });
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const printed = spies.flatMap((spy) =>
+        spy.mock.calls.map((call) => call.map(String).join(' ')),
+      );
+      for (const text of [...entries.map((e) => e.message), ...printed]) {
+        expect(text).not.toContain('@');
+      }
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+    }
   });
 });

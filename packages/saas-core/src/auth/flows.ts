@@ -78,11 +78,32 @@ export function createAuthFlows(options: {
   /** Địa chỉ gốc của web (ví dụ http://localhost:3000) — dùng cho các đường dẫn quay lại sau khi bấm link trong thư. */
   appUrl?: string;
   loginGate?: LoginGate;
+  /**
+   * Thời gian phản hồi tối thiểu (ms) của các luồng có thể lộ "email có tồn tại không" qua thời gian
+   * (đăng ký, gửi lại thư, quên mật khẩu): email mới phải ghi DB + ký token, email đã có thì không — nên
+   * chờ cho đủ ngưỡng này (cộng một ít ngẫu nhiên) rồi mới trả. Mặc định 600; đặt 0 để tắt (test).
+   */
+  minResponseMs?: number;
 }) {
   const { auth } = options;
   const loginGate = options.loginGate ?? allowAll;
+  const minResponseMs = options.minResponseMs ?? 600;
 
-  return {
+  const padded =
+    <Args extends unknown[], Result>(run: (...args: Args) => Promise<Result>) =>
+    async (...args: Args): Promise<Result> => {
+      const startedAt = Date.now();
+      try {
+        return await run(...args);
+      } finally {
+        const jitter = Math.random() * Math.min(100, minResponseMs / 6);
+        const wait = minResponseMs + jitter - (Date.now() - startedAt);
+        if (minResponseMs > 0 && wait > 0)
+          await new Promise((resolve) => setTimeout(resolve, wait));
+      }
+    };
+
+  const flows = {
     /**
      * Đăng ký. Email mới → gửi thư xác minh; email đã có → Better Auth trả phản hồi y hệt và gửi thư "đã có tài
      * khoản" cho chủ email. Giao diện luôn chuyển sang "Kiểm tra email".
@@ -225,6 +246,13 @@ export function createAuthFlows(options: {
         throw new AppError('INTERNAL', 'Không đăng xuất được.', { cause: error });
       }
     },
+  };
+
+  return {
+    ...flows,
+    register: padded(flows.register),
+    resendVerification: padded(flows.resendVerification),
+    requestPasswordReset: padded(flows.requestPasswordReset),
   };
 }
 

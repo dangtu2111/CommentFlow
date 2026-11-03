@@ -1,5 +1,5 @@
 import { accounts, sessions, users, verifications } from '@flow/db/schema/core';
-import { AppError, isLocale, type Locale } from '@flow/shared';
+import { AppError, isLocale, type Locale, maskPii } from '@flow/shared';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { type Notifier, RESET_PASSWORD_HOURS, VERIFY_EMAIL_HOURS } from '../notify';
@@ -21,6 +21,11 @@ export type AuthOptions = {
   authDb: AuthHandle;
   /** Gửi thư xác minh / đặt lại mật khẩu / "đã có tài khoản" (SMTP ở production, bộ nhớ ở test). */
   notifier: Notifier;
+  /**
+   * Nơi nhận log của Better Auth (mặc định console.warn dạng JSON). Thông điệp đã được che email/số điện thoại và
+   * mọi tham số phụ bị bỏ (có thể chứa email thô) — nguyên tắc bất biến #6.
+   */
+  logger?: (entry: { level: string; message: string }) => void;
   /** BETTER_AUTH_SECRET: khóa ký cookie phiên, chỉ ở env/secret manager, không bao giờ trong DB. */
   secret: string;
   baseURL: string;
@@ -68,7 +73,16 @@ export function createAuth(options: AuthOptions) {
     return { email: user.email, name: user.name, locale };
   };
 
+  const writeLog =
+    options.logger ??
+    ((entry: { level: string; message: string }) =>
+      console.warn(JSON.stringify({ event: 'auth_log', ...entry })));
+
   return betterAuth({
+    logger: {
+      level: 'warn',
+      log: (level, message) => writeLog({ level, message: maskPii(String(message)) }),
+    },
     secret: options.secret,
     baseURL: options.baseURL,
     // Pool role cf_auth: mọi kết nối mở với app.ctx = 'auth' (cần cả role lẫn ngữ cảnh mới vào được bảng xác thực).

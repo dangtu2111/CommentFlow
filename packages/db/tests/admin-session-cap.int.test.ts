@@ -160,7 +160,7 @@ describe('quyền cột của cf_auth trên core.sessions', () => {
     expect(after.expires_at.getTime()).toBe(after.created_at.getTime() + 8 * HOUR);
   });
 
-  it('cf_app chèn được phiên Admin qua đường xác thực (tạo phiên Admin) và hạn bị cắt 8 giờ', async () => {
+  it('cf_auth chèn được phiên Admin qua đường xác thực (tạo phiên Admin) và hạn bị cắt 8 giờ', async () => {
     const created = await authDb.transaction((tx) =>
       tx
         .insert(sessions)

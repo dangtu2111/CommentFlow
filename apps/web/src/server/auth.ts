@@ -19,6 +19,7 @@ export type AuthRuntime = {
   authHandle: AuthHandle;
   flows: AuthFlows;
   appUrl: string;
+  trustedProxyHops: number;
 };
 
 const holder = globalThis as typeof globalThis & { __cfAuthRuntime?: AuthRuntime };
@@ -44,7 +45,13 @@ function createRuntime(): AuthRuntime {
     baseURL: env.BETTER_AUTH_URL,
     appEnv: env.APP_ENV,
   });
-  return { auth, authHandle, flows: createAuthFlows({ auth }), appUrl: env.BETTER_AUTH_URL };
+  return {
+    auth,
+    authHandle,
+    flows: createAuthFlows({ auth }),
+    appUrl: env.BETTER_AUTH_URL,
+    trustedProxyHops: env.TRUSTED_PROXY_HOPS,
+  };
 }
 
 export function getAuthRuntime(): AuthRuntime {

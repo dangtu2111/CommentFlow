@@ -25,7 +25,7 @@ Kế hoạch: `docs/plans/feat-auth-ui.md` (đã duyệt 03/11 kèm 9 điều ch
 - Đăng ký trùng email → thư "đã có tài khoản"; `/app` tạm; `BETTER_AUTH_SECRET` ở `.env.local`.
 
 ## Còn lại (theo thứ tự)
-1. Chạy `verifier-security` + `verifier-db` (diff nhánh + diff migration 0011), sửa "Chặn merge".
+1. ✅ `verifier-security` + `verifier-db` đã chạy (diff nhánh + 0011): 0 "Chặn merge"; đã sửa các mục "Nên sửa" (callbackURL cố định, đệm thời gian, log che email, IP theo proxy tin cậy, CSP, bidi, check-rls allowlist + policy RESTRICTIVE). Còn lại ghi ở HARDEN-3 (g)–(l) và AUTH-RATELIMIT.
 2. PR → CI xanh → merge giữ lịch sử → xóa nhánh/plan/handoff (chờ chủ dự án).
 3. Nhánh sau: 2FA + rate limit (gắn vào `loginGate`, nhánh `two_factor_required`) + `AUTH-PWNED`; bộ chuyển workspace; vẽ lại màn Stitch còn thiếu; production: chọn nhà cung cấp email, thêm `SMTP_*`, role `cf_auth`.
 

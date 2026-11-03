@@ -6,7 +6,8 @@ import { getAuthRuntime } from '../../../../server/auth';
  * Đăng nhập/đăng ký/quên mật khẩu đi qua Server Action; mọi đường khác trả 404 cho tới khi có rate limit.
  */
 async function handle(request: Request): Promise<Response> {
-  if (!isAllowedAuthRequest(request.method, new URL(request.url).pathname)) {
+  const url = new URL(request.url);
+  if (!isAllowedAuthRequest(request.method, url.pathname, url.searchParams)) {
     return new Response(null, { status: 404 });
   }
   return getAuthRuntime().auth.handler(request);

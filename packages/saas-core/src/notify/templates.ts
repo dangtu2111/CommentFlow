@@ -92,10 +92,29 @@ function assertHttpUrl(url: string): string {
   return parsed.toString();
 }
 
-/** Tên hiển thị chỉ để chào: bỏ ký tự điều khiển (chống chèn dòng vào thư) và cắt gọn. */
+/**
+ * Ký tự không được xuất hiện trong lời chào: ký tự điều khiển (chống chèn dòng/header vào thư) và ký tự đảo chiều
+ * chữ (U+200E, U+200F, U+202A–U+202E, U+2066–U+2069) dùng để giả nội dung. So theo mã ký tự thay vì regex để
+ * file không chứa ký tự ẩn nào.
+ */
+function isUnsafeChar(code: number): boolean {
+  return (
+    code <= 0x1f ||
+    code === 0x7f ||
+    code === 0x200e ||
+    code === 0x200f ||
+    (code >= 0x202a && code <= 0x202e) ||
+    (code >= 0x2066 && code <= 0x2069)
+  );
+}
+
+/** Tên hiển thị chỉ để chào: thay ký tự nguy hiểm bằng dấu cách, gộp dấu cách thừa và cắt gọn. */
 function displayName(name: string): string {
-  // biome-ignore lint/suspicious/noControlCharactersInRegex: chủ ý loại ký tự điều khiển
-  const cleaned = name.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim();
+  const cleaned = [...name]
+    .map((char) => (isUnsafeChar(char.codePointAt(0) ?? 0) ? ' ' : char))
+    .join('')
+    .replace(/ {2,}/g, ' ')
+    .trim();
   return cleaned.slice(0, 80) || '—';
 }
 

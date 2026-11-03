@@ -78,6 +78,17 @@ describe('renderEmail', () => {
   });
 });
 
+describe('tên hiển thị', () => {
+  it('bỏ ký tự đảo chiều chữ (không giả được nội dung trong lời chào)', () => {
+    const mail = renderEmail(VERIFY, 'vi', {
+      name: 'Linh\u202eesirpruS\u2066x',
+      email: 'x@example.test',
+    });
+    expect(mail.text).not.toMatch(/[\u202a-\u202e\u2066-\u2069]/);
+    expect(mail.html).not.toMatch(/[\u202a-\u202e\u2066-\u2069]/);
+  });
+});
+
 describe('createNotifier', () => {
   it('sendNow dựng thư theo ngôn ngữ người nhận và giao cho transport', async () => {
     const transport = createMemoryTransport();

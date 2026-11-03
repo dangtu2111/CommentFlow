@@ -8,7 +8,29 @@ loadRepoEnv(new URL('../../', import.meta.url));
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+// CSP (docs/13 §6). Next cần script nội tuyến để khởi động nên chưa bỏ được 'unsafe-inline' cho script
+// (CSP có nonce qua middleware: việc của nhánh riêng, ghi ở gap matrix HARDEN-3); dev cần thêm 'unsafe-eval' và WebSocket.
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self' data:",
+  `connect-src 'self'${isProduction ? '' : ' ws: wss:'}`,
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
 const securityHeaders = [
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+  ...(isProduction
+    ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' }]
+    : []),
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
