@@ -210,7 +210,87 @@
     "header": {
       "brand": "CommentFlow AI",
       "nav": "Main navigation",
-      "security": "Security"
+      "security": "Security",
+      "members": "Members"
+    }
+  },
+  "members": {
+    "title": "Members",
+    "subtitle": "Manage the people who work in the workspace “{workspace}”. Only Owners can see this page.",
+    "roles": {
+      "owner": "Owner",
+      "staff": "Staff"
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "list": {
+      "title": "Member list",
+      "you": "You",
+      "selfNote": "You cannot change your own role or remove yourself.",
+      "unknownName": "(no name yet)",
+      "emailHidden": "(email hidden while suspended)"
+    },
+    "actions": {
+      "makeOwner": "Make Owner",
+      "makeStaff": "Make Staff",
+      "suspend": "Suspend",
+      "restore": "Restore",
+      "remove": "Remove from workspace",
+      "removeWarning": "This person loses access immediately. To add them back you must invite them again.",
+      "removeConfirm": "Confirm removal",
+      "lastOwner": "This is the last active Owner, so the role cannot be lowered and the member cannot be suspended or removed."
+    },
+    "invite": {
+      "title": "Invite a member",
+      "body": "Send an invitation by email. The recipient must sign in (or sign up) with exactly this email. The link works once and expires in 7 days.",
+      "email": "Email of the person to invite",
+      "emailPlaceholder": "name@company.com",
+      "role": "Role",
+      "roleHint": "Owners have full access and must turn on two-step verification. Staff handle comments and messages.",
+      "submit": "Send invitation",
+      "sent": "If the email is valid, the invitation has been sent. You can follow it under “Pending invitations”."
+    },
+    "pending": {
+      "title": "Pending invitations",
+      "empty": "There are no pending invitations.",
+      "waiting": "Waiting",
+      "expired": "Expired",
+      "expiresAt": "Expires: {date}",
+      "resend": "Resend",
+      "revoke": "Revoke"
+    },
+    "errors": {
+      "emailInvalid": "The email format is not valid.",
+      "roleInvalid": "The role is not valid.",
+      "rateLimited": "You have sent too many invitations. Please try again in {minutes} minutes.",
+      "lastOwner": "The workspace must always keep at least one active Owner.",
+      "invalid": "The information is not valid. Please reload the page and try again.",
+      "generic": "Could not complete that. Please try again in a few minutes."
+    }
+  },
+  "invite": {
+    "title": "Invitation",
+    "card": {
+      "title": "You are invited to “{workspace}”",
+      "role": "Role: {role}",
+      "signedOut": "Sign in or sign up with exactly the email that received the invitation to join.",
+      "signedIn": "You are signed in. Accept the invitation to join this workspace.",
+      "login": "Sign in to join",
+      "register": "Create a new account",
+      "accept": "Accept invitation",
+      "later": "Later"
+    },
+    "invalid": {
+      "title": "This invitation cannot be used",
+      "body": "The invitation may have expired, already been used or been revoked. Ask an Owner to send it again.",
+      "action": "Go to the main page"
+    },
+    "errors": {
+      "invalid": "This invitation cannot be accepted. It may have expired, been used or revoked, or the account you are signed in with is not the invited email. Check which email you are signed in with or ask an Owner to send it again.",
+      "rateLimited": "Too many attempts. Please try again in {minutes} minutes.",
+      "generic": "Could not complete that. Please try again in a few minutes."
     }
   }
 }

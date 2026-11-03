@@ -11,12 +11,14 @@ import {
   createTwoFactorFlows,
   createValkeyRateLimiter,
   openAuthDb,
-  openTenancy,
+  openWorkspaceServices,
   type SignedValueCodec,
   type Tenancy,
   type TwoFactorFlows,
+  type WorkspaceAdmin,
 } from '@flow/saas-core';
 import type { ClientIpSource } from '../lib/client-ip';
+import { INVITE_COOKIE_LABEL, INVITE_COOKIE_TTL_SECONDS } from '../lib/invite-token';
 import { loadServerEnv } from './env';
 import { WORKSPACE_COOKIE_LABEL, WORKSPACE_COOKIE_TTL_SECONDS } from './workspace-selection';
 
@@ -30,8 +32,12 @@ export type AuthRuntime = {
   flows: AuthFlows;
   twoFactor: TwoFactorFlows;
   tenancy: Tenancy;
+  /** Thành viên + lời mời (Owner); kiểm quyền Owner nằm trong saas-core. */
+  workspaceAdmin: WorkspaceAdmin;
   /** Ký cookie lựa chọn workspace (khóa HKDF nhãn riêng, không dùng secret gốc). */
   workspaceCookie: SignedValueCodec;
+  /** Ký cookie nhớ lời mời đang chờ qua bước đăng nhập/đăng ký/xác minh (khóa HKDF nhãn riêng). */
+  inviteCookie: SignedValueCodec;
   appUrl: string;
   clientIpSource: ClientIpSource;
 };
@@ -64,7 +70,12 @@ function createRuntime(): AuthRuntime {
     // Chỉ sự kiện + lý do; không có mật khẩu, băm hay tiền tố băm.
     onWarn: (warning) => console.warn(JSON.stringify(warning)),
   });
-  const tenancy = openTenancy({ connectionString: env.DATABASE_URL });
+  const { tenancy, admin: workspaceAdmin } = openWorkspaceServices({
+    connectionString: env.DATABASE_URL,
+    notifier,
+    limiter,
+    appUrl: env.BETTER_AUTH_URL,
+  });
   const auth = createAuth({
     authDb: authHandle,
     notifier,
@@ -86,10 +97,16 @@ function createRuntime(): AuthRuntime {
     flows: createAuthFlows({ auth, limiter, passwordPolicy, twoFactor }),
     twoFactor,
     tenancy,
+    workspaceAdmin,
     workspaceCookie: createSignedValueCodec({
       secret: env.BETTER_AUTH_SECRET,
       label: WORKSPACE_COOKIE_LABEL,
       ttlSeconds: WORKSPACE_COOKIE_TTL_SECONDS,
+    }),
+    inviteCookie: createSignedValueCodec({
+      secret: env.BETTER_AUTH_SECRET,
+      label: INVITE_COOKIE_LABEL,
+      ttlSeconds: INVITE_COOKIE_TTL_SECONDS,
     }),
     appUrl: env.BETTER_AUTH_URL,
     clientIpSource: env.CLIENT_IP_SOURCE,
