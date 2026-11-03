@@ -27,7 +27,7 @@ const codeOf = async (promise: Promise<unknown>) => {
 
 describe('createWorkspace', () => {
   it('tạo workspace, người tạo là owner, slug bỏ dấu và không trùng', async () => {
-    const owner = await createTestUser(db);
+    const owner = await createTestUser();
     const a = await tenancy.createWorkspace({ userId: owner, name: 'Cửa hàng Bé Yêu' });
     const b = await tenancy.createWorkspace({ userId: owner, name: 'Cửa hàng Bé Yêu' });
     expect(a.slug).toMatch(/^cua-hang-be-yeu-[0-9a-f]{6}$/);
@@ -37,7 +37,7 @@ describe('createWorkspace', () => {
   });
 
   it('từ chối tên rỗng hoặc quá dài', async () => {
-    const owner = await createTestUser(db);
+    const owner = await createTestUser();
     expect(await codeOf(tenancy.createWorkspace({ userId: owner, name: '   ' }))).toBe(
       'VALIDATION_FAILED',
     );
@@ -55,8 +55,8 @@ describe('createWorkspace', () => {
 
 describe('listWorkspacesOfUser', () => {
   it('chỉ liệt kê workspace của chính người đó, kèm vai trò', async () => {
-    const alice = await createTestUser(db);
-    const bob = await createTestUser(db);
+    const alice = await createTestUser();
+    const bob = await createTestUser();
     const wsAlice = await tenancy.createWorkspace({ userId: alice, name: 'Shop của Alice' });
     const wsBob = await tenancy.createWorkspace({ userId: bob, name: 'Shop của Bob' });
 
@@ -67,9 +67,9 @@ describe('listWorkspacesOfUser', () => {
   });
 
   it('Staff không thấy workspace người khác; thấy cả hai khi thuộc nhiều workspace', async () => {
-    const owner1 = await createTestUser(db);
-    const owner2 = await createTestUser(db);
-    const staff = await createTestUser(db);
+    const owner1 = await createTestUser();
+    const owner2 = await createTestUser();
+    const staff = await createTestUser();
     const ws1 = await tenancy.createWorkspace({ userId: owner1, name: 'Shop Một' });
     const ws2 = await tenancy.createWorkspace({ userId: owner2, name: 'Shop Hai' });
     await tenancy.addMember({
@@ -93,14 +93,14 @@ describe('listWorkspacesOfUser', () => {
   });
 
   it('người chưa thuộc workspace nào nhận danh sách rỗng', async () => {
-    expect(await tenancy.listWorkspacesOfUser(await createTestUser(db))).toEqual([]);
+    expect(await tenancy.listWorkspacesOfUser(await createTestUser())).toEqual([]);
   });
 });
 
 describe('addMember', () => {
   it('owner thêm được Staff; thành viên mới thấy workspace', async () => {
-    const owner = await createTestUser(db);
-    const staff = await createTestUser(db);
+    const owner = await createTestUser();
+    const staff = await createTestUser();
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Thêm' });
     await tenancy.addMember({
       workspaceId: ws.id,
@@ -112,9 +112,9 @@ describe('addMember', () => {
   });
 
   it('Staff không được thêm thành viên', async () => {
-    const owner = await createTestUser(db);
-    const staff = await createTestUser(db);
-    const other = await createTestUser(db);
+    const owner = await createTestUser();
+    const staff = await createTestUser();
+    const other = await createTestUser();
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Quyền' });
     await tenancy.addMember({
       workspaceId: ws.id,
@@ -131,9 +131,9 @@ describe('addMember', () => {
   });
 
   it('người ngoài workspace không được thêm thành viên', async () => {
-    const owner = await createTestUser(db);
-    const stranger = await createTestUser(db);
-    const target = await createTestUser(db);
+    const owner = await createTestUser();
+    const stranger = await createTestUser();
+    const target = await createTestUser();
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Kín' });
     expect(
       await codeOf(
@@ -148,9 +148,9 @@ describe('addMember', () => {
   });
 
   it('owner của workspace A không thêm được người vào workspace B', async () => {
-    const ownerA = await createTestUser(db);
-    const ownerB = await createTestUser(db);
-    const target = await createTestUser(db);
+    const ownerA = await createTestUser();
+    const ownerB = await createTestUser();
+    const target = await createTestUser();
     await tenancy.createWorkspace({ userId: ownerA, name: 'Shop A' });
     const wsB = await tenancy.createWorkspace({ userId: ownerB, name: 'Shop B' });
     expect(
@@ -166,8 +166,8 @@ describe('addMember', () => {
   });
 
   it('thêm trùng thành viên → CONFLICT', async () => {
-    const owner = await createTestUser(db);
-    const staff = await createTestUser(db);
+    const owner = await createTestUser();
+    const staff = await createTestUser();
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Trùng' });
     await tenancy.addMember({
       workspaceId: ws.id,
@@ -183,14 +183,14 @@ describe('addMember', () => {
   });
 
   it('vai trò không hợp lệ → VALIDATION_FAILED', async () => {
-    const owner = await createTestUser(db);
+    const owner = await createTestUser();
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Vai Trò' });
     expect(
       await codeOf(
         tenancy.addMember({
           workspaceId: ws.id,
           actorUserId: owner,
-          userId: await createTestUser(db),
+          userId: await createTestUser(),
           role: 'admin' as never,
         }),
       ),
@@ -198,9 +198,9 @@ describe('addMember', () => {
   });
 
   it('thành viên không còn active (suspended/removed) mất quyền: getRole null, không thấy workspace, không thêm được người', async () => {
-    const owner = await createTestUser(db);
-    const other = await createTestUser(db);
-    const target = await createTestUser(db);
+    const owner = await createTestUser();
+    const other = await createTestUser();
+    const target = await createTestUser();
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Gỡ Quyền' });
     await tenancy.addMember({
       workspaceId: ws.id,

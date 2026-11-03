@@ -15,7 +15,7 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |
 | Cài hàng đợi pg-boss | `pnpm --filter @flow/worker queue:install` | chạy bằng `cf_owner`; worker chạy bằng `cf_app` |
-| Máy ảo `cf-dev` | `pnpm cf:dev <up\|ps\|logs\|stats\|sync\|env-init…>` · `pnpm stack:check` | chỉ project `cf-dev`; xem `scripts/lib/cf-dev-command.mjs` |
+| Máy ảo `cf-dev` | `pnpm cf:dev <up\|ps\|logs\|stats\|sync\|env-init…>` · `pnpm stack:check` | chỉ project `cf-dev`; 7 cổng (có Mailpit 1025/8025); xem `scripts/lib/cf-dev-command.mjs` |
 | Python (ml) | `cd services/ml && uv run pytest` · `uv run ruff check .` | |
 
 ## Cây thư mục (3 tầng, rút gọn)
@@ -37,7 +37,7 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 
 | Miền | Đường dẫn | Vai trò (1 dòng) | Spec liên quan |
 |---|---|---|---|
-| Auth / phiên | `packages/saas-core/src/auth/` | Better Auth: argon2id, phiên 14 ngày, cookie ký HMAC, `readSession` áp hạn cứng 8 giờ cho phiên Admin | 13 §2 · ADR 003 |
+| Auth / phiên | `packages/saas-core/src/auth/` | Better Auth (adapter dùng pool role `cf_auth` từ `openAuthDb`): argon2id, phiên 14 ngày, cookie ký HMAC; hạn 8 giờ phiên Admin ép bằng trigger DB, `readSession` là lớp thứ hai | 13 §2 · ADR 003 |
 | Workspace / thành viên | `packages/saas-core/src/tenancy/` | Tạo workspace (owner), thêm thành viên (chỉ owner), liệt kê workspace của người dùng | 09 §3.1 |
 | Feature flag | `packages/saas-core/src/flags/` | `evaluateFlag` thuần + `createFlags` (cache 30 giây, `NOTIFY flags_changed`) | 09 §10 |
 | DB client / migrations / RLS | `packages/db/` | `withWorkspace`/`withUser`/`withSystem`, policy RLS (migration 0001, 0004), `checkRls` | 10 §4 |
@@ -58,11 +58,12 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 
 | Việc | Hàm | Vị trí |
 |---|---|---|
-| Kết nối DB / mở giao dịch có ngữ cảnh | `createDb` · `withWorkspace` | `packages/db/src/client.ts:78` · `:81` |
+| Kết nối DB / mở giao dịch có ngữ cảnh | `createDb` · `withWorkspace` | `packages/db/src/client.ts:93` · `:96` |
+| Pool role `cf_auth` cho bảng xác thực (chỉ module auth import) | `createAuthDb` · `openAuthDb` | `packages/db/src/auth-db.ts:24` · `packages/saas-core/src/auth/auth-db.ts:9` |
 | Chặn migration nhầm môi trường | `assertMigrationAllowed` | `packages/db/src/migration-guard.ts:41` |
-| Kiểm RLS | `checkRls` | `packages/db/src/check-rls.ts:33` |
-| Tạo cấu hình xác thực | `createAuth` | `packages/saas-core/src/auth/auth.ts:40` |
-| Đọc phiên (cách duy nhất được hỗ trợ) | `readSession` | `packages/saas-core/src/auth/session.ts:11` |
+| Kiểm RLS | `checkRls` | `packages/db/src/check-rls.ts:204` |
+| Tạo cấu hình xác thực | `createAuth` | `packages/saas-core/src/auth/auth.ts:45` |
+| Đọc phiên (cách duy nhất được hỗ trợ) | `readSession` | `packages/saas-core/src/auth/session.ts:12` |
 | Tạo workspace / thêm thành viên | `createTenancy` → `createWorkspace`, `addMember` | `packages/saas-core/src/tenancy/tenancy.ts:30,47,60` |
 | Hỏi flag | `createFlags` → `isEnabled` | `packages/saas-core/src/flags/flags.ts:37` |
 | Gọi LLM + ghi `ai_usage` | `createLlmClient` → `call` | `packages/ai/src/llm-client.ts:101` |
@@ -74,6 +75,8 @@ Cập nhật lần cuối: 2026-11-03 · commit: 041d076 (nhánh `chore/scaffold
 
 - **Ngữ cảnh RLS** do `set_config(..., true)` đặt trong giao dịch; sau khi giao dịch kết thúc biến về `''` (không phải NULL) → hàm `core.current_workspace_id()` dùng `NULLIF`. `withWorkspace` không cho `tx.transaction()` lồng.
 - **Liệt kê workspace của tôi** chỉ qua `withUser` (không có ngữ cảnh workspace); trong `withWorkspace(A)` không bao giờ thấy workspace khác.
+- **Bảng xác thực** (`users`, `sessions`, `accounts`, `verifications`) chỉ thấy toàn bộ qua pool role `cf_auth` + `app.ctx = 'auth'` (`openAuthDb` — chỉ module `saas-core/src/auth` được import `@flow/db/auth-db`, luật depcruise `chi-auth-import-auth-db`). `cf_app`: `withUser` chỉ ĐỌC dòng của mình (không cột token/mật khẩu) và chỉ ghi `users.name/image/locale`; `withWorkspace` không thấy sessions/accounts, `users` chỉ thành viên `active`; `verifications` không có quyền. Role `cf_auth` tạo bởi script khởi tạo Postgres (volume mới) hoặc `pnpm cf:dev add-auth-role` (volume cũ); migration 0010 báo lỗi nếu thiếu role.
+- **Phiên Admin:** trigger `core.cap_admin_session` ép hạn 8 giờ (INSERT + UPDATE), chỉ user `is_admin` mới có phiên Admin; `cf_app` không UPDATE `sessions`. Gieo dữ liệu thử cho các cột đó và tạo người dùng thử phải dùng pool chủ sở hữu (`TEST_DATABASE_ADMIN_URL`); test cần pool xác thực dùng `TEST_DATABASE_AUTH_URL`.
 - **`cf_app` không có DELETE trên `workspaces`/`users`**, không UPDATE `users.is_admin/admin_role`; `action_logs`/`ai_usage` chỉ thêm. Bảng mới phải khai báo quyền + policy (`check-rls` sẽ đỏ nếu thiếu).
 - **Token phiên lưu thô** (Better Auth, ADR 003); cookie ký bằng `BETTER_AUTH_SECRET`. Luôn đọc phiên bằng `readSession`; tạo phiên Admin bằng `internalAdapter.createSession(userId, false, { isAdminSession: true }, true)` (tham số cuối `true` bắt buộc, nếu không bị ghi đè mặc định).
 - **Flag `kill_switch`:** `default_on = true` = được phép chạy, `false` = đang chặn; đang chặn thì override bật KHÔNG bật lại được (override tắt vẫn có hiệu lực). Thứ tự: kill_switch → override → plan → rollout → default_on.

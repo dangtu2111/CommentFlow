@@ -26,6 +26,7 @@ const FORBIDDEN_FLAGS = new Set([
   '--file',
   '--env-file',
   '--profile',
+  '--project-directory',
 ]);
 const SAFE_ARG = /^[A-Za-z0-9_.:=/@-]+$/;
 // Không cho bắt đầu bằng '-' để tên nhánh không bị git hiểu thành tùy chọn.
@@ -38,6 +39,11 @@ function assertSafeArgs(args) {
     if (!SAFE_ARG.test(arg)) throw new CfDevCommandError(`Tham số không hợp lệ: ${arg}`);
     // So khớp cả dạng `--volumes=true` (phần trước dấu = là tên cờ).
     if (FORBIDDEN_FLAGS.has(arg.split('=')[0] ?? arg)) {
+      throw new CfDevCommandError(`Cờ bị cấm: ${arg}`);
+    }
+    // Cờ ngắn viết dính (-pfoo, -fx.yml, -vt1): docker compose hiểu được các cụm này nên chặn mọi cụm
+    // chứa v/p/f (xóa volume / đổi project / đổi file).
+    if (/^-[A-Za-z]/.test(arg) && /[vpf]/.test(arg.slice(1))) {
       throw new CfDevCommandError(`Cờ bị cấm: ${arg}`);
     }
     if (arg.includes('staging')) throw new CfDevCommandError('Không được nhắc tới cf-staging');
@@ -54,6 +60,11 @@ export function buildRemoteCommand(argv) {
   }
   if (sub === 'env-init') {
     return `cd ${REMOTE_DIR} && bash scripts/cf-dev-env-init.sh`;
+  }
+  if (sub === 'add-auth-role') {
+    // Thêm role cf_auth vào volume Postgres ĐÃ có (script khởi tạo chỉ chạy lúc volume trống). Chỉ chạy script cố định trong repo.
+    if (rest.length > 0) throw new CfDevCommandError('add-auth-role không nhận tham số');
+    return `cd ${REMOTE_DIR} && bash infra/scripts/cf-dev-add-auth-role.sh`;
   }
   if (sub === 'sync') {
     const branch = rest[0];

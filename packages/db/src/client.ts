@@ -1,5 +1,6 @@
 import { AppError } from '@flow/shared';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+
 import pg from 'pg';
 import { schema } from './schema';
 
@@ -22,13 +23,21 @@ export type FlowDb = {
    * sẽ kết thúc sớm giao dịch ngoài và mất ngữ cảnh workspace).
    */
   withWorkspace<T>(workspaceId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
-  /** Giao dịch chỉ có ngữ cảnh người dùng (liệt kê workspace của họ); không có workspace. */
+  /**
+   * Giao dịch chỉ có ngữ cảnh người dùng (liệt kê workspace của họ); không có workspace.
+   * Chỉ ĐỌC dòng của mình ở users/sessions/accounts (cột không nhạy cảm) và chỉ GHI users.name/image/locale;
+   * đổi mật khẩu, email, xác minh, 2FA, phiên chỉ qua luồng Better Auth (`AuthDb`, role cf_auth).
+   */
   withUser<T>(userId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
-  /** Giao dịch không ngữ cảnh: chỉ chạm được bảng hệ thống (job không có workspace). */
+  /**
+   * Giao dịch không ngữ cảnh: chỉ chạm được bảng hệ thống KHÔNG có RLS (ví dụ `feature_flags`).
+   * Không thấy dòng nào của bảng nghiệp vụ và của bảng xác thực (`users`, `sessions`, `accounts`,
+   * `verifications`) — các bảng đó cần ngữ cảnh rõ ràng.
+   */
   withSystem<T>(fn: (tx: Database) => Promise<T>): Promise<T>;
   /**
-   * Drizzle trên pool, không giao dịch/ngữ cảnh — CHỈ cho bảng hệ thống (xác thực).
-   * Bảng nghiệp vụ trả về 0 dòng hoặc bị chặn bởi RLS khi đi đường này.
+   * Drizzle trên pool chung, không giao dịch/ngữ cảnh — KHÔNG thấy bảng nghiệp vụ lẫn bảng xác thực.
+   * Chỉ còn dùng cho bảng hệ thống không có RLS.
    */
   readonly system: Database;
   /**
@@ -47,7 +56,13 @@ const CHANNEL_PATTERN = /^[a-z_][a-z0-9_]{0,62}$/;
 
 type Settings = Record<string, string>;
 
-async function runInTransaction<T>(
+/**
+ * Mỗi giao dịch ĐẶT LẠI mọi biến ngữ cảnh rồi mới đặt biến của đường đang dùng: nếu một kết nối trong pool bị
+ * `SET` ở cấp phiên (lỗi mã hoặc tấn công), ngữ cảnh đó không đi vào giao dịch thường (phòng thủ lớp hai).
+ */
+export const NO_CONTEXT: Settings = { 'app.workspace_id': '', 'app.user_id': '', 'app.ctx': '' };
+
+export async function runInTransaction<T>(
   pool: pg.Pool,
   settings: Settings,
   fn: (tx: Database) => Promise<T>,
@@ -79,10 +94,14 @@ export function createDb(options: { connectionString: string; max?: number }): F
   const pool = new pg.Pool({ connectionString: options.connectionString, max: options.max ?? 10 });
   return {
     withWorkspace: async (workspaceId, fn) =>
-      runInTransaction(pool, { 'app.workspace_id': assertUuid(workspaceId, 'workspaceId') }, fn),
+      runInTransaction(
+        pool,
+        { ...NO_CONTEXT, 'app.workspace_id': assertUuid(workspaceId, 'workspaceId') },
+        fn,
+      ),
     withUser: async (userId, fn) =>
-      runInTransaction(pool, { 'app.user_id': assertUuid(userId, 'userId') }, fn),
-    withSystem: (fn) => runInTransaction(pool, {}, fn),
+      runInTransaction(pool, { ...NO_CONTEXT, 'app.user_id': assertUuid(userId, 'userId') }, fn),
+    withSystem: (fn) => runInTransaction(pool, NO_CONTEXT, fn),
     system: drizzle(pool, { schema }),
     listen: async (channel, onNotify, onError) => {
       // Tên kênh được ghép vào câu LISTEN (không dùng được tham số) nên phải kiểm chặt.
@@ -98,6 +117,8 @@ export function createDb(options: { connectionString: string; max?: number }): F
       await client.query(`LISTEN ${channel}`);
       return () => client.end();
     },
-    close: () => pool.end(),
+    close: async () => {
+      await pool.end();
+    },
   };
 }

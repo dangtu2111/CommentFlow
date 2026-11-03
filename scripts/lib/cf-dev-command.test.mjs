@@ -28,10 +28,31 @@ describe('buildRemoteCommand', () => {
     expect(() => buildRemoteCommand(['ps', '-f', 'x.yml'])).toThrow(/Cờ bị cấm/);
   });
 
+  it('add-auth-role chạy đúng script cố định, không nhận tham số', () => {
+    expect(buildRemoteCommand(['add-auth-role'])).toBe(
+      'cd ~/CommentFlow && bash infra/scripts/cf-dev-add-auth-role.sh',
+    );
+    expect(() => buildRemoteCommand(['add-auth-role', 'x'])).toThrow(/không nhận tham số/);
+  });
+
+  it('từ chối --project-directory (đổi nơi tính đường dẫn bind mount / build context)', () => {
+    expect(() => buildRemoteCommand(['up', '--project-directory', '/tmp'])).toThrow(/Cờ bị cấm/);
+    expect(() => buildRemoteCommand(['up', '--project-directory=/tmp'])).toThrow(/Cờ bị cấm/);
+  });
+
   it('từ chối cờ nguy hiểm dạng --flag=giá-trị', () => {
     expect(() => buildRemoteCommand(['down', '--volumes=true'])).toThrow(/Cờ bị cấm/);
     expect(() => buildRemoteCommand(['ps', '--project-name=cf-x'])).toThrow(/Cờ bị cấm/);
     expect(() => buildRemoteCommand(['up', '--file=x.yml'])).toThrow(/Cờ bị cấm/);
+  });
+
+  it('từ chối cờ ngắn viết dính chứa v/p/f (-pfoo, -fx.yml, -vt1, -dv); vẫn cho -d, --build, --tail=50', () => {
+    for (const bad of ['-pfoo', '-fx.yml', '-vt1', '-dv', '-vf', '-pcf-x']) {
+      expect(() => buildRemoteCommand(['up', bad]), bad).toThrow(/Cờ bị cấm/);
+    }
+    expect(() => buildRemoteCommand(['up', '-d', '--build'])).not.toThrow();
+    expect(() => buildRemoteCommand(['logs', '--tail=50', 'litellm'])).not.toThrow();
+    expect(() => buildRemoteCommand(['logs', '-t', 'litellm'])).not.toThrow();
   });
 
   it('tên nhánh không được bắt đầu bằng dấu - và lệnh checkout có "--" chặn hiểu nhầm thành đường dẫn', () => {

@@ -36,6 +36,7 @@ optional() {
 
 HOST="$(get LAN_HOST)"
 APP_PW="$(get CF_APP_PASSWORD)"
+AUTH_PW="$(get CF_AUTH_PASSWORD)"
 OWNER_PW="$(get CF_OWNER_PASSWORD)"
 CACHE_PW="$(get VALKEY_PASSWORD)"
 LITELLM_KEY="$(optional LITELLM_DEV_KEY)"
@@ -49,8 +50,10 @@ WORKER_PORT=3001
 
 DATABASE_URL=postgresql://cf_app:${APP_PW}@${HOST}:5433/cf_dev
 DATABASE_ADMIN_URL=postgresql://cf_owner:${OWNER_PW}@${HOST}:5433/cf_dev
+DATABASE_AUTH_URL=postgresql://cf_auth:${AUTH_PW}@${HOST}:5433/cf_dev
 TEST_DATABASE_URL=postgresql://cf_app:${APP_PW}@${HOST}:5433/cf_test
 TEST_DATABASE_ADMIN_URL=postgresql://cf_owner:${OWNER_PW}@${HOST}:5433/cf_test
+TEST_DATABASE_AUTH_URL=postgresql://cf_auth:${AUTH_PW}@${HOST}:5433/cf_test
 
 REDIS_URL=redis://:${CACHE_PW}@${HOST}:6380/0
 REDIS_KEY_PREFIX=dev:
@@ -59,4 +62,8 @@ ML_URL=http://${HOST}:8001
 LITELLM_BASE_URL=http://${HOST}:4000
 LITELLM_API_KEY=${LITELLM_KEY}
 LANGFUSE_HOST=http://${HOST}:3100
+
+SMTP_HOST=${HOST}
+SMTP_PORT=1025
+MAILPIT_URL=http://${HOST}:8025
 EOF

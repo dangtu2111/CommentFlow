@@ -64,7 +64,7 @@ Chọn **SeaweedFS** (Apache-2.0; kho còn hoạt động, đẩy mã ngày 02/1
 
 | Project | Chạy | Dịch vụ | Publish cổng ra LAN |
 |---|---|---|---|
-| `cf-dev` | máy ảo (40 GB) | postgres (DB `cf_dev`, `cf_test`, `litellm`, `langfuse`), valkey, ml, litellm, langfuse-web, langfuse-worker, clickhouse, seaweedfs | **5433** Postgres, **6380** Valkey, **8001** ml, **4000** LiteLLM, **3100** Langfuse |
+| `cf-dev` | máy ảo (40 GB) | postgres (DB `cf_dev`, `cf_test`, `litellm`, `langfuse`), valkey, ml, litellm, langfuse-web, langfuse-worker, clickhouse, seaweedfs, **mailpit** | **5433** Postgres, **6380** Valkey, **8001** ml, **4000** LiteLLM, **3100** Langfuse, **1025** Mailpit SMTP, **8025** Mailpit giao diện |
 | `cf-staging` | máy ảo | đủ 7 dịch vụ (thêm web, worker), 2 project Langfuse tách khỏi dev, role/mật khẩu riêng | **không** publish Postgres/Valkey; web ra internet qua Cloudflare Tunnel (GĐ3) |
 
 - File: `infra/docker-compose.yml` (nền, không có `ports:`), `docker-compose.dev.yml`, `docker-compose.staging.yml` (khớp `15` §4); chạy bằng `-p cf-dev` / `-p cf-staging`.
@@ -142,3 +142,7 @@ Phát hiện khi dựng (đã sửa trong compose):
 ## 9. Quy ước tên file mẫu biến môi trường (chốt 03/11/2026)
 
 Mẫu **không có dấu chấm đầu, vĩnh viễn**: `env.example` (máy code) và `infra/env.cf-dev.example` (máy ảo). Lý do: quy tắc quyền của máy code chặn đọc/ghi `.env*`. `.gitignore` không còn ngoại lệ `!.env.example`. `.env` của máy code do chủ dự án sinh bằng `infra/scripts/print-dev-env.sh` chạy trên máy ảo (agent không chạy script này vì đầu ra chứa mật khẩu).
+
+## 10. Mailpit (cf-dev, 03/11/2026)
+
+Hộp thư giả cho dev: `axllent/mailpit:v1.33.0` (MIT; Alpine, tự có healthcheck `/mailpit readyz`). **Chỉ định nghĩa trong `infra/docker-compose.dev.yml`**, không có trong file nền hay bất kỳ file staging/production. Cổng publish: **1025** (SMTP, không xác thực) và **8025** (giao diện web, không mật khẩu) — thêm vào portproxy + tường lửa chỉ cho `192.168.1.96`; tổng cổng publish của `cf-dev`: 7. RAM đo thực tế: ~8 MiB (giới hạn 128 MiB). Thư không lưu qua lần khởi động lại (`MP_MAX_MESSAGES=500`). Biến cho máy code: `SMTP_HOST`, `SMTP_PORT`, `MAILPIT_URL` (`env.example`). Chưa có mã gửi email (làm ở `AUTH-FORGOT`).

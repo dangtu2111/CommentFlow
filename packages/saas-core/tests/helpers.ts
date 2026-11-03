@@ -1,16 +1,37 @@
 import { randomUUID } from 'node:crypto';
 import { createDb, type FlowDb } from '@flow/db';
-import { users } from '@flow/db/schema/core';
+import { type AuthDb, createAuthDb } from '@flow/db/auth-db';
+import pg from 'pg';
 
-export function createTestDb(max = 5): FlowDb {
-  const url = process.env.TEST_DATABASE_URL;
-  if (!url) throw new Error('Thiếu TEST_DATABASE_URL');
-  return createDb({ connectionString: url, max });
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Thiếu biến môi trường ${name}`);
+  return value;
 }
 
-/** Tạo người dùng qua đường hệ thống (bảng users không có RLS theo workspace). */
-export async function createTestUser(db: FlowDb, name = 'Người dùng thử'): Promise<string> {
+/** Kết nối bằng role ứng dụng cf_app — chịu RLS như production. */
+export function createTestDb(max = 5): FlowDb {
+  return createDb({ connectionString: requireEnv('TEST_DATABASE_URL'), max });
+}
+
+/** Pool role cf_auth (adapter Better Auth) — chỉ chạm bảng xác thực. */
+export function createTestAuthDb(max = 5): AuthDb {
+  return createAuthDb({ connectionString: requireEnv('TEST_DATABASE_AUTH_URL'), max });
+}
+
+/** Tạo người dùng bằng quyền chủ sở hữu (cf_app không còn quyền chèn users). */
+export async function createTestUser(name = 'Người dùng thử'): Promise<string> {
   const id = randomUUID();
-  await db.system.insert(users).values({ id, email: `${id}@example.test`, name });
+  const client = new pg.Client({ connectionString: requireEnv('TEST_DATABASE_ADMIN_URL') });
+  await client.connect();
+  try {
+    await client.query('INSERT INTO core.users (id, email, name) VALUES ($1, $2, $3)', [
+      id,
+      `${id}@example.test`,
+      name,
+    ]);
+  } finally {
+    await client.end();
+  }
   return id;
 }

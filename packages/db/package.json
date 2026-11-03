@@ -6,6 +6,7 @@
   "description": "Truy cập dữ liệu: schema Drizzle (core, cf), migration SQL, RLS, withWorkspace(). Chỉ được phụ thuộc @flow/shared.",
   "exports": {
     ".": "./src/index.ts",
+    "./auth-db": "./src/auth-db.ts",
     "./schema/core": "./src/schema/core/index.ts",
     "./schema/cf": "./src/schema/cf/index.ts"
   },

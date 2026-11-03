@@ -1,4 +1,4 @@
-# Ghi đè cho project cf-dev: publish ĐÚNG 5 cổng ra LAN (máy code dùng qua IP máy phụ + portproxy).
+# Ghi đè cho project cf-dev: publish ĐÚNG 7 cổng ra LAN (máy code dùng qua IP máy phụ + portproxy).
 # Mọi dịch vụ còn lại (ClickHouse, SeaweedFS, Langfuse worker…) chỉ nằm trong mạng nội bộ của Compose.
 services:
   postgres:
@@ -11,3 +11,25 @@ services:
     ports: ["4000:4000"]
   langfuse-web:
     ports: ["3100:3000"]
+
+  # Hộp thư giả cho dev: nhận email do ứng dụng gửi (quên mật khẩu, lời mời…) và hiển thị trên web.
+  # CHỈ định nghĩa ở file dev này — KHÔNG đưa vào docker-compose.yml (nền) hay bất kỳ file staging/production.
+  # Không mật khẩu giao diện, không xác thực SMTP (dữ liệu giả, chỉ trong LAN); thư không lưu qua lần khởi động lại.
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    restart: unless-stopped
+    mem_limit: 128m
+    environment:
+      MP_MAX_MESSAGES: "500"
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # giao diện web
+    healthcheck:
+      # Image tự có lệnh kiểm tra sức khỏe (/mailpit readyz, gọi /readyz của chính nó).
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s

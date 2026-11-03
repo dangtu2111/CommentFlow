@@ -1,8 +1,8 @@
-import type { FlowDb } from '@flow/db';
 import { accounts, sessions, users, verifications } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { type AuthHandle, unwrapAuthDb } from './auth-db';
 import { hashPassword, verifyPassword } from './password';
 import {
   APP_SESSION_SECONDS,
@@ -16,7 +16,8 @@ export const MAX_PASSWORD_LENGTH = 128;
 const MIN_SECRET_LENGTH = 32;
 
 export type AuthOptions = {
-  db: FlowDb;
+  /** Pool role cf_auth (`openAuthDb`): chỉ chạm users/sessions/accounts/verifications, trong ngữ cảnh app.ctx = 'auth'. */
+  authDb: AuthHandle;
   /** BETTER_AUTH_SECRET: khóa ký cookie phiên, chỉ ở env/secret manager, không bao giờ trong DB. */
   secret: string;
   baseURL: string;
@@ -25,17 +26,21 @@ export type AuthOptions = {
    * tắt trong các môi trường đó là lỗi cấu hình.
    */
   secureCookies?: boolean;
-  /** APP_ENV hiện tại (dev | test | ci | staging | production) để áp luật cookie Secure. */
-  appEnv?: string;
+  /** APP_ENV hiện tại — BẮT BUỘC: chỉ dev/test/ci được tắt cookie Secure; giá trị khác (kể cả lạ) phải Secure. */
+  appEnv: AppEnv;
 };
+
+export type AppEnv = 'dev' | 'test' | 'ci' | 'staging' | 'production';
+/** Môi trường được phép chạy cookie không Secure (http cục bộ). */
+const INSECURE_COOKIE_ENVS: readonly string[] = ['dev', 'test', 'ci'];
 
 /**
  * Better Auth theo ADR 003 (docs/decisions/003-auth-better-auth.md):
  * token phiên lưu thô + cookie ký HMAC, TẮT cookie cache, argon2id, phiên 14 ngày (Admin 8 giờ).
  * Phạm vi hiện tại: đăng ký, đăng nhập, quản lý phiên (email + mật khẩu).
  * Chưa làm (chừa chỗ, xem gap matrix): 2FA, rate limit đăng nhập, quên mật khẩu.
- * Đọc phiên: dùng `readSession()` (session.ts), KHÔNG gọi `auth.api.getSession` trực tiếp ở nơi khác —
- * hạn cứng 8 giờ của phiên Admin được áp ở đó.
+ * Hạn 8 giờ của phiên Admin được ÉP Ở DATABASE (trigger `core.cap_admin_session`, migration 0007) nên
+ * đúng cho mọi đường, kể cả route `/api/auth/*` của Better Auth; `readSession()` chỉ là lớp thứ hai.
  */
 export function createAuth(options: AuthOptions) {
   if (options.secret.length < MIN_SECRET_LENGTH) {
@@ -46,18 +51,19 @@ export function createAuth(options: AuthOptions) {
   }
 
   const secureCookies = options.secureCookies ?? options.baseURL.startsWith('https://');
-  if (!secureCookies && (options.appEnv === 'staging' || options.appEnv === 'production')) {
+  // Danh sách cho phép (không phải danh sách cấm): thiếu/sai appEnv (ví dụ 'prod') vẫn bị chặn.
+  if (!secureCookies && !INSECURE_COOKIE_ENVS.includes(options.appEnv)) {
     throw new AppError(
       'CONFIG_INVALID',
-      'Cookie phiên phải bật Secure ở staging/production (baseURL cần là https).',
+      'Cookie phiên phải bật Secure (baseURL https) trừ khi APP_ENV là dev/test/ci.',
     );
   }
 
   return betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
-    // Chỉ dùng đường "system": các bảng xác thực không có RLS theo workspace.
-    database: drizzleAdapter(options.db.system, {
+    // Pool role cf_auth: mọi kết nối mở với app.ctx = 'auth' (cần cả role lẫn ngữ cảnh mới vào được bảng xác thực).
+    database: drizzleAdapter(unwrapAuthDb(options.authDb).db, {
       provider: 'pg',
       schema: { user: users, session: sessions, account: accounts, verification: verifications },
     }),

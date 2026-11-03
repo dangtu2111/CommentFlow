@@ -79,18 +79,23 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Sinh mật khẩu ngẫu nhiên cho role cf_owner/cf_app (chỉ dùng trong job này)
+      - name: Sinh mật khẩu ngẫu nhiên cho role cf_owner/cf_app/cf_auth (chỉ dùng trong job này)
         run: |
           OWNER_PW="$(openssl rand -hex 24)"
           APP_PW="$(openssl rand -hex 24)"
+          AUTH_PW="$(openssl rand -hex 24)"
           echo "::add-mask::$OWNER_PW"
           echo "::add-mask::$APP_PW"
+          echo "::add-mask::$AUTH_PW"
           {
             echo "CF_OWNER_PASSWORD=$OWNER_PW"
             echo "CF_APP_PASSWORD=$APP_PW"
+            echo "CF_AUTH_PASSWORD=$AUTH_PW"
             echo "DATABASE_ADMIN_URL=postgresql://cf_owner:$OWNER_PW@localhost:5432/cf_ci"
             echo "TEST_DATABASE_ADMIN_URL=postgresql://cf_owner:$OWNER_PW@localhost:5432/cf_ci"
             echo "TEST_DATABASE_URL=postgresql://cf_app:$APP_PW@localhost:5432/cf_ci"
+            echo "TEST_DATABASE_AUTH_URL=postgresql://cf_auth:$AUTH_PW@localhost:5432/cf_ci"
+            echo "DATABASE_AUTH_URL=postgresql://cf_auth:$AUTH_PW@localhost:5432/cf_ci"
             echo "DATABASE_URL=postgresql://cf_app:$APP_PW@localhost:5432/cf_ci"
           } >> "$GITHUB_ENV"
       - name: Tạo role và database như trên máy ảo (cùng script khởi tạo)

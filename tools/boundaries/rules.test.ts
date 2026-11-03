@@ -43,6 +43,22 @@ describe('luật ranh giới dependency-cruiser', () => {
   it('saas-core được import db (không phải schema cf)', () => {
     expect(violations.some((v) => v.from.includes('saas-core/src/ok-imports-db.ts'))).toBe(false);
   });
+  it('auth-db (pool role cf_auth): saas-core/src/auth được import', () => {
+    expect(
+      violations.some((v) => v.from.includes('saas-core/src/auth/ok-imports-auth-db.ts')),
+    ).toBe(false);
+  });
+  it('auth-db: saas-core ngoài thư mục auth KHÔNG được import', () => {
+    expect(has('chi-auth-import-auth-db', 'saas-core/src/imports-auth-db-outside-auth.ts')).toBe(
+      true,
+    );
+  });
+  it('auth-db: gói ai KHÔNG được import', () => {
+    expect(has('chi-auth-import-auth-db', 'ai/src/imports-auth-db.ts')).toBe(true);
+  });
+  it('auth-db: ứng dụng web KHÔNG được import', () => {
+    expect(has('chi-auth-import-auth-db', 'web/src/imports-auth-db.ts')).toBe(true);
+  });
   it('packages không import apps', () => {
     expect(has('packages-khong-import-apps', 'ai/src/imports-app.ts')).toBe(true);
   });

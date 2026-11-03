@@ -1,7 +1,9 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { and, eq, type FlowDb } from '@flow/db';
+import { eq } from '@flow/db';
+import type { AuthDb } from '@flow/db/auth-db';
 import { accounts, sessions, users } from '@flow/db/schema/core';
 import { isAppError } from '@flow/shared';
+import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   ADMIN_SESSION_SECONDS,
@@ -12,22 +14,40 @@ import {
   readSession,
   revokeAllSessionsOfUser,
 } from '../src/auth';
-import { createTestDb } from './helpers';
+import { wrapAuthDb } from '../src/auth/auth-db';
+import { createTestAuthDb } from './helpers';
 
 // Khóa ký thử sinh ngẫu nhiên mỗi lần chạy (không có chuỗi cố định trong mã nguồn).
 const TEST_SECRET = randomBytes(32).toString('hex');
 const PASSWORD = 'mat-khau-dai-du-10';
 
-let db: FlowDb;
+let authDb: AuthDb;
+let authHandle: ReturnType<typeof wrapAuthDb>;
 let auth: Auth;
+/** Kết nối chủ sở hữu (cf_owner): chỉ để gieo dữ liệu thử mà cf_auth không có quyền sửa (is_admin). */
+let owner: pg.Pool;
 
 beforeAll(() => {
-  db = createTestDb();
-  auth = createAuth({ db, secret: TEST_SECRET, baseURL: 'http://localhost:3000' });
+  authDb = createTestAuthDb();
+  authHandle = wrapAuthDb(authDb);
+  auth = createAuth({
+    authDb: authHandle,
+    secret: TEST_SECRET,
+    baseURL: 'http://localhost:3000',
+    appEnv: 'test',
+  });
+  owner = new pg.Pool({ connectionString: process.env.TEST_DATABASE_ADMIN_URL, max: 2 });
 });
 afterAll(async () => {
-  await db.close();
+  await authDb.close();
+  await owner.end();
 });
+
+/** Phiên Admin chỉ tạo/bật được cho người dùng is_admin = true (trigger, migration 0009). */
+const makeAdmin = (userId: string) =>
+  owner.query("UPDATE core.users SET is_admin = true, admin_role = 'super' WHERE id = $1", [
+    userId,
+  ]);
 
 const newEmail = () => `${randomUUID()}@Example.Test`;
 
@@ -72,7 +92,7 @@ async function signIn(email: string, password = PASSWORD) {
 }
 
 const sessionRows = (userId: string) =>
-  db.system.select().from(sessions).where(eq(sessions.userId, userId));
+  authDb.db.select().from(sessions).where(eq(sessions.userId, userId));
 
 describe('đăng ký', () => {
   it('từ chối mật khẩu ngắn hơn 10 ký tự và dài hơn 128 ký tự', async () => {
@@ -88,12 +108,12 @@ describe('đăng ký', () => {
 
   it('lưu email chữ thường, mật khẩu băm argon2id ở bảng accounts (không phải users)', async () => {
     const { email, userId } = await signUp(newEmail());
-    const [user] = await db.system.select().from(users).where(eq(users.id, userId));
+    const [user] = await authDb.db.select().from(users).where(eq(users.id, userId));
     expect(user?.email).toBe(email.toLowerCase());
     expect(user?.locale).toBe('vi');
     expect(user?.isAdmin).toBe(false);
 
-    const [account] = await db.system.select().from(accounts).where(eq(accounts.userId, userId));
+    const [account] = await authDb.db.select().from(accounts).where(eq(accounts.userId, userId));
     expect(account?.providerId).toBe('credential');
     expect(account?.password).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$/);
     expect(account?.password).not.toContain(PASSWORD);
@@ -154,7 +174,7 @@ describe('đăng nhập và phiên', () => {
     const { cookie } = await signIn(email);
     const headers = new Headers({ cookie });
     expect(await auth.api.getSession({ headers })).not.toBeNull();
-    await revokeAllSessionsOfUser(db, userId);
+    await revokeAllSessionsOfUser(authHandle, userId);
     expect(await auth.api.getSession({ headers })).toBeNull();
   });
 
@@ -180,7 +200,7 @@ describe('đăng nhập và phiên', () => {
   it('phiên hết hạn bị loại', async () => {
     const { email, userId } = await signUp();
     const { cookie } = await signIn(email);
-    await db.system
+    await authDb.db
       .update(sessions)
       .set({ expiresAt: new Date(Date.now() - 1000) })
       .where(eq(sessions.userId, userId));
@@ -204,6 +224,7 @@ describe('đăng nhập và phiên', () => {
 describe('phiên Admin (is_admin_session)', () => {
   it('hết hạn sau 8 giờ, ngắn hơn phiên app', async () => {
     const { userId } = await signUp();
+    await makeAdmin(userId);
     const context = await auth.$context;
     // Tham số thứ 4 (overrideAll = true) bắt buộc: nếu không Better Auth ghi đè bằng giá trị mặc định (false).
     await context.internalAdapter.createSession(userId, false, { isAdminSession: true }, true);
@@ -215,82 +236,125 @@ describe('phiên Admin (is_admin_session)', () => {
   });
 });
 
-describe('readSession: hạn cứng 8 giờ của phiên Admin', () => {
+describe('phiên Admin chỉ dành cho người dùng Admin', () => {
+  it('tạo phiên Admin cho người dùng thường qua adapter Better Auth bị database từ chối', async () => {
+    const { userId } = await signUp();
+    const context = await auth.$context;
+    await expect(
+      context.internalAdapter.createSession(userId, false, { isAdminSession: true }, true),
+    ).rejects.toBeDefined();
+    const rows = await sessionRows(userId);
+    expect(rows.some((r) => r.isAdminSession)).toBe(false);
+  });
+});
+
+describe('hạn 8 giờ của phiên Admin được ép ở DATABASE (mọi đường đọc/làm mới)', () => {
   const HOUR = 3600 * 1000;
 
-  async function adminSessionCookie(createdHoursAgo: number, refreshedHoursAgo: number) {
+  /** Biến phiên vừa đăng nhập thành phiên Admin đã tạo cách đây N giờ (bằng quyền chủ sở hữu). */
+  async function adminSession(createdHoursAgo: number, refreshedHoursAgo: number) {
     const { email, userId } = await signUp();
+    await makeAdmin(userId);
     const { cookie } = await signIn(email);
     // Người dùng có 2 phiên (đăng ký + đăng nhập): chọn đúng phiên ứng với cookie theo token.
     const token = decodeURIComponent(cookie.split('session_token=')[1] ?? '').split('.')[0] ?? '';
-    const [row] = await db.system
-      .select()
-      .from(sessions)
-      .where(and(eq(sessions.userId, userId), eq(sessions.token, token)));
-    // Biến phiên vừa đăng nhập thành phiên Admin tạo cách đây N giờ, đã quá updateAge để buộc làm mới.
-    await db.system
-      .update(sessions)
-      .set({
-        isAdminSession: true,
-        createdAt: new Date(Date.now() - createdHoursAgo * HOUR),
-        updatedAt: new Date(Date.now() - refreshedHoursAgo * HOUR),
-      })
-      .where(eq(sessions.id, row?.id as string));
-    return { cookie, sessionId: row?.id as string };
+    const { rows } = await owner.query(
+      `UPDATE core.sessions
+         SET is_admin_session = true,
+             created_at = now() - make_interval(hours => $1::int),
+             updated_at = now() - make_interval(hours => $2::int)
+       WHERE user_id = $3 AND token = $4
+       RETURNING id`,
+      [createdHoursAgo, refreshedHoursAgo, userId, token],
+    );
+    return { cookie, sessionId: rows[0].id as string, headers: new Headers({ cookie }) };
   }
 
-  it('phiên Admin quá 8 giờ kể từ lúc tạo bị loại và xóa khỏi DB, dù hạn lưu còn 14 ngày', async () => {
-    const { cookie, sessionId } = await adminSessionCookie(9, 9);
-    expect(await readSession(auth, db, new Headers({ cookie }))).toBeNull();
-    const rows = await db.system.select().from(sessions).where(eq(sessions.id, sessionId));
-    expect(rows).toHaveLength(0);
+  const rowOf = async (sessionId: string) =>
+    (await authDb.db.select().from(sessions).where(eq(sessions.id, sessionId)))[0];
+
+  it('phiên Admin quá 8 giờ kể từ lúc tạo: hết hạn ở mọi đường — gọi thẳng auth.api.getSession và readSession đều null', async () => {
+    const { headers } = await adminSession(9, 9);
+    expect(await auth.api.getSession({ headers })).toBeNull();
+    expect(await readSession(auth, authHandle, headers)).toBeNull();
   });
 
-  it('phiên Admin dưới 8 giờ còn dùng được; hạn trong DB bị kéo về createdAt + 8 giờ sau khi làm mới', async () => {
-    const { cookie, sessionId } = await adminSessionCookie(1, 2); // quá updateAge (1h) → Better Auth làm mới
-    const session = await readSession(auth, db, new Headers({ cookie }));
+  it('Better Auth làm mới phiên Admin (+14 ngày) qua auth.api.getSession GỌI THẲNG: DB vẫn cắt về created_at + 8 giờ', async () => {
+    const { headers, sessionId } = await adminSession(1, 2); // quá updateAge (1h) → Better Auth làm mới
+    const session = await auth.api.getSession({ headers }); // KHÔNG qua readSession
     expect(session).not.toBeNull();
-    const [row] = await db.system.select().from(sessions).where(eq(sessions.id, sessionId));
-    const deadline = (row?.createdAt.getTime() ?? 0) + ADMIN_SESSION_SECONDS * 1000;
-    expect(row?.expiresAt.getTime()).toBeLessThanOrEqual(deadline);
+    const row = await rowOf(sessionId);
+    expect(row?.expiresAt.getTime()).toBeLessThanOrEqual(
+      (row?.createdAt.getTime() ?? 0) + ADMIN_SESSION_SECONDS * 1000,
+    );
+  });
+
+  it('cũng đúng khi đi qua bộ xử lý route của Better Auth (/api/auth/get-session)', async () => {
+    const { cookie, sessionId } = await adminSession(1, 2);
+    const response = await auth.handler(
+      new Request('http://localhost:3000/api/auth/get-session', { headers: { cookie } }),
+    );
+    expect(response.status).toBe(200);
+    const row = await rowOf(sessionId);
+    expect(row?.expiresAt.getTime()).toBeLessThanOrEqual(
+      (row?.createdAt.getTime() ?? 0) + ADMIN_SESSION_SECONDS * 1000,
+    );
+  });
+
+  it('hằng số 8 giờ trong SQL khớp ADMIN_SESSION_SECONDS', async () => {
+    const { userId } = await signUp();
+    await makeAdmin(userId);
+    const { rows } = await owner.query(
+      `INSERT INTO core.sessions (user_id, token, expires_at, is_admin_session)
+       VALUES ($1, $2, now() + interval '14 days', true) RETURNING created_at, expires_at`,
+      [userId, randomUUID()],
+    );
+    expect(rows[0].expires_at.getTime() - rows[0].created_at.getTime()).toBe(
+      ADMIN_SESSION_SECONDS * 1000,
+    );
   });
 
   it('phiên app (không Admin) không bị áp trần 8 giờ', async () => {
     const { email, userId } = await signUp();
     const { cookie } = await signIn(email);
-    await db.system
-      .update(sessions)
-      .set({ createdAt: new Date(Date.now() - 9 * HOUR) })
-      .where(eq(sessions.userId, userId));
-    expect(await readSession(auth, db, new Headers({ cookie }))).not.toBeNull();
+    await owner.query(
+      "UPDATE core.sessions SET created_at = now() - interval '9 hours' WHERE user_id = $1",
+      [userId],
+    );
+    expect(await readSession(auth, authHandle, new Headers({ cookie }))).not.toBeNull();
+    expect(await auth.api.getSession({ headers: new Headers({ cookie }) })).not.toBeNull();
+    expect(HOUR).toBeGreaterThan(0);
   });
 
   it('không có cookie → null', async () => {
-    expect(await readSession(auth, db, new Headers())).toBeNull();
+    expect(await readSession(auth, authHandle, new Headers())).toBeNull();
   });
 });
 
-describe('cookie Secure', () => {
-  it('mặc định bật khi baseURL là https, tắt khi http', async () => {
-    const https = createAuth({ db, secret: TEST_SECRET, baseURL: 'https://app.example.test' });
-    const http = createAuth({ db, secret: TEST_SECRET, baseURL: 'http://localhost:3000' });
+describe('cookie Secure và appEnv', () => {
+  const base = () => ({ authDb: authHandle, secret: TEST_SECRET });
+
+  it('mặc định bật khi baseURL là https, tắt khi http (ở dev/test/ci)', async () => {
+    const https = createAuth({ ...base(), baseURL: 'https://app.example.test', appEnv: 'test' });
+    const http = createAuth({ ...base(), baseURL: 'http://localhost:3000', appEnv: 'test' });
     expect((await https.$context).options.advanced?.useSecureCookies).toBe(true);
     expect((await http.$context).options.advanced?.useSecureCookies).toBe(false);
   });
 
-  it('staging/production mà cookie không Secure → CONFIG_INVALID', () => {
-    for (const appEnv of ['staging', 'production']) {
+  it('chỉ dev/test/ci được tắt Secure; staging/production (và mọi giá trị lạ) → CONFIG_INVALID', () => {
+    for (const appEnv of ['dev', 'test', 'ci'] as const) {
       expect(() =>
-        createAuth({ db, secret: TEST_SECRET, baseURL: 'http://localhost:3000', appEnv }),
-      ).toThrow(/Secure/);
+        createAuth({ ...base(), baseURL: 'http://localhost:3000', appEnv }),
+      ).not.toThrow();
+    }
+    for (const appEnv of ['staging', 'production', 'prod', '', undefined]) {
+      expect(() =>
+        // @ts-expect-error — appEnv phải thuộc dev|test|ci|staging|production; giá trị lạ vẫn bị chặn lúc chạy
+        createAuth({ ...base(), baseURL: 'http://localhost:3000', appEnv }),
+      ).toThrow(/Secure|APP_ENV/);
     }
     expect(() =>
-      createAuth({
-        db,
-        secret: TEST_SECRET,
-        baseURL: 'https://app.example.test',
-        appEnv: 'production',
-      }),
+      createAuth({ ...base(), baseURL: 'https://app.example.test', appEnv: 'production' }),
     ).not.toThrow();
   });
 });
@@ -301,7 +365,7 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
     await signIn(email);
     await signIn(email);
     const count = (await sessionRows(userId)).length;
-    expect(await revokeAllSessionsOfUser(db, userId)).toBe(count);
+    expect(await revokeAllSessionsOfUser(authHandle, userId)).toBe(count);
     expect(await sessionRows(userId)).toHaveLength(0);
   });
 
@@ -311,7 +375,7 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
     const { cookie } = await signIn(email);
     const newPassword = 'mat-khau-moi-dai-du-20';
 
-    await changePasswordAndRevokeAll(auth, db, {
+    await changePasswordAndRevokeAll(auth, authHandle, {
       headers: new Headers({ cookie }),
       currentPassword: PASSWORD,
       newPassword,
@@ -325,7 +389,7 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
 
   it('đổi mật khẩu khi chưa đăng nhập → UNAUTHENTICATED', async () => {
     await expect(
-      changePasswordAndRevokeAll(auth, db, {
+      changePasswordAndRevokeAll(auth, authHandle, {
         headers: new Headers(),
         currentPassword: PASSWORD,
         newPassword: 'mat-khau-moi-dai-du-20',
@@ -336,9 +400,14 @@ describe('đổi mật khẩu và thu hồi phiên', () => {
 
 describe('cấu hình', () => {
   it('từ chối khóa ký ngắn hơn 32 ký tự', () => {
-    expect(() => createAuth({ db, secret: 'ngan', baseURL: 'http://localhost:3000' })).toThrow(
-      /BETTER_AUTH_SECRET/,
-    );
+    expect(() =>
+      createAuth({
+        authDb: authHandle,
+        secret: 'ngan',
+        baseURL: 'http://localhost:3000',
+        appEnv: 'test',
+      }),
+    ).toThrow(/BETTER_AUTH_SECRET/);
   });
 
   it('cookie cache tắt và hạn phiên mặc định 14 ngày', async () => {
