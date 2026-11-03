@@ -8,13 +8,14 @@ Mã gap matrix: `RLS-ACTOR-CTX` (ưu tiên đầu GĐ1) · Spec: `docs/10` §4 (
 
 ## Điểm chưa rõ
 
-[CẦN LÀM RÕ: Hình dạng API. Khuyến nghị: **giữ nguyên `withWorkspace(id, fn)`** (worker, job hệ thống, đường không có người dùng) và **thêm `withActor(workspaceId, userId, fn)`** đặt `app.workspace_id` + `app.user_id`. Bảng có policy chỉ-Owner (`members` ghi, `invitations`, `workspaces` sửa) chỉ ghi được qua `withActor` với Owner đang hoạt động; `withWorkspace` thuần vẫn đọc được `members` (cần cho job) nhưng KHÔNG ghi được các bảng này. Phương án thay: thêm tham số thứ ba tuỳ chọn vào `withWorkspace` — loại vì dễ quên truyền.]
+Quyết định của chủ dự án (đồng ý khuyến nghị cả bốn thẻ, kèm bổ sung):
 
-[CẦN LÀM RÕ: Phạm vi bảng trong nhánh này. Khuyến nghị: **`members` (INSERT/UPDATE), `invitations` (SELECT/INSERT/UPDATE), `workspaces` (UPDATE), `action_logs` (INSERT: `actor_id` phải bằng người gọi khi `actor_type='user'`)**. Các bảng GĐ1 (`channels`...) áp cùng mẫu khi được tạo — ghi vào checklist của từng nhánh đó. Bảng `ai_usage`, `feature_flag_overrides` không đổi.]
-
-[CẦN LÀM RÕ: `invitations.token_hash` có ẩn khỏi `cf_app` không (verifier ghi nhận mọi thành viên workspace đọc được băm token)? Khuyến nghị: **có** — `REVOKE SELECT (token_hash)`; ứng dụng không đọc cột này (xem trước/nhận lời mời đi qua hàm DEFINER; liệt kê lời mời chọn cột tường minh). Hệ quả: truy vấn `select()` toàn cột trên `invitations` bị từ chối (đã có tiền lệ với `users`, ghi vào codemap).]
-
-[CẦN LÀM RÕ: Người đóng vai trò khởi tạo: `createWorkspace` chèn thành viên Owner đầu tiên khi workspace chưa có ai. Khuyến nghị: policy INSERT cho phép **đúng một trường hợp khởi tạo**: `role='owner' AND user_id = người gọi AND workspace chưa có thành viên nào` (kiểm bằng hàm DEFINER hẹp `core.workspace_has_members(uuid)` để tránh đệ quy RLS). Mọi trường hợp khác đòi Owner đang hoạt động.]
+1. Quyết định: **giữ `withWorkspace(id, fn)`, thêm `withActor(workspaceId, userId, fn)`.**
+2. Quyết định: **phạm vi bảng: `members` (INSERT/UPDATE), `invitations` (SELECT/INSERT/UPDATE), `workspaces` (UPDATE), `action_logs` (INSERT).** Bảng GĐ1 áp cùng mẫu khi được tạo.
+3. Quyết định: **`REVOKE SELECT (token_hash)` khỏi `cf_app`.**
+4. Quyết định: **đường khởi tạo `createWorkspace`** bằng hàm DEFINER hẹp `core.workspace_has_members(uuid)`.
+5. Bổ sung (chủ dự án): **chấp nhận giới hạn** — bảo vệ này chống quên kiểm quyền/sai id (IDOR), KHÔNG chống tiến trình web bị chiếm hoàn toàn (kẻ đó tự đặt `app.user_id`). **Ghi giới hạn này vào ADR 005** (mục 3) trong cùng nhánh.
+6. Bổ sung (chủ dự án): kiểm chứng độc lập bằng verifier **opus** (một lần ở cuối nhánh).
 
 ## Tiêu chí nghiệm thu
 
@@ -100,7 +101,7 @@ pnpm db:check-rls && pnpm lint && pnpm typecheck && pnpm depcruise && pnpm check
 
 ## Checklist plan
 
-- [ ] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
+- [x] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
 - [x] Mỗi tiêu chí nghiệm thu kiểm được và có cách kiểm
 - [x] Logic quy tắc đã có test viết trước
 - [x] Đã đánh dấu diff nhạy cảm (cần verifier hay không)
@@ -109,4 +110,4 @@ pnpm db:check-rls && pnpm lint && pnpm typecheck && pnpm depcruise && pnpm check
 
 ## Trạng thái duyệt
 
-**Chờ duyệt.** Chưa sửa code.
+**Đã duyệt** (chủ dự án, 03/11/2026: đồng ý khuyến nghị kèm bổ sung ở mục "Điểm chưa rõ").
