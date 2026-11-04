@@ -36,7 +36,9 @@ export {
   TokenConfigError,
   type TokenContext,
   TokenDecryptError,
+  TokenKeyMissingError,
 } from './token-cipher';
+export { assertTokenKeysCoverVersions } from './token-startup-check';
 export {
   type ChannelRef,
   type ConversationRef,

@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { createChannelTokenProvider } from './channel-token-provider';
 import { isPlatformError } from './errors';
-import { createTokenCipher, parseTokenKeys } from './token-cipher';
+import { createTokenCipher, parseTokenKeys, TokenKeyMissingError } from './token-cipher';
 import type { ChannelRef } from './types';
 
 const hex = () => randomBytes(32).toString('hex');
@@ -115,6 +115,18 @@ describe('FR-010 ChannelTokenProvider — lấy token đã giải mã cho connec
       onUndecryptable,
     });
     expect(await caught(provider.getAccessToken(channel))).toBe(boom);
+    expect(onUndecryptable).not.toHaveBeenCalled();
+  });
+
+  it('FR-010 thiếu khóa cho key_version → lỗi cấu hình nổi lên nguyên dạng, KHÔNG đánh dấu kênh expired', async () => {
+    const stored = cipherOf(`v1:${hex()}`).encrypt('token', ctx);
+    const onUndecryptable = vi.fn();
+    const provider = createChannelTokenProvider({
+      cipher: cipherOf(`v2:${hex()}`),
+      reader: { read: async () => stored },
+      onUndecryptable,
+    });
+    expect(await caught(provider.getAccessToken(channel))).toBeInstanceOf(TokenKeyMissingError);
     expect(onUndecryptable).not.toHaveBeenCalled();
   });
 

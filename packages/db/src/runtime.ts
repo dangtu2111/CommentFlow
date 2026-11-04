@@ -9,6 +9,7 @@ export {
   type CreateChannelInput,
   clearChannelToken,
   createChannel,
+  listChannelKeyVersions,
   readChannelToken,
   setChannelToken,
 } from './channel-tokens';

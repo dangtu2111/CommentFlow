@@ -58,3 +58,9 @@ export async function readChannelToken(
   const row = result.rows[0];
   return row ? { ciphertext: Buffer.from(row.ciphertext), keyVersion: row.key_version } : null;
 }
+
+/** Các `key_version` đang có token trong `channels` (xuyên workspace) — chỉ để kiểm khóa lúc khởi động. */
+export async function listChannelKeyVersions(tx: Database): Promise<number[]> {
+  const result = await tx.execute<{ v: number }>(sql`SELECT cf.channel_key_versions() AS v`);
+  return result.rows.map((row) => Number(row.v));
+}

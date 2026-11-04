@@ -7,6 +7,7 @@ import {
   TOKEN_KEY_BYTES,
   TokenConfigError,
   TokenDecryptError,
+  TokenKeyMissingError,
 } from './token-cipher';
 
 const hex = () => randomBytes(TOKEN_KEY_BYTES).toString('hex');
@@ -106,7 +107,22 @@ describe('FR-010 createTokenCipher — AES-256-GCM', () => {
     const { ciphertext } = cipher.encrypt('token', ctx); // mã hóa bằng v2
     expect(() => cipher.decrypt(ciphertext, 1, ctx)).toThrow(TokenDecryptError);
     expect(cipher.decrypt(ciphertext, 2, ctx)).toBe('token');
-    expect(() => cipher.decrypt(ciphertext, 9, ctx)).toThrow(TokenDecryptError);
+    expect(() => cipher.decrypt(ciphertext, 9, ctx)).toThrow(TokenKeyMissingError);
+  });
+
+  it('FR-010 thiếu khóa cho key_version là lỗi CẤU HÌNH (TokenConfigError), thông báo chỉ nêu số phiên bản', () => {
+    const k = hex();
+    const { ciphertext } = cipherOf(`v1:${k}`).encrypt('token', ctx);
+    try {
+      cipherOf(`v2:${hex()}`).decrypt(ciphertext, 1, ctx);
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(TokenKeyMissingError);
+      expect(error).toBeInstanceOf(TokenConfigError);
+      expect(error).not.toBeInstanceOf(TokenDecryptError);
+      expect((error as Error).message).toContain('v1');
+      expect((error as Error).message).not.toContain(k);
+    }
   });
 
   it('FR-010 sai khóa → lỗi giải mã', () => {
@@ -174,7 +190,7 @@ describe('FR-010 createTokenCipher — AES-256-GCM', () => {
     // gỡ khóa v1 vẫn đọc được bản đã xoay; bản chưa xoay thì không
     const onlyV2 = cipherOf(`v2:${k2}`);
     expect(onlyV2.decrypt(next.ciphertext, 2, ctx)).toBe('token-xoay');
-    expect(() => onlyV2.decrypt(old.ciphertext, 1, ctx)).toThrow(TokenDecryptError);
+    expect(() => onlyV2.decrypt(old.ciphertext, 1, ctx)).toThrow(TokenKeyMissingError);
   });
 
   it('FR-010 reencrypt từ chối khi không giải mã được bản gốc (không làm hỏng dữ liệu âm thầm)', () => {

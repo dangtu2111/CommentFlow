@@ -383,3 +383,27 @@ describe('FR-010 cô lập workspace và hành vi từng hàm', () => {
     expect(noWs).toBe('42501');
   });
 });
+
+describe('FR-010 cf.channel_key_versions (kiểm khóa lúc khởi động)', () => {
+  it('trả các key_version đang có token (chỉ số nguyên, xuyên workspace); PUBLIC không có quyền; cf_app gọi được không cần ngữ cảnh', async () => {
+    const channelId = await seedChannel();
+    await admin.query(
+      'UPDATE cf.channels SET access_token_enc = $2, key_version = 41 WHERE id = $1',
+      [channelId, cipher()],
+    );
+    const versions = await db.withSystem((tx) =>
+      tx.execute<{ v: number }>(sql`SELECT cf.channel_key_versions() AS v`),
+    );
+    expect(versions.rows.map((r) => Number(r.v))).toContain(41);
+    const perm = (
+      await admin.query(
+        "SELECT has_function_privilege('public', 'cf.channel_key_versions()', 'EXECUTE') AS pub, has_function_privilege('cf_app', 'cf.channel_key_versions()', 'EXECUTE') AS app",
+      )
+    ).rows[0];
+    expect(perm).toEqual({ pub: false, app: true });
+    await admin.query(
+      'UPDATE cf.channels SET access_token_enc = NULL, key_version = 1 WHERE id = $1',
+      [channelId],
+    );
+  });
+});

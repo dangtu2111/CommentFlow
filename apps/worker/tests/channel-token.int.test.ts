@@ -11,6 +11,7 @@ import {
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createWorkerTokenProvider } from '../src/channels/token-provider';
+import { verifyTokenKeysAtStartup } from '../src/channels/verify-token-keys';
 
 /**
  * TOKEN-ENC (FR-010), đầu-cuối: web-giả (withActor Owner) tạo kênh → mã hóa → ghi token; worker (withJob) đọc ciphertext
@@ -233,5 +234,53 @@ describe('FR-010 token Page đầu-cuối (web ghi, worker đọc)', () => {
     )) as { code?: string };
     expect(again.code).toBe('TOKEN_EXPIRED');
     expect(await statusOf(revoked)).toBe('revoked');
+  });
+
+  it('thiếu khóa cho key_version đang dùng → lỗi cấu hình, kênh KHÔNG bị đổi trạng thái (không expired hàng loạt)', async () => {
+    const k1 = hex();
+    const channelId = await connectPage(cipherOf(`v1:${k1}`), 'token-v1');
+    const onlyV2 = cipherOf(`v2:${hex()}`);
+    const error = (await createWorkerTokenProvider({ db, cipher: onlyV2 })
+      .getAccessToken(refOf(channelId))
+      .then(
+        () => undefined,
+        (e) => e,
+      )) as Error;
+    expect(error.name).toBe('TokenKeyMissingError');
+    expect(error.message).not.toContain(k1);
+    expect(await statusOf(channelId)).toBe('connected');
+  });
+});
+
+describe('FR-010 kiểm khóa lúc khởi động worker', () => {
+  it('đủ khóa cho mọi phiên bản đang dùng → qua; thiếu → lỗi nêu phiên bản, không in khóa', async () => {
+    const k1 = hex();
+    const k2 = hex();
+    const channelId = await connectPage(cipherOf(`v1:${k1}`), 'token-khoi-dong');
+    await db.withJob(ws, (tx) =>
+      setChannelToken(tx, { channelId, ciphertext: randomBytes(40), keyVersion: 7 }),
+    );
+    // DB test dùng chung: đủ khóa cho MỌI phiên bản đang dùng (các test khác để lại v1, v2...).
+    const inUse = (
+      await admin.query(
+        'SELECT DISTINCT key_version FROM cf.channels WHERE access_token_enc IS NOT NULL',
+      )
+    ).rows.map((r) => Number(r.key_version));
+    const all = [...new Set([...inUse, 7])].map((v) => `v${v}:${v === 7 ? k2 : hex()}`).join(',');
+    await expect(verifyTokenKeysAtStartup(db, all)).resolves.toBeUndefined();
+    const withoutV7 = all
+      .split(',')
+      .filter((p) => !p.startsWith('v7:'))
+      .join(',');
+    const error = (await verifyTokenKeysAtStartup(db, withoutV7).then(
+      () => undefined,
+      (e) => e,
+    )) as Error;
+    expect(error.name).toBe('TokenConfigError');
+    expect(error.message).toContain('v7');
+    expect(error.message).not.toContain(k2);
+    await db.withJob(ws, (tx) =>
+      setChannelToken(tx, { channelId, ciphertext: randomBytes(40), keyVersion: 1 }),
+    );
   });
 });

@@ -17,6 +17,8 @@
 4. `WH-INGEST` — webhook (xác minh chữ ký) → job `ingest`, chống trùng, bỏ bình luận của chính Page
 5. `INBOX-LIST` — trang Bình luận (tab, lọc, tìm)
 
+**Bắt buộc trước khi lên staging:** `WORKER-DB-ROLE` (role DB riêng cho worker; web/`cf_app` không đọc được ciphertext token — gap matrix, ADR 007 §2) — chủ dự án chốt 06/11/2026. Kiểm tra khóa lúc khởi động ở web gắn cùng `FB-OAUTH` (gap `TOKEN-KEY-STARTUP-WEB`).
+
 Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000/...`, App ID/Secret ở `.env.local`; hướng dẫn `docs/CAN_BAN_CUNG_CAP.md`) nên `FB-OAUTH` không còn chờ tên miền; vẫn cần **Page thử** khi kiểm tra tay các tính năng gọi Graph API. Chạy E2E cổng 0 lần đầu — chủ dự án.
 
 ---

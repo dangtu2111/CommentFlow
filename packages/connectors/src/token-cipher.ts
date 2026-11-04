@@ -19,6 +19,14 @@ export class TokenConfigError extends Error {
   }
 }
 
+/** Thiếu khóa cho một `key_version` đang có dữ liệu: lỗi CẤU HÌNH (không phải dữ liệu hỏng) — không đánh dấu kênh. */
+export class TokenKeyMissingError extends TokenConfigError {
+  constructor(readonly keyVersion: number) {
+    super(`Thiếu khóa cho key_version v${keyVersion} trong TOKEN_ENC_KEYS.`);
+    this.name = 'TokenKeyMissingError';
+  }
+}
+
 /** Giải mã thất bại (sai khóa/AAD/ciphertext hỏng). Cố ý không có `cause` và không chứa dữ liệu nào. */
 export class TokenDecryptError extends Error {
   constructor() {
@@ -89,7 +97,8 @@ export function createTokenCipher(config: ParsedTokenKeys) {
 
   function decrypt(ciphertext: Buffer, keyVersion: number, ctx: TokenContext): string {
     const key = keys.get(keyVersion);
-    if (!key || ciphertext.length < NONCE_BYTES + TAG_BYTES) throw new TokenDecryptError();
+    if (!key) throw new TokenKeyMissingError(keyVersion);
+    if (ciphertext.length < NONCE_BYTES + TAG_BYTES) throw new TokenDecryptError();
     try {
       const nonce = ciphertext.subarray(0, NONCE_BYTES);
       const tag = ciphertext.subarray(ciphertext.length - TAG_BYTES);
