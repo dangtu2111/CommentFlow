@@ -44,6 +44,14 @@ module.exports = {
       to: { path: '^(packages/(saas-core|ai|connectors)/|apps/)' },
     },
     {
+      name: 'connectors-chi-phu-thuoc-shared',
+      comment:
+        'packages/connectors (giao diện + khai báo khả năng nền tảng) chỉ được phụ thuộc shared; không import db, saas-core, ai, apps (token đi qua TokenProvider được tiêm).',
+      severity: 'error',
+      from: { path: '^packages/connectors/' },
+      to: { path: '^(packages/(?!shared/|connectors/)|apps/)' },
+    },
+    {
       name: 'chi-auth-import-auth-db',
       comment:
         'Pool role cf_auth (packages/db/src/auth-db) mở TOÀN BỘ bảng xác thực (băm mật khẩu, token phiên thô): chỉ packages/saas-core/src/auth/, chính packages/db và test được import. Nơi khác dùng qua API của saas-core.',

@@ -74,6 +74,17 @@ describe('luật ranh giới dependency-cruiser', () => {
   it('worker không import web', () => {
     expect(has('apps-khong-import-nhau', 'worker/src/imports-web.ts')).toBe(true);
   });
+  it('connectors không import db', () => {
+    expect(has('connectors-chi-phu-thuoc-shared', 'connectors/src/imports-db.ts')).toBe(true);
+  });
+  it('connectors không import ai', () => {
+    expect(has('connectors-chi-phu-thuoc-shared', 'connectors/src/imports-ai.ts')).toBe(true);
+  });
+  it('connectors được import shared', () => {
+    expect(violations.some((v) => v.from.includes('connectors/src/ok-imports-shared.ts'))).toBe(
+      false,
+    );
+  });
   it('cấm vòng phụ thuộc', () => {
     expect(
       violations.some((v) => v.rule === 'no-circular' && v.from.includes('ai/src/cycle-')),
