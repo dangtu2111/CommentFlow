@@ -9,7 +9,8 @@
 | Mục | Tính năng | PR | Đã merge | Chủ dự án thử | Kết quả |
 |---|---|---|---|---|---|
 | KT-001 | Workspace, thành viên, lời mời, chỉ-Owner ở DB | #7, #11 | có | chưa | — |
-| KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | WH-INGEST | chưa | chưa | — |
+| KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | #19 | có | chưa | — |
+| KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | INBOX-LIST | chưa | chưa | — |
 
 ---
 
@@ -51,6 +52,27 @@ Nếu hỏng: ghi số bước, ảnh chụp màn hình (che email thật nếu 
 | 8 | Với Meta thật (tunnel, docs/CAN_BAN_CUNG_CAP.md §2): bình luận trên Fanpage thử bằng tài khoản **khác** Page; rồi để chính Page trả lời bình luận đó. | Bình luận của khách xuất hiện; câu trả lời của chính Page **không** xuất hiện. |
 
 Nếu hỏng: ghi số bước, mã HTTP và dòng log của web/worker (che tên khách); không dán `META_APP_SECRET`.
+
+---
+
+## KT-003 — Trang Bình luận: tab, danh sách, tìm, lọc (INBOX-LIST)
+
+Điều kiện: đã đăng nhập vào một workspace (Owner hoặc Staff); trong DB có **vài bình luận** để thấy danh sách (cần một kênh đã kết nối + `webhook_subscribed` — sau `FB-OAUTH` — rồi chạy `pnpm webhook:send -- --page <PAGE_ID>` vài lần, hoặc nhờ agent gieo dữ liệu thử vào `cf_dev`). Chạy `pnpm --filter @flow/web dev`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Bấm **Bình luận** ở thanh trên. | Mở `/app/comments`: cột trái là các tab kèm số, ở giữa danh sách, bên phải khung "Chọn một bình luận…". Mặc định tab **Chờ duyệt**. |
+| 2 | Bấm tab **Mới** (bình luận từ webhook mới nằm ở đây). | Danh sách hiện bình luận vừa gửi (tên khách, kênh, thời gian "x phút trước", nội dung, nhãn trạng thái **Mới**); số trên tab khớp số dòng ("Hiển thị N / N"). |
+| 3 | Gõ một từ trong nội dung (thử cả không dấu, ví dụ "gia" cho "giá") vào ô tìm kiếm, bấm **Áp dụng**. | Chỉ còn bình luận khớp, không phân biệt hoa/thường và dấu; số trên các tab cũng đổi theo bộ lọc. |
+| 4 | Tìm bằng ký tự đặc biệt `%` hoặc `_`. | Không lỗi, không hiện tràn mọi bình luận. |
+| 5 | Chọn một nền tảng/kênh trong ô lọc, bật **Chỉ bài quảng cáo**, rồi bấm **Xóa bộ lọc**. | Danh sách thu hẹp đúng; "Xóa bộ lọc" trả về đầy đủ. |
+| 6 | Đổi **Sắp xếp** giữa "Cũ nhất trước" và "Mới nhất trước". | Thứ tự đảo đúng. |
+| 7 | Nếu có > 25 bình luận: bấm **Xem trang kế tiếp**, rồi **Về trang đầu**. | Không lặp/sót bình luận giữa các trang. |
+| 8 | Thu nhỏ cửa sổ về ~390px (hoặc xem trên điện thoại). | Các cột xếp dọc; tab thành hàng cuộn ngang; không bị tràn ngang trang. |
+| 9 | Đổi ngôn ngữ giao diện sang **English** (và quay lại). | Mọi chữ trên trang (tab, nhãn trạng thái, nút, thời gian) đổi đúng; không còn chữ Việt ở bản English. |
+| 10 | Đăng nhập một workspace khác (hoặc người không thuộc workspace) mở `/app/comments`. | Chỉ thấy bình luận của workspace đang chọn; không thấy dữ liệu workspace khác. |
+
+Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
 
 ---
 

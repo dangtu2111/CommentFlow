@@ -212,7 +212,8 @@
       "brand": "CommentFlow AI",
       "nav": "Điều hướng chính",
       "security": "Bảo mật",
-      "members": "Thành viên"
+      "members": "Thành viên",
+      "comments": "Bình luận"
     }
   },
   "members": {
@@ -292,6 +293,83 @@
       "invalid": "Không thể chấp nhận lời mời này. Lời mời có thể đã hết hạn, đã được dùng hoặc bị thu hồi, hoặc tài khoản đang đăng nhập không dùng email được mời. Hãy kiểm tra email đang đăng nhập hoặc nhờ Owner gửi lại lời mời.",
       "rateLimited": "Bạn thử quá nhiều lần. Vui lòng thử lại sau {minutes} phút.",
       "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
+    }
+  },
+  "comments": {
+    "title": "Bình luận",
+    "tabsLabel": "Trạng thái xử lý",
+    "tabs": {
+      "new": "Mới",
+      "pending_review": "Chờ duyệt",
+      "scheduled_auto": "Sẽ tự gửi",
+      "auto_replied": "AI đã tự gửi",
+      "needs_human": "Cần nhân viên",
+      "needs_followup": "Cần hỗ trợ thêm",
+      "spam_suspected": "Nghi spam",
+      "send_failed": "Gửi lỗi",
+      "replied": "Đã trả lời",
+      "hidden": "Đã ẩn",
+      "skipped": "Bỏ qua",
+      "all": "Tất cả"
+    },
+    "status": {
+      "new": "Mới",
+      "processing": "Đang xử lý",
+      "pending_review": "Chờ duyệt",
+      "needs_human": "Cần nhân viên",
+      "scheduled_auto": "Sẽ tự gửi",
+      "sending": "Đang gửi",
+      "replied": "Đã trả lời",
+      "auto_replied": "AI đã tự gửi",
+      "send_failed": "Gửi lỗi",
+      "skipped": "Bỏ qua",
+      "spam_suspected": "Nghi spam",
+      "hidden": "Đã ẩn"
+    },
+    "toolbar": {
+      "label": "Tìm và lọc bình luận",
+      "search": "Tìm theo tên khách, nội dung…",
+      "searchLabel": "Tìm kiếm",
+      "platform": "Nền tảng",
+      "allPlatforms": "Tất cả nền tảng",
+      "channel": "Kênh",
+      "allChannels": "Tất cả kênh",
+      "adsOnly": "Chỉ bài quảng cáo",
+      "sort": "Sắp xếp",
+      "apply": "Áp dụng",
+      "clear": "Xóa bộ lọc"
+    },
+    "sort": {
+      "oldest": "Cũ nhất trước",
+      "newest": "Mới nhất trước"
+    },
+    "platforms": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "list": {
+      "label": "Danh sách bình luận",
+      "anonymous": "Khách ẩn danh",
+      "ad": "Bài quảng cáo",
+      "followup": "Cần hỗ trợ thêm",
+      "shown": "Hiển thị {shown} / {total}",
+      "next": "Xem trang kế tiếp",
+      "first": "Về trang đầu"
+    },
+    "empty": {
+      "title": "Chưa có bình luận",
+      "body": "Bình luận mới từ Fanpage đã kết nối sẽ xuất hiện ở đây.",
+      "filteredTitle": "Không có bình luận khớp",
+      "filteredBody": "Thử đổi tab hoặc xóa bớt bộ lọc."
+    },
+    "detail": {
+      "title": "Chi tiết bình luận",
+      "empty": "Chọn một bình luận để xem chi tiết."
+    },
+    "error": {
+      "title": "Không tải được danh sách bình luận",
+      "body": "Có lỗi tạm thời. Hãy tải lại trang sau ít phút."
     }
   }
 }
