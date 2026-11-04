@@ -9,14 +9,15 @@
 --  * Hàm không ghi ciphertext/token vào action_logs hay thông báo lỗi.
 --  * Bảo mật hàm: search_path cố định (pg_catalog, core, cf, pg_temp), REVOKE ALL FROM PUBLIC, chỉ GRANT EXECUTE cf_app.
 --
--- Đường lùi: khôi phục hai hàm về bản 0019 (không COALESCE; trigger không kiểm current_user), rồi DROP FUNCTION cf.create_channel(text, text, text, text, text[]), cf.set_channel_token(uuid, bytea, integer,
+-- Đường lùi: DROP bốn hàm TRƯỚC (chúng chỉ an toàn nhờ is_system_context() đã COALESCE), rồi mới khôi phục hai hàm về bản 0019;
+-- DROP FUNCTION cf.create_channel(text, text, text, text, text[]), cf.set_channel_token(uuid, bytea, integer,
 -- timestamptz), cf.clear_channel_token(uuid), cf.read_channel_token(uuid) (không đổi bảng).
 -- ===================================================================================================
 
 -- Sửa kèm (phát hiện khi viết test): trigger cf.guard_channel_user_update (0019) chặn MỌI UPDATE cột hệ thống khi
 -- không phải ngữ cảnh hệ thống — kể cả khi chính các hàm DEFINER dưới đây (đã tự kiểm Owner/hệ thống) cập nhật. Trigger
--- chỉ áp cho role ứng dụng (current_user = 'cf_app'); bên trong hàm DEFINER current_user là chủ hàm nên được qua.
--- cf_app không đổi được current_user (không SET ROLE tới chủ hàm), nên đường người dùng vẫn bị chặn như cũ.
+-- chỉ miễn cho CHỦ BẢNG (bên trong hàm DEFINER current_user = chủ hàm = chủ bảng; role nào khác — cf_app, role Admin/worker
+-- tương lai — vẫn bị chặn: fail-closed). cf_app không đổi được current_user (không SET ROLE tới chủ bảng).
 -- Cũng làm cứng core.is_system_context(): current_setting(...) = 'system' trả NULL khi GUC chưa từng đặt, làm
 -- "NOT is_system_context()" thành NULL (trigger không chặn). COALESCE(..., false) → luôn true/false.
 CREATE OR REPLACE FUNCTION core.is_system_context() RETURNS boolean
@@ -32,8 +33,9 @@ LANGUAGE plpgsql
 SET search_path = pg_catalog, core, cf, pg_temp
 AS $$
 BEGIN
-  -- Chỉ đường của role ứng dụng; hàm DEFINER đã tự kiểm quyền (current_user = chủ hàm) thì được qua.
-  IF current_user = 'cf_app' AND NOT core.is_system_context() AND (
+  -- Chủ bảng (hàm DEFINER đã tự kiểm quyền; migration/admin) được qua; mọi role khác bị chặn ngoài ngữ cảnh hệ thống.
+  IF current_user IS DISTINCT FROM pg_get_userbyid((SELECT c.relowner FROM pg_class c WHERE c.oid = TG_RELID))
+     AND NOT core.is_system_context() AND (
        NEW.avatar_url IS DISTINCT FROM OLD.avatar_url
     OR NEW.token_expires_at IS DISTINCT FROM OLD.token_expires_at
     OR NEW.scopes IS DISTINCT FROM OLD.scopes
@@ -64,7 +66,7 @@ DECLARE
   v_id uuid;
   v_inserted boolean;
 BEGIN
-  IF v_ws IS NULL OR NOT (core.is_workspace_owner() OR v_system) THEN
+  IF v_ws IS NULL OR (core.is_workspace_owner() OR v_system) IS NOT TRUE THEN
     RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
   END IF;
 
@@ -102,7 +104,7 @@ AS $$
 DECLARE
   v_ws uuid := core.current_workspace_id();
 BEGIN
-  IF v_ws IS NULL OR NOT (core.is_workspace_owner() OR core.is_system_context()) THEN
+  IF v_ws IS NULL OR (core.is_workspace_owner() OR core.is_system_context()) IS NOT TRUE THEN
     RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
   END IF;
   -- AES-GCM: nonce 12 + tag 16 byte tối thiểu; key_version dương.
@@ -119,6 +121,16 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'channel not found' USING ERRCODE = 'P0002';
   END IF;
+
+  -- Dấu vết kiểm toán thay token (KHÔNG kèm ciphertext).
+  INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action, target_type, target_id, after)
+  VALUES (
+    v_ws,
+    CASE WHEN core.is_system_context() THEN 'system' ELSE 'user' END,
+    CASE WHEN core.is_system_context() THEN NULL ELSE core.current_user_id() END,
+    'channel.token_set', 'channel', p_channel_id::text,
+    jsonb_build_object('key_version', p_key_version)
+  );
 END
 $$;
 --> statement-breakpoint
@@ -133,7 +145,7 @@ DECLARE
   v_user uuid := core.current_user_id();
   v_system boolean := core.is_system_context();
 BEGIN
-  IF v_ws IS NULL OR NOT (core.is_workspace_owner() OR v_system) THEN
+  IF v_ws IS NULL OR (core.is_workspace_owner() OR v_system) IS NOT TRUE THEN
     RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
   END IF;
 
@@ -168,7 +180,7 @@ SECURITY DEFINER
 SET search_path = pg_catalog, core, cf, pg_temp
 AS $$
 BEGIN
-  IF core.current_workspace_id() IS NULL OR NOT core.is_system_context() THEN
+  IF core.current_workspace_id() IS NULL OR core.is_system_context() IS NOT TRUE THEN
     RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
   END IF;
   RETURN QUERY

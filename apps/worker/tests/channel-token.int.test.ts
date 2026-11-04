@@ -1,6 +1,13 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
-import { createChannel, createDb, type FlowDb, setChannelToken, sql } from '@flow/db';
+import {
+  clearChannelToken,
+  createChannel,
+  createDb,
+  type FlowDb,
+  setChannelToken,
+  sql,
+} from '@flow/db';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createWorkerTokenProvider } from '../src/channels/token-provider';
@@ -202,7 +209,7 @@ describe('FR-010 token Page đầu-cuối (web ghi, worker đọc)', () => {
     ).toBe('token-xoay-vong');
   });
 
-  it('kênh chưa có token hoặc đã ngắt kết nối → TOKEN_EXPIRED (và kênh ghi nhận cần kết nối lại)', async () => {
+  it('kênh chưa có token → TOKEN_EXPIRED và trạng thái KHÔNG đổi; kênh đã ngắt (revoked) không bị ghi đè thành expired', async () => {
     const channelId = await db.withActor(ws, owner, (tx) =>
       createChannel(tx, {
         platform: 'facebook',
@@ -216,6 +223,15 @@ describe('FR-010 token Page đầu-cuối (web ghi, worker đọc)', () => {
       (e) => e,
     )) as { code?: string };
     expect(error.code).toBe('TOKEN_EXPIRED');
-    expect(await statusOf(channelId)).toBe('expired');
+    expect(await statusOf(channelId)).toBe('connected');
+
+    const revoked = await connectPage(cipherOf(`v1:${hex()}`), 'token-se-bi-ngat');
+    await db.withActor(ws, owner, (tx) => clearChannelToken(tx, revoked));
+    const again = (await provider.getAccessToken(refOf(revoked)).then(
+      () => undefined,
+      (e) => e,
+    )) as { code?: string };
+    expect(again.code).toBe('TOKEN_EXPIRED');
+    expect(await statusOf(revoked)).toBe('revoked');
   });
 });

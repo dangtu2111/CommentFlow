@@ -69,7 +69,7 @@ export type TokenContext = { workspaceId: string; channelId: string };
 export type EncryptedToken = { ciphertext: Buffer; keyVersion: number };
 
 const aadOf = (ctx: TokenContext, keyVersion: number): Buffer =>
-  Buffer.from(`${ctx.workspaceId}|${ctx.channelId}|${keyVersion}`, 'utf8');
+  Buffer.from(`${ctx.workspaceId}|${ctx.channelId}|${keyVersion}`.toLowerCase(), 'utf8');
 
 export function createTokenCipher(config: ParsedTokenKeys) {
   const { keys, currentVersion } = config;

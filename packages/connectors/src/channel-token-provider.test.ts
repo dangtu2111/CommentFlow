@@ -32,7 +32,7 @@ describe('FR-010 ChannelTokenProvider — lấy token đã giải mã cho connec
     expect(await provider.getAccessToken(channel)).toBe('EAAG-token-that');
   });
 
-  it('FR-010 kênh chưa có token → onUndecryptable một lần rồi TOKEN_EXPIRED', async () => {
+  it('FR-010 kênh không có token → TOKEN_EXPIRED nhưng KHÔNG đánh dấu kênh (không ghi đè revoked)', async () => {
     const onUndecryptable = vi.fn();
     const provider = createChannelTokenProvider({
       cipher: cipherOf(`v1:${hex()}`),
@@ -41,8 +41,7 @@ describe('FR-010 ChannelTokenProvider — lấy token đã giải mã cho connec
     });
     const error = await caught(provider.getAccessToken(channel));
     expect(isPlatformError(error) && error.code).toBe('TOKEN_EXPIRED');
-    expect(onUndecryptable).toHaveBeenCalledTimes(1);
-    expect(onUndecryptable).toHaveBeenCalledWith(channel);
+    expect(onUndecryptable).not.toHaveBeenCalled();
   });
 
   it('FR-010 sai khóa / sai kênh (AAD) / ciphertext hỏng → kênh cần kết nối lại, TOKEN_EXPIRED, KHÔNG lộ token/ciphertext/khóa', async () => {
@@ -89,7 +88,7 @@ describe('FR-010 ChannelTokenProvider — lấy token đã giải mã cho connec
     const onWarn = vi.fn();
     const provider = createChannelTokenProvider({
       cipher: cipherOf(`v1:${hex()}`),
-      reader: { read: async () => null },
+      reader: { read: async () => ({ ciphertext: Buffer.alloc(40), keyVersion: 1 }) },
       onUndecryptable: async () => {
         throw new Error('DB sập');
       },

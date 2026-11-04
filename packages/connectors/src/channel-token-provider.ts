@@ -26,6 +26,9 @@ export type ChannelTokenProviderOptions = {
 export function createChannelTokenProvider(options: ChannelTokenProviderOptions): TokenProvider {
   const { cipher, reader, onUndecryptable, onWarn } = options;
 
+  const tokenExpired = () =>
+    new PlatformError('TOKEN_EXPIRED', { message: 'Token của kênh không còn dùng được.' });
+
   async function markUnusable(channel: ChannelRef): Promise<never> {
     try {
       await onUndecryptable?.(channel);
@@ -33,13 +36,15 @@ export function createChannelTokenProvider(options: ChannelTokenProviderOptions)
       // Không che TOKEN_EXPIRED bằng lỗi của hook (và không log nội dung lỗi gốc).
       onWarn?.({ event: 'channel_mark_expired_failed', channelId: channel.id });
     }
-    throw new PlatformError('TOKEN_EXPIRED', { message: 'Token của kênh không còn dùng được.' });
+    throw tokenExpired();
   }
 
   return {
     async getAccessToken(channel) {
       const stored = await reader.read(channel);
-      if (stored === null) return markUnusable(channel);
+      // Kênh không có token (chưa kết nối xong hoặc Owner đã ngắt): báo TOKEN_EXPIRED nhưng KHÔNG đổi trạng thái —
+      // job còn trong hàng đợi không được ghi đè `revoked` thành `expired`.
+      if (stored === null) throw tokenExpired();
       try {
         return cipher.decrypt(stored.ciphertext, stored.keyVersion, {
           workspaceId: channel.workspaceId,

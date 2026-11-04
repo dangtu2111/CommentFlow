@@ -237,6 +237,9 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.channels', 'access_token_enc', 'SELECT'],
   ['cf_app', 'cf.channels', 'access_token_enc', 'INSERT'],
   ['cf_app', 'cf.channels', 'access_token_enc', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'key_version', 'SELECT'],
+  ['cf_app', 'cf.channels', 'key_version', 'INSERT'],
+  ['cf_app', 'cf.channels', 'key_version', 'UPDATE'],
   ['cf_app', 'cf.channels', 'send_suspended_until', 'UPDATE'],
   ['cf_app', 'cf.channels', 'send_suspended_until', 'INSERT'],
   ['cf_app', 'cf.channels', 'send_suspended_reason', 'UPDATE'],
@@ -389,6 +392,40 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
       message: `hàm SECURITY DEFINER không an toàn: ${String(row.problem)}`,
     });
   }
+  // Giới hạn cột ở đường người dùng (channels/comments) dựa hoàn toàn vào hai trigger này (0019): phải tồn tại và đang bật.
+  const guards = await db.query(`/* column-guard-triggers */
+    SELECT v.tbl AS name, v.trg AS trg FROM (VALUES
+      ('cf.channels', 'channels_guard_user_update'), ('cf.comments', 'comments_guard_user_update')) AS v(tbl, trg)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_trigger t
+      WHERE t.tgrelid = v.tbl::regclass AND t.tgname = v.trg AND NOT t.tgisinternal AND t.tgenabled = 'O')`);
+  for (const row of guards.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `thiếu hoặc tắt trigger ${String(row.trg)} (giới hạn cột của đường người dùng)`,
+    });
+  }
+  // Mọi quyền "hệ thống" dựa vào thân core.is_system_context(): phải đòi app.ctx = 'system' VÀ không có người dùng.
+  const systemFn = await db.query(`/* is-system-context-body */
+    SELECT 'core.is_system_context' AS name WHERE NOT EXISTS (
+      SELECT 1 FROM pg_proc p WHERE p.pronamespace = 'core'::regnamespace AND p.proname = 'is_system_context'
+        AND p.prosrc LIKE '%app.ctx%' AND p.prosrc LIKE '%''system''%' AND p.prosrc LIKE '%current_user_id() IS NULL%')`);
+  for (const row of systemFn.rows) {
+    violations.push({
+      subject: String(row.name),
+      message:
+        "thân hàm phải đòi app.ctx = 'system' và current_user_id() IS NULL (mọi quyền hệ thống dựa vào đây)",
+    });
+  }
+  // cf.channels: cf_app không có INSERT ở bất kỳ cột nào (tạo kênh chỉ qua cf.create_channel).
+  const channelInsert = await db.query(`/* channels-no-insert */
+    SELECT 'cf.channels' AS name WHERE has_any_column_privilege('${APP_ROLE}', 'cf.channels', 'INSERT')`);
+  for (const row of channelInsert.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `${APP_ROLE} không được INSERT (tạo kênh chỉ qua cf.create_channel)`,
+    });
+  }
   const trigger = await db.query(`/* last-owner-trigger */
     SELECT 'core.members' AS name WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t
@@ -453,6 +490,7 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.posts', 'a', 'IS NULL'],
   ['cf.posts', 'w', 'IS NULL'],
   ['cf.comments', 'a', 'IS NULL'],
+  ['cf.comments', 'w', 'IS NULL'],
   ['cf.webhook_events', 'a', 'IS NULL'],
   ['cf.webhook_events', 'w', 'IS NULL'],
   ['cf.webhook_events', 'r', 'IS NULL'],

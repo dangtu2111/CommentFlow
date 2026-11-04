@@ -144,6 +144,13 @@ describe('FR-010 createTokenCipher — AES-256-GCM', () => {
     }
   });
 
+  it('FR-010 AAD không phân biệt chữ hoa/thường của UUID (payload job dùng UUID chữ hoa vẫn giải mã được)', () => {
+    const cipher = cipherOf(`v1:${hex()}`);
+    const { ciphertext, keyVersion } = cipher.encrypt('token', ctx);
+    const upper = { workspaceId: WS.toUpperCase(), channelId: CH.toUpperCase() };
+    expect(cipher.decrypt(ciphertext, keyVersion, upper)).toBe('token');
+  });
+
   it('FR-010 xoay khóa: bản mã hóa bằng v1 vẫn giải mã được sau khi thêm v2; bản mới dùng v2', () => {
     const k1 = hex();
     const k2 = hex();

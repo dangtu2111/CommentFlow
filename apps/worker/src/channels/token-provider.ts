@@ -1,5 +1,5 @@
 import { type ChannelRef, createChannelTokenProvider, type TokenCipher } from '@flow/connectors';
-import { eq, type FlowDb, readChannelToken, schema } from '@flow/db';
+import { and, eq, type FlowDb, readChannelToken, schema } from '@flow/db';
 
 /**
  * `TokenProvider` của worker (đường duy nhất giải mã token Page): đọc ciphertext bằng `withJob` (chỉ đường hệ thống
@@ -24,7 +24,7 @@ export function createWorkerTokenProvider(options: {
         await tx
           .update(schema.channels)
           .set({ status: 'expired', updatedAt: new Date() })
-          .where(eq(schema.channels.id, channel.id));
+          .where(and(eq(schema.channels.id, channel.id), eq(schema.channels.status, 'connected')));
       }),
   });
 }

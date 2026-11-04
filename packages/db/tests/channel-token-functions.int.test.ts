@@ -236,8 +236,14 @@ describe('FR-010 cô lập workspace và hành vi từng hàm', () => {
         [ws, id],
       )
     ).rows;
-    expect(logs.map((l) => l.action)).toEqual(['channel.connected', 'channel.reconnected']);
-    expect(logs.every((l) => l.actor_type === 'user' && l.actor_id === ids.owner)).toBe(true);
+    expect(logs.map((l) => l.action)).toEqual([
+      'channel.connected',
+      'channel.token_set',
+      'channel.reconnected',
+    ]);
+    expect(logs.map((l) => l.actor_type)).toEqual(['user', 'system', 'user']);
+    expect(logs[0]?.actor_id).toBe(ids.owner);
+    expect(logs[1]?.actor_id).toBeNull();
     expect(JSON.stringify(logs)).not.toContain('access_token');
   });
 
