@@ -96,16 +96,17 @@ describe('members: chỉ Owner đang hoạt động ghi được', () => {
     expectOnlyOwner(results, 1);
   });
 
-  it('INSERT thành viên mới', async () => {
-    const results: Record<string, number | 'denied'> = {};
+  it('INSERT thành viên mới: KHÔNG AI (kể cả Owner) thêm thẳng được — thành viên chỉ vào qua lời mời', async () => {
     for (const who of WHO) {
-      const fresh = await seedUser(admin, `moi-${who}`);
-      results[who] = await run(
-        who,
-        `INSERT INTO core.members (workspace_id, user_id, role) VALUES ('${ws}', '${fresh}', 'staff')`,
-      );
+      for (const role of ['staff', 'owner']) {
+        const fresh = await seedUser(admin, `moi-${who}-${role}`);
+        const result = await run(
+          who,
+          `INSERT INTO core.members (workspace_id, user_id, role) VALUES ('${ws}', '${fresh}', '${role}')`,
+        );
+        expect(result, `${who} thêm ${role}`).toBe('denied');
+      }
     }
-    expectOnlyOwner(results as Record<Who, number | 'denied'>, 1);
   });
 
   it('đọc danh sách thành viên vẫn mở cho mọi người dùng thuộc workspace (Staff, job hệ thống)', async () => {

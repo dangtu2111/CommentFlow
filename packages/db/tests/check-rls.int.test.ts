@@ -173,6 +173,27 @@ describe('check-rls', () => {
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.members' }));
   });
 
+  it('bắt được khi members INSERT có thêm nhánh Owner (thêm thẳng) hoặc policy permissive thứ hai', async () => {
+    const owner = await violationsAfter(
+      "DROP POLICY members_insert ON core.members; CREATE POLICY members_insert ON core.members FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()) AND ((SELECT core.is_workspace_owner()) OR (role = 'owner' AND user_id = (SELECT core.current_user_id()) AND (SELECT core.workspace_bootstrap_open()))))",
+    );
+    expect(owner).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.members',
+        message: expect.stringContaining('KHÔNG được chứa is_workspace_owner'),
+      }),
+    );
+    const second = await violationsAfter(
+      'CREATE POLICY members_insert_extra ON core.members FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(second).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.members',
+        message: expect.stringContaining('không có marker'),
+      }),
+    );
+  });
+
   it('bắt được khi cf_app lấy lại quyền đọc token_hash', async () => {
     const v = await violationsAfter('GRANT SELECT (token_hash) ON core.invitations TO cf_app');
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));

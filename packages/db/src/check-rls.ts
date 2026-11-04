@@ -378,7 +378,7 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
  * Câu truy vấn chỉ trả các cặp VI PHẠM (rỗng = đạt).
  */
 const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: string]> = [
-  ['members', 'a', 'is_workspace_owner'], // INSERT
+  ['members', 'a', 'workspace_bootstrap_open'], // INSERT: chỉ đường khởi tạo (thành viên khác vào qua accept_invitation)
   ['members', 'w', 'is_workspace_owner'], // UPDATE
   ['invitations', 'r', 'is_workspace_owner'], // SELECT
   ['invitations', 'a', 'is_workspace_owner'],
@@ -386,6 +386,11 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['workspaces', 'w', 'is_workspace_owner'],
   ['workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
   ['action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+];
+
+/** Chuỗi KHÔNG được xuất hiện trong policy của lệnh đó. */
+const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marker: string]> = [
+  ['members', 'a', 'is_workspace_owner'],
 ];
 
 async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -413,6 +418,21 @@ async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Pr
     violations.push({
       subject: `core.${String(row.tbl)}`,
       message: `policy "người gọi" (${String(row.marker)}) cho lệnh '${String(row.cmd)}' không đạt: ${String(row.problem)}`,
+    });
+  }
+  // Chuỗi bị cấm trong policy (ví dụ Owner không được INSERT thẳng vào members).
+  const fvalues = FORBIDDEN_IN_POLICY.map(([t, c, m]) => `('${t}', '${c}', '${m}')`).join(', ');
+  const forbidden = await db.query(`/* actor-forbidden */
+    SELECT v.t AS tbl, v.c AS cmd, v.m AS marker
+    FROM (VALUES ${fvalues}) AS v(t, c, m)
+    JOIN pg_policy p ON p.polrelid = ('core.' || v.t)::regclass AND p.polpermissive
+         AND (p.polcmd = v.c::"char" OR p.polcmd = '*')
+    WHERE (coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), ''))
+          LIKE '%' || v.m || '%'`);
+  for (const row of forbidden.rows) {
+    violations.push({
+      subject: `core.${String(row.tbl)}`,
+      message: `policy cho lệnh '${String(row.cmd)}' KHÔNG được chứa ${String(row.marker)} (thành viên chỉ vào qua lời mời / đường khởi tạo)`,
     });
   }
 }

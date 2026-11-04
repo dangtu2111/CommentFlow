@@ -18,6 +18,7 @@ function fakeDb(parts: {
   definerFunctions?: Row[];
   lastOwnerTrigger?: Row[];
   actorPolicies?: Row[];
+  actorForbidden?: Row[];
   sensitive?: Row[];
   usersColumns?: Row[];
   adminGuard?: Row[];
@@ -65,6 +66,7 @@ function fakeDb(parts: {
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       if (text.includes('/* definer-functions */')) return { rows: parts.definerFunctions ?? [] };
+      if (text.includes('/* actor-forbidden */')) return { rows: parts.actorForbidden ?? [] };
       if (text.includes('/* actor-policies */')) return { rows: parts.actorPolicies ?? [] };
       if (text.includes('/* last-owner-trigger */')) return { rows: parts.lastOwnerTrigger ?? [] };
       throw new Error(`câu truy vấn lạ: ${text.slice(0, 40)}`);
