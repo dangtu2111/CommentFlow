@@ -380,6 +380,55 @@
       "mine": "You are handling this comment (2-minute soft lock, renewed while open).",
       "heldNamed": "{name} is handling this comment (about {seconds}s left). View only.",
       "heldAnonymous": "A teammate is handling this comment (about {seconds}s left). View only."
+    },
+    "reply": {
+      "field": "Reply",
+      "placeholder": "Type the reply to send to the customer…",
+      "send": "Send",
+      "retry": "Try again",
+      "sending": "Sending…",
+      "hint": "Ctrl/⌘ + Enter to send",
+      "counter": "{count} / {max}",
+      "stateSending": "Sending your reply…",
+      "stateSlow": "This is taking a while. Please reload the page in a few minutes.",
+      "yourReply": "Your reply",
+      "sentTitle": "Replied",
+      "failedTitle": "Send failed",
+      "failedWhy": "Reason:",
+      "blocked": {
+        "lockedNamed": "{name} is handling this comment, so you cannot reply yet.",
+        "lockedAnonymous": "A teammate is handling this comment, so you cannot reply yet.",
+        "channelUnavailable": "The channel is not connected, so replies cannot be sent. The workspace Owner needs to reconnect it.",
+        "notReplyable": "This comment cannot be replied to right now."
+      },
+      "failures": {
+        "empty": "Please type a reply.",
+        "too_long": "The reply is too long (8000 characters max).",
+        "not_found": "Comment not found.",
+        "not_replyable": "This comment can no longer be replied to (already replied, hidden or being processed).",
+        "locked_by_other": "A teammate is handling this comment.",
+        "channel_not_connected": "The channel is not connected, so the reply cannot be sent.",
+        "invalid_text": "The text is not valid.",
+        "forbidden": "You are not allowed to reply.",
+        "queue_unavailable": "Could not send right now. Please try again in a few minutes.",
+        "unavailable": "Could not send right now. Please try again in a few minutes."
+      },
+      "errors": {
+        "tokenExpired": "The channel connection expired. The workspace Owner needs to reconnect it.",
+        "permission": "The channel no longer has permission to reply. The workspace Owner needs to grant access again.",
+        "blocked": "The platform is temporarily blocking sends from this channel. Please try again later.",
+        "rateLimit": "The platform is rate-limiting requests. Please try again in a few minutes.",
+        "unknown": "It is unclear whether the reply was sent. Trying again checks first and will not send twice.",
+        "recheckR1": "The comment was already replied to or changed status, so it was not sent.",
+        "recheckR2": "The comment was hidden or merged, so it was not sent.",
+        "recheckR3": "The channel is disconnected or temporarily blocked from sending.",
+        "connectorUnavailable": "Could not reach the platform to send. Please try again later.",
+        "actionUnsupported": "This platform does not support replying to comments yet.",
+        "windowExpired": "The allowed time to reply to this comment has passed.",
+        "textTooLong": "The reply is longer than the platform allows.",
+        "retriesExhausted": "Tried several times but could not send. Please try again later.",
+        "generic": "Sending failed. Please try again later."
+      }
     }
   },
   "shell": {

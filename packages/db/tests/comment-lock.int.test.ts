@@ -218,3 +218,44 @@ describe('FR-041 chi tiết bình luận + chip khóa ở danh sách', () => {
     expect(expired.items.find((i) => i.id === id)?.lockedByName).toBeNull();
   });
 });
+
+describe('FB-REPLY chi tiết: trạng thái kênh và yêu cầu trả lời mới nhất', () => {
+  it('trả channelStatus và latestReply (yêu cầu MỚI NHẤT); chưa có yêu cầu → null; người ngoài/workspace khác vẫn null', async () => {
+    const id = await seedComment();
+    const none = await as(anna, (tx) => getCommentDetail(tx, ws, id, anna));
+    expect(none).toMatchObject({ channelStatus: 'connected', latestReply: null });
+
+    const first = (
+      await admin.query(
+        `INSERT INTO cf.comment_replies (workspace_id, channel_id, comment_id, text, requested_by, previous_status, status, error_code)
+         VALUES ($1, $2, $3, 'Câu cũ', $4, 'pending_review', 'failed', 'TOKEN_EXPIRED') RETURNING id`,
+        [ws, channel, id, anna],
+      )
+    ).rows[0].id as string;
+    await new Promise((resolve) => setTimeout(resolve, 15));
+    const second = (
+      await admin.query(
+        `INSERT INTO cf.comment_replies (workspace_id, channel_id, comment_id, text, requested_by, previous_status, status)
+         VALUES ($1, $2, $3, 'Câu mới', $4, 'send_failed', 'queued') RETURNING id`,
+        [ws, channel, id, anna],
+      )
+    ).rows[0].id as string;
+    const detail = await as(binh, (tx) => getCommentDetail(tx, ws, id, binh));
+    expect(detail?.latestReply).toMatchObject({
+      id: second,
+      status: 'queued',
+      text: 'Câu mới',
+      errorCode: null,
+    });
+    expect(detail?.latestReply?.id).not.toBe(first);
+
+    await admin.query("UPDATE cf.channels SET status = 'expired' WHERE id = $1", [channel]);
+    expect((await as(anna, (tx) => getCommentDetail(tx, ws, id, anna)))?.channelStatus).toBe(
+      'expired',
+    );
+    await admin.query("UPDATE cf.channels SET status = 'connected' WHERE id = $1", [channel]);
+
+    expect(await as(stranger, (tx) => getCommentDetail(tx, ws, id, stranger))).toBeNull();
+    expect(await as(anna, (tx) => getCommentDetail(tx, wsOther, id, anna))).toBeNull();
+  });
+});

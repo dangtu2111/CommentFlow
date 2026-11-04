@@ -21,6 +21,16 @@ export type CommentDetail = {
   platform: InboxPlatform;
   postExternalId: string;
   isAd: boolean;
+  /** Trạng thái kênh (`connected` mới gửi được). */
+  channelStatus: string;
+  /** Yêu cầu trả lời MỚI NHẤT của bình luận (hàng đợi gửi, ADR 008); `null` nếu chưa có. */
+  latestReply: {
+    id: string;
+    status: string;
+    text: string;
+    errorCode: string | null;
+    sentAt: Date | null;
+  } | null;
   /** Người đang giữ khóa còn hạn (kể cả chính mình); `null` nếu không ai giữ hoặc đã hết hạn. */
   lock: { holderId: string; holderName: string | null; until: Date; heldByMe: boolean } | null;
 };
@@ -40,6 +50,12 @@ type Row = {
   platform: InboxPlatform;
   post_external_id: string;
   is_ad: boolean;
+  channel_status: string;
+  reply_id: string | null;
+  reply_status: string | null;
+  reply_text: string | null;
+  reply_error_code: string | null;
+  reply_sent_at: Date | null;
   locked_by: string | null;
   locked_until: Date | null;
   lock_active: boolean | null;
@@ -55,11 +71,21 @@ export async function getCommentDetail(
   const result = await tx.execute<Row>(sql`
     SELECT c.id, c.status, c.text, c.author_name, c.author_external_id, c.created_time, c.label, c.needs_followup,
            c.parent_external_id, c.channel_id, ch.name AS channel_name, ch.platform, p.external_id AS post_external_id,
-           p.is_ad, c.locked_by, c.locked_until, (c.locked_until > now()) AS lock_active, u.name AS holder_name
+           p.is_ad, ch.status AS channel_status,
+           lr.id AS reply_id, lr.status AS reply_status, lr.text AS reply_text,
+           lr.error_code AS reply_error_code, lr.sent_at AS reply_sent_at,
+           c.locked_by, c.locked_until, (c.locked_until > now()) AS lock_active, u.name AS holder_name
       FROM cf.comments c
       JOIN cf.channels ch ON ch.workspace_id = c.workspace_id AND ch.id = c.channel_id
       JOIN cf.posts p ON p.workspace_id = c.workspace_id AND p.id = c.post_id
       LEFT JOIN core.users u ON u.id = c.locked_by
+      LEFT JOIN LATERAL (
+        SELECT r.id, r.status, r.text, r.error_code, r.sent_at
+          FROM cf.comment_replies r
+         WHERE r.workspace_id = c.workspace_id AND r.comment_id = c.id
+         ORDER BY r.created_at DESC, r.id DESC
+         LIMIT 1
+      ) lr ON true
      WHERE c.workspace_id = ${workspaceId}::uuid AND c.id = ${commentId}::uuid`);
   const row = result.rows[0];
   if (!row) return null;
@@ -78,6 +104,17 @@ export async function getCommentDetail(
     platform: row.platform,
     postExternalId: row.post_external_id,
     isAd: row.is_ad,
+    channelStatus: row.channel_status,
+    latestReply:
+      row.reply_id && row.reply_status && row.reply_text !== null
+        ? {
+            id: row.reply_id,
+            status: row.reply_status,
+            text: row.reply_text,
+            errorCode: row.reply_error_code,
+            sentAt: row.reply_sent_at,
+          }
+        : null,
     lock:
       row.locked_by && row.locked_until && row.lock_active
         ? {
