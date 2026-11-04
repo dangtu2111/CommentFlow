@@ -296,6 +296,27 @@ describe('check-rls', () => {
     expect(pol).toContainEqual(expect.objectContaining({ subject: 'cf.comments' }));
   });
 
+  it('WH-INGEST: bắt được khi hàm ghi webhook bỏ kiểm ngữ cảnh trần hoặc PUBLIC có EXECUTE', async () => {
+    const open = await violationsAfter(
+      'CREATE OR REPLACE FUNCTION cf.record_webhook_event(p_platform text, p_page_external_id text, p_event_hash text, p_payload jsonb) RETURNS TABLE (event_id uuid, event_workspace_id uuid) LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, core, cf, pg_temp AS $$ SELECT NULL::uuid, NULL::uuid WHERE false $$',
+    );
+    expect(open).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.record_webhook_event',
+        message: expect.stringContaining('ngữ cảnh trần'),
+      }),
+    );
+    const pub = await violationsAfter(
+      'GRANT EXECUTE ON FUNCTION cf.record_webhook_event(text, text, text, jsonb) TO PUBLIC',
+    );
+    expect(pub).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.record_webhook_event',
+        message: expect.stringContaining('PUBLIC'),
+      }),
+    );
+  });
+
   it('CH-SCHEMA: DELETE vẫn bị bắt dù kèm một policy DELETE theo workspace', async () => {
     const v = await violationsAfter(
       'GRANT DELETE ON cf.channels TO cf_app; CREATE POLICY channels_delete ON cf.channels FOR DELETE USING (workspace_id = (SELECT core.current_workspace_id()))',

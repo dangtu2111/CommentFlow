@@ -24,7 +24,8 @@
     "e2e": "node scripts/e2e.mjs",
     "test:db": "pnpm -r --workspace-concurrency=1 --if-present run test:db",
     "db:migrate": "pnpm --filter @flow/db run db:migrate",
-    "db:check-rls": "pnpm --filter @flow/db run db:check-rls"
+    "db:check-rls": "pnpm --filter @flow/db run db:check-rls",
+    "webhook:send": "node scripts/webhook-send.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",

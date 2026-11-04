@@ -31,7 +31,10 @@ export async function installQueueSchema(input: {
   try {
     for (const queue of input.queues) {
       if (!(await boss.getQueue(queue.name))) {
-        await boss.createQueue(queue.name, { retryLimit: queue.retryLimit ?? 2 });
+        await boss.createQueue(queue.name, {
+          retryLimit: queue.retryLimit ?? 2,
+          ...(queue.retryBackoff ? { retryBackoff: true } : {}),
+        });
       }
     }
   } finally {

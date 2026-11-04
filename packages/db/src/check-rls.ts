@@ -608,6 +608,32 @@ async function checkTokenFunctions(db: Queryable, violations: RlsViolation[]): P
   }
 }
 
+/**
+ * Hàm ghi sự kiện webhook (0022): phải tồn tại, PUBLIC không EXECUTE, và thân hàm chỉ cho NGỮ CẢNH TRẦN (từ chối khi có
+ * workspace, người dùng hoặc ngữ cảnh job) — nếu không, đường khác tiêm được sự kiện sang workspace bất kỳ.
+ */
+async function checkWebhookFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* webhook-function */
+    SELECT 'cf.record_webhook_event' AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        ELSE 'thân hàm phải từ chối khi có workspace, người dùng hoặc ngữ cảnh job (chỉ ngữ cảnh trần)'
+      END AS problem
+    FROM (SELECT 1) AS one
+    LEFT JOIN pg_proc p ON p.pronamespace = 'cf'::regnamespace AND p.proname = 'record_webhook_event'
+    WHERE p.oid IS NULL
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%current_workspace_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%current_user_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'`);
+  for (const row of found.rows) {
+    violations.push({ subject: String(row.name), message: `hàm webhook: ${String(row.problem)}` });
+  }
+}
+
 export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   const violations: RlsViolation[] = [];
 
@@ -782,6 +808,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkActorPolicies(db, violations);
   await checkNoDelete(db, violations);
   await checkTokenFunctions(db, violations);
+  await checkWebhookFunction(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */
