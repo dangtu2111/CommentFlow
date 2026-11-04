@@ -138,6 +138,7 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
           role: 'staff',
           tokenHash: `hash-${newId()}`,
           expiresAt: new Date(Date.now() + 3600_000),
+          invitedBy: userOnlyB,
         })
         .returning({ id: invitations.id }),
     );
@@ -153,6 +154,7 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
           role: 'staff',
           tokenHash: `hash-${newId()}`,
           expiresAt: new Date(Date.now() + 3600_000),
+          invitedBy: ownerA,
         }),
       ),
     );
@@ -304,7 +306,9 @@ describe('workspaces và members: liệt kê workspace của chính người dù
     const owner = await seedUser(admin);
     const newWs = newId();
     await db.withActor(newWs, owner, async (tx) => {
-      await tx.insert(workspaces).values({ id: newWs, name: 'Mới', slug: `moi-${newWs}` });
+      await tx
+        .insert(workspaces)
+        .values({ id: newWs, name: 'Mới', slug: `moi-${newWs}`, createdBy: owner });
       await tx.insert(members).values({ workspaceId: newWs, userId: owner, role: 'owner' });
     });
     const rows = await db.withUser(owner, (tx) =>

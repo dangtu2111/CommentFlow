@@ -25,6 +25,8 @@ export const workspaces = core.table(
     emergencyStoppedAt: timestamptz('emergency_stopped_at'),
     aiCostCapUsd: numeric('ai_cost_cap_usd', { precision: 12, scale: 2 }),
     status: text('status').notNull().default('trial'),
+    // Người tạo workspace: chỉ người này (và chỉ khi workspace chưa có thành viên) được tự thêm mình làm Owner đầu tiên (0016).
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

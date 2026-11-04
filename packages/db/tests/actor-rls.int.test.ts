@@ -129,16 +129,26 @@ describe('invitations: chỉ Owner đọc/ghi', () => {
     }
   });
 
-  it('INSERT lời mời', async () => {
+  it('INSERT lời mời (invited_by phải là chính người gọi)', async () => {
     const results: Record<string, number | 'denied'> = {};
     for (const who of WHO) {
+      // noUser không có id: thử giả người mời là Owner thật
+      const inviter = who === 'noUser' ? ids.owner : ids[who];
       results[who] = await run(
         who,
-        `INSERT INTO core.invitations (workspace_id, email, role, token_hash, expires_at)
-         VALUES ('${ws}', '${who}-${newId()}@example.test', 'staff', 'h-${newId()}', now() + interval '1 day')`,
+        `INSERT INTO core.invitations (workspace_id, email, role, token_hash, expires_at, invited_by)
+         VALUES ('${ws}', '${who}-${newId()}@example.test', 'staff', 'h-${newId()}', now() + interval '1 day', '${inviter}')`,
       );
     }
     expectOnlyOwner(results as Record<Who, number | 'denied'>, 1);
+    // Owner giả người mời là người khác → bị chặn
+    expect(
+      await run(
+        'owner',
+        `INSERT INTO core.invitations (workspace_id, email, role, token_hash, expires_at, invited_by)
+         VALUES ('${ws}', 'gia-${newId()}@example.test', 'staff', 'h-${newId()}', now() + interval '1 day', '${ids.staff}')`,
+      ),
+    ).toBe('denied');
   });
 
   it('UPDATE thu hồi lời mời', async () => {
@@ -211,7 +221,7 @@ describe('đường khởi tạo workspace', () => {
     const intruder = await seedUser(admin, 'ke-xam-nhap');
     await db.withActor(nw, creator, async (tx) => {
       await tx.execute(
-        sql`INSERT INTO core.workspaces (id, name, slug) VALUES (${nw}, 'Mới', ${`slug-${nw}`})`,
+        sql`INSERT INTO core.workspaces (id, name, slug, created_by) VALUES (${nw}, 'Mới', ${`slug-${nw}`}, ${creator})`,
       );
       await tx.execute(
         sql`INSERT INTO core.members (workspace_id, user_id, role) VALUES (${nw}, ${creator}, 'owner')`,
@@ -241,15 +251,14 @@ describe('đường khởi tạo workspace', () => {
     }
   });
 
-  it('workspace TRỐNG: không ai tự thêm NGƯỜI KHÁC làm Owner, và không tự nhận vai trò staff', async () => {
+  it('workspace TRỐNG do người tạo ghi created_by: chỉ chính người tạo, chỉ vai trò owner, không phong người khác', async () => {
     const nw = newId();
-    await admin.query('INSERT INTO core.workspaces (id, name, slug) VALUES ($1, $2, $3)', [
-      nw,
-      'Trống',
-      `slug-${nw}`,
-    ]);
     const a = await seedUser(admin, 'a');
     const b = await seedUser(admin, 'b');
+    await admin.query(
+      'INSERT INTO core.workspaces (id, name, slug, created_by) VALUES ($1, $2, $3, $4)',
+      [nw, 'Trống', `slug-${nw}`, a],
+    );
     const attempt = (actor: string, user: string, role: string) =>
       expectRejectCode(
         db.withActor(nw, actor, (tx) =>
@@ -260,7 +269,63 @@ describe('đường khởi tạo workspace', () => {
       );
     expect(await attempt(a, b, 'owner')).toBe('42501'); // phong người khác
     expect(await attempt(a, a, 'staff')).toBe('42501'); // không phải đường khởi tạo Owner
-    expect(await attempt(a, a, 'owner')).toBeUndefined(); // đúng đường khởi tạo
+    expect(await attempt(b, b, 'owner')).toBe('42501'); // không phải người tạo workspace này
+    expect(await attempt(a, a, 'owner')).toBeUndefined(); // đúng người tạo, đúng đường khởi tạo
+  });
+
+  it('workspace TRỐNG KHÔNG do ai tạo (seed/Admin/job, created_by NULL): không ai chiếm được Owner', async () => {
+    const nw = newId();
+    const a = await seedUser(admin, 'a2');
+    await admin.query('INSERT INTO core.workspaces (id, name, slug) VALUES ($1, $2, $3)', [
+      nw,
+      'Mồ côi',
+      `slug-${nw}`,
+    ]);
+    expect(
+      await expectRejectCode(
+        db.withActor(nw, a, (tx) =>
+          tx.execute(
+            sql`INSERT INTO core.members (workspace_id, user_id, role) VALUES (${nw}, ${a}, 'owner')`,
+          ),
+        ),
+      ),
+    ).toBe('42501');
+  });
+
+  it('workspaces INSERT: created_by phải là người gọi (không ghi tên người khác làm người tạo)', async () => {
+    const nw = newId();
+    const a = await seedUser(admin, 'a3');
+    const b = await seedUser(admin, 'b3');
+    expect(
+      await expectRejectCode(
+        db.withActor(nw, a, (tx) =>
+          tx.execute(
+            sql`INSERT INTO core.workspaces (id, name, slug, created_by) VALUES (${nw}, 'X', ${`slug-${nw}`}, ${b})`,
+          ),
+        ),
+      ),
+    ).toBe('42501');
+  });
+
+  it('members: cf_app không đổi được user_id/invited_by của dòng (chuyển ghế Owner / giả người mời)', async () => {
+    const tgt = await seedUser(admin, 'doi-user');
+    for (const set of [
+      `user_id = '${tgt}'`,
+      `invited_by = '${tgt}'`,
+      `workspace_id = '${other}'`,
+    ]) {
+      expect(await run('owner', `UPDATE core.members SET ${set} WHERE id = '${staffMember}'`)).toBe(
+        'denied',
+      );
+    }
+  });
+
+  it('action_logs: actor_type admin hoặc system kèm actor_id (khi không có người dùng) bị chặn', async () => {
+    const ins = (type: string, actor: string | null) =>
+      `INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action) VALUES ('${ws}', '${type}', ${actor ? `'${actor}'` : 'NULL'}, 'thu')`;
+    expect(await run('noUser', ins('admin', null))).toBe('denied');
+    expect(await run('noUser', ins('system', ids.owner as string))).toBe('denied');
+    expect(await run('noUser', ins('ai', null))).toBe(1);
   });
 });
 

@@ -239,6 +239,12 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.invitations', 'accepted_at', 'UPDATE'],
   ['cf_app', 'core.invitations', 'workspace_id', 'UPDATE'],
   ['cf_app', 'core.invitations', 'invited_by', 'UPDATE'],
+  // thành viên: chỉ sửa role/status/updated_at (không đổi user_id → chuyển ghế Owner, không giả người mời)
+  ['cf_app', 'core.members', 'user_id', 'UPDATE'],
+  ['cf_app', 'core.members', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'core.members', 'invited_by', 'UPDATE'],
+  ['cf_app', 'core.members', 'id', 'UPDATE'],
+  ['cf_app', 'core.members', 'created_at', 'UPDATE'],
   ['cf_app', 'core.invitations', 'id', 'UPDATE'],
   ['cf_app', 'core.invitations', 'created_at', 'UPDATE'],
   ['cf_app', 'core.sessions', 'is_admin_session', 'UPDATE'],
@@ -378,25 +384,35 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['invitations', 'a', 'is_workspace_owner'],
   ['invitations', 'w', 'is_workspace_owner'],
   ['workspaces', 'w', 'is_workspace_owner'],
+  ['workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
   ['action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
 ];
 
 async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Promise<void> {
   const values = ACTOR_POLICIES.map(([t, c, m]) => `('${t}', '${c}', '${m}')`).join(', ');
+  // Policy permissive cộng dồn bằng OR: MỌI policy permissive áp cho cf_app (kể cả FOR ALL '*') ở lệnh đó phải chứa
+  // marker; và phải có ít nhất một. Vi phạm = thiếu policy, hoặc tồn tại một policy permissive thứ hai không có marker.
   const bad = await db.query(`/* actor-policies */
-    SELECT v.t AS tbl, v.c AS cmd, v.m AS marker
+    WITH app AS (SELECT oid FROM pg_roles WHERE rolname = '${APP_ROLE}'),
+    pol AS (
+      SELECT v.t, v.c, v.m,
+             (coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '')) AS txt,
+             p.polname
+      FROM (VALUES ${values}) AS v(t, c, m)
+      JOIN pg_policy p ON p.polrelid = ('core.' || v.t)::regclass AND p.polpermissive
+           AND (p.polcmd = v.c::"char" OR p.polcmd = '*')
+           AND (p.polroles = '{0}'::oid[] OR (SELECT oid FROM app) = ANY(p.polroles))
+    )
+    SELECT v.t AS tbl, v.c AS cmd, v.m AS marker, 'thiếu policy có marker' AS problem
     FROM (VALUES ${values}) AS v(t, c, m)
-    WHERE NOT EXISTS (
-      SELECT 1 FROM pg_policy p
-      WHERE p.polrelid = ('core.' || v.t)::regclass
-        AND p.polpermissive
-        AND p.polcmd = v.c::"char"
-        AND (coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), ''))
-            LIKE '%' || v.m || '%')`);
+    WHERE NOT EXISTS (SELECT 1 FROM pol WHERE pol.t = v.t AND pol.c = v.c AND pol.txt LIKE '%' || pol.m || '%')
+    UNION ALL
+    SELECT pol.t, pol.c, pol.m, 'policy permissive "' || pol.polname || '" không có marker (OR sẽ mở lại quyền)'
+    FROM pol WHERE pol.txt NOT LIKE '%' || pol.m || '%'`);
   for (const row of bad.rows) {
     violations.push({
       subject: `core.${String(row.tbl)}`,
-      message: `thiếu policy "người gọi" (${String(row.marker)}) cho lệnh '${String(row.cmd)}': thao tác chỉ-Owner không còn được DB ép`,
+      message: `policy "người gọi" (${String(row.marker)}) cho lệnh '${String(row.cmd)}' không đạt: ${String(row.problem)}`,
     });
   }
 }

@@ -698,7 +698,7 @@ describe('checkRls: policy người gọi (chỉ-Owner)', () => {
     );
     expect(v).toContainEqual({
       subject: 'core.members',
-      message: expect.stringContaining('thiếu policy "người gọi" (is_workspace_owner)'),
+      message: expect.stringContaining('policy "người gọi" (is_workspace_owner)'),
     });
   });
 });

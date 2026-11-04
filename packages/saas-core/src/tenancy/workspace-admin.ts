@@ -8,6 +8,7 @@ import type { Notifier } from '../notify/notifier';
 import type { OwnerChange } from '../notify/templates';
 import type { RateLimiter } from '../ratelimit/limiter';
 import { writeActionLog } from './action-log';
+import { isLastOwnerViolation, isRlsViolation, isUniqueViolation } from './pg-errors';
 import type { MemberRole } from './tenancy';
 
 export const INVITATION_TTL_DAYS = 7;
@@ -59,25 +60,12 @@ export type InvitationPreview = { workspaceName: string; role: MemberRole };
 
 type Person = { userId: string; name: string; email: string; locale: Locale };
 
-/** Postgres 23505 = trùng khóa duy nhất; 23514 + constraint `members_last_owner` = trigger giữ Owner cuối cùng. */
-const pgField = (error: unknown, field: 'code' | 'constraint'): string | undefined => {
-  const e = error as {
-    code?: string;
-    constraint?: string;
-    cause?: { code?: string; constraint?: string };
-  };
-  return e?.cause?.[field] ?? e?.[field];
-};
-const isUniqueViolation = (error: unknown) => pgField(error, 'code') === '23505';
-const isLastOwnerViolation = (error: unknown) =>
-  pgField(error, 'code') === '23514' && pgField(error, 'constraint') === 'members_last_owner';
-
 export const hashInvitationToken = (token: string): string =>
   createHash('sha256').update(token).digest('hex');
 
 /**
  * Quản lý thành viên + lời mời của workspace (FR-002…005). Mọi truy vấn qua withActor/withWorkspace/withUser. Việc "chỉ
- * Owner" được kiểm ở ĐÂY (DB không biết người gọi); chỉ Owner cuối cùng được bảo vệ thêm ở DB (trigger 0015).
+ * Owner" được kiểm ở ĐÂY và ép thêm ở DB (RLS withActor, 0016); Owner cuối cùng được bảo vệ bằng trigger (0015).
  * userId luôn lấy từ phiên phía server; id trong form (memberId, invitationId) chỉ tra trong workspace hiện tại —
  * không thấy → NOT_FOUND.
  */
@@ -105,7 +93,7 @@ export function createWorkspaceAdmin(options: {
     try {
       return await db.withActor(workspaceId, actorUserId, fn);
     } catch (error) {
-      if (pgField(error, 'code') === '42501') {
+      if (isRlsViolation(error)) {
         throw new AppError(
           'FORBIDDEN',
           'Chỉ Owner của workspace mới thực hiện được thao tác này.',
@@ -305,7 +293,8 @@ export function createWorkspaceAdmin(options: {
           const [targetPerson] = await activePeople(tx, workspaceId, ws.lang, {
             userId: target.userId,
           });
-          // RLS ẩn dòng nếu người gọi vừa mất quyền Owner (đua song song) → 0 dòng: coi như bị từ chối, không ghi nhật ký.
+          // RLS ẩn dòng nếu người gọi KHÔNG còn là Owner khi câu lệnh bắt đầu → 0 dòng: coi như bị từ chối, không ghi nhật ký.
+          // (Owner bị hạ quyền song song mà chưa commit vẫn hoàn tất lệnh đang chạy — snapshot READ COMMITTED; chấp nhận được.)
           const updated = await tx
             .update(members)
             .set({ role, updatedAt: now() })

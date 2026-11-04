@@ -147,6 +147,32 @@ describe('check-rls', () => {
     }
   });
 
+  it('bắt được policy permissive THỨ HAI (OR mở lại quyền) và policy FOR ALL thiếu kiểm Owner', async () => {
+    const extra = await violationsAfter(
+      'CREATE POLICY members_update_extra ON core.members FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(extra).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.members',
+        message: expect.stringContaining('không có marker'),
+      }),
+    );
+    const all = await violationsAfter(
+      'CREATE POLICY invitations_all ON core.invitations FOR ALL USING (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(all).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.invitations',
+        message: expect.stringContaining('không có marker'),
+      }),
+    );
+  });
+
+  it('bắt được khi cf_app lấy lại quyền sửa user_id của members', async () => {
+    const v = await violationsAfter('GRANT UPDATE (user_id) ON core.members TO cf_app');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'core.members' }));
+  });
+
   it('bắt được khi cf_app lấy lại quyền đọc token_hash', async () => {
     const v = await violationsAfter('GRANT SELECT (token_hash) ON core.invitations TO cf_app');
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));
