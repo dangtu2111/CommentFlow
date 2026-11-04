@@ -22,6 +22,6 @@ Nhân viên bấm Gửi trả lời. Hệ thống phải (a) không để ngư�
 
 `SEND-SWEEP` (job quét yêu cầu `queued` bị bỏ quên khi đẩy job lỗi và bù hủy cũng lỗi, và yêu cầu `sending` hết thuê lâu không có job — quét lại CÓ bước kiểm trước khi gửi, rồi ghi `failed`/`sent`), `COMMENT-HIDE-MERGE-GUARD` (người dùng vẫn sửa được `is_hidden`/`merged_into_id` từ 0019; ẩn thật phải đi qua connector — làm cùng `FB-HIDE`), `SEND-RATE-LIMIT` (R9: token bucket theo Page, cần Redis), `SEND-SUSPEND-ADMIN` (Admin ghi `send_suspended_*`), R4–R8 (tự gửi/giá/KB/lượt/cửa sổ tin nhắn — GĐ2+), hạn mức đồng thời 3/kênh (hiện 3 toàn worker). Web và worker dùng chung role `cf_app` (gap `WORKER-DB-ROLE`, bắt buộc trước staging): web bị chiếm hoàn toàn thì tự đặt `app.ctx = 'system'` ghi được kết quả gửi giả — cùng mô hình ADR 005 §3.
 
-## 4. Đề xuất sửa `docs/10` §3.2 (chưa sửa — chờ chủ dự án cho phép)
+## 4. Sửa `docs/10` §3.2 và §4 — **đã áp dụng** (chủ dự án cho phép 06/11/2026)
 
 Thêm bảng `comment_replies` (workspace_id, channel_id, comment_id, text, requested_by, status `queued`/`sending`/`sent`/`failed`/`cancelled`, attempts, external_reply_id, error_code, previous_status, sent_at, created_at, updated_at; unique một yêu cầu hoạt động / bình luận; khóa ngoại ghép `(workspace_id, comment_id)`, `(workspace_id, channel_id)`) và dòng quyền tương ứng ở §4 (đọc: thành viên; ghi: chỉ qua `cf.request_comment_reply`/`cf.cancel_comment_reply`; cập nhật kết quả: chỉ hệ thống). Khi dựng `drafts` (GĐ2), cân nhắc gộp/liên kết `draft_id`.
