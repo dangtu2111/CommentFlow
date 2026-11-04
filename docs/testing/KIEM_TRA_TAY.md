@@ -13,7 +13,8 @@
 | KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | #20 | có | chưa | — |
 | KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | #21 | có | chưa | — |
 | KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | #22 | có | chưa | — |
-| KT-006 | Banner trạng thái kênh | CH-STATUS-BANNER | chưa | chưa | — |
+| KT-006 | Banner trạng thái kênh | #23 | có | chưa | — |
+| KT-007 | Hộp soạn trả lời, Gửi, Thử lại | FB-REPLY giao diện | chưa | chưa | — |
 
 ---
 
@@ -131,6 +132,26 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 | 7 | Thu nhỏ ~390px. | Banner không tràn ngang, chữ xuống dòng. |
 
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-007 — Hộp soạn trả lời, Gửi, Thử lại (FB-REPLY giao diện + FB-RETRY-UI)
+
+Điều kiện: có bình luận ở trạng thái Chờ duyệt/Mới trên một kênh `connected` (xem KT-003). **Chưa có connector Facebook thật** nên khi bấm Gửi, worker (`pnpm --filter @flow/worker dev`, đã `queue:install`) sẽ báo lỗi "Chưa kết nối được tới nền tảng để gửi" — đó là kết quả ĐÚNG ở bước này; gửi thật chỉ thử được sau `FB-OAUTH` + connector Facebook. Chạy `pnpm --filter @flow/web dev`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở một bình luận Chờ duyệt ở trang Bình luận. | Dưới chi tiết có ô **Câu trả lời** (đếm ký tự "0 / 8000", gợi ý "Ctrl/⌘ + Enter để gửi") và nút **Gửi** (xám khi ô trống). |
+| 2 | Gõ một câu rồi bấm **Gửi** (hoặc Ctrl/⌘+Enter). | Nút đổi thành "Đang gửi…" rồi hộp soạn được thay bằng "Đang gửi câu trả lời…" kèm câu của bạn; bấm đúp không gửi hai lần. |
+| 3 | Đợi vài giây (worker chạy). | Trạng thái chuyển thành **Gửi lỗi** + "Lý do: Chưa kết nối được tới nền tảng để gửi…" và có hộp soạn mới với câu cũ điền sẵn + nút **Thử lại**. |
+| 4 | Sửa câu rồi bấm **Thử lại**. | Lại thấy "Đang gửi…" rồi kết quả; không có bình luận nào chuyển sang "Đã trả lời" khi chưa có connector thật. |
+| 5 | Để ô trống/chỉ khoảng trắng hoặc gõ > 8000 ký tự. | Nút Gửi bị khóa (không gửi được). |
+| 6 | Hai tài khoản: A mở bình luận (khóa), B mở cùng bình luận. | B thấy "<tên A> đang xử lý… nên bạn chưa trả lời được", không có ô soạn. |
+| 7 | Đặt kênh sang `expired` (nhờ agent) rồi mở bình luận. | Thấy "Kênh chưa kết nối được nên chưa gửi được…", không có ô soạn. |
+| 8 | Đổi sang **English** và thu nhỏ ~390px. | Mọi chữ đúng tiếng Anh; không tràn ngang. |
+| 9 | (Sau FB-OAUTH + connector Facebook) Gửi một câu cho bình luận trên Page thử. | Chuyển "Đã trả lời" kèm câu đã gửi; trên Facebook xuất hiện câu trả lời của Page, không trùng. |
+
+Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
 
 ---
 

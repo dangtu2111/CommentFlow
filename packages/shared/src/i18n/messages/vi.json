@@ -380,6 +380,55 @@
       "mine": "Bạn đang xử lý bình luận này (khóa mềm 2 phút, tự gia hạn khi còn mở).",
       "heldNamed": "{name} đang xử lý bình luận này (còn khoảng {seconds} giây). Bạn chỉ xem được.",
       "heldAnonymous": "Đồng nghiệp đang xử lý bình luận này (còn khoảng {seconds} giây). Bạn chỉ xem được."
+    },
+    "reply": {
+      "field": "Câu trả lời",
+      "placeholder": "Nhập câu trả lời gửi cho khách…",
+      "send": "Gửi",
+      "retry": "Thử lại",
+      "sending": "Đang gửi…",
+      "hint": "Ctrl/⌘ + Enter để gửi",
+      "counter": "{count} / {max}",
+      "stateSending": "Đang gửi câu trả lời…",
+      "stateSlow": "Đang chờ xử lý lâu. Hãy tải lại trang sau ít phút.",
+      "yourReply": "Câu trả lời của bạn",
+      "sentTitle": "Đã trả lời",
+      "failedTitle": "Gửi lỗi",
+      "failedWhy": "Lý do:",
+      "blocked": {
+        "lockedNamed": "{name} đang xử lý bình luận này nên bạn chưa trả lời được.",
+        "lockedAnonymous": "Đồng nghiệp đang xử lý bình luận này nên bạn chưa trả lời được.",
+        "channelUnavailable": "Kênh chưa kết nối được nên chưa gửi được. Chủ workspace cần kết nối lại kênh.",
+        "notReplyable": "Bình luận này hiện không thể trả lời."
+      },
+      "failures": {
+        "empty": "Hãy nhập câu trả lời.",
+        "too_long": "Câu trả lời quá dài (tối đa 8000 ký tự).",
+        "not_found": "Không tìm thấy bình luận.",
+        "not_replyable": "Bình luận này không còn trả lời được (đã trả lời, đã ẩn hoặc đang được xử lý).",
+        "locked_by_other": "Đồng nghiệp đang xử lý bình luận này.",
+        "channel_not_connected": "Kênh chưa kết nối được nên chưa gửi được.",
+        "invalid_text": "Nội dung không hợp lệ.",
+        "forbidden": "Bạn không có quyền trả lời.",
+        "queue_unavailable": "Chưa gửi được lúc này. Hãy thử lại sau ít phút.",
+        "unavailable": "Chưa gửi được lúc này. Hãy thử lại sau ít phút."
+      },
+      "errors": {
+        "tokenExpired": "Kết nối của kênh đã hết hạn. Chủ workspace cần kết nối lại kênh.",
+        "permission": "Kênh không còn quyền trả lời bình luận. Chủ workspace cần cấp lại quyền.",
+        "blocked": "Nền tảng đang tạm chặn gửi từ kênh này. Hãy thử lại sau.",
+        "rateLimit": "Nền tảng đang giới hạn tốc độ. Hãy thử lại sau ít phút.",
+        "unknown": "Không rõ câu trả lời đã được gửi chưa. Thử lại sẽ kiểm tra trước khi gửi, không gửi trùng.",
+        "recheckR1": "Bình luận đã được trả lời hoặc đổi trạng thái nên không gửi nữa.",
+        "recheckR2": "Bình luận đã bị ẩn hoặc gộp nên không gửi nữa.",
+        "recheckR3": "Kênh đang không kết nối hoặc đang bị tạm khóa gửi.",
+        "connectorUnavailable": "Chưa kết nối được tới nền tảng để gửi. Hãy thử lại sau.",
+        "actionUnsupported": "Nền tảng này chưa hỗ trợ trả lời bình luận.",
+        "windowExpired": "Đã quá thời hạn được phép trả lời bình luận này.",
+        "textTooLong": "Câu trả lời dài hơn giới hạn của nền tảng.",
+        "retriesExhausted": "Đã thử nhiều lần nhưng chưa gửi được. Hãy thử lại sau.",
+        "generic": "Gửi không thành công. Hãy thử lại sau."
+      }
     }
   },
   "shell": {
