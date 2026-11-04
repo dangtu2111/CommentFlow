@@ -8,6 +8,7 @@ import type { Notifier } from '../notify/notifier';
 import type { OwnerChange } from '../notify/templates';
 import type { RateLimiter } from '../ratelimit/limiter';
 import { writeActionLog } from './action-log';
+import { isLastOwnerViolation, isRlsViolation, isUniqueViolation } from './pg-errors';
 import type { MemberRole } from './tenancy';
 
 export const INVITATION_TTL_DAYS = 7;
@@ -59,25 +60,12 @@ export type InvitationPreview = { workspaceName: string; role: MemberRole };
 
 type Person = { userId: string; name: string; email: string; locale: Locale };
 
-/** Postgres 23505 = trùng khóa duy nhất; 23514 + constraint `members_last_owner` = trigger giữ Owner cuối cùng. */
-const pgField = (error: unknown, field: 'code' | 'constraint'): string | undefined => {
-  const e = error as {
-    code?: string;
-    constraint?: string;
-    cause?: { code?: string; constraint?: string };
-  };
-  return e?.cause?.[field] ?? e?.[field];
-};
-const isUniqueViolation = (error: unknown) => pgField(error, 'code') === '23505';
-const isLastOwnerViolation = (error: unknown) =>
-  pgField(error, 'code') === '23514' && pgField(error, 'constraint') === 'members_last_owner';
-
 export const hashInvitationToken = (token: string): string =>
   createHash('sha256').update(token).digest('hex');
 
 /**
- * Quản lý thành viên + lời mời của workspace (FR-002…005). Mọi truy vấn qua withWorkspace/withUser. Việc "chỉ
- * Owner" được kiểm ở ĐÂY (DB không biết người gọi); chỉ Owner cuối cùng được bảo vệ thêm ở DB (trigger 0015).
+ * Quản lý thành viên + lời mời của workspace (FR-002…005). Mọi truy vấn qua withActor/withWorkspace/withUser. Việc "chỉ
+ * Owner" được kiểm ở ĐÂY và ép thêm ở DB (RLS withActor, 0016); Owner cuối cùng được bảo vệ bằng trigger (0015).
  * userId luôn lấy từ phiên phía server; id trong form (memberId, invitationId) chỉ tra trong workspace hiện tại —
  * không thấy → NOT_FOUND.
  */
@@ -92,6 +80,31 @@ export function createWorkspaceAdmin(options: {
   const { db, notifier, limiter } = options;
   const now = options.now ?? (() => new Date());
   const appUrl = options.appUrl.replace(/\/+$/, '');
+
+  /**
+   * Mọi thao tác chỉ-Owner chạy bằng withActor: DB biết người gọi (`app.user_id`) nên policy RLS chỉ cho Owner
+   * `active` của workspace (migration 0016). Lỗi RLS (42501) → FORBIDDEN, giống kiểm quyền ở code.
+   */
+  async function asActor<T>(
+    workspaceId: string,
+    actorUserId: string,
+    fn: (tx: Database) => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await db.withActor(workspaceId, actorUserId, fn);
+    } catch (error) {
+      if (isRlsViolation(error)) {
+        throw new AppError(
+          'FORBIDDEN',
+          'Chỉ Owner của workspace mới thực hiện được thao tác này.',
+          {
+            cause: error,
+          },
+        );
+      }
+      throw error;
+    }
+  }
 
   async function assertOwner(tx: Database, workspaceId: string, userId: string): Promise<void> {
     const rows = await tx
@@ -222,7 +235,7 @@ export function createWorkspaceAdmin(options: {
     async listMembers(input: { workspaceId: string; actorUserId: string }): Promise<MemberRow[]> {
       const workspaceId = parse(uuidSchema, input.workspaceId, 'workspaceId không hợp lệ.');
       const actor = parse(uuidSchema, input.actorUserId, 'actorUserId không hợp lệ.');
-      return db.withWorkspace(workspaceId, async (tx) => {
+      return asActor(workspaceId, actor, async (tx) => {
         await assertOwner(tx, workspaceId, actor);
         const rows = await tx
           .select({
@@ -269,7 +282,7 @@ export function createWorkspaceAdmin(options: {
       const role = parse(roleSchema, input.role, 'Vai trò phải là owner hoặc staff.');
 
       const event = await runMemberChange(() =>
-        db.withWorkspace(workspaceId, async (tx): Promise<OwnerEvent | null> => {
+        asActor(workspaceId, actor, async (tx): Promise<OwnerEvent | null> => {
           await assertOwner(tx, workspaceId, actor);
           const target = await findMember(tx, workspaceId, memberId);
           if (target.userId === actor) {
@@ -280,10 +293,18 @@ export function createWorkspaceAdmin(options: {
           const [targetPerson] = await activePeople(tx, workspaceId, ws.lang, {
             userId: target.userId,
           });
-          await tx
+          // RLS ẩn dòng nếu người gọi KHÔNG còn là Owner khi câu lệnh bắt đầu → 0 dòng: coi như bị từ chối, không ghi nhật ký.
+          // (Owner bị hạ quyền song song mà chưa commit vẫn hoàn tất lệnh đang chạy — snapshot READ COMMITTED; chấp nhận được.)
+          const updated = await tx
             .update(members)
             .set({ role, updatedAt: now() })
-            .where(and(eq(members.id, target.id), eq(members.workspaceId, workspaceId)));
+            .where(and(eq(members.id, target.id), eq(members.workspaceId, workspaceId)))
+            .returning({ id: members.id });
+          if (updated.length === 0)
+            throw new AppError(
+              'FORBIDDEN',
+              'Chỉ Owner của workspace mới thực hiện được thao tác này.',
+            );
           await writeActionLog(tx, {
             workspaceId,
             actorId: actor,
@@ -327,7 +348,7 @@ export function createWorkspaceAdmin(options: {
       );
 
       const event = await runMemberChange(() =>
-        db.withWorkspace(workspaceId, async (tx): Promise<OwnerEvent | null> => {
+        asActor(workspaceId, actor, async (tx): Promise<OwnerEvent | null> => {
           await assertOwner(tx, workspaceId, actor);
           const target = await findMember(tx, workspaceId, memberId);
           if (target.userId === actor) {
@@ -338,10 +359,16 @@ export function createWorkspaceAdmin(options: {
           const [targetBefore] = await activePeople(tx, workspaceId, ws.lang, {
             userId: target.userId,
           });
-          await tx
+          const updated = await tx
             .update(members)
             .set({ status, updatedAt: now() })
-            .where(and(eq(members.id, target.id), eq(members.workspaceId, workspaceId)));
+            .where(and(eq(members.id, target.id), eq(members.workspaceId, workspaceId)))
+            .returning({ id: members.id });
+          if (updated.length === 0)
+            throw new AppError(
+              'FORBIDDEN',
+              'Chỉ Owner của workspace mới thực hiện được thao tác này.',
+            );
           await writeActionLog(tx, {
             workspaceId,
             actorId: actor,
@@ -378,7 +405,7 @@ export function createWorkspaceAdmin(options: {
     }): Promise<PendingInvitation[]> {
       const workspaceId = parse(uuidSchema, input.workspaceId, 'workspaceId không hợp lệ.');
       const actor = parse(uuidSchema, input.actorUserId, 'actorUserId không hợp lệ.');
-      return db.withWorkspace(workspaceId, async (tx) => {
+      return asActor(workspaceId, actor, async (tx) => {
         await assertOwner(tx, workspaceId, actor);
         const rows = await tx
           .select({
@@ -422,7 +449,7 @@ export function createWorkspaceAdmin(options: {
       const role = parse(roleSchema, input.role, 'Vai trò phải là owner hoặc staff.');
 
       // Kiểm quyền TRƯỚC khi đếm hạn mức (người không phải Owner không được tiêu hạn mức của workspace).
-      await db.withWorkspace(workspaceId, (tx) => assertOwner(tx, workspaceId, actor));
+      await asActor(workspaceId, actor, (tx) => assertOwner(tx, workspaceId, actor));
       const decision = await limiter.check('invite', { workspaceId, email, userId: actor });
       if (!decision.allowed) {
         return { status: 'rate_limited', retryAfterSeconds: decision.retryAfterSeconds };
@@ -434,7 +461,7 @@ export function createWorkspaceAdmin(options: {
 
       let mail: { workspaceName: string; lang: Locale; inviterName: string } | null;
       try {
-        mail = await db.withWorkspace(workspaceId, async (tx) => {
+        mail = await asActor(workspaceId, actor, async (tx) => {
           await assertOwner(tx, workspaceId, actor);
           const ws = await workspaceInfo(tx, workspaceId);
           const existing = await tx
@@ -507,7 +534,7 @@ export function createWorkspaceAdmin(options: {
       const workspaceId = parse(uuidSchema, input.workspaceId, 'workspaceId không hợp lệ.');
       const actor = parse(uuidSchema, input.actorUserId, 'actorUserId không hợp lệ.');
       const invitationId = parse(uuidSchema, input.invitationId, 'invitationId không hợp lệ.');
-      await db.withWorkspace(workspaceId, async (tx) => {
+      await asActor(workspaceId, actor, async (tx) => {
         await assertOwner(tx, workspaceId, actor);
         const revoked = await tx
           .update(invitations)
@@ -541,7 +568,7 @@ export function createWorkspaceAdmin(options: {
       const workspaceId = parse(uuidSchema, input.workspaceId, 'workspaceId không hợp lệ.');
       const actor = parse(uuidSchema, input.actorUserId, 'actorUserId không hợp lệ.');
       const invitationId = parse(uuidSchema, input.invitationId, 'invitationId không hợp lệ.');
-      const found = await db.withWorkspace(workspaceId, async (tx) => {
+      const found = await asActor(workspaceId, actor, async (tx) => {
         await assertOwner(tx, workspaceId, actor);
         const rows = await tx
           .select({ email: invitations.email, role: invitations.role })

@@ -251,7 +251,7 @@ describe('addMember', () => {
     });
 
     for (const status of ['suspended', 'removed']) {
-      await db.withWorkspace(ws.id, (tx) =>
+      await db.withActor(ws.id, owner, (tx) =>
         tx
           .update(members)
           .set({ status })

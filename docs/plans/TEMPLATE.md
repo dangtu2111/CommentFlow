@@ -59,6 +59,7 @@ Mã gap matrix: `<mã>` · Spec: `<mục spec>`.
 - [ ] Đã đánh dấu diff nhạy cảm (cần verifier hay không)
 - [ ] Mọi thư viện mới nêu lý do + giấy phép; mọi vi phạm nguyên tắc ghi ở Complexity tracking
 - [ ] Danh sách "File sẽ đọc / sửa" đủ để làm mà không quét repo
+- [ ] Mỗi bảng mới nêu policy GHI theo vai trò (`withActor`, mẫu `is_workspace_owner`) hay chỉ theo workspace (`withWorkspace`) — hoặc "không có bảng mới"
 
 ## Trạng thái duyệt
 

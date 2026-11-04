@@ -2,7 +2,7 @@ import type { Database } from '@flow/db/runtime';
 import { actionLogs } from '@flow/db/schema/core';
 
 /**
- * Ghi nhật ký hành động của người dùng trong workspace hiện tại. PHẢI gọi bên trong cùng giao dịch `withWorkspace`
+ * Ghi nhật ký hành động của người dùng trong workspace hiện tại. PHẢI gọi bên trong cùng giao dịch `withActor` (RLS 0016: actor_type='user' đòi actor_id = người gọi, đang là thành viên)
  * với thay đổi được ghi (nếu thay đổi hỏng thì nhật ký cũng không còn). `before`/`after` chỉ chứa trường cần
  * thiết (vai trò, trạng thái), KHÔNG email/token.
  */

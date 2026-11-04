@@ -5,6 +5,7 @@ import { members, users, workspaces } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import { z } from 'zod';
 import { writeActionLog } from './action-log';
+import { isRlsViolation, isUniqueViolation } from './pg-errors';
 import { uniqueSlug } from './slug';
 
 export type MemberRole = 'owner' | 'staff';
@@ -59,12 +60,6 @@ function parse<T>(schema: z.ZodType<T>, value: unknown, message: string): T {
   return result.data;
 }
 
-/** Postgres 23505 = vi phạm ràng buộc duy nhất (Drizzle bọc lỗi gốc trong `cause`). */
-function isUniqueViolation(error: unknown): boolean {
-  const e = error as { code?: string; cause?: { code?: string } };
-  return (e?.cause?.code ?? e?.code) === '23505';
-}
-
 /** Workspace, thành viên, vai trò. Mọi truy vấn đi qua withWorkspace()/withUser() (RLS). */
 export function createTenancy(db: FlowDb) {
   async function getRole(workspaceId: string, userId: string): Promise<MemberRole | null> {
@@ -105,8 +100,12 @@ export function createTenancy(db: FlowDb) {
       );
       const id = randomUUID();
       const slug = uniqueSlug(name);
-      await db.withWorkspace(id, async (tx) => {
-        await tx.insert(workspaces).values({ id, name, slug, timezone, defaultLang });
+      // withActor: DB cần biết người tạo để cho đường khởi tạo Owner đầu tiên (migration 0016).
+      await db.withActor(id, userId, async (tx) => {
+        // createdBy: RLS (0016) chỉ cho đúng người tạo tự thêm mình làm Owner đầu tiên của workspace này.
+        await tx
+          .insert(workspaces)
+          .values({ id, name, slug, timezone, defaultLang, createdBy: userId });
         await tx.insert(members).values({ workspaceId: id, userId, role: 'owner' });
         await writeActionLog(tx, {
           workspaceId: id,
@@ -133,7 +132,7 @@ export function createTenancy(db: FlowDb) {
       const role = parse(roleSchema, input.role, 'Vai trò phải là owner hoặc staff.');
 
       try {
-        await db.withWorkspace(workspaceId, async (tx) => {
+        await db.withActor(workspaceId, actorUserId, async (tx) => {
           const actor = await tx
             .select({ role: members.role })
             .from(members)
@@ -150,6 +149,11 @@ export function createTenancy(db: FlowDb) {
           await tx.insert(members).values({ workspaceId, userId, role, invitedBy: actorUserId });
         });
       } catch (error) {
+        if (isRlsViolation(error)) {
+          throw new AppError('FORBIDDEN', 'Chỉ chủ workspace (owner) mới được thêm thành viên.', {
+            cause: error,
+          });
+        }
         if (isUniqueViolation(error)) {
           throw new AppError('CONFLICT', 'Người dùng này đã là thành viên của workspace.', {
             cause: error,

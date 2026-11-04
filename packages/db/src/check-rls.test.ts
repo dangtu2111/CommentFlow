@@ -17,6 +17,7 @@ function fakeDb(parts: {
   authPrivileges?: Row[];
   definerFunctions?: Row[];
   lastOwnerTrigger?: Row[];
+  actorPolicies?: Row[];
   sensitive?: Row[];
   usersColumns?: Row[];
   adminGuard?: Row[];
@@ -64,6 +65,7 @@ function fakeDb(parts: {
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       if (text.includes('/* definer-functions */')) return { rows: parts.definerFunctions ?? [] };
+      if (text.includes('/* actor-policies */')) return { rows: parts.actorPolicies ?? [] };
       if (text.includes('/* last-owner-trigger */')) return { rows: parts.lastOwnerTrigger ?? [] };
       throw new Error(`câu truy vấn lạ: ${text.slice(0, 40)}`);
     },
@@ -686,5 +688,17 @@ describe('checkRls: hàm SECURITY DEFINER và trigger Owner cuối', () => {
       message: 'hàm SECURITY DEFINER không an toàn: thiếu search_path cố định',
     });
     expect(v.map((x) => x.message).join('\n')).toContain('members_guard_last_owner');
+  });
+});
+
+describe('checkRls: policy người gọi (chỉ-Owner)', () => {
+  it('báo khi thiếu policy chỉ-Owner', async () => {
+    const v = await checkRls(
+      fakeDb({ actorPolicies: [{ tbl: 'members', cmd: 'a', marker: 'is_workspace_owner' }] }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.members',
+      message: expect.stringContaining('policy "người gọi" (is_workspace_owner)'),
+    });
   });
 });
