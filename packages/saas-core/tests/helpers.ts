@@ -51,3 +51,20 @@ export async function adminQuery<T extends pg.QueryResultRow = pg.QueryResultRow
     await client.end();
   }
 }
+
+/**
+ * CHỈ DÙNG TRONG TEST: thêm thành viên bằng quyền chủ sở hữu DB test (bỏ qua RLS). Trong sản phẩm thành viên chỉ vào
+ * qua lời mời (`accept_invitation`) hoặc là Owner đầu tiên của workspace do chính họ tạo (ADR 005); không có API
+ * thêm thẳng. Không bao giờ import file này từ `src/` hay `apps/`.
+ */
+export async function seedMemberForTest(
+  workspaceId: string,
+  userId: string,
+  role: 'owner' | 'staff',
+  status: 'active' | 'suspended' | 'removed' = 'active',
+): Promise<void> {
+  await adminQuery(
+    'INSERT INTO core.members (workspace_id, user_id, role, status) VALUES ($1, $2, $3, $4)',
+    [workspaceId, userId, role, status],
+  );
+}

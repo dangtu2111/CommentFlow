@@ -96,16 +96,17 @@ describe('members: chỉ Owner đang hoạt động ghi được', () => {
     expectOnlyOwner(results, 1);
   });
 
-  it('INSERT thành viên mới', async () => {
-    const results: Record<string, number | 'denied'> = {};
+  it('INSERT thành viên mới: KHÔNG AI (kể cả Owner) thêm thẳng được — thành viên chỉ vào qua lời mời', async () => {
     for (const who of WHO) {
-      const fresh = await seedUser(admin, `moi-${who}`);
-      results[who] = await run(
-        who,
-        `INSERT INTO core.members (workspace_id, user_id, role) VALUES ('${ws}', '${fresh}', 'staff')`,
-      );
+      for (const role of ['staff', 'owner']) {
+        const fresh = await seedUser(admin, `moi-${who}-${role}`);
+        const result = await run(
+          who,
+          `INSERT INTO core.members (workspace_id, user_id, role) VALUES ('${ws}', '${fresh}', '${role}')`,
+        );
+        expect(result, `${who} thêm ${role}`).toBe('denied');
+      }
     }
-    expectOnlyOwner(results as Record<Who, number | 'denied'>, 1);
   });
 
   it('đọc danh sách thành viên vẫn mở cho mọi người dùng thuộc workspace (Staff, job hệ thống)', async () => {
@@ -347,5 +348,79 @@ describe('ngữ cảnh', () => {
     expect(
       await run('otherOwner', `UPDATE core.workspaces SET name = 'x' WHERE id = '${ws}'`),
     ).not.toBe(1);
+  });
+});
+
+describe('sau kiểm chứng gộp (0018)', () => {
+  it('Owner KHÔNG đưa lại thành viên đã removed bằng UPDATE (kể cả ON CONFLICT DO UPDATE); mở khóa suspended vẫn được', async () => {
+    const removedRow = (
+      await admin.query('SELECT id FROM core.members WHERE workspace_id = $1 AND user_id = $2', [
+        ws,
+        ids.removed,
+      ])
+    ).rows[0].id as string;
+    expect(
+      await run('owner', `UPDATE core.members SET status = 'active' WHERE id = '${removedRow}'`),
+    ).toBe(0);
+    expect(
+      await run(
+        'owner',
+        `INSERT INTO core.members (id, workspace_id, user_id, role) VALUES ('${removedRow}', '${ws}', '${ids.removed}', 'staff')
+          ON CONFLICT (id) DO UPDATE SET status = 'active'`,
+      ),
+    ).toBe('denied');
+    const status = (
+      await admin.query('SELECT status FROM core.members WHERE id = $1', [removedRow])
+    ).rows[0].status;
+    expect(status).toBe('removed');
+    const suspendedRow = (
+      await admin.query('SELECT id FROM core.members WHERE workspace_id = $1 AND user_id = $2', [
+        ws,
+        ids.suspended,
+      ])
+    ).rows[0].id as string;
+    expect(
+      await run('owner', `UPDATE core.members SET status = 'active' WHERE id = '${suspendedRow}'`),
+    ).toBe(1);
+    await admin.query("UPDATE core.members SET status = 'suspended' WHERE id = $1", [suspendedRow]);
+  });
+
+  it('đường khởi tạo đòi status active (không tự chèn Owner removed/suspended)', async () => {
+    for (const status of ['removed', 'suspended']) {
+      const nw = newId();
+      const a = await seedUser(admin, `kt-${status}`);
+      await admin.query(
+        'INSERT INTO core.workspaces (id, name, slug, created_by) VALUES ($1, $2, $3, $4)',
+        [nw, 'KT', `slug-${nw}`, a],
+      );
+      expect(
+        await expectRejectCode(
+          db.withActor(nw, a, (tx) =>
+            tx.execute(
+              sql`INSERT INTO core.members (workspace_id, user_id, role, status) VALUES (${nw}, ${a}, 'owner', ${status})`,
+            ),
+          ),
+        ),
+      ).toBe('42501');
+    }
+  });
+
+  it('Owner chỉ sửa được name/slug/timezone/default_lang/ai_enabled của workspace; không sửa status, ai_cost_cap_usd, created_by', async () => {
+    expect(
+      await run(
+        'owner',
+        `UPDATE core.workspaces SET name = 'Đổi tên', timezone = 'UTC', ai_enabled = false WHERE id = '${ws}'`,
+      ),
+    ).toBe(1);
+    for (const set of [
+      "status = 'active'",
+      'ai_cost_cap_usd = 1',
+      `created_by = '${ids.staff}'`,
+      'emergency_stopped_at = now()',
+    ]) {
+      expect(await run('owner', `UPDATE core.workspaces SET ${set} WHERE id = '${ws}'`), set).toBe(
+        'denied',
+      );
+    }
   });
 });
