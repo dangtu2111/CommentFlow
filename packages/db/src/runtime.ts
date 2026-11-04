@@ -14,6 +14,11 @@ export {
   setChannelToken,
 } from './channel-tokens';
 export { createDb, type Database, type FlowDb } from './client';
+export {
+  type ChannelAlert,
+  type ChannelAlertStatus,
+  listChannelAlerts,
+} from './queries/channel-alerts';
 export { type CommentDetail, getCommentDetail } from './queries/comment-detail';
 export {
   acquireCommentLock,

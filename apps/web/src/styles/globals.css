@@ -1229,3 +1229,38 @@ a {
   border: 1px solid var(--color-warning);
   color: var(--color-warning);
 }
+
+/* ===== Banner hệ thống: kênh mất kết nối (FR-012) ===== */
+.banners {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) 0;
+}
+
+.banner {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.banner-expired,
+.banner-revoked {
+  border-color: var(--color-danger);
+}
+
+.banner p {
+  margin: 0;
+}
+
+.banner-title {
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.banner-body {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

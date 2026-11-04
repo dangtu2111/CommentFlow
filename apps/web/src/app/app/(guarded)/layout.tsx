@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { ShellNav } from '../../../components/app/shell-nav';
+import { SystemBanners } from '../../../components/app/system-banners';
 import { WorkspaceSwitcher } from '../../../components/app/workspace-switcher';
 import { LocaleSwitcher } from '../../../components/locale-switcher';
 import { SubmitButton } from '../../../components/ui/submit-button';
@@ -52,8 +53,10 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
       <div className="shell-body">
         <ShellNav groups={groups} label={t('navLabel')} />
         <div className="shell-main">
-          {/* Khe banner hệ thống (kênh mất kết nối, hạn mức AI, dùng thử... — docs/08 §3): CH-STATUS-BANNER lấp. */}
-          <div data-slot="banners" />
+          {/* Khe banner hệ thống (docs/08 §3): hiện tại kênh mất kết nối (FR-012); hạn mức AI/dùng thử làm sau. */}
+          <div data-slot="banners">
+            <SystemBanners workspaceId={workspace.id} userId={user.id} role={workspace.role} />
+          </div>
           {children}
         </div>
       </div>
