@@ -9,7 +9,7 @@ import {
 
 const HOUR = 3_600_000;
 const T0 = new Date('2026-11-04T00:00:00.000Z');
-const after = (ms: number) => new Date(T0.getTime() + ms);
+const plus = (ms: number) => new Date(T0.getTime() + ms);
 
 const none: ActionCapability = { supported: false, verified: true };
 const caps = (over: Partial<ConnectorCapabilities>): ConnectorCapabilities => ({
@@ -50,7 +50,7 @@ const onceLike = caps({
 
 const ctx = (over: Record<string, unknown> = {}) => ({
   referenceAt: T0,
-  now: after(HOUR),
+  now: plus(HOUR),
   byHuman: false,
   alreadyUsed: false,
   ...over,
@@ -72,7 +72,7 @@ describe('FR-016 evaluateAction — hành động được phép', () => {
 
   it('FR-016 hỗ trợ và không có cửa sổ/giới hạn → được phép, kể cả khi không biết độ dài', () => {
     const open = caps({ hide: { supported: true, verified: true } });
-    expect(evaluateAction(open, 'hide', ctx({ now: after(10_000 * HOUR) }))).toEqual({
+    expect(evaluateAction(open, 'hide', ctx({ now: plus(10_000 * HOUR) }))).toEqual({
       allowed: true,
       humanOnly: false,
     });
@@ -82,20 +82,20 @@ describe('FR-016 evaluateAction — hành động được phép', () => {
 describe('FR-016 evaluateAction — cửa sổ thời gian', () => {
   it('FR-016 TikTok trả lời: trong 48 giờ được, đúng 48 giờ được (biên), quá 1 ms thì WINDOW_EXPIRED', () => {
     const base = { textLength: 10 };
-    expect(evaluateAction(tiktokLike, 'reply', ctx({ ...base, now: after(0) }))).toMatchObject({
+    expect(evaluateAction(tiktokLike, 'reply', ctx({ ...base, now: plus(0) }))).toMatchObject({
       allowed: true,
     });
     expect(
-      evaluateAction(tiktokLike, 'reply', ctx({ ...base, now: after(48 * HOUR) })),
+      evaluateAction(tiktokLike, 'reply', ctx({ ...base, now: plus(48 * HOUR) })),
     ).toMatchObject({
       allowed: true,
     });
-    expect(
-      evaluateAction(tiktokLike, 'reply', ctx({ ...base, now: after(48 * HOUR + 1) })),
-    ).toEqual({
-      allowed: false,
-      reason: 'WINDOW_EXPIRED',
-    });
+    expect(evaluateAction(tiktokLike, 'reply', ctx({ ...base, now: plus(48 * HOUR + 1) }))).toEqual(
+      {
+        allowed: false,
+        reason: 'WINDOW_EXPIRED',
+      },
+    );
   });
 
   it('FR-016 mốc tham chiếu ở tương lai (đồng hồ lệch) coi như 0, không làm hỏng cửa sổ', () => {
@@ -103,7 +103,7 @@ describe('FR-016 evaluateAction — cửa sổ thời gian', () => {
       evaluateAction(
         tiktokLike,
         'reply',
-        ctx({ textLength: 5, referenceAt: after(5 * HOUR), now: T0 }),
+        ctx({ textLength: 5, referenceAt: plus(5 * HOUR), now: T0 }),
       ),
     ).toMatchObject({ allowed: true });
   });
@@ -111,20 +111,20 @@ describe('FR-016 evaluateAction — cửa sổ thời gian', () => {
   it('FR-016 Messenger: trong 24 giờ AI được; 24 giờ–7 ngày chỉ người; quá 7 ngày không gửi', () => {
     const base = { textLength: 20 };
     expect(
-      evaluateAction(messengerLike, 'sendMessage', ctx({ ...base, now: after(23 * HOUR) })),
+      evaluateAction(messengerLike, 'sendMessage', ctx({ ...base, now: plus(23 * HOUR) })),
     ).toEqual({
       allowed: true,
       humanOnly: false,
     });
     // đúng 24 giờ vẫn là cửa sổ tự động (biên)
     expect(
-      evaluateAction(messengerLike, 'sendMessage', ctx({ ...base, now: after(24 * HOUR) })),
+      evaluateAction(messengerLike, 'sendMessage', ctx({ ...base, now: plus(24 * HOUR) })),
     ).toEqual({
       allowed: true,
       humanOnly: false,
     });
     expect(
-      evaluateAction(messengerLike, 'sendMessage', ctx({ ...base, now: after(24 * HOUR + 1) })),
+      evaluateAction(messengerLike, 'sendMessage', ctx({ ...base, now: plus(24 * HOUR + 1) })),
     ).toEqual({
       allowed: false,
       reason: 'HUMAN_REQUIRED',
@@ -133,21 +133,21 @@ describe('FR-016 evaluateAction — cửa sổ thời gian', () => {
       evaluateAction(
         messengerLike,
         'sendMessage',
-        ctx({ ...base, now: after(3 * 24 * HOUR), byHuman: true }),
+        ctx({ ...base, now: plus(3 * 24 * HOUR), byHuman: true }),
       ),
     ).toEqual({ allowed: true, humanOnly: true });
     expect(
       evaluateAction(
         messengerLike,
         'sendMessage',
-        ctx({ ...base, now: after(7 * 24 * HOUR), byHuman: true }),
+        ctx({ ...base, now: plus(7 * 24 * HOUR), byHuman: true }),
       ),
     ).toMatchObject({ allowed: true });
     expect(
       evaluateAction(
         messengerLike,
         'sendMessage',
-        ctx({ ...base, now: after(7 * 24 * HOUR + 1), byHuman: true }),
+        ctx({ ...base, now: plus(7 * 24 * HOUR + 1), byHuman: true }),
       ),
     ).toEqual({ allowed: false, reason: 'WINDOW_EXPIRED' });
   });
@@ -186,12 +186,12 @@ describe('FR-016 evaluateAction — giới hạn ký tự và hành động mộ
       allowed: false,
       reason: 'ALREADY_USED',
     });
-    expect(
-      evaluateAction(onceLike, 'privateReply', ctx({ now: after(7 * 24 * HOUR + 1) })),
-    ).toEqual({
-      allowed: false,
-      reason: 'WINDOW_EXPIRED',
-    });
+    expect(evaluateAction(onceLike, 'privateReply', ctx({ now: plus(7 * 24 * HOUR + 1) }))).toEqual(
+      {
+        allowed: false,
+        reason: 'WINDOW_EXPIRED',
+      },
+    );
   });
 
   it('FR-016 thứ tự kiểm cố định: UNSUPPORTED → ALREADY_USED → WINDOW_EXPIRED → HUMAN_REQUIRED → TEXT', () => {
@@ -204,13 +204,13 @@ describe('FR-016 evaluateAction — giới hạn ký tự và hành động mộ
         windows: [{ withinMs: HOUR, humanOnly: true }],
       },
     });
-    const bad = { now: after(2 * HOUR), alreadyUsed: true, byHuman: false, textLength: 99 };
+    const bad = { now: plus(2 * HOUR), alreadyUsed: true, byHuman: false, textLength: 99 };
     expect(evaluateAction(everything, 'reply', ctx(bad))).toMatchObject({ reason: 'ALREADY_USED' });
     expect(evaluateAction(everything, 'reply', ctx({ ...bad, alreadyUsed: false }))).toMatchObject({
       reason: 'WINDOW_EXPIRED',
     });
     expect(
-      evaluateAction(everything, 'reply', ctx({ ...bad, alreadyUsed: false, now: after(HOUR) })),
+      evaluateAction(everything, 'reply', ctx({ ...bad, alreadyUsed: false, now: plus(HOUR) })),
     ).toMatchObject({
       reason: 'HUMAN_REQUIRED',
     });
@@ -218,7 +218,7 @@ describe('FR-016 evaluateAction — giới hạn ký tự và hành động mộ
       evaluateAction(
         everything,
         'reply',
-        ctx({ ...bad, alreadyUsed: false, now: after(HOUR), byHuman: true }),
+        ctx({ ...bad, alreadyUsed: false, now: plus(HOUR), byHuman: true }),
       ),
     ).toMatchObject({ reason: 'TEXT_TOO_LONG' });
   });
@@ -255,8 +255,8 @@ describe('FR-016 evaluateAction — thuộc tính (property-based)', () => {
           const c = caps({ reply: { supported: true, verified: true, windows } });
           const t1 = Math.min(a, b) * HOUR;
           const t2 = Math.max(a, b) * HOUR;
-          const r1 = evaluateAction(c, 'reply', ctx({ now: after(t1), byHuman }));
-          const r2 = evaluateAction(c, 'reply', ctx({ now: after(t2), byHuman }));
+          const r1 = evaluateAction(c, 'reply', ctx({ now: plus(t1), byHuman }));
+          const r2 = evaluateAction(c, 'reply', ctx({ now: plus(t2), byHuman }));
           if (!r1.allowed && r1.reason === 'WINDOW_EXPIRED') {
             expect(r2).toEqual({ allowed: false, reason: 'WINDOW_EXPIRED' });
           }
@@ -269,8 +269,8 @@ describe('FR-016 evaluateAction — thuộc tính (property-based)', () => {
     fc.assert(
       fc.property(windowArb, fc.nat(100_000), (windows, t) => {
         const c = caps({ reply: { supported: true, verified: true, windows } });
-        const machine = evaluateAction(c, 'reply', ctx({ now: after(t * HOUR), byHuman: false }));
-        const human = evaluateAction(c, 'reply', ctx({ now: after(t * HOUR), byHuman: true }));
+        const machine = evaluateAction(c, 'reply', ctx({ now: plus(t * HOUR), byHuman: false }));
+        const human = evaluateAction(c, 'reply', ctx({ now: plus(t * HOUR), byHuman: true }));
         if (machine.allowed) expect(human.allowed).toBe(true);
       }),
     );
