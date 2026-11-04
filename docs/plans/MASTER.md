@@ -11,7 +11,7 @@
 
 ## Năm việc làm kế tiếp (theo thứ tự)
 
-1. `MEMBER-DIRECT-ADD` — 🔧 đang làm (nhánh `feat/members-invite-only`)
+1. `MEMBER-DIRECT-ADD` — ✅ xong (PR #13)
 2. `CONNECTOR-IFACE` — giao diện connector chung (FR-016)
 3. `CH-SCHEMA` — bảng `channels`/`posts`/`comments`/`webhook_events` + RLS
 4. `WH-INGEST` — webhook (xác minh chữ ký) → job `ingest`, chống trùng, bỏ bình luận của chính Page
@@ -57,7 +57,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| MEMBER-DIRECT-ADD | FR-003 (chỉ `accept_invitation` thêm thành viên) | US-004 | AUTH-INVITE | S+DB | không (đã có đề xuất của verifier; chủ dự án đã chọn hướng) | 🔧 |
+| MEMBER-DIRECT-ADD | FR-003 (chỉ `accept_invitation` thêm thành viên) | US-004 | AUTH-INVITE | S+DB | không (đã có đề xuất của verifier; chủ dự án đã chọn hướng) | ✅ |
 | MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S | không | ⏳ |
 | CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ⏳ |
 | AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ⏳ |

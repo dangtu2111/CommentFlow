@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createMemoryTransport, createNotifier, type MailMessage } from '../src/notify';
 import { createMemoryStore, createRateLimiter } from '../src/ratelimit';
 import { createTenancy, createWorkspaceAdmin, type WorkspaceAdmin } from '../src/tenancy';
-import { adminQuery, createTestDb, createTestUser } from './helpers';
+import { adminQuery, createTestDb, createTestUser, seedMemberForTest } from './helpers';
 
 const SECRET = randomBytes(32).toString('hex');
 const APP_URL = 'https://app.example.test';
@@ -70,7 +70,7 @@ async function setup(staffCount = 1) {
   const staff: string[] = [];
   for (let i = 0; i < staffCount; i++) {
     const s = await person(`Nhân viên ${i + 1}`);
-    await tenancy.addMember({ workspaceId: ws.id, actorUserId: owner, userId: s, role: 'staff' });
+    await seedMemberForTest(ws.id, s, 'staff');
     staff.push(s);
   }
   transport.sent.length = 0;

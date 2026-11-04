@@ -3,7 +3,7 @@ import { actionLogs, members, workspaces } from '@flow/db/schema/core';
 import { isAppError } from '@flow/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTenancy } from '../src/tenancy';
-import { createTestDb, createTestUser } from './helpers';
+import { createTestDb, createTestUser, seedMemberForTest } from './helpers';
 
 let db: FlowDb;
 let tenancy: ReturnType<typeof createTenancy>;
@@ -113,22 +113,12 @@ describe('listWorkspacesOfUser', () => {
     const staff = await createTestUser();
     const ws1 = await tenancy.createWorkspace({ userId: owner1, name: 'Shop Một' });
     const ws2 = await tenancy.createWorkspace({ userId: owner2, name: 'Shop Hai' });
-    await tenancy.addMember({
-      workspaceId: ws1.id,
-      actorUserId: owner1,
-      userId: staff,
-      role: 'staff',
-    });
+    await seedMemberForTest(ws1.id, staff, 'staff');
 
     expect((await tenancy.listWorkspacesOfUser(staff)).map((w) => w.id)).toEqual([ws1.id]);
     expect((await tenancy.listWorkspacesOfUser(staff))[0]?.role).toBe('staff');
 
-    await tenancy.addMember({
-      workspaceId: ws2.id,
-      actorUserId: owner2,
-      userId: staff,
-      role: 'staff',
-    });
+    await seedMemberForTest(ws2.id, staff, 'staff');
     const both = (await tenancy.listWorkspacesOfUser(staff)).map((w) => w.id).sort();
     expect(both).toEqual([ws1.id, ws2.id].sort());
   });
@@ -138,118 +128,33 @@ describe('listWorkspacesOfUser', () => {
   });
 });
 
-describe('addMember', () => {
-  it('owner thêm được Staff; thành viên mới thấy workspace', async () => {
-    const owner = await createTestUser();
-    const staff = await createTestUser();
-    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Thêm' });
-    await tenancy.addMember({
-      workspaceId: ws.id,
-      actorUserId: owner,
-      userId: staff,
-      role: 'staff',
-    });
-    expect(await tenancy.getRole(ws.id, staff)).toBe('staff');
+describe('không có đường thêm thành viên thẳng (ADR 005, feat/members-invite-only)', () => {
+  it('API tenancy không còn addMember', () => {
+    expect('addMember' in tenancy).toBe(false);
   });
 
-  it('Staff không được thêm thành viên', async () => {
+  it('Owner (withActor) INSERT thẳng vào members bị RLS chặn; dòng seed của test vẫn thấy được', async () => {
+    const { sql } = await import('@flow/db');
     const owner = await createTestUser();
-    const staff = await createTestUser();
     const other = await createTestUser();
-    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Quyền' });
-    await tenancy.addMember({
-      workspaceId: ws.id,
-      actorUserId: owner,
-      userId: staff,
-      role: 'staff',
-    });
-    expect(
-      await codeOf(
-        tenancy.addMember({ workspaceId: ws.id, actorUserId: staff, userId: other, role: 'staff' }),
+    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Chỉ Mời' });
+    await expect(
+      db.withActor(ws.id, owner, (tx) =>
+        tx.execute(
+          sql`INSERT INTO core.members (workspace_id, user_id, role) VALUES (${ws.id}, ${other}, 'staff')`,
+        ),
       ),
-    ).toBe('FORBIDDEN');
+    ).rejects.toThrow();
     expect(await tenancy.getRole(ws.id, other)).toBeNull();
+    await seedMemberForTest(ws.id, other, 'staff');
+    expect(await tenancy.getRole(ws.id, other)).toBe('staff');
   });
 
-  it('người ngoài workspace không được thêm thành viên', async () => {
-    const owner = await createTestUser();
-    const stranger = await createTestUser();
-    const target = await createTestUser();
-    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Kín' });
-    expect(
-      await codeOf(
-        tenancy.addMember({
-          workspaceId: ws.id,
-          actorUserId: stranger,
-          userId: target,
-          role: 'staff',
-        }),
-      ),
-    ).toBe('FORBIDDEN');
-  });
-
-  it('owner của workspace A không thêm được người vào workspace B', async () => {
-    const ownerA = await createTestUser();
-    const ownerB = await createTestUser();
-    const target = await createTestUser();
-    await tenancy.createWorkspace({ userId: ownerA, name: 'Shop A' });
-    const wsB = await tenancy.createWorkspace({ userId: ownerB, name: 'Shop B' });
-    expect(
-      await codeOf(
-        tenancy.addMember({
-          workspaceId: wsB.id,
-          actorUserId: ownerA,
-          userId: target,
-          role: 'staff',
-        }),
-      ),
-    ).toBe('FORBIDDEN');
-  });
-
-  it('thêm trùng thành viên → CONFLICT', async () => {
-    const owner = await createTestUser();
-    const staff = await createTestUser();
-    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Trùng' });
-    await tenancy.addMember({
-      workspaceId: ws.id,
-      actorUserId: owner,
-      userId: staff,
-      role: 'staff',
-    });
-    expect(
-      await codeOf(
-        tenancy.addMember({ workspaceId: ws.id, actorUserId: owner, userId: staff, role: 'staff' }),
-      ),
-    ).toBe('CONFLICT');
-  });
-
-  it('vai trò không hợp lệ → VALIDATION_FAILED', async () => {
-    const owner = await createTestUser();
-    const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Vai Trò' });
-    expect(
-      await codeOf(
-        tenancy.addMember({
-          workspaceId: ws.id,
-          actorUserId: owner,
-          userId: await createTestUser(),
-          role: 'admin' as never,
-        }),
-      ),
-    ).toBe('VALIDATION_FAILED');
-  });
-
-  it('thành viên không còn active (suspended/removed) mất quyền: getRole null, không thấy workspace, không thêm được người', async () => {
+  it('thành viên không còn active (suspended/removed) mất quyền: getRole null, không thấy workspace; dòng còn nguyên', async () => {
     const owner = await createTestUser();
     const other = await createTestUser();
-    const target = await createTestUser();
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop Gỡ Quyền' });
-    await tenancy.addMember({
-      workspaceId: ws.id,
-      actorUserId: owner,
-      userId: other,
-      role: 'owner',
-    });
-
+    await seedMemberForTest(ws.id, other, 'owner');
     for (const status of ['suspended', 'removed']) {
       await db.withActor(ws.id, owner, (tx) =>
         tx
@@ -259,17 +164,6 @@ describe('addMember', () => {
       );
       expect(await tenancy.getRole(ws.id, other)).toBeNull();
       expect((await tenancy.listWorkspacesOfUser(other)).map((w) => w.id)).not.toContain(ws.id);
-      expect(
-        await codeOf(
-          tenancy.addMember({
-            workspaceId: ws.id,
-            actorUserId: other,
-            userId: target,
-            role: 'staff',
-          }),
-        ),
-      ).toBe('FORBIDDEN');
-      // Dòng vẫn còn trong DB (không xóa).
       const rows = await db.withWorkspace(ws.id, (tx) =>
         tx
           .select()
@@ -288,12 +182,7 @@ describe('listMembers (HARDEN-3: chỉ trả cột cần cho danh sách)', () =>
     const outsider = await createTestUser('Ngoài');
     const ws = await tenancy.createWorkspace({ userId: owner, name: 'Shop A' });
     const other = await tenancy.createWorkspace({ userId: outsider, name: 'Shop B' });
-    await tenancy.addMember({
-      workspaceId: ws.id,
-      actorUserId: owner,
-      userId: staff,
-      role: 'staff',
-    });
+    await seedMemberForTest(ws.id, staff, 'staff');
 
     const list = await tenancy.listMembers(ws.id);
     expect(list.map((m) => [m.name, m.role])).toEqual([

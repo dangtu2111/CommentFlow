@@ -8,7 +8,7 @@ import type { Notifier } from '../notify/notifier';
 import type { OwnerChange } from '../notify/templates';
 import type { RateLimiter } from '../ratelimit/limiter';
 import { writeActionLog } from './action-log';
-import { isLastOwnerViolation, isRlsViolation, isUniqueViolation } from './pg-errors';
+import { isLastOwnerViolation, isRlsViolation, isUniqueViolation, pgField } from './pg-errors';
 import type { MemberRole } from './tenancy';
 
 export const INVITATION_TTL_DAYS = 7;
@@ -228,6 +228,43 @@ export function createWorkspaceAdmin(options: {
       throw new AppError('NOT_FOUND', 'Không tìm thấy thành viên.');
     }
     return { ...row, role: row.role as MemberRole, status: row.status as 'active' | 'suspended' };
+  }
+
+  /** Báo Owner khi một lời mời làm thay đổi Owner; lỗi gửi thư không làm hỏng việc nhận lời mời. */
+  async function notifyAcceptedOwnerChange(input: {
+    workspaceId: string;
+    userId: string;
+    invitedBy: string | null;
+    newRole: MemberRole;
+    previousRole: MemberRole | null;
+  }): Promise<void> {
+    try {
+      const event = await db.withWorkspace(input.workspaceId, async (tx) => {
+        const ws = await workspaceInfo(tx, input.workspaceId);
+        const [target] = await activePeople(tx, input.workspaceId, ws.lang, {
+          userId: input.userId,
+        });
+        const inviter = input.invitedBy
+          ? (await activePeople(tx, input.workspaceId, ws.lang, { userId: input.invitedBy }))[0]
+          : undefined;
+        return {
+          workspaceName: ws.name,
+          owners: await activePeople(tx, input.workspaceId, ws.lang, { role: 'owner' }),
+          targetName: target?.name ?? '',
+          actorName: inviter?.name ?? target?.name ?? '',
+        };
+      });
+      notifyOwners({
+        ...event,
+        change: input.newRole === 'owner' ? 'added' : 'role_changed',
+      });
+    } catch {
+      // Báo Owner là việc phụ: không ném lỗi ra ngoài (nhật ký invitation.accepted đã ghi trong DB), nhưng KHÔNG nuốt
+      // im lặng: ghi sự kiện có cấu trúc, không PII (không email, không token).
+      console.error(
+        JSON.stringify({ event: 'owner_change_notify_failed', workspaceId: input.workspaceId }),
+      );
+    }
   }
 
   const api = {
@@ -505,7 +542,13 @@ export function createWorkspaceAdmin(options: {
         });
       } catch (error) {
         // Hai lời mời cùng email chạy song song: một cái thắng, cái kia coi như đã gửi.
-        if (isUniqueViolation(error)) return { status: 'sent' };
+        // Chỉ lỗi của chỉ mục "một lời mời đang chờ" mới coi là đã gửi; trùng khóa ở chỗ khác phải nổi lên.
+        if (
+          isUniqueViolation(error) &&
+          pgField(error, 'constraint') === 'invitations_pending_email_unique'
+        ) {
+          return { status: 'sent' };
+        }
         throw error;
       }
 
@@ -630,7 +673,7 @@ export function createWorkspaceAdmin(options: {
 
       // Chỉ báo Owner khi thật sự thêm một Owner mới (lời mời không bao giờ hạ vai trò thành viên đang hoạt động).
       if (row.accepted_role === 'owner' && row.previous_role !== 'owner') {
-        await api.notifyAcceptedOwnerChange({
+        await notifyAcceptedOwnerChange({
           workspaceId: row.accepted_workspace_id,
           userId,
           invitedBy: row.inviter_id,
@@ -639,39 +682,6 @@ export function createWorkspaceAdmin(options: {
         });
       }
       return { status: 'accepted', workspaceId: row.accepted_workspace_id };
-    },
-
-    /** (Nội bộ) Báo Owner khi một lời mời làm thay đổi Owner; lỗi gửi thư không làm hỏng việc nhận lời mời. */
-    async notifyAcceptedOwnerChange(input: {
-      workspaceId: string;
-      userId: string;
-      invitedBy: string | null;
-      newRole: MemberRole;
-      previousRole: MemberRole | null;
-    }): Promise<void> {
-      try {
-        const event = await db.withWorkspace(input.workspaceId, async (tx) => {
-          const ws = await workspaceInfo(tx, input.workspaceId);
-          const [target] = await activePeople(tx, input.workspaceId, ws.lang, {
-            userId: input.userId,
-          });
-          const inviter = input.invitedBy
-            ? (await activePeople(tx, input.workspaceId, ws.lang, { userId: input.invitedBy }))[0]
-            : undefined;
-          return {
-            workspaceName: ws.name,
-            owners: await activePeople(tx, input.workspaceId, ws.lang, { role: 'owner' }),
-            targetName: target?.name ?? '',
-            actorName: inviter?.name ?? target?.name ?? '',
-          };
-        });
-        notifyOwners({
-          ...event,
-          change: input.newRole === 'owner' ? 'added' : 'role_changed',
-        });
-      } catch {
-        // Báo Owner là việc phụ: không ném lỗi ra ngoài (nhật ký invitation.accepted đã ghi trong DB).
-      }
     },
   };
   return api;

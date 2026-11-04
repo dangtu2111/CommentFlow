@@ -5,7 +5,6 @@ import { members, users, workspaces } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import { z } from 'zod';
 import { writeActionLog } from './action-log';
-import { isRlsViolation, isUniqueViolation } from './pg-errors';
 import { uniqueSlug } from './slug';
 
 export type MemberRole = 'owner' | 'staff';
@@ -23,7 +22,6 @@ export type MemberListItem = {
 
 const nameSchema = z.string().trim().min(1).max(80);
 const uuidSchema = z.uuid();
-const roleSchema = z.enum(['owner', 'staff']);
 const langSchema = z.enum(['vi', 'en']);
 
 export const DEFAULT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
@@ -117,50 +115,6 @@ export function createTenancy(db: FlowDb) {
         });
       });
       return { id, name, slug, role: 'owner' };
-    },
-
-    /** Chỉ owner của workspace mới thêm được thành viên. */
-    async addMember(input: {
-      workspaceId: string;
-      actorUserId: string;
-      userId: string;
-      role: MemberRole;
-    }): Promise<void> {
-      const workspaceId = parse(uuidSchema, input.workspaceId, 'workspaceId không hợp lệ.');
-      const actorUserId = parse(uuidSchema, input.actorUserId, 'actorUserId không hợp lệ.');
-      const userId = parse(uuidSchema, input.userId, 'userId không hợp lệ.');
-      const role = parse(roleSchema, input.role, 'Vai trò phải là owner hoặc staff.');
-
-      try {
-        await db.withActor(workspaceId, actorUserId, async (tx) => {
-          const actor = await tx
-            .select({ role: members.role })
-            .from(members)
-            .where(
-              and(
-                eq(members.workspaceId, workspaceId),
-                eq(members.userId, actorUserId),
-                eq(members.status, 'active'),
-              ),
-            );
-          if (actor[0]?.role !== 'owner') {
-            throw new AppError('FORBIDDEN', 'Chỉ chủ workspace (owner) mới được thêm thành viên.');
-          }
-          await tx.insert(members).values({ workspaceId, userId, role, invitedBy: actorUserId });
-        });
-      } catch (error) {
-        if (isRlsViolation(error)) {
-          throw new AppError('FORBIDDEN', 'Chỉ chủ workspace (owner) mới được thêm thành viên.', {
-            cause: error,
-          });
-        }
-        if (isUniqueViolation(error)) {
-          throw new AppError('CONFLICT', 'Người dùng này đã là thành viên của workspace.', {
-            cause: error,
-          });
-        }
-        throw error;
-      }
     },
 
     /**

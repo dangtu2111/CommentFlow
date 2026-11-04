@@ -16,7 +16,7 @@ import { wrapAuthDb } from '../src/auth/auth-db';
 import { createMemoryTransport, createNotifier } from '../src/notify';
 import { createMemoryStore, createRateLimiter } from '../src/ratelimit';
 import { createTenancy } from '../src/tenancy';
-import { createTestAuthDb, createTestDb } from './helpers';
+import { createTestAuthDb, createTestDb, seedMemberForTest } from './helpers';
 import { totp, wrongCode } from './totp';
 
 const SECRET = randomBytes(32).toString('hex');
@@ -385,12 +385,7 @@ describe('bắt buộc 2FA cho Owner/Admin (dữ liệu seed chỉ ở cf_test)'
     await tenancy.createWorkspace({ userId: boss.userId, name: 'Cửa hàng thử' });
     const staff = await userWithTwoFactor();
     const ws = await tenancy.createWorkspace({ userId: boss.userId, name: 'Cửa hàng thử 2' });
-    await tenancy.addMember({
-      workspaceId: ws.id,
-      actorUserId: boss.userId,
-      userId: staff.userId,
-      role: 'staff',
-    });
+    await seedMemberForTest(ws.id, staff.userId, 'staff');
     const loginAs = async (u: typeof boss) => {
       const signIn = await flows.signIn({ ...u, headers: new Headers() });
       if (signIn.status !== 'two_factor_required') throw new Error(signIn.status);
