@@ -26,6 +26,15 @@ Tên biến có trong `env.example` (không có giá trị):
 
 Không dán App Secret/verify token vào chat, issue, log hay commit.
 
+### 1.3 Khóa mã hóa token Page (`TOKEN_ENC_KEYS`) — `TOKEN-ENC`, `FB-OAUTH`
+Token Page được mã hóa AES-256-GCM trước khi vào DB; **mất khóa = mọi kênh phải kết nối lại**.
+
+1. Sinh khóa: `openssl rand -hex 32` (64 ký tự hex). Không có `openssl`: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+2. Đặt vào `.env.local` (máy code): `TOKEN_ENC_KEYS=v1:<64 hex>`. **Không** đặt trên máy ảo/staging chung, không commit, không dán vào chat/issue/log.
+3. **Sao lưu khóa riêng** (trình quản lý mật khẩu), tách khỏi nơi sao lưu DB — có DB mà không có khóa thì token vô dụng.
+4. Xoay khóa (sau này): thêm `v2:<hex mới>` phía sau (`v1:…,v2:…`); token mới mã hóa bằng v2, token cũ vẫn đọc được bằng v1; chỉ gỡ v1 sau khi mọi kênh đã mã hóa lại.
+5. Staging/production: khóa nằm trong secret manager riêng của môi trường đó (làm khi tới `DEPLOY`), không dùng lại khóa dev.
+
 ## 2. Thử webhook thật bằng Cloudflare quick tunnel
 
 Webhook của Meta phải gọi được tới máy bạn qua HTTPS công khai. Dùng **quick tunnel** của Cloudflare (không cần tài khoản, không cần tên miền; địa chỉ đổi mỗi lần chạy).

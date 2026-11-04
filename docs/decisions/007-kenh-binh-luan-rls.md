@@ -23,7 +23,7 @@ Ba đường, phân biệt bằng `app.user_id` và `app.ctx`:
 
 ## 2. Token Page và cột do Admin
 
-- `channels.access_token_enc` (**bytea**, AES-GCM) và `key_version` (int, mặc định 1, xoay khóa — docs/10 §1, docs/13 §5): `cf_app` **không có quyền cột nào**. Tạo kênh kèm token và đọc token do **hàm DEFINER hẹp ở `TOKEN-ENC`**.
+- `channels.access_token_enc` (**bytea**, AES-GCM) và `key_version` (int, mặc định 1, xoay khóa — docs/10 §1, docs/13 §5): `cf_app` **không có quyền cột nào**. Tạo kênh/ghi/xóa token: hàm DEFINER `cf.create_channel`, `cf.set_channel_token`, `cf.clear_channel_token` (Owner đang hoạt động hoặc hệ thống; migration 0020). **Đọc ciphertext: `cf.read_channel_token` — CHỈ đường hệ thống** (`withJob`/worker); Owner/web không đọc được (quyết định chủ dự án 05/11/2026: gửi trả lời luôn qua job `send` của worker). Mã hóa AES-256-GCM chạy trong mã ứng dụng (`@flow/connectors`: `createTokenCipher`), khóa `TOKEN_ENC_KEYS` (`v1:<hex>,v2:<hex>`) ở env, DB không bao giờ thấy khóa; AAD = `workspace_id|channel_id|key_version`. Không giải mã được (thiếu/sai khóa/AAD/hỏng) → kênh `expired` ("cần kết nối lại") và connector nhận `TOKEN_EXPIRED`, không log token/ciphertext. Trigger `guard_channel_user_update` chỉ áp cho `current_user = 'cf_app'` (hàm DEFINER chạy dưới chủ hàm nên cập nhật được cột hệ thống sau khi tự kiểm quyền).
 - `send_suspended_until`, `send_suspended_reason`, `rate_limit_override`: `cf_app` chỉ **đọc**; Admin ghi qua role/hàm riêng ở GĐ3. Lưu ý: khóa gắn theo hàng `channels` — Owner nối cùng Page ở workspace khác được hàng mới chưa bị khóa; cổng gửi phải xét khóa theo `(platform, external_id)` xuyên workspace (gap `SEND-LOCK-CROSS-WORKSPACE`).
 - Cột định danh (`workspace_id`, `channel_id`, `post_id`, `external_id`, `platform`, `event_hash`, `payload`...) không UPDATE được sau khi tạo.
 - Drizzle: `select()`/`.returning()` không đối số trên `channels` liệt kê cả cột token và bị từ chối — dùng `channelReadColumns`.
@@ -36,7 +36,7 @@ Ba đường, phân biệt bằng `app.user_id` và `app.ctx`:
 
 `workspace_id` nullable: dòng NULL không workspace nào thấy (và `cf_app` cũng không chèn được dòng NULL); ghi bằng hàm DEFINER ở `WH-INGEST` (biết nền tảng + Page ID, tra kênh xuyên workspace; **chỉ map vào kênh có `access_token_enc` do hàm DEFINER ghi** — Owner không tự tạo kênh mang Page ID của shop khác). Spec cho phép cùng một Page ở nhiều workspace (`unique (platform, external_id, workspace_id)`) → `UNIQUE NULLS NOT DISTINCT (event_hash, workspace_id)`: một sự kiện một dòng cho MỖI workspace, và một dòng chưa map; `WH-INGEST` dùng `ON CONFLICT DO NOTHING` trên cặp đó. Cột `error` không được chứa PII/token (WH-INGEST che); job xóa sau 30 ngày (docs/10 §6) thuộc `DB-MAINTENANCE-ROLE`; chỉ mục `(status, created_at)` một phần cho job thử lại.
 
-## 5. Đề xuất sửa `docs/10` §3.2 (chưa sửa — chờ chủ dự án cho phép)
+## 5. Sửa `docs/10` §3.2 và §4 — **đã áp dụng** ở `feat/token-enc` (chủ dự án cho phép 05/11/2026)
 
 - `webhook_events`: thêm `processed_at timestamptz`; ghi chú dòng NULL chỉ ghi bằng hàm DEFINER.
 - `channels`/`posts`/`comments`: thêm `updated_at`; ghi `unique (workspace_id, id)` và khóa ngoại ghép ở cột "Ghi chú".

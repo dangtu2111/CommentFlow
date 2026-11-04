@@ -4,5 +4,13 @@
  * để mã quản trị DB không lọt vào bundle (và để Next.js đóng gói được).
  */
 export { and, asc, desc, eq, gt, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+export {
+  type ChannelTokenRow,
+  type CreateChannelInput,
+  clearChannelToken,
+  createChannel,
+  readChannelToken,
+  setChannelToken,
+} from './channel-tokens';
 export { createDb, type Database, type FlowDb } from './client';
 export { schema } from './schema';

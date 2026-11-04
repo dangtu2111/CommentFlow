@@ -20,6 +20,7 @@ function fakeDb(parts: {
   actorPolicies?: Row[];
   actorForbidden?: Row[];
   noDelete?: Row[];
+  tokenFunctions?: Row[];
   sensitive?: Row[];
   usersColumns?: Row[];
   adminGuard?: Row[];
@@ -67,6 +68,7 @@ function fakeDb(parts: {
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       if (text.includes('/* definer-functions */')) return { rows: parts.definerFunctions ?? [] };
+      if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
       if (text.includes('/* no-delete */')) return { rows: parts.noDelete ?? [] };
       if (text.includes('/* actor-forbidden */')) return { rows: parts.actorForbidden ?? [] };
       if (text.includes('/* actor-policies */')) return { rows: parts.actorPolicies ?? [] };
@@ -713,6 +715,20 @@ describe('checkRls: bảng không được DELETE', () => {
     expect(v).toContainEqual({
       subject: 'cf.comments',
       message: expect.stringContaining('không được có quyền DELETE'),
+    });
+  });
+});
+
+describe('checkRls: hàm token Page', () => {
+  it('báo khi hàm token thiếu/mở rộng quyền', async () => {
+    const v = await checkRls(
+      fakeDb({
+        tokenFunctions: [{ name: 'read_channel_token', problem: 'PUBLIC có quyền EXECUTE' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.read_channel_token',
+      message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
     });
   });
 });

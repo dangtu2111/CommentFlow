@@ -529,6 +529,47 @@ async function checkNoDelete(db: Queryable, violations: RlsViolation[]): Promise
   }
 }
 
+/**
+ * Bốn hàm token Page (0020): phải tồn tại, PUBLIC không EXECUTE, cf_app có EXECUTE; `read_channel_token` chỉ cho đường
+ * hệ thống (thân hàm có is_system_context, KHÔNG có is_workspace_*); mọi hàm giới hạn theo workspace hiện tại.
+ */
+const TOKEN_FUNCTIONS = [
+  'create_channel',
+  'set_channel_token',
+  'clear_channel_token',
+  'read_channel_token',
+];
+
+async function checkTokenFunctions(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const names = TOKEN_FUNCTIONS.map((n) => `'${n}'`).join(', ');
+  const found = await db.query(`/* token-functions */
+    SELECT w.n AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN p.prosrc NOT LIKE '%current_workspace_id()%' THEN 'không giới hạn theo workspace hiện tại'
+        WHEN w.n = 'read_channel_token' AND (p.prosrc NOT LIKE '%is_system_context()%' OR p.prosrc LIKE '%is_workspace_%')
+          THEN 'read_channel_token phải chỉ cho đường hệ thống (is_system_context), không mở cho Owner/thành viên'
+        WHEN w.n <> 'read_channel_token' AND p.prosrc NOT LIKE '%is_workspace_owner()%' THEN 'thiếu kiểm Owner/hệ thống'
+      END AS problem
+    FROM (VALUES ${TOKEN_FUNCTIONS.map((n) => `('${n}')`).join(', ')}) AS w(n)
+    LEFT JOIN pg_proc p ON p.pronamespace = 'cf'::regnamespace AND p.proname = w.n
+    WHERE w.n IN (${names}) AND (
+      p.oid IS NULL
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%current_workspace_id()%'
+      OR (w.n = 'read_channel_token' AND (p.prosrc NOT LIKE '%is_system_context()%' OR p.prosrc LIKE '%is_workspace_%'))
+      OR (w.n <> 'read_channel_token' AND p.prosrc NOT LIKE '%is_workspace_owner()%'))`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: `cf.${String(row.name)}`,
+      message: `hàm token Page: ${String(row.problem)}`,
+    });
+  }
+}
+
 export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   const violations: RlsViolation[] = [];
 
@@ -702,6 +743,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkDefinerFunctions(db, violations);
   await checkActorPolicies(db, violations);
   await checkNoDelete(db, violations);
+  await checkTokenFunctions(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

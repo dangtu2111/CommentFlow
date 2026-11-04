@@ -279,9 +279,10 @@ describe('posts và comments', () => {
         `system ${set}`,
       ).toBe(1);
     }
-    await admin.query(
-      "UPDATE cf.comments SET text = 'giá bao nhiêu?', text_normalized = NULL, lang = NULL, author_name = NULL, attachments = '[]', is_own = false, is_impersonation_suspected = false WHERE id = $1",
-      [comment],
+    // Khôi phục qua đường hệ thống (trigger áp cho mọi ngữ cảnh không phải hệ thống, kể cả admin không đặt app.ctx).
+    await run(
+      'system',
+      `UPDATE cf.comments SET text = 'giá bao nhiêu?', text_normalized = NULL, lang = NULL, author_name = NULL, attachments = '[]', is_own = false, is_impersonation_suspected = false WHERE id = '${comment}'`,
     );
   });
 

@@ -12,6 +12,7 @@
     "test:db": "vitest run --config vitest.int.config.ts"
   },
   "dependencies": {
+    "@flow/connectors": "workspace:*",
     "@flow/db": "workspace:*",
     "@flow/shared": "workspace:*",
     "pg-boss": "12.38.0",
