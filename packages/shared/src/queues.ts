@@ -9,3 +9,13 @@ export const ingestJobSchema = z.object({
   eventId: z.uuid(),
 });
 export type IngestJob = z.infer<typeof ingestJobSchema>;
+
+/** Hàng đợi gửi trả lời (docs/09 §9: `send`, thử lại 3 lần, backoff mũ). */
+export const SEND_QUEUE = 'send';
+
+/** Dữ liệu job `send`: chỉ id (nội dung câu trả lời nằm ở `cf.comment_replies`, không đi qua hàng đợi). */
+export const sendJobSchema = z.object({
+  workspaceId: z.uuid(),
+  replyId: z.uuid(),
+});
+export type SendJob = z.infer<typeof sendJobSchema>;

@@ -315,6 +315,34 @@ describe('check-rls', () => {
     );
   });
 
+  it('FB-REPLY: bắt được khi cf_app có INSERT/UPDATE nội dung trên hàng đợi gửi hoặc policy hệ thống bị nới', async () => {
+    const ins = await violationsAfter('GRANT INSERT ON cf.comment_replies TO cf_app');
+    expect(ins).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.comment_replies',
+        message: expect.stringContaining('INSERT'),
+      }),
+    );
+    const col = await violationsAfter('GRANT UPDATE (text) ON cf.comment_replies TO cf_app');
+    expect(col).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.comment_replies',
+        message: expect.stringContaining('text'),
+      }),
+    );
+    const pol = await violationsAfter(
+      'DROP POLICY comment_replies_update ON cf.comment_replies; CREATE POLICY comment_replies_update ON cf.comment_replies FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(pol).toContainEqual(expect.objectContaining({ subject: 'cf.comment_replies' }));
+    const del = await violationsAfter('GRANT DELETE ON cf.comment_replies TO cf_app');
+    expect(del).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.comment_replies',
+        message: expect.stringContaining('DELETE'),
+      }),
+    );
+  });
+
   it('CH-SCHEMA: DELETE vẫn bị bắt dù kèm một policy DELETE theo workspace', async () => {
     const v = await violationsAfter(
       'GRANT DELETE ON cf.channels TO cf_app; CREATE POLICY channels_delete ON cf.channels FOR DELETE USING (workspace_id = (SELECT core.current_workspace_id()))',

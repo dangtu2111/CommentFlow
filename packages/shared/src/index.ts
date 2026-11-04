@@ -11,4 +11,11 @@ export {
 } from './i18n/locales';
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
 export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
-export { INGEST_QUEUE, type IngestJob, ingestJobSchema } from './queues';
+export {
+  INGEST_QUEUE,
+  type IngestJob,
+  ingestJobSchema,
+  SEND_QUEUE,
+  type SendJob,
+  sendJobSchema,
+} from './queues';

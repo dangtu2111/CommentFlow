@@ -1,12 +1,14 @@
+import { createConnectorRegistry } from '@flow/connectors';
 import { createDb } from '@flow/db';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
 import { startHealthServer } from './health';
 import { createIngestHandler } from './jobs/ingest';
 import { createPingHandler } from './jobs/ping';
+import { createSendHandler } from './jobs/send';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
-import { INGEST_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
+import { INGEST_QUEUE, SEND_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -29,6 +31,13 @@ async function main(): Promise<void> {
     INGEST_QUEUE,
     { batchSize: 1, localConcurrency: 10 },
     createIngestHandler({ db, logger }),
+  );
+  // docs/09 §9: send — tối đa 3 job đồng thời; `sendRecheck` + khóa theo yêu cầu chống gửi trùng. Sổ connector RỖNG cho tới
+  // khi có connector Facebook thật (`feat/fb-connector`): thiếu connector → yêu cầu ghi `connector_unavailable`.
+  await boss.work(
+    SEND_QUEUE,
+    { batchSize: 1, localConcurrency: 3 },
+    createSendHandler({ db, registry: createConnectorRegistry([]), logger }),
   );
   ready = true;
   logger.info({ port: config.port }, 'worker đã khởi động');
