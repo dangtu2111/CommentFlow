@@ -134,6 +134,13 @@
       "when": 1793754318615,
       "tag": "0018_post_verify_tighten",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793759765634,
+      "tag": "0019_ch_schema",
+      "breakpoints": true
     }
   ]
 }

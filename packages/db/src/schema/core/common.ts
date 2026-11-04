@@ -10,6 +10,13 @@ export const citext = customType<{ data: string }>({
   },
 });
 
+/** Cột nhị phân (token mã hóa AES-GCM: `*_enc bytea`, docs/10 §1). */
+export const bytea = customType<{ data: Buffer }>({
+  dataType() {
+    return 'bytea';
+  },
+});
+
 export const timestamptz = (name: string) => timestamp(name, { withTimezone: true });
 
 /** Cặp cột created_at / updated_at theo quy ước docs/10 §1. */

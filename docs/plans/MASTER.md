@@ -13,7 +13,7 @@
 
 1. `MEMBER-DIRECT-ADD` — ✅ xong (PR #13)
 2. `CONNECTOR-IFACE` — ✅ xong (giao diện connector chung + khai báo khả năng, FR-016)
-3. `CH-SCHEMA` — bảng `channels`/`posts`/`comments`/`webhook_events` + RLS
+3. `CH-SCHEMA` — ✅ xong (bảng + RLS, ADR 007)
 4. `WH-INGEST` — webhook (xác minh chữ ký) → job `ingest`, chống trùng, bỏ bình luận của chính Page
 5. `INBOX-LIST` — trang Bình luận (tab, lọc, tìm)
 
@@ -77,7 +77,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | CONNECTOR-IFACE | FR-016 (connector khai báo cửa sổ + hành động được phép; `12` §9) | — | — | — | không | ✅ |
-| CH-SCHEMA | FR-010 (bảng `channels`, `reply_language`), FR-021 (`webhook_events`), `posts`, `comments` + RLS | — | CONNECTOR-IFACE | S+DB | không | ⏳ |
+| CH-SCHEMA | FR-010 (bảng `channels`, `reply_language`), FR-021 (`webhook_events`), `posts`, `comments` + RLS | — | CONNECTOR-IFACE | S+DB | không | ✅ |
 | TOKEN-ENC | FR-010 (mã hóa Page token, 13 §5; khóa theo ADR) | US-002 | CH-SCHEMA | S | không | ⏳ |
 | WH-INGEST | FR-020 (chữ ký → job `ingest` → 200), FR-021 (chống trùng `(channel_id, external_comment_id)`) | UF-2 | CH-SCHEMA | S | không (fixture đã ghi) | ⏳ |
 | INGEST-SKIP-OWN | FR-022 (bỏ bình luận của chính Page, gồm câu AI gửi) | UF-2 | WH-INGEST | — | không | ⏳ |

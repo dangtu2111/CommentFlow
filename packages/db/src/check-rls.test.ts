@@ -19,6 +19,7 @@ function fakeDb(parts: {
   lastOwnerTrigger?: Row[];
   actorPolicies?: Row[];
   actorForbidden?: Row[];
+  noDelete?: Row[];
   sensitive?: Row[];
   usersColumns?: Row[];
   adminGuard?: Row[];
@@ -66,6 +67,7 @@ function fakeDb(parts: {
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       if (text.includes('/* definer-functions */')) return { rows: parts.definerFunctions ?? [] };
+      if (text.includes('/* no-delete */')) return { rows: parts.noDelete ?? [] };
       if (text.includes('/* actor-forbidden */')) return { rows: parts.actorForbidden ?? [] };
       if (text.includes('/* actor-policies */')) return { rows: parts.actorPolicies ?? [] };
       if (text.includes('/* last-owner-trigger */')) return { rows: parts.lastOwnerTrigger ?? [] };
@@ -696,11 +698,21 @@ describe('checkRls: hàm SECURITY DEFINER và trigger Owner cuối', () => {
 describe('checkRls: policy người gọi (chỉ-Owner)', () => {
   it('báo khi thiếu policy chỉ-Owner', async () => {
     const v = await checkRls(
-      fakeDb({ actorPolicies: [{ tbl: 'members', cmd: 'a', marker: 'is_workspace_owner' }] }),
+      fakeDb({ actorPolicies: [{ tbl: 'core.members', cmd: 'a', marker: 'is_workspace_owner' }] }),
     );
     expect(v).toContainEqual({
       subject: 'core.members',
       message: expect.stringContaining('policy "người gọi" (is_workspace_owner)'),
+    });
+  });
+});
+
+describe('checkRls: bảng không được DELETE', () => {
+  it('báo khi cf_app có quyền DELETE trên bảng cấm', async () => {
+    const v = await checkRls(fakeDb({ noDelete: [{ tbl: 'cf.comments' }] }));
+    expect(v).toContainEqual({
+      subject: 'cf.comments',
+      message: expect.stringContaining('không được có quyền DELETE'),
     });
   });
 });

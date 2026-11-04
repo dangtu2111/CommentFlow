@@ -31,6 +31,13 @@ export type FlowDb = {
    */
   withActor<T>(workspaceId: string, userId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
   /**
+   * Đường HỆ THỐNG của một workspace (job worker: ingest, polling, xử lý hàng đợi): đặt `app.workspace_id` + `app.ctx = 'system'`
+   * và KHÔNG có người dùng. Policy ghi của `channels` (cột nền tảng), `posts`, `comments` (INSERT), `webhook_events` đòi
+   * `core.is_system_context()`: `withWorkspace()` trần (không ctx) KHÔNG ghi được — quên `withActor` ở đường người dùng thì bị
+   * từ chối chứ không được nâng quyền. Chỉ worker/job được gọi; không dùng ở route web/Server Action.
+   */
+  withJob<T>(workspaceId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
+  /**
    * Giao dịch chỉ có ngữ cảnh người dùng (liệt kê workspace của họ); không có workspace.
    * Chỉ ĐỌC dòng của mình ở users/sessions/accounts (cột không nhạy cảm) và chỉ GHI users.name/image/locale;
    * đổi mật khẩu, email, xác minh, 2FA, phiên chỉ qua luồng Better Auth (`AuthDb`, role cf_auth).
@@ -113,6 +120,16 @@ export function createDb(options: { connectionString: string; max?: number }): F
           ...NO_CONTEXT,
           'app.workspace_id': assertUuid(workspaceId, 'workspaceId'),
           'app.user_id': assertUuid(userId, 'userId'),
+        },
+        fn,
+      ),
+    withJob: async (workspaceId, fn) =>
+      runInTransaction(
+        pool,
+        {
+          ...NO_CONTEXT,
+          'app.workspace_id': assertUuid(workspaceId, 'workspaceId'),
+          'app.ctx': 'system',
         },
         fn,
       ),

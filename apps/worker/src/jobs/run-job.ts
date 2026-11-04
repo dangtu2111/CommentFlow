@@ -38,7 +38,8 @@ export function workspaceJob<S extends z.ZodType<{ workspaceId: string }>>(optio
   return async (jobs) => {
     for (const job of jobs) {
       const payload = parsePayload(options.schema, job.data);
-      await options.db.withWorkspace(payload.workspaceId, (tx) =>
+      // withJob: đường hệ thống của workspace (policy ghi kênh/bình luận/webhook đòi ngữ cảnh hệ thống, ADR 007).
+      await options.db.withJob(payload.workspaceId, (tx) =>
         options.handler({ tx, payload, workspaceId: payload.workspaceId, jobId: job.id }),
       );
     }
