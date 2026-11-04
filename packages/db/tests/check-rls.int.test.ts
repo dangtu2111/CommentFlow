@@ -232,6 +232,70 @@ describe('check-rls', () => {
     expect(sel).toContainEqual(expect.objectContaining({ subject: 'cf.comments' }));
   });
 
+  it('TOKEN-ENC: bắt được khi read_channel_token mở cho Owner (thêm is_workspace_owner) hoặc PUBLIC có EXECUTE', async () => {
+    const owner = await violationsAfter(
+      'CREATE OR REPLACE FUNCTION cf.read_channel_token(p_channel_id uuid) RETURNS TABLE (ciphertext bytea, key_version integer) LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, core, cf, pg_temp AS $$ SELECT access_token_enc, key_version FROM cf.channels WHERE id = p_channel_id AND workspace_id = core.current_workspace_id() AND (core.is_system_context() OR core.is_workspace_owner()) $$',
+    );
+    expect(owner).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.read_channel_token',
+        message: expect.stringContaining('chỉ cho đường hệ thống'),
+      }),
+    );
+    const pub = await violationsAfter(
+      'GRANT EXECUTE ON FUNCTION cf.clear_channel_token(uuid) TO PUBLIC',
+    );
+    expect(pub).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.clear_channel_token',
+        message: expect.stringContaining('PUBLIC'),
+      }),
+    );
+  });
+
+  it('TOKEN-ENC: bắt được khi tắt trigger giới hạn cột, nới thân is_system_context, cấp key_version/INSERT kênh, nới policy comments', async () => {
+    const trg = await violationsAfter(
+      'ALTER TABLE cf.channels DISABLE TRIGGER channels_guard_user_update',
+    );
+    expect(trg).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.channels',
+        message: expect.stringContaining('channels_guard_user_update'),
+      }),
+    );
+    const trg2 = await violationsAfter('DROP TRIGGER comments_guard_user_update ON cf.comments');
+    expect(trg2).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.comments',
+        message: expect.stringContaining('comments_guard_user_update'),
+      }),
+    );
+    const fn = await violationsAfter(
+      'CREATE OR REPLACE FUNCTION core.is_system_context() RETURNS boolean LANGUAGE sql STABLE SET search_path = pg_catalog, core, pg_temp AS $$ SELECT core.current_user_id() IS NULL $$',
+    );
+    expect(fn).toContainEqual(expect.objectContaining({ subject: 'core.is_system_context' }));
+    const kv = await violationsAfter('GRANT UPDATE (key_version) ON cf.channels TO cf_app');
+    expect(kv).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.channels',
+        message: expect.stringContaining('key_version'),
+      }),
+    );
+    const ins = await violationsAfter(
+      'GRANT INSERT (workspace_id, platform, external_id, name) ON cf.channels TO cf_app',
+    );
+    expect(ins).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.channels',
+        message: expect.stringContaining('INSERT'),
+      }),
+    );
+    const pol = await violationsAfter(
+      'DROP POLICY comments_update ON cf.comments; CREATE POLICY comments_update ON cf.comments FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()) AND ((SELECT core.current_user_id()) IS NULL OR (SELECT core.is_workspace_member())))',
+    );
+    expect(pol).toContainEqual(expect.objectContaining({ subject: 'cf.comments' }));
+  });
+
   it('CH-SCHEMA: DELETE vẫn bị bắt dù kèm một policy DELETE theo workspace', async () => {
     const v = await violationsAfter(
       'GRANT DELETE ON cf.channels TO cf_app; CREATE POLICY channels_delete ON cf.channels FOR DELETE USING (workspace_id = (SELECT core.current_workspace_id()))',

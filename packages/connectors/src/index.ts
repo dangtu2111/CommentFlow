@@ -11,6 +11,12 @@ export {
   evaluateAction,
   textLengthOf,
 } from './capabilities';
+export {
+  type ChannelTokenProviderOptions,
+  type ChannelTokenReader,
+  createChannelTokenProvider,
+  type StoredChannelToken,
+} from './channel-token-provider';
 export { checkConnectorContract } from './contract';
 export { DECLARED_CAPABILITIES } from './declarations';
 export {
@@ -20,6 +26,17 @@ export {
   type PlatformErrorCode,
 } from './errors';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
+export {
+  createTokenCipher,
+  type EncryptedToken,
+  type ParsedTokenKeys,
+  parseTokenKeys,
+  TOKEN_KEY_BYTES,
+  type TokenCipher,
+  TokenConfigError,
+  type TokenContext,
+  TokenDecryptError,
+} from './token-cipher';
 export {
   type ChannelRef,
   type ConversationRef,

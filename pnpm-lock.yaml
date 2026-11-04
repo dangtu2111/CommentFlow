@@ -72,6 +72,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@flow/connectors':
+        specifier: workspace:*
+        version: link:../../packages/connectors
       '@flow/db':
         specifier: workspace:*
         version: link:../../packages/db

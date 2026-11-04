@@ -237,6 +237,9 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.channels', 'access_token_enc', 'SELECT'],
   ['cf_app', 'cf.channels', 'access_token_enc', 'INSERT'],
   ['cf_app', 'cf.channels', 'access_token_enc', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'key_version', 'SELECT'],
+  ['cf_app', 'cf.channels', 'key_version', 'INSERT'],
+  ['cf_app', 'cf.channels', 'key_version', 'UPDATE'],
   ['cf_app', 'cf.channels', 'send_suspended_until', 'UPDATE'],
   ['cf_app', 'cf.channels', 'send_suspended_until', 'INSERT'],
   ['cf_app', 'cf.channels', 'send_suspended_reason', 'UPDATE'],
@@ -389,6 +392,40 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
       message: `hàm SECURITY DEFINER không an toàn: ${String(row.problem)}`,
     });
   }
+  // Giới hạn cột ở đường người dùng (channels/comments) dựa hoàn toàn vào hai trigger này (0019): phải tồn tại và đang bật.
+  const guards = await db.query(`/* column-guard-triggers */
+    SELECT v.tbl AS name, v.trg AS trg FROM (VALUES
+      ('cf.channels', 'channels_guard_user_update'), ('cf.comments', 'comments_guard_user_update')) AS v(tbl, trg)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_trigger t
+      WHERE t.tgrelid = v.tbl::regclass AND t.tgname = v.trg AND NOT t.tgisinternal AND t.tgenabled = 'O')`);
+  for (const row of guards.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `thiếu hoặc tắt trigger ${String(row.trg)} (giới hạn cột của đường người dùng)`,
+    });
+  }
+  // Mọi quyền "hệ thống" dựa vào thân core.is_system_context(): phải đòi app.ctx = 'system' VÀ không có người dùng.
+  const systemFn = await db.query(`/* is-system-context-body */
+    SELECT 'core.is_system_context' AS name WHERE NOT EXISTS (
+      SELECT 1 FROM pg_proc p WHERE p.pronamespace = 'core'::regnamespace AND p.proname = 'is_system_context'
+        AND p.prosrc LIKE '%app.ctx%' AND p.prosrc LIKE '%''system''%' AND p.prosrc LIKE '%current_user_id() IS NULL%')`);
+  for (const row of systemFn.rows) {
+    violations.push({
+      subject: String(row.name),
+      message:
+        "thân hàm phải đòi app.ctx = 'system' và current_user_id() IS NULL (mọi quyền hệ thống dựa vào đây)",
+    });
+  }
+  // cf.channels: cf_app không có INSERT ở bất kỳ cột nào (tạo kênh chỉ qua cf.create_channel).
+  const channelInsert = await db.query(`/* channels-no-insert */
+    SELECT 'cf.channels' AS name WHERE has_any_column_privilege('${APP_ROLE}', 'cf.channels', 'INSERT')`);
+  for (const row of channelInsert.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `${APP_ROLE} không được INSERT (tạo kênh chỉ qua cf.create_channel)`,
+    });
+  }
   const trigger = await db.query(`/* last-owner-trigger */
     SELECT 'core.members' AS name WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t
@@ -453,6 +490,7 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.posts', 'a', 'IS NULL'],
   ['cf.posts', 'w', 'IS NULL'],
   ['cf.comments', 'a', 'IS NULL'],
+  ['cf.comments', 'w', 'IS NULL'],
   ['cf.webhook_events', 'a', 'IS NULL'],
   ['cf.webhook_events', 'w', 'IS NULL'],
   ['cf.webhook_events', 'r', 'IS NULL'],
@@ -525,6 +563,47 @@ async function checkNoDelete(db: Queryable, violations: RlsViolation[]): Promise
     violations.push({
       subject: String(row.tbl),
       message: `${APP_ROLE} không được có quyền DELETE (xóa mềm bằng status; xóa thật do job/role bảo trì)`,
+    });
+  }
+}
+
+/**
+ * Bốn hàm token Page (0020): phải tồn tại, PUBLIC không EXECUTE, cf_app có EXECUTE; `read_channel_token` chỉ cho đường
+ * hệ thống (thân hàm có is_system_context, KHÔNG có is_workspace_*); mọi hàm giới hạn theo workspace hiện tại.
+ */
+const TOKEN_FUNCTIONS = [
+  'create_channel',
+  'set_channel_token',
+  'clear_channel_token',
+  'read_channel_token',
+];
+
+async function checkTokenFunctions(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const names = TOKEN_FUNCTIONS.map((n) => `'${n}'`).join(', ');
+  const found = await db.query(`/* token-functions */
+    SELECT w.n AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN p.prosrc NOT LIKE '%current_workspace_id()%' THEN 'không giới hạn theo workspace hiện tại'
+        WHEN w.n = 'read_channel_token' AND (p.prosrc NOT LIKE '%is_system_context()%' OR p.prosrc LIKE '%is_workspace_%')
+          THEN 'read_channel_token phải chỉ cho đường hệ thống (is_system_context), không mở cho Owner/thành viên'
+        WHEN w.n <> 'read_channel_token' AND p.prosrc NOT LIKE '%is_workspace_owner()%' THEN 'thiếu kiểm Owner/hệ thống'
+      END AS problem
+    FROM (VALUES ${TOKEN_FUNCTIONS.map((n) => `('${n}')`).join(', ')}) AS w(n)
+    LEFT JOIN pg_proc p ON p.pronamespace = 'cf'::regnamespace AND p.proname = w.n
+    WHERE w.n IN (${names}) AND (
+      p.oid IS NULL
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%current_workspace_id()%'
+      OR (w.n = 'read_channel_token' AND (p.prosrc NOT LIKE '%is_system_context()%' OR p.prosrc LIKE '%is_workspace_%'))
+      OR (w.n <> 'read_channel_token' AND p.prosrc NOT LIKE '%is_workspace_owner()%'))`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: `cf.${String(row.name)}`,
+      message: `hàm token Page: ${String(row.problem)}`,
     });
   }
 }
@@ -702,6 +781,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkDefinerFunctions(db, violations);
   await checkActorPolicies(db, violations);
   await checkNoDelete(db, violations);
+  await checkTokenFunctions(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

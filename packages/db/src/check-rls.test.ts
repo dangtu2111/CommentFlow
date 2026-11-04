@@ -20,6 +20,10 @@ function fakeDb(parts: {
   actorPolicies?: Row[];
   actorForbidden?: Row[];
   noDelete?: Row[];
+  tokenFunctions?: Row[];
+  guards?: Row[];
+  systemFn?: Row[];
+  channelInsert?: Row[];
   sensitive?: Row[];
   usersColumns?: Row[];
   adminGuard?: Row[];
@@ -67,6 +71,10 @@ function fakeDb(parts: {
       if (text.includes('/* auth-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* auth-privileges */')) return { rows: parts.authPrivileges ?? [] };
       if (text.includes('/* definer-functions */')) return { rows: parts.definerFunctions ?? [] };
+      if (text.includes('/* column-guard-triggers */')) return { rows: parts.guards ?? [] };
+      if (text.includes('/* is-system-context-body */')) return { rows: parts.systemFn ?? [] };
+      if (text.includes('/* channels-no-insert */')) return { rows: parts.channelInsert ?? [] };
+      if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
       if (text.includes('/* no-delete */')) return { rows: parts.noDelete ?? [] };
       if (text.includes('/* actor-forbidden */')) return { rows: parts.actorForbidden ?? [] };
       if (text.includes('/* actor-policies */')) return { rows: parts.actorPolicies ?? [] };
@@ -713,6 +721,44 @@ describe('checkRls: bảng không được DELETE', () => {
     expect(v).toContainEqual({
       subject: 'cf.comments',
       message: expect.stringContaining('không được có quyền DELETE'),
+    });
+  });
+});
+
+describe('checkRls: hàm token Page', () => {
+  it('báo khi hàm token thiếu/mở rộng quyền', async () => {
+    const v = await checkRls(
+      fakeDb({
+        tokenFunctions: [{ name: 'read_channel_token', problem: 'PUBLIC có quyền EXECUTE' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.read_channel_token',
+      message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
+    });
+  });
+});
+
+describe('checkRls: trigger giới hạn cột, thân is_system_context, INSERT kênh', () => {
+  it('báo từng loại vi phạm', async () => {
+    const v = await checkRls(
+      fakeDb({
+        guards: [{ name: 'cf.comments', trg: 'comments_guard_user_update' }],
+        systemFn: [{ name: 'core.is_system_context' }],
+        channelInsert: [{ name: 'cf.channels' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.comments',
+      message: expect.stringContaining('comments_guard_user_update'),
+    });
+    expect(v).toContainEqual({
+      subject: 'core.is_system_context',
+      message: expect.stringContaining("app.ctx = 'system'"),
+    });
+    expect(v).toContainEqual({
+      subject: 'cf.channels',
+      message: expect.stringContaining('INSERT'),
     });
   });
 });
