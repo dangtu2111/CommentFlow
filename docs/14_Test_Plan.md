@@ -69,7 +69,7 @@
 - Lưu dữ liệu 12 tháng (FR-126): job dọn dẹp xóa đúng dữ liệu quá hạn, không xóa nhật ký kiểm toán cần giữ.
 - Đối soát Shopify: fixture có giá lệch, sản phẩm bị xóa, webhook bị gỡ → cập nhật đúng, `archived`, đăng ký lại webhook, ghi `reconcile_diffs`.
 
-Coverage mục tiêu ≥ 80% cho `packages/ai` (gate, guard, rules) và `packages/shared`.
+Coverage mục tiêu ≥ 85% cho `packages/ai`, `packages/shared`, `packages/saas-core` (đã nâng từ 80% và thêm saas-core; ngưỡng thực thi ở CI xem §3 mục 8).
 
 ## 3. Test cô lập dữ liệu (bắt buộc, chặn merge)
 
@@ -78,6 +78,11 @@ Coverage mục tiêu ≥ 80% cho `packages/ai` (gate, guard, rules) và `package
 3. Job worker với `app.workspace_id = A` không đọc được dòng của B.
 4. Cache: cùng câu hỏi ở A và B → khóa cache khác nhau.
 5. Ranh giới saas-core: `dependency-cruiser` chặn `packages/saas-core` import từ code sản phẩm (chạy trong CI).
+6. Mọi trang/route/Server Action dưới `/app` gọi `requireAppUser()` (test quét `require-app-user.scan.test.ts`); thao tác ghi chỉ-Owner đi qua `withActor` và `check-rls` bắt hồi quy policy (ADR 005 §3).
+7. **Truy vết FR → test** (`pnpm test:trace`, chạy ở CI): mỗi FR trạng thái Xong trong `gap-matrix.md` phải có ≥ 1 test mang mã FR trong tên (`describe('FR-xxx …')`); FR thiếu truy vết nằm trong `docs/testing/trace-baseline.json` (nợ, chỉ được giảm); FR mới thiếu truy vết → CI đỏ.
+8. **Ngưỡng coverage** (`pnpm test:coverage`, chạy ở CI): đo trên test đơn vị, ngưỡng đặt bằng mức đo được làm tròn xuống cho `packages/ai`, `packages/shared`, `packages/saas-core` và chỉ được nâng (ratchet); **mục tiêu** ≥ 85% dòng và nhánh cho ba gói này, ≥ 95% nhánh cho module logic quy tắc (cổng tự gửi, `sendRecheck`, `decideAction`, guard, hạn mức, che PII…). Phần chênh so với mục tiêu ghi ở `gap-matrix.md` `TEST-COVERAGE-GAP`; đo test tích hợp (`saas-core`) bằng job `database` là việc sau.
+9. **Mutation testing** (Stryker): chạy trước khi merge nhánh chạm cổng tự gửi, `sendRecheck`, guard số tiền, `decideAction`; mục tiêu ≥ 80% mutant bị diệt. Chưa cài công cụ — thêm khi làm các module đó (GĐ2/GĐ4).
+10. Chuẩn chi tiết (tầng test, TDD, property-based, cô lập, flaky là lỗi): `docs/testing/STANDARD.md`.
 
 ## 4. Đánh giá AI (promptfoo)
 

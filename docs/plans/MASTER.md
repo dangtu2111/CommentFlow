@@ -17,7 +17,7 @@
 4. `WH-INGEST` — webhook (xác minh chữ ký) → job `ingest`, chống trùng, bỏ bình luận của chính Page
 5. `INBOX-LIST` — trang Bình luận (tab, lọc, tìm)
 
-Kèm theo: xin Meta App/Page thử sớm (`FB-OAUTH` ⛔) và chạy E2E cổng 0 lần đầu — chủ dự án.
+Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000/...`, App ID/Secret ở `.env.local`; hướng dẫn `docs/CAN_BAN_CUNG_CAP.md`) nên `FB-OAUTH` không còn chờ tên miền; vẫn cần **Page thử** khi kiểm tra tay các tính năng gọi Graph API. Chạy E2E cổng 0 lần đầu — chủ dự án.
 
 ---
 
@@ -83,7 +83,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | INGEST-SKIP-OWN | FR-022 (bỏ bình luận của chính Page, gồm câu AI gửi) | UF-2 | WH-INGEST | — | không | ⏳ |
 | INBOX-LIST | FR-040 (tab trạng thái, lọc, tìm, sắp xếp) | US-010, UF-3 | CH-SCHEMA | — | không | ⏳ |
 | INBOX-DETAIL-LOCK | FR-041 (khóa mềm `locked_until`, cảnh báo người thứ hai) | US-013 | INBOX-LIST | — | không | ⏳ |
-| FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Meta App + Page thử | ⛔ |
+| FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Page thử (Meta App dev đã có; redirect localhost; xem `docs/CAN_BAN_CUNG_CAP.md`) | ⏳ |
 | CH-STATUS-BANNER | FR-012 (connected / token_expired / disconnected; banner Kết nối lại) | US-002 | FB-OAUTH | — | không | ⏳ |
 | FB-BACKFILL | FR-011 (lấy bình luận cũ 3/7/30 ngày khi kết nối) | US-002 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
 | FB-REPLY | FR-042 (gửi trả lời tay; thành công/lỗi + lý do; timeout kiểm lại) | US-011, 016, UF-3 | FB-OAUTH, INBOX-DETAIL-LOCK | S (dùng token) | **có** — Page thử | ⛔ |
