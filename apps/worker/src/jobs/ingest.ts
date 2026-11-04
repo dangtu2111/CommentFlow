@@ -2,10 +2,11 @@ import { deserializeEvent } from '@flow/connectors';
 import { and, type Database, eq, type FlowDb, schema, sql } from '@flow/db';
 import { type IngestJob, ingestJobSchema } from '@flow/shared';
 import type { Logger } from '../logger';
+import { INGEST_RETRY_LIMIT } from '../queue/definitions';
 import { type BatchHandler, workspaceJob } from './run-job';
 
-/** Sau từng này lần lỗi sự kiện thành `dead` (khớp retryLimit của hàng đợi `ingest`, docs/09 §9). */
-export const MAX_INGEST_ATTEMPTS = 5;
+/** Sau từng này lần lỗi sự kiện thành `dead` = tổng số lần chạy tối đa của pg-boss (retryLimit + 1; docs/09 §9). */
+export const MAX_INGEST_ATTEMPTS = INGEST_RETRY_LIMIT + 1;
 
 const { webhookEvents, channels, posts, comments } = schema;
 
@@ -32,7 +33,11 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
     .select({ id: channels.id, status: channels.status })
     .from(channels)
     .where(
-      and(eq(channels.platform, 'facebook'), eq(channels.externalId, parsed.channelExternalId)),
+      and(
+        eq(channels.workspaceId, job.workspaceId),
+        eq(channels.platform, 'facebook'),
+        eq(channels.externalId, parsed.channelExternalId),
+      ),
     );
 
   if (channel?.status === 'connected' && parsed.kind === 'comment_created') {

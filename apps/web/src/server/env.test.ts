@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadServerEnv } from './env';
+import { loadServerEnv, loadWebhookEnv } from './env';
 
 const BASE = {
   APP_ENV: 'dev',
@@ -52,5 +52,37 @@ describe('loadServerEnv — nguồn IP (ADR 004 §2)', () => {
   it('thiếu REDIS_URL → lỗi nêu đúng tên biến (không in giá trị)', () => {
     const { REDIS_URL: _omit, ...withoutRedis } = BASE;
     expect(() => loadServerEnv(withoutRedis)).toThrow(/REDIS_URL/);
+  });
+});
+
+describe('FR-020 loadWebhookEnv — cấu hình endpoint webhook', () => {
+  const db = 'postgresql://cf_app:x@localhost:5432/db';
+
+  it('FR-020 thiếu META_* → undefined (endpoint trả 503), không ném lỗi', () => {
+    expect(loadWebhookEnv({ DATABASE_URL: db })).toEqual({
+      databaseUrl: db,
+      appSecret: undefined,
+      verifyToken: undefined,
+    });
+    expect(
+      loadWebhookEnv({ DATABASE_URL: db, META_APP_SECRET: '   ', META_WEBHOOK_VERIFY_TOKEN: '' }),
+    ).toMatchObject({ appSecret: undefined, verifyToken: undefined });
+  });
+
+  it('FR-020 đọc META_* hợp lệ (cắt khoảng trắng đầu/cuối)', () => {
+    const env = loadWebhookEnv({
+      DATABASE_URL: db,
+      META_APP_SECRET: ` ${'a'.repeat(32)} `,
+      META_WEBHOOK_VERIFY_TOKEN: 'v'.repeat(20),
+    });
+    expect(env.appSecret).toBe('a'.repeat(32));
+    expect(env.verifyToken).toBe('v'.repeat(20));
+  });
+
+  it('FR-020 khóa quá ngắn bị từ chối (tên biến, không lộ giá trị); thiếu DATABASE_URL → lỗi', () => {
+    expect(() => loadWebhookEnv({ DATABASE_URL: db, META_APP_SECRET: 'ngan' })).toThrow(
+      /META_APP_SECRET/,
+    );
+    expect(() => loadWebhookEnv({})).toThrow(/DATABASE_URL/);
   });
 });

@@ -417,13 +417,15 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
         "thân hàm phải đòi app.ctx = 'system' và current_user_id() IS NULL (mọi quyền hệ thống dựa vào đây)",
     });
   }
-  // cf.channels: cf_app không có INSERT ở bất kỳ cột nào (tạo kênh chỉ qua cf.create_channel).
-  const channelInsert = await db.query(`/* channels-no-insert */
-    SELECT 'cf.channels' AS name WHERE has_any_column_privilege('${APP_ROLE}', 'cf.channels', 'INSERT')`);
-  for (const row of channelInsert.rows) {
+  // cf_app không có INSERT ở bất kỳ cột nào: kênh chỉ tạo qua cf.create_channel, sự kiện webhook chỉ ghi qua
+  // cf.record_webhook_event (hàm DEFINER tự kiểm quyền/ngữ cảnh).
+  const noInsert = await db.query(`/* channels-no-insert */
+    SELECT v.t AS name FROM (VALUES ('cf.channels'), ('cf.webhook_events')) AS v(t)
+    WHERE has_any_column_privilege('${APP_ROLE}', v.t::regclass, 'INSERT')`);
+  for (const row of noInsert.rows) {
     violations.push({
       subject: String(row.name),
-      message: `${APP_ROLE} không được INSERT (tạo kênh chỉ qua cf.create_channel)`,
+      message: `${APP_ROLE} không được INSERT (ghi qua hàm DEFINER: cf.create_channel / cf.record_webhook_event)`,
     });
   }
   const trigger = await db.query(`/* last-owner-trigger */
@@ -463,7 +465,7 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.comments', 'a', 'is_system_context'],
   ['cf.comments', 'w', 'is_workspace_member'], // + is_system_context (trigger chặn sửa dữ liệu nền tảng ở đường người dùng)
   ['cf.comments', 'r', 'is_workspace_member'],
-  ['cf.webhook_events', 'a', 'is_system_context'],
+  // cf.webhook_events: KHÔNG có INSERT cho cf_app (đường ghi duy nhất = cf.record_webhook_event, migration 0022).
   ['cf.webhook_events', 'w', 'is_system_context'],
   ['cf.webhook_events', 'r', 'is_workspace_owner'],
 ];
@@ -472,9 +474,7 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
 const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marker: string]> = [
   ['core.members', 'a', 'is_workspace_owner'],
   // Chỉ-hệ thống: không được mở thêm nhánh thành viên/Owner/"không người dùng" trong CÙNG policy (OR)
-  ['cf.webhook_events', 'a', 'is_workspace_member'],
   ['cf.webhook_events', 'w', 'is_workspace_member'],
-  ['cf.webhook_events', 'a', 'is_workspace_owner'],
   ['cf.webhook_events', 'w', 'is_workspace_owner'],
   ['cf.posts', 'a', 'is_workspace_member'],
   ['cf.posts', 'w', 'is_workspace_member'],
@@ -491,7 +491,6 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.posts', 'w', 'IS NULL'],
   ['cf.comments', 'a', 'IS NULL'],
   ['cf.comments', 'w', 'IS NULL'],
-  ['cf.webhook_events', 'a', 'IS NULL'],
   ['cf.webhook_events', 'w', 'IS NULL'],
   ['cf.webhook_events', 'r', 'IS NULL'],
 ];

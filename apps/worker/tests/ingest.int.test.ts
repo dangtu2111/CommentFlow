@@ -4,7 +4,7 @@ import { createDb, type FlowDb, recordWebhookEvent } from '@flow/db';
 import pg from 'pg';
 import type { Job } from 'pg-boss';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createIngestHandler } from '../src/jobs/ingest';
+import { createIngestHandler, MAX_INGEST_ATTEMPTS } from '../src/jobs/ingest';
 
 /**
  * WH-INGEST (FR-020/021/022): job `ingest` — đọc sự kiện đã ghi, tạo bài + bình luận (idempotent), bỏ bình luận do chính
@@ -238,7 +238,7 @@ describe('FR-020 lỗi xử lý — failed/dead, không PII, để pg-boss thử
     expect(row.error).toBe('invalid_payload');
   });
 
-  it('lỗi DB khi lưu bình luận → sự kiện failed + attempts tăng + error là tên lỗi, rồi ném lại; không để lại bình luận dở dang; đủ 5 lần → dead', async () => {
+  it('lỗi DB khi lưu bình luận → sự kiện failed + attempts tăng + error là tên lỗi, rồi ném lại; không để lại bình luận dở dang; đủ lần tối đa → dead', async () => {
     const { pageId, channelId } = await seedPage();
     const eventId = await record(pageId, change(pageId));
     // Ép lỗi ở bước lưu bình luận: text vượt CHECK? không có → dùng trigger tạm của cf_owner.
@@ -254,9 +254,10 @@ describe('FR-020 lỗi xử lý — failed/dead, không PII, để pg-boss thử
       expect(row).toMatchObject({ status: 'failed', attempts: 1 });
       expect(String(row.error)).not.toContain('Khách');
       expect(await commentsOf(channelId)).toHaveLength(0);
-      for (let i = 0; i < 4; i++) await expect(handler()(job(ws, eventId))).rejects.toThrow();
+      for (let i = 0; i < MAX_INGEST_ATTEMPTS - 1; i++)
+        await expect(handler()(job(ws, eventId))).rejects.toThrow();
       row = await eventRow(eventId);
-      expect(row).toMatchObject({ status: 'dead', attempts: 5 });
+      expect(row).toMatchObject({ status: 'dead', attempts: MAX_INGEST_ATTEMPTS });
     } finally {
       await admin.query('DROP TRIGGER test_fail_comment ON cf.comments');
       await admin.query('DROP FUNCTION cf.test_fail_comment()');

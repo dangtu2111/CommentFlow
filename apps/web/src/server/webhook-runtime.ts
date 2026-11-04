@@ -1,6 +1,7 @@
 import { createDb, type FlowDb, recordWebhookEvent } from '@flow/db/runtime';
 import { INGEST_QUEUE } from '@flow/shared';
 import { PgBoss } from 'pg-boss';
+import { loadWebhookEnv } from './env';
 import { createMetaWebhookHandlers } from './meta-webhook';
 
 /**
@@ -14,8 +15,7 @@ const holder = globalThis as typeof globalThis & { __cfWebhookRuntime?: Runtime 
 
 function runtime(): Runtime {
   if (!holder.__cfWebhookRuntime) {
-    const url = process.env.DATABASE_URL;
-    if (!url) throw new Error('Thiếu DATABASE_URL');
+    const url = loadWebhookEnv().databaseUrl;
     const boss = new PgBoss({
       connectionString: url,
       schema: 'pgboss',
@@ -30,24 +30,27 @@ function runtime(): Runtime {
     boss.on('error', (error: Error) =>
       console.warn(JSON.stringify({ event: 'webhook_queue_error', reason: error.name })),
     );
-    holder.__cfWebhookRuntime = {
-      db: createDb({ connectionString: url, max: 3 }),
-      boss,
-      started: boss.start(),
-    };
+    const started = boss.start();
+    // Khởi động pg-boss lỗi (DB chập chờn, schema chưa cài) không được kẹt mãi: xóa bản lỗi để lần gọi sau tạo lại.
+    started.catch(() => {
+      holder.__cfWebhookRuntime = undefined;
+    });
+    holder.__cfWebhookRuntime = { db: createDb({ connectionString: url, max: 3 }), boss, started };
   }
   return holder.__cfWebhookRuntime;
 }
 
 export const metaWebhookHandlers = createMetaWebhookHandlers({
-  appSecret: () => process.env.META_APP_SECRET || undefined,
-  verifyToken: () => process.env.META_WEBHOOK_VERIFY_TOKEN || undefined,
+  // Đọc mỗi lần gọi (thiếu/ngắn → undefined → 503); cấu hình sai định dạng ném lỗi → 500, không chấp nhận gì.
+  appSecret: () => loadWebhookEnv().appSecret,
+  verifyToken: () => loadWebhookEnv().verifyToken,
   record: (input) => runtime().db.withSystem((tx) => recordWebhookEvent(tx, input)),
   enqueue: async (job) => {
     const { boss, started } = runtime();
     await started;
-    // singletonKey: cùng sự kiện không vào hàng đợi hai lần; retry theo định nghĩa hàng đợi (worker `queue:install`).
-    await boss.send(INGEST_QUEUE, job, { singletonKey: job.eventId });
+    // Có thể vào hàng đợi nhiều lần (Meta gửi lại, ghi lại sự kiện còn `received`): worker idempotent theo trạng thái
+    // sự kiện và ON CONFLICT nên không sao. Retry theo định nghĩa hàng đợi (`queue:install`).
+    await boss.send(INGEST_QUEUE, job);
   },
   warn: (event) => console.warn(JSON.stringify(event)),
 });

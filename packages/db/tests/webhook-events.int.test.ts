@@ -82,12 +82,23 @@ describe('FR-021 cf.record_webhook_event — ghi và rải sự kiện theo kên
     expect(rows).toEqual([{ workspace_id: wsA, status: 'received', payload: { comment: 'x' } }]);
   });
 
-  it('gửi lại CÙNG sự kiện → không dòng mới, không trả gì (idempotent)', async () => {
+  it('gửi lại CÙNG sự kiện: KHÔNG thêm dòng; còn chưa xong (received/failed) thì trả lại để enqueue lại; done/dead thì không', async () => {
     const externalId = page();
     await seedChannel(wsA, externalId);
     const h = hash();
-    expect(await record(externalId, h)).toHaveLength(1);
-    expect(await record(externalId, h)).toHaveLength(0);
+    const first = await record(externalId, h);
+    expect(first).toHaveLength(1);
+    // Meta gửi lại khi bước enqueue từng lỗi → vẫn nhận lại dòng chưa xong
+    expect(await record(externalId, h)).toEqual(first);
+    await admin.query("UPDATE cf.webhook_events SET status = 'failed' WHERE event_hash = $1", [h]);
+    expect(await record(externalId, h)).toEqual(first);
+    for (const status of ['done', 'dead']) {
+      await admin.query('UPDATE cf.webhook_events SET status = $2 WHERE event_hash = $1', [
+        h,
+        status,
+      ]);
+      expect(await record(externalId, h), status).toHaveLength(0);
+    }
     expect(await rowsOf(h)).toHaveLength(1);
   });
 
@@ -98,6 +109,8 @@ describe('FR-021 cf.record_webhook_event — ghi và rải sự kiện theo kên
     const h = hash();
     const first = await record(externalId, h);
     expect(new Set(first.map((r) => r.workspaceId))).toEqual(new Set([wsA, wsB]));
+    expect(await record(externalId, h)).toHaveLength(2); // còn chưa xong → trả lại để enqueue lại
+    await admin.query("UPDATE cf.webhook_events SET status = 'done' WHERE event_hash = $1", [h]);
     expect(await record(externalId, h)).toHaveLength(0);
     expect(await rowsOf(h)).toHaveLength(2);
   });
@@ -116,6 +129,8 @@ describe('FR-021 cf.record_webhook_event — ghi và rải sự kiện theo kên
       const rows = await rowsOf(h);
       expect(rows).toHaveLength(1);
       expect(rows[0]?.workspace_id).toBeNull();
+      // dòng chưa map KHÔNG lưu payload (PII) và là dead — job quét/thử lại không đụng tới
+      expect(rows[0]).toMatchObject({ status: 'dead', payload: {} });
     }
   });
 
@@ -200,5 +215,51 @@ describe('FR-020 quyền gọi hàm: chỉ ngữ cảnh trần (route webhook)',
           .length,
     );
     expect(seen).toBe(0);
+  });
+});
+
+describe('FR-020 an toàn khi gửi lại / song song / đường ghi duy nhất', () => {
+  it('hai lệnh gọi song song cùng sự kiện → đúng một dòng mỗi workspace (không trùng, không lỗi)', async () => {
+    const externalId = page();
+    await seedChannel(wsA, externalId);
+    await seedChannel(wsB, externalId);
+    const h = hash();
+    const [a, b] = await Promise.all([record(externalId, h), record(externalId, h)]);
+    expect(a.length + b.length).toBeGreaterThanOrEqual(2);
+    expect(await rowsOf(h)).toHaveLength(2);
+  });
+
+  it('ghi trong giao dịch bị ROLLBACK → không để lại dòng; gửi lại sau đó ghi bình thường', async () => {
+    const externalId = page();
+    await seedChannel(wsA, externalId);
+    const h = hash();
+    await db
+      .withSystem(async (tx) => {
+        await recordWebhookEvent(tx, {
+          platform: 'facebook',
+          pageExternalId: externalId,
+          eventHash: h,
+          payload: {},
+        });
+        throw new Error('hoan-tac');
+      })
+      .catch(() => undefined);
+    expect(await rowsOf(h)).toHaveLength(0);
+    expect(await record(externalId, h)).toHaveLength(1);
+  });
+
+  it('cf_app KHÔNG INSERT trực tiếp được webhook_events ở bất kỳ ngữ cảnh nào (đường ghi duy nhất = hàm)', async () => {
+    const attempt = (run: (fn: (tx: Database) => Promise<unknown>) => Promise<unknown>) =>
+      run((tx) =>
+        tx.execute(
+          sql`INSERT INTO cf.webhook_events (workspace_id, platform, event_hash, payload) VALUES (${wsA}::uuid, 'facebook', ${hash()}, '{}'::jsonb)`,
+        ),
+      ).then(
+        () => 'ok',
+        (e: { cause?: { code?: string }; code?: string }) => e.cause?.code ?? e.code,
+      );
+    expect(await attempt((fn) => db.withJob(wsA, fn))).toBe('42501');
+    expect(await attempt((fn) => db.withActor(wsA, owner, fn))).toBe('42501');
+    expect(await attempt((fn) => db.withSystem(fn))).toBe('42501');
   });
 });

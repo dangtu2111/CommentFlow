@@ -222,3 +222,48 @@ describe('FR-020 POST /api/webhooks/meta — chữ ký, ghi sự kiện, enqueue
     expect((await second.handlers.POST(signed(body([change()])))).status).toBe(500);
   });
 });
+
+describe('FR-020 lỗi theo từng sự kiện, không kéo cả lô', () => {
+  const pgError = (code: string) => Object.assign(new Error('pg'), { cause: { code } });
+
+  it('FR-020 một sự kiện lỗi DỮ LIỆU (mã Postgres lớp 22/23) → bỏ sự kiện đó, các sự kiện khác vẫn ghi + enqueue, trả 200', async () => {
+    const record = vi
+      .fn()
+      .mockRejectedValueOnce(pgError('22P05'))
+      .mockResolvedValueOnce([{ eventId: 'e2', workspaceId: 'w2' }]);
+    const { handlers, enqueue, warn } = setup({ record });
+    const res = await handlers.POST(
+      signed(body([change({ comment_id: 'bad' }), change({ comment_id: 'ok' })])),
+    );
+    expect(res.status).toBe(200);
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledWith({ eventId: 'e2', workspaceId: 'w2' });
+    expect(warn).toHaveBeenCalledWith({ event: 'webhook_event_skipped', reason: 'Error' });
+  });
+
+  it('FR-020 lỗi HẠ TẦNG ở một sự kiện → vẫn thử các sự kiện còn lại, rồi trả 500 để Meta gửi lại', async () => {
+    const record = vi
+      .fn()
+      .mockRejectedValueOnce(pgError('08006'))
+      .mockResolvedValueOnce([{ eventId: 'e2', workspaceId: 'w2' }]);
+    const { handlers, enqueue } = setup({ record });
+    const res = await handlers.POST(
+      signed(body([change({ comment_id: 'a' }), change({ comment_id: 'b' })])),
+    );
+    expect(res.status).toBe(500);
+    expect(enqueue).toHaveBeenCalledWith({ eventId: 'e2', workspaceId: 'w2' });
+  });
+
+  it('FR-020 enqueue lỗi lần đầu → 500; Meta gửi lại, hàm ghi trả lại dòng chưa xong → enqueue được (không mất sự kiện)', async () => {
+    const row = { eventId: 'e1', workspaceId: 'w1' };
+    const record = vi.fn(async () => [row]); // dòng còn received nên lần nào cũng được trả
+    const enqueue = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('queue chua san sang'))
+      .mockResolvedValue(undefined);
+    const { handlers } = setup({ record, enqueue });
+    expect((await handlers.POST(signed(body([change()])))).status).toBe(500);
+    expect((await handlers.POST(signed(body([change()])))).status).toBe(200);
+    expect(enqueue).toHaveBeenCalledTimes(2);
+  });
+});

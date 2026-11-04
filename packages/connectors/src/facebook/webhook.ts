@@ -31,22 +31,31 @@ export function verifyMetaSignature(
   return timingSafeEqual(expected, Buffer.from(received, 'hex'));
 }
 
+/** Postgres jsonb/text từ chối NUL và surrogate lẻ: làm sạch để một ký tự lạ không làm hỏng cả lô webhook. */
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+const cleanText = (value: string): string =>
+  value.replaceAll('\u0000', '').replace(LONE_SURROGATE, '\uFFFD');
+const text = () => z.string().transform(cleanText);
+
+/** Mốc thời gian hợp lệ (giây): tới năm 2100; ngoài khoảng → bản ghi bị bỏ (tránh `toISOString()` ném lỗi). */
+const MAX_UNIX_SECONDS = 4_102_444_800;
+
 const changeValueSchema = z.object({
   item: z.literal('comment'),
   verb: z.enum(['add', 'edited', 'remove']),
-  comment_id: z.string().min(1),
-  post_id: z.string().min(1),
-  parent_id: z.string().min(1).optional(),
-  from: z.object({ id: z.string().min(1), name: z.string().optional() }),
-  message: z.string().optional(),
-  created_time: z.number().int().nonnegative(),
+  comment_id: text().pipe(z.string().min(1)),
+  post_id: text().pipe(z.string().min(1)),
+  parent_id: text().pipe(z.string().min(1)).optional(),
+  from: z.object({ id: text().pipe(z.string().min(1)), name: text().optional() }),
+  message: text().optional(),
+  created_time: z.number().int().nonnegative().max(MAX_UNIX_SECONDS),
 });
 
 const bodySchema = z.object({
   object: z.literal('page'),
   entry: z.array(
     z.object({
-      id: z.string().min(1),
+      id: text().pipe(z.string().min(1)),
       changes: z.array(z.object({ field: z.string(), value: z.unknown() })).default([]),
     }),
   ),

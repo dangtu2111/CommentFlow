@@ -254,3 +254,31 @@ describe('FR-021 nhánh biên của chuẩn hóa/lưu trữ', () => {
     expect(eventHashOf('facebook', deleted)).not.toBe(eventHashOf('facebook', created));
   });
 });
+
+describe('FR-020 làm sạch dữ liệu bẩn để một sự kiện không làm hỏng cả lô', () => {
+  it('FR-020 bỏ ký tự NUL và sửa surrogate lẻ trong tên/nội dung (Postgres jsonb từ chối chúng)', () => {
+    const [event] = parseMetaWebhook(
+      webhookBody([
+        commentChange({
+          message: 'chào\u0000 bạn \ud83d',
+          from: { id: '9\u00001', name: 'Khách\u0000 \ude00' },
+        }),
+      ]),
+    );
+    if (event?.kind !== 'comment_created') throw new Error('kind');
+    expect(event.comment.text).not.toContain('\u0000');
+    expect(() => encodeURIComponent(event.comment.text)).not.toThrow();
+    expect(event.comment.authorExternalId).toBe('91');
+    expect(() => encodeURIComponent(event.comment.authorName ?? '')).not.toThrow();
+    expect(() => JSON.stringify(serializeEvent(event))).not.toThrow();
+  });
+
+  it('FR-020 created_time ngoài khoảng hợp lệ (quá lớn) → bản ghi bị bỏ, không ném RangeError', () => {
+    expect(
+      parseMetaWebhook(webhookBody([commentChange({ created_time: 9_999_999_999_999 })])),
+    ).toEqual([]);
+    expect(() =>
+      parseMetaWebhook(webhookBody([commentChange({ created_time: 1e308 })])),
+    ).not.toThrow();
+  });
+});

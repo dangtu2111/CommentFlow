@@ -59,6 +59,14 @@ async function readCapped(req: Request, limit: number): Promise<Buffer | 'too_la
   return Buffer.concat(chunks);
 }
 
+/** Lỗi do CHÍNH dữ liệu sự kiện (Postgres lớp 22 `data_exception`, 23 ràng buộc; RangeError), không phải hạ tầng. */
+function isDataError(error: unknown): boolean {
+  if (error instanceof RangeError) return true;
+  const holder = error as { cause?: { code?: unknown }; code?: unknown } | null;
+  const code = holder?.cause?.code ?? holder?.code;
+  return typeof code === 'string' && /^2[23]/.test(code);
+}
+
 export function createMetaWebhookHandlers(deps: MetaWebhookDeps) {
   /** Bắt tay đăng ký webhook (Meta gọi GET một lần): đúng verify token → trả nguyên `hub.challenge`. */
   async function handleGet(req: Request): Promise<Response> {
@@ -96,8 +104,12 @@ export function createMetaWebhookHandlers(deps: MetaWebhookDeps) {
       return text(400);
     }
 
-    try {
-      for (const event of parseMetaWebhook(json)) {
+    // Xử lý TỪNG sự kiện độc lập: một sự kiện lỗi dữ liệu không được kéo cả lô (cả workspace khác) vào vòng gửi lại.
+    // Lỗi dữ liệu (mã Postgres lớp 22/23, RangeError) → bỏ sự kiện đó, ghi nhận; lỗi hạ tầng → 500 để Meta gửi lại
+    // (ghi idempotent; sự kiện chưa xong được enqueue lại ở lần gửi sau).
+    let infraFailed = false;
+    for (const event of parseMetaWebhook(json)) {
+      try {
         const recorded = await deps.record({
           platform: 'facebook',
           pageExternalId: event.channelExternalId,
@@ -107,15 +119,17 @@ export function createMetaWebhookHandlers(deps: MetaWebhookDeps) {
         for (const row of recorded) {
           await deps.enqueue({ eventId: row.eventId, workspaceId: row.workspaceId });
         }
+      } catch (error) {
+        const dataError = isDataError(error);
+        // Chỉ tên lỗi/mã, không nội dung (có thể chứa tên khách).
+        deps.warn({
+          event: dataError ? 'webhook_event_skipped' : 'webhook_ingest_failed',
+          reason: error instanceof Error ? error.name : 'unknown',
+        });
+        if (!dataError) infraFailed = true;
       }
-    } catch (error) {
-      // 500 để Meta gửi lại (ghi đã idempotent). Chỉ log tên lỗi, không nội dung.
-      deps.warn({
-        event: 'webhook_ingest_failed',
-        reason: error instanceof Error ? error.name : 'unknown',
-      });
-      return text(500);
     }
+    if (infraFailed) return text(500);
     return text(200, 'ok');
   }
 

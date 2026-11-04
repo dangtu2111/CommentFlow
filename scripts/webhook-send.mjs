@@ -24,12 +24,22 @@ if (!pageId) {
   process.exit(1);
 }
 const url = option('url', 'http://localhost:3000/api/webhooks/meta');
-if (
-  !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(url) &&
-  !url.includes('trycloudflare.com')
-) {
-  console.error('Chỉ gửi tới localhost hoặc tunnel *.trycloudflare.com (máy dev).');
-  process.exit(1);
+{
+  let target;
+  try {
+    target = new URL(url);
+  } catch {
+    target = null;
+  }
+  const local =
+    target?.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(target.hostname);
+  const tunnel = target?.protocol === 'https:' && target.hostname.endsWith('.trycloudflare.com');
+  if (!local && !tunnel) {
+    console.error(
+      'Chỉ gửi tới http://localhost, http://127.0.0.1 hoặc https://*.trycloudflare.com (máy dev).',
+    );
+    process.exit(1);
+  }
 }
 
 const postId = `${pageId}_${option('post', 'post-thu')}`;

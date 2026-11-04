@@ -15,7 +15,7 @@ import {
  * CH-SCHEMA: channels / posts / comments / webhook_events. Ai được ghi gì (cùng role cf_app; phân biệt bằng app.user_id):
  *  - channels: Owner đang hoạt động hoặc HỆ THỐNG (không có người dùng); Staff không.
  *  - posts, comments: thành viên đang hoạt động hoặc hệ thống.
- *  - webhook_events: chỉ hệ thống ghi; Owner hoặc hệ thống đọc.
+ *  - webhook_events: ghi qua hàm DEFINER (không INSERT trực tiếp); chỉ hệ thống cập nhật trạng thái; Owner hoặc hệ thống đọc.
  * Không bảng nào cho DELETE. Token Page và cột khóa gửi do Admin không đọc/ghi được bằng cf_app.
  */
 let admin: pg.Pool;
@@ -340,12 +340,12 @@ describe('posts và comments', () => {
 });
 
 describe('FR-021 webhook_events', () => {
-  it('INSERT: CHỈ hệ thống (withJob); Owner và withWorkspace trần không ghi được', async () => {
+  it('INSERT trực tiếp: KHÔNG ai (kể cả withJob) — chỉ ghi qua hàm cf.record_webhook_event (migration 0022)', async () => {
     const results = await matrix(
       (who) =>
         `INSERT INTO cf.webhook_events (workspace_id, platform, event_hash, payload) VALUES ('${ws}', 'facebook', 'h-${who}-${newId()}', '{}')`,
     );
-    expectOnly(results, ['system']);
+    expectOnly(results, []);
   });
 
   it('UPDATE trạng thái xử lý: chỉ hệ thống', async () => {

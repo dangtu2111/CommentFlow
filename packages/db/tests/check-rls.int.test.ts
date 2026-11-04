@@ -222,9 +222,7 @@ describe('check-rls', () => {
       'DROP POLICY channels_update ON cf.channels; CREATE POLICY channels_update ON cf.channels FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
     );
     expect(ch).toContainEqual(expect.objectContaining({ subject: 'cf.channels' }));
-    const wh = await violationsAfter(
-      'DROP POLICY webhook_events_insert ON cf.webhook_events; CREATE POLICY webhook_events_insert ON cf.webhook_events FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()) AND (SELECT core.is_workspace_member()))',
-    );
+    const wh = await violationsAfter('GRANT INSERT ON cf.webhook_events TO cf_app');
     expect(wh).toContainEqual(expect.objectContaining({ subject: 'cf.webhook_events' }));
     const sel = await violationsAfter(
       'DROP POLICY comments_select ON cf.comments; CREATE POLICY comments_select ON cf.comments FOR SELECT USING (workspace_id = (SELECT core.current_workspace_id()))',
