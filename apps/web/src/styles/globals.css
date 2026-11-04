@@ -652,21 +652,6 @@ a {
 }
 
 /* ---------- Khung /app: đầu trang + bộ chuyển workspace ---------- */
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.app-nav {
-  margin-left: auto;
-  display: flex;
-  gap: var(--space-4);
-}
-
 .ws-switch {
   position: relative;
 }
@@ -1020,4 +1005,127 @@ a {
 .inbox-error {
   max-width: 480px;
   margin: var(--space-8) auto;
+}
+
+/* ===== Khung ứng dụng (docs/08 §3): thanh trên + điều hướng + nội dung ===== */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.shell-top-end {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.shell-user {
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--weight-medium);
+}
+
+.shell-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.shell-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.shell-nav {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.shell-nav-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.shell-nav-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.shell-nav-heading {
+  margin: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.shell-nav-link {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.shell-nav-link:hover {
+  background: var(--selected-bg);
+}
+
+.shell-nav-link[aria-current="page"] {
+  background: var(--selected-bg);
+  border-color: var(--selected-border);
+  font-weight: var(--weight-semibold);
+}
+
+@media (min-width: 900px) {
+  .shell-body {
+    flex-direction: row;
+  }
+
+  .shell-nav {
+    flex: none;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 220px;
+    padding: var(--space-4) var(--space-3);
+    overflow: visible;
+    border-bottom: 0;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .shell-nav-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shell-nav-group ul {
+    flex-direction: column;
+  }
 }

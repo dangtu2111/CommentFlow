@@ -1,10 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { LocaleSwitcher } from '../../../components/locale-switcher';
-import { SubmitButton } from '../../../components/ui/submit-button';
 import { pendingInviteToken } from '../../../server/invite-cookie';
 import { requireAppUser } from '../../../server/require-app-user';
-import { logoutAction } from '../../(auth)/actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
@@ -22,12 +19,6 @@ export default async function AppHomePage() {
     <main className="app-page">
       <h1 className="auth-title">{t('app.greeting', { name: user.name })}</h1>
       <p className="auth-subtitle">{t('app.body', { workspace: workspace.name })}</p>
-      <form action={logoutAction}>
-        <SubmitButton variant="secondary" block={false}>
-          {t('app.logout')}
-        </SubmitButton>
-      </form>
-      <LocaleSwitcher />
     </main>
   );
 }

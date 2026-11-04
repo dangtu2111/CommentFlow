@@ -210,10 +210,7 @@
     },
     "header": {
       "brand": "CommentFlow AI",
-      "nav": "Main navigation",
-      "security": "Security",
-      "members": "Members",
-      "comments": "Comments"
+      "nav": "Main navigation"
     }
   },
   "members": {
@@ -371,5 +368,19 @@
       "title": "Could not load the comment list",
       "body": "A temporary error occurred. Please reload in a few minutes."
     }
+  },
+  "shell": {
+    "groups": {
+      "operations": "Operations",
+      "settings": "Settings"
+    },
+    "nav": {
+      "comments": "Comments",
+      "members": "Members",
+      "security": "Security"
+    },
+    "logout": "Sign out",
+    "brand": "CommentFlow AI",
+    "navLabel": "Main navigation"
   }
 }
