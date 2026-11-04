@@ -23,6 +23,8 @@ export type CommentDetail = {
   isAd: boolean;
   /** Trạng thái kênh (`connected` mới gửi được). */
   channelStatus: string;
+  /** Khách đã xóa bình luận trên nền tảng (FR-048); `null` nếu còn. */
+  deletedAt: Date | null;
   /** Yêu cầu trả lời MỚI NHẤT của bình luận (hàng đợi gửi, ADR 008); `null` nếu chưa có. */
   latestReply: {
     id: string;
@@ -51,6 +53,7 @@ type Row = {
   post_external_id: string;
   is_ad: boolean;
   channel_status: string;
+  deleted_at: Date | null;
   reply_id: string | null;
   reply_status: string | null;
   reply_text: string | null;
@@ -71,7 +74,7 @@ export async function getCommentDetail(
   const result = await tx.execute<Row>(sql`
     SELECT c.id, c.status, c.text, c.author_name, c.author_external_id, c.created_time, c.label, c.needs_followup,
            c.parent_external_id, c.channel_id, ch.name AS channel_name, ch.platform, p.external_id AS post_external_id,
-           p.is_ad, ch.status AS channel_status,
+           p.is_ad, ch.status AS channel_status, c.deleted_at,
            lr.id AS reply_id, lr.status AS reply_status, lr.text AS reply_text,
            lr.error_code AS reply_error_code, lr.sent_at AS reply_sent_at,
            c.locked_by, c.locked_until, (c.locked_until > now()) AS lock_active, u.name AS holder_name
@@ -105,6 +108,7 @@ export async function getCommentDetail(
     postExternalId: row.post_external_id,
     isAd: row.is_ad,
     channelStatus: row.channel_status,
+    deletedAt: row.deleted_at,
     latestReply:
       row.reply_id && row.reply_status && row.reply_text !== null
         ? {

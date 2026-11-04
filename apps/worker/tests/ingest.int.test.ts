@@ -179,23 +179,6 @@ describe('FR-022 bỏ bình luận do chính Page viết; sự kiện không x�
     expect((await eventRow(eventId)).status).toBe('done');
   });
 
-  it('edited / remove → done, không đổi dữ liệu (chờ FB-HIDE/đồng bộ trạng thái)', async () => {
-    const { pageId, channelId } = await seedPage();
-    const created = change(pageId);
-    await handler()(job(ws, await record(pageId, created)));
-    for (const verb of ['edited', 'remove']) {
-      const eventId = await record(pageId, {
-        ...created,
-        value: { ...(created.value as object), verb },
-      });
-      await handler()(job(ws, eventId));
-      expect((await eventRow(eventId)).status).toBe('done');
-    }
-    const rows = await commentsOf(channelId);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.text).toBe('Còn size M không shop?');
-  });
-
   it('kênh đã ngắt/không còn connected sau khi ghi sự kiện → done, bỏ qua (không tạo bình luận)', async () => {
     const { pageId, channelId } = await seedPage();
     const eventId = await record(pageId, change(pageId));
@@ -279,5 +262,211 @@ describe('FR-020 lỗi xử lý — failed/dead, không PII, để pg-boss thử
   it('dữ liệu job sai (thiếu workspaceId/eventId không phải UUID) → AppError VALIDATION_FAILED, không đụng DB', async () => {
     const bad = [{ id: 'j', data: { eventId: randomUUID() } }] as unknown as Job<unknown>[];
     await expect(handler()(bad)).rejects.toThrow(/không hợp lệ/);
+  });
+});
+
+describe('FR-048 job ingest — khách sửa/xóa bình luận', () => {
+  /** Ghi sự kiện sửa/xóa với entry.time riêng (mỗi lần sửa là một sự kiện). */
+  async function recordAt(pageId: string, changeObject: unknown, time: number): Promise<string> {
+    const [event] = parseMetaWebhook({
+      object: 'page',
+      entry: [{ id: pageId, time, changes: [changeObject] }],
+    });
+    if (!event) throw new Error('fixture không parse được');
+    const rows = await db.withSystem((tx) =>
+      recordWebhookEvent(tx, {
+        platform: 'facebook',
+        pageExternalId: pageId,
+        eventHash: eventHashOf('facebook', event),
+        payload: serializeEvent(event),
+      }),
+    );
+    const row = rows.find((r) => r.workspaceId === ws);
+    if (!row) throw new Error('không có dòng cho workspace');
+    return row.eventId;
+  }
+  const withVerb = (base: ReturnType<typeof change>, verb: string, message?: string) => ({
+    ...base,
+    value: { ...(base.value as object), verb, ...(message === undefined ? {} : { message }) },
+  });
+  const commentRowOf = async (channelId: string) =>
+    (
+      await admin.query(
+        'SELECT id, text, text_normalized, deleted_at FROM cf.comments WHERE channel_id = $1',
+        [channelId],
+      )
+    ).rows[0];
+  const logsOf = async (commentId: string) =>
+    (
+      await admin.query(
+        "SELECT action, actor_type, actor_id FROM core.action_logs WHERE target_id = $1 AND action LIKE 'comment.%' ORDER BY created_at",
+        [commentId],
+      )
+    ).rows;
+
+  it('sửa: cập nhật text (text_normalized về NULL), ghi action_logs KHÔNG kèm nội dung; sửa lần hai (entry.time khác) áp dụng; cùng nội dung → không ghi log', async () => {
+    const { pageId, channelId } = await seedPage();
+    const created = change(pageId);
+    await handler()(job(ws, await record(pageId, created)));
+    await admin.query(
+      "UPDATE cf.comments SET text_normalized = 'chuan hoa' WHERE channel_id = $1",
+      [channelId],
+    );
+    const first = await recordAt(pageId, withVerb(created, 'edited', 'Giá bao nhiêu vậy ạ?'), 100);
+    await handler()(job(ws, first));
+    let row = await commentRowOf(channelId);
+    expect(row).toMatchObject({ text: 'Giá bao nhiêu vậy ạ?', text_normalized: null });
+    const second = await recordAt(pageId, withVerb(created, 'edited', 'Còn hàng không ạ?'), 200);
+    await handler()(job(ws, second));
+    expect((await commentRowOf(channelId)).text).toBe('Còn hàng không ạ?');
+    const same = await recordAt(pageId, withVerb(created, 'edited', 'Còn hàng không ạ?'), 300);
+    await handler()(job(ws, same));
+    const logs = await logsOf(row.id);
+    expect(logs.map((l) => l.action)).toEqual(['comment.edited', 'comment.edited']);
+    expect(logs.every((l) => l.actor_type === 'system' && l.actor_id === null)).toBe(true);
+    expect(JSON.stringify(logs)).not.toContain('hàng');
+    expect((await eventRow(same)).status).toBe('done');
+    row = await commentRowOf(channelId);
+    expect(row.deleted_at).toBeNull();
+  });
+
+  it('sửa bình luận chưa có trong DB / của chính Page / đã xóa → done êm, không tạo mới, không đổi', async () => {
+    const { pageId, channelId } = await seedPage();
+    const unknown = change(pageId);
+    await handler()(job(ws, await recordAt(pageId, withVerb(unknown, 'edited', 'x'), 10)));
+    expect(await commentsOf(channelId)).toHaveLength(0);
+
+    const own = change(pageId);
+    await handler()(job(ws, await record(pageId, own)));
+    await admin.query('UPDATE cf.comments SET is_own = true WHERE channel_id = $1', [channelId]);
+    await handler()(
+      job(ws, await recordAt(pageId, withVerb(own, 'edited', 'Câu của Page bị sửa'), 11)),
+    );
+    expect((await commentRowOf(channelId)).text).toBe('Còn size M không shop?');
+
+    await admin.query(
+      'UPDATE cf.comments SET is_own = false, deleted_at = now() WHERE channel_id = $1',
+      [channelId],
+    );
+    await handler()(
+      job(ws, await recordAt(pageId, withVerb(own, 'edited', 'Sửa sau khi xóa'), 12)),
+    );
+    expect((await commentRowOf(channelId)).text).toBe('Còn size M không shop?');
+  });
+
+  it('xóa: đặt deleted_at MỘT lần (chạy lại/xóa lại không đổi giờ), giữ dòng, ghi action_logs comment.deleted; bình luận không tồn tại → done êm', async () => {
+    const { pageId, channelId } = await seedPage();
+    const created = change(pageId);
+    await handler()(job(ws, await record(pageId, created)));
+    const removed = await recordAt(pageId, withVerb(created, 'remove'), 100);
+    await handler()(job(ws, removed));
+    await handler()(job(ws, removed)); // chạy lại cùng sự kiện
+    const first = await commentRowOf(channelId);
+    expect(first.deleted_at).not.toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await handler()(job(ws, await recordAt(pageId, withVerb(created, 'remove'), 200))); // xóa lần hai (sự kiện khác)
+    expect(new Date((await commentRowOf(channelId)).deleted_at).getTime()).toBe(
+      new Date(first.deleted_at).getTime(),
+    );
+    expect((await logsOf(first.id)).map((l) => l.action)).toEqual(['comment.deleted']);
+    expect((await eventRow(removed)).status).toBe('done');
+
+    const ghost = change(pageId);
+    await handler()(job(ws, await recordAt(pageId, withVerb(ghost, 'remove'), 300)));
+    expect(await commentsOf(channelId)).toHaveLength(1);
+  });
+
+  it('sửa/xóa vẫn đồng bộ khi kênh hết hạn SAU khi nhận sự kiện (là dữ liệu, không phải gửi)', async () => {
+    const { pageId, channelId } = await seedPage();
+    const created = change(pageId);
+    await handler()(job(ws, await record(pageId, created)));
+    const edit = await recordAt(pageId, withVerb(created, 'edited', 'Sửa khi kênh hết hạn'), 400);
+    const remove = await recordAt(pageId, withVerb(created, 'remove'), 500);
+    await admin.query("UPDATE cf.channels SET status = 'expired' WHERE id = $1", [channelId]);
+    await handler()(job(ws, edit));
+    expect((await commentRowOf(channelId)).text).toBe('Sửa khi kênh hết hạn');
+    await handler()(job(ws, remove));
+    expect((await commentRowOf(channelId)).deleted_at).not.toBeNull();
+  });
+});
+
+describe('FR-048 thứ tự sửa/xóa: lần sửa CŨ đến muộn không ghi đè lần mới', () => {
+  async function recordEdit(
+    pageId: string,
+    base: ReturnType<typeof change>,
+    message: string,
+    time: number,
+  ) {
+    const body = { ...base, value: { ...(base.value as object), verb: 'edited', message } };
+    const [event] = parseMetaWebhook({
+      object: 'page',
+      entry: [{ id: pageId, time, changes: [body] }],
+    });
+    if (!event) throw new Error('parse');
+    const rows = await db.withSystem((tx) =>
+      recordWebhookEvent(tx, {
+        platform: 'facebook',
+        pageExternalId: pageId,
+        eventHash: eventHashOf('facebook', event),
+        payload: serializeEvent(event),
+      }),
+    );
+    const row = rows.find((r) => r.workspaceId === ws);
+    if (!row) throw new Error('không có dòng');
+    return row.eventId;
+  }
+
+  it('sửa lần 2 chạy trước, sửa lần 1 (cũ hơn) chạy sau (retry) → giữ nội dung lần 2; text_synced_at = thời điểm sự kiện', async () => {
+    const { pageId, channelId } = await seedPage();
+    const created = change(pageId);
+    await handler()(job(ws, await record(pageId, created)));
+    const older = await recordEdit(pageId, created, 'Bản sửa CŨ', 1_000);
+    const newer = await recordEdit(pageId, created, 'Bản sửa MỚI', 2_000);
+    await handler()(job(ws, newer));
+    await handler()(job(ws, older));
+    const row = (
+      await admin.query('SELECT text, text_synced_at FROM cf.comments WHERE channel_id = $1', [
+        channelId,
+      ])
+    ).rows[0];
+    expect(row.text).toBe('Bản sửa MỚI');
+    expect(new Date(row.text_synced_at).getTime()).toBe(2_000_000);
+  });
+
+  it('hai lần sửa CÙNG thời điểm nhưng nội dung khác → áp dụng theo thứ tự đến (không bị loại)', async () => {
+    const { pageId, channelId } = await seedPage();
+    const created = change(pageId);
+    await handler()(job(ws, await record(pageId, created)));
+    await handler()(job(ws, await recordEdit(pageId, created, 'A', 5_000)));
+    await handler()(job(ws, await recordEdit(pageId, created, 'B', 5_000)));
+    expect(
+      (await admin.query('SELECT text FROM cf.comments WHERE channel_id = $1', [channelId])).rows[0]
+        .text,
+    ).toBe('B');
+  });
+
+  it('xóa: deleted_at lấy giờ SỰ KIỆN (entry.time) khi có', async () => {
+    const { pageId, channelId } = await seedPage();
+    const created = change(pageId);
+    await handler()(job(ws, await record(pageId, created)));
+    const body = { ...created, value: { ...(created.value as object), verb: 'remove' } };
+    const [event] = parseMetaWebhook({
+      object: 'page',
+      entry: [{ id: pageId, time: 7_000, changes: [body] }],
+    });
+    if (!event) throw new Error('parse');
+    const rows = await db.withSystem((tx) =>
+      recordWebhookEvent(tx, {
+        platform: 'facebook',
+        pageExternalId: pageId,
+        eventHash: eventHashOf('facebook', event),
+        payload: serializeEvent(event),
+      }),
+    );
+    await handler()(job(ws, rows.find((r) => r.workspaceId === ws)?.eventId as string));
+    const row = (
+      await admin.query('SELECT deleted_at FROM cf.comments WHERE channel_id = $1', [channelId])
+    ).rows[0];
+    expect(new Date(row.deleted_at).getTime()).toBe(7_000_000);
   });
 });

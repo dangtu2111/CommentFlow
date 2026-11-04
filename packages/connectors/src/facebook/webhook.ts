@@ -56,10 +56,23 @@ const bodySchema = z.object({
   entry: z.array(
     z.object({
       id: text().pipe(z.string().min(1)),
+      /** Thời điểm sự kiện: FB `feed` dùng giây, Messenger dùng mili-giây → KHÔNG ràng buộc ở đây (xem `occurredAtOf`). */
+      time: z.unknown().optional(),
       changes: z.array(z.object({ field: z.string(), value: z.unknown() })).default([]),
     }),
   ),
 });
+
+/**
+ * `entry.time` → Date: số nguyên ≤ MAX_UNIX_SECONDS là giây; lớn hơn nhưng hợp lệ nếu là mili-giây (Messenger); còn lại
+ * (không phải số/âm/ngoài khoảng) → `undefined` mà KHÔNG làm hỏng cả lô webhook.
+ */
+function occurredAtOf(time: unknown): Date | undefined {
+  if (typeof time !== 'number' || !Number.isInteger(time) || time < 0) return undefined;
+  if (time <= MAX_UNIX_SECONDS) return new Date(time * 1000);
+  if (time <= MAX_UNIX_SECONDS * 1000) return new Date(time);
+  return undefined;
+}
 
 /**
  * Chuẩn hóa thân webhook thành các sự kiện bình luận. Bỏ qua mọi thứ không phải bình luận (reaction, status, field
@@ -75,17 +88,21 @@ export function parseMetaWebhook(body: unknown): NormalizedEvent[] {
       const value = changeValueSchema.safeParse(change.value);
       if (!value.success) continue;
       const v = value.data;
+      const occurredAt = occurredAtOf(entry.time);
+      const occurred = occurredAt ? { occurredAt } : {};
       if (v.verb === 'remove') {
         events.push({
           kind: 'comment_deleted',
           channelExternalId: entry.id,
           commentExternalId: v.comment_id,
+          ...occurred,
         });
         continue;
       }
       events.push({
         kind: v.verb === 'add' ? 'comment_created' : 'comment_edited',
         channelExternalId: entry.id,
+        ...(v.verb === 'edited' ? occurred : {}),
         comment: {
           externalId: v.comment_id,
           postExternalId: v.post_id,
@@ -109,15 +126,23 @@ export function parseMetaWebhook(body: unknown): NormalizedEvent[] {
  * bình luận (không lộ tên/nội dung khách trong chỉ mục). Cùng (nền tảng, Page, loại, bình luận, thời gian) → cùng hash.
  */
 export function eventHashOf(platform: Platform, event: NormalizedEvent): string {
+  // Sửa/xóa dùng thời điểm SỰ KIỆN (entry.time) để mỗi lần sửa là một sự kiện riêng; thiếu thì rơi về cách cũ.
+  const occurred = event.occurredAt ? String(event.occurredAt.getTime()) : null;
   const parts =
     event.kind === 'comment_deleted'
-      ? [platform, event.channelExternalId, event.kind, event.commentExternalId, '']
+      ? [platform, event.channelExternalId, event.kind, event.commentExternalId, occurred ?? '']
       : [
           platform,
           event.channelExternalId,
           event.kind,
           event.comment.externalId,
-          String(event.comment.createdAt.getTime()),
+          event.kind === 'comment_edited' && occurred
+            ? occurred
+            : String(event.comment.createdAt.getTime()),
+          // Hai lần sửa cùng giây nhưng nội dung khác là hai sự kiện: chỉ băm (digest) nội dung vào khóa, không lưu thô.
+          event.kind === 'comment_edited'
+            ? createHash('sha256').update(event.comment.text).digest('hex')
+            : '',
         ];
   return createHash('sha256').update(parts.join('|')).digest('hex');
 }
@@ -138,19 +163,23 @@ const storedEventSchema = z.discriminatedUnion('kind', [
     kind: z.enum(['comment_created', 'comment_edited']),
     channelExternalId: z.string().min(1),
     comment: storedCommentSchema,
+    occurredAt: z.iso.datetime().optional(),
   }),
   z.object({
     kind: z.literal('comment_deleted'),
     channelExternalId: z.string().min(1),
     commentExternalId: z.string().min(1),
+    occurredAt: z.iso.datetime().optional(),
   }),
 ]);
 
 /** Dạng JSON thuần của sự kiện chuẩn hóa (lưu ở `webhook_events.payload`; chỉ trường cần dùng, không có phần thừa của Meta). */
 export function serializeEvent(event: NormalizedEvent): Record<string, unknown> {
-  if (event.kind === 'comment_deleted') return { ...event };
+  const occurredAt = event.occurredAt ? { occurredAt: event.occurredAt.toISOString() } : {};
+  if (event.kind === 'comment_deleted') return { ...event, ...occurredAt };
   return {
     ...event,
+    ...occurredAt,
     comment: { ...event.comment, createdAt: event.comment.createdAt.toISOString() },
   };
 }
@@ -160,11 +189,20 @@ export function deserializeEvent(value: unknown): NormalizedEvent | null {
   const parsed = storedEventSchema.safeParse(value);
   if (!parsed.success) return null;
   const event = parsed.data;
-  if (event.kind === 'comment_deleted') return event;
+  const occurred = event.occurredAt ? { occurredAt: new Date(event.occurredAt) } : {};
+  if (event.kind === 'comment_deleted') {
+    return {
+      kind: 'comment_deleted',
+      channelExternalId: event.channelExternalId,
+      commentExternalId: event.commentExternalId,
+      ...occurred,
+    };
+  }
   const { comment } = event;
   return {
     kind: event.kind,
     channelExternalId: event.channelExternalId,
+    ...occurred,
     comment: {
       externalId: comment.externalId,
       postExternalId: comment.postExternalId,

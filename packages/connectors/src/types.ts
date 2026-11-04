@@ -47,8 +47,15 @@ export type NormalizedEvent =
       kind: 'comment_created' | 'comment_edited';
       channelExternalId: string;
       comment: NormalizedComment;
+      /** Thời điểm sự kiện theo nền tảng (FB: `entry.time`); có ở sửa/xóa để mỗi lần sửa là một sự kiện riêng. */
+      occurredAt?: Date;
     }
-  | { kind: 'comment_deleted'; channelExternalId: string; commentExternalId: string };
+  | {
+      kind: 'comment_deleted';
+      channelExternalId: string;
+      commentExternalId: string;
+      occurredAt?: Date;
+    };
 
 /**
  * Interface connector chung (docs/12 §9). Khác bản minh họa trong spec ở hai điểm có chủ đích:

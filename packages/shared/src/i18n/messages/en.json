@@ -399,7 +399,8 @@
         "lockedNamed": "{name} is handling this comment, so you cannot reply yet.",
         "lockedAnonymous": "A teammate is handling this comment, so you cannot reply yet.",
         "channelUnavailable": "The channel is not connected, so replies cannot be sent. The workspace Owner needs to reconnect it.",
-        "notReplyable": "This comment cannot be replied to right now."
+        "notReplyable": "This comment cannot be replied to right now.",
+        "deleted": "The customer deleted this comment on the platform, so it cannot be replied to."
       },
       "failures": {
         "empty": "Please type a reply.",

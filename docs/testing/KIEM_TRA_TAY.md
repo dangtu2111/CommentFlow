@@ -14,7 +14,8 @@
 | KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | #21 | có | chưa | — |
 | KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | #22 | có | chưa | — |
 | KT-006 | Banner trạng thái kênh | #23 | có | chưa | — |
-| KT-007 | Hộp soạn trả lời, Gửi, Thử lại | FB-REPLY giao diện | chưa | chưa | — |
+| KT-007 | Hộp soạn trả lời, Gửi, Thử lại | #26 | có | chưa | — |
+| KT-008 | Khách sửa/xóa bình luận | COMMENT-EDIT-DELETE | chưa | chưa | — |
 
 ---
 
@@ -150,6 +151,22 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 7 | Đặt kênh sang `expired` (nhờ agent) rồi mở bình luận. | Thấy "Kênh chưa kết nối được nên chưa gửi được…", không có ô soạn. |
 | 8 | Đổi sang **English** và thu nhỏ ~390px. | Mọi chữ đúng tiếng Anh; không tràn ngang. |
 | 9 | (Sau FB-OAUTH + connector Facebook) Gửi một câu cho bình luận trên Page thử. | Chuyển "Đã trả lời" kèm câu đã gửi; trên Facebook xuất hiện câu trả lời của Page, không trùng. |
+
+Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
+
+---
+
+## KT-008 — Khách sửa/xóa bình luận (COMMENT-EDIT-DELETE)
+
+Điều kiện: có kênh `connected` + `webhook_subscribed` (sau `FB-OAUTH`) và worker đang chạy; hoặc thử bằng `pnpm webhook:send` (chỉ tạo bình luận mới — thử sửa/xóa thật cần Meta thật). Bước 1–3 cần Page thử.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Trên Facebook, dùng tài khoản khách bình luận vào bài của Page thử; đợi vài giây. | Bình luận xuất hiện ở tab **Mới/Chờ duyệt**. |
+| 2 | Khách **sửa** nội dung bình luận; đợi vài giây; tải lại panel chi tiết. | Nội dung trong inbox đổi theo bản đã sửa. Sửa lần hai cũng cập nhật. |
+| 3 | Khách **xóa** bình luận; đợi vài giây; tải lại danh sách. | Bình luận biến mất khỏi danh sách và số trên tab giảm; mở trực tiếp bằng đường dẫn `?c=` thì thấy "Khách đã xóa bình luận này trên nền tảng nên không thể trả lời." và không có ô soạn. |
+| 4 | (Tùy chọn) Bấm Gửi trả lời cho một bình luận rồi để khách xóa nó trước khi worker gửi. | Yêu cầu bị hủy (không gửi lên Facebook); bình luận trở về trạng thái trước. |
+| 5 | Nhờ agent kiểm `cf.action_logs`. | Có dòng `comment.edited`/`comment.deleted` (actor hệ thống), KHÔNG chứa nội dung bình luận. |
 
 Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
 

@@ -22,6 +22,7 @@ export type CommentDetailView = {
   postExternalId: string;
   isAd: boolean;
   channelStatus: string;
+  deletedAt: Date | null;
   latestReply: ReplyUiDetail['latestReply'];
   lock: { holderName: string | null; heldByMe: boolean } | null;
 };
@@ -63,7 +64,7 @@ export async function CommentDetailPanel({
   const platform = (PLATFORMS as readonly string[]).includes(comment.platform)
     ? t(`platforms.${comment.platform as (typeof PLATFORMS)[number]}`)
     : comment.platform;
-  const reply = deriveReplyUi(comment);
+  const reply = deriveReplyUi({ ...comment, deleted: comment.deletedAt !== null });
   const composerLabels = {
     field: t('reply.field'),
     placeholder: t('reply.placeholder'),
@@ -185,7 +186,9 @@ export async function CommentDetailPanel({
                 : t('reply.blocked.lockedAnonymous')
               : reply.reason === 'channel_unavailable'
                 ? t('reply.blocked.channelUnavailable')
-                : t('reply.blocked.notReplyable')}
+                : reply.reason === 'deleted'
+                  ? t('reply.blocked.deleted')
+                  : t('reply.blocked.notReplyable')}
           </p>
         ) : null}
       </section>

@@ -399,7 +399,8 @@
         "lockedNamed": "{name} đang xử lý bình luận này nên bạn chưa trả lời được.",
         "lockedAnonymous": "Đồng nghiệp đang xử lý bình luận này nên bạn chưa trả lời được.",
         "channelUnavailable": "Kênh chưa kết nối được nên chưa gửi được. Chủ workspace cần kết nối lại kênh.",
-        "notReplyable": "Bình luận này hiện không thể trả lời."
+        "notReplyable": "Bình luận này hiện không thể trả lời.",
+        "deleted": "Khách đã xóa bình luận này trên nền tảng nên không thể trả lời."
       },
       "failures": {
         "empty": "Hãy nhập câu trả lời.",

@@ -282,3 +282,122 @@ describe('FR-020 làm sạch dữ liệu bẩn để một sự kiện không l�
     ).not.toThrow();
   });
 });
+
+describe('FR-048 sửa/xóa bình luận — occurredAt và khóa chống trùng', () => {
+  const at = (time: number, verb: 'edited' | 'remove' | 'add') =>
+    parseMetaWebhook({
+      object: 'page',
+      entry: [{ id: PAGE_ID, time, changes: [commentChange({ verb })] }],
+    })[0];
+
+  it('FR-048 edited/remove mang occurredAt = entry.time (giây → Date); thiếu entry.time → không có; created không có', () => {
+    const edited = at(1_762_000_100, 'edited');
+    const removed = at(1_762_000_200, 'remove');
+    expect(edited?.kind).toBe('comment_edited');
+    expect(edited && 'occurredAt' in edited ? edited.occurredAt?.getTime() : null).toBe(
+      1_762_000_100_000,
+    );
+    expect(removed && 'occurredAt' in removed ? removed.occurredAt?.getTime() : null).toBe(
+      1_762_000_200_000,
+    );
+    expect(at(1_762_000_300, 'add')).not.toHaveProperty('occurredAt');
+    const [noTime] = parseMetaWebhook({
+      object: 'page',
+      entry: [{ id: PAGE_ID, changes: [commentChange({ verb: 'edited' })] }],
+    });
+    expect(noTime).not.toHaveProperty('occurredAt');
+  });
+
+  it('FR-048 hai lần sửa cùng bình luận (entry.time khác) → hash KHÁC; Meta gửi lại cùng payload → hash GIỐNG; xóa cũng vậy', () => {
+    const e1 = at(1_762_000_100, 'edited');
+    const e1again = at(1_762_000_100, 'edited');
+    const e2 = at(1_762_000_500, 'edited');
+    const d1 = at(1_762_000_100, 'remove');
+    const d2 = at(1_762_000_500, 'remove');
+    if (!e1 || !e1again || !e2 || !d1 || !d2) throw new Error('parse');
+    const h = (e: typeof e1) => eventHashOf('facebook', e);
+    expect(h(e1)).toBe(h(e1again));
+    expect(h(e1)).not.toBe(h(e2));
+    expect(h(d1)).not.toBe(h(d2));
+    expect(h(e1)).not.toBe(h(d1));
+  });
+
+  it('FR-048 serialize/deserialize khứ hồi giữ occurredAt (sửa và xóa)', () => {
+    for (const verb of ['edited', 'remove'] as const) {
+      const event = at(1_762_000_100, verb);
+      if (!event) throw new Error('parse');
+      expect(deserializeEvent(JSON.parse(JSON.stringify(serializeEvent(event))))).toEqual(event);
+    }
+  });
+});
+
+describe('FR-048 chịu được entry.time lạ và hai lần sửa cùng giây', () => {
+  it('FR-048 entry.time tính bằng MILI-GIÂY (Messenger dùng chung object=page) KHÔNG làm mất cả lô; entry feed cùng lô vẫn được xử lý', () => {
+    const events = parseMetaWebhook({
+      object: 'page',
+      entry: [
+        { id: PAGE_ID, time: 1_762_000_000_000, changes: [{ field: 'messages', value: {} }] },
+        { id: PAGE_ID, time: 1_762_000_100, changes: [commentChange({ verb: 'edited' })] },
+        {
+          id: PAGE_ID,
+          time: 1_762_000_200_000,
+          changes: [commentChange({ verb: 'remove', comment_id: 'c-ms' })],
+        },
+        {
+          id: PAGE_ID,
+          time: 'hom-qua',
+          changes: [commentChange({ verb: 'edited', comment_id: 'c-bad' })],
+        },
+      ],
+    });
+    expect(events.map((e) => e.kind)).toEqual([
+      'comment_edited',
+      'comment_deleted',
+      'comment_edited',
+    ]);
+    const [first, second, third] = events;
+    expect(first && 'occurredAt' in first ? first.occurredAt?.getTime() : null).toBe(
+      1_762_000_100_000,
+    );
+    // mili-giây được nhận diện và chuẩn hóa về cùng đơn vị
+    expect(second && 'occurredAt' in second ? second.occurredAt?.getTime() : null).toBe(
+      1_762_000_200_000,
+    );
+    // time không phải số → bỏ occurredAt nhưng KHÔNG bỏ sự kiện
+    expect(third).not.toHaveProperty('occurredAt');
+  });
+
+  it('FR-048 hai lần sửa cùng bình luận trong CÙNG giây nhưng nội dung khác → hash KHÁC; cùng nội dung → cùng hash; hash không chứa nội dung', () => {
+    const edit = (message: string) =>
+      parseMetaWebhook({
+        object: 'page',
+        entry: [
+          {
+            id: PAGE_ID,
+            time: 1_762_000_100,
+            changes: [commentChange({ verb: 'edited', message })],
+          },
+        ],
+      })[0];
+    const a = edit('Giá bao nhiêu?');
+    const b = edit('Còn hàng không?');
+    const a2 = edit('Giá bao nhiêu?');
+    if (!a || !b || !a2) throw new Error('parse');
+    expect(eventHashOf('facebook', a)).not.toBe(eventHashOf('facebook', b));
+    expect(eventHashOf('facebook', a)).toBe(eventHashOf('facebook', a2));
+    expect(eventHashOf('facebook', a)).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe('FR-048 entry.time ngoài khoảng', () => {
+  it('FR-048 time âm / quá lớn → bỏ occurredAt, KHÔNG bỏ sự kiện', () => {
+    for (const time of [-5, 9e15, 1.5]) {
+      const [event] = parseMetaWebhook({
+        object: 'page',
+        entry: [{ id: PAGE_ID, time, changes: [commentChange({ verb: 'edited' })] }],
+      });
+      expect(event?.kind).toBe('comment_edited');
+      expect(event).not.toHaveProperty('occurredAt');
+    }
+  });
+});

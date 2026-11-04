@@ -72,6 +72,10 @@ export const comments = cf.table(
     repliedBy: uuid('replied_by').references(() => users.id, { onDelete: 'set null' }),
     repliedAt: timestamptz('replied_at'),
     privateRepliedAt: timestamptz('private_replied_at'),
+    /** Khách xóa bình luận trên nền tảng (FR-048): ẩn khỏi inbox, GIỮ dòng + log. Chỉ đường hệ thống ghi (trigger). */
+    deletedAt: timestamptz('deleted_at'),
+    /** Thời điểm (theo nền tảng) của lần sửa nội dung đã áp dụng gần nhất: lần sửa cũ đến muộn không ghi đè. Chỉ hệ thống ghi. */
+    textSyncedAt: timestamptz('text_synced_at'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
