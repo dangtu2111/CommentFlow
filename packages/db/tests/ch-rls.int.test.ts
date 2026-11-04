@@ -29,8 +29,26 @@ let post: string;
 let comment: string;
 let webhookRow: string;
 
-type Who = 'owner' | 'staff' | 'suspended' | 'removed' | 'stranger' | 'otherOwner' | 'system';
-const WHO: Who[] = ['owner', 'staff', 'suspended', 'removed', 'stranger', 'otherOwner', 'system'];
+/** `system` = withJob (đường hệ thống của worker); `bare` = withWorkspace trần (không người dùng, KHÔNG phải hệ thống). */
+type Who =
+  | 'owner'
+  | 'staff'
+  | 'suspended'
+  | 'removed'
+  | 'stranger'
+  | 'otherOwner'
+  | 'system'
+  | 'bare';
+const WHO: Who[] = [
+  'owner',
+  'staff',
+  'suspended',
+  'removed',
+  'stranger',
+  'otherOwner',
+  'system',
+  'bare',
+];
 
 beforeAll(async () => {
   admin = createAdminPool();
@@ -89,8 +107,10 @@ async function run(who: Who, text: string, workspaceId = ws): Promise<number | '
   try {
     const result =
       who === 'system'
-        ? await db.withWorkspace(workspaceId, exec)
-        : await db.withActor(workspaceId, ids[who] as string, exec);
+        ? await db.withJob(workspaceId, exec)
+        : who === 'bare'
+          ? await db.withWorkspace(workspaceId, exec)
+          : await db.withActor(workspaceId, ids[who] as string, exec);
     return result.rowCount ?? result.rows.length;
   } catch (error) {
     const e = error as { cause?: { code?: string }; code?: string };
@@ -114,27 +134,51 @@ function expectOnly(results: Record<Who, number | 'denied'>, allowed: Who[], cou
 }
 
 describe('FR-010 channels', () => {
-  it('INSERT: chỉ Owner đang hoạt động hoặc hệ thống; Staff và người ngoài bị chặn', async () => {
+  it('KHÔNG ai INSERT được kênh bằng cf_app (kể cả Owner và hệ thống): tạo kênh qua hàm DEFINER của TOKEN-ENC', async () => {
     const results = await matrix(
       (who) =>
         `INSERT INTO cf.channels (workspace_id, platform, external_id, name) VALUES ('${ws}', 'facebook', 'ins-${who}-${newId()}', 'K')`,
     );
+    for (const who of WHO) expect(results[who], who).toBe('denied');
+  });
+
+  it('UPDATE name/reply_language: Owner hoặc hệ thống; Staff, người ngoài và withWorkspace trần bị chặn', async () => {
+    const results = await matrix(
+      () => `UPDATE cf.channels SET name = 'Đổi', reply_language = 'vi' WHERE id = '${channel}'`,
+    );
     expectOnly(results, ['owner', 'system']);
   });
 
-  it('UPDATE các cột cho phép: chỉ Owner hoặc hệ thống', async () => {
-    const results = await matrix(
-      () =>
-        `UPDATE cf.channels SET name = 'Đổi', reply_language = 'vi', status = 'connected' WHERE id = '${channel}'`,
+  it('cột do hệ thống quản lý (status, scopes, webhook_subscribed, capabilities...): đường người dùng (Owner) bị trigger chặn, hệ thống được', async () => {
+    for (const set of [
+      "status = 'expired'",
+      'webhook_subscribed = true',
+      "scopes = ARRAY['x']",
+      'capabilities = \'{"a":1}\'',
+      "avatar_url = 'http://x'",
+      'last_polled_at = now()',
+    ]) {
+      expect(
+        await run('owner', `UPDATE cf.channels SET ${set} WHERE id = '${channel}'`),
+        `owner ${set}`,
+      ).toBe('denied');
+      expect(
+        await run('system', `UPDATE cf.channels SET ${set} WHERE id = '${channel}'`),
+        `system ${set}`,
+      ).toBe(1);
+    }
+    await admin.query(
+      "UPDATE cf.channels SET status = 'connected', webhook_subscribed = false, scopes = '{}', capabilities = '{}', avatar_url = NULL, last_polled_at = NULL WHERE id = $1",
+      [channel],
     );
-    expectOnly(results, ['owner', 'system']);
   });
 
   it('SELECT: thành viên đang hoạt động và hệ thống thấy kênh; người ngoài/đã gỡ không', async () => {
     const results = await matrix(
       () => `SELECT id, name, status FROM cf.channels WHERE id = '${channel}'`,
     );
-    for (const who of ['owner', 'staff', 'system'] as const) expect(results[who], who).toBe(1);
+    for (const who of ['owner', 'staff', 'system', 'bare'] as const)
+      expect(results[who], who).toBe(1);
     for (const who of ['suspended', 'removed', 'stranger', 'otherOwner'] as const)
       expect(results[who], who).toBe(0);
   });
@@ -190,27 +234,82 @@ describe('FR-010 channels', () => {
 });
 
 describe('posts và comments', () => {
-  it('posts INSERT/UPDATE: thành viên đang hoạt động hoặc hệ thống', async () => {
+  it('posts INSERT/UPDATE: CHỈ hệ thống (withJob); Owner, Staff và withWorkspace trần bị chặn', async () => {
     const insert = await matrix(
       (who) =>
         `INSERT INTO cf.posts (workspace_id, channel_id, external_id, message) VALUES ('${ws}', '${channel}', 'p-${who}-${newId()}', 'm')`,
     );
-    expectOnly(insert, ['owner', 'staff', 'system']);
+    expectOnly(insert, ['system']);
     const update = await matrix(() => `UPDATE cf.posts SET message = 'sửa' WHERE id = '${post}'`);
-    expectOnly(update, ['owner', 'staff', 'system']);
+    expectOnly(update, ['system']);
   });
 
-  it('comments INSERT/UPDATE: thành viên đang hoạt động hoặc hệ thống (Staff duyệt/đổi trạng thái)', async () => {
+  it('comments INSERT: CHỈ hệ thống; UPDATE (đổi trạng thái/nhãn): thành viên đang hoạt động hoặc hệ thống', async () => {
     const insert = await matrix(
       (who) =>
         `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text)
          VALUES ('${ws}', '${channel}', '${post}', 'c-${who}-${newId()}', 'u', 't')`,
     );
-    expectOnly(insert, ['owner', 'staff', 'system']);
+    expectOnly(insert, ['system']);
     const update = await matrix(
-      () => `UPDATE cf.comments SET status = 'pending_review' WHERE id = '${comment}'`,
+      () =>
+        `UPDATE cf.comments SET status = 'pending_review', label = 'hỏi giá', label_source = 'human' WHERE id = '${comment}'`,
     );
     expectOnly(update, ['owner', 'staff', 'system']);
+  });
+
+  it('comments: đường người dùng không sửa dữ liệu nền tảng (text, tác giả, đính kèm, is_own...) — hệ thống thì được', async () => {
+    for (const set of [
+      "text = 'đã sửa'",
+      "text_normalized = 'x'",
+      "lang = 'en'",
+      "author_name = 'Giả'",
+      'attachments = \'[{"type":"photo"}]\'',
+      'is_own = true',
+      'is_impersonation_suspected = true',
+    ]) {
+      for (const who of ['owner', 'staff'] as const) {
+        expect(
+          await run(who, `UPDATE cf.comments SET ${set} WHERE id = '${comment}'`),
+          `${who} ${set}`,
+        ).toBe('denied');
+      }
+      expect(
+        await run('system', `UPDATE cf.comments SET ${set} WHERE id = '${comment}'`),
+        `system ${set}`,
+      ).toBe(1);
+    }
+    await admin.query(
+      "UPDATE cf.comments SET text = 'giá bao nhiêu?', text_normalized = NULL, lang = NULL, author_name = NULL, attachments = '[]', is_own = false, is_impersonation_suspected = false WHERE id = $1",
+      [comment],
+    );
+  });
+
+  it('comments: replied_by/locked_by chỉ được là chính người gọi hoặc NULL (không giả người khác)', async () => {
+    expect(
+      await run(
+        'staff',
+        `UPDATE cf.comments SET replied_by = '${ids.owner}' WHERE id = '${comment}'`,
+      ),
+    ).toBe('denied');
+    expect(
+      await run(
+        'staff',
+        `UPDATE cf.comments SET locked_by = '${ids.owner}' WHERE id = '${comment}'`,
+      ),
+    ).toBe('denied');
+    expect(
+      await run(
+        'staff',
+        `UPDATE cf.comments SET replied_by = '${ids.staff}', locked_by = '${ids.staff}' WHERE id = '${comment}'`,
+      ),
+    ).toBe(1);
+    expect(
+      await run(
+        'staff',
+        `UPDATE cf.comments SET replied_by = NULL, locked_by = NULL WHERE id = '${comment}'`,
+      ),
+    ).toBe(1);
   });
 
   it('cô lập: không đọc/sửa bình luận của workspace khác', async () => {
@@ -240,7 +339,7 @@ describe('posts và comments', () => {
 });
 
 describe('FR-021 webhook_events', () => {
-  it('INSERT: chỉ hệ thống (không người dùng); Owner cũng không ghi được', async () => {
+  it('INSERT: CHỈ hệ thống (withJob); Owner và withWorkspace trần không ghi được', async () => {
     const results = await matrix(
       (who) =>
         `INSERT INTO cf.webhook_events (workspace_id, platform, event_hash, payload) VALUES ('${ws}', 'facebook', 'h-${who}-${newId()}', '{}')`,
@@ -256,13 +355,20 @@ describe('FR-021 webhook_events', () => {
     expectOnly(results, ['system']);
   });
 
-  it('SELECT: Owner và hệ thống đọc được (payload có tên khách); Staff và người ngoài không', async () => {
+  it('SELECT: Owner và hệ thống đọc được (payload có tên khách); Staff, người ngoài và withWorkspace trần không', async () => {
     const results = await matrix(
       () => `SELECT id FROM cf.webhook_events WHERE id = '${webhookRow}'`,
     );
     expect(results.owner).toBe(1);
     expect(results.system).toBe(1);
-    for (const who of ['staff', 'suspended', 'removed', 'stranger', 'otherOwner'] as const) {
+    for (const who of [
+      'staff',
+      'suspended',
+      'removed',
+      'stranger',
+      'otherOwner',
+      'bare',
+    ] as const) {
       expect(results[who], who).toBe(0);
     }
   });

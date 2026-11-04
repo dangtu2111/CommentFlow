@@ -219,7 +219,7 @@ describe('check-rls', () => {
 
   it('CH-SCHEMA: bắt được khi policy ghi của channels/webhook_events bị hạ xuống chỉ theo workspace', async () => {
     const ch = await violationsAfter(
-      'DROP POLICY channels_insert ON cf.channels; CREATE POLICY channels_insert ON cf.channels FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
+      'DROP POLICY channels_update ON cf.channels; CREATE POLICY channels_update ON cf.channels FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
     );
     expect(ch).toContainEqual(expect.objectContaining({ subject: 'cf.channels' }));
     const wh = await violationsAfter(
@@ -230,6 +230,25 @@ describe('check-rls', () => {
       'DROP POLICY comments_select ON cf.comments; CREATE POLICY comments_select ON cf.comments FOR SELECT USING (workspace_id = (SELECT core.current_workspace_id()))',
     );
     expect(sel).toContainEqual(expect.objectContaining({ subject: 'cf.comments' }));
+  });
+
+  it('CH-SCHEMA: DELETE vẫn bị bắt dù kèm một policy DELETE theo workspace', async () => {
+    const v = await violationsAfter(
+      'GRANT DELETE ON cf.channels TO cf_app; CREATE POLICY channels_delete ON cf.channels FOR DELETE USING (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.channels',
+        message: expect.stringContaining('DELETE'),
+      }),
+    );
+  });
+
+  it('CH-SCHEMA: bắt được khi policy hệ thống bị nới thành "không có người dùng" (withWorkspace trần được nâng quyền)', async () => {
+    const v = await violationsAfter(
+      'DROP POLICY posts_insert ON cf.posts; CREATE POLICY posts_insert ON cf.posts FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()) AND (SELECT core.is_system_context()) OR (SELECT core.current_user_id()) IS NULL)',
+    );
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'cf.posts' }));
   });
 
   it('CH-SCHEMA: bắt được khi cf_app có quyền DELETE trên bảng kênh/bình luận', async () => {

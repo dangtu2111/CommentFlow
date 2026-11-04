@@ -416,26 +416,46 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.workspaces', 'w', 'is_workspace_owner'],
   ['core.workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
   ['core.action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
-  // CH-SCHEMA (feat/ch-schema): ghi theo vai trò hoặc hệ thống (không người dùng); webhook_events chỉ hệ thống ghi
-  ['cf.channels', 'a', 'is_workspace_owner'],
-  ['cf.channels', 'w', 'is_workspace_owner'],
-  ['cf.channels', 'r', 'is_workspace_member'], // người gọi phải là thành viên (hoặc hệ thống) — chống sai id
-  ['cf.posts', 'a', 'is_workspace_member'],
-  ['cf.posts', 'w', 'is_workspace_member'],
+  // CH-SCHEMA (feat/ch-schema, ADR 007): ghi theo vai trò hoặc ĐƯỜNG HỆ THỐNG (withJob → is_system_context()).
+  // Không có policy INSERT cho cf.channels (cf_app không INSERT: tạo kênh qua hàm DEFINER của TOKEN-ENC).
+  ['cf.channels', 'w', 'is_workspace_owner'], // + is_system_context (trigger giới hạn cột cho đường người dùng)
+  ['cf.channels', 'r', 'is_workspace_member'], // người gọi phải là thành viên (hoặc không người dùng) — chống sai id
+  ['cf.posts', 'a', 'is_system_context'],
+  ['cf.posts', 'w', 'is_system_context'],
   ['cf.posts', 'r', 'is_workspace_member'],
-  ['cf.comments', 'a', 'is_workspace_member'],
-  ['cf.comments', 'w', 'is_workspace_member'],
+  ['cf.comments', 'a', 'is_system_context'],
+  ['cf.comments', 'w', 'is_workspace_member'], // + is_system_context (trigger chặn sửa dữ liệu nền tảng ở đường người dùng)
   ['cf.comments', 'r', 'is_workspace_member'],
-  ['cf.webhook_events', 'a', 'current_user_id'], // chỉ hệ thống: current_user_id() IS NULL
-  ['cf.webhook_events', 'w', 'current_user_id'],
+  ['cf.webhook_events', 'a', 'is_system_context'],
+  ['cf.webhook_events', 'w', 'is_system_context'],
   ['cf.webhook_events', 'r', 'is_workspace_owner'],
 ];
 
 /** Chuỗi KHÔNG được xuất hiện trong policy của lệnh đó. */
 const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marker: string]> = [
   ['core.members', 'a', 'is_workspace_owner'],
-  ['cf.webhook_events', 'a', 'is_workspace_member'], // hệ thống ghi, không phải thành viên
+  // Chỉ-hệ thống: không được mở thêm nhánh thành viên/Owner/"không người dùng" trong CÙNG policy (OR)
+  ['cf.webhook_events', 'a', 'is_workspace_member'],
   ['cf.webhook_events', 'w', 'is_workspace_member'],
+  ['cf.webhook_events', 'a', 'is_workspace_owner'],
+  ['cf.webhook_events', 'w', 'is_workspace_owner'],
+  ['cf.posts', 'a', 'is_workspace_member'],
+  ['cf.posts', 'w', 'is_workspace_member'],
+  ['cf.posts', 'a', 'is_workspace_owner'],
+  ['cf.posts', 'w', 'is_workspace_owner'],
+  ['cf.comments', 'a', 'is_workspace_member'],
+  ['cf.comments', 'a', 'is_workspace_owner'],
+  ['cf.channels', 'w', 'is_workspace_member'], // Staff không ghi kênh
+  ['cf.channels', 'r', 'is_workspace_owner'], // đọc kênh không riêng Owner
+  ['cf.webhook_events', 'r', 'is_workspace_member'], // Staff không đọc payload
+  // "hệ thống" phải là is_system_context(), KHÔNG phải "không có người dùng" thuần (withWorkspace trần sẽ được nâng quyền)
+  ['cf.channels', 'w', 'IS NULL'],
+  ['cf.posts', 'a', 'IS NULL'],
+  ['cf.posts', 'w', 'IS NULL'],
+  ['cf.comments', 'a', 'IS NULL'],
+  ['cf.webhook_events', 'a', 'IS NULL'],
+  ['cf.webhook_events', 'w', 'IS NULL'],
+  ['cf.webhook_events', 'r', 'IS NULL'],
 ];
 
 async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -479,6 +499,32 @@ async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Pr
     violations.push({
       subject: String(row.tbl),
       message: `policy cho lệnh '${String(row.cmd)}' KHÔNG được chứa ${String(row.marker)} (thành viên chỉ vào qua lời mời / đường khởi tạo)`,
+    });
+  }
+}
+
+/** Bảng cf_app KHÔNG BAO GIỜ được DELETE (xóa mềm bằng status; xóa thật do job/role bảo trì riêng). */
+const NO_DELETE_TABLES = [
+  'cf.channels',
+  'cf.posts',
+  'cf.comments',
+  'cf.webhook_events',
+  'cf.ai_usage',
+  'core.members',
+  'core.invitations',
+  'core.action_logs',
+  'core.workspaces',
+];
+
+async function checkNoDelete(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const values = NO_DELETE_TABLES.map((t) => `('${t}')`).join(', ');
+  const found = await db.query(`/* no-delete */
+    SELECT v.t AS tbl FROM (VALUES ${values}) AS v(t)
+    WHERE has_table_privilege('${APP_ROLE}', v.t::regclass, 'DELETE')`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.tbl),
+      message: `${APP_ROLE} không được có quyền DELETE (xóa mềm bằng status; xóa thật do job/role bảo trì)`,
     });
   }
 }
@@ -655,6 +701,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkAdminInsertGuard(db, violations);
   await checkDefinerFunctions(db, violations);
   await checkActorPolicies(db, violations);
+  await checkNoDelete(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

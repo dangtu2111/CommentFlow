@@ -182,6 +182,53 @@ describe('khóa ngoại ghép chống chéo workspace', () => {
   });
 });
 
+describe('sau kiểm chứng độc lập (CH-SCHEMA)', () => {
+  it('xóa bình luận chính: bình luận đã gộp vào nó CÒN LẠI với merged_into_id = NULL (SET NULL chỉ cột con, không đụng workspace_id)', async () => {
+    const main = (await insertComment(wsA, channelA, postA)).rows[0].id;
+    const merged = (await insertComment(wsA, channelA, postA)).rows[0].id;
+    await admin.query('UPDATE cf.comments SET merged_into_id = $2 WHERE id = $1', [merged, main]);
+    await admin.query('DELETE FROM cf.comments WHERE id = $1', [main]);
+    const row = (
+      await admin.query('SELECT workspace_id, merged_into_id FROM cf.comments WHERE id = $1', [
+        merged,
+      ])
+    ).rows[0];
+    expect(row).toEqual({ workspace_id: wsA, merged_into_id: null });
+  });
+
+  it('bình luận phải thuộc ĐÚNG kênh của bài: post của kênh X, bình luận khai kênh Y (cùng workspace) → 23503', async () => {
+    const channelA2 = (await channel(wsA)).rows[0].id;
+    expect(await code(insertComment(wsA, channelA2, postA))).toBe(FK);
+  });
+
+  it('label_confidence phải trong [0, 1]', async () => {
+    const id = (await insertComment(wsA, channelA, postA)).rows[0].id;
+    for (const bad of ['-0.1', '1.001', '5']) {
+      expect(
+        await code(
+          admin.query('UPDATE cf.comments SET label_confidence = $2 WHERE id = $1', [id, bad]),
+        ),
+        bad,
+      ).toBe(CHECK);
+    }
+    for (const ok of ['0', '0.5', '1']) {
+      await expect(
+        admin.query('UPDATE cf.comments SET label_confidence = $2 WHERE id = $1', [id, ok]),
+      ).resolves.toBeTruthy();
+    }
+  });
+
+  it('kênh có access_token_enc kiểu bytea và key_version mặc định 1 (xoay khóa, docs/10 §1)', async () => {
+    const row = (
+      await admin.query(
+        'SELECT key_version, pg_typeof(access_token_enc)::text AS t FROM cf.channels WHERE id = $1',
+        [channelA],
+      )
+    ).rows[0];
+    expect(row).toEqual({ key_version: 1, t: 'bytea' });
+  });
+});
+
 describe('posts và comments', () => {
   it('UNIQUE (channel_id, external_id) cho bài và bình luận (chống trùng webhook)', async () => {
     const ext = `dup-${newId()}`;
@@ -247,20 +294,18 @@ describe('posts và comments', () => {
 });
 
 describe('FR-021 webhook_events', () => {
-  it('event_hash duy nhất (idempotency); status/platform có CHECK; workspace_id nullable', async () => {
+  it('event_hash duy nhất THEO workspace (idempotency; một Page ở hai workspace → hai dòng); dòng chưa map (NULL) cũng chỉ một; status/platform có CHECK', async () => {
     const hash = `h-${newId()}`;
-    await admin.query(
-      "INSERT INTO cf.webhook_events (workspace_id, platform, event_hash, payload) VALUES (NULL, 'facebook', $1, '{}')",
-      [hash],
-    );
-    expect(
-      await code(
-        admin.query(
-          "INSERT INTO cf.webhook_events (workspace_id, platform, event_hash, payload) VALUES ($1, 'facebook', $2, '{}')",
-          [wsA, hash],
-        ),
-      ),
-    ).toBe(UNIQUE);
+    const ins = (ws: string | null, h: string) =>
+      admin.query(
+        "INSERT INTO cf.webhook_events (workspace_id, platform, event_hash, payload) VALUES ($1, 'facebook', $2, '{}')",
+        [ws, h],
+      );
+    await ins(null, hash);
+    expect(await code(ins(null, hash))).toBe(UNIQUE); // NULLS NOT DISTINCT: không chèn hai dòng chưa map cùng hash
+    await ins(wsA, hash);
+    expect(await code(ins(wsA, hash))).toBe(UNIQUE);
+    await expect(ins(wsB, hash)).resolves.toBeTruthy(); // workspace khác: sự kiện của chính họ
     expect(
       await code(
         admin.query(
@@ -278,9 +323,10 @@ describe('FR-021 webhook_events', () => {
       ),
     ).toBe(CHECK);
     const row = (
-      await admin.query('SELECT status, attempts FROM cf.webhook_events WHERE event_hash = $1', [
-        hash,
-      ])
+      await admin.query(
+        'SELECT status, attempts FROM cf.webhook_events WHERE event_hash = $1 AND workspace_id = $2',
+        [hash, wsA],
+      )
     ).rows[0];
     expect(row).toEqual({ status: 'received', attempts: 0 });
   });

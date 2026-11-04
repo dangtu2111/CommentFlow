@@ -1,5 +1,5 @@
 {
-  "id": "e2ba2f48-68b9-4416-9a8e-d0771ea8f827",
+  "id": "b9e0733b-fc92-4bad-b706-674ed6a7d546",
   "prevId": "835f856b-df26-43e2-8c11-c0589ff05147",
   "version": "7",
   "dialect": "postgresql",
@@ -1402,9 +1402,16 @@
         },
         "access_token_enc": {
           "name": "access_token_enc",
-          "type": "text",
+          "type": "bytea",
           "primaryKey": false,
           "notNull": false
+        },
+        "key_version": {
+          "name": "key_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
         },
         "token_expires_at": {
           "name": "token_expires_at",
@@ -1779,6 +1786,28 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "comments_merged_into_idx": {
+          "name": "comments_merged_into_idx",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "merged_into_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cf\".\"comments\".\"merged_into_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1827,8 +1856,8 @@
           "tableFrom": "comments",
           "tableTo": "posts",
           "schemaTo": "cf",
-          "columnsFrom": ["workspace_id", "post_id"],
-          "columnsTo": ["workspace_id", "id"],
+          "columnsFrom": ["workspace_id", "channel_id", "post_id"],
+          "columnsTo": ["workspace_id", "channel_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1858,6 +1887,10 @@
       },
       "policies": {},
       "checkConstraints": {
+        "comments_label_confidence_check": {
+          "name": "comments_label_confidence_check",
+          "value": "\"cf\".\"comments\".\"label_confidence\" is null or (\"cf\".\"comments\".\"label_confidence\" >= 0 and \"cf\".\"comments\".\"label_confidence\" <= 1)"
+        },
         "comments_status_check": {
           "name": "comments_status_check",
           "value": "\"cf\".\"comments\".\"status\" in ('new', 'processing', 'pending_review', 'needs_human', 'scheduled_auto', 'sending', 'replied', 'auto_replied', 'send_failed', 'skipped', 'spam_suspected', 'hidden')"
@@ -1992,6 +2025,11 @@
           "name": "posts_workspace_id_id_unique",
           "nullsNotDistinct": false,
           "columns": ["workspace_id", "id"]
+        },
+        "posts_workspace_channel_id_unique": {
+          "name": "posts_workspace_channel_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["workspace_id", "channel_id", "id"]
         }
       },
       "policies": {},
@@ -2088,6 +2126,28 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "webhook_events_pending_idx": {
+          "name": "webhook_events_pending_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cf\".\"webhook_events\".\"status\" in ('received', 'failed')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -2104,10 +2164,10 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "webhook_events_event_hash_unique": {
-          "name": "webhook_events_event_hash_unique",
-          "nullsNotDistinct": false,
-          "columns": ["event_hash"]
+        "webhook_events_hash_workspace_unique": {
+          "name": "webhook_events_hash_workspace_unique",
+          "nullsNotDistinct": true,
+          "columns": ["event_hash", "workspace_id"]
         }
       },
       "policies": {},

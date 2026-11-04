@@ -83,8 +83,8 @@ export const comments = cf.table(
     }).onDelete('cascade'),
     foreignKey({
       name: 'comments_post_fk',
-      columns: [t.workspaceId, t.postId],
-      foreignColumns: [posts.workspaceId, posts.id],
+      columns: [t.workspaceId, t.channelId, t.postId],
+      foreignColumns: [posts.workspaceId, posts.channelId, posts.id],
     }).onDelete('cascade'),
     unique('comments_channel_external_unique').on(t.channelId, t.externalId),
     unique('comments_workspace_id_id_unique').on(t.workspaceId, t.id),
@@ -95,6 +95,13 @@ export const comments = cf.table(
     }).onDelete('set null'),
     index('comments_workspace_status_created_idx').on(t.workspaceId, t.status, t.createdTime),
     index('comments_post_id_idx').on(t.postId),
+    index('comments_merged_into_idx')
+      .on(t.workspaceId, t.mergedIntoId)
+      .where(sql`${t.mergedIntoId} is not null`),
+    check(
+      'comments_label_confidence_check',
+      sql`${t.labelConfidence} is null or (${t.labelConfidence} >= 0 and ${t.labelConfidence} <= 1)`,
+    ),
     check(
       'comments_status_check',
       sql`${t.status} in (${sql.raw(COMMENT_STATUSES.map((s) => `'${s}'`).join(', '))})`,

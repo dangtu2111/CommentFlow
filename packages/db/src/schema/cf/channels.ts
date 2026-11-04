@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, jsonb, text, unique, uuid } from 'drizzle-orm/pg-core';
-import { createdAt, timestamptz, updatedAt } from '../core/common';
+import { boolean, check, integer, jsonb, text, unique, uuid } from 'drizzle-orm/pg-core';
+import { bytea, createdAt, timestamptz, updatedAt } from '../core/common';
 import { workspaces } from '../core/tenancy';
 import { cf } from './ai-usage';
 
@@ -20,7 +20,10 @@ export const channels = cf.table(
     externalId: text('external_id').notNull(),
     name: text('name').notNull(),
     avatarUrl: text('avatar_url'),
-    accessTokenEnc: text('access_token_enc'),
+    /** AES-GCM; cf_app KHÔNG có quyền cột nào (hàm DEFINER ở TOKEN-ENC). */
+    accessTokenEnc: bytea('access_token_enc'),
+    /** Phiên bản khóa mã hóa (xoay khóa, docs/13 §5); cf_app không có quyền cột. */
+    keyVersion: integer('key_version').notNull().default(1),
     tokenExpiresAt: timestamptz('token_expires_at'),
     scopes: text('scopes').array().notNull().default(sql`'{}'::text[]`),
     status: text('status').notNull().default('connected'),
@@ -50,3 +53,28 @@ export const channels = cf.table(
     check('channels_reply_language_check', sql`${t.replyLanguage} in ('auto', 'vi', 'en')`),
   ],
 );
+
+/**
+ * Tập cột `cf_app` ĐỌC được (không có token, `key_version`): dùng `db.select(channelReadColumns).from(channels)`.
+ * `select()`/`.returning()` không đối số liệt kê cả cột token và bị từ chối khi chạy — KHÔNG sửa bằng cách cấp thêm quyền.
+ */
+export const channelReadColumns = {
+  id: channels.id,
+  workspaceId: channels.workspaceId,
+  platform: channels.platform,
+  externalId: channels.externalId,
+  name: channels.name,
+  avatarUrl: channels.avatarUrl,
+  tokenExpiresAt: channels.tokenExpiresAt,
+  scopes: channels.scopes,
+  status: channels.status,
+  webhookSubscribed: channels.webhookSubscribed,
+  replyLanguage: channels.replyLanguage,
+  capabilities: channels.capabilities,
+  lastPolledAt: channels.lastPolledAt,
+  sendSuspendedUntil: channels.sendSuspendedUntil,
+  sendSuspendedReason: channels.sendSuspendedReason,
+  rateLimitOverride: channels.rateLimitOverride,
+  createdAt: channels.createdAt,
+  updatedAt: channels.updatedAt,
+} as const;

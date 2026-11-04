@@ -32,5 +32,7 @@ export const posts = cf.table(
     }).onDelete('cascade'),
     unique('posts_channel_external_unique').on(t.channelId, t.externalId),
     unique('posts_workspace_id_id_unique').on(t.workspaceId, t.id),
+    // Đích của khóa ngoại ghép (workspace_id, channel_id, post_id) từ comments: bình luận phải thuộc ĐÚNG kênh của bài.
+    unique('posts_workspace_channel_id_unique').on(t.workspaceId, t.channelId, t.id),
   ],
 );

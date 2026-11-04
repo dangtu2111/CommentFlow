@@ -7,11 +7,15 @@ import { systemJob, workspaceJob } from './run-job';
 const WS = '11111111-1111-4111-8111-111111111111';
 
 function fakeDb() {
-  const calls: { kind: 'workspace' | 'system'; workspaceId?: string }[] = [];
+  const calls: { kind: 'workspace' | 'job' | 'system'; workspaceId?: string }[] = [];
   const tx = { marker: 'tx' };
   const db = {
     withWorkspace: async (workspaceId: string, fn: (t: unknown) => unknown) => {
       calls.push({ kind: 'workspace', workspaceId });
+      return fn(tx);
+    },
+    withJob: async (workspaceId: string, fn: (t: unknown) => unknown) => {
+      calls.push({ kind: 'job', workspaceId });
       return fn(tx);
     },
     withSystem: async (fn: (t: unknown) => unknown) => {
@@ -36,7 +40,7 @@ const codeOf = async (promise: Promise<unknown>) => {
 describe('workspaceJob', () => {
   const schema = z.object({ workspaceId: z.uuid(), note: z.string() });
 
-  it('chạy handler trong withWorkspace với workspaceId lấy từ dữ liệu job', async () => {
+  it('chạy handler trong withJob (đường hệ thống của workspace) với workspaceId lấy từ dữ liệu job', async () => {
     const { db, calls, tx } = fakeDb();
     const seen: unknown[] = [];
     const handler = workspaceJob({
@@ -47,7 +51,7 @@ describe('workspaceJob', () => {
       },
     });
     await handler([job({ workspaceId: WS, note: 'xin chào' })]);
-    expect(calls).toEqual([{ kind: 'workspace', workspaceId: WS }]);
+    expect(calls).toEqual([{ kind: 'job', workspaceId: WS }]);
     expect(seen).toEqual([
       { tx, payload: { workspaceId: WS, note: 'xin chào' }, workspaceId: WS, jobId: 'job-1' },
     ]);
@@ -79,8 +83,8 @@ describe('workspaceJob', () => {
       job({ workspaceId: other, note: 'b' }, 'j2'),
     ]);
     expect(calls).toEqual([
-      { kind: 'workspace', workspaceId: WS },
-      { kind: 'workspace', workspaceId: other },
+      { kind: 'job', workspaceId: WS },
+      { kind: 'job', workspaceId: other },
     ]);
   });
 
