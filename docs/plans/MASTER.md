@@ -15,7 +15,7 @@
 2. `CONNECTOR-IFACE` — ✅ xong (giao diện connector chung + khai báo khả năng, FR-016)
 3. `CH-SCHEMA` — ✅ xong (bảng + RLS, ADR 007)
 4. `WH-INGEST` — ✅ webhook (xác minh chữ ký) → job `ingest`, chống trùng, bỏ bình luận của chính Page
-5. `INBOX-LIST` — trang Bình luận (tab, lọc, tìm)
+5. `INBOX-LIST` — ✅ trang Bình luận (tab, lọc, tìm)
 
 **Bắt buộc trước khi lên staging:** `WORKER-DB-ROLE` (role DB riêng cho worker; web/`cf_app` không đọc được ciphertext token — gap matrix, ADR 007 §2) — chủ dự án chốt 06/11/2026. Kiểm tra khóa lúc khởi động ở web gắn cùng `FB-OAUTH` (gap `TOKEN-KEY-STARTUP-WEB`).
 
@@ -83,7 +83,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | TOKEN-ENC | FR-010 (mã hóa Page token, 13 §5; khóa theo ADR) | US-002 | CH-SCHEMA | S | không | ✅ |
 | WH-INGEST | FR-020 (chữ ký → job `ingest` → 200), FR-021 (chống trùng `(channel_id, external_comment_id)`) | UF-2 | CH-SCHEMA | S | không (fixture đã ghi) | ✅ |
 | INGEST-SKIP-OWN | FR-022 (bỏ bình luận của chính Page, gồm câu AI gửi) | UF-2 | WH-INGEST | — | không | ✅ một phần (bỏ theo `from.id == page_id` ở WH-INGEST; còn bỏ câu do AI gửi khi có `FB-REPLY`) |
-| INBOX-LIST | FR-040 (tab trạng thái, lọc, tìm, sắp xếp) | US-010, UF-3 | CH-SCHEMA | — | không | ⏳ |
+| INBOX-LIST | FR-040 (tab trạng thái, lọc, tìm, sắp xếp) | US-010, UF-3 | CH-SCHEMA | — | không | ✅ (danh sách + tab + tìm/lọc/sắp xếp; còn: chi tiết, nhãn AI, giao việc, sidebar — xem gap) |
 | INBOX-DETAIL-LOCK | FR-041 (khóa mềm `locked_until`, cảnh báo người thứ hai) | US-013 | INBOX-LIST | — | không | ⏳ |
 | FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Page thử (Meta App dev đã có; redirect localhost; xem `docs/CAN_BAN_CUNG_CAP.md`) | ⏳ |
 | CH-STATUS-BANNER | FR-012 (connected / token_expired / disconnected; banner Kết nối lại) | US-002 | FB-OAUTH | — | không | ⏳ |

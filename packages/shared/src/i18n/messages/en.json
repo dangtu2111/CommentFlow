@@ -212,7 +212,8 @@
       "brand": "CommentFlow AI",
       "nav": "Main navigation",
       "security": "Security",
-      "members": "Members"
+      "members": "Members",
+      "comments": "Comments"
     }
   },
   "members": {
@@ -292,6 +293,83 @@
       "invalid": "This invitation cannot be accepted. It may have expired, been used or revoked, or the account you are signed in with is not the invited email. Check which email you are signed in with or ask an Owner to send it again.",
       "rateLimited": "Too many attempts. Please try again in {minutes} minutes.",
       "generic": "Could not complete that. Please try again in a few minutes."
+    }
+  },
+  "comments": {
+    "title": "Comments",
+    "tabsLabel": "Processing status",
+    "tabs": {
+      "new": "New",
+      "pending_review": "Pending review",
+      "scheduled_auto": "Scheduled to send",
+      "auto_replied": "AI auto-replied",
+      "needs_human": "Needs a person",
+      "needs_followup": "Needs more help",
+      "spam_suspected": "Suspected spam",
+      "send_failed": "Send failed",
+      "replied": "Replied",
+      "hidden": "Hidden",
+      "skipped": "Skipped",
+      "all": "All"
+    },
+    "status": {
+      "new": "New",
+      "processing": "Processing",
+      "pending_review": "Pending review",
+      "needs_human": "Needs a person",
+      "scheduled_auto": "Scheduled to send",
+      "sending": "Sending",
+      "replied": "Replied",
+      "auto_replied": "AI auto-replied",
+      "send_failed": "Send failed",
+      "skipped": "Skipped",
+      "spam_suspected": "Suspected spam",
+      "hidden": "Hidden"
+    },
+    "toolbar": {
+      "label": "Search and filter comments",
+      "search": "Search by customer name, text…",
+      "searchLabel": "Search",
+      "platform": "Platform",
+      "allPlatforms": "All platforms",
+      "channel": "Channel",
+      "allChannels": "All channels",
+      "adsOnly": "Ad posts only",
+      "sort": "Sort",
+      "apply": "Apply",
+      "clear": "Clear filters"
+    },
+    "sort": {
+      "oldest": "Oldest first",
+      "newest": "Newest first"
+    },
+    "platforms": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "list": {
+      "label": "Comment list",
+      "anonymous": "Anonymous customer",
+      "ad": "Ad post",
+      "followup": "Needs more help",
+      "shown": "Showing {shown} / {total}",
+      "next": "Next page",
+      "first": "Back to first page"
+    },
+    "empty": {
+      "title": "No comments yet",
+      "body": "New comments from your connected Pages will show up here.",
+      "filteredTitle": "No matching comments",
+      "filteredBody": "Try another tab or clear some filters."
+    },
+    "detail": {
+      "title": "Comment details",
+      "empty": "Select a comment to see its details."
+    },
+    "error": {
+      "title": "Could not load the comment list",
+      "body": "A temporary error occurred. Please reload in a few minutes."
     }
   }
 }

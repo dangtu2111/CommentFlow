@@ -14,6 +14,24 @@ export {
   setChannelToken,
 } from './channel-tokens';
 export { createDb, type Database, type FlowDb } from './client';
+export {
+  countCommentsByTab,
+  DEFAULT_INBOX_LIMIT,
+  escapeLikePattern,
+  INBOX_PLATFORMS,
+  INBOX_TABS,
+  type InboxChannel,
+  type InboxCursor,
+  type InboxFilter,
+  type InboxItem,
+  type InboxPage,
+  type InboxPlatform,
+  type InboxTab,
+  listComments,
+  listInboxChannels,
+  MAX_INBOX_LIMIT,
+  MAX_SEARCH_LENGTH,
+} from './queries/inbox';
 export { schema } from './schema';
 export {
   type RecordedWebhookEvent,

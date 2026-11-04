@@ -27,6 +27,7 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
         </Link>
         <WorkspaceSwitcher current={workspace} memberships={memberships} />
         <nav className="app-nav" aria-label={t('nav')}>
+          <Link href="/app/comments">{t('comments')}</Link>
           {workspace.role === 'owner' ? <Link href="/app/members">{t('members')}</Link> : null}
           <Link href="/app/security">{t('security')}</Link>
         </nav>
