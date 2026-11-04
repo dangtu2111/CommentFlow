@@ -1,5 +1,5 @@
 import { deserializeEvent } from '@flow/connectors';
-import { and, type Database, eq, type FlowDb, schema, sql } from '@flow/db';
+import { and, type Database, eq, type FlowDb, isNull, ne, schema, sql } from '@flow/db';
 import { type IngestJob, ingestJobSchema } from '@flow/shared';
 import type { Logger } from '../logger';
 import { INGEST_RETRY_LIMIT } from '../queue/definitions';
@@ -39,6 +39,12 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
         eq(channels.externalId, parsed.channelExternalId),
       ),
     );
+
+  if (channel && parsed.kind === 'comment_edited') {
+    await applyEdit(tx, job, channel.id, parsed.comment);
+  } else if (channel && parsed.kind === 'comment_deleted') {
+    await applyDelete(tx, job, channel.id, parsed.commentExternalId);
+  }
 
   if (channel?.status === 'connected' && parsed.kind === 'comment_created') {
     const c = parsed.comment;
@@ -91,8 +97,71 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
       }
     }
   }
-  // Kênh đã ngắt/không còn connected, sửa/xóa, hoặc bình luận của Page: không có gì để làm → xong.
+  // Kênh đã ngắt/không còn connected (bình luận mới), bình luận của Page, hoặc không có gì để đồng bộ → xong.
   await finish(tx, event.id, { status: 'done', error: null });
+}
+
+/**
+ * Khách sửa bình luận (FR-048): cập nhật `text` (và để `text_normalized` chuẩn hóa lại sau) CHỈ khi bình luận đã có,
+ * không phải của Page, chưa bị xóa và nội dung thật sự đổi. Ghi `action_logs` KHÔNG kèm nội dung cũ/mới.
+ * "Phân loại lại nếu chưa trả lời" chưa làm (chưa có phân loại — gap).
+ */
+async function applyEdit(
+  tx: Database,
+  job: IngestJob,
+  channelId: string,
+  comment: { externalId: string; text: string },
+): Promise<void> {
+  const updated = await tx
+    .update(comments)
+    .set({ text: comment.text, textNormalized: null })
+    .where(
+      and(
+        eq(comments.workspaceId, job.workspaceId),
+        eq(comments.channelId, channelId),
+        eq(comments.externalId, comment.externalId),
+        eq(comments.isOwn, false),
+        isNull(comments.deletedAt),
+        ne(comments.text, comment.text),
+      ),
+    )
+    .returning({ id: comments.id });
+  const id = updated[0]?.id;
+  if (id) await logSystemAction(tx, job.workspaceId, 'comment.edited', id);
+}
+
+/** Khách xóa bình luận (FR-048): đặt `deleted_at` MỘT lần (chạy lại không đổi giờ); dòng và log được giữ. */
+async function applyDelete(
+  tx: Database,
+  job: IngestJob,
+  channelId: string,
+  commentExternalId: string,
+): Promise<void> {
+  const updated = await tx
+    .update(comments)
+    .set({ deletedAt: new Date() })
+    .where(
+      and(
+        eq(comments.workspaceId, job.workspaceId),
+        eq(comments.channelId, channelId),
+        eq(comments.externalId, commentExternalId),
+        isNull(comments.deletedAt),
+      ),
+    )
+    .returning({ id: comments.id });
+  const id = updated[0]?.id;
+  if (id) await logSystemAction(tx, job.workspaceId, 'comment.deleted', id);
+}
+
+async function logSystemAction(
+  tx: Database,
+  workspaceId: string,
+  action: string,
+  commentId: string,
+): Promise<void> {
+  await tx.execute(sql`
+    INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action, target_type, target_id)
+    VALUES (${workspaceId}::uuid, 'system', NULL, ${action}, 'comment', ${commentId})`);
 }
 
 async function finish(

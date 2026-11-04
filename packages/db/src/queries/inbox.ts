@@ -99,6 +99,8 @@ function commonConditions(workspaceId: string, filter: InboxFilter): SQL[] {
   const conditions: SQL[] = [
     sql`c.workspace_id = ${workspaceId}::uuid`,
     sql`c.merged_into_id IS NULL`,
+    // Khách đã xóa trên nền tảng (FR-048): ẩn khỏi inbox (vẫn giữ dòng + log).
+    sql`c.deleted_at IS NULL`,
   ];
   if (filter.platform) conditions.push(sql`ch.platform = ${filter.platform}`);
   if (filter.channelId) conditions.push(sql`c.channel_id = ${filter.channelId}::uuid`);

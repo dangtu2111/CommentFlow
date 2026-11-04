@@ -282,3 +282,51 @@ describe('FR-020 làm sạch dữ liệu bẩn để một sự kiện không l�
     ).not.toThrow();
   });
 });
+
+describe('FR-048 sửa/xóa bình luận — occurredAt và khóa chống trùng', () => {
+  const at = (time: number, verb: 'edited' | 'remove' | 'add') =>
+    parseMetaWebhook({
+      object: 'page',
+      entry: [{ id: PAGE_ID, time, changes: [commentChange({ verb })] }],
+    })[0];
+
+  it('FR-048 edited/remove mang occurredAt = entry.time (giây → Date); thiếu entry.time → không có; created không có', () => {
+    const edited = at(1_762_000_100, 'edited');
+    const removed = at(1_762_000_200, 'remove');
+    expect(edited?.kind).toBe('comment_edited');
+    expect(edited && 'occurredAt' in edited ? edited.occurredAt?.getTime() : null).toBe(
+      1_762_000_100_000,
+    );
+    expect(removed && 'occurredAt' in removed ? removed.occurredAt?.getTime() : null).toBe(
+      1_762_000_200_000,
+    );
+    expect(at(1_762_000_300, 'add')).not.toHaveProperty('occurredAt');
+    const [noTime] = parseMetaWebhook({
+      object: 'page',
+      entry: [{ id: PAGE_ID, changes: [commentChange({ verb: 'edited' })] }],
+    });
+    expect(noTime).not.toHaveProperty('occurredAt');
+  });
+
+  it('FR-048 hai lần sửa cùng bình luận (entry.time khác) → hash KHÁC; Meta gửi lại cùng payload → hash GIỐNG; xóa cũng vậy', () => {
+    const e1 = at(1_762_000_100, 'edited');
+    const e1again = at(1_762_000_100, 'edited');
+    const e2 = at(1_762_000_500, 'edited');
+    const d1 = at(1_762_000_100, 'remove');
+    const d2 = at(1_762_000_500, 'remove');
+    if (!e1 || !e1again || !e2 || !d1 || !d2) throw new Error('parse');
+    const h = (e: typeof e1) => eventHashOf('facebook', e);
+    expect(h(e1)).toBe(h(e1again));
+    expect(h(e1)).not.toBe(h(e2));
+    expect(h(d1)).not.toBe(h(d2));
+    expect(h(e1)).not.toBe(h(d1));
+  });
+
+  it('FR-048 serialize/deserialize khứ hồi giữ occurredAt (sửa và xóa)', () => {
+    for (const verb of ['edited', 'remove'] as const) {
+      const event = at(1_762_000_100, verb);
+      if (!event) throw new Error('parse');
+      expect(deserializeEvent(JSON.parse(JSON.stringify(serializeEvent(event))))).toEqual(event);
+    }
+  });
+});

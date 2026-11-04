@@ -222,6 +222,19 @@ describe('FR-042 sendRecheck — trượt thì KHÔNG gọi connector', () => {
     expect((await commentRow(hidden.commentId)).status).toBe('needs_human');
   });
 
+  it('R2: khách đã xóa bình luận trên nền tảng (deleted_at) → hủy recheck:R2, không gọi connector, bình luận về trạng thái trước', async () => {
+    const fx = await fixture({ commentStatus: 'needs_human' });
+    await admin.query('UPDATE cf.comments SET deleted_at = now() WHERE id = $1', [fx.commentId]);
+    const { replies, registry } = connectorWith();
+    await run(fx, registry);
+    expect(replies).toHaveLength(0);
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'cancelled',
+      error_code: 'recheck:R2',
+    });
+    expect((await commentRow(fx.commentId)).status).toBe('needs_human');
+  });
+
   it('R3: kênh không còn connected hoặc đang bị tạm khóa gửi → failed recheck:R3, bình luận send_failed', async () => {
     const expired = await fixture();
     await admin.query("UPDATE cf.channels SET status = 'expired' WHERE id = $1", [

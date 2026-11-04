@@ -5,6 +5,8 @@
  */
 export type ReplyUiDetail = {
   status: string;
+  /** Khách đã xóa bình luận trên nền tảng (FR-048): không trả lời được. */
+  deleted?: boolean;
   channelStatus: string;
   lock: { holderName: string | null; heldByMe: boolean } | null;
   latestReply: {
@@ -21,7 +23,7 @@ export type ReplyUi =
   | { mode: 'failed'; errorCode: string | null; prefill: string; canRetry: boolean }
   | {
       mode: 'blocked';
-      reason: 'locked_by_other' | 'channel_unavailable' | 'not_replyable';
+      reason: 'locked_by_other' | 'channel_unavailable' | 'not_replyable' | 'deleted';
       holderName?: string | null;
     };
 
@@ -29,6 +31,7 @@ export type ReplyUi =
 const REPLYABLE = ['new', 'pending_review', 'needs_human', 'send_failed'];
 
 export function deriveReplyUi(detail: ReplyUiDetail): ReplyUi {
+  if (detail.deleted) return { mode: 'blocked', reason: 'deleted' };
   const latest = detail.latestReply;
   if (latest && (latest.status === 'queued' || latest.status === 'sending')) {
     return { mode: 'sending', text: latest.text };

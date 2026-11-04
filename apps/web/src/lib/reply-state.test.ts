@@ -165,3 +165,23 @@ describe('FR-042 deriveReplyUi — chế độ hộp soạn', () => {
     });
   });
 });
+
+describe('FR-048 deriveReplyUi — bình luận đã bị khách xóa', () => {
+  it('FR-048 deleted → blocked/deleted, ưu tiên cao nhất (kể cả khi đang gửi, đã trả lời, khóa của người khác, kênh hỏng)', () => {
+    const overrides: Array<Partial<ReplyUiDetail>> = [
+      {},
+      { status: 'replied', latestReply: reply('sent') },
+      { latestReply: reply('queued') },
+      { status: 'send_failed', latestReply: reply('failed') },
+      { channelStatus: 'expired' },
+      { lock: { holderName: 'An', heldByMe: false } },
+    ];
+    for (const over of overrides) {
+      expect(deriveReplyUi(detail({ ...over, deleted: true }))).toEqual({
+        mode: 'blocked',
+        reason: 'deleted',
+      });
+    }
+    expect(deriveReplyUi(detail({ deleted: false }))).toMatchObject({ mode: 'compose' });
+  });
+});

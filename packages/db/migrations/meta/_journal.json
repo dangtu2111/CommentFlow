@@ -169,6 +169,13 @@
       "when": 1793774833981,
       "tag": "0023_comment_replies",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793781349251,
+      "tag": "0024_comment_deleted_at",
+      "breakpoints": true
     }
   ]
 }

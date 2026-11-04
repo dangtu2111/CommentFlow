@@ -50,6 +50,7 @@ type Row = {
   comment_external_reply_id: string | null;
   is_hidden: boolean;
   merged_into_id: string | null;
+  deleted_at: Date | null;
   comment_created_time: Date | null;
   channel_id: string;
   channel_status: string;
@@ -81,7 +82,7 @@ async function prepare(
                     WHERE p.workspace_id = r.workspace_id AND p.comment_id = r.comment_id AND p.id <> r.id
                       AND p.status = 'failed' AND p.error_code = 'UNKNOWN') AS prior_unknown,
            c.id AS comment_id, c.status AS comment_status, c.external_id AS comment_external_id,
-           c.external_reply_id AS comment_external_reply_id, c.is_hidden, c.merged_into_id,
+           c.external_reply_id AS comment_external_reply_id, c.is_hidden, c.merged_into_id, c.deleted_at,
            c.created_time AS comment_created_time,
            ch.id AS channel_id, ch.status AS channel_status, ch.platform AS channel_platform,
            ch.external_id AS channel_external_id,
@@ -108,8 +109,8 @@ async function prepare(
     await finish('cancelled', 'recheck:R1', null);
     return { kind: 'done' };
   }
-  // R2: chưa ẩn/gộp.
-  if (row.is_hidden || row.merged_into_id !== null) {
+  // R2: chưa ẩn/gộp/xóa trên nền tảng.
+  if (row.is_hidden || row.merged_into_id !== null || row.deleted_at !== null) {
     await finish('cancelled', 'recheck:R2', row.previous_status);
     return { kind: 'done' };
   }

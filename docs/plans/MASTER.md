@@ -91,7 +91,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | FB-REPLY | FR-042 (gửi trả lời tay; thành công/lỗi + lý do; timeout kiểm lại) | US-011, 016, UF-3 | FB-OAUTH, INBOX-DETAIL-LOCK | S (dùng token) | **có** — Page thử | ✅ backend (outbox + job `send` + `sendRecheck`, test bằng connector giả — feat/reply-backend); + giao diện hộp soạn/Gửi/Thử lại (feat/reply-ui); còn connector Facebook thật + Page thử |
 | FB-RETRY-UI | FR-042 (Gửi lỗi + Thử lại, lý do dễ hiểu) | US-016 | FB-REPLY | — | không | ✅ (cùng feat/reply-ui: lý do dễ hiểu + Thử lại; thử lại có kiểm trước) |
 | FB-HIDE | FR-044 (ẩn/bỏ ẩn `is_hidden`, không có xóa) | US-015 | FB-REPLY | — | **có** — Page thử | ⛔ |
-| COMMENT-EDIT-DELETE | FR-048 (bình luận sửa → cập nhật; xóa → ẩn khỏi inbox, giữ log) | — | WH-INGEST | — | không | ⏳ |
+| COMMENT-EDIT-DELETE | FR-048 (bình luận sửa → cập nhật; xóa → ẩn khỏi inbox, giữ log) | — | WH-INGEST | — | không | ✅ (feat/comment-sync: sửa → cập nhật nội dung; xóa → `deleted_at` ẩn khỏi inbox; còn phân loại lại sau sửa) |
 | POLLING-BACKFILL | FR-023 (polling bù sót; cảnh báo webhook im lặng) | UF-2 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
 | ATTACHMENTS-STORE | FR-143 (lưu loại + link tệp đính kèm) | — | CH-SCHEMA | DB | không | ⏳ |
 | ADS-POSTS-LIST | FR-123 (bài quảng cáo/dark post của Page + bài thường) | — | FB-OAUTH | — | **có** — Meta App | ⛔ |
