@@ -210,10 +210,7 @@
     },
     "header": {
       "brand": "CommentFlow AI",
-      "nav": "Điều hướng chính",
-      "security": "Bảo mật",
-      "members": "Thành viên",
-      "comments": "Bình luận"
+      "nav": "Điều hướng chính"
     }
   },
   "members": {
@@ -371,5 +368,19 @@
       "title": "Không tải được danh sách bình luận",
       "body": "Có lỗi tạm thời. Hãy tải lại trang sau ít phút."
     }
+  },
+  "shell": {
+    "groups": {
+      "operations": "Điều hướng vận hành",
+      "settings": "Cài đặt"
+    },
+    "nav": {
+      "comments": "Bình luận",
+      "members": "Thành viên",
+      "security": "Bảo mật"
+    },
+    "logout": "Đăng xuất",
+    "brand": "CommentFlow AI",
+    "navLabel": "Điều hướng chính"
   }
 }

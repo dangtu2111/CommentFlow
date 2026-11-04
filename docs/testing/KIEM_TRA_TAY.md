@@ -10,7 +10,8 @@
 |---|---|---|---|---|---|
 | KT-001 | Workspace, thành viên, lời mời, chỉ-Owner ở DB | #7, #11 | có | chưa | — |
 | KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | #19 | có | chưa | — |
-| KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | INBOX-LIST | chưa | chưa | — |
+| KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | #20 | có | chưa | — |
+| KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | APP-SHELL | chưa | chưa | — |
 
 ---
 
@@ -73,6 +74,25 @@ Nếu hỏng: ghi số bước, mã HTTP và dòng log của web/worker (che tê
 | 10 | Đăng nhập một workspace khác (hoặc người không thuộc workspace) mở `/app/comments`. | Chỉ thấy bình luận của workspace đang chọn; không thấy dữ liệu workspace khác. |
 
 Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
+
+## KT-004 — Khung ứng dụng: thanh trên, điều hướng, đăng xuất, ngôn ngữ (APP-SHELL)
+
+Điều kiện: đã đăng nhập (Owner), có workspace. Chạy `pnpm --filter @flow/web dev`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/app`. | Thấy thanh trên (CommentFlow AI, bộ chuyển workspace, ngôn ngữ, tên bạn, **Đăng xuất**) và thanh điều hướng bên trái (nhóm **Điều hướng vận hành**: Bình luận; nhóm **Cài đặt**: Thành viên, Bảo mật). |
+| 2 | Bấm **Bình luận**, rồi **Thành viên**, rồi **Bảo mật**. | Mỗi trang mở trong khung; mục đang mở được tô nền/đậm; không có hai thanh cuộn dọc hay tràn ngang. |
+| 3 | Thu nhỏ cửa sổ về ~390px. | Thanh điều hướng thành hàng ngang cuộn được dưới thanh trên; nội dung không tràn ngang. |
+| 4 | Dùng phím Tab đi qua thanh trên và điều hướng; bấm Enter ở một mục. | Có viền focus rõ; điều hướng được bằng bàn phím. |
+| 5 | Đổi ngôn ngữ sang **English**, rồi quay lại **Tiếng Việt**. | Mọi nhãn (nhóm, mục, Đăng xuất) đổi đúng; không còn chữ Việt ở bản English. |
+| 6 | Bấm **Đăng xuất**. | Về trang đăng nhập (thông báo đã đăng xuất); mở lại `/app` thì bị chuyển về đăng nhập. |
+| 7 | Đăng nhập bằng tài khoản **Staff** (đã được mời). | Thanh điều hướng **không có** Thành viên (chỉ Bình luận và Bảo mật); gõ tay `/app/members` → trang 404. |
+| 8 | Tạo/chuyển sang workspace khác bằng bộ chuyển workspace. | Khung giữ nguyên; tên workspace đổi; điều hướng theo vai trò ở workspace mới. |
+
+Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
 
 ---
 
