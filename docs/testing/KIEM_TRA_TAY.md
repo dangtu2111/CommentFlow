@@ -12,7 +12,8 @@
 | KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | #19 | có | chưa | — |
 | KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | #20 | có | chưa | — |
 | KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | #21 | có | chưa | — |
-| KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | INBOX-DETAIL-LOCK | chưa | chưa | — |
+| KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | #22 | có | chưa | — |
+| KT-006 | Banner trạng thái kênh | CH-STATUS-BANNER | chưa | chưa | — |
 
 ---
 
@@ -112,6 +113,24 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 9 | Thu nhỏ về ~390px. | Chi tiết xuống dưới danh sách; không tràn ngang. |
 
 Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
+
+---
+
+## KT-006 — Banner trạng thái kênh (CH-STATUS-BANNER)
+
+Điều kiện: có ít nhất một kênh trong workspace; nhờ agent đặt thử một kênh sang `expired`/`revoked`/`error` trên `cf_dev` (hoặc tự sửa cột `status` bằng công cụ DB). Chạy `pnpm --filter @flow/web dev`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Khi mọi kênh `connected`, mở `/app/comments`. | Không có banner. |
+| 2 | Đặt một kênh sang `expired`, tải lại trang (F5). | Banner đỏ ở đầu nội dung: "Kênh hết hạn kết nối: <tên kênh>." kèm hướng dẫn; Owner thấy "Bạn (Owner) cần kết nối lại…", Staff thấy "Hãy báo chủ workspace (Owner)…". |
+| 3 | Đặt thêm một kênh khác sang `revoked` và một kênh sang `error`. | Mỗi tình trạng một banner riêng (expired → revoked → error); nhiều hơn 3 kênh cùng loại thì ghi "và N kênh khác". |
+| 4 | Chuyển giữa Bình luận, Thành viên, Bảo mật. | Banner hiện ở mọi trang trong khung. (Banner cập nhật sau lần tải đầy đủ kế tiếp, không tức thời.) |
+| 5 | Đặt kênh về `connected`, tải lại. | Banner biến mất. |
+| 6 | Đổi sang **English**. | Banner đúng tiếng Anh. |
+| 7 | Thu nhỏ ~390px. | Banner không tràn ngang, chữ xuống dòng. |
+
+Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
 
 ---
 

@@ -395,5 +395,31 @@
     "logout": "Sign out",
     "brand": "CommentFlow AI",
     "navLabel": "Main navigation"
+  },
+  "banners": {
+    "channel": {
+      "expired": {
+        "title": "Channel connection expired: {names}.",
+        "body": {
+          "owner": "The system cannot read or reply to comments on this channel for now. You (Owner) need to reconnect it; the reconnect button arrives with the Facebook connection feature.",
+          "staff": "The system cannot read or reply to comments on this channel for now. Please ask the workspace Owner to reconnect it."
+        }
+      },
+      "revoked": {
+        "title": "Channel access was revoked or disconnected: {names}.",
+        "body": {
+          "owner": "The channel stays unusable until you (Owner) grant access again and reconnect.",
+          "staff": "The channel is unusable. Please ask the workspace Owner to grant access again and reconnect."
+        }
+      },
+      "error": {
+        "title": "Channel has an error: {names}.",
+        "body": {
+          "owner": "The system is retrying. If it keeps failing, reconnect the channel.",
+          "staff": "The system is retrying. If it keeps failing, please tell the workspace Owner."
+        }
+      },
+      "more": "and {count} more channels"
+    }
   }
 }

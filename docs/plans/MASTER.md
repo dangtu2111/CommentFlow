@@ -86,7 +86,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | INBOX-LIST | FR-040 (tab trạng thái, lọc, tìm, sắp xếp) | US-010, UF-3 | CH-SCHEMA | — | không | ✅ (danh sách + tab + tìm/lọc/sắp xếp; còn: chi tiết, nhãn AI, giao việc, sidebar — xem gap) |
 | INBOX-DETAIL-LOCK | FR-041 (khóa mềm `locked_until`, cảnh báo người thứ hai) | US-013 | INBOX-LIST | — | không | ✅ (chi tiết + khóa 2 phút; hành động Gửi/Ẩn/Bỏ qua ở `FB-REPLY`/`FB-HIDE`) |
 | FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Page thử (Meta App dev đã có; redirect localhost; xem `docs/CAN_BAN_CUNG_CAP.md`) | ⏳ |
-| CH-STATUS-BANNER | FR-012 (connected / token_expired / disconnected; banner Kết nối lại) | US-002 | FB-OAUTH | — | không | ⏳ |
+| CH-STATUS-BANNER | FR-012 (connected / token_expired / disconnected; banner Kết nối lại) | US-002 | FB-OAUTH | — | không | ✅ (banner theo trạng thái kênh; nút "Kết nối lại" chờ FB-OAUTH — gap `CH-RECONNECT-ACTION`) |
 | FB-BACKFILL | FR-011 (lấy bình luận cũ 3/7/30 ngày khi kết nối) | US-002 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
 | FB-REPLY | FR-042 (gửi trả lời tay; thành công/lỗi + lý do; timeout kiểm lại) | US-011, 016, UF-3 | FB-OAUTH, INBOX-DETAIL-LOCK | S (dùng token) | **có** — Page thử | ⛔ |
 | FB-RETRY-UI | FR-042 (Gửi lỗi + Thử lại, lý do dễ hiểu) | US-016 | FB-REPLY | — | không | ⏳ |

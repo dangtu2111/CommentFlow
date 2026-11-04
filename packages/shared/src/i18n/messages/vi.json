@@ -395,5 +395,31 @@
     "logout": "Đăng xuất",
     "brand": "CommentFlow AI",
     "navLabel": "Điều hướng chính"
+  },
+  "banners": {
+    "channel": {
+      "expired": {
+        "title": "Kênh hết hạn kết nối: {names}.",
+        "body": {
+          "owner": "Hệ thống tạm không đọc/trả lời được bình luận của kênh này. Bạn (Owner) cần kết nối lại kênh; nút kết nối lại sẽ có khi tính năng kết nối Facebook hoàn tất.",
+          "staff": "Hệ thống tạm không đọc/trả lời được bình luận của kênh này. Hãy báo chủ workspace (Owner) kết nối lại kênh."
+        }
+      },
+      "revoked": {
+        "title": "Kênh đã bị thu hồi quyền hoặc ngắt kết nối: {names}.",
+        "body": {
+          "owner": "Kênh không còn dùng được cho tới khi bạn (Owner) cấp lại quyền và kết nối lại.",
+          "staff": "Kênh không còn dùng được. Hãy báo chủ workspace (Owner) cấp lại quyền và kết nối lại."
+        }
+      },
+      "error": {
+        "title": "Kênh đang gặp lỗi: {names}.",
+        "body": {
+          "owner": "Hệ thống đang thử lại. Nếu lỗi kéo dài, hãy kết nối lại kênh.",
+          "staff": "Hệ thống đang thử lại. Nếu lỗi kéo dài, hãy báo chủ workspace (Owner)."
+        }
+      },
+      "more": "và {count} kênh khác"
+    }
   }
 }
