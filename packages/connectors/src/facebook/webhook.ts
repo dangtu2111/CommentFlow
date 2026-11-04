@@ -56,12 +56,23 @@ const bodySchema = z.object({
   entry: z.array(
     z.object({
       id: text().pipe(z.string().min(1)),
-      /** Thời điểm sự kiện (giây, Unix). */
-      time: z.number().int().nonnegative().max(MAX_UNIX_SECONDS).optional(),
+      /** Thời điểm sự kiện: FB `feed` dùng giây, Messenger dùng mili-giây → KHÔNG ràng buộc ở đây (xem `occurredAtOf`). */
+      time: z.unknown().optional(),
       changes: z.array(z.object({ field: z.string(), value: z.unknown() })).default([]),
     }),
   ),
 });
+
+/**
+ * `entry.time` → Date: số nguyên ≤ MAX_UNIX_SECONDS là giây; lớn hơn nhưng hợp lệ nếu là mili-giây (Messenger); còn lại
+ * (không phải số/âm/ngoài khoảng) → `undefined` mà KHÔNG làm hỏng cả lô webhook.
+ */
+function occurredAtOf(time: unknown): Date | undefined {
+  if (typeof time !== 'number' || !Number.isInteger(time) || time < 0) return undefined;
+  if (time <= MAX_UNIX_SECONDS) return new Date(time * 1000);
+  if (time <= MAX_UNIX_SECONDS * 1000) return new Date(time);
+  return undefined;
+}
 
 /**
  * Chuẩn hóa thân webhook thành các sự kiện bình luận. Bỏ qua mọi thứ không phải bình luận (reaction, status, field
@@ -77,7 +88,8 @@ export function parseMetaWebhook(body: unknown): NormalizedEvent[] {
       const value = changeValueSchema.safeParse(change.value);
       if (!value.success) continue;
       const v = value.data;
-      const occurred = entry.time === undefined ? {} : { occurredAt: new Date(entry.time * 1000) };
+      const occurredAt = occurredAtOf(entry.time);
+      const occurred = occurredAt ? { occurredAt } : {};
       if (v.verb === 'remove') {
         events.push({
           kind: 'comment_deleted',
@@ -127,6 +139,10 @@ export function eventHashOf(platform: Platform, event: NormalizedEvent): string 
           event.kind === 'comment_edited' && occurred
             ? occurred
             : String(event.comment.createdAt.getTime()),
+          // Hai lần sửa cùng giây nhưng nội dung khác là hai sự kiện: chỉ băm (digest) nội dung vào khóa, không lưu thô.
+          event.kind === 'comment_edited'
+            ? createHash('sha256').update(event.comment.text).digest('hex')
+            : '',
         ];
   return createHash('sha256').update(parts.join('|')).digest('hex');
 }

@@ -80,6 +80,12 @@ describe('FR-048 trigger: người dùng không đặt/gỡ deleted_at', () => {
         .then(() => 'ok', code);
       expect(clear).toBe('42501');
     }
+    const synced = await db
+      .withActor(ws, staff, (tx) =>
+        tx.execute(sql.raw(`UPDATE cf.comments SET text_synced_at = now() WHERE id = '${live}'`)),
+      )
+      .then(() => 'ok', code);
+    expect(synced).toBe('42501'); // mốc đồng bộ nội dung cũng chỉ hệ thống ghi
     const system = await db.withJob(ws, (tx) =>
       tx.execute(sql.raw(`UPDATE cf.comments SET deleted_at = now() WHERE id = '${live}'`)),
     );

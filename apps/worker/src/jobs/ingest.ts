@@ -1,5 +1,5 @@
 import { deserializeEvent } from '@flow/connectors';
-import { and, type Database, eq, type FlowDb, isNull, ne, schema, sql } from '@flow/db';
+import { and, type Database, eq, type FlowDb, isNull, lte, ne, or, schema, sql } from '@flow/db';
 import { type IngestJob, ingestJobSchema } from '@flow/shared';
 import type { Logger } from '../logger';
 import { INGEST_RETRY_LIMIT } from '../queue/definitions';
@@ -13,7 +13,7 @@ const { webhookEvents, channels, posts, comments } = schema;
 /**
  * Xử lý một sự kiện webhook bình luận (FR-021/022). Idempotent: bài và bình luận chèn `ON CONFLICT DO NOTHING`, đếm
  * chỉ tăng khi bình luận thực sự mới. Bình luận do chính Page viết KHÔNG được lưu (chống vòng lặp, nguyên tắc #5).
- * Sửa/xóa bình luận: chỉ đánh dấu xong (chờ FB-HIDE/đồng bộ trạng thái, gap `INGEST-EDIT-REMOVE`).
+ * Sửa/xóa bình luận (FR-048): cập nhật nội dung / đặt `deleted_at` (xem `applyEdit`, `applyDelete`).
  */
 export async function processIngestEvent(tx: Database, job: IngestJob): Promise<void> {
   const [event] = await tx
@@ -41,9 +41,9 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
     );
 
   if (channel && parsed.kind === 'comment_edited') {
-    await applyEdit(tx, job, channel.id, parsed.comment);
+    await applyEdit(tx, job, channel.id, parsed.comment, parsed.occurredAt);
   } else if (channel && parsed.kind === 'comment_deleted') {
-    await applyDelete(tx, job, channel.id, parsed.commentExternalId);
+    await applyDelete(tx, job, channel.id, parsed.commentExternalId, parsed.occurredAt);
   }
 
   if (channel?.status === 'connected' && parsed.kind === 'comment_created') {
@@ -111,10 +111,15 @@ async function applyEdit(
   job: IngestJob,
   channelId: string,
   comment: { externalId: string; text: string },
+  occurredAt?: Date,
 ): Promise<void> {
   const updated = await tx
     .update(comments)
-    .set({ text: comment.text, textNormalized: null })
+    .set({
+      text: comment.text,
+      textNormalized: null,
+      ...(occurredAt ? { textSyncedAt: occurredAt } : {}),
+    })
     .where(
       and(
         eq(comments.workspaceId, job.workspaceId),
@@ -123,6 +128,10 @@ async function applyEdit(
         eq(comments.isOwn, false),
         isNull(comments.deletedAt),
         ne(comments.text, comment.text),
+        // Lần sửa CŨ đến muộn (retry) không ghi đè lần mới: chỉ áp dụng khi chưa có mốc hoặc mốc không muộn hơn sự kiện này.
+        occurredAt
+          ? or(isNull(comments.textSyncedAt), lte(comments.textSyncedAt, occurredAt))
+          : undefined,
       ),
     )
     .returning({ id: comments.id });
@@ -136,10 +145,11 @@ async function applyDelete(
   job: IngestJob,
   channelId: string,
   commentExternalId: string,
+  occurredAt?: Date,
 ): Promise<void> {
   const updated = await tx
     .update(comments)
-    .set({ deletedAt: new Date() })
+    .set({ deletedAt: occurredAt ?? new Date() })
     .where(
       and(
         eq(comments.workspaceId, job.workspaceId),

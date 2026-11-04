@@ -1,4 +1,5 @@
-ALTER TABLE "cf"."comments" ADD COLUMN "deleted_at" timestamp with time zone;
+ALTER TABLE "cf"."comments" ADD COLUMN "deleted_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "cf"."comments" ADD COLUMN "text_synced_at" timestamp with time zone;
 
 --> statement-breakpoint
 -- ===================================================================================================
@@ -6,10 +7,14 @@ ALTER TABLE "cf"."comments" ADD COLUMN "deleted_at" timestamp with time zone;
 -- giữ log). Chỉ đường hệ thống (worker, job ingest) ghi; trigger chặn người dùng đổi cột này. cf.request_comment_reply
 -- từ chối bình luận đã xóa (CF409). Hai hàm dưới là bản 0023 + đúng các điều kiện trên.
 --
--- Đường lùi: CREATE OR REPLACE lại hai hàm bằng bản 0023 (không có deleted_at); ALTER TABLE cf.comments DROP COLUMN deleted_at.
+-- text_synced_at: thời điểm (theo nền tảng) của lần sửa nội dung đã áp dụng gần nhất — lần sửa CŨ đến muộn (retry) không
+-- được ghi đè lần sửa mới; chỉ hệ thống ghi (trigger chặn người dùng).
+--
+-- Đường lùi: LÙI CODE ỨNG DỤNG TRƯỚC (inbox/chi tiết/job send đọc deleted_at), rồi CREATE OR REPLACE lại hai hàm bằng bản 0023
+-- (không có deleted_at), rồi ALTER TABLE cf.comments DROP COLUMN deleted_at, DROP COLUMN text_synced_at.
 -- ===================================================================================================
 
-GRANT UPDATE (deleted_at) ON cf.comments TO cf_app;
+GRANT UPDATE (deleted_at, text_synced_at) ON cf.comments TO cf_app;
 --> statement-breakpoint
 
 CREATE OR REPLACE FUNCTION cf.guard_comment_user_update() RETURNS trigger
@@ -36,6 +41,7 @@ BEGIN
      OR NEW.private_replied_at IS DISTINCT FROM OLD.private_replied_at
      OR (NEW.label_source IS DISTINCT FROM OLD.label_source AND NEW.label_source IS DISTINCT FROM 'human')
      OR NEW.deleted_at IS DISTINCT FROM OLD.deleted_at
+     OR NEW.text_synced_at IS DISTINCT FROM OLD.text_synced_at
   THEN
     RAISE EXCEPTION 'comments: dữ liệu nền tảng/dấu vết gửi do hệ thống quản lý, người dùng không sửa'
       USING ERRCODE = 'insufficient_privilege';
