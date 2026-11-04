@@ -146,3 +146,27 @@ describe('FR-040 khớp với tầng truy vấn', () => {
     expect([...INBOX_PLATFORM_KEYS]).toEqual([...INBOX_PLATFORMS]);
   });
 });
+
+describe('FR-041 bình luận đang chọn (tham số c)', () => {
+  it('FR-041 nhận UUID hợp lệ; giá trị lạ bị bỏ', () => {
+    expect(parseInboxSearchParams({ c: uuid }).selected).toBe(uuid);
+    for (const bad of ['x', '', "1'; DROP", uuid.slice(1), undefined]) {
+      expect(parseInboxSearchParams({ c: bad }).selected).toBeUndefined();
+    }
+  });
+
+  it('FR-041 build giữ c; đổi tab/lọc (override selected: undefined) bỏ c; phân trang giữ c', () => {
+    const view = parseInboxSearchParams({ tab: 'all', c: uuid });
+    expect(buildInboxHref(view)).toBe(`/app/comments?tab=all&c=${uuid}`);
+    expect(buildInboxHref(view, { tab: 'replied', selected: undefined })).toBe(
+      '/app/comments?tab=replied',
+    );
+    expect(buildInboxHref(view, { cursor })).toContain(`c=${uuid}`);
+  });
+
+  it('FR-041 khứ hồi có c', () => {
+    const view = { tab: 'all' as const, sort: 'oldest' as const, cursor: null, selected: uuid };
+    const url = new URL(buildInboxHref(view), 'http://x');
+    expect(parseInboxSearchParams(Object.fromEntries(url.searchParams))).toEqual(view);
+  });
+});

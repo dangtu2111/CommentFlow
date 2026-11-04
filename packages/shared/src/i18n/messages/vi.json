@@ -352,7 +352,8 @@
       "followup": "Cần hỗ trợ thêm",
       "shown": "Hiển thị {shown} / {total}",
       "next": "Xem trang kế tiếp",
-      "first": "Về trang đầu"
+      "first": "Về trang đầu",
+      "lockedBy": "{name} đang xử lý"
     },
     "empty": {
       "title": "Chưa có bình luận",
@@ -362,11 +363,23 @@
     },
     "detail": {
       "title": "Chi tiết bình luận",
-      "empty": "Chọn một bình luận để xem chi tiết."
+      "empty": "Chọn một bình luận để xem chi tiết.",
+      "source": "Kênh",
+      "post": "Bài viết",
+      "authorId": "Mã người bình luận",
+      "isReply": "Đây là trả lời cho một bình luận khác.",
+      "noText": "(Không có nội dung chữ)",
+      "notFoundTitle": "Không tìm thấy bình luận",
+      "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này."
     },
     "error": {
       "title": "Không tải được danh sách bình luận",
       "body": "Có lỗi tạm thời. Hãy tải lại trang sau ít phút."
+    },
+    "lock": {
+      "mine": "Bạn đang xử lý bình luận này (khóa mềm 2 phút, tự gia hạn khi còn mở).",
+      "heldNamed": "{name} đang xử lý bình luận này (còn khoảng {seconds} giây). Bạn chỉ xem được.",
+      "heldAnonymous": "Đồng nghiệp đang xử lý bình luận này (còn khoảng {seconds} giây). Bạn chỉ xem được."
     }
   },
   "shell": {

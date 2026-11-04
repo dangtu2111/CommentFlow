@@ -11,7 +11,8 @@
 | KT-001 | Workspace, thành viên, lời mời, chỉ-Owner ở DB | #7, #11 | có | chưa | — |
 | KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | #19 | có | chưa | — |
 | KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | #20 | có | chưa | — |
-| KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | APP-SHELL | chưa | chưa | — |
+| KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | #21 | có | chưa | — |
+| KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | INBOX-DETAIL-LOCK | chưa | chưa | — |
 
 ---
 
@@ -91,6 +92,26 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 | 8 | Tạo/chuyển sang workspace khác bằng bộ chuyển workspace. | Khung giữ nguyên; tên workspace đổi; điều hướng theo vai trò ở workspace mới. |
 
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-005 — Chi tiết bình luận + khóa mềm (INBOX-DETAIL-LOCK)
+
+Điều kiện: có ít nhất 2 bình luận trong DB (xem KT-003); **hai tài khoản** cùng workspace (Owner + Staff đã được mời) mở ở **hai trình duyệt/cửa sổ ẩn danh khác nhau**. Chạy `pnpm --filter @flow/web dev`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Tài khoản A: ở trang **Bình luận**, bấm một bình luận trong danh sách. | Cột phải hiện chi tiết (tên khách, thời gian, kênh, bài viết, mã người bình luận, nội dung đầy đủ, trạng thái); thanh địa chỉ có `c=<mã>`; dòng được chọn tô nền; có dòng "Bạn đang xử lý bình luận này (khóa mềm 2 phút…)". |
+| 2 | Tài khoản B: mở trang Bình luận (cùng tab/bộ lọc). | Dòng bình luận A đang mở có nhãn **"<tên A> đang xử lý"**. |
+| 3 | B bấm đúng bình luận đó. | Cột phải hiện cảnh báo **"<tên A> đang xử lý bình luận này (còn khoảng N giây). Bạn chỉ xem được."**; nội dung vẫn xem được. |
+| 4 | A bấm sang bình luận khác (hoặc đóng chi tiết bằng cách đổi tab). | Khóa của bình luận cũ được mở: B tải lại thì nhãn "đang xử lý" biến mất; B bấm vào được và thấy "Bạn đang xử lý". |
+| 5 | A mở một bình luận rồi **đóng hẳn tab trình duyệt**; đợi hơn 2 phút; B mở bình luận đó. | Sau khi hết hạn, B lấy được khóa (không còn cảnh báo). |
+| 6 | A giữ nguyên một bình luận mở > 3 phút, rồi B mở bình luận đó. | B vẫn thấy cảnh báo (khóa tự gia hạn mỗi 60 giây khi còn mở). |
+| 7 | Dán một `c=` sai (ví dụ `c=abc`) hoặc mã của workspace khác lên URL. | Với mã sai: không có chi tiết (như chưa chọn); với mã đúng định dạng nhưng không thấy: hiện "Không tìm thấy bình luận". Không lỗi trắng trang. |
+| 8 | Đổi sang **English**, xem lại bước 1–3. | Mọi chữ đúng tiếng Anh. |
+| 9 | Thu nhỏ về ~390px. | Chi tiết xuống dưới danh sách; không tràn ngang. |
+
+Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
 
 ---
 

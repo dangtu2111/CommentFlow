@@ -15,6 +15,7 @@ export type InboxListItem = {
   channelName: string;
   platform: string;
   isAd: boolean;
+  lockedByName: string | null;
 };
 
 /**
@@ -58,34 +59,45 @@ export async function InboxList({
       <ul className="inbox-items" aria-label={t('list.label')}>
         {items.map((item) => (
           <li key={item.id} className="inbox-item">
-            <div className="inbox-item-head">
-              <span className="inbox-author">{item.authorName ?? t('list.anonymous')}</span>
-              <time
-                className="inbox-time"
-                dateTime={item.createdTime?.toISOString()}
-                title={formatAbsoluteTime(item.createdTime, locale, timeZone)}
-              >
-                {formatRelativeTime(item.createdTime, now, locale)}
-              </time>
-            </div>
-            <div className="inbox-source">
-              {item.platform === 'facebook' ||
-              item.platform === 'instagram' ||
-              item.platform === 'tiktok'
-                ? t(`platforms.${item.platform}`)
-                : item.platform}
-              {' · '}
-              {item.channelName}
-            </div>
-            <p className="inbox-text">{item.text}</p>
-            <div className="inbox-chips">
-              <span className={`chip chip-status chip-${item.status}`}>
-                {knownStatus(item.status) ? t(`status.${item.status as 'new'}`) : item.status}
-              </span>
-              {item.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
-              {item.isAd ? <span className="chip">{t('list.ad')}</span> : null}
-              {item.label ? <span className="chip">{item.label}</span> : null}
-            </div>
+            <Link
+              href={buildInboxHref(view, { selected: item.id })}
+              className="inbox-item-link"
+              aria-current={view.selected === item.id ? 'true' : undefined}
+            >
+              <div className="inbox-item-head">
+                <span className="inbox-author">{item.authorName ?? t('list.anonymous')}</span>
+                <time
+                  className="inbox-time"
+                  dateTime={item.createdTime?.toISOString()}
+                  title={formatAbsoluteTime(item.createdTime, locale, timeZone)}
+                >
+                  {formatRelativeTime(item.createdTime, now, locale)}
+                </time>
+              </div>
+              <div className="inbox-source">
+                {item.platform === 'facebook' ||
+                item.platform === 'instagram' ||
+                item.platform === 'tiktok'
+                  ? t(`platforms.${item.platform}`)
+                  : item.platform}
+                {' · '}
+                {item.channelName}
+              </div>
+              <p className="inbox-text">{item.text}</p>
+              <div className="inbox-chips">
+                <span className={`chip chip-status chip-${item.status}`}>
+                  {knownStatus(item.status) ? t(`status.${item.status as 'new'}`) : item.status}
+                </span>
+                {item.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
+                {item.isAd ? <span className="chip">{t('list.ad')}</span> : null}
+                {item.label ? <span className="chip">{item.label}</span> : null}
+                {item.lockedByName ? (
+                  <span className="chip chip-lock">
+                    {t('list.lockedBy', { name: item.lockedByName })}
+                  </span>
+                ) : null}
+              </div>
+            </Link>
           </li>
         ))}
       </ul>

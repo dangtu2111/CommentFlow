@@ -1,6 +1,8 @@
 import {
+  type CommentDetail,
   countCommentsByTab,
   eq,
+  getCommentDetail,
   type InboxChannel,
   type InboxPage,
   type InboxTab,
@@ -16,6 +18,8 @@ export type InboxData = {
   counts: Record<InboxTab, number>;
   channels: InboxChannel[];
   timeZone: string;
+  /** Bình luận đang chọn (`c`); `null` nếu không chọn hoặc không thấy (id sai/workspace khác). */
+  detail: CommentDetail | null;
 };
 
 /**
@@ -37,15 +41,16 @@ export async function loadInbox(
     ...(view.search ? { search: view.search } : {}),
   };
   return getDb().withActor(workspaceId, userId, async (tx) => {
-    const [page, counts, channels, workspace] = await Promise.all([
-      listComments(tx, workspaceId, filter),
+    const [page, counts, channels, workspace, detail] = await Promise.all([
+      listComments(tx, workspaceId, filter, userId),
       countCommentsByTab(tx, workspaceId, filter),
       listInboxChannels(tx, workspaceId),
       tx
         .select({ timezone: schema.workspaces.timezone })
         .from(schema.workspaces)
         .where(eq(schema.workspaces.id, workspaceId)),
+      view.selected ? getCommentDetail(tx, workspaceId, view.selected, userId) : null,
     ]);
-    return { page, counts, channels, timeZone: workspace[0]?.timezone ?? 'UTC' };
+    return { page, counts, channels, timeZone: workspace[0]?.timezone ?? 'UTC', detail };
   });
 }

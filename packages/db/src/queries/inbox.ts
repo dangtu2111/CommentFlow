@@ -55,6 +55,8 @@ export type InboxItem = {
   channelName: string;
   platform: InboxPlatform;
   isAd: boolean;
+  /** Tên người KHÁC đang giữ khóa mềm còn hạn (không phải chính người xem); `null` nếu không có. */
+  lockedByName: string | null;
 };
 
 export type InboxPage = { items: InboxItem[]; nextCursor: InboxCursor | null };
@@ -87,7 +89,8 @@ export function escapeLikePattern(value: string): string {
 const FROM = sql`
   FROM cf.comments c
   JOIN cf.channels ch ON ch.workspace_id = c.workspace_id AND ch.id = c.channel_id
-  JOIN cf.posts p ON p.workspace_id = c.workspace_id AND p.id = c.post_id`;
+  JOIN cf.posts p ON p.workspace_id = c.workspace_id AND p.id = c.post_id
+  LEFT JOIN core.users lu ON lu.id = c.locked_by`;
 
 const SORT_KEY = sql`COALESCE(c.created_time, c.created_at)`;
 
@@ -126,6 +129,7 @@ type Row = {
   channel_name: string;
   platform: InboxPlatform;
   is_ad: boolean;
+  locked_by_name: string | null;
   sort_key: string;
 };
 
@@ -133,6 +137,8 @@ export async function listComments(
   tx: Database,
   workspaceId: string,
   filter: InboxFilter,
+  /** Người xem: khóa của chính họ không hiện như "người khác đang xử lý". */
+  viewerId?: string,
 ): Promise<InboxPage> {
   const limit = clampLimit(filter.limit);
   const conditions = commonConditions(workspaceId, filter);
@@ -149,6 +155,8 @@ export async function listComments(
   const result = await tx.execute<Row>(sql`
     SELECT c.id, c.status, c.text, c.author_name, c.author_external_id, c.created_time, c.label,
            c.needs_followup, c.channel_id, ch.name AS channel_name, ch.platform, p.is_ad,
+           CASE WHEN c.locked_until > now() AND c.locked_by IS DISTINCT FROM ${viewerId ?? null}::uuid
+                THEN lu.name END AS locked_by_name,
            (${SORT_KEY})::text AS sort_key
     ${FROM}
     ${where(conditions)}
@@ -206,6 +214,7 @@ function toItem(row: Row): InboxItem {
     channelName: row.channel_name,
     platform: row.platform,
     isAd: row.is_ad,
+    lockedByName: row.locked_by_name,
   };
 }
 
