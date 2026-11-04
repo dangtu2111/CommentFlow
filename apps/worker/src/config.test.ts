@@ -10,7 +10,12 @@ describe('loadConfig', () => {
       logLevel: 'info',
       port: 3001,
       databaseUrl: DATABASE_URL,
+      tokenEncKeys: undefined,
     });
+  });
+
+  it('đọc TOKEN_ENC_KEYS (tùy chọn) nguyên văn', () => {
+    expect(loadConfig({ DATABASE_URL, TOKEN_ENC_KEYS: 'v1:abc' }).tokenEncKeys).toBe('v1:abc');
   });
 
   it('đọc cổng và mức log từ biến môi trường', () => {

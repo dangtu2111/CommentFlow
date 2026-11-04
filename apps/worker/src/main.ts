@@ -1,4 +1,5 @@
 import { createDb } from '@flow/db';
+import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
 import { startHealthServer } from './health';
 import { createPingHandler } from './jobs/ping';
@@ -11,6 +12,8 @@ async function main(): Promise<void> {
   const logger = createLogger({ level: config.logLevel });
 
   const db = createDb({ connectionString: config.databaseUrl });
+  // Thiếu khóa cho key_version đang dùng = lỗi cấu hình: dừng ngay, không làm hỏng kênh nào.
+  await verifyTokenKeysAtStartup(db, config.tokenEncKeys);
   const boss = createBoss(config.databaseUrl, logger);
 
   // "Sẵn sàng" chỉ khi đã kết nối pg-boss và đăng ký xong các job.
