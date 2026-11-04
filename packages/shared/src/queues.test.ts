@@ -20,3 +20,19 @@ describe('FR-020 job ingest — dữ liệu job', () => {
     }
   });
 });
+
+describe('FR-042 job send — dữ liệu job', () => {
+  it('FR-042 tên hàng đợi và chỉ nhận {workspaceId, replyId} là UUID (không mang nội dung câu trả lời)', async () => {
+    const { SEND_QUEUE, sendJobSchema } = await import('./queues');
+    expect(SEND_QUEUE).toBe('send');
+    expect(sendJobSchema.safeParse({ workspaceId: uuid, replyId: uuid }).success).toBe(true);
+    for (const bad of [
+      {},
+      { workspaceId: uuid },
+      { replyId: uuid },
+      { workspaceId: uuid, replyId: 'x' },
+    ]) {
+      expect(sendJobSchema.safeParse(bad).success).toBe(false);
+    }
+  });
+});

@@ -2,7 +2,7 @@
 export const QUEUE_SCHEMA = 'pgboss';
 
 export const SYSTEM_PING_QUEUE = 'system.ping';
-export { INGEST_QUEUE } from '@flow/shared';
+export { INGEST_QUEUE, SEND_QUEUE } from '@flow/shared';
 
 export type QueueDefinition = { name: string; retryLimit?: number; retryBackoff?: boolean };
 
@@ -13,8 +13,13 @@ export type QueueDefinition = { name: string; retryLimit?: number; retryBackoff?
 /** Số lần pg-boss THỬ LẠI hàng đợi `ingest` (tổng số lần chạy tối đa = retryLimit + 1). */
 export const INGEST_RETRY_LIMIT = 5;
 
+/** Số lần pg-boss THỬ LẠI hàng đợi `send` (tổng số lần chạy tối đa = retryLimit + 1). */
+export const SEND_RETRY_LIMIT = 3;
+
 export const QUEUES: QueueDefinition[] = [
   { name: SYSTEM_PING_QUEUE, retryLimit: 0 },
   // docs/09 §9: ingest — thử lại 5 lần, backoff mũ; idempotent theo sự kiện.
   { name: 'ingest', retryLimit: INGEST_RETRY_LIMIT, retryBackoff: true },
+  // docs/09 §9: send — thử lại 3 lần, backoff mũ; `sendRecheck` + khóa theo yêu cầu chống gửi trùng.
+  { name: 'send', retryLimit: SEND_RETRY_LIMIT, retryBackoff: true },
 ];

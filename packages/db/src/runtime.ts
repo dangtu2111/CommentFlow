@@ -44,6 +44,13 @@ export {
   MAX_INBOX_LIMIT,
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
+export {
+  cancelCommentReply,
+  REPLY_REJECTIONS,
+  ReplyRejectedError,
+  type ReplyRejection,
+  requestCommentReply,
+} from './replies';
 export { schema } from './schema';
 export {
   type RecordedWebhookEvent,

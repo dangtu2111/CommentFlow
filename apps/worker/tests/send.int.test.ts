@@ -1,0 +1,456 @@
+import { randomUUID } from 'node:crypto';
+import {
+  type ConnectorCapabilities,
+  createConnectorRegistry,
+  DECLARED_CAPABILITIES,
+  type NormalizedComment,
+  PlatformError,
+  type PlatformErrorCode,
+} from '@flow/connectors';
+import { createFakeConnector } from '@flow/connectors/testing';
+import { createDb, type FlowDb, requestCommentReply } from '@flow/db';
+import pg from 'pg';
+import type { Job } from 'pg-boss';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  createSendHandler,
+  MAX_SEND_ATTEMPTS,
+  processSendJob,
+  SEND_LEASE_SECONDS,
+  SendInFlightError,
+  SendRetryableError,
+} from '../src/jobs/send';
+
+/**
+ * FB-REPLY backend (FR-042, docs/09 §6.1): job `send` — sendRecheck R1–R3, evaluateAction, gọi connector (giả), ghi kết
+ * quả, thử lại an toàn (kiểm trước khi gửi lại), không gửi trùng khi chạy song song. Connector giả, không gọi mạng.
+ */
+let db: FlowDb;
+let admin: pg.Pool;
+let ws: string;
+let staff: string;
+const quiet = { error: () => {} };
+
+beforeAll(async () => {
+  const url = process.env.TEST_DATABASE_URL;
+  const adminUrl = process.env.TEST_DATABASE_ADMIN_URL;
+  if (!url || !adminUrl) throw new Error('Thiếu TEST_DATABASE_URL / TEST_DATABASE_ADMIN_URL');
+  db = createDb({ connectionString: url, max: 6 });
+  admin = new pg.Pool({ connectionString: adminUrl, max: 3 });
+  ws = randomUUID();
+  staff = randomUUID();
+  await admin.query('INSERT INTO core.workspaces (id, name, slug) VALUES ($1, $2, $3)', [
+    ws,
+    'Shop send',
+    `shop-${ws}`,
+  ]);
+  await admin.query('INSERT INTO core.users (id, email, name) VALUES ($1, $2, $3)', [
+    staff,
+    `${staff}@example.test`,
+    'Nhân viên',
+  ]);
+  await admin.query(
+    "INSERT INTO core.members (workspace_id, user_id, role, status) VALUES ($1, $2, 'staff', 'active')",
+    [ws, staff],
+  );
+});
+afterAll(async () => {
+  await db.close();
+  await admin.end();
+});
+
+type Fixture = {
+  channelId: string;
+  pageId: string;
+  commentId: string;
+  commentExternalId: string;
+  replyId: string;
+};
+
+async function fixture(
+  options: { channelStatus?: string; commentStatus?: string; text?: string } = {},
+): Promise<Fixture> {
+  const pageId = `page-${randomUUID()}`;
+  const channel = await admin.query(
+    "INSERT INTO cf.channels (workspace_id, platform, external_id, name, status) VALUES ($1, 'facebook', $2, 'Page', $3) RETURNING id",
+    [ws, pageId, options.channelStatus ?? 'connected'],
+  );
+  const channelId = channel.rows[0].id as string;
+  const post = await admin.query(
+    'INSERT INTO cf.posts (workspace_id, channel_id, external_id) VALUES ($1, $2, $3) RETURNING id',
+    [ws, channelId, `post-${randomUUID()}`],
+  );
+  const commentExternalId = `cm-${randomUUID()}`;
+  const comment = await admin.query(
+    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, created_time, status)
+     VALUES ($1, $2, $3, $4, 'u1', 'Khách', 'Giá bao nhiêu?', now(), $5) RETURNING id`,
+    [ws, channelId, post.rows[0].id, commentExternalId, options.commentStatus ?? 'pending_review'],
+  );
+  const commentId = comment.rows[0].id as string;
+  const replyId = await db.withActor(ws, staff, (tx) =>
+    requestCommentReply(tx, { commentId, text: options.text ?? 'Dạ còn size M ạ.' }),
+  );
+  return { channelId, pageId, commentId, commentExternalId, replyId };
+}
+
+type Behaviour = {
+  reply?: () => Promise<{ externalId: string }>;
+  existing?: (fx: Fixture) => NormalizedComment[];
+  capabilities?: ConnectorCapabilities;
+};
+
+function connectorWith(behaviour: Behaviour = {}, fx?: Fixture) {
+  const fake = createFakeConnector(
+    'facebook',
+    behaviour.capabilities ? { capabilities: behaviour.capabilities } : {},
+  );
+  const replies: unknown[][] = [];
+  const connector = {
+    ...fake,
+    async reply(...args: Parameters<typeof fake.reply>) {
+      replies.push(args);
+      return behaviour.reply ? behaviour.reply() : { externalId: `fb-reply-${replies.length}` };
+    },
+    async fetchComments() {
+      return fx && behaviour.existing ? behaviour.existing(fx) : [];
+    },
+  };
+  return { connector, replies, registry: createConnectorRegistry([connector]) };
+}
+
+const run = (fx: Fixture, registry: ReturnType<typeof createConnectorRegistry>, now?: Date) =>
+  processSendJob({
+    db,
+    registry,
+    job: { workspaceId: ws, replyId: fx.replyId },
+    ...(now ? { now } : {}),
+  });
+const replyRow = async (id: string) =>
+  (await admin.query('SELECT * FROM cf.comment_replies WHERE id = $1', [id])).rows[0];
+const commentRow = async (id: string) =>
+  (
+    await admin.query(
+      'SELECT status, external_reply_id, replied_by, replied_at FROM cf.comments WHERE id = $1',
+      [id],
+    )
+  ).rows[0];
+const channelStatus = async (id: string) =>
+  (await admin.query('SELECT status FROM cf.channels WHERE id = $1', [id])).rows[0].status;
+const failWith = (code: PlatformErrorCode) => async () => {
+  throw new PlatformError(code, { message: 'EAAG-token-bi-mat Khách Thử' });
+};
+
+describe('FR-042 job send — gửi thành công', () => {
+  it('gọi connector ĐÚNG MỘT LẦN với (kênh không bí mật, mã bình luận ngoài, nội dung); ghi sent/replied + external_reply_id + replied_by + action_logs', async () => {
+    const fx = await fixture();
+    const { replies, registry } = connectorWith();
+    await run(fx, registry);
+    expect(replies).toHaveLength(1);
+    expect(replies[0]).toEqual([
+      { id: fx.channelId, workspaceId: ws, platform: 'facebook', externalId: fx.pageId },
+      fx.commentExternalId,
+      'Dạ còn size M ạ.',
+    ]);
+    const reply = await replyRow(fx.replyId);
+    expect(reply).toMatchObject({
+      status: 'sent',
+      external_reply_id: 'fb-reply-1',
+      attempts: 1,
+      error_code: null,
+    });
+    expect(reply.sent_at).not.toBeNull();
+    const comment = await commentRow(fx.commentId);
+    expect(comment).toMatchObject({
+      status: 'replied',
+      external_reply_id: 'fb-reply-1',
+      replied_by: staff,
+    });
+    expect(comment.replied_at).not.toBeNull();
+    const log = (
+      await admin.query(
+        "SELECT actor_type, actor_id, after FROM core.action_logs WHERE target_id = $1 AND action = 'comment.replied'",
+        [fx.commentId],
+      )
+    ).rows;
+    expect(log).toHaveLength(1);
+    expect(log[0]).toMatchObject({ actor_type: 'system', actor_id: null });
+    expect(JSON.stringify(log)).not.toContain('size M');
+  });
+
+  it('chạy lại job đã xong / đã hủy / đã thất bại → không gọi connector, không đổi gì', async () => {
+    const fx = await fixture();
+    const first = connectorWith();
+    await run(fx, first.registry);
+    const again = connectorWith();
+    await run(fx, again.registry);
+    expect(again.replies).toHaveLength(0);
+    expect((await replyRow(fx.replyId)).status).toBe('sent');
+    await run({ ...fx, replyId: randomUUID() }, again.registry); // yêu cầu không tồn tại: êm
+    expect(again.replies).toHaveLength(0);
+  });
+});
+
+describe('FR-042 sendRecheck — trượt thì KHÔNG gọi connector', () => {
+  it('R1: bình luận đã có external_reply_id hoặc không còn trạng thái sending → hủy recheck:R1', async () => {
+    const replied = await fixture();
+    await admin.query("UPDATE cf.comments SET external_reply_id = 'da-tra-loi' WHERE id = $1", [
+      replied.commentId,
+    ]);
+    const skipped = await fixture();
+    await admin.query("UPDATE cf.comments SET status = 'skipped' WHERE id = $1", [
+      skipped.commentId,
+    ]);
+    for (const fx of [replied, skipped]) {
+      const { replies, registry } = connectorWith();
+      await run(fx, registry);
+      expect(replies).toHaveLength(0);
+      expect(await replyRow(fx.replyId)).toMatchObject({
+        status: 'cancelled',
+        error_code: 'recheck:R1',
+      });
+    }
+  });
+
+  it('R2: bình luận đã ẩn/gộp → hủy recheck:R2 và trả bình luận về trạng thái trước', async () => {
+    const hidden = await fixture({ commentStatus: 'needs_human' });
+    await admin.query('UPDATE cf.comments SET is_hidden = true WHERE id = $1', [hidden.commentId]);
+    const { replies, registry } = connectorWith();
+    await run(hidden, registry);
+    expect(replies).toHaveLength(0);
+    expect(await replyRow(hidden.replyId)).toMatchObject({
+      status: 'cancelled',
+      error_code: 'recheck:R2',
+    });
+    expect((await commentRow(hidden.commentId)).status).toBe('needs_human');
+  });
+
+  it('R3: kênh không còn connected hoặc đang bị tạm khóa gửi → failed recheck:R3, bình luận send_failed', async () => {
+    const expired = await fixture();
+    await admin.query("UPDATE cf.channels SET status = 'expired' WHERE id = $1", [
+      expired.channelId,
+    ]);
+    const suspended = await fixture();
+    await admin.query(
+      "UPDATE cf.channels SET send_suspended_until = now() + interval '1 hour' WHERE id = $1",
+      [suspended.channelId],
+    );
+    for (const fx of [expired, suspended]) {
+      const { replies, registry } = connectorWith();
+      await run(fx, registry);
+      expect(replies).toHaveLength(0);
+      expect(await replyRow(fx.replyId)).toMatchObject({
+        status: 'failed',
+        error_code: 'recheck:R3',
+      });
+      expect((await commentRow(fx.commentId)).status).toBe('send_failed');
+    }
+  });
+
+  it('không có connector cho nền tảng → failed connector_unavailable (không thử lại vô ích)', async () => {
+    const fx = await fixture();
+    await run(fx, createConnectorRegistry([]));
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'failed',
+      error_code: 'connector_unavailable',
+    });
+    expect((await commentRow(fx.commentId)).status).toBe('send_failed');
+  });
+
+  it('evaluateAction: quá độ dài theo khai báo của connector → failed TEXT_TOO_LONG, không gọi connector', async () => {
+    const fx = await fixture({ text: 'Câu trả lời rất dài so với giới hạn thử nghiệm.' });
+    const capabilities: ConnectorCapabilities = {
+      ...DECLARED_CAPABILITIES.facebook,
+      reply: { supported: true, verified: true, maxTextLength: 10 },
+    };
+    const { replies, registry } = connectorWith({ capabilities });
+    await run(fx, registry);
+    expect(replies).toHaveLength(0);
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'failed',
+      error_code: 'TEXT_TOO_LONG',
+    });
+  });
+});
+
+describe('FR-042 lỗi từ nền tảng', () => {
+  it('TOKEN_EXPIRED → thất bại + kênh expired; PERMISSION → thất bại + kênh revoked; BLOCKED → thất bại, kênh giữ nguyên; error_code chỉ là mã (không lộ token/nội dung)', async () => {
+    const cases: Array<[PlatformErrorCode, string]> = [
+      ['TOKEN_EXPIRED', 'expired'],
+      ['PERMISSION', 'revoked'],
+      ['BLOCKED', 'connected'],
+    ];
+    for (const [code, expectedChannel] of cases) {
+      const fx = await fixture();
+      const { registry } = connectorWith({ reply: failWith(code) });
+      await run(fx, registry);
+      const reply = await replyRow(fx.replyId);
+      expect(reply, code).toMatchObject({ status: 'failed', error_code: code });
+      expect(JSON.stringify(reply)).not.toContain('EAAG');
+      expect(JSON.stringify(reply)).not.toContain('Khách Thử');
+      expect((await commentRow(fx.commentId)).status, code).toBe('send_failed');
+      expect(await channelStatus(fx.channelId), code).toBe(expectedChannel);
+    }
+  });
+
+  it('RATE_LIMIT: chắc chắn chưa gửi → trả về queued và ném để thử lại; lần sau gửi được', async () => {
+    const fx = await fixture();
+    const limited = connectorWith({ reply: failWith('RATE_LIMIT') });
+    await expect(run(fx, limited.registry)).rejects.toBeInstanceOf(SendRetryableError);
+    expect(await replyRow(fx.replyId)).toMatchObject({ status: 'queued', attempts: 1 });
+    expect((await commentRow(fx.commentId)).status).toBe('sending');
+    const ok = connectorWith();
+    await run(fx, ok.registry);
+    expect(await replyRow(fx.replyId)).toMatchObject({ status: 'sent', attempts: 2 });
+  });
+
+  it('UNKNOWN (có thể đã gửi nhưng mất kết quả): lần sau KIỂM TRƯỚC — thấy câu trả lời của Page → ghi sent, KHÔNG gửi lại', async () => {
+    const fx = await fixture();
+    const broken = connectorWith({ reply: failWith('UNKNOWN') });
+    await expect(run(fx, broken.registry)).rejects.toBeInstanceOf(SendRetryableError);
+    const stuck = await replyRow(fx.replyId);
+    expect(stuck.status).toBe('sending');
+
+    const existing = (f: Fixture): NormalizedComment[] => [
+      {
+        externalId: 'fb-da-gui-truoc-do',
+        postExternalId: 'p',
+        parentExternalId: f.commentExternalId,
+        authorExternalId: f.pageId,
+        text: '  Dạ còn size M ạ.  ',
+        createdAt: new Date(),
+        isFromPage: true,
+      },
+    ];
+    const recovered = connectorWith({ existing }, fx);
+    await run(fx, recovered.registry);
+    expect(recovered.replies).toHaveLength(0);
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'sent',
+      external_reply_id: 'fb-da-gui-truoc-do',
+    });
+    expect((await commentRow(fx.commentId)).status).toBe('replied');
+  });
+
+  it('UNKNOWN rồi KHÔNG thấy câu đã gửi → gửi lại bình thường; câu của người khác/nội dung khác không bị nhận nhầm', async () => {
+    const fx = await fixture();
+    await expect(
+      run(fx, connectorWith({ reply: failWith('UNKNOWN') }).registry),
+    ).rejects.toBeInstanceOf(SendRetryableError);
+    const decoys = (f: Fixture): NormalizedComment[] => [
+      {
+        externalId: 'khach',
+        postExternalId: 'p',
+        parentExternalId: f.commentExternalId,
+        authorExternalId: 'u',
+        text: 'Dạ còn size M ạ.',
+        createdAt: new Date(),
+        isFromPage: false,
+      },
+      {
+        externalId: 'khac-noi-dung',
+        postExternalId: 'p',
+        parentExternalId: f.commentExternalId,
+        authorExternalId: f.pageId,
+        text: 'Câu khác',
+        createdAt: new Date(),
+        isFromPage: true,
+      },
+      {
+        externalId: 'khac-binh-luan',
+        postExternalId: 'p',
+        parentExternalId: 'cm-khac',
+        authorExternalId: f.pageId,
+        text: 'Dạ còn size M ạ.',
+        createdAt: new Date(),
+        isFromPage: true,
+      },
+    ];
+    const retry = connectorWith({ existing: decoys }, fx);
+    await run(fx, retry.registry);
+    expect(retry.replies).toHaveLength(1);
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'sent',
+      external_reply_id: 'fb-reply-1',
+    });
+  });
+
+  it('lỗi tạm thời kéo dài hết số lần thử → failed (không ném mãi)', async () => {
+    const fx = await fixture();
+    const flaky = connectorWith({ reply: failWith('RATE_LIMIT') });
+    for (let i = 1; i < MAX_SEND_ATTEMPTS; i++) {
+      await expect(run(fx, flaky.registry)).rejects.toBeInstanceOf(SendRetryableError);
+    }
+    await run(fx, flaky.registry);
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'failed',
+      error_code: 'RATE_LIMIT',
+      attempts: MAX_SEND_ATTEMPTS,
+    });
+    expect((await commentRow(fx.commentId)).status).toBe('send_failed');
+  });
+});
+
+describe('FR-042 không gửi trùng khi chạy song song', () => {
+  it('hai job cùng yêu cầu chạy cùng lúc → connector.reply gọi đúng MỘT lần; job còn lại nhận SendInFlightError (để pg-boss thử lại)', async () => {
+    const fx = await fixture();
+    const slow = connectorWith({
+      reply: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return { externalId: 'fb-cham' };
+      },
+    });
+    const results = await Promise.allSettled([run(fx, slow.registry), run(fx, slow.registry)]);
+    expect(slow.replies).toHaveLength(1);
+    const rejected = results.filter((r) => r.status === 'rejected');
+    expect(rejected).toHaveLength(1);
+    expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(SendInFlightError);
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'sent',
+      external_reply_id: 'fb-cham',
+    });
+  });
+
+  it('yêu cầu đang sending quá thời hạn thuê (job trước chết giữa chừng) → job sau được tiếp quản và kiểm trước khi gửi', async () => {
+    const fx = await fixture();
+    await admin.query(
+      "UPDATE cf.comment_replies SET status = 'sending', attempts = 1, updated_at = now() - make_interval(secs => $2) WHERE id = $1",
+      [fx.replyId, SEND_LEASE_SECONDS + 5],
+    );
+    const { replies, registry } = connectorWith();
+    await run(fx, registry);
+    expect(replies).toHaveLength(1);
+    expect(await replyRow(fx.replyId)).toMatchObject({ status: 'sent', attempts: 2 });
+  });
+});
+
+describe('FR-042 handler hàng đợi send', () => {
+  const job = (data: unknown) => [{ id: randomUUID(), data } as unknown as Job<unknown>];
+
+  it('dữ liệu job sai → AppError (không đụng DB); lỗi gửi được log CHỈ bằng mã rồi ném lại', async () => {
+    const { registry } = connectorWith();
+    const handler = createSendHandler({ db, registry, logger: quiet });
+    await expect(handler(job({ replyId: randomUUID() }))).rejects.toThrow(/không hợp lệ/);
+
+    const fx = await fixture();
+    const error = vi.fn();
+    const failing = connectorWith({ reply: failWith('RATE_LIMIT') });
+    const failingHandler = createSendHandler({ db, registry: failing.registry, logger: { error } });
+    await expect(
+      failingHandler(job({ workspaceId: ws, replyId: fx.replyId })),
+    ).rejects.toBeInstanceOf(SendRetryableError);
+    expect(error).toHaveBeenCalledTimes(1);
+    const logged = JSON.stringify(error.mock.calls);
+    expect(logged).toContain('SendRetryableError');
+    for (const secret of ['EAAG', 'Khách Thử', 'size M']) expect(logged).not.toContain(secret);
+  });
+
+  it('xử lý đúng một job thành công qua handler', async () => {
+    const fx = await fixture();
+    const { replies, registry } = connectorWith();
+    await createSendHandler({ db, registry, logger: quiet })(
+      job({ workspaceId: ws, replyId: fx.replyId }),
+    );
+    expect(replies).toHaveLength(1);
+    expect((await replyRow(fx.replyId)).status).toBe('sent');
+  });
+});
