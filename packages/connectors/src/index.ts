@@ -25,6 +25,14 @@ export {
   PlatformError,
   type PlatformErrorCode,
 } from './errors';
+export {
+  deserializeEvent,
+  eventHashOf,
+  parseMetaWebhook,
+  serializeEvent,
+  signMetaBody,
+  verifyMetaSignature,
+} from './facebook/webhook';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
 export {
   createTokenCipher,

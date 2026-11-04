@@ -15,3 +15,8 @@ export {
 } from './channel-tokens';
 export { createDb, type Database, type FlowDb } from './client';
 export { schema } from './schema';
+export {
+  type RecordedWebhookEvent,
+  type RecordWebhookEventInput,
+  recordWebhookEvent,
+} from './webhook-events';

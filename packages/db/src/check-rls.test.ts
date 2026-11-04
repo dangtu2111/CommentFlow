@@ -21,6 +21,7 @@ function fakeDb(parts: {
   actorForbidden?: Row[];
   noDelete?: Row[];
   tokenFunctions?: Row[];
+  webhookFn?: Row[];
   guards?: Row[];
   systemFn?: Row[];
   channelInsert?: Row[];
@@ -74,6 +75,7 @@ function fakeDb(parts: {
       if (text.includes('/* column-guard-triggers */')) return { rows: parts.guards ?? [] };
       if (text.includes('/* is-system-context-body */')) return { rows: parts.systemFn ?? [] };
       if (text.includes('/* channels-no-insert */')) return { rows: parts.channelInsert ?? [] };
+      if (text.includes('/* webhook-function */')) return { rows: parts.webhookFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
       if (text.includes('/* no-delete */')) return { rows: parts.noDelete ?? [] };
       if (text.includes('/* actor-forbidden */')) return { rows: parts.actorForbidden ?? [] };
@@ -759,6 +761,20 @@ describe('checkRls: trigger giới hạn cột, thân is_system_context, INSERT 
     expect(v).toContainEqual({
       subject: 'cf.channels',
       message: expect.stringContaining('INSERT'),
+    });
+  });
+});
+
+describe('checkRls: hàm ghi sự kiện webhook', () => {
+  it('báo khi hàm thiếu/mở rộng ngữ cảnh', async () => {
+    const v = await checkRls(
+      fakeDb({
+        webhookFn: [{ name: 'cf.record_webhook_event', problem: 'PUBLIC có quyền EXECUTE' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.record_webhook_event',
+      message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
     });
   });
 });

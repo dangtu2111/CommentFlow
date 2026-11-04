@@ -38,9 +38,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   // Gói nội bộ được dùng thẳng từ mã nguồn TypeScript (không build riêng).
-  transpilePackages: ['@flow/shared', '@flow/saas-core', '@flow/db'],
+  transpilePackages: ['@flow/shared', '@flow/saas-core', '@flow/db', '@flow/connectors'],
   // Thư viện Node chạy phía server, không đóng gói vào bundle.
-  serverExternalPackages: ['nodemailer', 'pg', 'ioredis'],
+  serverExternalPackages: ['nodemailer', 'pg', 'ioredis', 'pg-boss'],
   // Bản chạy độc lập cho Docker (cf-staging); cần gốc monorepo để gom đúng gói nội bộ.
   output: 'standalone',
   outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),

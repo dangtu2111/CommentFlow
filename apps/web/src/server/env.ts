@@ -56,3 +56,35 @@ export type ServerEnv = z.infer<typeof envSchema>;
 export function loadServerEnv(source: Record<string, string | undefined> = process.env): ServerEnv {
   return parseEnv(envSchema, source);
 }
+
+const webhookEnvSchema = z.object({
+  /** Role cf_app (ghi sự kiện qua hàm DEFINER, gửi job). */
+  DATABASE_URL: z.string().min(1),
+  /** App Secret của Meta (xác minh `X-Hub-Signature-256`). Chưa đặt → endpoint trả 503, không bao giờ chấp nhận. */
+  META_APP_SECRET: z.string().trim().min(16).optional(),
+  /** Chuỗi tự chọn để Meta xác minh endpoint (bắt tay GET). Chưa đặt → 503. */
+  META_WEBHOOK_VERIFY_TOKEN: z.string().trim().min(16).optional(),
+});
+
+export type WebhookEnv = {
+  databaseUrl: string;
+  appSecret: string | undefined;
+  verifyToken: string | undefined;
+};
+
+/** Cấu hình riêng cho endpoint webhook (không đòi SMTP/Redis...). Giá trị rỗng/chỉ khoảng trắng coi như chưa đặt. */
+export function loadWebhookEnv(
+  source: Record<string, string | undefined> = process.env,
+): WebhookEnv {
+  const blank = (value: string | undefined) => (value?.trim() ? value : undefined);
+  const env = parseEnv(webhookEnvSchema, {
+    DATABASE_URL: source.DATABASE_URL,
+    META_APP_SECRET: blank(source.META_APP_SECRET),
+    META_WEBHOOK_VERIFY_TOKEN: blank(source.META_WEBHOOK_VERIFY_TOKEN),
+  });
+  return {
+    databaseUrl: env.DATABASE_URL,
+    appSecret: env.META_APP_SECRET,
+    verifyToken: env.META_WEBHOOK_VERIFY_TOKEN,
+  };
+}

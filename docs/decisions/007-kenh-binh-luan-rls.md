@@ -14,7 +14,7 @@ Ba đường, phân biệt bằng `app.user_id` và `app.ctx`:
 | `channels` | hệ thống/trần hoặc thành viên đang hoạt động | **không có** (tạo qua hàm DEFINER của `TOKEN-ENC` sau khi xác minh token) | Owner hoặc hệ thống; đường người dùng chỉ đổi `name`, `reply_language` (trigger) | không |
 | `posts` | như trên | **chỉ hệ thống** | chỉ hệ thống | không |
 | `comments` | như trên | **chỉ hệ thống** | thành viên đang hoạt động hoặc hệ thống; đường người dùng không sửa `text`, tác giả, `attachments`, `is_own`, `is_impersonation_suspected` và `replied_by`/`locked_by` phải là chính người gọi (trigger) | không |
-| `webhook_events` | Owner đang hoạt động hoặc hệ thống (payload có tên khách) | **chỉ hệ thống** | chỉ hệ thống | không |
+| `webhook_events` | Owner đang hoạt động hoặc hệ thống (payload có tên khách) | **không INSERT trực tiếp** (migration 0022 thu hồi); chỉ qua `cf.record_webhook_event` (ngữ cảnh trần: không workspace/người dùng/job) | chỉ hệ thống | không |
 
 - SELECT đòi thành viên khi có người dùng (sai id ở đường người dùng không lộ dữ liệu).
 - Không DELETE cho `cf_app`: ngắt kênh = `status`; xóa dữ liệu theo job/role bảo trì (gap `DB-MAINTENANCE-ROLE`).

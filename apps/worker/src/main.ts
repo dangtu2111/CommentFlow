@@ -2,10 +2,11 @@ import { createDb } from '@flow/db';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
 import { startHealthServer } from './health';
+import { createIngestHandler } from './jobs/ingest';
 import { createPingHandler } from './jobs/ping';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
-import { SYSTEM_PING_QUEUE } from './queue/definitions';
+import { INGEST_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -23,6 +24,12 @@ async function main(): Promise<void> {
   await boss.start();
   // batchSize 1: một job lỗi không làm các job đã chạy xong trong cùng lô bị thử lại (tránh tác dụng phụ lặp, ví dụ gửi trùng).
   await boss.work(SYSTEM_PING_QUEUE, { batchSize: 1 }, createPingHandler(db, logger));
+  // docs/09 §9: ingest — 10 job đồng thời (mỗi lần một job để lỗi không làm các job khác trong lô bị thử lại).
+  await boss.work(
+    INGEST_QUEUE,
+    { batchSize: 1, localConcurrency: 10 },
+    createIngestHandler({ db, logger }),
+  );
   ready = true;
   logger.info({ port: config.port }, 'worker đã khởi động');
 

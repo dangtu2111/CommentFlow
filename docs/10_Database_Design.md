@@ -190,7 +190,7 @@ create policy ws_isolation on comments
   | `channels` | hệ thống/trần hoặc thành viên đang hoạt động (không cột token/`key_version`) | **không** (tạo qua `cf.create_channel`, Owner hoặc hệ thống) | Owner hoặc hệ thống; đường người dùng chỉ đổi `name`, `reply_language` (trigger) | không |
   | `posts` | như trên | chỉ hệ thống | chỉ hệ thống | không |
   | `comments` | như trên | chỉ hệ thống | thành viên đang hoạt động hoặc hệ thống; đường người dùng không sửa `text`, tác giả, `attachments`, `is_own`, `is_impersonation_suspected`; `replied_by`/`locked_by` phải là chính người gọi (trigger) | không |
-  | `webhook_events` | Owner đang hoạt động hoặc hệ thống | chỉ hệ thống | chỉ hệ thống | không |
+  | `webhook_events` | Owner đang hoạt động hoặc hệ thống | **không INSERT trực tiếp** — chỉ qua hàm DEFINER `cf.record_webhook_event` (ngữ cảnh trần của route webhook, sau khi kiểm chữ ký) | chỉ hệ thống (`status`, `attempts`, `error`, `processed_at`) | không |
 
   Hàm token Page (SECURITY DEFINER, `search_path = pg_catalog, core, cf, pg_temp`, chỉ `EXECUTE` cho `cf_app`): `cf.create_channel`, `cf.set_channel_token`, `cf.clear_channel_token` — Owner đang hoạt động hoặc hệ thống; `cf.read_channel_token` — **chỉ hệ thống** (worker giải mã; web không đọc được ciphertext). Mã hóa AES-256-GCM chạy trong mã ứng dụng, AAD = `workspace_id|channel_id|key_version`.
 

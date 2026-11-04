@@ -222,9 +222,7 @@ describe('check-rls', () => {
       'DROP POLICY channels_update ON cf.channels; CREATE POLICY channels_update ON cf.channels FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
     );
     expect(ch).toContainEqual(expect.objectContaining({ subject: 'cf.channels' }));
-    const wh = await violationsAfter(
-      'DROP POLICY webhook_events_insert ON cf.webhook_events; CREATE POLICY webhook_events_insert ON cf.webhook_events FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()) AND (SELECT core.is_workspace_member()))',
-    );
+    const wh = await violationsAfter('GRANT INSERT ON cf.webhook_events TO cf_app');
     expect(wh).toContainEqual(expect.objectContaining({ subject: 'cf.webhook_events' }));
     const sel = await violationsAfter(
       'DROP POLICY comments_select ON cf.comments; CREATE POLICY comments_select ON cf.comments FOR SELECT USING (workspace_id = (SELECT core.current_workspace_id()))',
@@ -294,6 +292,27 @@ describe('check-rls', () => {
       'DROP POLICY comments_update ON cf.comments; CREATE POLICY comments_update ON cf.comments FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()) AND ((SELECT core.current_user_id()) IS NULL OR (SELECT core.is_workspace_member())))',
     );
     expect(pol).toContainEqual(expect.objectContaining({ subject: 'cf.comments' }));
+  });
+
+  it('WH-INGEST: bắt được khi hàm ghi webhook bỏ kiểm ngữ cảnh trần hoặc PUBLIC có EXECUTE', async () => {
+    const open = await violationsAfter(
+      'CREATE OR REPLACE FUNCTION cf.record_webhook_event(p_platform text, p_page_external_id text, p_event_hash text, p_payload jsonb) RETURNS TABLE (event_id uuid, event_workspace_id uuid) LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, core, cf, pg_temp AS $$ SELECT NULL::uuid, NULL::uuid WHERE false $$',
+    );
+    expect(open).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.record_webhook_event',
+        message: expect.stringContaining('ngữ cảnh trần'),
+      }),
+    );
+    const pub = await violationsAfter(
+      'GRANT EXECUTE ON FUNCTION cf.record_webhook_event(text, text, text, jsonb) TO PUBLIC',
+    );
+    expect(pub).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.record_webhook_event',
+        message: expect.stringContaining('PUBLIC'),
+      }),
+    );
   });
 
   it('CH-SCHEMA: DELETE vẫn bị bắt dù kèm một policy DELETE theo workspace', async () => {

@@ -9,6 +9,7 @@
 | Mục | Tính năng | PR | Đã merge | Chủ dự án thử | Kết quả |
 |---|---|---|---|---|---|
 | KT-001 | Workspace, thành viên, lời mời, chỉ-Owner ở DB | #7, #11 | có | chưa | — |
+| KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | WH-INGEST | chưa | chưa | — |
 
 ---
 
@@ -32,6 +33,24 @@
 Thử thêm (không bắt buộc): dùng link mời khi đăng nhập bằng **email khác** email được mời → thông báo trung tính, không tham gia được; tạo quá 5 workspace trong một ngày → thông báo giới hạn.
 
 Nếu hỏng: ghi số bước, ảnh chụp màn hình (che email thật nếu có) và nội dung hiện trên màn hình; dán vào báo cáo cho agent.
+---
+
+## KT-002 — Webhook bình luận Facebook: bắt tay, chữ ký, đường nhận (WH-INGEST)
+
+Điều kiện: máy ảo `cf` bật; `pnpm db:migrate` (0022) và `pnpm --filter @flow/worker queue:install` đã chạy trên `cf_dev`; trong `.env.local` có `META_APP_SECRET` và `META_WEBHOOK_VERIFY_TOKEN` (giá trị tự chọn khi chưa dùng Meta thật). Bước 5–8 cần một **kênh đã kết nối** — chỉ có sau `FB-OAUTH`; trước đó chỉ làm bước 1–4 (hoặc nhờ agent gieo một kênh thử).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/web dev` và `pnpm --filter @flow/worker dev`. | Web ở cổng 3000, worker báo "worker đã khởi động"; thiếu khóa cho phiên bản token đang dùng thì worker dừng với thông báo rõ. |
+| 2 | Mở `http://localhost:3000/api/webhooks/meta?hub.mode=subscribe&hub.verify_token=<META_WEBHOOK_VERIFY_TOKEN>&hub.challenge=12345` trên trình duyệt. | Trang chỉ hiện đúng `12345`. |
+| 3 | Lặp lại với verify token **sai**. | Trả 403 (trang trống), không lộ token. |
+| 4 | Gửi POST **không chữ ký**: `curl -i -X POST http://localhost:3000/api/webhooks/meta -d "{}"`. | `HTTP 401`; không có dòng nào mới trong `cf.webhook_events`. |
+| 5 | (Sau FB-OAUTH) `pnpm webhook:send -- --page <PAGE_ID của kênh thử>`. | In `HTTP 200 ok`. |
+| 6 | Vài giây sau mở trang **Bình luận** (sau INBOX-LIST) hoặc hỏi agent kiểm `cf.comments`. | Có đúng một bình luận mới, trạng thái `new`. |
+| 7 | Chạy lại đúng lệnh bước 5 hai lần nữa. | Mỗi lần 200; thêm 2 bình luận **khác nhau** (id ngẫu nhiên), không lỗi. |
+| 8 | Với Meta thật (tunnel, docs/CAN_BAN_CUNG_CAP.md §2): bình luận trên Fanpage thử bằng tài khoản **khác** Page; rồi để chính Page trả lời bình luận đó. | Bình luận của khách xuất hiện; câu trả lời của chính Page **không** xuất hiện. |
+
+Nếu hỏng: ghi số bước, mã HTTP và dòng log của web/worker (che tên khách); không dán `META_APP_SECRET`.
 
 ---
 
