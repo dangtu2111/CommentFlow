@@ -14,7 +14,9 @@ CREATE TABLE "cf"."comment_replies" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"sent_at" timestamp with time zone,
 	CONSTRAINT "comment_replies_status_check" CHECK ("cf"."comment_replies"."status" in ('queued', 'sending', 'sent', 'failed', 'cancelled')),
-	CONSTRAINT "comment_replies_text_check" CHECK (char_length("cf"."comment_replies"."text") between 1 and 8000)
+	CONSTRAINT "comment_replies_text_check" CHECK (char_length("cf"."comment_replies"."text") between 1 and 8000),
+	CONSTRAINT "comment_replies_previous_status_check" CHECK ("cf"."comment_replies"."previous_status" in ('new', 'pending_review', 'needs_human', 'send_failed')),
+	CONSTRAINT "comment_replies_attempts_check" CHECK ("cf"."comment_replies"."attempts" >= 0)
 );
 --> statement-breakpoint
 ALTER TABLE "cf"."comment_replies" ADD CONSTRAINT "comment_replies_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "core"."workspaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -23,6 +25,8 @@ ALTER TABLE "cf"."comment_replies" ADD CONSTRAINT "comment_replies_comment_fk" F
 ALTER TABLE "cf"."comment_replies" ADD CONSTRAINT "comment_replies_channel_fk" FOREIGN KEY ("workspace_id","channel_id") REFERENCES "cf"."channels"("workspace_id","id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "comment_replies_one_active_per_comment" ON "cf"."comment_replies" USING btree ("workspace_id","comment_id") WHERE "cf"."comment_replies"."status" in ('queued', 'sending');--> statement-breakpoint
 CREATE INDEX "comment_replies_workspace_comment_idx" ON "cf"."comment_replies" USING btree ("workspace_id","comment_id");--> statement-breakpoint
+CREATE INDEX "comment_replies_workspace_channel_idx" ON "cf"."comment_replies" USING btree ("workspace_id","channel_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "comment_replies_external_reply_unique" ON "cf"."comment_replies" USING btree ("channel_id","external_reply_id") WHERE "cf"."comment_replies"."external_reply_id" is not null;--> statement-breakpoint
 
 -- ===================================================================================================
 -- FB-REPLY (feat/reply-backend, ADR 008): hàng đợi gửi trả lời (outbox) + hàm DEFINER yêu cầu/hủy + siết trigger bình luận.
@@ -39,7 +43,7 @@ CREATE INDEX "comment_replies_workspace_comment_idx" ON "cf"."comment_replies" U
 --  * Trigger cf.guard_comment_user_update (thay bản 0019): miễn CHỦ BẢNG (hàm DEFINER đã tự kiểm quyền) và đường hệ
 --    thống; đường người dùng KHÔNG đặt được trạng thái hệ thống (sending/replied/auto_replied/send_failed/
 --    scheduled_auto/processing/spam_suspected/hidden), không đổi trạng thái khi bình luận đang ở trạng thái hệ thống,
---    không sửa external_reply_id/replied_at/private_replied_at; label_source chỉ được đặt 'human' (đổi nhãn tay); người dùng chỉ chuyển giữa
+--    không sửa external_reply_id/replied_at/private_replied_at; label_source chỉ được đặt 'human' (đổi nhãn tay); người dùng KHÔNG sửa replied_by và không ghi đè/xóa khóa mềm còn hạn của người khác; người dùng chỉ chuyển giữa
 --    {skipped, pending_review, needs_human} từ {new, pending_review, needs_human, send_failed, skipped, spam_suspected}.
 --    (Giải quyết gap COMMENTS-STATUS-GUARD.)
 --
@@ -97,14 +101,19 @@ BEGIN
     RAISE EXCEPTION 'comments: dữ liệu nền tảng/dấu vết gửi do hệ thống quản lý, người dùng không sửa'
       USING ERRCODE = 'insufficient_privilege';
   END IF;
-  -- Không ghi tên người khác vào "ai đã trả lời"/"ai đang khóa": giá trị mới phải là NULL hoặc chính người gọi.
-  IF NEW.replied_by IS DISTINCT FROM OLD.replied_by
-     AND NEW.replied_by IS NOT NULL AND NEW.replied_by IS DISTINCT FROM core.current_user_id() THEN
-    RAISE EXCEPTION 'comments: replied_by phải là người gọi' USING ERRCODE = 'insufficient_privilege';
+  -- "Ai đã trả lời" do hệ thống ghi (hàm DEFINER/worker): người dùng không sửa (không nhận công, không xóa dấu vết).
+  IF NEW.replied_by IS DISTINCT FROM OLD.replied_by THEN
+    RAISE EXCEPTION 'comments: replied_by do hệ thống ghi' USING ERRCODE = 'insufficient_privilege';
   END IF;
+  -- Khóa mềm: giá trị mới phải là NULL hoặc chính người gọi; và KHÔNG được ghi đè/xóa khóa CÒN HẠN của người khác.
   IF NEW.locked_by IS DISTINCT FROM OLD.locked_by
      AND NEW.locked_by IS NOT NULL AND NEW.locked_by IS DISTINCT FROM core.current_user_id() THEN
     RAISE EXCEPTION 'comments: locked_by phải là người gọi' USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  IF (NEW.locked_by IS DISTINCT FROM OLD.locked_by OR NEW.locked_until IS DISTINCT FROM OLD.locked_until)
+     AND OLD.locked_by IS NOT NULL AND OLD.locked_by IS DISTINCT FROM core.current_user_id()
+     AND OLD.locked_until > now() THEN
+    RAISE EXCEPTION 'comments: khóa của người khác còn hạn' USING ERRCODE = 'insufficient_privilege';
   END IF;
   -- Trạng thái: người dùng chỉ chuyển giữa {skipped, pending_review, needs_human} từ trạng thái "của người".
   IF NEW.status IS DISTINCT FROM OLD.status THEN

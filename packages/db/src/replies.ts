@@ -34,6 +34,16 @@ export class ReplyRejectedError extends Error {
   }
 }
 
+/** Lỗi không ánh xạ được: chỉ mang SQLSTATE (nguyên tắc #6: không để nội dung đi vào thông báo lỗi/log). */
+export class ReplyRequestFailedError extends Error {
+  readonly sqlstate: string | undefined;
+  constructor(sqlstate: string | undefined) {
+    super(`Yêu cầu trả lời thất bại (${sqlstate ?? 'không rõ'})`);
+    this.name = 'ReplyRequestFailedError';
+    this.sqlstate = sqlstate;
+  }
+}
+
 function sqlstateOf(error: unknown): string | undefined {
   const holder = error as { cause?: { code?: unknown }; code?: unknown } | null;
   const code = holder?.cause?.code ?? holder?.code;
@@ -55,7 +65,8 @@ export async function requestCommentReply(
   } catch (error) {
     const reason = SQLSTATE_TO_REJECTION[sqlstateOf(error) ?? ''];
     if (reason) throw new ReplyRejectedError(reason);
-    throw error;
+    // KHÔNG ném lại nguyên văn: `DrizzleQueryError.message` chứa tham số truy vấn (= nội dung câu trả lời, có thể có SĐT/địa chỉ).
+    throw new ReplyRequestFailedError(sqlstateOf(error));
   }
 }
 

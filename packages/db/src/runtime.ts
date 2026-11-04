@@ -49,6 +49,7 @@ export {
   REPLY_REJECTIONS,
   ReplyRejectedError,
   type ReplyRejection,
+  ReplyRequestFailedError,
   requestCommentReply,
 } from './replies';
 export { schema } from './schema';

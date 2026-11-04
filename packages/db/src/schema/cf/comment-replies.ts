@@ -53,10 +53,20 @@ export const commentReplies = cf.table(
       .on(t.workspaceId, t.commentId)
       .where(sql`${t.status} in ('queued', 'sending')`),
     index('comment_replies_workspace_comment_idx').on(t.workspaceId, t.commentId),
+    index('comment_replies_workspace_channel_idx').on(t.workspaceId, t.channelId),
+    // Mã trả lời của nền tảng chỉ gắn với MỘT yêu cầu trong một kênh.
+    uniqueIndex('comment_replies_external_reply_unique')
+      .on(t.channelId, t.externalReplyId)
+      .where(sql`${t.externalReplyId} is not null`),
     check(
       'comment_replies_status_check',
       sql`${t.status} in (${sql.raw(REPLY_STATUSES.map((s) => `'${s}'`).join(', '))})`,
     ),
     check('comment_replies_text_check', sql`char_length(${t.text}) between 1 and 8000`),
+    check(
+      'comment_replies_previous_status_check',
+      sql`${t.previousStatus} in ('new', 'pending_review', 'needs_human', 'send_failed')`,
+    ),
+    check('comment_replies_attempts_check', sql`${t.attempts} >= 0`),
   ],
 );

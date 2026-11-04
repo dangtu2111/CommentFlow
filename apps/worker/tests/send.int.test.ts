@@ -118,13 +118,11 @@ function connectorWith(behaviour: Behaviour = {}, fx?: Fixture) {
   return { connector, replies, registry: createConnectorRegistry([connector]) };
 }
 
-const run = (fx: Fixture, registry: ReturnType<typeof createConnectorRegistry>, now?: Date) =>
-  processSendJob({
-    db,
-    registry,
-    job: { workspaceId: ws, replyId: fx.replyId },
-    ...(now ? { now } : {}),
-  });
+const run = (
+  fx: Fixture,
+  registry: ReturnType<typeof createConnectorRegistry>,
+  extra: { sleep?: (ms: number) => Promise<void>; leaseSeconds?: number } = {},
+) => processSendJob({ db, registry, job: { workspaceId: ws, replyId: fx.replyId }, ...extra });
 const replyRow = async (id: string) =>
   (await admin.query('SELECT * FROM cf.comment_replies WHERE id = $1', [id])).rows[0];
 const commentRow = async (id: string) =>
@@ -391,7 +389,7 @@ describe('FR-042 lỗi từ nền tảng', () => {
 });
 
 describe('FR-042 không gửi trùng khi chạy song song', () => {
-  it('hai job cùng yêu cầu chạy cùng lúc → connector.reply gọi đúng MỘT lần; job còn lại nhận SendInFlightError (để pg-boss thử lại)', async () => {
+  it('hai job cùng yêu cầu chạy cùng lúc → connector.reply gọi đúng MỘT lần; job còn lại CHỜ hết thuê (không đốt lượt thử lại) rồi thấy đã gửi xong', async () => {
     const fx = await fixture();
     const slow = connectorWith({
       reply: async () => {
@@ -399,14 +397,98 @@ describe('FR-042 không gửi trùng khi chạy song song', () => {
         return { externalId: 'fb-cham' };
       },
     });
-    const results = await Promise.allSettled([run(fx, slow.registry), run(fx, slow.registry)]);
+    const waits: number[] = [];
+    // Không chờ thật 90 giây: chờ ~700ms (đủ để job đầu xong) và ghi lại thời gian được yêu cầu chờ.
+    const sleep = async (ms: number) => {
+      waits.push(ms);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+    };
+    await Promise.all([run(fx, slow.registry, { sleep }), run(fx, slow.registry, { sleep })]);
     expect(slow.replies).toHaveLength(1);
-    const rejected = results.filter((r) => r.status === 'rejected');
-    expect(rejected).toHaveLength(1);
-    expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(SendInFlightError);
+    expect(waits.length).toBeLessThanOrEqual(1);
+    for (const ms of waits) expect(ms).toBeGreaterThan(0);
     expect(await replyRow(fx.replyId)).toMatchObject({
       status: 'sent',
       external_reply_id: 'fb-cham',
+    });
+  });
+
+  it('chờ xong mà job kia VẪN còn trong thời hạn thuê → ném SendInFlightError (pg-boss thử lại), không gửi', async () => {
+    const fx = await fixture();
+    await admin.query(
+      "UPDATE cf.comment_replies SET status = 'sending', attempts = 1, updated_at = now() WHERE id = $1",
+      [fx.replyId],
+    );
+    const { replies, registry } = connectorWith();
+    await expect(run(fx, registry, { sleep: async () => undefined })).rejects.toBeInstanceOf(
+      SendInFlightError,
+    );
+    expect(replies).toHaveLength(0);
+  });
+
+  it('RÀO ghi kết quả: job chạy quá hạn thuê, job khác đã tiếp quản và ghi → lần ghi muộn KHÔNG ghi đè (kể cả thất bại muộn)', async () => {
+    for (const late of ['success', 'failure'] as const) {
+      const fx = await fixture();
+      const takeover = connectorWith({
+        reply: async () => {
+          // trong lúc job A đang gọi API, job B đã gửi xong và ghi sent (attempts + 1)
+          await admin.query(
+            "UPDATE cf.comment_replies SET status = 'sent', external_reply_id = 'fb-B', attempts = attempts + 1, sent_at = now() WHERE id = $1",
+            [fx.replyId],
+          );
+          await admin.query(
+            "UPDATE cf.comments SET status = 'replied', external_reply_id = 'fb-B' WHERE id = $1",
+            [fx.commentId],
+          );
+          if (late === 'failure') throw new PlatformError('PERMISSION', { message: 'x' });
+          return { externalId: 'fb-A-muon' };
+        },
+      });
+      await run(fx, takeover.registry);
+      expect(await replyRow(fx.replyId), late).toMatchObject({
+        status: 'sent',
+        external_reply_id: 'fb-B',
+        error_code: null,
+      });
+      expect(await commentRow(fx.commentId), late).toMatchObject({
+        status: 'replied',
+        external_reply_id: 'fb-B',
+      });
+      expect(await channelStatus(fx.channelId), late).toBe('connected');
+    }
+  });
+
+  it('UNKNOWN hết lượt → failed; gửi lại từ send_failed vẫn KIỂM TRƯỚC (có thể lần trước đã đăng) — thấy thì không gửi trùng', async () => {
+    const fx = await fixture();
+    const broken = connectorWith({ reply: failWith('UNKNOWN') });
+    for (let i = 1; i < MAX_SEND_ATTEMPTS; i++) {
+      await expect(run(fx, broken.registry)).rejects.toBeInstanceOf(SendRetryableError);
+    }
+    await run(fx, broken.registry);
+    expect(await replyRow(fx.replyId)).toMatchObject({ status: 'failed', error_code: 'UNKNOWN' });
+    expect((await commentRow(fx.commentId)).status).toBe('send_failed');
+
+    const again = await db.withActor(ws, staff, (tx) =>
+      requestCommentReply(tx, { commentId: fx.commentId, text: 'Dạ còn size M ạ.' }),
+    );
+    const retryFx = { ...fx, replyId: again };
+    const existing = (f: Fixture): NormalizedComment[] => [
+      {
+        externalId: 'fb-da-dang',
+        postExternalId: 'p',
+        parentExternalId: f.commentExternalId,
+        authorExternalId: f.pageId,
+        text: 'Dạ còn size M ạ.',
+        createdAt: new Date(),
+        isFromPage: true,
+      },
+    ];
+    const recovered = connectorWith({ existing }, fx);
+    await run(retryFx, recovered.registry);
+    expect(recovered.replies).toHaveLength(0);
+    expect(await replyRow(again)).toMatchObject({
+      status: 'sent',
+      external_reply_id: 'fb-da-dang',
     });
   });
 
@@ -452,5 +534,85 @@ describe('FR-042 handler hàng đợi send', () => {
     );
     expect(replies).toHaveLength(1);
     expect((await replyRow(fx.replyId)).status).toBe('sent');
+  });
+});
+
+describe('FR-042 an toàn khi lỗi tạm thời lặp lại / hết lượt thử', () => {
+  const job = (data: unknown, meta: Record<string, unknown> = {}) => [
+    { id: randomUUID(), data, ...meta } as unknown as Job<unknown>,
+  ];
+
+  it('UNKNOWN rồi RATE_LIMIT ở bước KIỂM (fetchComments): KHÔNG trả về queued — lần sau vẫn kiểm trước khi gửi (không gửi trùng)', async () => {
+    const fx = await fixture();
+    await expect(
+      run(fx, connectorWith({ reply: failWith('UNKNOWN') }).registry),
+    ).rejects.toBeInstanceOf(SendRetryableError);
+    // lần 2: là lượt tiếp quản; bước kiểm bị giới hạn tốc độ
+    const checkLimited = connectorWith();
+    const limitedConnector = {
+      ...checkLimited.connector,
+      async fetchComments(): Promise<NormalizedComment[]> {
+        throw new PlatformError('RATE_LIMIT', { message: 'x' });
+      },
+    };
+    await expect(run(fx, createConnectorRegistry([limitedConnector]))).rejects.toBeInstanceOf(
+      SendRetryableError,
+    );
+    expect(checkLimited.replies).toHaveLength(0);
+    expect((await replyRow(fx.replyId)).status).toBe('sending'); // KHÔNG về queued
+
+    // lần 3: kiểm được và thấy câu đã đăng → không gửi lại
+    const existing = (f: Fixture): NormalizedComment[] => [
+      {
+        externalId: 'fb-da-dang',
+        postExternalId: 'p',
+        parentExternalId: f.commentExternalId,
+        authorExternalId: f.pageId,
+        text: 'Dạ còn size M ạ.',
+        createdAt: new Date(),
+        isFromPage: true,
+      },
+    ];
+    const third = connectorWith({ existing }, fx);
+    await run(fx, third.registry);
+    expect(third.replies).toHaveLength(0);
+    expect(await replyRow(fx.replyId)).toMatchObject({
+      status: 'sent',
+      external_reply_id: 'fb-da-dang',
+    });
+  });
+
+  it('lượt thử CUỐI của pg-boss mà vẫn lỗi tạm thời → yêu cầu failed (UNKNOWN vì đã gọi nền tảng), bình luận send_failed, job kết thúc (không kẹt sending)', async () => {
+    const fx = await fixture();
+    const error = vi.fn();
+    const handler = createSendHandler({
+      db,
+      registry: connectorWith({ reply: failWith('RATE_LIMIT') }).registry,
+      logger: { error },
+    });
+    await expect(
+      handler(job({ workspaceId: ws, replyId: fx.replyId }, { retryCount: 0, retryLimit: 3 })),
+    ).rejects.toBeInstanceOf(SendRetryableError);
+    await expect(
+      handler(job({ workspaceId: ws, replyId: fx.replyId }, { retryCount: 3, retryLimit: 3 })),
+    ).resolves.toBeUndefined();
+    expect(await replyRow(fx.replyId)).toMatchObject({ status: 'failed', error_code: 'UNKNOWN' });
+    expect((await commentRow(fx.commentId)).status).toBe('send_failed');
+  });
+
+  it('hết lượt thử khi chưa từng gọi nền tảng (attempts = 0) → failed retries_exhausted; yêu cầu đã xong thì không bị đụng', async () => {
+    const fx = await fixture();
+    const handler = createSendHandler({
+      db,
+      registry: connectorWith().registry,
+      logger: { error: () => {} },
+    });
+    // buộc lỗi trước khi gọi nền tảng: workspace sai trong dữ liệu job → yêu cầu không thấy → êm (không lỗi)
+    await expect(
+      handler(
+        job({ workspaceId: randomUUID(), replyId: fx.replyId }, { retryCount: 3, retryLimit: 3 }),
+      ),
+    ).resolves.toBeUndefined();
+    expect((await replyRow(fx.replyId)).status).toBe('queued');
   });
 });

@@ -286,13 +286,21 @@ describe('posts và comments', () => {
     );
   });
 
-  it('comments: replied_by/locked_by chỉ được là chính người gọi hoặc NULL (không giả người khác)', async () => {
-    expect(
-      await run(
-        'staff',
-        `UPDATE cf.comments SET replied_by = '${ids.owner}' WHERE id = '${comment}'`,
-      ),
-    ).toBe('denied');
+  it('comments: người dùng KHÔNG sửa replied_by (hệ thống ghi); locked_by chỉ được là chính người gọi hoặc NULL', async () => {
+    // đặt sẵn một giá trị (qua đường hệ thống) để mọi lệnh bên dưới đều là THAY ĐỔI thật
+    await run(
+      'system',
+      `UPDATE cf.comments SET replied_by = '${ids.owner}' WHERE id = '${comment}'`,
+    );
+    for (const set of [
+      `replied_by = '${ids.staff}'`,
+      `replied_by = '${ids.staff}'`,
+      'replied_by = NULL',
+    ]) {
+      expect(await run('staff', `UPDATE cf.comments SET ${set} WHERE id = '${comment}'`), set).toBe(
+        'denied',
+      );
+    }
     expect(
       await run(
         'staff',
@@ -302,14 +310,21 @@ describe('posts và comments', () => {
     expect(
       await run(
         'staff',
-        `UPDATE cf.comments SET replied_by = '${ids.staff}', locked_by = '${ids.staff}' WHERE id = '${comment}'`,
+        `UPDATE cf.comments SET locked_by = '${ids.staff}' WHERE id = '${comment}'`,
       ),
     ).toBe(1);
     expect(
+      await run('staff', `UPDATE cf.comments SET locked_by = NULL WHERE id = '${comment}'`),
+    ).toBe(1);
+    // hệ thống (worker) ghi được replied_by
+    expect(
       await run(
-        'staff',
-        `UPDATE cf.comments SET replied_by = NULL, locked_by = NULL WHERE id = '${comment}'`,
+        'system',
+        `UPDATE cf.comments SET replied_by = '${ids.staff}' WHERE id = '${comment}'`,
       ),
+    ).toBe(1);
+    expect(
+      await run('system', `UPDATE cf.comments SET replied_by = NULL WHERE id = '${comment}'`),
     ).toBe(1);
   });
 

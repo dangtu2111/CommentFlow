@@ -1,5 +1,5 @@
 {
-  "id": "c9b82373-e457-4ec0-96f9-9a8a88cf7ae8",
+  "id": "82f49f48-7d2a-45b2-8589-2eb38c8053a5",
   "prevId": "ce2a1e92-c97c-4336-b62d-5c153d9f85f6",
   "version": "7",
   "dialect": "postgresql",
@@ -1673,6 +1673,49 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "comment_replies_workspace_channel_idx": {
+          "name": "comment_replies_workspace_channel_idx",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "channel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comment_replies_external_reply_unique": {
+          "name": "comment_replies_external_reply_unique",
+          "columns": [
+            {
+              "expression": "channel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "external_reply_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"cf\".\"comment_replies\".\"external_reply_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1728,6 +1771,14 @@
         "comment_replies_text_check": {
           "name": "comment_replies_text_check",
           "value": "char_length(\"cf\".\"comment_replies\".\"text\") between 1 and 8000"
+        },
+        "comment_replies_previous_status_check": {
+          "name": "comment_replies_previous_status_check",
+          "value": "\"cf\".\"comment_replies\".\"previous_status\" in ('new', 'pending_review', 'needs_human', 'send_failed')"
+        },
+        "comment_replies_attempts_check": {
+          "name": "comment_replies_attempts_check",
+          "value": "\"cf\".\"comment_replies\".\"attempts\" >= 0"
         }
       },
       "isRLSEnabled": false

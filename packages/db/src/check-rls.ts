@@ -432,7 +432,7 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
   for (const row of noInsert.rows) {
     violations.push({
       subject: String(row.name),
-      message: `${APP_ROLE} không được INSERT (ghi qua hàm DEFINER: cf.create_channel / cf.record_webhook_event)`,
+      message: `${APP_ROLE} không được INSERT (ghi qua hàm DEFINER: cf.create_channel / cf.record_webhook_event / cf.request_comment_reply)`,
     });
   }
   const trigger = await db.query(`/* last-owner-trigger */

@@ -431,3 +431,92 @@ describe('FR-042 bảng comment_replies và trigger bình luận', () => {
     }
   });
 });
+
+describe('FR-042 trigger bình luận: dấu vết "ai trả lời" và khóa mềm của người khác', () => {
+  const update = (who: Who, id: string, setClause: string) =>
+    as(who, (tx) => tx.execute(sql.raw(`UPDATE cf.comments SET ${setClause} WHERE id = '${id}'`)));
+
+  it('người dùng KHÔNG sửa replied_by (không nhận công, không xóa dấu vết) — kể cả đặt thành chính mình hoặc NULL', async () => {
+    const id = await comment({ status: 'replied' });
+    await admin.query(
+      'UPDATE cf.comments SET replied_by = $2, external_reply_id = $3 WHERE id = $1',
+      [id, stranger, 'fb-1'],
+    );
+    for (const who of ['owner', 'staff'] as const) {
+      expect((await update(who, id, `replied_by = '${ids[who]}'`)).ok, `${who} đặt mình`).toBe(
+        false,
+      );
+      expect((await update(who, id, 'replied_by = NULL')).ok, `${who} xóa`).toBe(false);
+    }
+    expect((await commentRow(id)).replied_by).toBe(stranger);
+  });
+
+  it('khóa mềm CÒN HẠN của người khác: không ghi đè, không xóa, không đổi hạn; hết hạn hoặc của chính mình thì được', async () => {
+    const id = await comment();
+    await admin.query(
+      "UPDATE cf.comments SET locked_by = $2, locked_until = now() + interval '1 minute' WHERE id = $1",
+      [id, owner],
+    );
+    expect(
+      (
+        await update(
+          'staff',
+          id,
+          `locked_by = '${staff}', locked_until = now() + interval '2 minutes'`,
+        )
+      ).ok,
+    ).toBe(false);
+    expect((await update('staff', id, 'locked_by = NULL, locked_until = NULL')).ok).toBe(false);
+    expect((await update('staff', id, "locked_until = now() + interval '1 hour'")).ok).toBe(false);
+    expect((await update('owner', id, "locked_until = now() + interval '2 minutes'")).ok).toBe(
+      true,
+    ); // của chính mình
+    await admin.query(
+      "UPDATE cf.comments SET locked_until = now() - interval '1 second' WHERE id = $1",
+      [id],
+    );
+    expect(
+      (
+        await update(
+          'staff',
+          id,
+          `locked_by = '${staff}', locked_until = now() + interval '2 minutes'`,
+        )
+      ).ok,
+    ).toBe(true); // đã hết hạn
+  });
+
+  it('ràng buộc bảng: attempts >= 0, previous_status hợp lệ, một mã trả lời nền tảng chỉ gắn một yêu cầu trong một kênh', async () => {
+    const a = await comment();
+    const b = await comment();
+    const ra = await request('owner', a);
+    const rb = await request('owner', b);
+    if (!ra.ok || !rb.ok) throw new Error('request');
+    const code = async (statement: string) => {
+      try {
+        await admin.query(statement);
+        return 'ok';
+      } catch (error) {
+        return (error as { code?: string }).code ?? 'unknown';
+      }
+    };
+    expect(await code(`UPDATE cf.comment_replies SET attempts = -1 WHERE id = '${ra.value}'`)).toBe(
+      '23514',
+    );
+    expect(
+      await code(
+        `UPDATE cf.comment_replies SET previous_status = 'replied' WHERE id = '${ra.value}'`,
+      ),
+    ).toBe('23514');
+    expect(
+      await code(
+        `UPDATE cf.comment_replies SET external_reply_id = 'fb-trung' WHERE id = '${ra.value}'`,
+      ),
+    ).toBe('ok');
+    expect(
+      await code(
+        `UPDATE cf.comment_replies SET external_reply_id = 'fb-trung' WHERE id = '${rb.value}'`,
+      ),
+    ).toBe('23505');
+  });
+});
