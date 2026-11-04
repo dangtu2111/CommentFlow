@@ -92,6 +92,7 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/workspace-members` · Gói
 
 - **Lời mời (ADR 005):** nhận lời mời chỉ qua `core.accept_invitation(token_hash)` (SECURITY DEFINER, gọi trong `withUser`, KHÔNG nhận email/user id, mọi lỗi → 0 dòng). Tên cột trả về khác tên cột bảng (plpgsql nhập nhằng). `cf_app` chỉ UPDATE `invitations.revoked_at`; không DELETE. Trong hàm DEFINER, `search_path` không có `public` nên citext phải so bằng `lower(x::text)`.
 - **Owner cuối cùng** được trigger `members_guard_last_owner` giữ; lỗi `23514` + constraint `members_last_owner` → `AppError('CONFLICT')`. Dùng `members.id` (không phải user id) làm khóa trong form; id lạ/workspace khác → `NOT_FOUND` → web trả 404.
+- **`isRlsViolation` dò chữ "row-level security" trong thông báo lỗi Postgres** (tiếng Anh): hạ tầng phải để `lc_messages` của DB là `C`/`en_US` cho `cf_app`, nếu không lỗi RLS nổi lên thành 500 thay vì FORBIDDEN. `cf_app` chỉ UPDATE `workspaces.name/slug/timezone/default_lang/ai_enabled/updated_at` (0018); tính năng sau cần sửa `status`/`ai_cost_cap_usd`/`emergency_stopped_at` phải thêm GRANT cột hoặc hàm DEFINER riêng.
 - **Server Component không đặt được cookie:** cookie `cf-workspace`/`cf-invite` chỉ ghi trong Server Action/route handler (`/invite/<token>/start`, `/invite/clear`).
 - `Intl.supportedValuesOf('timeZone')` KHÔNG có `Asia/Ho_Chi_Minh` — dùng `WORKSPACE_TIME_ZONES`.
 - **Đồng hồ máy ảo lệch ~1 giây** so với máy code làm test `admin-session-cap` ("created_at ở tương lai") đỏ — không liên quan mã; đồng bộ giờ máy ảo.

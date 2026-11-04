@@ -127,6 +127,13 @@
       "when": 1793753238558,
       "tag": "0017_members_invite_only",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793754318615,
+      "tag": "0018_post_verify_tighten",
+      "breakpoints": true
     }
   ]
 }

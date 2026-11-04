@@ -194,6 +194,13 @@ describe('check-rls', () => {
     );
   });
 
+  it('bắt được khi cf_app lấy lại quyền sửa status/created_by của workspaces', async () => {
+    for (const col of ['status', 'created_by', 'ai_cost_cap_usd']) {
+      const v = await violationsAfter(`GRANT UPDATE (${col}) ON core.workspaces TO cf_app`);
+      expect(v, col).toContainEqual(expect.objectContaining({ subject: 'core.workspaces' }));
+    }
+  });
+
   it('bắt được khi cf_app lấy lại quyền đọc token_hash', async () => {
     const v = await violationsAfter('GRANT SELECT (token_hash) ON core.invitations TO cf_app');
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));

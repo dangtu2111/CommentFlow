@@ -240,6 +240,13 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.invitations', 'workspace_id', 'UPDATE'],
   ['cf_app', 'core.invitations', 'invited_by', 'UPDATE'],
   // thành viên: chỉ sửa role/status/updated_at (không đổi user_id → chuyển ghế Owner, không giả người mời)
+  // workspaces: Owner chỉ sửa name/slug/timezone/default_lang/ai_enabled (0018); không status/ai_cost_cap_usd/emergency_stopped_at/created_by
+  ['cf_app', 'core.workspaces', 'status', 'UPDATE'],
+  ['cf_app', 'core.workspaces', 'ai_cost_cap_usd', 'UPDATE'],
+  ['cf_app', 'core.workspaces', 'emergency_stopped_at', 'UPDATE'],
+  ['cf_app', 'core.workspaces', 'created_by', 'UPDATE'],
+  ['cf_app', 'core.workspaces', 'created_at', 'UPDATE'],
+  ['cf_app', 'core.workspaces', 'id', 'UPDATE'],
   ['cf_app', 'core.members', 'user_id', 'UPDATE'],
   ['cf_app', 'core.members', 'workspace_id', 'UPDATE'],
   ['cf_app', 'core.members', 'invited_by', 'UPDATE'],
@@ -406,7 +413,8 @@ async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Pr
       FROM (VALUES ${values}) AS v(t, c, m)
       JOIN pg_policy p ON p.polrelid = ('core.' || v.t)::regclass AND p.polpermissive
            AND (p.polcmd = v.c::"char" OR p.polcmd = '*')
-           AND (p.polroles = '{0}'::oid[] OR (SELECT oid FROM app) = ANY(p.polroles))
+           AND (0 = ANY(p.polroles)
+                OR EXISTS (SELECT 1 FROM unnest(p.polroles) rid WHERE rid <> 0 AND pg_has_role('${APP_ROLE}', rid, 'MEMBER')))
     )
     SELECT v.t AS tbl, v.c AS cmd, v.m AS marker, 'thiếu policy có marker' AS problem
     FROM (VALUES ${values}) AS v(t, c, m)

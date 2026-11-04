@@ -96,11 +96,7 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
   it('members.status chỉ nhận active | suspended | removed (CHECK)', async () => {
     const user = await seedUser(admin);
     const id = await seedMember(admin, wsA, user, 'staff');
-    for (const ok of ['active', 'suspended', 'removed']) {
-      await db.withActor(wsA, ownerA, (tx) =>
-        tx.update(members).set({ status: ok }).where(eq(members.id, id)),
-      );
-    }
+    // Giá trị sai bị CHECK chặn khi dòng còn hiện với Owner (dòng `removed` bị RLS ẩn nên thử TRƯỚC khi gỡ).
     expect(
       await expectRejectCode(
         db.withActor(wsA, ownerA, (tx) =>
@@ -108,6 +104,11 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
         ),
       ),
     ).toBe('23514'); // check_violation
+    for (const ok of ['active', 'suspended', 'removed']) {
+      await db.withActor(wsA, ownerA, (tx) =>
+        tx.update(members).set({ status: ok }).where(eq(members.id, id)),
+      );
+    }
   });
 
   it('A không chèn được dòng mang workspace_id của B (vi phạm RLS)', async () => {
