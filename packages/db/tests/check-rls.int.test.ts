@@ -201,6 +201,42 @@ describe('check-rls', () => {
     }
   });
 
+  it('CH-SCHEMA: bắt được khi cf_app lấy lại quyền đọc/ghi token Page hoặc sửa cột khóa gửi / định danh', async () => {
+    for (const ddl of [
+      'GRANT SELECT (access_token_enc) ON cf.channels TO cf_app',
+      'GRANT UPDATE (access_token_enc) ON cf.channels TO cf_app',
+      'GRANT UPDATE (send_suspended_until) ON cf.channels TO cf_app',
+      'GRANT UPDATE (rate_limit_override) ON cf.channels TO cf_app',
+      'GRANT UPDATE (workspace_id) ON cf.comments TO cf_app',
+      'GRANT UPDATE (payload) ON cf.webhook_events TO cf_app',
+    ]) {
+      const v = await violationsAfter(ddl);
+      expect(v, ddl).toContainEqual(
+        expect.objectContaining({ message: expect.stringContaining('cf_app') }),
+      );
+    }
+  });
+
+  it('CH-SCHEMA: bắt được khi policy ghi của channels/webhook_events bị hạ xuống chỉ theo workspace', async () => {
+    const ch = await violationsAfter(
+      'DROP POLICY channels_insert ON cf.channels; CREATE POLICY channels_insert ON cf.channels FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(ch).toContainEqual(expect.objectContaining({ subject: 'cf.channels' }));
+    const wh = await violationsAfter(
+      'DROP POLICY webhook_events_insert ON cf.webhook_events; CREATE POLICY webhook_events_insert ON cf.webhook_events FOR INSERT WITH CHECK (workspace_id = (SELECT core.current_workspace_id()) AND (SELECT core.is_workspace_member()))',
+    );
+    expect(wh).toContainEqual(expect.objectContaining({ subject: 'cf.webhook_events' }));
+    const sel = await violationsAfter(
+      'DROP POLICY comments_select ON cf.comments; CREATE POLICY comments_select ON cf.comments FOR SELECT USING (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(sel).toContainEqual(expect.objectContaining({ subject: 'cf.comments' }));
+  });
+
+  it('CH-SCHEMA: bắt được khi cf_app có quyền DELETE trên bảng kênh/bình luận', async () => {
+    const v = await violationsAfter('GRANT DELETE ON cf.comments TO cf_app');
+    expect(v).toContainEqual(expect.objectContaining({ subject: 'cf.comments' }));
+  });
+
   it('bắt được khi cf_app lấy lại quyền đọc token_hash', async () => {
     const v = await violationsAfter('GRANT SELECT (token_hash) ON core.invitations TO cf_app');
     expect(v).toContainEqual(expect.objectContaining({ subject: 'core.invitations' }));

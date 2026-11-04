@@ -233,6 +233,29 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.invitations', 'token_hash', 'UPDATE'],
   // băm token mời: chỉ hàm DEFINER (0015) so khớp; cf_app không đọc được (kể cả Owner)
   ['cf_app', 'core.invitations', 'token_hash', 'SELECT'],
+  // kênh nền tảng (CH-SCHEMA): token Page không đọc/ghi được bằng cf_app (hàm DEFINER của TOKEN-ENC); khóa gửi do Admin
+  ['cf_app', 'cf.channels', 'access_token_enc', 'SELECT'],
+  ['cf_app', 'cf.channels', 'access_token_enc', 'INSERT'],
+  ['cf_app', 'cf.channels', 'access_token_enc', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'send_suspended_until', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'send_suspended_until', 'INSERT'],
+  ['cf_app', 'cf.channels', 'send_suspended_reason', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'send_suspended_reason', 'INSERT'],
+  ['cf_app', 'cf.channels', 'rate_limit_override', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'rate_limit_override', 'INSERT'],
+  ['cf_app', 'cf.channels', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'platform', 'UPDATE'],
+  ['cf_app', 'cf.channels', 'external_id', 'UPDATE'],
+  ['cf_app', 'cf.posts', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.posts', 'channel_id', 'UPDATE'],
+  ['cf_app', 'cf.posts', 'external_id', 'UPDATE'],
+  ['cf_app', 'cf.comments', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.comments', 'channel_id', 'UPDATE'],
+  ['cf_app', 'cf.comments', 'post_id', 'UPDATE'],
+  ['cf_app', 'cf.comments', 'external_id', 'UPDATE'],
+  ['cf_app', 'cf.webhook_events', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.webhook_events', 'event_hash', 'UPDATE'],
+  ['cf_app', 'cf.webhook_events', 'payload', 'UPDATE'],
   ['cf_app', 'core.invitations', 'email', 'UPDATE'],
   ['cf_app', 'core.invitations', 'role', 'UPDATE'],
   ['cf_app', 'core.invitations', 'expires_at', 'UPDATE'],
@@ -385,19 +408,34 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
  * Câu truy vấn chỉ trả các cặp VI PHẠM (rỗng = đạt).
  */
 const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: string]> = [
-  ['members', 'a', 'workspace_bootstrap_open'], // INSERT: chỉ đường khởi tạo (thành viên khác vào qua accept_invitation)
-  ['members', 'w', 'is_workspace_owner'], // UPDATE
-  ['invitations', 'r', 'is_workspace_owner'], // SELECT
-  ['invitations', 'a', 'is_workspace_owner'],
-  ['invitations', 'w', 'is_workspace_owner'],
-  ['workspaces', 'w', 'is_workspace_owner'],
-  ['workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
-  ['action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+  ['core.members', 'a', 'workspace_bootstrap_open'], // INSERT: chỉ đường khởi tạo (thành viên khác vào qua accept_invitation)
+  ['core.members', 'w', 'is_workspace_owner'], // UPDATE
+  ['core.invitations', 'r', 'is_workspace_owner'], // SELECT
+  ['core.invitations', 'a', 'is_workspace_owner'],
+  ['core.invitations', 'w', 'is_workspace_owner'],
+  ['core.workspaces', 'w', 'is_workspace_owner'],
+  ['core.workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
+  ['core.action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+  // CH-SCHEMA (feat/ch-schema): ghi theo vai trò hoặc hệ thống (không người dùng); webhook_events chỉ hệ thống ghi
+  ['cf.channels', 'a', 'is_workspace_owner'],
+  ['cf.channels', 'w', 'is_workspace_owner'],
+  ['cf.channels', 'r', 'is_workspace_member'], // người gọi phải là thành viên (hoặc hệ thống) — chống sai id
+  ['cf.posts', 'a', 'is_workspace_member'],
+  ['cf.posts', 'w', 'is_workspace_member'],
+  ['cf.posts', 'r', 'is_workspace_member'],
+  ['cf.comments', 'a', 'is_workspace_member'],
+  ['cf.comments', 'w', 'is_workspace_member'],
+  ['cf.comments', 'r', 'is_workspace_member'],
+  ['cf.webhook_events', 'a', 'current_user_id'], // chỉ hệ thống: current_user_id() IS NULL
+  ['cf.webhook_events', 'w', 'current_user_id'],
+  ['cf.webhook_events', 'r', 'is_workspace_owner'],
 ];
 
 /** Chuỗi KHÔNG được xuất hiện trong policy của lệnh đó. */
 const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marker: string]> = [
-  ['members', 'a', 'is_workspace_owner'],
+  ['core.members', 'a', 'is_workspace_owner'],
+  ['cf.webhook_events', 'a', 'is_workspace_member'], // hệ thống ghi, không phải thành viên
+  ['cf.webhook_events', 'w', 'is_workspace_member'],
 ];
 
 async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -411,7 +449,7 @@ async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Pr
              (coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '')) AS txt,
              p.polname
       FROM (VALUES ${values}) AS v(t, c, m)
-      JOIN pg_policy p ON p.polrelid = ('core.' || v.t)::regclass AND p.polpermissive
+      JOIN pg_policy p ON p.polrelid = v.t::regclass AND p.polpermissive
            AND (p.polcmd = v.c::"char" OR p.polcmd = '*')
            AND (0 = ANY(p.polroles)
                 OR EXISTS (SELECT 1 FROM unnest(p.polroles) rid WHERE rid <> 0 AND pg_has_role('${APP_ROLE}', rid, 'MEMBER')))
@@ -424,7 +462,7 @@ async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Pr
     FROM pol WHERE pol.txt NOT LIKE '%' || pol.m || '%'`);
   for (const row of bad.rows) {
     violations.push({
-      subject: `core.${String(row.tbl)}`,
+      subject: String(row.tbl),
       message: `policy "người gọi" (${String(row.marker)}) cho lệnh '${String(row.cmd)}' không đạt: ${String(row.problem)}`,
     });
   }
@@ -433,13 +471,13 @@ async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Pr
   const forbidden = await db.query(`/* actor-forbidden */
     SELECT v.t AS tbl, v.c AS cmd, v.m AS marker
     FROM (VALUES ${fvalues}) AS v(t, c, m)
-    JOIN pg_policy p ON p.polrelid = ('core.' || v.t)::regclass AND p.polpermissive
+    JOIN pg_policy p ON p.polrelid = v.t::regclass AND p.polpermissive
          AND (p.polcmd = v.c::"char" OR p.polcmd = '*')
     WHERE (coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), ''))
           LIKE '%' || v.m || '%'`);
   for (const row of forbidden.rows) {
     violations.push({
-      subject: `core.${String(row.tbl)}`,
+      subject: String(row.tbl),
       message: `policy cho lệnh '${String(row.cmd)}' KHÔNG được chứa ${String(row.marker)} (thành viên chỉ vào qua lời mời / đường khởi tạo)`,
     });
   }

@@ -696,7 +696,7 @@ describe('checkRls: hàm SECURITY DEFINER và trigger Owner cuối', () => {
 describe('checkRls: policy người gọi (chỉ-Owner)', () => {
   it('báo khi thiếu policy chỉ-Owner', async () => {
     const v = await checkRls(
-      fakeDb({ actorPolicies: [{ tbl: 'members', cmd: 'a', marker: 'is_workspace_owner' }] }),
+      fakeDb({ actorPolicies: [{ tbl: 'core.members', cmd: 'a', marker: 'is_workspace_owner' }] }),
     );
     expect(v).toContainEqual({
       subject: 'core.members',

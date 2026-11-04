@@ -81,7 +81,7 @@ pnpm db:migrate && pnpm db:check-rls
 
 ## Đề xuất thay đổi
 
-`docs/10` §3.2 (được phép sửa): thêm `processed_at` cho `webhook_events`, `updated_at` cho 3 bảng, khóa ngoại ghép `(workspace_id, …)`, ghi chú token không đọc được bằng `cf_app`; báo lại nội dung đã đổi.
+`docs/10` §3.2: CHƯA được phép sửa — nội dung đề xuất ghi ở `docs/decisions/007-kenh-binh-luan-rls.md` §5 (chờ chủ dự án cho phép).
 
 ## Complexity tracking
 
