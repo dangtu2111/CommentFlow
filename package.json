@@ -13,6 +13,8 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
     "build": "pnpm -r --if-present run build",
+    "test:coverage": "pnpm -r --if-present run test:coverage",
+    "test:trace": "node scripts/check-test-trace.mjs",
     "check:plans": "node scripts/check-plans.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs",

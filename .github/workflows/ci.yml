@@ -33,6 +33,10 @@ jobs:
       - run: pnpm typecheck
       - name: Test (gồm test khớp khóa vi/en)
         run: pnpm test
+      - name: Ngưỡng coverage (packages/ai, shared, saas-core; ratchet, docs/testing/STANDARD.md §8)
+        run: pnpm test:coverage
+      - name: Truy vết FR → test (mã FR mới Xong phải có test mang mã; nợ cũ ở trace-baseline.json)
+        run: pnpm test:trace
       - name: Ranh giới gói (dependency-cruiser)
         run: pnpm depcruise
       - name: Cổng kế hoạch (plan đã duyệt hết điểm chưa rõ; nhánh feat/*, chore/* có plan)

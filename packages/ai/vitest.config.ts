@@ -1,6 +1,17 @@
 import { defineConfig } from 'vitest/config';
 
 // Test đơn vị (không cần database). Test tích hợp: vitest.int.config.ts (`pnpm test:db`).
+// Ngưỡng coverage = mức đo được 04/11/2026 làm tròn xuống (ratchet: chỉ được tăng).
+// Mục tiêu 85% dòng + nhánh (docs/testing/STANDARD.md §8); xem gap matrix `TEST-COVERAGE-GAP`.
 export default defineConfig({
-  test: { include: ['src/**/*.test.ts'] },
+  test: {
+    include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['**/*.test.ts', '**/*.d.ts'],
+      reporter: ['text-summary'],
+      thresholds: { lines: 100, statements: 97, functions: 100, branches: 90 },
+    },
+  },
 });
