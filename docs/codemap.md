@@ -15,6 +15,8 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/workspace-members` · Gói
 | Cổng số migration | `pnpm check:migrations` | số liên tục/không trùng, khớp `_journal.json` (`scripts/lib/migrations-check.mjs`); chạy ở CI |
 | Chạy song song (làn) | `CF_LANE=a pnpm test:db` · `pnpm cf:dev add-test-db a` | DB test riêng `cf_test_<làn>` (`scripts/lib/load-env.mjs`, `infra/scripts/cf-dev-add-test-db.sh`); quy trình: `docs/workflows/parallel.md` |
 | E2E cổng 0 (trình duyệt thật) | `pnpm e2e [tham số playwright]` | Playwright (`e2e/`), cần máy ảo + Mailpit + Valkey bật và Chromium cài một lần (`pnpm --filter @flow/e2e exec playwright install chromium`); DB `cf_test` (hoặc `cf_test_<CF_LANE>`); `scripts/e2e.mjs` + `scripts/lib/e2e-env.mjs`; KHÔNG nằm trong `pnpm test` |
+| Truy vết FR → test | `pnpm test:trace` | FR của dòng ✅ gap matrix phải có trong tên test; nợ cũ ở `docs/testing/trace-baseline.json` (`scripts/check-test-trace.mjs`, `scripts/lib/test-trace.mjs`); chạy ở CI; chuẩn: `docs/testing/STANDARD.md` §2 |
+| Ngưỡng coverage | `pnpm test:coverage` | `@vitest/coverage-v8`, ngưỡng ở `packages/{ai,shared,saas-core}/vitest.config.ts` (ratchet); chạy ở CI, chỉ test đơn vị |
 | Ranh giới gói | `pnpm depcruise` | luật ở `.dependency-cruiser.cjs`, test luật ở `tools/boundaries` |
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |
@@ -35,6 +37,8 @@ Cập nhật lần cuối: 2026-11-03 · nhánh `feat/workspace-members` · Gói
 | `packages/ai/` | `createLlmClient().call()` → LiteLLM + ghi `ai_usage` (chưa có pipeline) |
 | `infra/` | Compose (`docker-compose.yml` nền + `.dev.yml`), `postgres/init`, `litellm/config.yaml`, `scripts/print-dev-env.sh` |
 | `e2e/` | Kịch bản Playwright cổng 0 (`tests/gate0.spec.ts`, vi+en) và `support/{totp,mailpit,i18n,env,flows}.ts` (test đơn vị cạnh file); không import gói nội bộ, không nằm trong depcruise |
+| `docs/testing/` | `STANDARD.md` (chuẩn test), `KIEM_TRA_TAY.md` (kiểm tra tay dồn), `trace-baseline.json` (nợ truy vết), `ALLOWLIST_DE_XUAT.md` (đề xuất allow, chưa áp); thứ tự toàn bộ tính năng: `docs/plans/MASTER.md` |
+| `.claude/skills/` | 3 skill văn bản (`test-driven-development`, `systematic-debugging`, `verification-before-completion`); nguồn + giấy phép: `docs/decisions/006-skills.md` |
 | `scripts/`, `tools/boundaries/` | Script vận hành (`cf-dev*`, `stack-check`, `e2e`) và test luật depcruise |
 | `env.example`, `infra/env.cf-dev.example` | Tên biến `.env` (máy code) và `.env.cf-dev` (máy ảo); không có giá trị thật |
 
