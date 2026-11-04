@@ -136,6 +136,7 @@ Hạ tầng MVP: 1 VPS (web + worker + Postgres) — rẻ hơn nhiều so với 
 
 - **Tối ưu token:** đọc source ít lần nhất (`docs/codemap.md` + `docs/handoff/`), không làm trùng việc (một kế hoạch trong `docs/plans/`, một lần kiểm chứng cuối nhánh, kiểm tra máy móc giao cho công cụ), chỉ gọi AI thứ hai khi có giá trị kiểm chứng độc lập hoặc chuyên môn bổ sung. Làn Haiku cho việc cơ học kiểm được bằng công cụ.
 - **Mỗi việc:** `/clear` → `/feature <mã>` → duyệt → code → `/finish` → commit. Hết token Claude → chuyển Codex theo `HUONG_DAN_CLAUDE_CODE.md` §7.
+- **Mỗi tính năng (từ 04/11/2026):** thứ tự và trạng thái ở `docs/plans/MASTER.md`; vòng lặp plan → test trước → code → `/finish` → chủ dự án kiểm tra tay (danh sách dồn ở `docs/testing/KIEM_TRA_TAY.md`) → PR/CI xanh/merge giữ lịch sử — chi tiết `docs/PROMPT_BUILD_TOAN_BO.md`; chuẩn test `docs/testing/STANDARD.md`. Việc cần chủ dự án cung cấp/thiết lập: `docs/CAN_BAN_CUNG_CAP.md`.
 - **Cuối tuần (30 phút):** ghi chi phí / số mục xong / số lần gọi verifier vào `gap-matrix.md`; cắt/dời việc tuần sau.
 
 ## 9. Câu hỏi mở cần chốt
