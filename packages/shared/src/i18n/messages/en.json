@@ -352,7 +352,8 @@
       "followup": "Needs more help",
       "shown": "Showing {shown} / {total}",
       "next": "Next page",
-      "first": "Back to first page"
+      "first": "Back to first page",
+      "lockedBy": "{name} is handling"
     },
     "empty": {
       "title": "No comments yet",
@@ -362,11 +363,23 @@
     },
     "detail": {
       "title": "Comment details",
-      "empty": "Select a comment to see its details."
+      "empty": "Select a comment to see its details.",
+      "source": "Channel",
+      "post": "Post",
+      "authorId": "Commenter ID",
+      "isReply": "This is a reply to another comment.",
+      "noText": "(No text)",
+      "notFoundTitle": "Comment not found",
+      "notFoundBody": "The comment no longer exists or is not in this workspace."
     },
     "error": {
       "title": "Could not load the comment list",
       "body": "A temporary error occurred. Please reload in a few minutes."
+    },
+    "lock": {
+      "mine": "You are handling this comment (2-minute soft lock, renewed while open).",
+      "heldNamed": "{name} is handling this comment (about {seconds}s left). View only.",
+      "heldAnonymous": "A teammate is handling this comment (about {seconds}s left). View only."
     }
   },
   "shell": {

@@ -909,8 +909,23 @@ a {
 }
 
 .inbox-item {
-  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-border);
+}
+
+.inbox-item-link {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+  text-decoration: none;
+}
+
+.inbox-item-link:hover {
+  background: var(--selected-bg);
+}
+
+.inbox-item-link[aria-current="true"] {
+  background: var(--selected-bg);
+  box-shadow: inset 3px 0 0 var(--action-bg);
 }
 
 .inbox-item-head {
@@ -1128,4 +1143,89 @@ a {
   .shell-nav-group ul {
     flex-direction: column;
   }
+}
+
+/* ===== Chi tiết bình luận + khóa mềm (FR-041) ===== */
+.chip-lock {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.comment-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  color: var(--color-text);
+}
+
+.comment-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.comment-detail-author {
+  margin: 0;
+  font-size: var(--text-lg);
+  overflow-wrap: anywhere;
+}
+
+.comment-detail-meta {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.comment-detail-meta dt {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.comment-detail-meta dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+.comment-detail-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-xs);
+}
+
+.comment-detail-reply {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.comment-detail-text {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--color-primary-300);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.comment-lock {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.comment-lock-mine {
+  background: var(--selected-bg);
+  border: 1px solid var(--selected-border);
+}
+
+.comment-lock-held {
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
 }

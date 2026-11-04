@@ -23,7 +23,7 @@ export async function InboxTabs({
         {INBOX_TAB_KEYS.map((tab) => (
           <li key={tab}>
             <Link
-              href={buildInboxHref(view, { tab, cursor: null })}
+              href={buildInboxHref(view, { tab, cursor: null, selected: undefined })}
               className="inbox-tab"
               aria-current={view.tab === tab ? 'page' : undefined}
             >

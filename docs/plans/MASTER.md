@@ -84,7 +84,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | WH-INGEST | FR-020 (chữ ký → job `ingest` → 200), FR-021 (chống trùng `(channel_id, external_comment_id)`) | UF-2 | CH-SCHEMA | S | không (fixture đã ghi) | ✅ |
 | INGEST-SKIP-OWN | FR-022 (bỏ bình luận của chính Page, gồm câu AI gửi) | UF-2 | WH-INGEST | — | không | ✅ một phần (bỏ theo `from.id == page_id` ở WH-INGEST; còn bỏ câu do AI gửi khi có `FB-REPLY`) |
 | INBOX-LIST | FR-040 (tab trạng thái, lọc, tìm, sắp xếp) | US-010, UF-3 | CH-SCHEMA | — | không | ✅ (danh sách + tab + tìm/lọc/sắp xếp; còn: chi tiết, nhãn AI, giao việc, sidebar — xem gap) |
-| INBOX-DETAIL-LOCK | FR-041 (khóa mềm `locked_until`, cảnh báo người thứ hai) | US-013 | INBOX-LIST | — | không | ⏳ |
+| INBOX-DETAIL-LOCK | FR-041 (khóa mềm `locked_until`, cảnh báo người thứ hai) | US-013 | INBOX-LIST | — | không | ✅ (chi tiết + khóa 2 phút; hành động Gửi/Ẩn/Bỏ qua ở `FB-REPLY`/`FB-HIDE`) |
 | FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Page thử (Meta App dev đã có; redirect localhost; xem `docs/CAN_BAN_CUNG_CAP.md`) | ⏳ |
 | CH-STATUS-BANNER | FR-012 (connected / token_expired / disconnected; banner Kết nối lại) | US-002 | FB-OAUTH | — | không | ⏳ |
 | FB-BACKFILL | FR-011 (lấy bình luận cũ 3/7/30 ngày khi kết nối) | US-002 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |

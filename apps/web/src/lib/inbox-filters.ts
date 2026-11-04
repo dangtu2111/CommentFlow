@@ -37,6 +37,8 @@ export type InboxView = {
   search?: string;
   sort: 'oldest' | 'newest';
   cursor: InboxCursorValue | null;
+  /** Bình luận đang mở ở cột chi tiết (tham số `c`, UUID). */
+  selected?: string;
 };
 
 type RawParams = Record<string, string | string[] | undefined>;
@@ -69,6 +71,7 @@ export function parseInboxSearchParams(params: RawParams): InboxView {
   const platform = z.enum(INBOX_PLATFORM_KEYS).safeParse(first(params.platform));
   const channel = z.uuid().safeParse(first(params.channel));
   const sort = z.enum(['oldest', 'newest']).safeParse(first(params.sort));
+  const selected = z.uuid().safeParse(first(params.c));
   const search = first(params.q)?.trim().slice(0, INBOX_SEARCH_MAX);
   return {
     tab: tab.success ? tab.data : DEFAULT_INBOX_TAB,
@@ -78,6 +81,7 @@ export function parseInboxSearchParams(params: RawParams): InboxView {
     ...(search ? { search } : {}),
     sort: sort.success ? sort.data : 'oldest',
     cursor: decodeCursor(first(params.cursor)),
+    ...(selected.success ? { selected: selected.data } : {}),
   };
 }
 
@@ -95,6 +99,7 @@ export function buildInboxHref(
   if (merged.search) params.set('q', merged.search);
   if (merged.sort && merged.sort !== 'oldest') params.set('sort', merged.sort);
   if (merged.cursor) params.set('cursor', encodeInboxCursor(merged.cursor));
+  if (merged.selected) params.set('c', merged.selected);
   const query = params.toString();
   return query ? `${INBOX_BASE_PATH}?${query}` : INBOX_BASE_PATH;
 }

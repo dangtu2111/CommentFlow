@@ -14,6 +14,13 @@ export {
   setChannelToken,
 } from './channel-tokens';
 export { createDb, type Database, type FlowDb } from './client';
+export { type CommentDetail, getCommentDetail } from './queries/comment-detail';
+export {
+  acquireCommentLock,
+  COMMENT_LOCK_TTL_SECONDS,
+  type CommentLockResult,
+  releaseCommentLock,
+} from './queries/comment-lock';
 export {
   countCommentsByTab,
   DEFAULT_INBOX_LIMIT,

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { CommentDetailPanel } from '../../../../components/comments/comment-detail';
 import { InboxList } from '../../../../components/comments/inbox-list';
 import { InboxTabs } from '../../../../components/comments/inbox-tabs';
 import { InboxToolbar } from '../../../../components/comments/inbox-toolbar';
@@ -40,7 +41,8 @@ export default async function CommentsPage({
     );
   }
 
-  const { page, counts, channels, timeZone } = data;
+  const { page, counts, channels, timeZone, detail } = data;
+  const now = new Date();
   const filtered = Boolean(view.platform || view.channelId || view.adsOnly || view.search);
   return (
     <main className="inbox">
@@ -59,12 +61,22 @@ export default async function CommentsPage({
             total={counts[view.tab]}
             nextCursor={page.nextCursor}
             timeZone={timeZone}
-            now={new Date()}
+            now={now}
           />
         )}
       </section>
       <aside className="inbox-detail" aria-label={t('detail.title')}>
-        <p>{t('detail.empty')}</p>
+        {detail ? (
+          // key = id: đổi bình luận → gắn lại panel (mở khóa cái cũ, lấy khóa cái mới).
+          <CommentDetailPanel key={detail.id} comment={detail} timeZone={timeZone} now={now} />
+        ) : view.selected ? (
+          <div className="inbox-empty" role="alert">
+            <h2>{t('detail.notFoundTitle')}</h2>
+            <p>{t('detail.notFoundBody')}</p>
+          </div>
+        ) : (
+          <p>{t('detail.empty')}</p>
+        )}
       </aside>
     </main>
   );
