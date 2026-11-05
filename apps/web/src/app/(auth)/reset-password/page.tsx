@@ -2,10 +2,11 @@ import { CircleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { ResetPasswordForm } from '../../../components/auth/forms';
+import { getBrand } from '../../../server/brand';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('reset.title')} · ${t('brand')}` };
+  return { title: `${t('reset.title')} · ${getBrand().name}` };
 }
 
 /** Đích sau khi bấm link trong thư đặt lại mật khẩu (`?token=...`; token sai/hết hạn → `?error=`). */

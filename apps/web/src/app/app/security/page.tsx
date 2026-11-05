@@ -5,13 +5,14 @@ import { TwoFactorCard } from '../../../components/security/two-factor-card';
 import { Banner } from '../../../components/ui/banner';
 import { SubmitButton } from '../../../components/ui/submit-button';
 import { getAuthRuntime } from '../../../server/auth';
+import { getBrand } from '../../../server/brand';
 import { requestContext } from '../../../server/request-context';
 import { requireAppUser } from '../../../server/require-app-user';
 import { revokeSessionAction } from './actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('security.pageTitle')} · ${t('brand')}` };
+  return { title: `${t('security.pageTitle')} · ${getBrand().name}` };
 }
 
 /**

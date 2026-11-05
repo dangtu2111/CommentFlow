@@ -9,7 +9,6 @@
     "en": "English"
   },
   "auth": {
-    "brand": "CommentFlow AI",
     "tabs": {
       "label": "Chọn thao tác",
       "login": "Đăng nhập",
@@ -107,7 +106,7 @@
       "bilingual": "Giao diện tiếng Việt và tiếng Anh."
     },
     "footer": {
-      "rights": "© {year} CommentFlow AI. Bảo lưu mọi quyền."
+      "rights": "© {year} {appName}. Bảo lưu mọi quyền."
     },
     "twoFactor": {
       "title": "Xác thực 2 bước",
@@ -213,7 +212,6 @@
       }
     },
     "header": {
-      "brand": "CommentFlow AI",
       "nav": "Điều hướng chính"
     }
   },
@@ -504,7 +502,6 @@
       "security": "Bảo mật"
     },
     "logout": "Đăng xuất",
-    "brand": "CommentFlow AI",
     "navLabel": "Điều hướng chính"
   },
   "banners": {

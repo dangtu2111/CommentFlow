@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { getBrand } from '../../../server/brand';
 import { pendingInviteToken } from '../../../server/invite-cookie';
 import { requireAppUser } from '../../../server/require-app-user';
 
-export async function generateMetadata() {
-  const t = await getTranslations('auth');
-  return { title: t('brand') };
+export function generateMetadata() {
+  return { title: getBrand().name };
 }
 
 /** Trang tạm sau đăng nhập: kết nối Fanpage và onboarding tiếp theo làm ở nhánh sau. */

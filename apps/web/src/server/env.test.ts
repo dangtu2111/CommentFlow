@@ -86,3 +86,27 @@ describe('FR-020 loadWebhookEnv — cấu hình endpoint webhook', () => {
     expect(() => loadWebhookEnv({})).toThrow(/DATABASE_URL/);
   });
 });
+
+describe('FR-125 thương hiệu trong cấu hình web', () => {
+  const { SMTP_FROM: _omit, ...NO_FROM } = BASE;
+
+  it('không đặt APP_* → brand mặc định; SMTP_FROM vẫn thắng', () => {
+    const env = loadServerEnv(BASE);
+    expect(env.brand.name).toBe('CommentFlow AI');
+    expect(env.mailFrom).toBe(BASE.SMTP_FROM);
+  });
+
+  it('APP_NAME/APP_DOMAIN đổi brand; thiếu SMTP_FROM thì dựng từ tên + domain', () => {
+    const env = loadServerEnv({ ...NO_FROM, APP_NAME: 'Tên Tạm', APP_DOMAIN: 'tam.example.com' });
+    expect(env.brand.name).toBe('Tên Tạm');
+    expect(env.mailFrom).toBe('Tên Tạm <no-reply@tam.example.com>');
+  });
+
+  it('thiếu cả SMTP_FROM lẫn APP_EMAIL_FROM/APP_DOMAIN → lỗi nêu SMTP_FROM', () => {
+    expect(() => loadServerEnv(NO_FROM)).toThrow(/SMTP_FROM/);
+  });
+
+  it('APP_* sai định dạng → lỗi nêu tên biến', () => {
+    expect(() => loadServerEnv({ ...BASE, APP_DOMAIN: 'https://x.com' })).toThrow(/APP_DOMAIN/);
+  });
+});

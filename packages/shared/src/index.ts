@@ -1,3 +1,4 @@
+export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } from './brand';
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
 export {
