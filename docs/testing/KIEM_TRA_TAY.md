@@ -19,6 +19,7 @@
 | KT-009 | Trang Nhật ký (Owner thấy tất cả, Staff chỉ của mình) | LOG-PAGE | chưa | chưa | — |
 | KT-010 | Ẩn / Bỏ ẩn bình luận | FB-HIDE | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
+| KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
 
 ---
 
@@ -279,6 +280,27 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 7 | Đổi sang **English**, thu nhỏ ~390px. | "System (at your request)" / "System (at the request of <name>)", không vỡ bố cục. |
 
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-014 — Kết nối Facebook (OAuth) + Kết nối lại (FB-OAUTH, feat/fb-oauth)
+
+Điều kiện: làm xong `docs/CAN_BAN_CUNG_CAP.md` mục 1 + mục "Meta OAuth + Page thử" (Meta App dev, Page thử, `.env.local` có `META_APP_ID`, `META_APP_SECRET`, `META_OAUTH_REDIRECT_URL`, `TOKEN_ENC_KEYS`, **`FB_OAUTH_ENABLED=true`**; tùy chọn `CHANNELS_LIMIT_DEFAULT`, `FB_LOGIN_CONFIG_ID`); khởi động lại web. Đăng nhập bằng **Owner** (tài khoản Facebook của bạn là Admin/Tester của App và quản lý Page thử). Có thêm một tài khoản **Staff**.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Staff mở `/app/channels`. | 404 (Staff không thấy trang; không có mục "Kênh" trong menu). |
+| 2 | Owner mở menu **Cài đặt → Kênh**. | Thấy "Chưa có kênh nào" và nút **Kết nối Facebook**. |
+| 3 | Bấm **Kết nối Facebook**, đăng nhập Facebook và cấp quyền. | Quay về `/app/channels` với bước **Chọn Page** liệt kê Page bạn quản lý; Page thiếu quyền quản lý/kiểm duyệt bị mờ. |
+| 4 | Chọn đúng một Page thử, bấm **Kết nối các Page đã chọn**. | Dải xanh "Đã kết nối 1 Page"; Page xuất hiện trong danh sách trạng thái **Đang kết nối**, không có nhãn "Chưa nhận bình luận mới". |
+| 5 | Bình luận vào một bài của Page thử bằng tài khoản khác; đợi vài giây. | Bình luận hiện ở trang **Bình luận** (webhook đã đăng ký đúng Page). |
+| 6 | Với `CHANNELS_LIMIT_DEFAULT=1`, bấm **Kết nối Facebook** lần nữa và chọn thêm một Page khác. | Dải vàng "Vượt số kênh tối đa của gói hiện tại"; không có kênh mới. Chọn lại chính Page đã kết nối (kết nối lại) thì vẫn được. |
+| 7 | Trong Facebook → Cài đặt → Ứng dụng, gỡ App khỏi tài khoản, rồi để hệ thống gặp lỗi token (hoặc đặt tay trạng thái kênh `expired` bằng công cụ DB của bạn). Tải lại trang bất kỳ. | Banner "Kênh hết hạn kết nối" có nút **Kết nối lại** cho Owner (Staff không có nút). |
+| 8 | Bấm **Kết nối lại**, cấp quyền lại, chọn Page. | Kênh trở lại **Đang kết nối**; banner biến mất sau lần tải kế tiếp. |
+| 9 | Bấm **Kết nối Facebook**, ở màn Meta bấm **Hủy**. | Về `/app/channels` với dải xanh nhạt "Bạn đã hủy việc cấp quyền"; không có gì đổi. |
+| 10 | Bỏ `FB_OAUTH_ENABLED` (hoặc đặt `false`), khởi động lại web, mở `/app/channels` và `/api/channels/facebook/start`. | Trang hiện "chưa được bật", không có nút; đường `start` trả 404. Đổi sang **English** + ~390px: chữ và bố cục đúng. |
+
+Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ mã lỗi, không có token).
 
 ---
 

@@ -6,6 +6,7 @@ import {
   createAuthFlows,
   createNotifier,
   createPasswordPolicy,
+  createSealedValueCodec,
   createSignedValueCodec,
   createSmtpTransport,
   createTwoFactorFlows,
@@ -13,6 +14,7 @@ import {
   openAuthDb,
   openWorkspaceServices,
   type RateLimiter,
+  type SealedValueCodec,
   type SignedValueCodec,
   type Tenancy,
   type TwoFactorFlows,
@@ -21,6 +23,11 @@ import {
 import type { ClientIpSource } from '../lib/client-ip';
 import { INVITE_COOKIE_LABEL, INVITE_COOKIE_TTL_SECONDS } from '../lib/invite-token';
 import { loadServerEnv } from './env';
+import {
+  FB_SESSION_COOKIE_LABEL,
+  FB_STATE_COOKIE_LABEL,
+  FB_STATE_TTL_SECONDS,
+} from './fb-oauth-state';
 import { WORKSPACE_COOKIE_LABEL, WORKSPACE_COOKIE_TTL_SECONDS } from './workspace-selection';
 
 /**
@@ -39,6 +46,10 @@ export type AuthRuntime = {
   workspaceCookie: SignedValueCodec;
   /** Ký cookie nhớ lời mời đang chờ qua bước đăng nhập/đăng ký/xác minh (khóa HKDF nhãn riêng). */
   inviteCookie: SignedValueCodec;
+  /** Ký cookie `state` OAuth Facebook (10 phút). */
+  fbOAuthState: SignedValueCodec;
+  /** Niêm phong (mã hóa) cookie giữ token người dùng giữa callback OAuth và bước chọn Page (10 phút). */
+  fbOAuthSession: SealedValueCodec;
   appUrl: string;
   /** Cờ `secure` của cookie do ta đặt: lấy từ URL công khai đã cấu hình (https), không từ NODE_ENV. */
   secureCookies: boolean;
@@ -111,6 +122,16 @@ function createRuntime(): AuthRuntime {
       secret: env.BETTER_AUTH_SECRET,
       label: INVITE_COOKIE_LABEL,
       ttlSeconds: INVITE_COOKIE_TTL_SECONDS,
+    }),
+    fbOAuthState: createSignedValueCodec({
+      secret: env.BETTER_AUTH_SECRET,
+      label: FB_STATE_COOKIE_LABEL,
+      ttlSeconds: FB_STATE_TTL_SECONDS,
+    }),
+    fbOAuthSession: createSealedValueCodec({
+      secret: env.BETTER_AUTH_SECRET,
+      label: FB_SESSION_COOKIE_LABEL,
+      ttlSeconds: FB_STATE_TTL_SECONDS,
     }),
     appUrl: env.BETTER_AUTH_URL,
     secureCookies: env.BETTER_AUTH_URL.startsWith('https:'),
