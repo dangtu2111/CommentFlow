@@ -498,6 +498,7 @@
     },
     "nav": {
       "comments": "Bình luận",
+      "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
       "security": "Bảo mật"
@@ -511,7 +512,7 @@
       "expired": {
         "title": "Kênh hết hạn kết nối: {names}.",
         "body": {
-          "owner": "Hệ thống tạm không đọc/trả lời được bình luận của kênh này. Bạn (Owner) cần kết nối lại kênh; nút kết nối lại sẽ có khi tính năng kết nối Facebook hoàn tất.",
+          "owner": "Hệ thống tạm không đọc/trả lời được bình luận của kênh này. Bạn (Owner) cần kết nối lại kênh.",
           "staff": "Hệ thống tạm không đọc/trả lời được bình luận của kênh này. Hãy báo chủ workspace (Owner) kết nối lại kênh."
         }
       },
@@ -529,7 +530,47 @@
           "staff": "Hệ thống đang thử lại. Nếu lỗi kéo dài, hãy báo chủ workspace (Owner)."
         }
       },
-      "more": "và {count} kênh khác"
+      "more": "và {count} kênh khác",
+      "reconnect": "Kết nối lại"
+    }
+  },
+  "channels": {
+    "title": "Kênh",
+    "subtitle": "Các trang Facebook của workspace {workspace}. Chỉ chủ workspace (Owner) kết nối được.",
+    "connect": "Kết nối Facebook",
+    "reconnect": "Kết nối lại",
+    "disabled": "Tính năng kết nối Facebook chưa được bật cho môi trường này.",
+    "list": {
+      "title": "Kênh đã kết nối",
+      "empty": "Chưa có kênh nào.",
+      "noWebhook": "Chưa nhận bình luận mới (chưa đăng ký webhook)"
+    },
+    "platform": { "facebook": "Facebook", "instagram": "Instagram", "tiktok": "TikTok" },
+    "status": {
+      "connected": "Đang kết nối",
+      "expired": "Hết hạn",
+      "revoked": "Đã ngắt",
+      "error": "Lỗi"
+    },
+    "pick": {
+      "title": "Chọn Page để kết nối",
+      "hint": "Workspace này kết nối tối đa {limit} kênh. Chỉ chọn được Page mà tài khoản của bạn có quyền quản lý hoặc kiểm duyệt.",
+      "empty": "Tài khoản Facebook này chưa có Page nào có thể kết nối.",
+      "connected": "Đã kết nối",
+      "noPermission": "Bạn chưa có quyền quản lý/kiểm duyệt Page này.",
+      "submit": "Kết nối các Page đã chọn",
+      "cancel": "Hủy"
+    },
+    "notice": {
+      "done": "Đã kết nối {ok} Page.",
+      "partial": "Đã kết nối {ok} Page; {bad} Page chưa xong (Page không khớp tài khoản, thiếu quyền, hoặc chưa đăng ký được nhận bình luận). Bấm Kết nối lại để thử lại.",
+      "state": "Phiên kết nối đã hết hạn hoặc không hợp lệ. Hãy bấm Kết nối Facebook để thử lại.",
+      "denied": "Bạn đã hủy việc cấp quyền cho Facebook. Chưa có gì thay đổi.",
+      "error": "Chưa kết nối được Facebook. Hãy thử lại sau ít phút.",
+      "limit": "Vượt số kênh tối đa của gói hiện tại. Hãy bớt Page đã chọn hoặc nâng gói.",
+      "none": "Hãy chọn ít nhất một Page.",
+      "unavailable": "Tính năng kết nối Facebook đang được cấu hình lại. Hãy báo quản trị hệ thống.",
+      "expiredSession": "Phiên chọn Page đã hết hạn. Hãy bấm Kết nối Facebook để bắt đầu lại."
     }
   },
   "activity": {

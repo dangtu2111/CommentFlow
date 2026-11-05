@@ -140,9 +140,33 @@ function retryAfterOf(headers: Headers): number | undefined {
   return minutes > 0 ? Math.min(minutes * 60, MAX_RETRY_AFTER_SECONDS) : undefined;
 }
 
-const graphErrorSchema = z.object({ error: z.object({ code: z.unknown().optional() }) });
+/** Đọc thân tối đa MAX_RESPONSE_BYTES (theo byte nhận được, không tin Content-Length). Dùng chung với `oauth.ts`. */
+export async function readBoundedText(response: Response): Promise<string> {
+  const declared = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
+    await response.body?.cancel();
+    throw fail('UNKNOWN', 'facebook_bad_response');
+  }
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_RESPONSE_BYTES) {
+      await reader.cancel();
+      throw fail('UNKNOWN', 'facebook_bad_response');
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
 
-function graphFailure(status: number, body: unknown, headers: Headers): PlatformError {
+export const graphErrorSchema = z.object({ error: z.object({ code: z.unknown().optional() }) });
+
+export function graphFailure(status: number, body: unknown, headers: Headers): PlatformError {
   const parsed = graphErrorSchema.safeParse(body);
   const raw = parsed.success ? parsed.data.error.code : undefined;
   if (typeof raw === 'number' && Number.isInteger(raw)) {
@@ -242,30 +266,6 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
   function graphId(id: string): string {
     if (typeof id !== 'string' || !GRAPH_ID.test(id)) throw fail('UNKNOWN', 'facebook_invalid_id');
     return id;
-  }
-
-  /** Đọc thân tối đa MAX_RESPONSE_BYTES (theo byte nhận được, không tin Content-Length). */
-  async function readBoundedText(response: Response): Promise<string> {
-    const declared = Number(response.headers.get('content-length'));
-    if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
-      await response.body?.cancel();
-      throw badResponse();
-    }
-    if (!response.body) return '';
-    const reader = response.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > MAX_RESPONSE_BYTES) {
-        await reader.cancel();
-        throw badResponse();
-      }
-      chunks.push(value);
-    }
-    return Buffer.concat(chunks).toString('utf8');
   }
 
   async function tokenOf(channel: ChannelRef): Promise<string> {

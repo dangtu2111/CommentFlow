@@ -133,6 +133,12 @@ describe('reply — POST /{comment-id}/comments', () => {
     }
   });
 
+  it('HTTP 200 nhưng thân là lỗi Graph (code 190) → vẫn phân loại theo error.code', async () => {
+    const { connector } = harness([json(graphError(190), 200)]);
+    const error = await failureOf(connector.reply(channel, '4000000000001', 'x'));
+    expect(error.code).toBe('TOKEN_EXPIRED');
+  });
+
   it('lỗi mạng, timeout, 5xx ở bước ghi → UNKNOWN; đúng 1 lần gọi (không retry ngầm)', async () => {
     const cases: Reply[] = [
       new TypeError('fetch failed'),
@@ -670,6 +676,7 @@ describe('tổng thời hạn cho thao tác nhiều trang', () => {
     expect(() => createFacebookConnector({ ...base, totalTimeoutMs: 45_001 })).toThrow();
     expect(() => createFacebookConnector({ ...base, totalTimeoutMs: 0 })).toThrow();
     expect(() => createFacebookConnector({ ...base, maxReplyPages: 0 })).toThrow();
+    expect(() => createFacebookConnector({ ...base, maxPages: 0 })).toThrow();
     expect(() => createFacebookConnector({ ...base, totalTimeoutMs: 45_000 })).not.toThrow();
   });
 

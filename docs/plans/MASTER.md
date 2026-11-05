@@ -63,7 +63,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | MEMBER-DIRECT-ADD | FR-003 (chỉ `accept_invitation` thêm thành viên) | US-004 | AUTH-INVITE | S+DB | không (đã có đề xuất của verifier; chủ dự án đã chọn hướng) | ✅ |
 | MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/member-leave`, migration 0028) |
 | LOG-STAFF-SYSTEM-ROWS | FR-092 | — | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/log-on-behalf-of`, migration 0029) |
-| WORKER-DB-ROLE | ADR 007 §2 (token Page), ADR 011 | — | LOG-STAFF-SYSTEM-ROWS | S+DB | verifier-security + verifier-db | 🟡 (`feat/worker-db-role`, migration 0030; chờ duyệt + KT-014) |
+| WORKER-DB-ROLE | ADR 007 §2 (token Page), ADR 011 | — | LOG-STAFF-SYSTEM-ROWS | S+DB | verifier-security + verifier-db | 🟡 (`feat/worker-db-role`, migration 0030; chờ duyệt + KT-015) |
 | CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ⏳ |
 | AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ⏳ |
 | AUTH-LANG-PREF | FR-119 (`users.locale` từ Cài đặt) | — | I18N | — | không | ⏳ |
@@ -88,7 +88,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | INGEST-SKIP-OWN | FR-022 (bỏ bình luận của chính Page, gồm câu AI gửi) | UF-2 | WH-INGEST | — | không | ✅ một phần (bỏ theo `from.id == page_id` ở WH-INGEST; còn bỏ câu do AI gửi khi có `FB-REPLY`) |
 | INBOX-LIST | FR-040 (tab trạng thái, lọc, tìm, sắp xếp) | US-010, UF-3 | CH-SCHEMA | — | không | ✅ (danh sách + tab + tìm/lọc/sắp xếp; còn: chi tiết, nhãn AI, giao việc, sidebar — xem gap) |
 | INBOX-DETAIL-LOCK | FR-041 (khóa mềm `locked_until`, cảnh báo người thứ hai) | US-013 | INBOX-LIST | — | không | ✅ (chi tiết + khóa 2 phút; hành động Gửi/Ẩn/Bỏ qua ở `FB-REPLY`/`FB-HIDE`) |
-| FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Page thử (Meta App dev đã có; redirect localhost; xem `docs/CAN_BAN_CUNG_CAP.md`) | ⏳ |
+| FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Page thử (Meta App dev đã có; redirect localhost; xem `docs/CAN_BAN_CUNG_CAP.md`) | ✅ Xong-mock (feat/fb-oauth; chưa thử Page thật — KT-014; cờ `FB_OAUTH_ENABLED` tắt) |
 | CH-STATUS-BANNER | FR-012 (connected / token_expired / disconnected; banner Kết nối lại) | US-002 | FB-OAUTH | — | không | ✅ (banner theo trạng thái kênh; nút "Kết nối lại" chờ FB-OAUTH — gap `CH-RECONNECT-ACTION`) |
 | FB-BACKFILL | FR-011 (lấy bình luận cũ 3/7/30 ngày khi kết nối) | US-002 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
 | FB-REPLY | FR-042 (gửi trả lời tay; thành công/lỗi + lý do; timeout kiểm lại) | US-011, 016, UF-3 | FB-OAUTH, INBOX-DETAIL-LOCK | S (dùng token) | **có** — Page thử | ✅ backend (outbox + job `send` + `sendRecheck`, test bằng connector giả — feat/reply-backend); + giao diện hộp soạn/Gửi/Thử lại (feat/reply-ui); connector Facebook (hợp đồng + fixture) xong ở feat/fb-connector (ADR 010); còn đăng ký vào worker + Page thử |

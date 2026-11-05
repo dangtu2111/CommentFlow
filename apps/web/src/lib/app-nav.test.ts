@@ -6,7 +6,7 @@ const keys = (role: 'owner' | 'staff') =>
 
 describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
   it('FR-040 Owner thấy Bình luận, Thành viên, Nhật ký, Bảo mật; Staff không thấy Thành viên (có Nhật ký của mình, FR-092) (trang chỉ Owner, docs/13 §3.1)', () => {
-    expect(keys('owner')).toEqual(['comments', 'members', 'activity', 'security']);
+    expect(keys('owner')).toEqual(['comments', 'channels', 'members', 'activity', 'security']);
     expect(keys('staff')).toEqual(['comments', 'activity', 'security']);
   });
 
