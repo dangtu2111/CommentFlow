@@ -14,8 +14,8 @@ const envSchema = z
     DATABASE_URL: z.string().min(1),
     /** Valkey cho rate limit (khóa `sys:rl:…`, ADR 004). */
     REDIS_URL: z.string().min(1),
-    /** Tiền tố khóa của môi trường (`dev:`, `ci:`…); khóa của dev luôn có tiền tố. */
-    REDIS_KEY_PREFIX: z.string().default(''),
+    /** Tiền tố khóa của môi trường (`dev:`, `ci:`…). Bắt buộc khác rỗng ở dev/test/ci/staging (superRefine); chỉ production được để trống. */
+    REDIS_KEY_PREFIX: z.string().trim().default(''),
     /**
      * Nguồn IP khách (ADR 004 §2): `none` (mặc định; dev/LAN) hoặc `cf-connecting-ip` (CHỈ khi APP_ENV=staging, phía sau
      * Cloudflare Tunnel và cổng web không truy cập được trực tiếp).
@@ -34,6 +34,14 @@ const envSchema = z
     SMTP_PASS: z.string().min(1).optional(),
   })
   .superRefine((env, ctx) => {
+    // Dev/test/ci/staging dùng chung một Valkey: thiếu tiền tố thì khóa rate limit đè lên nhau giữa các môi trường.
+    if (env.APP_ENV !== 'production' && env.REDIS_KEY_PREFIX === '') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['REDIS_KEY_PREFIX'],
+        message: 'REDIS_KEY_PREFIX không được rỗng khi APP_ENV là dev/test/ci/staging',
+      });
+    }
     if (env.PWNED_CHECK === 'off' && !['dev', 'test', 'ci'].includes(env.APP_ENV)) {
       ctx.addIssue({
         code: 'custom',
