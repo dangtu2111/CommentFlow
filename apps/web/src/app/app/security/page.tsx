@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
@@ -6,6 +5,7 @@ import { TwoFactorCard } from '../../../components/security/two-factor-card';
 import { Banner } from '../../../components/ui/banner';
 import { SubmitButton } from '../../../components/ui/submit-button';
 import { getAuthRuntime } from '../../../server/auth';
+import { requestContext } from '../../../server/request-context';
 import { requireAppUser } from '../../../server/require-app-user';
 import { revokeSessionAction } from './actions';
 
@@ -20,7 +20,7 @@ export async function generateMetadata() {
  */
 export default async function SecurityPage() {
   await requireAppUser({ workspace: 'optional', twoFactor: 'skip' });
-  const overview = await getAuthRuntime().twoFactor.overview(await headers());
+  const overview = await getAuthRuntime().twoFactor.overview((await requestContext()).headers);
   if (!overview) redirect('/login');
   const [t, format] = await Promise.all([getTranslations('auth.security'), getFormatter()]);
   const mustEnable = overview.required && !overview.twoFactorEnabled;
