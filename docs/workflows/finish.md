@@ -9,3 +9,4 @@
    - `docs/codemap.md`: chỉ dòng có file mới/đổi vai trò.
 6. Việc chưa xong, hoặc sắp đổi agent → commit phần đã xong, ghi `docs/handoff/<nhánh>.md` theo `docs/handoff/TEMPLATE.md` (ghi rõ agent vừa làm). Xong hẳn → xóa handoff và plan của nhánh.
 7. Đề xuất commit message; không tự push.
+8. **Merge:** chỉ bằng `gh pr merge <số> --merge --delete-branch` sau khi CI xanh. **Không xóa nhánh remote bằng tay** (`git push origin --delete …`): xóa nhánh khi PR chưa merge sẽ ĐÓNG PR. Merge báo lỗi tạm (502, "Base branch was modified") → thử lại hoặc `git fetch && git rebase origin/main` rồi push, và xác nhận `state = MERGED` trước khi dọn nhánh cục bộ.

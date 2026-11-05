@@ -10,7 +10,7 @@
 | FR-002 | Tạo workspace; người tạo là Owner; một người thuộc nhiều workspace | Bắt buộc | US-001, US-006 |
 | FR-003 | Mời thành viên qua email, vai trò Owner/Staff; gửi lại, thu hồi lời mời; đổi vai trò; xóa thành viên | Bắt buộc | US-004 |
 | FR-004 | Phân quyền theo bảng ở `13_Security_Design.md`; trang không có quyền ẩn khỏi menu, nút không có quyền vô hiệu kèm tooltip | Bắt buộc | — |
-| FR-005 | Bộ chuyển workspace có tìm kiếm và số cần xử lý | Bắt buộc | US-006 |
+| FR-005 | Bộ chuyển workspace có tìm kiếm và số cần xử lý. **"Số cần xử lý" = số bình luận chưa xóa (`deleted_at` rỗng) ở trạng thái Mới, Chờ duyệt, Cần người hoặc Gửi lỗi, chỉ tính các workspace mà người dùng là thành viên đang hoạt động** | Bắt buộc | US-006 |
 
 ## FR-B — Kênh
 
