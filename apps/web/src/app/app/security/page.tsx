@@ -29,6 +29,7 @@ export default async function SecurityPage() {
       <h1 className="auth-title">{t('title')}</h1>
       <p className="auth-subtitle">{t('subtitle')}</p>
       {mustEnable ? <Banner variant="warning">{t('requiredBanner')}</Banner> : null}
+      {/* Giữ nguyên vị trí TwoFactorCard trong cây: đổi vị trí/key làm nó mount lại và mất state `enrolling` (mã dự phòng biến mất). */}
       <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
       <section className="card stack" aria-labelledby="sessions-title">
         <h2 id="sessions-title" className="section-title">
