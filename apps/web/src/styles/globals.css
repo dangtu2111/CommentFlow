@@ -1422,6 +1422,7 @@ a {
 .log-diff-changed td:last-child {
   color: var(--color-primary-600);
   font-weight: var(--weight-semibold);
+}
 
 /* ---------- Bộ chuyển workspace: ô tìm kiếm (FR-005) ---------- */
 .ws-switch-search {
