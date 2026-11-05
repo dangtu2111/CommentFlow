@@ -36,3 +36,19 @@ describe('FR-042 job send — dữ liệu job', () => {
     }
   });
 });
+
+describe('FR-044 job hide — dữ liệu job', () => {
+  it('FR-044 tên hàng đợi và chỉ nhận {workspaceId, hideId} là UUID (không mang dữ liệu bình luận)', async () => {
+    const { HIDE_QUEUE, hideJobSchema } = await import('./queues');
+    expect(HIDE_QUEUE).toBe('hide');
+    expect(hideJobSchema.safeParse({ workspaceId: uuid, hideId: uuid }).success).toBe(true);
+    for (const bad of [
+      {},
+      { workspaceId: uuid },
+      { hideId: uuid },
+      { workspaceId: 'x', hideId: uuid },
+    ]) {
+      expect(hideJobSchema.safeParse(bad).success).toBe(false);
+    }
+  });
+});

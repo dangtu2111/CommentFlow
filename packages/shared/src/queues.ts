@@ -19,3 +19,13 @@ export const sendJobSchema = z.object({
   replyId: z.uuid(),
 });
 export type SendJob = z.infer<typeof sendJobSchema>;
+
+/** Hàng đợi ẩn/bỏ ẩn bình luận (FR-044, ADR 009; thử lại 3 lần, backoff mũ). */
+export const HIDE_QUEUE = 'hide';
+
+/** Dữ liệu job `hide`: chỉ id (hành động ẩn/bỏ ẩn nằm ở `cf.comment_hides`, không đi qua hàng đợi). */
+export const hideJobSchema = z.object({
+  workspaceId: z.uuid(),
+  hideId: z.uuid(),
+});
+export type HideJob = z.infer<typeof hideJobSchema>;

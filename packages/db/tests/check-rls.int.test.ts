@@ -343,6 +343,34 @@ describe('check-rls', () => {
     );
   });
 
+  it('FR-044 FB-HIDE: bắt được khi cf_app có INSERT/UPDATE hành động trên hàng đợi ẩn hoặc policy hệ thống bị nới', async () => {
+    const ins = await violationsAfter('GRANT INSERT ON cf.comment_hides TO cf_app');
+    expect(ins).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.comment_hides',
+        message: expect.stringContaining('INSERT'),
+      }),
+    );
+    const col = await violationsAfter('GRANT UPDATE (action) ON cf.comment_hides TO cf_app');
+    expect(col).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.comment_hides',
+        message: expect.stringContaining('action'),
+      }),
+    );
+    const pol = await violationsAfter(
+      'DROP POLICY comment_hides_update ON cf.comment_hides; CREATE POLICY comment_hides_update ON cf.comment_hides FOR UPDATE USING (workspace_id = (SELECT core.current_workspace_id())) WITH CHECK (workspace_id = (SELECT core.current_workspace_id()))',
+    );
+    expect(pol).toContainEqual(expect.objectContaining({ subject: 'cf.comment_hides' }));
+    const del = await violationsAfter('GRANT DELETE ON cf.comment_hides TO cf_app');
+    expect(del).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.comment_hides',
+        message: expect.stringContaining('DELETE'),
+      }),
+    );
+  });
+
   it('CH-SCHEMA: DELETE vẫn bị bắt dù kèm một policy DELETE theo workspace', async () => {
     const v = await violationsAfter(
       'GRANT DELETE ON cf.channels TO cf_app; CREATE POLICY channels_delete ON cf.channels FOR DELETE USING (workspace_id = (SELECT core.current_workspace_id()))',

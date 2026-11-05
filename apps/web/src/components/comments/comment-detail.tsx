@@ -1,9 +1,14 @@
+import { DECLARED_CAPABILITIES } from '@flow/connectors';
 import { isLocale } from '@flow/shared';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { hideErrorKey } from '../../lib/hide-errors';
+import { deriveHideUi, type HideUiDetail } from '../../lib/hide-state';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
 import { replyErrorKey } from '../../lib/reply-errors';
 import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
 import { CommentLock } from './comment-lock';
+import { HideButton } from './hide-button';
+import { HideProgress } from './hide-progress';
 import { ReplyComposer } from './reply-composer';
 import { ReplyProgress } from './reply-progress';
 
@@ -23,6 +28,8 @@ export type CommentDetailView = {
   isAd: boolean;
   channelStatus: string;
   deletedAt: Date | null;
+  isHidden: boolean;
+  latestHide: HideUiDetail['latestHide'];
   latestReply: ReplyUiDetail['latestReply'];
   lock: { holderName: string | null; heldByMe: boolean } | null;
 };
@@ -68,6 +75,33 @@ export async function CommentDetailPanel({
   // Khách đã xóa: nội dung và danh tính đã bị xóa trắng ở DB (FR-048) → báo rõ thay vì khung rỗng.
   const bodyText = isDeleted ? t('detail.redacted') : comment.text || t('detail.noText');
   const reply = deriveReplyUi({ ...comment, deleted: isDeleted });
+  // Nút hiện theo khả năng của nền tảng (docs/08: không hỗ trợ thì không hiện nút).
+  const declared = (PLATFORMS as readonly string[]).includes(comment.platform)
+    ? DECLARED_CAPABILITIES[comment.platform as (typeof PLATFORMS)[number]]
+    : null;
+  const hideUi = deriveHideUi({
+    ...comment,
+    deleted: isDeleted,
+    supports: {
+      hide: declared?.hide.supported === true,
+      unhide: declared?.unhide.supported === true,
+    },
+  });
+  const hideLabels = {
+    hide: t('hide.hide'),
+    unhide: t('hide.unhide'),
+    retry: t('hide.retry'),
+    working: t('hide.working'),
+    failures: {
+      not_found: t('hide.failures.not_found'),
+      not_hideable: t('hide.failures.not_hideable'),
+      locked_by_other: t('hide.failures.locked_by_other'),
+      channel_not_connected: t('hide.failures.channel_not_connected'),
+      forbidden: t('hide.failures.forbidden'),
+      queue_unavailable: t('hide.failures.queue_unavailable'),
+      unavailable: t('hide.failures.unavailable'),
+    },
+  };
   const composerLabels = {
     field: t('reply.field'),
     placeholder: t('reply.placeholder'),
@@ -197,6 +231,57 @@ export async function CommentDetailPanel({
           </p>
         ) : null}
       </section>
+      {hideUi.mode === 'none' ? null : (
+        <section className="hide-section" aria-label={t('hide.section')}>
+          {hideUi.mode === 'can' ? (
+            <HideButton
+              commentId={comment.id}
+              action={hideUi.action}
+              isRetry={false}
+              labels={hideLabels}
+            />
+          ) : null}
+          {hideUi.mode === 'pending' ? (
+            <HideProgress
+              labels={{
+                working: hideUi.action === 'hide' ? t('hide.stateHiding') : t('hide.stateUnhiding'),
+                slow: t('hide.stateSlow'),
+              }}
+            />
+          ) : null}
+          {hideUi.mode === 'failed' ? (
+            <>
+              <div className="reply-state reply-failed" role="alert">
+                <p className="reply-state-title">
+                  {hideUi.action === 'hide' ? t('hide.failedHide') : t('hide.failedUnhide')}
+                </p>
+                <p>
+                  {t('hide.failedWhy')} {t(`hide.errors.${hideErrorKey(hideUi.errorCode)}`)}
+                </p>
+              </div>
+              {hideUi.canRetry ? (
+                <HideButton
+                  commentId={comment.id}
+                  action={hideUi.action}
+                  isRetry
+                  labels={hideLabels}
+                />
+              ) : null}
+            </>
+          ) : null}
+          {hideUi.mode === 'blocked' ? (
+            <p className="reply-state reply-blocked" role="status">
+              {hideUi.reason === 'locked_by_other'
+                ? hideUi.holderName
+                  ? t('hide.blocked.lockedNamed', { name: hideUi.holderName })
+                  : t('hide.blocked.lockedAnonymous')
+                : hideUi.reason === 'channel_unavailable'
+                  ? t('hide.blocked.channelUnavailable')
+                  : t('hide.blocked.notHideable')}
+            </p>
+          ) : null}
+        </section>
+      )}
     </article>
   );
 }

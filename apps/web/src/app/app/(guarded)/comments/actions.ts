@@ -2,15 +2,19 @@
 
 import {
   acquireCommentLock,
+  cancelCommentHide,
   cancelCommentReply,
+  HideRejectedError,
   ReplyRejectedError,
   releaseCommentLock,
+  requestCommentHide,
   requestCommentReply,
 } from '@flow/db/runtime';
-import { SEND_QUEUE } from '@flow/shared';
+import { HIDE_QUEUE, SEND_QUEUE } from '@flow/shared';
 import { z } from 'zod';
 import type { LockActionResult } from '../../../../lib/comment-lock-result';
 import { getDb } from '../../../../server/db';
+import { createHideAction, type HideActionResult } from '../../../../server/hide-action';
 import { enqueueJob } from '../../../../server/queue';
 import { createReplyAction, type ReplyActionResult } from '../../../../server/reply-action';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -72,4 +76,28 @@ export async function replyCommentAction(
 ): Promise<ReplyActionResult> {
   const { user, workspace } = await requireAppUser({});
   return sendReply({ workspaceId: workspace.id, userId: user.id }, commentId, text);
+}
+
+/** Logic ẩn/bỏ ẩn (đầu vào, hàm DB, đẩy job `hide`, bù hủy khi đẩy lỗi) — xem `server/hide-action.ts`. */
+const changeHidden = createHideAction({
+  request: (session, input) =>
+    getDb().withActor(session.workspaceId, session.userId, (tx) => requestCommentHide(tx, input)),
+  cancel: (session, hideId) =>
+    getDb().withActor(session.workspaceId, session.userId, (tx) => cancelCommentHide(tx, hideId)),
+  enqueue: (job) => enqueueJob(HIDE_QUEUE, job),
+  warn: (event) => console.warn(JSON.stringify(event)),
+  isRejection: (error): error is HideRejectedError => error instanceof HideRejectedError,
+});
+
+/**
+ * Ẩn (`hide: true`) / bỏ ẩn (`hide: false`) bình luận (FR-044). Chỉ người bấm; không có đường tự động nào gọi hàm này.
+ * Workspace/người dùng lấy từ phiên (`requireAppUser`), KHÔNG từ client; quyền thật do hàm DB `cf.request_comment_hide`
+ * quyết định. Việc ẩn thật chạy ở worker; giao diện chỉ hiện "đã ẩn" sau khi nền tảng xác nhận.
+ */
+export async function hideCommentAction(
+  commentId: string,
+  hide: boolean,
+): Promise<HideActionResult> {
+  const { user, workspace } = await requireAppUser({});
+  return changeHidden({ workspaceId: workspace.id, userId: user.id }, commentId, hide);
 }
