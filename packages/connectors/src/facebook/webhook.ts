@@ -33,7 +33,7 @@ export function verifyMetaSignature(
 
 /** Postgres jsonb/text từ chối NUL và surrogate lẻ: làm sạch để một ký tự lạ không làm hỏng cả lô webhook. */
 const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
-const cleanText = (value: string): string =>
+export const cleanText = (value: string): string =>
   value.replaceAll('\u0000', '').replace(LONE_SURROGATE, '\uFFFD');
 const text = () => z.string().transform(cleanText);
 

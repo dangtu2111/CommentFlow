@@ -1,0 +1,555 @@
+import { createHmac } from 'node:crypto';
+import { describe, expect, it, vi } from 'vitest';
+import { checkConnectorContract } from '../contract';
+import { DECLARED_CAPABILITIES } from '../declarations';
+import { isPlatformError, PlatformError } from '../errors';
+import type { ChannelRef } from '../types';
+import { createFacebookConnector, type FacebookConnectorOptions } from './connector';
+import {
+  APP_ID,
+  APP_SECRET,
+  APP_USAGE_HEADER,
+  BUC_HEADER,
+  EMPTY_PAGE,
+  graphError,
+  PAGE_ID,
+  REPLIES_PAGE_1,
+  REPLIES_PAGE_2,
+  REPLY_CREATED,
+  SUBSCRIBED_APPS,
+  SUBSCRIBED_APPS_NONE,
+  SUCCESS_FALSE,
+  SUCCESS_TRUE,
+  TOKEN,
+} from './connector.fixtures';
+import { signMetaBody } from './webhook';
+
+const channel: ChannelRef = {
+  id: 'ch-1',
+  workspaceId: 'ws-1',
+  platform: 'facebook',
+  externalId: PAGE_ID,
+};
+
+type Call = { url: URL; init: RequestInit };
+type Reply = Response | Error | (() => Response | Promise<Response>);
+
+const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json', ...headers },
+  });
+
+function harness(replies: Reply[], overrides: Partial<FacebookConnectorOptions> = {}) {
+  const calls: Call[] = [];
+  const queue = [...replies];
+  const fetchFake = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+    calls.push({ url: new URL(String(input)), init: init ?? {} });
+    const next = queue.shift();
+    if (next === undefined) throw new Error('hết phản hồi giả');
+    if (next instanceof Error) throw next;
+    return typeof next === 'function' ? next() : next;
+  });
+  const connector = createFacebookConnector({
+    tokenProvider: { getAccessToken: vi.fn(async () => TOKEN) },
+    appId: APP_ID,
+    appSecret: APP_SECRET,
+    fetch: fetchFake as unknown as typeof fetch,
+    ...overrides,
+  });
+  return { connector, calls, fetchFake };
+}
+
+const bodyOf = (call: Call) => new URLSearchParams(String(call.init.body));
+const proofOf = (token: string) => createHmac('sha256', APP_SECRET).update(token).digest('hex');
+
+async function failureOf(promise: Promise<unknown>): Promise<PlatformError> {
+  try {
+    await promise;
+  } catch (error) {
+    expect(isPlatformError(error)).toBe(true);
+    return error as PlatformError;
+  }
+  throw new Error('đáng lẽ phải ném lỗi');
+}
+
+describe('Facebook connector — cấu hình và hợp đồng chung', () => {
+  it('thỏa checkConnectorContract và dùng khai báo khả năng Facebook', () => {
+    const { connector } = harness([]);
+    expect(checkConnectorContract(connector)).toEqual([]);
+    expect(connector.platform).toBe('facebook');
+    expect(connector.capabilities.reply).toEqual(DECLARED_CAPABILITIES.facebook.reply);
+    expect(connector.capabilities.hide).toEqual(DECLARED_CAPABILITIES.facebook.hide);
+    expect(connector.capabilities.privateReply.supported).toBe(false);
+    expect(connector.capabilities.sendMessage.supported).toBe(false);
+  });
+
+  it('từ chối cấu hình sai: khóa ứng dụng rỗng, timeout quá lớn/không dương, phiên bản sai', () => {
+    const tokenProvider = { getAccessToken: async () => TOKEN };
+    const base = { tokenProvider, appId: APP_ID, appSecret: APP_SECRET };
+    expect(() => createFacebookConnector({ ...base, appSecret: '' })).toThrow();
+    expect(() => createFacebookConnector({ ...base, appId: '' })).toThrow();
+    expect(() => createFacebookConnector({ ...base, timeoutMs: 60_001 })).toThrow();
+    expect(() => createFacebookConnector({ ...base, timeoutMs: 0 })).toThrow();
+    expect(() => createFacebookConnector({ ...base, apiVersion: '27' })).toThrow();
+    expect(() => createFacebookConnector({ ...base, timeoutMs: 60_000 })).not.toThrow();
+  });
+});
+
+describe('reply — POST /{comment-id}/comments', () => {
+  it('gửi message trong thân POST kèm token + appsecret_proof, trả id mới; token KHÔNG nằm trong URL', async () => {
+    const { connector, calls } = harness([json(REPLY_CREATED)]);
+    const result = await connector.reply(channel, '3000000000003_4000000000001', 'Chào bạn');
+    expect(result).toEqual({ externalId: REPLY_CREATED.id });
+    expect(calls).toHaveLength(1);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('POST');
+    expect(call.url.origin).toBe('https://graph.facebook.com');
+    expect(call.url.pathname).toBe('/v27.0/3000000000003_4000000000001/comments');
+    expect(call.url.search).toBe('');
+    const body = bodyOf(call);
+    expect(body.get('message')).toBe('Chào bạn');
+    expect(body.get('access_token')).toBe(TOKEN);
+    expect(body.get('appsecret_proof')).toBe(proofOf(TOKEN));
+    expect(call.init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('id bình luận được mã hóa trong đường dẫn (không chèn được đoạn đường dẫn khác)', async () => {
+    const { connector, calls } = harness([json(REPLY_CREATED)]);
+    await connector.reply(channel, '1/../me?x=1', 'a');
+    expect((calls[0] as Call).url.pathname).toBe('/v27.0/1%2F..%2Fme%3Fx%3D1/comments');
+  });
+
+  it('phản hồi 200 thiếu id / không phải JSON / rỗng → UNKNOWN (không biết đã gửi hay chưa)', async () => {
+    for (const reply of [
+      json({}),
+      json({ id: '' }),
+      new Response('<html>', { status: 200 }),
+      new Response('', { status: 200 }),
+    ]) {
+      const { connector } = harness([reply]);
+      const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+      expect(error.code).toBe('UNKNOWN');
+    }
+  });
+
+  it('lỗi mạng, timeout, 5xx ở bước ghi → UNKNOWN; đúng 1 lần gọi (không retry ngầm)', async () => {
+    const cases: Reply[] = [
+      new TypeError('fetch failed'),
+      json({}, 500),
+      new Response('Bad Gateway', { status: 502 }),
+      new Response('', { status: 503 }),
+    ];
+    for (const reply of cases) {
+      const { connector, fetchFake } = harness([reply, json(REPLY_CREATED)]);
+      const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+      expect(error.code).toBe('UNKNOWN');
+      expect(fetchFake).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('cắt timeout bằng AbortSignal: fetch treo → UNKNOWN sau timeoutMs', async () => {
+    const hang = (_u: string | URL | Request, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      });
+    const connector = createFacebookConnector({
+      tokenProvider: { getAccessToken: async () => TOKEN },
+      appId: APP_ID,
+      appSecret: APP_SECRET,
+      fetch: hang as unknown as typeof fetch,
+      timeoutMs: 30,
+    });
+    const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+    expect(error.code).toBe('UNKNOWN');
+    expect(error.message).not.toContain(TOKEN);
+  });
+
+  it('token không dùng được → TOKEN_EXPIRED từ provider, KHÔNG gọi mạng', async () => {
+    const { connector, fetchFake } = harness([], {
+      tokenProvider: {
+        getAccessToken: async () => {
+          throw new PlatformError('TOKEN_EXPIRED');
+        },
+      },
+    });
+    const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+    expect(error.code).toBe('TOKEN_EXPIRED');
+    expect(fetchFake).not.toHaveBeenCalled();
+  });
+
+  it('lỗi hạ tầng của provider (không phải PlatformError) → UNKNOWN, không lộ lỗi gốc', async () => {
+    const { connector } = harness([], {
+      tokenProvider: {
+        getAccessToken: async () => {
+          throw new Error(`DB lỗi ${TOKEN}`);
+        },
+      },
+    });
+    const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+    expect(error.code).toBe('UNKNOWN');
+    expect(JSON.stringify(error)).not.toContain(TOKEN);
+    expect(error.message).not.toContain(TOKEN);
+    expect(error.cause).toBeUndefined();
+  });
+});
+
+describe('phân loại lỗi Graph API → 5 mã chuẩn (docs/12 §1, error-handling, rate-limiting)', () => {
+  const table: Array<[string, unknown, number, string]> = [
+    ['190 token hết hạn', graphError(190), 400, 'TOKEN_EXPIRED'],
+    ['190 kèm subcode 463', graphError(190, { subcode: 463 }), 401, 'TOKEN_EXPIRED'],
+    ['190 kèm subcode 460 (đổi mật khẩu)', graphError(190, { subcode: 460 }), 400, 'TOKEN_EXPIRED'],
+    ['102 phiên API (token)', graphError(102), 400, 'TOKEN_EXPIRED'],
+    ['10 quyền bị từ chối', graphError(10), 403, 'PERMISSION'],
+    ['200 lỗi quyền', graphError(200), 403, 'PERMISSION'],
+    ['283 (trong 200–299)', graphError(283), 403, 'PERMISSION'],
+    ['299 (biên 200–299)', graphError(299), 403, 'PERMISSION'],
+    ['4 giới hạn ứng dụng', graphError(4), 400, 'RATE_LIMIT'],
+    ['17 giới hạn người dùng', graphError(17), 400, 'RATE_LIMIT'],
+    ['32 giới hạn Page', graphError(32), 400, 'RATE_LIMIT'],
+    ['613 giới hạn tùy biến', graphError(613), 400, 'RATE_LIMIT'],
+    ['80001 quá nhiều lệnh gọi tới Page', graphError(80001), 400, 'RATE_LIMIT'],
+    ['341 giới hạn ứng dụng', graphError(341), 400, 'RATE_LIMIT'],
+    ['368 bị chặn tạm', graphError(368), 400, 'BLOCKED'],
+    ['100 tham số không hợp lệ', graphError(100), 400, 'UNKNOWN'],
+    ['2 sự cố dịch vụ', graphError(2), 500, 'UNKNOWN'],
+    ['1 không xác định', graphError(1), 500, 'UNKNOWN'],
+    ['mã không biết', graphError(99999), 400, 'UNKNOWN'],
+    ['201 không có trong bảng nhưng thuộc 200–299', graphError(201), 400, 'PERMISSION'],
+    ['code không phải số', { error: { message: 'x', code: 'abc' } }, 400, 'UNKNOWN'],
+    ['thiếu code', { error: { message: 'x' } }, 400, 'UNKNOWN'],
+  ];
+
+  it.each(table)('%s', async (_name, body, status, expected) => {
+    const { connector } = harness([json(body, status)]);
+    const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+    expect(error.code).toBe(expected);
+  });
+
+  it('HTTP 429 không thân JSON → RATE_LIMIT', async () => {
+    const { connector } = harness([new Response('', { status: 429 })]);
+    expect((await failureOf(connector.reply(channel, 'c1', 'x'))).code).toBe('RATE_LIMIT');
+  });
+
+  it('retryAfterSeconds lấy từ X-Business-Use-Case-Usage (phút → giây); X-App-Usage không có → undefined', async () => {
+    const withBuc = harness([
+      json(graphError(80001), 400, { 'x-business-use-case-usage': BUC_HEADER }),
+    ]);
+    const e1 = await failureOf(withBuc.connector.reply(channel, 'c1', 'x'));
+    expect(e1.retryAfterSeconds).toBe(300);
+    const withApp = harness([json(graphError(4), 400, { 'x-app-usage': APP_USAGE_HEADER })]);
+    const e2 = await failureOf(withApp.connector.reply(channel, 'c1', 'x'));
+    expect(e2.retryAfterSeconds).toBeUndefined();
+  });
+
+  it('header lạ/hỏng/âm/quá lớn → bỏ qua, không ném', async () => {
+    for (const value of [
+      'khong phai json',
+      '[]',
+      '{"a":[{"estimated_time_to_regain_access":-3}]}',
+      '{"a":[{"estimated_time_to_regain_access":"x"}]}',
+      '{"a":"x"}',
+    ]) {
+      const { connector } = harness([
+        json(graphError(32), 400, { 'x-business-use-case-usage': value }),
+      ]);
+      const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+      expect(error.code).toBe('RATE_LIMIT');
+      expect(error.retryAfterSeconds).toBeUndefined();
+    }
+    const big = JSON.stringify({ a: [{ estimated_time_to_regain_access: 999_999 }] });
+    const { connector } = harness([
+      json(graphError(32), 400, { 'x-business-use-case-usage': big }),
+    ]);
+    expect((await failureOf(connector.reply(channel, 'c1', 'x'))).retryAfterSeconds).toBe(86_400);
+  });
+
+  it('thông báo lỗi chỉ chứa mã: không có token, nội dung/tên khách, message của Meta, URL; không có cause', async () => {
+    const leaky = `Nội dung bình luận của khách Nguyễn Văn A 0901234567 ${TOKEN}`;
+    const { connector } = harness([
+      json(
+        {
+          error: {
+            message: leaky,
+            type: 'OAuthException',
+            code: 190,
+            error_user_msg: leaky,
+            fbtrace_id: 'T',
+          },
+        },
+        400,
+      ),
+    ]);
+    const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+    const dump = `${error.message} ${error.name} ${JSON.stringify(error)} ${String(error.stack).split('\n')[0]}`;
+    for (const secret of [TOKEN, 'Nguyễn Văn A', '0901234567', 'graph.facebook.com', APP_SECRET]) {
+      expect(dump).not.toContain(secret);
+    }
+    expect(error.cause).toBeUndefined();
+    expect(error.message).toBe('facebook_error_190');
+  });
+
+  it('lỗi mạng mang token trong thông báo gốc → không lọt ra ngoài', async () => {
+    const { connector } = harness([
+      new TypeError(`fetch failed https://graph.facebook.com/x?access_token=${TOKEN}`),
+    ]);
+    const error = await failureOf(connector.reply(channel, 'c1', 'x'));
+    expect(JSON.stringify(error)).not.toContain(TOKEN);
+    expect(error.message).not.toContain(TOKEN);
+    expect(error.cause).toBeUndefined();
+  });
+
+  it('mapError: PlatformError giữ nguyên; giá trị lạ → UNKNOWN không kèm cause', () => {
+    const { connector } = harness([]);
+    const original = new PlatformError('BLOCKED');
+    expect(connector.mapError(original)).toBe(original);
+    for (const value of [new Error('x'), 'chuỗi', null, undefined, 42, { code: 190 }]) {
+      const mapped = connector.mapError(value);
+      expect(mapped.code).toBe('UNKNOWN');
+      expect(mapped.cause).toBeUndefined();
+    }
+  });
+});
+
+describe('setHidden — POST /{comment-id} is_hidden', () => {
+  it.each([
+    [true, 'true'],
+    [false, 'false'],
+  ])('hidden=%s gửi is_hidden=%s', async (hidden, wire) => {
+    const { connector, calls } = harness([json(SUCCESS_TRUE)]);
+    await connector.setHidden(channel, 'c1', hidden);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('POST');
+    expect(call.url.pathname).toBe('/v27.0/c1');
+    expect(call.url.search).toBe('');
+    const body = bodyOf(call);
+    expect(body.get('is_hidden')).toBe(wire);
+    expect(body.get('access_token')).toBe(TOKEN);
+    expect(body.get('appsecret_proof')).toBe(proofOf(TOKEN));
+  });
+
+  it('success:false / thân lạ / rỗng → UNKNOWN', async () => {
+    for (const reply of [
+      json(SUCCESS_FALSE),
+      json({}),
+      json([]),
+      new Response('', { status: 200 }),
+    ]) {
+      const { connector } = harness([reply]);
+      expect((await failureOf(connector.setHidden(channel, 'c1', true))).code).toBe('UNKNOWN');
+    }
+  });
+
+  it('lỗi quyền/giới hạn/chặn được phân loại như reply; 5xx và timeout → UNKNOWN, một lần gọi', async () => {
+    const perm = harness([json(graphError(200), 403)]);
+    expect((await failureOf(perm.connector.setHidden(channel, 'c1', true))).code).toBe(
+      'PERMISSION',
+    );
+    const blocked = harness([json(graphError(368), 400)]);
+    expect((await failureOf(blocked.connector.setHidden(channel, 'c1', true))).code).toBe(
+      'BLOCKED',
+    );
+    const five = harness([json({}, 500), json(SUCCESS_TRUE)]);
+    expect((await failureOf(five.connector.setHidden(channel, 'c1', true))).code).toBe('UNKNOWN');
+    expect(five.fetchFake).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('fetchReplies — GET /{comment-id}/comments, phân trang bằng `after`', () => {
+  it('đọc hết các trang, chuẩn hóa, isFromPage theo from.id == Page, KHÔNG đi theo URL `next`', async () => {
+    const { connector, calls } = harness([json(REPLIES_PAGE_1), json(REPLIES_PAGE_2)]);
+    const parent = '3000000000003_4000000000001';
+    const comments = await connector.fetchReplies(channel, parent, { postExternalId: 'POST1' });
+    expect(comments.map((c) => c.externalId)).toEqual([
+      '3000000000003_4000000000010',
+      '3000000000003_4000000000011',
+      '3000000000003_4000000000012',
+    ]);
+    expect(comments.map((c) => c.isFromPage)).toEqual([true, false, true]);
+    expect(comments.every((c) => c.parentExternalId === parent)).toBe(true);
+    expect(comments.every((c) => c.postExternalId === 'POST1')).toBe(true);
+    expect(comments[0]).toMatchObject({
+      text: 'Cảm ơn bạn',
+      authorExternalId: PAGE_ID,
+      createdAt: new Date('2026-11-05T03:00:00Z'),
+    });
+    expect(calls).toHaveLength(2);
+    const [first, second] = calls as [Call, Call];
+    expect(first.init.method).toBe('GET');
+    expect(first.url.pathname).toBe(`/v27.0/${parent}/comments`);
+    expect(first.url.searchParams.get('after')).toBeNull();
+    expect(first.url.searchParams.get('limit')).toBe('100');
+    expect(first.url.searchParams.get('fields')).toContain('message');
+    expect(first.url.searchParams.get('access_token')).toBe(TOKEN);
+    expect(first.url.searchParams.get('appsecret_proof')).toBe(proofOf(TOKEN));
+    expect(second.url.searchParams.get('after')).toBe('AFTER1');
+    for (const call of calls) expect(call.url.origin).toBe('https://graph.facebook.com');
+  });
+
+  it('trang không có `paging.next` thì dừng, dù có cursors.after', async () => {
+    const { connector, fetchFake } = harness([json(REPLIES_PAGE_2)]);
+    expect(await connector.fetchReplies(channel, 'p1')).toHaveLength(1);
+    expect(fetchFake).toHaveBeenCalledTimes(1);
+  });
+
+  it('`next` có nhưng thiếu cursors.after → UNKNOWN (không đọc dở dang)', async () => {
+    const { connector } = harness([json({ data: [], paging: { next: 'https://x' } })]);
+    expect((await failureOf(connector.fetchReplies(channel, 'p1'))).code).toBe('UNKNOWN');
+  });
+
+  it('vượt giới hạn số trang → UNKNOWN (đọc thiếu thì không được coi là "chưa có câu trả lời")', async () => {
+    const endless = () =>
+      json({ data: [], paging: { cursors: { after: 'A' }, next: 'https://x' } });
+    const { connector, fetchFake } = harness([endless, endless, endless, endless], { maxPages: 3 });
+    expect((await failureOf(connector.fetchReplies(channel, 'p1'))).code).toBe('UNKNOWN');
+    expect(fetchFake).toHaveBeenCalledTimes(3);
+  });
+
+  it('bình luận thiếu id/created_time/hỏng bị bỏ; thiếu from → isFromPage=false; message thiếu → rỗng', async () => {
+    const page = {
+      data: [
+        { id: 'ok1', created_time: '2026-11-05T03:00:00+0000' },
+        { message: 'thiếu id', created_time: '2026-11-05T03:00:00+0000' },
+        { id: 'bad-time', message: 'x', created_time: 'hôm qua' },
+        { id: 'no-time', message: 'x' },
+        {
+          id: 'ok2',
+          message: 'x',
+          created_time: '2026-11-05T03:00:00+0000',
+          from: { id: PAGE_ID },
+        },
+      ],
+    };
+    const { connector } = harness([json(page)]);
+    const comments = await connector.fetchReplies(channel, 'p1');
+    expect(comments.map((c) => c.externalId)).toEqual(['ok1', 'ok2']);
+    expect(comments[0]).toMatchObject({ text: '', isFromPage: false, authorExternalId: '' });
+    expect(comments[1]?.isFromPage).toBe(true);
+  });
+
+  it('phản hồi sai cấu trúc → UNKNOWN, thông báo không chứa nội dung phản hồi', async () => {
+    for (const body of [{ data: 'x' }, { nodata: [] }, [], 'chuỗi bí mật Nguyễn Văn A']) {
+      const { connector } = harness([json(body)]);
+      const error = await failureOf(connector.fetchReplies(channel, 'p1'));
+      expect(error.code).toBe('UNKNOWN');
+      expect(JSON.stringify(error)).not.toContain('Nguyễn Văn A');
+    }
+  });
+
+  it('lỗi 190 khi đọc → TOKEN_EXPIRED; trang rỗng → mảng rỗng', async () => {
+    const bad = harness([json(graphError(190), 400)]);
+    expect((await failureOf(bad.connector.fetchReplies(channel, 'p1'))).code).toBe('TOKEN_EXPIRED');
+    const empty = harness([json(EMPTY_PAGE)]);
+    expect(await empty.connector.fetchReplies(channel, 'p1')).toEqual([]);
+  });
+});
+
+describe('fetchPostComments — GET /{post-id}/comments (filter=stream)', () => {
+  it('đọc mọi cấp bằng filter=stream, lọc theo `since`, ghi postExternalId', async () => {
+    const { connector, calls } = harness([json(REPLIES_PAGE_1), json(REPLIES_PAGE_2)]);
+    const since = new Date('2026-11-05T03:01:00Z');
+    const comments = await connector.fetchPostComments(channel, 'POST1', { since });
+    expect(comments.map((c) => c.externalId)).toEqual([
+      '3000000000003_4000000000011',
+      '3000000000003_4000000000012',
+    ]);
+    expect(comments.every((c) => c.postExternalId === 'POST1')).toBe(true);
+    const [first] = calls as [Call];
+    expect(first.url.pathname).toBe('/v27.0/POST1/comments');
+    expect(first.url.searchParams.get('filter')).toBe('stream');
+  });
+
+  it('không có `since` → trả tất cả; bình luận cha lấy từ trường parent', async () => {
+    const { connector } = harness([json(REPLIES_PAGE_1), json(REPLIES_PAGE_2)]);
+    const comments = await connector.fetchPostComments(channel, 'POST1');
+    expect(comments).toHaveLength(3);
+    expect(comments[0]?.parentExternalId).toBe('3000000000003_4000000000001');
+    expect(comments[1]?.parentExternalId).toBeNull();
+  });
+});
+
+describe('fetchComments (quét cả Page) — chưa làm: tài liệu chưa rõ', () => {
+  it('ném UNKNOWN fetch_comments_page_wide_unsupported, không gọi mạng', async () => {
+    const { connector, fetchFake } = harness([]);
+    const error = await failureOf(connector.fetchComments(channel, new Date(0)));
+    expect(error.code).toBe('UNKNOWN');
+    expect(error.message).toBe('fetch_comments_page_wide_unsupported');
+    expect(fetchFake).not.toHaveBeenCalled();
+  });
+});
+
+describe('webhook subscription — /{page-id}/subscribed_apps', () => {
+  it('getPageSubscription: tìm ứng dụng của mình, trả danh sách trường đã đăng ký', async () => {
+    const { connector, calls } = harness([json(SUBSCRIBED_APPS)]);
+    expect(await connector.getPageSubscription(channel)).toEqual({
+      subscribed: true,
+      fields: ['feed'],
+    });
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('GET');
+    expect(call.url.pathname).toBe(`/v27.0/${PAGE_ID}/subscribed_apps`);
+    expect(call.url.searchParams.get('access_token')).toBe(TOKEN);
+  });
+
+  it('chưa đăng ký / chỉ ứng dụng khác → subscribed=false', async () => {
+    for (const body of [
+      SUBSCRIBED_APPS_NONE,
+      { data: [{ id: '1', subscribed_fields: ['feed'] }] },
+    ]) {
+      const { connector } = harness([json(body)]);
+      expect(await connector.getPageSubscription(channel)).toEqual({
+        subscribed: false,
+        fields: [],
+      });
+    }
+  });
+
+  it('subscribePage: POST subscribed_fields=feed (mặc định), success:true → xong', async () => {
+    const { connector, calls } = harness([json(SUCCESS_TRUE)]);
+    await connector.subscribePage(channel);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('POST');
+    expect(call.url.pathname).toBe(`/v27.0/${PAGE_ID}/subscribed_apps`);
+    const body = bodyOf(call);
+    expect(body.get('subscribed_fields')).toBe('feed');
+    expect(body.get('access_token')).toBe(TOKEN);
+  });
+
+  it('subscribePage nhận danh sách trường; success:false → UNKNOWN; lỗi 200 → PERMISSION', async () => {
+    const ok = harness([json(SUCCESS_TRUE)]);
+    await ok.connector.subscribePage(channel, ['feed', 'messages']);
+    expect(bodyOf(ok.calls[0] as Call).get('subscribed_fields')).toBe('feed,messages');
+    const no = harness([json(SUCCESS_FALSE)]);
+    expect((await failureOf(no.connector.subscribePage(channel))).code).toBe('UNKNOWN');
+    const perm = harness([json(graphError(200), 403)]);
+    expect((await failureOf(perm.connector.subscribePage(channel))).code).toBe('PERMISSION');
+  });
+
+  it('thân lạ khi GET → UNKNOWN', async () => {
+    const { connector } = harness([json({ data: 5 })]);
+    expect((await failureOf(connector.getPageSubscription(channel))).code).toBe('UNKNOWN');
+  });
+});
+
+describe('webhook — verifyWebhook / parseWebhook', () => {
+  const raw = Buffer.from(JSON.stringify({ object: 'page', entry: [] }));
+  const request = (signature?: string) =>
+    new Request('https://example.test/webhook', {
+      method: 'POST',
+      body: raw,
+      headers: signature === undefined ? {} : { 'x-hub-signature-256': signature },
+    });
+
+  it('chữ ký đúng → true; sai/thiếu → false', async () => {
+    const { connector } = harness([]);
+    expect(await connector.verifyWebhook(request(signMetaBody(raw, APP_SECRET)))).toBe(true);
+    expect(await connector.verifyWebhook(request(signMetaBody(raw, 'khóa khác')))).toBe(false);
+    expect(await connector.verifyWebhook(request())).toBe(false);
+  });
+
+  it('parseWebhook chuẩn hóa sự kiện bình luận (dùng parseMetaWebhook)', () => {
+    const { connector } = harness([]);
+    expect(connector.parseWebhook({ object: 'page', entry: [] })).toEqual([]);
+    expect(connector.parseWebhook('rác')).toEqual([]);
+  });
+});

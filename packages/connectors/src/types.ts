@@ -70,6 +70,15 @@ export interface PlatformConnector {
   verifyWebhook(req: Request): Promise<boolean>;
   parseWebhook(body: unknown): NormalizedEvent[];
   fetchComments(channel: ChannelRef, since: Date): Promise<NormalizedComment[]>;
+  /**
+   * Đọc ĐỦ các trả lời trực tiếp của MỘT bình luận (đi hết các trang; chưa đọc đủ thì ném lỗi, không trả nửa chừng).
+   * Dùng cho "kiểm trước khi gửi lại" (ADR 008): lọc theo cha, không quét cả kênh. Tùy chọn: connector không có thì thiếu.
+   */
+  fetchReplies?(
+    channel: ChannelRef,
+    parentCommentId: string,
+    options?: { postExternalId?: string },
+  ): Promise<NormalizedComment[]>;
   reply(channel: ChannelRef, commentId: string, text: string): Promise<{ externalId: string }>;
   setHidden?(channel: ChannelRef, commentId: string, hidden: boolean): Promise<void>;
   sendMessage?(
