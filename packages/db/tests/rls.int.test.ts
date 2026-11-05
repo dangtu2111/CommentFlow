@@ -164,9 +164,9 @@ describe('cô lập dữ liệu giữa workspace (bảng có workspace_id)', () 
 });
 
 describe('bảng chỉ thêm (action_logs, ai_usage) và bảng cờ tính năng', () => {
-  it('action_logs: ghi được trong workspace của mình, không sửa, không xóa', async () => {
+  it('action_logs: dòng system ghi được qua đường hệ thống (withJob) trong workspace của mình, không sửa, không xóa', async () => {
     const id = newId();
-    await db.withWorkspace(wsA, (tx) =>
+    await db.withJob(wsA, (tx) =>
       tx.insert(actionLogs).values({ id, workspaceId: wsA, actorType: 'system', action: 'thu' }),
     );
     expect(

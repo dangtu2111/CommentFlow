@@ -264,7 +264,7 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 
 ---
 
-## KT-012 — Staff thấy dòng hệ thống do mình yêu cầu (LOG-STAFF-SYSTEM-ROWS)
+## KT-013 — Staff thấy dòng hệ thống do mình yêu cầu (LOG-STAFF-SYSTEM-ROWS)
 
 Điều kiện: migration 0029 đã áp lên `cf_dev` (`pnpm db:migrate`); chạy web + worker bản mới (`pnpm --filter @flow/web dev`, `pnpm --filter @flow/worker dev`); workspace có **một Owner** và **hai Staff** (Staff 1, Staff 2) và một kênh Facebook đã kết nối có vài bình luận. Dùng cửa sổ ẩn danh riêng cho mỗi người.
 

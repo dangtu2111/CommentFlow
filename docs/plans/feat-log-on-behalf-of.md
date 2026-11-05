@@ -41,7 +41,7 @@ Lựa chọn kỹ thuật (do agent chọn, nêu lý do):
 - `packages/db/tests/action-logs-on-behalf.int.test.ts` (mới), `action-logs.int.test.ts`.
 - `apps/worker/src/jobs/send.ts`, `hide.ts` (+ test worker).
 - `apps/web`: `components/activity/activity-{list,detail}.tsx`, `activity/page.tsx`, `lib/action-log-format.ts` (+ test), `packages/shared/src/i18n/messages/{vi,en}.json`.
-- Docs: `docs/10`, `docs/13` §3.1 (dòng Nhật ký), `docs/codemap.md`, `docs/gap-matrix.md`, `docs/plans/MASTER.md`, `docs/testing/KIEM_TRA_TAY.md` (KT-012), `docs/handoff/feat-log-on-behalf-of.md`.
+- Docs: `docs/10`, `docs/13` §3.1 (dòng Nhật ký), `docs/codemap.md`, `docs/gap-matrix.md`, `docs/plans/MASTER.md`, `docs/testing/KIEM_TRA_TAY.md` (KT-013), `docs/handoff/feat-log-on-behalf-of.md`.
 
 ## Migration
 

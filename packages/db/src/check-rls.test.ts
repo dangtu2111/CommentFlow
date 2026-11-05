@@ -23,6 +23,7 @@ function fakeDb(parts: {
   tokenFunctions?: Row[];
   webhookFn?: Row[];
   leaveFn?: Row[];
+  actionLogsCheck?: Row[];
   guards?: Row[];
   systemFn?: Row[];
   channelInsert?: Row[];
@@ -77,6 +78,7 @@ function fakeDb(parts: {
       if (text.includes('/* is-system-context-body */')) return { rows: parts.systemFn ?? [] };
       if (text.includes('/* channels-no-insert */')) return { rows: parts.channelInsert ?? [] };
       if (text.includes('/* webhook-function */')) return { rows: parts.webhookFn ?? [] };
+      if (text.includes('/* action-logs-check */')) return { rows: parts.actionLogsCheck ?? [] };
       if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
       if (text.includes('/* no-delete */')) return { rows: parts.noDelete ?? [] };
@@ -751,11 +753,27 @@ describe('checkRls: on_behalf_of của action_logs (0029)', () => {
     const missing = [
       { tbl: 'core.action_logs', cmd: 'r', marker: 'on_behalf_of' },
       { tbl: 'core.action_logs', cmd: 'a', marker: 'on_behalf_of' },
+      { tbl: 'core.action_logs', cmd: 'a', marker: 'is_system_context' },
     ];
     const v = await checkRls(fakeDb({ actorPolicies: missing }));
     const messages = v.filter((x) => x.subject === 'core.action_logs').map((x) => x.message);
     expect(messages).toContainEqual(expect.stringContaining(`(on_behalf_of) cho lệnh 'r'`));
     expect(messages).toContainEqual(expect.stringContaining(`(on_behalf_of) cho lệnh 'a'`));
+    expect(messages).toContainEqual(expect.stringContaining(`(is_system_context) cho lệnh 'a'`));
+  });
+
+  it('báo khi thiếu CHECK action_logs_on_behalf_of_check hoặc sai định nghĩa', async () => {
+    const v = await checkRls(
+      fakeDb({
+        actionLogsCheck: [
+          { name: 'core.action_logs', problem: 'thiếu CHECK action_logs_on_behalf_of_check' },
+        ],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.action_logs',
+      message: 'thiếu CHECK action_logs_on_behalf_of_check',
+    });
   });
 });
 

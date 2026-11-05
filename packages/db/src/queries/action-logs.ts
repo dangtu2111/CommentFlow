@@ -39,7 +39,7 @@ export type ActionLogItem = {
   actorName: string | null;
   /** Người đã yêu cầu việc do hệ thống làm (chỉ dòng `system`); `null` nếu không có. */
   onBehalfOfId: string | null;
-  /** Tên người yêu cầu (`null` nếu không có hoặc không còn trong `users`). */
+  /** Tên người yêu cầu; `null` khi không có người yêu cầu hoặc người đó không còn là thành viên ĐANG HOẠT ĐỘNG (đã rời/tạm khóa/xóa) — RLS của `users` không cho đọc tên. */
   onBehalfOfName: string | null;
   action: string;
   targetType: string | null;

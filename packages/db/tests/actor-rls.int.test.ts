@@ -209,8 +209,11 @@ describe('action_logs: người gọi phải là chính thành viên ghi', () =>
     expect(await run('noUser', insert('user', ids.owner as string))).toBe('denied');
   });
 
-  it('actor_type khác (system/ai) chỉ qua đường KHÔNG có người dùng', async () => {
-    expect(await run('noUser', insert('system', null))).toBe(1);
+  it('actor_type khác (system/ai) chỉ qua đường hệ thống (withJob); withWorkspace trần và người dùng bị từ chối (0029)', async () => {
+    const asJob = await db.withJob(ws, (tx) => tx.execute(sql.raw(insert('system', null))));
+    expect(asJob.rowCount).toBe(1);
+    expect(await run('noUser', insert('system', null))).toBe('denied');
+    expect(await run('noUser', insert('ai', null))).toBe('denied');
     expect(await run('owner', insert('system', null))).toBe('denied');
   });
 });
@@ -326,7 +329,9 @@ describe('đường khởi tạo workspace', () => {
       `INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action) VALUES ('${ws}', '${type}', ${actor ? `'${actor}'` : 'NULL'}, 'thu')`;
     expect(await run('noUser', ins('admin', null))).toBe('denied');
     expect(await run('noUser', ins('system', ids.owner as string))).toBe('denied');
-    expect(await run('noUser', ins('ai', null))).toBe(1);
+    expect(await run('noUser', ins('ai', null))).toBe('denied'); // 0029: ngữ cảnh trần không còn ghi được
+    const asJob = await db.withJob(ws, (tx) => tx.execute(sql.raw(ins('ai', null))));
+    expect(asJob.rowCount).toBe(1);
   });
 });
 

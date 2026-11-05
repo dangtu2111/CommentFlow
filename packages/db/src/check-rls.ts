@@ -469,6 +469,7 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.workspaces', 'w', 'is_workspace_owner'],
   ['core.workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
   ['core.action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+  ['core.action_logs', 'a', 'is_system_context'], // 0029: dòng system/ai chỉ qua ngữ cảnh hệ thống (withJob), withWorkspace trần bị chặn
   ['core.action_logs', 'a', 'on_behalf_of'], // 0029: đường người dùng không tự đặt người yêu cầu (on_behalf_of IS NULL)
   // đọc (0028): Owner cả workspace, Staff chỉ dòng `user` của mình; mọi policy SELECT permissive phải chứa đủ ba marker
   ['core.action_logs', 'r', 'is_workspace_owner'],
@@ -707,6 +708,33 @@ async function checkLeaveFunction(db: Queryable, violations: RlsViolation[]): Pr
   }
 }
 
+/**
+ * Ràng buộc CHECK `action_logs_on_behalf_of_check` (0029): phải tồn tại, đã VALIDATE và định nghĩa chứa `on_behalf_of`
+ * và `'system'` (chỉ dòng system mới có người yêu cầu; áp cả cho chủ bảng và hàm DEFINER).
+ */
+async function checkActionLogsOnBehalfCheck(
+  db: Queryable,
+  violations: RlsViolation[],
+): Promise<void> {
+  const found = await db.query(`/* action-logs-check */
+    SELECT 'core.action_logs' AS name,
+      CASE
+        WHEN c.oid IS NULL THEN 'thiếu CHECK action_logs_on_behalf_of_check'
+        WHEN NOT c.convalidated THEN 'CHECK action_logs_on_behalf_of_check chưa VALIDATE'
+        ELSE 'CHECK action_logs_on_behalf_of_check sai định nghĩa (phải chứa on_behalf_of và system)'
+      END AS problem
+    FROM (SELECT 1) AS one
+    LEFT JOIN pg_constraint c ON c.conrelid = 'core.action_logs'::regclass
+      AND c.conname = 'action_logs_on_behalf_of_check' AND c.contype = 'c'
+    WHERE c.oid IS NULL
+      OR NOT c.convalidated
+      OR pg_get_constraintdef(c.oid) NOT LIKE '%on_behalf_of%'
+      OR pg_get_constraintdef(c.oid) NOT LIKE '%''system''%'`);
+  for (const row of found.rows) {
+    violations.push({ subject: String(row.name), message: String(row.problem) });
+  }
+}
+
 export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   const violations: RlsViolation[] = [];
 
@@ -883,6 +911,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkTokenFunctions(db, violations);
   await checkWebhookFunction(db, violations);
   await checkLeaveFunction(db, violations);
+  await checkActionLogsOnBehalfCheck(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

@@ -114,17 +114,41 @@ describe('RLS action_logs SELECT với on_behalf_of', () => {
 
 describe('ghi on_behalf_of', () => {
   it('đường người dùng (withActor) không INSERT được dòng system/ai (42501)', async () => {
-    const code = await expectRejectCode(
-      db.withActor(ws, staffA, (tx) =>
+    for (const type of ['system', 'ai']) {
+      const code = await expectRejectCode(
+        db.withActor(ws, staffA, (tx) =>
+          tx.execute(
+            sql`INSERT INTO core.action_logs (workspace_id, actor_type, action) VALUES (${ws}::uuid, ${type}, 'x.fake')`,
+          ),
+        ),
+      );
+      expect(code).toBe('42501');
+    }
+  });
+
+  it('withWorkspace TRẦN (không ngữ cảnh hệ thống) không INSERT được dòng system/ai, kể cả có on_behalf_of (42501)', async () => {
+    for (const type of ['system', 'ai']) {
+      const code = await expectRejectCode(
+        db.withWorkspace(ws, (tx) =>
+          tx.execute(
+            sql`INSERT INTO core.action_logs (workspace_id, actor_type, action) VALUES (${ws}::uuid, ${type}, 'x.bare')`,
+          ),
+        ),
+      );
+      expect(code).toBe('42501');
+    }
+    const forced = await expectRejectCode(
+      db.withWorkspace(ws, (tx) =>
         tx.execute(
-          sql`INSERT INTO core.action_logs (workspace_id, actor_type, on_behalf_of, action) VALUES (${ws}::uuid, 'system', ${staffA}::uuid, 'x.fake')`,
+          sql`INSERT INTO core.action_logs (workspace_id, actor_type, on_behalf_of, action)
+              VALUES (${ws}::uuid, 'system', ${staffA}::uuid, 'x.bare')`,
         ),
       ),
     );
-    expect(code).toBe('42501');
+    expect(forced).toBe('42501');
   });
 
-  it('dòng user không được đặt on_behalf_of (kể cả = chính mình hay người khác): bị từ chối', async () => {
+  it('dòng user không được đặt on_behalf_of (kể cả = chính mình hay người khác): bị từ chối bởi RLS hoặc CHECK', async () => {
     for (const target of [staffA, staffB]) {
       const code = await expectRejectCode(
         db.withActor(ws, staffA, (tx) =>
@@ -134,7 +158,41 @@ describe('ghi on_behalf_of', () => {
           ),
         ),
       );
-      expect(code).toBeDefined();
+      expect(['42501', '23514']).toContain(code);
+    }
+  });
+
+  it('nhánh `on_behalf_of IS NULL` của policy INSERT tự chặn (CHECK được gỡ tạm rồi dựng lại y nguyên): 42501', async () => {
+    // cf_owner không SET ROLE cf_app được nên gỡ CHECK thật (commit), thử bằng withActor, rồi dựng lại trong finally.
+    // Các file test tích hợp chạy tuần tự (fileParallelism=false) nên không ai khác thấy trạng thái tạm này.
+    await admin.query(
+      'ALTER TABLE core.action_logs DROP CONSTRAINT action_logs_on_behalf_of_check',
+    );
+    try {
+      const ok = await db.withActor(ws, staffA, (tx) =>
+        tx.execute(
+          sql`INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action) VALUES (${ws}::uuid, 'user', ${staffA}::uuid, 'x.ok')`,
+        ),
+      );
+      expect(ok.rowCount).toBe(1); // đối chứng: ngữ cảnh đúng, không đặt on_behalf_of thì policy cho qua
+      for (const target of [staffA, staffB]) {
+        const code = await expectRejectCode(
+          db.withActor(ws, staffA, (tx) =>
+            tx.execute(
+              sql`INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, on_behalf_of, action)
+                  VALUES (${ws}::uuid, 'user', ${staffA}::uuid, ${target}::uuid, 'x.forced')`,
+            ),
+          ),
+        );
+        expect(code).toBe('42501'); // do policy (nhánh on_behalf_of IS NULL), không phải CHECK
+      }
+    } finally {
+      await admin.query(
+        "ALTER TABLE core.action_logs ADD CONSTRAINT action_logs_on_behalf_of_check CHECK (on_behalf_of IS NULL OR actor_type = 'system') NOT VALID",
+      );
+      await admin.query(
+        'ALTER TABLE core.action_logs VALIDATE CONSTRAINT action_logs_on_behalf_of_check',
+      );
     }
   });
 
