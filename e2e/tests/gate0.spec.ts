@@ -110,7 +110,7 @@ function runScenarios(locale: Locale) {
 
       // Staff không thấy mục Thành viên và vào thẳng /app/members nhận 404 (docs/13 §3.1).
       await expect(
-        staffPage.getByRole('link', { name: t('workspace.header.members'), exact: true }),
+        staffPage.getByRole('link', { name: t('shell.nav.members'), exact: true }),
       ).toHaveCount(0);
       const response = await staffPage.goto('/app/members');
       expect(response?.status()).toBe(404);
