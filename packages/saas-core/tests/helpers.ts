@@ -9,9 +9,17 @@ function requireEnv(name: string): string {
   return value;
 }
 
-/** Kết nối bằng role ứng dụng cf_app — chịu RLS như production. */
+/** Web (cf_app) + `withJob` bằng worker (cf_worker, migration 0030) — như packages/db/tests/helpers.ts. */
 export function createTestDb(max = 5): FlowDb {
-  return createDb({ connectionString: requireEnv('TEST_DATABASE_URL'), max });
+  const web = createDb({ connectionString: requireEnv('TEST_DATABASE_URL'), max });
+  const worker = createDb({ connectionString: requireEnv('TEST_DATABASE_WORKER_URL'), max });
+  return {
+    ...web,
+    withJob: worker.withJob,
+    close: async () => {
+      await Promise.all([web.close(), worker.close()]);
+    },
+  };
 }
 
 /** Pool role cf_auth (adapter Better Auth) — chỉ chạm bảng xác thực. */

@@ -8,6 +8,8 @@ export type RlsViolation = { subject: string; message: string };
 const APP_ROLE = 'cf_app';
 /** Role riêng của adapter Better Auth: chỉ chạm các bảng xác thực, và chỉ trong ngữ cảnh app.ctx = 'auth'. */
 const AUTH_ROLE = 'cf_auth';
+/** Role riêng của worker (0030, ADR 011): đường DUY NHẤT là "hệ thống" và đọc được ciphertext token. Thành viên của cf_app. */
+const WORKER_ROLE = 'cf_worker';
 
 /** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
 const SYSTEM_TABLES = ['core.feature_flags'];
@@ -423,12 +425,14 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
   const systemFn = await db.query(`/* is-system-context-body */
     SELECT 'core.is_system_context' AS name WHERE NOT EXISTS (
       SELECT 1 FROM pg_proc p WHERE p.pronamespace = 'core'::regnamespace AND p.proname = 'is_system_context'
-        AND p.prosrc LIKE '%app.ctx%' AND p.prosrc LIKE '%''system''%' AND p.prosrc LIKE '%current_user_id() IS NULL%')`);
+        AND p.prosrc LIKE '%app.ctx%' AND p.prosrc LIKE '%''system''%' AND p.prosrc LIKE '%current_user_id() IS NULL%'
+        AND p.prosrc LIKE '%session_user = ''${WORKER_ROLE}''%'
+        AND p.prosrc NOT LIKE '% OR %' AND p.prosrc NOT LIKE '%<>%' AND p.prosrc NOT LIKE '%!=%')`);
   for (const row of systemFn.rows) {
     violations.push({
       subject: String(row.name),
       message:
-        "thân hàm phải đòi app.ctx = 'system' và current_user_id() IS NULL (mọi quyền hệ thống dựa vào đây)",
+        "thân hàm phải đòi app.ctx = 'system', current_user_id() IS NULL và session_user = 'cf_worker' (mọi quyền hệ thống dựa vào đây; thiếu session_user thì web tự đặt app.ctx là thành hệ thống)",
     });
   }
   // cf_app không có INSERT ở bất kỳ cột nào: kênh chỉ tạo qua cf.create_channel, sự kiện webhook chỉ ghi qua
@@ -618,6 +622,27 @@ const TOKEN_FUNCTIONS = [
   'read_channel_token',
 ];
 
+/**
+ * Quan hệ cf_worker ↔ cf_app (0030): worker kế thừa quyền của cf_app (thành viên có INHERIT) còn cf_app/cf_auth KHÔNG được
+ * là thành viên cf_worker (nếu không web nâng quyền thành worker bằng SET ROLE). Thuộc tính role/CREATE do checkRole kiểm.
+ */
+async function checkWorkerMembership(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* worker-membership */
+    SELECT '${WORKER_ROLE}' AS name, v.problem
+    FROM (VALUES
+      ('không kế thừa quyền ${APP_ROLE} (cần GRANT ${APP_ROLE} TO ${WORKER_ROLE})',
+        NOT pg_has_role('${WORKER_ROLE}', '${APP_ROLE}', 'USAGE')),
+      ('${APP_ROLE} là thành viên ${WORKER_ROLE} (web nâng quyền thành worker được)',
+        pg_has_role('${APP_ROLE}', '${WORKER_ROLE}', 'MEMBER')),
+      ('${AUTH_ROLE} là thành viên ${WORKER_ROLE}',
+        pg_has_role('${AUTH_ROLE}', '${WORKER_ROLE}', 'MEMBER'))
+    ) AS v(problem, bad)
+    WHERE v.bad`);
+  for (const row of found.rows) {
+    violations.push({ subject: String(row.name), message: String(row.problem) });
+  }
+}
+
 async function checkTokenFunctions(db: Queryable, violations: RlsViolation[]): Promise<void> {
   const names = TOKEN_FUNCTIONS.map((n) => `'${n}'`).join(', ');
   const found = await db.query(`/* token-functions */
@@ -625,7 +650,9 @@ async function checkTokenFunctions(db: Queryable, violations: RlsViolation[]): P
       CASE
         WHEN p.oid IS NULL THEN 'hàm không tồn tại'
         WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
-        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN w.n <> 'read_channel_token' AND NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN w.n = 'read_channel_token' AND has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} (web) không được có quyền EXECUTE (chỉ ${WORKER_ROLE})'
+        WHEN w.n = 'read_channel_token' AND NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE') THEN '${WORKER_ROLE} thiếu quyền EXECUTE'
         WHEN p.prosrc NOT LIKE '%current_workspace_id()%' THEN 'không giới hạn theo workspace hiện tại'
         WHEN w.n = 'read_channel_token' AND (p.prosrc NOT LIKE '%is_system_context()%' OR p.prosrc LIKE '%is_workspace_%')
           THEN 'read_channel_token phải chỉ cho đường hệ thống (is_system_context), không mở cho Owner/thành viên'
@@ -636,7 +663,9 @@ async function checkTokenFunctions(db: Queryable, violations: RlsViolation[]): P
     WHERE w.n IN (${names}) AND (
       p.oid IS NULL
       OR has_function_privilege('public', p.oid, 'EXECUTE')
-      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR (w.n <> 'read_channel_token' AND NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE'))
+      OR (w.n = 'read_channel_token' AND (has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+                                          OR NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE')))
       OR p.prosrc NOT LIKE '%current_workspace_id()%'
       OR (w.n = 'read_channel_token' AND (p.prosrc NOT LIKE '%is_system_context()%' OR p.prosrc LIKE '%is_workspace_%'))
       OR (w.n <> 'read_channel_token' AND p.prosrc NOT LIKE '%is_workspace_owner()%'))`);
@@ -769,7 +798,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
         violations.push({ subject: name, message: 'chưa có policy nào' });
       }
     }
-    for (const roleName of [APP_ROLE, AUTH_ROLE]) {
+    for (const roleName of [APP_ROLE, AUTH_ROLE, WORKER_ROLE]) {
       if (row.owner === roleName) {
         violations.push({ subject: name, message: `role ${roleName} không được sở hữu bảng` });
       }
@@ -901,6 +930,8 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   // --- Role ứng dụng và role xác thực ---
   await checkRole(db, APP_ROLE, '', violations);
   await checkRole(db, AUTH_ROLE, 'auth-', violations);
+  await checkRole(db, WORKER_ROLE, 'worker-', violations);
+  await checkWorkerMembership(db, violations);
   await checkAuthRolePrivileges(db, policies.rows, violations);
   await checkSensitiveColumns(db, violations);
   await checkUsersColumnAllowlist(db, violations);

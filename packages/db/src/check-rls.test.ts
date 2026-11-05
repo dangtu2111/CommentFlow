@@ -14,6 +14,8 @@ function fakeDb(parts: {
   publicGrants?: Row[];
   functions?: Row[];
   authRole?: Row | null;
+  workerRole?: Row | null;
+  workerMembership?: Row[];
   authPrivileges?: Row[];
   definerFunctions?: Row[];
   lastOwnerTrigger?: Row[];
@@ -59,6 +61,17 @@ function fakeDb(parts: {
         };
         return { rows: parts.authRole === null ? [] : [parts.authRole ?? ok] };
       }
+      if (text.includes('/* worker-role */')) {
+        const ok = {
+          rolsuper: false,
+          rolbypassrls: false,
+          rolcreatedb: false,
+          rolcreaterole: false,
+        };
+        return { rows: parts.workerRole === null ? [] : [parts.workerRole ?? ok] };
+      }
+      if (text.includes('/* worker-create-privileges */')) return { rows: [noCreate] };
+      if (text.includes('/* worker-membership */')) return { rows: parts.workerMembership ?? [] };
       if (text.includes('/* sensitive-columns */')) return { rows: parts.sensitive ?? [] };
       if (text.includes('/* users-columns */')) return { rows: parts.usersColumns ?? [] };
       if (text.includes('/* admin-insert-guard */')) {
@@ -798,6 +811,60 @@ describe('checkRls: hàm token Page', () => {
       subject: 'cf.read_channel_token',
       message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
     });
+  });
+});
+
+describe('checkRls: role worker cf_worker (WORKER-DB-ROLE, 0030)', () => {
+  it('báo khi role cf_worker không tồn tại, là superuser hoặc có BYPASSRLS', async () => {
+    const missing = await checkRls(fakeDb({ workerRole: null }));
+    expect(missing).toContainEqual({ subject: 'cf_worker', message: 'role không tồn tại' });
+    const bad = await checkRls(
+      fakeDb({
+        workerRole: {
+          rolsuper: true,
+          rolbypassrls: true,
+          rolcreatedb: false,
+          rolcreaterole: false,
+        },
+      }),
+    );
+    expect(bad).toContainEqual({ subject: 'cf_worker', message: 'là superuser' });
+    expect(bad).toContainEqual({ subject: 'cf_worker', message: 'có BYPASSRLS' });
+  });
+
+  it('báo khi cf_app là thành viên cf_worker hoặc cf_worker không kế thừa cf_app', async () => {
+    const v = await checkRls(
+      fakeDb({
+        workerMembership: [
+          {
+            name: 'cf_worker',
+            problem: 'cf_app là thành viên cf_worker (web nâng quyền thành worker được)',
+          },
+        ],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf_worker',
+      message: expect.stringContaining('web nâng quyền'),
+    });
+  });
+
+  it('SQL kiểm thân is_system_context đòi session_user và cf_worker; read_channel_token chặn cf_app', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({});
+    await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    const system = queries.find((q) => q.includes('/* is-system-context-body */')) ?? '';
+    expect(system).toContain('session_user');
+    expect(system).toContain('cf_worker');
+    const token = queries.find((q) => q.includes('/* token-functions */')) ?? '';
+    expect(token).toMatch(
+      /has_function_privilege\('cf_app', p\.oid, 'EXECUTE'\)\s+OR NOT has_function_privilege\('cf_worker'/,
+    );
   });
 });
 

@@ -211,6 +211,13 @@
       "when": 1793887729245,
       "tag": "0029_action_logs_on_behalf_of",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793891000000,
+      "tag": "0030_worker_db_role",
+      "breakpoints": true
     }
   ]
 }

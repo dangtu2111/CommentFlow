@@ -58,6 +58,8 @@ services:
       <<: *app-env
       LOG_LEVEL: ${LOG_LEVEL:-info}
       WORKER_PORT: "3001"
+      # Role cf_worker (ADR 011): CHỈ worker nhận mật khẩu này; web không có biến CF_WORKER_PASSWORD/DATABASE_WORKER_URL.
+      DATABASE_WORKER_URL: postgresql://cf_worker:${CF_WORKER_PASSWORD:?}@postgres:5432/${CF_APP_DATABASE:?}
 
   # Khung Cloudflare Tunnel: chỉ chạy khi bật profile `tunnel` (chưa có tên miền/token nên mặc định không chạy).
   # Khi bật: ghim lại phiên bản image theo bản mới nhất đã kiểm, đặt CLOUDFLARE_TUNNEL_TOKEN trong .env.cf-staging,

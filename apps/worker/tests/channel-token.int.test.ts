@@ -18,6 +18,8 @@ import { verifyTokenKeysAtStartup } from '../src/channels/verify-token-keys';
  * và giải mã ra đúng bản rõ. Web không đọc được cột token. Sai khóa → kênh "cần kết nối lại" (expired), không lộ dữ liệu.
  */
 let db: FlowDb;
+let web: FlowDb;
+let worker: FlowDb;
 let admin: pg.Pool;
 let ws: string;
 let owner: string;
@@ -27,9 +29,15 @@ const cipherOf = (spec: string) => createTokenCipher(parseTokenKeys(spec));
 
 beforeAll(async () => {
   const url = process.env.TEST_DATABASE_URL;
+  const workerUrl = process.env.TEST_DATABASE_WORKER_URL;
   const adminUrl = process.env.TEST_DATABASE_ADMIN_URL;
-  if (!url || !adminUrl) throw new Error('Thiếu TEST_DATABASE_URL / TEST_DATABASE_ADMIN_URL');
-  db = createDb({ connectionString: url, max: 4 });
+  if (!url || !workerUrl || !adminUrl) {
+    throw new Error('Thiếu TEST_DATABASE_URL / TEST_DATABASE_WORKER_URL / TEST_DATABASE_ADMIN_URL');
+  }
+  // Web-giả (cf_app) cho withActor/withWorkspace; worker thật (cf_worker) cho withJob — như production.
+  web = createDb({ connectionString: url, max: 4 });
+  worker = createDb({ connectionString: workerUrl, max: 4 });
+  db = { ...web, withJob: worker.withJob };
   admin = new pg.Pool({ connectionString: adminUrl, max: 2 });
   ws = randomUUID();
   owner = randomUUID();
@@ -49,7 +57,7 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await db.close();
+  await Promise.all([web.close(), worker.close()]);
   await admin.end();
 });
 

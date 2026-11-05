@@ -68,6 +68,11 @@ export function buildRemoteCommand(argv) {
     if (rest.length > 0) throw new CfDevCommandError('add-auth-role không nhận tham số');
     return `cd ${REMOTE_DIR} && bash infra/scripts/cf-dev-add-auth-role.sh`;
   }
+  if (sub === 'add-worker-role') {
+    // Thêm role cf_worker (WORKER-DB-ROLE, migration 0030) vào volume Postgres ĐÃ có. Chỉ chạy script cố định trong repo.
+    if (rest.length > 0) throw new CfDevCommandError('add-worker-role không nhận tham số');
+    return `cd ${REMOTE_DIR} && bash infra/scripts/cf-dev-add-worker-role.sh`;
+  }
   if (sub === 'add-test-db') {
     // Tạo DB test riêng cho một làn song song (cf_test_<làn>). Chỉ chạy script cố định, tên làn đã kiểm regex.
     const lane = rest[0];

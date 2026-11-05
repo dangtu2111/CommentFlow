@@ -251,6 +251,36 @@ describe('check-rls', () => {
     );
   });
 
+  it('WORKER-DB-ROLE: bắt được khi cf_app lại có EXECUTE read_channel_token, cf_worker mất EXECUTE, hoặc is_system_context bỏ session_user', async () => {
+    const app = await violationsAfter(
+      'GRANT EXECUTE ON FUNCTION cf.read_channel_token(uuid) TO cf_app',
+    );
+    expect(app).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.read_channel_token',
+        message: expect.stringContaining('cf_app (web) không được có quyền EXECUTE'),
+      }),
+    );
+    const worker = await violationsAfter(
+      'REVOKE EXECUTE ON FUNCTION cf.read_channel_token(uuid) FROM cf_worker',
+    );
+    expect(worker).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.read_channel_token',
+        message: expect.stringContaining('cf_worker thiếu quyền EXECUTE'),
+      }),
+    );
+    const ctx = await violationsAfter(
+      "CREATE OR REPLACE FUNCTION core.is_system_context() RETURNS boolean LANGUAGE sql STABLE SET search_path = pg_catalog, core, pg_temp AS $$ SELECT COALESCE(current_setting('app.ctx', true) = 'system' AND core.current_user_id() IS NULL, false) $$",
+    );
+    expect(ctx).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.is_system_context',
+        message: expect.stringContaining('session_user'),
+      }),
+    );
+  });
+
   it('TOKEN-ENC: bắt được khi tắt trigger giới hạn cột, nới thân is_system_context, cấp key_version/INSERT kênh, nới policy comments', async () => {
     const trg = await violationsAfter(
       'ALTER TABLE cf.channels DISABLE TRIGGER channels_guard_user_update',
