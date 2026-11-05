@@ -498,7 +498,11 @@ describe('FR-023 fetchComments — quét cả Page theo bài có hoạt động 
   const since = new Date('2026-11-01T00:00:00Z');
 
   it('FR-023 đọc feed, chỉ đọc bình luận của bài có updated_time ≥ since, lọc bình luận cũ hơn since', async () => {
-    const { connector, calls } = harness([json(FEED_PAGE), json(POST_COMMENTS_MIXED), json(EMPTY_PAGE)]);
+    const { connector, calls } = harness([
+      json(FEED_PAGE),
+      json(POST_COMMENTS_MIXED),
+      json(EMPTY_PAGE),
+    ]);
     const result = await connector.fetchComments(channel, since);
     expect(result.map((c) => c.externalId)).toEqual([`${PAGE_ID}_3000000000101_4000000000201`]);
     expect(result[0]?.postExternalId).toBe(`${PAGE_ID}_3000000000101`);

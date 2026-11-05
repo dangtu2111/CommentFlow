@@ -1,6 +1,10 @@
-import { listChannelAlerts } from '@flow/db/runtime';
+import { listChannelAlerts, listWebhookSilentChannels } from '@flow/db/runtime';
 import { getTranslations } from 'next-intl/server';
-import { type BannerAudience, buildBannerModel } from '../../lib/channel-banner';
+import {
+  type BannerAudience,
+  buildBannerModel,
+  buildWebhookSilentBanner,
+} from '../../lib/channel-banner';
 import { FB_START_PATH } from '../../lib/fb-connect-view';
 import { getDb } from '../../server/db';
 import { getEnabledFbConfig } from '../../server/fb-connect-runtime';
@@ -35,10 +39,31 @@ export async function SystemBanners({
   } catch {
     banners = [];
   }
-  if (banners.length === 0) return null;
+  // FR-023: webhook im lặng (chỉ Owner; lỗi nạp → bỏ qua như các banner khác).
+  let silent: ReturnType<typeof buildWebhookSilentBanner> = null;
+  if (role === 'owner') {
+    try {
+      const channels = await getDb().withActor(workspaceId, userId, (tx) =>
+        listWebhookSilentChannels(tx, workspaceId),
+      );
+      silent = buildWebhookSilentBanner(channels, role);
+    } catch {
+      silent = null;
+    }
+  }
+  if (banners.length === 0 && !silent) return null;
   const t = await getTranslations('banners');
   return (
     <div className="banners">
+      {silent ? (
+        <div className="banner banner-webhook-silent" role="status">
+          <p className="banner-title">
+            {t('webhookSilent.title', { names: silent.names.join(', ') })}
+            {silent.moreCount > 0 ? ` ${t('channel.more', { count: silent.moreCount })}` : ''}
+          </p>
+          <p className="banner-body">{t('webhookSilent.body')}</p>
+        </div>
+      ) : null}
       {banners.map((banner) => (
         <div
           key={banner.status}

@@ -575,6 +575,10 @@
       },
       "more": "và {count} kênh khác",
       "reconnect": "Kết nối lại"
+    },
+    "webhookSilent": {
+      "title": "Webhook có thể đang bị sót tin: {names}.",
+      "body": "Hệ thống phải tự lấy bù bình luận mà Facebook chưa báo về. Bình luận vẫn được nhận, nhưng chậm hơn. Hãy kiểm tra đăng ký webhook của ứng dụng Meta hoặc kết nối lại kênh."
     }
   },
   "channels": {

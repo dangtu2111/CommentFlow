@@ -575,6 +575,10 @@
       },
       "more": "and {count} more channels",
       "reconnect": "Reconnect"
+    },
+    "webhookSilent": {
+      "title": "Webhook may be dropping events: {names}.",
+      "body": "The system had to fetch comments that Facebook did not report. Comments are still received, only later. Check the webhook subscription of your Meta app or reconnect the channel."
     }
   },
   "channels": {

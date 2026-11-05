@@ -39,3 +39,20 @@ export function buildBannerModel(alerts: ChannelAlertInput[], role: BannerAudien
     ];
   });
 }
+
+export type WebhookSilentBanner = { names: string[]; moreCount: number };
+
+/**
+ * Banner "webhook im lặng" (FR-023): quét bù thấy bình luận mà webhook chưa báo. Chỉ Owner thấy (RLS của `webhook_events`
+ * chỉ cho Owner đọc; Staff không có dữ liệu và cũng không sửa được cấu hình webhook). Không có kênh → `null`.
+ */
+export function buildWebhookSilentBanner(
+  channels: Array<{ id: string; name: string }>,
+  role: BannerAudience,
+): WebhookSilentBanner | null {
+  if (role !== 'owner' || channels.length === 0) return null;
+  return {
+    names: channels.slice(0, MAX_BANNER_NAMES).map((c) => c.name),
+    moreCount: Math.max(0, channels.length - MAX_BANNER_NAMES),
+  };
+}

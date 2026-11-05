@@ -67,7 +67,8 @@ function harness(
       recordEvent: async (raw) => {
         const input = raw as RecordInput;
         recorded.push(input);
-        return options.record?.(input) ?? [{ eventId: `ev-${(seq += 1)}`, workspaceId: WS }];
+        seq += 1;
+        return options.record?.(input) ?? [{ eventId: `ev-${seq}`, workspaceId: WS }];
       },
       markPolled: async (channelRef, lastPolledAt) => {
         updates.push({ channelId: channelRef.id, lastPolledAt });
@@ -158,8 +159,14 @@ describe('FR-023 pollChannel — quét bù một kênh', () => {
 
 describe('FR-023 runPollingCycle — một vòng cho mọi kênh', () => {
   it('FR-023 lỗi một kênh không dừng kênh khác; log chỉ có mã lỗi, không nội dung', async () => {
-    const ok: PollableChannel = { ref: { ...ref, id: 'ch-ok', externalId: '2' }, lastPolledAt: null };
-    const bad: PollableChannel = { ref: { ...ref, id: 'ch-bad', externalId: '3' }, lastPolledAt: null };
+    const ok: PollableChannel = {
+      ref: { ...ref, id: 'ch-ok', externalId: '2' },
+      lastPolledAt: null,
+    };
+    const bad: PollableChannel = {
+      ref: { ...ref, id: 'ch-bad', externalId: '3' },
+      lastPolledAt: null,
+    };
     const h = harness({ comments: [comment('c1')] });
     h.deps.lister = { list: async () => [bad, ok] };
     h.fetchComments.mockImplementationOnce(async () => {
@@ -207,7 +214,9 @@ describe('FR-011 backfillChannel — lấy bình luận cũ khi kết nối', ()
     const { deps, recorded, updates, fetchComments } = harness({ comments: [fresh] });
     const result = await backfillChannel(deps, ref, 30);
     expect(result).toEqual({ fetched: 1, recorded: 1 });
-    expect(fetchComments.mock.calls[0]?.[1].getTime()).toBe(NOW.getTime() - 30 * 24 * 60 * 60 * 1000);
+    expect(fetchComments.mock.calls[0]?.[1].getTime()).toBe(
+      NOW.getTime() - 30 * 24 * 60 * 60 * 1000,
+    );
     expect(recorded[0]?.payload.source).toBe('backfill');
     expect(updates).toEqual([]);
   });

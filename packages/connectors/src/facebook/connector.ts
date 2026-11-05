@@ -205,7 +205,7 @@ const pageSchema = z.object({
 
 const postNodeSchema = z.object({ id: z.string().min(1), updated_time: z.string() });
 
-const successSchema =z.object({ success: z.literal(true) });
+const successSchema = z.object({ success: z.literal(true) });
 const createdSchema = z.object({ id: z.string().min(1) });
 const subscribedAppsSchema = z.object({
   data: z.array(z.object({ id: z.string(), subscribed_fields: z.array(z.string()).optional() })),
