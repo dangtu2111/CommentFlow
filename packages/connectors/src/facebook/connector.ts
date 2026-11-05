@@ -35,6 +35,8 @@ export const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const DEFAULT_MAX_PAGES = 20;
 /** Đường kiểm-trước-khi-gửi-lại: tối đa 5 trang × 100 = 500 trả lời trực tiếp; nhiều hơn → UNKNOWN (không đoán). */
 const DEFAULT_MAX_REPLY_PAGES = 5;
+/** Quét cả Page (`fetchComments`): số bài mới nhất xét mỗi lần (QP1). */
+const DEFAULT_MAX_FEED_POSTS = 25;
 /** ID Graph của Page/bài/bình luận: chữ số, tối đa 3 đoạn nối bằng "_" (vd `pageId_postId`, `postId_commentId`). */
 const GRAPH_ID = /^[0-9]{1,30}(_[0-9]{1,30}){0,2}$/;
 const PAGE_SIZE = 100;
@@ -55,6 +57,8 @@ export type FacebookConnectorOptions = {
   maxPages?: number;
   /** Số trang tối đa cho `fetchReplies` (đường kiểm-trước-khi-gửi-lại); mặc định nhỏ hơn. */
   maxReplyPages?: number;
+  /** Số bài mới nhất của Page được xét mỗi lần `fetchComments` (QP1; trần chi phí rate limit). */
+  maxFeedPosts?: number;
   /** Tổng thời hạn cho cả vòng phân trang (mặc định và tối đa 45 giây). */
   totalTimeoutMs?: number;
 };
@@ -199,7 +203,9 @@ const pageSchema = z.object({
     .optional(),
 });
 
-const successSchema = z.object({ success: z.literal(true) });
+const postNodeSchema = z.object({ id: z.string().min(1), updated_time: z.string() });
+
+const successSchema =z.object({ success: z.literal(true) });
 const createdSchema = z.object({ id: z.string().min(1) });
 const subscribedAppsSchema = z.object({
   data: z.array(z.object({ id: z.string(), subscribed_fields: z.array(z.string()).optional() })),
@@ -241,6 +247,7 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     timeoutMs = DEFAULT_TIMEOUT_MS,
     maxPages = DEFAULT_MAX_PAGES,
     maxReplyPages = DEFAULT_MAX_REPLY_PAGES,
+    maxFeedPosts = DEFAULT_MAX_FEED_POSTS,
     totalTimeoutMs = DEFAULT_TOTAL_TIMEOUT_MS,
   } = options;
   const doFetch = options.fetch ?? fetch;
@@ -255,6 +262,8 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     throw new Error('maxPages phải là số nguyên dương.');
   if (!Number.isInteger(maxReplyPages) || maxReplyPages <= 0)
     throw new Error('maxReplyPages phải là số nguyên dương.');
+  if (!Number.isInteger(maxFeedPosts) || maxFeedPosts <= 0 || maxFeedPosts > PAGE_SIZE)
+    throw new Error(`maxFeedPosts phải là số nguyên trong [1, ${PAGE_SIZE}].`);
   if (
     !Number.isInteger(totalTimeoutMs) ||
     totalTimeoutMs <= 0 ||
@@ -385,9 +394,32 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       return parseMetaWebhook(body);
     },
 
-    // CẦN LÀM RÕ (plan feat-fb-connector): quét cả Page theo `since` chưa định nghĩa được từ tài liệu → không code.
-    async fetchComments(): Promise<NormalizedComment[]> {
-      throw fail('UNKNOWN', 'fetch_comments_page_wide_unsupported');
+    /**
+     * Quét cả Page (FR-023, QP1): đọc tối đa `maxFeedPosts` bài mới nhất của `/{page}/feed`, chỉ đọc bình luận của bài có
+     * `updated_time ≥ since` (giả định cần kiểm trên Page thật: bài được cập nhật khi có bình luận mới), lọc `since` ở bình luận.
+     * Lỗi của một bài làm hỏng cả lần quét (không trả thiếu mà tưởng đủ).
+     */
+    async fetchComments(channel, since) {
+      const feed = pageSchema.safeParse(
+        await call(channel, 'GET', `${graphId(channel.externalId)}/feed`, {
+          fields: 'id,updated_time',
+          limit: String(maxFeedPosts),
+        }),
+      );
+      if (!feed.success) throw badResponse();
+      const sinceMs = since.getTime();
+      const postIds: string[] = [];
+      for (const item of feed.data.data.slice(0, maxFeedPosts)) {
+        const post = postNodeSchema.safeParse(item);
+        if (!post.success || !GRAPH_ID.test(post.data.id)) continue;
+        const updated = parseGraphTime(post.data.updated_time);
+        if (updated && updated.getTime() >= sinceMs) postIds.push(post.data.id);
+      }
+      const result: NormalizedComment[] = [];
+      for (const postId of postIds) {
+        result.push(...(await this.fetchPostComments(channel, postId, { since })));
+      }
+      return result;
     },
 
     async fetchReplies(channel, parentCommentId, opts = {}) {

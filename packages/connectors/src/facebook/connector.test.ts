@@ -17,8 +17,10 @@ import {
   APP_USAGE_HEADER,
   BUC_HEADER,
   EMPTY_PAGE,
+  FEED_PAGE,
   graphError,
   PAGE_ID,
+  POST_COMMENTS_MIXED,
   REPLIES_PAGE_1,
   REPLIES_PAGE_2,
   REPLY_CREATED,
@@ -492,13 +494,44 @@ describe('fetchPostComments — GET /{post-id}/comments (filter=stream)', () => 
   });
 });
 
-describe('fetchComments (quét cả Page) — chưa làm: tài liệu chưa rõ', () => {
-  it('ném UNKNOWN fetch_comments_page_wide_unsupported, không gọi mạng', async () => {
-    const { connector, fetchFake } = harness([]);
-    const error = await failureOf(connector.fetchComments(channel, new Date(0)));
-    expect(error.code).toBe('UNKNOWN');
-    expect(error.message).toBe('fetch_comments_page_wide_unsupported');
-    expect(fetchFake).not.toHaveBeenCalled();
+describe('FR-023 fetchComments — quét cả Page theo bài có hoạt động gần đây (QP1)', () => {
+  const since = new Date('2026-11-01T00:00:00Z');
+
+  it('FR-023 đọc feed, chỉ đọc bình luận của bài có updated_time ≥ since, lọc bình luận cũ hơn since', async () => {
+    const { connector, calls } = harness([json(FEED_PAGE), json(POST_COMMENTS_MIXED), json(EMPTY_PAGE)]);
+    const result = await connector.fetchComments(channel, since);
+    expect(result.map((c) => c.externalId)).toEqual([`${PAGE_ID}_3000000000101_4000000000201`]);
+    expect(result[0]?.postExternalId).toBe(`${PAGE_ID}_3000000000101`);
+    // feed + 2 bài mới (bài thứ 3 cũ hơn since → không đọc bình luận)
+    expect(calls).toHaveLength(3);
+    expect(calls[0]?.url.pathname).toBe(`/v27.0/${PAGE_ID}/feed`);
+    expect(calls[0]?.url.searchParams.get('fields')).toBe('id,updated_time');
+    expect(calls[1]?.url.pathname).toBe(`/v27.0/${PAGE_ID}_3000000000101/comments`);
+    expect(calls[2]?.url.pathname).toBe(`/v27.0/${PAGE_ID}_3000000000102/comments`);
+  });
+
+  it('FR-023 chỉ xét tối đa maxFeedPosts bài mới nhất (trần chi phí rate limit)', async () => {
+    const { connector, calls } = harness([json(FEED_PAGE), json(EMPTY_PAGE)], { maxFeedPosts: 1 });
+    await connector.fetchComments(channel, since);
+    expect(calls).toHaveLength(2);
+    expect(calls[0]?.url.searchParams.get('limit')).toBe('1');
+  });
+
+  it('FR-023 bài có id sai dạng bị bỏ; lỗi Graph chỉ là mã, không lộ token', async () => {
+    const { connector } = harness([json(graphError(190), 400)]);
+    const error = await failureOf(connector.fetchComments(channel, since));
+    expect(error.code).toBe('TOKEN_EXPIRED');
+    expect(JSON.stringify(error)).not.toContain(TOKEN);
+  });
+
+  it('FR-023 phản hồi feed sai dạng → UNKNOWN facebook_bad_response', async () => {
+    const { connector } = harness([json({ nope: true })]);
+    const error = await failureOf(connector.fetchComments(channel, since));
+    expect(error.message).toBe('facebook_bad_response');
+  });
+
+  it('FR-023 maxFeedPosts không hợp lệ bị từ chối khi dựng', () => {
+    expect(() => harness([], { maxFeedPosts: 0 })).toThrow();
   });
 });
 
