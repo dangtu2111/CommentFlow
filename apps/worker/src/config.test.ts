@@ -11,7 +11,33 @@ describe('loadConfig', () => {
       port: 3001,
       databaseUrl: DATABASE_WORKER_URL,
       tokenEncKeys: undefined,
+      pollingEnabled: false,
+      metaAppId: undefined,
+      metaAppSecret: undefined,
     });
+  });
+
+  it('FR-023 cờ POLLING_ENABLED mặc định TẮT; chỉ đúng chữ "true" mới bật (như FB_OAUTH_ENABLED)', () => {
+    expect(loadConfig({ DATABASE_WORKER_URL, POLLING_ENABLED: '' }).pollingEnabled).toBe(false);
+    expect(loadConfig({ DATABASE_WORKER_URL, POLLING_ENABLED: '1' }).pollingEnabled).toBe(false);
+    expect(loadConfig({ DATABASE_WORKER_URL }).pollingEnabled).toBe(false);
+    expect(loadConfig({ DATABASE_WORKER_URL, POLLING_ENABLED: 'false' }).pollingEnabled).toBe(
+      false,
+    );
+    expect(
+      loadConfig({
+        DATABASE_WORKER_URL,
+        POLLING_ENABLED: 'true',
+        META_APP_ID: '1',
+        META_APP_SECRET: 's',
+      }),
+    ).toMatchObject({ pollingEnabled: true, metaAppId: '1', metaAppSecret: 's' });
+  });
+
+  it('FR-023 bật POLLING_ENABLED mà thiếu META_APP_ID/META_APP_SECRET → CONFIG_INVALID (không lộ giá trị)', () => {
+    expect(() => loadConfig({ DATABASE_WORKER_URL, POLLING_ENABLED: 'true' })).toThrow(
+      /META_APP_ID/,
+    );
   });
 
   it('đọc TOKEN_ENC_KEYS (tùy chọn) nguyên văn', () => {
