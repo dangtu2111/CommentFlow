@@ -14,9 +14,30 @@ export function createAdminPool(): pg.Pool {
   return new pg.Pool({ connectionString: requireEnv('TEST_DATABASE_ADMIN_URL'), max: 2 });
 }
 
-/** Kết nối bằng role ứng dụng (cf_app) — chịu RLS như production. */
-export function createAppDb(max = 5): FlowDb {
+/** Kết nối thuần role web (cf_app) — chịu RLS như production. KHÔNG có đường hệ thống: `withJob` ở đây không phải hệ thống. */
+export function createWebDb(max = 5): FlowDb {
   return createDb({ connectionString: requireEnv('TEST_DATABASE_URL'), max });
+}
+
+/** Kết nối role worker (cf_worker, migration 0030): đường duy nhất được coi là "hệ thống". */
+export function createWorkerDb(max = 5): FlowDb {
+  return createDb({ connectionString: requireEnv('TEST_DATABASE_WORKER_URL'), max });
+}
+
+/**
+ * Web + worker trong một đối tượng cho test cũ: mọi đường (`withWorkspace`/`withActor`/`withUser`/`withSystem`) chạy bằng
+ * `cf_app` như production, còn `withJob` chạy bằng `cf_worker` (qua `cf_app` thì `withJob` không còn là hệ thống).
+ */
+export function createAppDb(max = 5): FlowDb {
+  const web = createWebDb(max);
+  const worker = createWorkerDb(max);
+  return {
+    ...web,
+    withJob: worker.withJob,
+    close: async () => {
+      await Promise.all([web.close(), worker.close()]);
+    },
+  };
 }
 
 /** Pool role cf_auth (adapter Better Auth) với app.ctx = 'auth' — chỉ chạm bảng xác thực. */

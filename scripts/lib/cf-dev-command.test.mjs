@@ -35,6 +35,13 @@ describe('buildRemoteCommand', () => {
     expect(() => buildRemoteCommand(['add-auth-role', 'x'])).toThrow(/không nhận tham số/);
   });
 
+  it('add-worker-role chạy đúng script cố định, không nhận tham số', () => {
+    expect(buildRemoteCommand(['add-worker-role'])).toBe(
+      'cd ~/CommentFlow && bash infra/scripts/cf-dev-add-worker-role.sh',
+    );
+    expect(() => buildRemoteCommand(['add-worker-role', 'x'])).toThrow(/không nhận tham số/);
+  });
+
   it('add-test-db <làn> chạy script cố định với đúng một tên làn hợp lệ', () => {
     expect(buildRemoteCommand(['add-test-db', 'b'])).toBe(
       'cd ~/CommentFlow && bash infra/scripts/cf-dev-add-test-db.sh b',

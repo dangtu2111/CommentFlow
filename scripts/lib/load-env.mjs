@@ -20,10 +20,15 @@ export function loadRepoEnv(rootDir) {
 
 /** Làn: chữ thường/số, 1–8 ký tự (khớp migration-guard và script máy ảo). */
 const LANE_PATTERN = /^[a-z0-9]{1,8}$/;
-const TEST_URL_KEYS = ['TEST_DATABASE_URL', 'TEST_DATABASE_ADMIN_URL', 'TEST_DATABASE_AUTH_URL'];
+const TEST_URL_KEYS = [
+  'TEST_DATABASE_URL',
+  'TEST_DATABASE_ADMIN_URL',
+  'TEST_DATABASE_AUTH_URL',
+  'TEST_DATABASE_WORKER_URL',
+];
 
 /**
- * `CF_LANE=<làn>` → ba URL DB test trỏ tới `cf_test_<làn>` (mỗi làn một DB, chạy song song không giẫm chân nhau).
+ * `CF_LANE=<làn>` → bốn URL DB test trỏ tới `cf_test_<làn>` (mỗi làn một DB, chạy song song không giẫm chân nhau).
  * Không đặt/rỗng → giữ nguyên. Chỉ đổi URL có tên DB đúng `cf_test`; không đụng `DATABASE_URL` (dev).
  * @param {Record<string, string | undefined>} env
  */

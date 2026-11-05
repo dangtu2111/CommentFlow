@@ -35,6 +35,8 @@ export type FlowDb = {
    * và KHÔNG có người dùng. Policy ghi của `channels` (cột nền tảng), `posts`, `comments` (INSERT), `webhook_events` đòi
    * `core.is_system_context()`: `withWorkspace()` trần (không ctx) KHÔNG ghi được — quên `withActor` ở đường người dùng thì bị
    * từ chối chứ không được nâng quyền. Chỉ worker/job được gọi; không dùng ở route web/Server Action.
+   * Từ migration 0030 (ADR 011) "hệ thống" còn đòi kết nối đăng nhập bằng role `cf_worker` (`DATABASE_WORKER_URL`): `withJob` trên
+   * pool `cf_app` (web) KHÔNG phải hệ thống — ghi bảng hệ thống và `read_channel_token` bị từ chối (fail-closed).
    */
   withJob<T>(workspaceId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
   /**
