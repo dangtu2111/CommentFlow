@@ -84,6 +84,10 @@ Chủ dự án đọc TypeScript ở mức cơ bản. Mọi kế hoạch, báo c
 - Chỉ `git add` đúng file của việc đang làm; không bao giờ `git add -A`/`git add .` hay gom file ngoài việc.
 - Báo cáo ≤ 10 dòng, mỗi ngày một lần hoặc khi dừng; tách riêng mục "Việc chỉ bạn làm được".
 
+## Tài nguyên ngoài: xây mock, không chờ (chủ dự án chốt 05/11/2026)
+
+Không chờ khóa/tài nguyên của chủ dự án. Việc cần Meta OAuth/webhook thật, khóa LLM, SMTP, tên miền/Cloudflare, Shopify/Google/Haravan/Sapo/KiotViet/Pancake/TikTok, thanh toán… → viết đủ code thật sau interface + fixture/mock theo tài liệu chính thức; cấu hình đọc từ biến môi trường (chỉ TÊN biến vào `env.example`); feature flag mặc định **TẮT** cho đường dùng tài nguyên thật; test bằng fixture/mock; trạng thái **Xong-mock** trong `MASTER.md`; mỗi tài nguyên một mục trong `docs/CAN_BAN_CUNG_CAP.md`. Không bịa khóa, không gọi dịch vụ thật, không dùng dữ liệu khách thật. Dừng chỉ khi mọi việc còn lại đều "Chờ tài nguyên" hoặc Xong, hoặc lỗi sửa 2 lần không được. FR-166 (GĐ6) làm cuối. Không force-push; cập nhật nhánh bằng merge.
+
 ## Cấm
 
 - Đọc `.env*` hoặc bất kỳ file bí mật nào; in biến môi trường.
