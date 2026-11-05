@@ -799,6 +799,52 @@ a {
   }
 }
 
+/* Mobile (< 900px, thiết kế cho 390px; FR-040): hai ngăn — danh sách HOẶC chi tiết toàn màn hình (`data-pane`). */
+.inbox-back {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .inbox {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+  .inbox[data-pane="list"] .inbox-detail,
+  .inbox[data-pane="detail"] .inbox-tabs,
+  .inbox[data-pane="detail"] .inbox-list {
+    display: none;
+  }
+  .inbox-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: var(--space-3);
+    font-weight: var(--weight-semibold);
+  }
+  .inbox-tabs ul {
+    padding-bottom: var(--space-1);
+  }
+  .inbox-tab {
+    min-height: 44px;
+  }
+  .inbox-toolbar {
+    padding: var(--space-3);
+  }
+  .inbox-field,
+  .inbox-field-search {
+    flex: 1 1 100%;
+  }
+  .inbox-field input,
+  .inbox-field select,
+  .inbox-check,
+  .inbox-clear {
+    min-height: 44px;
+  }
+  .inbox-footer {
+    flex-wrap: wrap;
+  }
+}
+
 .inbox-title {
   margin: 0 0 var(--space-3);
   font-size: var(--text-lg);
@@ -864,6 +910,12 @@ a {
 .inbox-detail {
   padding: var(--space-6);
   color: var(--color-text-muted);
+}
+
+@media (max-width: 899px) {
+  .inbox-detail {
+    padding: var(--space-4);
+  }
 }
 
 .inbox-toolbar {

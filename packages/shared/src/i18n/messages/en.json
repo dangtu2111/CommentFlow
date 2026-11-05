@@ -429,7 +429,8 @@
       "noText": "(No text)",
       "redacted": "The customer deleted this comment; its content and the commenter details were removed from the system.",
       "notFoundTitle": "Comment not found",
-      "notFoundBody": "The comment no longer exists or is not in this workspace."
+      "notFoundBody": "The comment no longer exists or is not in this workspace.",
+      "back": "← Back to list"
     },
     "error": {
       "title": "Could not load the comment list",
