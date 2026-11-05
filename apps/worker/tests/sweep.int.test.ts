@@ -4,6 +4,8 @@ import { createFakeConnector } from '@flow/connectors/testing';
 import { createDb, type FlowDb, requestCommentHide, requestCommentReply } from '@flow/db';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MAX_HIDE_ATTEMPTS } from '../src/jobs/hide';
+import { MAX_SEND_ATTEMPTS } from '../src/jobs/send';
 import { runSweep } from '../src/jobs/sweep';
 
 /**
@@ -229,6 +231,19 @@ describe('SEND-SWEEP: yêu cầu gửi kẹt', () => {
     expect(await replyRow(fx.requestId)).toMatchObject({ status: 'sent' });
   });
 
+  it('đã đủ số lần gọi nền tảng (attempts = MAX) → ghi failed UNKNOWN, KHÔNG gọi connector (không thử vô hạn)', async () => {
+    const fx = await stuckReply('sending');
+    await admin.query('UPDATE cf.comment_replies SET attempts = $2 WHERE id = $1', [
+      fx.requestId,
+      MAX_SEND_ATTEMPTS,
+    ]);
+    const { registry, replies } = connector();
+    await sweep(registry);
+    expect(callsFor(replies, fx)).toHaveLength(0);
+    expect(await replyRow(fx.requestId)).toMatchObject({ status: 'failed', error_code: 'UNKNOWN' });
+    expect(await commentRow(fx.commentId)).toMatchObject({ status: 'send_failed' });
+  });
+
   it('yêu cầu CÒN MỚI (queued vừa tạo, sending còn thuê) không bị quét', async () => {
     const base = await seedComment('pending_review');
     const requestId = await db.withActor(ws, staff, (tx) =>
@@ -314,6 +329,18 @@ describe('HIDE-SWEEP: yêu cầu ẩn kẹt', () => {
       status: 'failed',
       error_code: 'recheck:H3',
     });
+  });
+
+  it('đã đủ số lần gọi (attempts = MAX) → failed UNKNOWN, KHÔNG gọi nền tảng', async () => {
+    const fx = await stuckHide('sending');
+    await admin.query('UPDATE cf.comment_hides SET attempts = $2 WHERE id = $1', [
+      fx.requestId,
+      MAX_HIDE_ATTEMPTS,
+    ]);
+    const { registry, hides } = connector();
+    await sweep(registry);
+    expect(callsFor(hides, fx)).toHaveLength(0);
+    expect(await hideRow(fx.requestId)).toMatchObject({ status: 'failed', error_code: 'UNKNOWN' });
   });
 
   it('bỏ ẩn (`unhide`) kẹt → quét gọi setHidden(false) và khôi phục trạng thái', async () => {
