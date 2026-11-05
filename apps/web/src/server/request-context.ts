@@ -1,5 +1,6 @@
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { clientIpFrom } from '../lib/client-ip';
+import { cookieHeaderFromJar } from '../lib/cookie-header';
 import { getAuthRuntime } from './auth';
 
 /**
@@ -13,5 +14,9 @@ export async function requestContext(): Promise<{ ip: string | undefined; header
   const forwarded = new Headers(incoming);
   for (const name of ['x-forwarded-for', 'x-real-ip', 'cf-connecting-ip']) forwarded.delete(name);
   if (ip) forwarded.set('x-forwarded-for', ip);
+  // Cookie theo kho hiện tại của Next: thấy cả cookie Server Action vừa đặt (xoay phiên) khi trang dựng lại.
+  const cookie = cookieHeaderFromJar(incoming.get('cookie'), (await cookies()).getAll());
+  if (cookie) forwarded.set('cookie', cookie);
+  else forwarded.delete('cookie');
   return { ip, headers: forwarded };
 }
