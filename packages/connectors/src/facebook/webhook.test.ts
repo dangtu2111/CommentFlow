@@ -253,6 +253,20 @@ describe('FR-021 nhánh biên của chuẩn hóa/lưu trữ', () => {
     expect(eventHashOf('facebook', deleted)).toBe(eventHashOf('facebook', deleted));
     expect(eventHashOf('facebook', deleted)).not.toBe(eventHashOf('facebook', created));
   });
+
+  it('FR-021 sự kiện xóa thiếu thời điểm vẫn có hash ổn định (rơi về cách cũ)', () => {
+    const [, , deleted] = parseMetaWebhook(
+      webhookBody([
+        commentChange(),
+        commentChange({ verb: 'edited' }),
+        commentChange({ verb: 'remove' }),
+      ]),
+    );
+    if (deleted?.kind !== 'comment_deleted') throw new Error('parse');
+    const noTime = { ...deleted, occurredAt: undefined };
+    expect(eventHashOf('facebook', noTime)).toMatch(/^[0-9a-f]{64}$/);
+    expect(eventHashOf('facebook', noTime)).toBe(eventHashOf('facebook', { ...noTime }));
+  });
 });
 
 describe('FR-020 làm sạch dữ liệu bẩn để một sự kiện không làm hỏng cả lô', () => {

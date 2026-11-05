@@ -541,6 +541,7 @@
     },
     "nav": {
       "comments": "Comments",
+      "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
       "security": "Security"
@@ -554,7 +555,7 @@
       "expired": {
         "title": "Channel connection expired: {names}.",
         "body": {
-          "owner": "The system cannot read or reply to comments on this channel for now. You (Owner) need to reconnect it; the reconnect button arrives with the Facebook connection feature.",
+          "owner": "The system cannot read or reply to comments on this channel for now. You (Owner) need to reconnect it.",
           "staff": "The system cannot read or reply to comments on this channel for now. Please ask the workspace Owner to reconnect it."
         }
       },
@@ -572,7 +573,47 @@
           "staff": "The system is retrying. If it keeps failing, please tell the workspace Owner."
         }
       },
-      "more": "and {count} more channels"
+      "more": "and {count} more channels",
+      "reconnect": "Reconnect"
+    }
+  },
+  "channels": {
+    "title": "Channels",
+    "subtitle": "Facebook Pages of workspace {workspace}. Only the workspace Owner can connect them.",
+    "connect": "Connect Facebook",
+    "reconnect": "Reconnect",
+    "disabled": "Facebook connection is not enabled for this environment.",
+    "list": {
+      "title": "Connected channels",
+      "empty": "No channels yet.",
+      "noWebhook": "Not receiving new comments (webhook not registered)"
+    },
+    "platform": { "facebook": "Facebook", "instagram": "Instagram", "tiktok": "TikTok" },
+    "status": {
+      "connected": "Connected",
+      "expired": "Expired",
+      "revoked": "Disconnected",
+      "error": "Error"
+    },
+    "pick": {
+      "title": "Choose Pages to connect",
+      "hint": "This workspace can connect up to {limit} channels. You can only pick Pages you manage or moderate.",
+      "empty": "This Facebook account has no Pages that can be connected.",
+      "connected": "Connected",
+      "noPermission": "You do not manage or moderate this Page.",
+      "submit": "Connect selected Pages",
+      "cancel": "Cancel"
+    },
+    "notice": {
+      "done": "Connected {ok} Page(s).",
+      "partial": "Connected {ok} Page(s); {bad} not finished (Page does not match the account, missing permission, or comment delivery could not be registered). Press Reconnect to retry.",
+      "state": "The connection session expired or is invalid. Press Connect Facebook to try again.",
+      "denied": "You cancelled granting access to Facebook. Nothing changed.",
+      "error": "Could not connect Facebook. Please try again in a few minutes.",
+      "limit": "This exceeds the channel limit of your current plan. Select fewer Pages or upgrade.",
+      "none": "Select at least one Page.",
+      "unavailable": "Facebook connection is being reconfigured. Please tell your system administrator.",
+      "expiredSession": "The Page selection session expired. Press Connect Facebook to start over."
     }
   },
   "activity": {

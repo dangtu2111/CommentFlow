@@ -26,6 +26,7 @@ export {
   type PasswordVerdict,
 } from './password-policy';
 export { changePasswordAndRevokeAll, revokeAllSessionsOfUser } from './revoke';
+export { createSealedValueCodec, type SealedValueCodec } from './sealed-value';
 export { readSession } from './session';
 export {
   ADMIN_SESSION_SECONDS,

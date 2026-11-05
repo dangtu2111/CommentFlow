@@ -44,6 +44,7 @@ export {
   type ChannelAlertStatus,
   listChannelAlerts,
 } from './queries/channel-alerts';
+export { type ChannelListItem, listChannels } from './queries/channels';
 export { relabelComments, SKIPPABLE_STATUSES, skipComments } from './queries/comment-bulk';
 export { type CommentDetail, getCommentDetail } from './queries/comment-detail';
 export {
