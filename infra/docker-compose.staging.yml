@@ -1,6 +1,7 @@
 # Ghi đè cho project cf-staging (docs/15 §2, §5): thêm web + worker (+ khung cloudflared) lên compose nền.
-# KHÔNG publish cổng nào ra máy chủ: web chỉ truy cập được qua cloudflared cùng mạng Compose (CLIENT_IP_SOURCE=cf-connecting-ip
-# chỉ an toàn khi đúng như vậy — ADR 004 §2). Không có Mailpit ở staging (chỉ ở docker-compose.dev.yml): SMTP thật qua biến SMTP_*.
+# Chỉ MỘT cổng được publish: Postgres, và CHỈ ở 127.0.0.1 của máy ảo (cho runner migrate-staging cùng máy; tuyệt đối không
+# 0.0.0.0 — scripts/lib/compose-ports.test.mjs kiểm). Web KHÔNG publish: chỉ truy cập được qua cloudflared cùng mạng Compose
+# (CLIENT_IP_SOURCE=cf-connecting-ip chỉ an toàn khi đúng như vậy — ADR 004 §2). Không có Mailpit ở staging (chỉ ở docker-compose.dev.yml): SMTP thật qua biến SMTP_*.
 #
 # CHƯA CHẠY ở đâu cả (H5 phần không cần tên miền). Cách dùng khi bật (trên máy ảo, do deploy-staging hoặc chủ dự án):
 #   docker compose -p cf-staging --env-file .env.cf-staging -f infra/docker-compose.yml -f infra/docker-compose.staging.yml up -d --build
@@ -15,6 +16,10 @@ x-app-env: &app-env
   TOKEN_ENC_KEYS: ${TOKEN_ENC_KEYS:-}
 
 services:
+  postgres:
+    # Cổng cho CLI migrate staging: CF_STAGING_DB_HOSTS=127.0.0.1:<CF_STAGING_DB_PORT> (mặc định 5434). Chỉ loopback.
+    ports: ["127.0.0.1:${CF_STAGING_DB_PORT:-5434}:5432"]
+
   web:
     build:
       context: ..
