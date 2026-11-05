@@ -183,6 +183,13 @@
       "when": 1793846456726,
       "tag": "0025_comment_redact",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793851476997,
+      "tag": "0026_comment_tombstone",
+      "breakpoints": true
     }
   ]
 }

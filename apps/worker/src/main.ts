@@ -5,6 +5,7 @@ import { loadConfig } from './config';
 import { startHealthServer } from './health';
 import { createIngestHandler } from './jobs/ingest';
 import { createPingHandler } from './jobs/ping';
+import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
@@ -39,12 +40,15 @@ async function main(): Promise<void> {
     { batchSize: 1, localConcurrency: 3 },
     createSendHandler({ db, registry: createConnectorRegistry([]), logger }),
   );
+  // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
+  const stopRetention = startRetention({ db, logger });
   ready = true;
   logger.info({ port: config.port }, 'worker đã khởi động');
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'worker đang dừng');
     ready = false;
+    stopRetention();
     await boss.stop({ graceful: true });
     await db.close();
     await health.close();

@@ -32,6 +32,8 @@ export const webhookEvents = cf.table(
     index('webhook_events_pending_idx')
       .on(t.status, t.createdAt)
       .where(sql`${t.status} in ('received', 'failed')`),
+    // Job dọn payload (WEBHOOK-PAYLOAD-RETENTION): quét theo thời gian chỉ trên dòng còn payload.
+    index('webhook_events_retention_idx').on(t.createdAt).where(sql`${t.payload} <> '{}'::jsonb`),
     check(
       'webhook_events_platform_check',
       sql`${t.platform} in ('facebook', 'instagram', 'tiktok')`,
