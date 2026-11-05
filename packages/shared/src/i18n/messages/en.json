@@ -369,6 +369,49 @@
       "first": "Back to first page",
       "lockedBy": "{name} is handling"
     },
+    "labels": {
+      "price": "Price question",
+      "advice": "Advice",
+      "purchase": "Purchase",
+      "complaint": "Complaint",
+      "spam": "Spam",
+      "other": "Other"
+    },
+    "bulk": {
+      "select": "Select comment from {name}",
+      "toolbar": "Bulk actions",
+      "selected": "{count} selected",
+      "clear": "Clear selection",
+      "skip": "Skip",
+      "hide": "Hide",
+      "relabel": "Change label",
+      "labelPick": "Choose new label",
+      "apply": "Apply",
+      "working": "Working…",
+      "shortcuts": "Shortcuts: X select row · J/K move · H hide · Esc clear",
+      "confirmTitle": "Hide {count} comments?",
+      "confirmBody": "These comments will be hidden from customers on the platform; each can be unhidden. AI never hides on its own.",
+      "confirmYes": "Hide {count} comments",
+      "confirmNo": "Cancel",
+      "result": "Processed {done}/{requested} comments.",
+      "reasons": {
+        "not_applicable": "{count} comments not applicable (already handled, being handled by a teammate, or gone).",
+        "not_found": "{count} comments not found.",
+        "not_hideable": "{count} comments can't be hidden in their current state.",
+        "locked_by_other": "{count} comments are being handled by a teammate.",
+        "channel_not_connected": "{count} comments belong to a channel that isn't connected.",
+        "forbidden": "{count} comments you aren't allowed to handle.",
+        "queue_unavailable": "{count} comments couldn't send the hide request, please retry.",
+        "unavailable": "{count} comments hit a temporary error, please retry."
+      },
+      "rejections": {
+        "invalid_input": "The comment list is invalid.",
+        "too_many": "Select at most {max} comments at a time.",
+        "invalid_label": "Invalid label.",
+        "confirm_required": "Confirmation is required before hiding.",
+        "unavailable": "The system hit a temporary error, please retry."
+      }
+    },
     "empty": {
       "title": "No comments yet",
       "body": "New comments from your connected Pages will show up here.",
