@@ -1,5 +1,5 @@
 {
-  "id": "f3d0f457-38ef-42a9-93c2-b5ba92240b9b",
+  "id": "580ce86f-4cf1-4963-b2d1-05fb732b22cd",
   "prevId": "ca5ec2c8-5230-42ed-920e-503b6311684e",
   "version": "7",
   "dialect": "postgresql",
@@ -1751,6 +1751,10 @@
         "comment_hides_attempts_check": {
           "name": "comment_hides_attempts_check",
           "value": "\"cf\".\"comment_hides\".\"attempts\" >= 0"
+        },
+        "comment_hides_error_code_check": {
+          "name": "comment_hides_error_code_check",
+          "value": "char_length(\"cf\".\"comment_hides\".\"error_code\") <= 64"
         }
       },
       "isRLSEnabled": false

@@ -57,6 +57,7 @@ type Row = {
   comment_status: string;
   comment_external_id: string;
   is_hidden: boolean;
+  is_own: boolean;
   merged_into_id: string | null;
   deleted_at: Date | null;
   comment_created_time: Date | null;
@@ -93,7 +94,7 @@ async function prepare(
     SELECT h.id AS hide_id, h.action, h.status AS hide_status, h.attempts, h.previous_status, h.requested_by,
            EXTRACT(EPOCH FROM (now() - h.updated_at))::float8 AS lease_age_seconds,
            c.id AS comment_id, c.status AS comment_status, c.external_id AS comment_external_id,
-           c.is_hidden, c.merged_into_id, c.deleted_at, c.created_time AS comment_created_time,
+           c.is_hidden, c.is_own, c.merged_into_id, c.deleted_at, c.created_time AS comment_created_time,
            ch.id AS channel_id, ch.status AS channel_status, ch.platform AS channel_platform,
            ch.external_id AS channel_external_id
       FROM cf.comment_hides h
@@ -113,8 +114,8 @@ async function prepare(
   const finish = (status: 'done' | 'cancelled' | 'failed', code: string | null) =>
     settle(tx, row, status, code);
 
-  // H1: khách đã xóa / bình luận đã gộp.
-  if (row.deleted_at !== null || row.merged_into_id !== null) {
+  // H1: khách đã xóa / bình luận đã gộp / bình luận do chính Page viết.
+  if (row.deleted_at !== null || row.merged_into_id !== null || row.is_own) {
     await finish('cancelled', 'recheck:H1');
     return { kind: 'done' };
   }
@@ -153,7 +154,9 @@ async function prepare(
   }
 
   await tx.execute(sql`
-    UPDATE cf.comment_hides SET status = 'sending', attempts = attempts + 1, updated_at = now()
+    UPDATE cf.comment_hides
+       SET status = 'sending', attempts = attempts + 1, updated_at = now(),
+           previous_status = ${wantHidden ? row.comment_status : row.previous_status}
      WHERE id = ${row.hide_id}::uuid`);
   return {
     kind: 'call',
@@ -233,10 +236,11 @@ async function recordFailure(
   }
   const settled = await settle(tx, row, 'failed', error.code, attemptsSoFar);
   if (!settled) return false;
-  if (error.code === 'TOKEN_EXPIRED' || error.code === 'PERMISSION') {
-    const channelStatus = error.code === 'TOKEN_EXPIRED' ? 'expired' : 'revoked';
+  // Chỉ TOKEN_EXPIRED đổi trạng thái kênh. PERMISSION khi ẩn có thể chỉ là một bình luận không ẩn được (ví dụ của Page):
+  // KHÔNG được làm sập cả kênh (gap HIDE-PERMISSION-SCOPE: connector thật phải phân biệt "token thiếu quyền" với "từ chối từng bình luận").
+  if (error.code === 'TOKEN_EXPIRED') {
     await tx.execute(sql`
-      UPDATE cf.channels SET status = ${channelStatus}, updated_at = now()
+      UPDATE cf.channels SET status = 'expired', updated_at = now()
        WHERE id = ${row.channel_id}::uuid AND status = 'connected'`);
   }
   return false;
@@ -317,7 +321,11 @@ function isLastAttempt(job: unknown): boolean {
  * Hết lượt thử mà yêu cầu chưa kết thúc: ghi `failed` để không kẹt `queued`/`sending` (chặn yêu cầu mới của người dùng).
  * Đã từng gọi nền tảng (attempts > 0) → mã `UNKNOWN`. Trả `true` nếu đã ghi.
  */
-async function failExhausted(db: FlowDb, job: HideJob): Promise<boolean> {
+async function failExhausted(
+  db: FlowDb,
+  job: HideJob,
+  leaseSeconds: number = HIDE_LEASE_SECONDS,
+): Promise<boolean> {
   try {
     await db.withJob(job.workspaceId, async (tx) => {
       await tx.execute(sql`
@@ -325,7 +333,8 @@ async function failExhausted(db: FlowDb, job: HideJob): Promise<boolean> {
            SET status = 'failed', updated_at = now(),
                error_code = CASE WHEN attempts > 0 THEN 'UNKNOWN' ELSE 'retries_exhausted' END
          WHERE id = ${job.hideId}::uuid AND workspace_id = ${job.workspaceId}::uuid
-           AND status IN ('queued', 'sending')`);
+           AND (status = 'queued'
+                OR (status = 'sending' AND updated_at < now() - make_interval(secs => ${leaseSeconds}::int)))`);
     });
     return true;
   } catch {
@@ -341,8 +350,10 @@ export function createHideHandler(options: {
   db: FlowDb;
   registry: ConnectorRegistry;
   logger: Pick<Logger, 'error'>;
+  /** Chờ khi job khác đang gọi (test tiêm bản ngắn). */
+  sleep?: (ms: number) => Promise<void>;
 }): BatchHandler {
-  const { db, registry, logger } = options;
+  const { db, registry, logger, sleep } = options;
   return async (jobs) => {
     for (const job of jobs) {
       const result = hideJobSchema.safeParse(job.data);
@@ -350,10 +361,16 @@ export function createHideHandler(options: {
       if (!result.success) throw new AppError('VALIDATION_FAILED', 'Dữ liệu job không hợp lệ.');
       const parsed = result.data;
       try {
-        await processHideJob({ db, registry, job: parsed });
+        await processHideJob({ db, registry, job: parsed, ...(sleep ? { sleep } : {}) });
       } catch (error) {
         logger.error({ hideId: parsed.hideId, error: safeCode(error) }, 'hide lỗi');
-        if (isLastAttempt(job) && (await failExhausted(db, parsed))) continue;
+        // Job khác đang gọi (còn thuê): KHÔNG ghi đè kết quả của nó.
+        if (
+          !(error instanceof HideInFlightError) &&
+          isLastAttempt(job) &&
+          (await failExhausted(db, parsed))
+        )
+          continue;
         throw error;
       }
     }

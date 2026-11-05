@@ -562,6 +562,7 @@
       "channel.token_cleared": "Xóa mã truy cập kênh",
       "comment.reply_requested": "Yêu cầu gửi trả lời bình luận",
       "comment.hide_requested": "Yêu cầu ẩn bình luận",
+      "comment.hide_cancelled": "Đã hủy yêu cầu ẩn bình luận",
       "comment.unhide_requested": "Yêu cầu bỏ ẩn bình luận",
       "comment.hidden": "Đã ẩn bình luận trên nền tảng",
       "comment.unhidden": "Đã bỏ ẩn bình luận trên nền tảng"

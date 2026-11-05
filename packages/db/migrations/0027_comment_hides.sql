@@ -15,7 +15,8 @@ CREATE TABLE "cf"."comment_hides" (
 	CONSTRAINT "comment_hides_action_check" CHECK ("cf"."comment_hides"."action" in ('hide', 'unhide')),
 	CONSTRAINT "comment_hides_status_check" CHECK ("cf"."comment_hides"."status" in ('queued', 'sending', 'done', 'failed', 'cancelled')),
 	CONSTRAINT "comment_hides_previous_status_check" CHECK ("cf"."comment_hides"."previous_status" in ('new', 'pending_review', 'needs_human', 'send_failed', 'skipped', 'spam_suspected', 'replied', 'auto_replied')),
-	CONSTRAINT "comment_hides_attempts_check" CHECK ("cf"."comment_hides"."attempts" >= 0)
+	CONSTRAINT "comment_hides_attempts_check" CHECK ("cf"."comment_hides"."attempts" >= 0),
+	CONSTRAINT "comment_hides_error_code_check" CHECK (char_length("cf"."comment_hides"."error_code") <= 64)
 );
 --> statement-breakpoint
 ALTER TABLE "cf"."comment_hides" ADD CONSTRAINT "comment_hides_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "core"."workspaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -39,10 +40,18 @@ CREATE INDEX "comment_hides_workspace_channel_idx" ON "cf"."comment_hides" USING
 --    nhận. SQLSTATE: CF404 không thấy · CF409 không ẩn/bỏ ẩn được · CF423 người khác giữ khóa · CF424 kênh không kết nối
 --    · 42501 không có quyền. `previous_status` của `unhide` = trạng thái khôi phục (lần ẩn xong gần nhất; mặc định
 --    `replied` nếu có external_reply_id, ngược lại `pending_review`).
---  * cf.cancel_comment_hide(hide_id): người yêu cầu hủy yêu cầu còn `queued` (bù khi đẩy job thất bại).
+--  * cf.cancel_comment_hide(hide_id): người yêu cầu — hoặc Owner đang hoạt động, hoặc bất kỳ thành viên khi
+--    requested_by IS NULL — hủy yêu cầu còn `queued` (bù khi đẩy job thất bại; Owner gỡ yêu cầu kẹt); ghi action_logs.
+--    Yêu cầu `sending` kẹt chờ HIDE-SWEEP.
+--  * Bình luận do chính Page viết (is_own) không ẩn được (CF409). `unhide`: trạng thái khôi phục lấy từ dòng `done`
+--    MỚI NHẤT (hide hoặc unhide); ứng viên ∈ {new, pending_review, needs_human, send_failed} mà đã có external_reply_id
+--    → `replied`. Worker cập nhật previous_status (của `hide`) khi đánh dấu `sending`. error_code ≤ 64 ký tự.
 --  * cf.request_comment_reply (thay bản 0024): thêm — từ chối (CF409) khi bình luận đang có yêu cầu ẩn/bỏ ẩn hoạt động.
 --  * cf.guard_comment_user_update (thay bản 0025): thêm — đường người dùng KHÔNG đổi comments.is_hidden (đóng nửa
 --    `is_hidden` của gap COMMENT-HIDE-MERGE-GUARD; `merged_into_id` còn mở cho việc gộp).
+--
+-- TRIỂN KHAI: migrate rồi chạy web/worker bản mới (`pnpm db:migrate` + `pnpm --filter @flow/worker queue:install` cho hàng đợi `hide`).
+-- HIDE-SWEEP là ĐIỀU KIỆN BẮT BUỘC trước khi đăng ký connector thật vào worker (yêu cầu kẹt `sending` chỉ sweep gỡ được).
 --
 -- Đường lùi: LÙI CODE TRƯỚC (web gọi hàm hide; worker job `hide`); CREATE OR REPLACE lại cf.guard_comment_user_update bản
 -- 0025 và cf.request_comment_reply bản 0024; DROP FUNCTION cf.request_comment_hide(uuid, boolean),
@@ -53,7 +62,7 @@ ALTER TABLE cf.comment_hides ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
 GRANT SELECT ON cf.comment_hides TO cf_app;
 --> statement-breakpoint
-GRANT UPDATE (status, attempts, error_code, updated_at, done_at) ON cf.comment_hides TO cf_app;
+GRANT UPDATE (status, attempts, error_code, previous_status, updated_at, done_at) ON cf.comment_hides TO cf_app;
 --> statement-breakpoint
 CREATE POLICY comment_hides_select ON cf.comment_hides FOR SELECT
   USING (
@@ -226,7 +235,7 @@ BEGIN
     RAISE EXCEPTION 'comment_not_hideable' USING ERRCODE = 'CF409';
   END IF;
 
-  SELECT c.id, c.channel_id, c.status, c.is_hidden, c.merged_into_id, c.external_reply_id, c.deleted_at,
+  SELECT c.id, c.channel_id, c.status, c.is_hidden, c.is_own, c.merged_into_id, c.external_reply_id, c.deleted_at,
          c.locked_by, c.locked_until
     INTO v_comment
     FROM cf.comments c
@@ -235,7 +244,7 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'comment_not_found' USING ERRCODE = 'CF404';
   END IF;
-  IF v_comment.deleted_at IS NOT NULL OR v_comment.merged_into_id IS NOT NULL THEN
+  IF v_comment.deleted_at IS NOT NULL OR v_comment.merged_into_id IS NOT NULL OR v_comment.is_own THEN
     RAISE EXCEPTION 'comment_not_hideable' USING ERRCODE = 'CF409';
   END IF;
 
@@ -264,11 +273,14 @@ BEGIN
   ELSE
     SELECT h.previous_status INTO v_previous
       FROM cf.comment_hides h
-     WHERE h.workspace_id = v_ws AND h.comment_id = v_comment.id AND h.action = 'hide' AND h.status = 'done'
+     WHERE h.workspace_id = v_ws AND h.comment_id = v_comment.id AND h.status = 'done'
      ORDER BY h.created_at DESC, h.id DESC
      LIMIT 1;
     IF v_previous IS NULL THEN
       v_previous := CASE WHEN v_comment.external_reply_id IS NOT NULL THEN 'replied' ELSE 'pending_review' END;
+    ELSIF v_previous IN ('new', 'pending_review', 'needs_human', 'send_failed')
+          AND v_comment.external_reply_id IS NOT NULL THEN
+      v_previous := 'replied';
     END IF;
   END IF;
 
@@ -308,17 +320,23 @@ BEGIN
   IF v_ws IS NULL OR v_user IS NULL OR core.is_workspace_member() IS NOT TRUE THEN
     RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
   END IF;
-  SELECT h.id, h.requested_by, h.status
+  SELECT h.id, h.comment_id, h.requested_by, h.status
     INTO v_hide
     FROM cf.comment_hides h
    WHERE h.id = p_hide_id AND h.workspace_id = v_ws
      FOR UPDATE;
-  IF NOT FOUND OR v_hide.requested_by IS DISTINCT FROM v_user OR v_hide.status <> 'queued' THEN
+  IF NOT FOUND OR v_hide.status <> 'queued'
+     OR NOT (v_hide.requested_by IS NOT DISTINCT FROM v_user
+             OR v_hide.requested_by IS NULL
+             OR core.is_workspace_owner() IS TRUE) THEN
     RETURN false;
   END IF;
   UPDATE cf.comment_hides
      SET status = 'cancelled', error_code = 'cancelled_by_user', updated_at = now()
    WHERE id = v_hide.id;
+  INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action, target_type, target_id, after)
+  VALUES (v_ws, 'user', v_user, 'comment.hide_cancelled', 'comment', v_hide.comment_id::text,
+          jsonb_build_object('hide_id', v_hide.id));
   RETURN true;
 END
 $$;

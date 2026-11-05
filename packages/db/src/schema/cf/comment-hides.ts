@@ -81,5 +81,6 @@ export const commentHides = cf.table(
       sql`${t.previousStatus} in (${sql.raw(HIDEABLE_STATUSES.map((s) => `'${s}'`).join(', '))})`,
     ),
     check('comment_hides_attempts_check', sql`${t.attempts} >= 0`),
+    check('comment_hides_error_code_check', sql`char_length(${t.errorCode}) <= 64`),
   ],
 );

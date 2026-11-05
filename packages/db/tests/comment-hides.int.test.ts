@@ -330,10 +330,6 @@ describe('FR-044 cf.cancel_comment_hide', () => {
     const id = await comment();
     const created = await request('staff', id);
     if (!created.ok || !created.value) throw new Error('request');
-    expect(await as('owner', (tx) => cancelCommentHide(tx, created.value as string))).toEqual({
-      ok: true,
-      value: false,
-    });
     expect(await as('staff', (tx) => cancelCommentHide(tx, created.value as string))).toEqual({
       ok: true,
       value: true,
@@ -394,7 +390,7 @@ describe('FR-044 bảng comment_hides, RLS và trigger bình luận', () => {
       `UPDATE cf.comment_hides SET status = 'sending', attempts = attempts + 1 WHERE id = '${hideId}'`,
     );
     expect(sys.ok && (sys.value as { rowCount: number }).rowCount).toBe(1);
-    for (const column of ['action', 'requested_by', 'previous_status', 'comment_id']) {
+    for (const column of ['action', 'requested_by', 'comment_id']) {
       expect(
         await attempt(
           'job',
@@ -403,6 +399,20 @@ describe('FR-044 bảng comment_hides, RLS và trigger bình luận', () => {
         column,
       ).toMatchObject({ ok: false });
     }
+  });
+
+  it('FR-044 previous_status do hệ thống (worker) cập nhật được; người dùng thì không', async () => {
+    const id = await comment({ status: 'needs_human' });
+    const created = await request('owner', id);
+    if (!created.ok || !created.value) throw new Error('request');
+    const stmt = `UPDATE cf.comment_hides SET previous_status = 'skipped' WHERE id = '${created.value}'`;
+    for (const who of ['owner', 'staff'] as const) {
+      const r = await as(who, (tx) => tx.execute(sql.raw(stmt)));
+      expect(r.ok && (r.value as { rowCount: number }).rowCount, who).not.toBe(1);
+    }
+    const sys = await as('job', (tx) => tx.execute(sql.raw(stmt)));
+    expect(sys.ok && (sys.value as { rowCount: number }).rowCount).toBe(1);
+    expect((await hidesOf(id))[0].previous_status).toBe('skipped');
   });
 
   it('FR-044 thành viên chỉ đọc được yêu cầu của workspace mình; người ngoài đọc 0 dòng', async () => {
@@ -474,6 +484,12 @@ describe('FR-044 bảng comment_hides, RLS và trigger bình luận', () => {
     await expect(insert('hide', 'done', -1, 'new')).rejects.toThrow();
     await expect(insert('hide', 'done', 0, 'sending')).rejects.toThrow();
     await expect(insert('hide', 'done', 0, 'new')).resolves.toBeDefined();
+    await expect(
+      admin.query(
+        'INSERT INTO cf.comment_hides (workspace_id, channel_id, comment_id, action, status, error_code, previous_status) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [ws, channelOk, id, 'hide', 'failed', 'x'.repeat(65), 'new'],
+      ),
+    ).rejects.toThrow();
   });
 });
 
@@ -502,5 +518,100 @@ describe('FR-044 chi tiết bình luận đọc trạng thái ẩn', () => {
       isHidden: true,
       latestHide: { status: 'failed', errorCode: 'RATE_LIMIT' },
     });
+  });
+});
+
+describe('FR-044 bổ sung: bình luận của Page, khôi phục trạng thái, hủy của Owner, đua ẩn/trả lời', () => {
+  it('FR-044 bình luận do chính Page viết (is_own) → not_hideable, không tạo yêu cầu', async () => {
+    const id = await comment();
+    await admin.query('UPDATE cf.comments SET is_own = true WHERE id = $1', [id]);
+    expect(await request('owner', id)).toEqual({ ok: false, reason: 'not_hideable' });
+    expect(await hidesOf(id)).toHaveLength(0);
+  });
+
+  it('FR-044 bỏ ẩn lấy trạng thái từ dòng done MỚI NHẤT (hide hoặc unhide); đã có external_reply_id thì ép replied', async () => {
+    const previousOfUnhide = async (id: string) => {
+      const r = (await request('owner', id, false)) as { ok: true; value: string };
+      return (
+        await admin.query('SELECT previous_status FROM cf.comment_hides WHERE id = $1', [r.value])
+      ).rows[0].previous_status as string;
+    };
+    const id = await comment({ status: 'needs_human' });
+    await admin.query(
+      `INSERT INTO cf.comment_hides (workspace_id, channel_id, comment_id, action, status, previous_status, created_at)
+       VALUES ($1, $2, $3, 'hide', 'done', 'needs_human', now() - interval '3 minutes'),
+              ($1, $2, $3, 'unhide', 'done', 'skipped', now() - interval '1 minute')`,
+      [ws, channelOk, id],
+    );
+    await admin.query("UPDATE cf.comments SET status = 'hidden', is_hidden = true WHERE id = $1", [
+      id,
+    ]);
+    expect(await previousOfUnhide(id)).toBe('skipped');
+
+    const replied = await comment({ status: 'needs_human', replyId: 'fb-reply-9' });
+    await admin.query(
+      `INSERT INTO cf.comment_hides (workspace_id, channel_id, comment_id, action, status, previous_status)
+       VALUES ($1, $2, $3, 'hide', 'done', 'needs_human')`,
+      [ws, channelOk, replied],
+    );
+    await admin.query("UPDATE cf.comments SET status = 'hidden', is_hidden = true WHERE id = $1", [
+      replied,
+    ]);
+    expect(await previousOfUnhide(replied)).toBe('replied');
+  });
+
+  it('FR-044 Owner hủy được yêu cầu queued của người khác; Staff chỉ hủy của mình hoặc yêu cầu requested_by NULL; hủy ghi action_logs', async () => {
+    const mine = await comment();
+    const a = await request('staff', mine);
+    if (!a.ok || !a.value) throw new Error('request');
+    const ownerRequest = await comment();
+    const b = await request('owner', ownerRequest);
+    if (!b.ok || !b.value) throw new Error('request');
+    expect(await as('staff', (tx) => cancelCommentHide(tx, b.value as string))).toEqual({
+      ok: true,
+      value: false,
+    });
+    expect(await as('owner', (tx) => cancelCommentHide(tx, a.value as string))).toEqual({
+      ok: true,
+      value: true,
+    });
+    const logs = (
+      await admin.query(
+        "SELECT actor_id FROM core.action_logs WHERE target_id = $1 AND action = 'comment.hide_cancelled'",
+        [mine],
+      )
+    ).rows;
+    expect(logs).toHaveLength(1);
+    expect(logs[0].actor_id).toBe(ids.owner);
+    await admin.query('UPDATE cf.comment_hides SET requested_by = NULL WHERE id = $1', [b.value]);
+    expect(await as('staff', (tx) => cancelCommentHide(tx, b.value as string))).toEqual({
+      ok: true,
+      value: true,
+    });
+    const stuck = await comment();
+    const c = await request('staff', stuck);
+    if (!c.ok || !c.value) throw new Error('request');
+    await admin.query("UPDATE cf.comment_hides SET status = 'sending' WHERE id = $1", [c.value]);
+    expect(await as('owner', (tx) => cancelCommentHide(tx, c.value as string))).toEqual({
+      ok: true,
+      value: false,
+    });
+  });
+
+  it('FR-044 ẩn và trả lời song song cho cùng bình luận → đúng một bên thắng', async () => {
+    for (let round = 0; round < 3; round += 1) {
+      const id = await comment();
+      const [h, r] = await Promise.all([
+        request('owner', id),
+        as('staff', (tx) => requestCommentReply(tx, { commentId: id, text: 'Dạ ạ' })),
+      ]);
+      const hides = await hidesOf(id);
+      const replies = (
+        await admin.query('SELECT 1 FROM cf.comment_replies WHERE comment_id = $1', [id])
+      ).rows;
+      expect(hides.length + replies.length).toBe(1);
+      expect(h.ok && !!h.value).toBe(hides.length === 1);
+      expect(r.ok).toBe(replies.length === 1);
+    }
   });
 });

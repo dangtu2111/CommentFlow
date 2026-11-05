@@ -269,7 +269,6 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.comment_hides', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.comment_hides', 'comment_id', 'UPDATE'],
   ['cf_app', 'cf.comment_hides', 'channel_id', 'UPDATE'],
-  ['cf_app', 'cf.comment_hides', 'previous_status', 'UPDATE'],
   ['cf_app', 'cf.webhook_events', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.webhook_events', 'event_hash', 'UPDATE'],
   ['cf_app', 'cf.webhook_events', 'payload', 'UPDATE'],

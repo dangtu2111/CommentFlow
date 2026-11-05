@@ -562,6 +562,7 @@
       "channel.token_cleared": "Channel access token removed",
       "comment.reply_requested": "Comment reply requested",
       "comment.hide_requested": "Comment hide requested",
+      "comment.hide_cancelled": "Comment hide request cancelled",
       "comment.unhide_requested": "Comment unhide requested",
       "comment.hidden": "Comment hidden on the platform",
       "comment.unhidden": "Comment unhidden on the platform"

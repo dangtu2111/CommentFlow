@@ -298,10 +298,10 @@ describe('FR-044 job hide — kiểm lại trước khi gọi (H1–H3) và conn
 });
 
 describe('FR-044 job hide — lỗi nền tảng', () => {
-  it('FR-044 TOKEN_EXPIRED → failed + kênh expired; PERMISSION → failed + kênh revoked; BLOCKED → failed, kênh giữ nguyên; bình luận KHÔNG đổi; mã lỗi không chứa nội dung/token', async () => {
+  it('FR-044 TOKEN_EXPIRED → failed + kênh expired; PERMISSION (một bình luận không ẩn được) và BLOCKED → failed, kênh VẪN connected; bình luận KHÔNG đổi; mã lỗi không chứa nội dung/token', async () => {
     const cases: Array<[PlatformErrorCode, string]> = [
       ['TOKEN_EXPIRED', 'expired'],
-      ['PERMISSION', 'revoked'],
+      ['PERMISSION', 'connected'],
       ['BLOCKED', 'connected'],
     ];
     for (const [code, expectedChannel] of cases) {
@@ -409,6 +409,62 @@ describe('FR-044 job hide — chạy song song và tiếp quản', () => {
   });
 });
 
+describe('FR-044 job hide — bổ sung sau kiểm chứng', () => {
+  it('FR-044 H1 bình luận do chính Page viết (is_own) → hủy recheck:H1, không gọi connector', async () => {
+    const fx = await fixture();
+    await admin.query('UPDATE cf.comments SET is_own = true WHERE id = $1', [fx.commentId]);
+    const { calls, registry } = connectorWith();
+    await run(fx, registry);
+    expect(calls).toHaveLength(0);
+    expect(await hideRow(fx.hideId)).toMatchObject({
+      status: 'cancelled',
+      error_code: 'recheck:H1',
+    });
+  });
+
+  it('FR-044 trạng thái bình luận đổi lúc yêu cầu còn queued → worker cập nhật previous_status khi đánh dấu sending', async () => {
+    const fx = await fixture({ commentStatus: 'needs_human' });
+    await admin.query("UPDATE cf.comments SET status = 'skipped' WHERE id = $1", [fx.commentId]);
+    const { registry } = connectorWith();
+    await run(fx, registry);
+    expect((await hideRow(fx.hideId)).previous_status).toBe('skipped');
+    const unhideId = await db.withActor(ws, staff, (tx) =>
+      requestCommentHide(tx, { commentId: fx.commentId, hide: false }),
+    );
+    await processHideJob({ db, registry, job: { workspaceId: ws, hideId: unhideId as string } });
+    expect(await commentRow(fx.commentId)).toEqual({ status: 'skipped', is_hidden: false });
+  });
+
+  it('FR-044 khách xóa (đã xóa trắng) giữa lúc gọi nền tảng → vẫn ghi done và is_hidden, không lỗi', async () => {
+    const fx = await fixture();
+    const { registry } = connectorWith({
+      setHidden: async () => {
+        await admin.query(
+          "UPDATE cf.comments SET deleted_at = now(), redacted_at = now(), text = '', text_normalized = NULL, author_name = NULL, author_external_id = '', attachments = '[]'::jsonb WHERE id = $1",
+          [fx.commentId],
+        );
+      },
+    });
+    await run(fx, registry);
+    expect((await hideRow(fx.hideId)).status).toBe('done');
+    expect((await commentRow(fx.commentId)).is_hidden).toBe(true);
+  });
+
+  it('FR-044 yêu cầu có requested_by NULL (người yêu cầu đã bị xóa) vẫn chạy bình thường', async () => {
+    const fx = await fixture();
+    await admin.query('UPDATE cf.comment_hides SET requested_by = NULL WHERE id = $1', [fx.hideId]);
+    const { calls, registry } = connectorWith();
+    await run(fx, registry);
+    expect(calls).toHaveLength(1);
+    expect((await hideRow(fx.hideId)).status).toBe('done');
+    const log = await admin.query(
+      "SELECT after->>'requested_by' AS by FROM core.action_logs WHERE target_id = $1 AND action = 'comment.hidden'",
+      [fx.commentId],
+    );
+    expect(log.rows[0].by).toBeNull();
+  });
+});
+
 describe('FR-044 handler hàng đợi hide', () => {
   const asJob = (data: unknown, extra: object = {}) =>
     [{ id: randomUUID(), data, ...extra }] as unknown as Job<unknown>[];
@@ -420,6 +476,40 @@ describe('FR-044 handler hàng đợi hide', () => {
     const fx = await fixture();
     await handler(asJob({ workspaceId: ws, hideId: fx.hideId }));
     expect((await hideRow(fx.hideId)).status).toBe('done');
+  });
+
+  it('FR-044 lượt cuối: job khác còn thuê (sending) → KHÔNG ghi đè failed, ném lỗi in-flight; sending hết thuê → failed', async () => {
+    const fx = await fixture();
+    await admin.query(
+      "UPDATE cf.comment_hides SET status = 'sending', attempts = 1, updated_at = now() WHERE id = $1",
+      [fx.hideId],
+    );
+    const { registry } = connectorWith();
+    const handler = createHideHandler({ db, registry, logger: quiet, sleep: noSleep });
+    const last = { retryCount: 3, retryLimit: 3 };
+    // sleep thật ngắn không có trong handler: dùng thuê cạn bằng cách để processHideJob ném in-flight sau lần chờ mặc định
+    // (rút ngắn: đặt remaining nhỏ bằng cách lùi updated_at gần hết thuê 90 giây)
+    await admin.query(
+      "UPDATE cf.comment_hides SET updated_at = now() - interval '89 seconds' WHERE id = $1",
+      [fx.hideId],
+    );
+    await expect(
+      handler([
+        { id: randomUUID(), data: { workspaceId: ws, hideId: fx.hideId }, ...last },
+      ] as unknown as Job<unknown>[]),
+    ).rejects.toBeInstanceOf(HideInFlightError);
+    expect((await hideRow(fx.hideId)).status).toBe('sending');
+
+    await admin.query(
+      "UPDATE cf.comment_hides SET updated_at = now() - interval '10 minutes' WHERE id = $1",
+      [fx.hideId],
+    );
+    const failing = connectorWith({ setHidden: failWith('UNKNOWN') });
+    const handler2 = createHideHandler({ db, registry: failing.registry, logger: quiet });
+    await handler2([
+      { id: randomUUID(), data: { workspaceId: ws, hideId: fx.hideId }, ...last },
+    ] as unknown as Job<unknown>[]);
+    expect(await hideRow(fx.hideId)).toMatchObject({ status: 'failed', error_code: 'UNKNOWN' });
   });
 
   it('FR-044 lỗi tạm thời được ném lại để pg-boss thử lại; log chỉ có mã, không token/nội dung; lượt cuối → failed UNKNOWN', async () => {
