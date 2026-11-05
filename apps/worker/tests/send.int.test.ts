@@ -284,10 +284,10 @@ describe('FR-042 sendRecheck — trượt thì KHÔNG gọi connector', () => {
 });
 
 describe('FR-042 lỗi từ nền tảng', () => {
-  it('TOKEN_EXPIRED → thất bại + kênh expired; PERMISSION → thất bại + kênh revoked; BLOCKED → thất bại, kênh giữ nguyên; error_code chỉ là mã (không lộ token/nội dung)', async () => {
+  it('TOKEN_EXPIRED → thất bại + kênh expired; PERMISSION → thất bại, kênh GIỮ NGUYÊN (có thể chỉ từ chối theo đối tượng); BLOCKED → thất bại, kênh giữ nguyên; error_code chỉ là mã (không lộ token/nội dung)', async () => {
     const cases: Array<[PlatformErrorCode, string]> = [
       ['TOKEN_EXPIRED', 'expired'],
-      ['PERMISSION', 'revoked'],
+      ['PERMISSION', 'connected'],
       ['BLOCKED', 'connected'],
     ];
     for (const [code, expectedChannel] of cases) {
