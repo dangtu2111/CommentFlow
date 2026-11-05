@@ -1,0 +1,64 @@
+name: Deploy staging (CHƯA BẬT)
+
+# Triển khai cf-staging trên máy ảo qua self-hosted runner. MẶC ĐỊNH TẮT, ba lớp:
+#  1) chỉ chạy tay (workflow_dispatch), không tự chạy khi push/merge;
+#  2) mọi job có điều kiện `vars.DEPLOY_STAGING_ENABLED == 'true'` — biến Repository variable này CHƯA tạo nên job bị bỏ qua;
+#  3) job dùng GitHub Environment `staging` (đặt Required reviewers) nên phải có người duyệt trước khi chạy.
+# Cách bật + điều kiện: docs/staging/H5-CHECKLIST.md mục "Bật workflow deploy-staging".
+# Workflow KHÔNG chứa bí mật: file `.env.cf-staging` nằm sẵn trên máy ảo (đường dẫn qua biến STAGING_ENV_FILE);
+# secret của GitHub chỉ dùng khi thật sự cần và chưa tạo cái nào.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Gõ "staging" để xác nhận triển khai lên cf-staging'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build image + compose up + kiểm sức khỏe
+    if: ${{ vars.DEPLOY_STAGING_ENABLED == 'true' && inputs.confirm == 'staging' }}
+    runs-on: [self-hosted, linux, cf-staging]
+    environment: staging # cấu hình Required reviewers ở Settings → Environments
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: cf-staging
+      # Đường dẫn file biến trên máy ảo (ngoài repo); đặt bằng Repository variable STAGING_ENV_FILE.
+      ENV_FILE: ${{ vars.STAGING_ENV_FILE }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Kiểm điều kiện trước khi chạm vào máy ảo
+        run: |
+          test -n "$ENV_FILE" || { echo "Thiếu biến STAGING_ENV_FILE"; exit 1; }
+          test -f "$ENV_FILE" || { echo "Không thấy file biến trên runner"; exit 1; }
+      - name: Kiểm cú pháp compose
+        run: |
+          docker compose --env-file "$ENV_FILE" \
+            -f infra/docker-compose.yml -f infra/docker-compose.staging.yml config --quiet
+      # [CẦN LÀM RÕ — docs/plans/chore-h5-staging-prep.md] Migration + `queue:install` lên staging: CLI hiện từ chối
+      # APP_ENV=staging (migration-guard). Cần quyết định đường chạy có duyệt riêng (environment `staging-migrate`
+      # với Required reviewers) TRƯỚC khi thêm bước ở đây. Không tự thêm.
+      - name: Build image (thẻ = git sha, không đẩy registry)
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker compose --env-file "$ENV_FILE" \
+            -f infra/docker-compose.yml -f infra/docker-compose.staging.yml build web worker
+      - name: Chạy worker trước, web sau
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          F="-f infra/docker-compose.yml -f infra/docker-compose.staging.yml"
+          docker compose --env-file "$ENV_FILE" $F up -d --no-build --wait worker
+          docker compose --env-file "$ENV_FILE" $F up -d --no-build --wait web
+      - name: Kiểm sức khỏe (compose --wait đã chờ healthcheck; in trạng thái)
+        run: docker compose --env-file "$ENV_FILE" -f infra/docker-compose.yml -f infra/docker-compose.staging.yml ps

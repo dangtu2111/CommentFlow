@@ -1,0 +1,21 @@
+# Ngữ cảnh build Docker (gốc repo): chỉ đưa mã nguồn cần thiết, KHÔNG đưa bí mật hay thư mục build.
+.git
+.github
+.claude
+.env
+.env.*
+!env.example
+node_modules
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/test-results
+**/playwright-report
+**/*.tsbuildinfo
+design
+docs
+services
+graphify-out
+*.pem
+*.key
