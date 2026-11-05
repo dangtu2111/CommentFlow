@@ -7,7 +7,7 @@
  */
 export type NavRole = 'owner' | 'staff';
 export type NavGroupKey = 'operations' | 'settings';
-export type NavItemKey = 'comments' | 'members' | 'security';
+export type NavItemKey = 'comments' | 'members' | 'activity' | 'security';
 
 export type NavItem = { key: NavItemKey; href: string };
 export type NavGroup = { key: NavGroupKey; items: NavItem[] };
@@ -18,6 +18,8 @@ const ENTRIES: readonly Entry[] = [
   { key: 'comments', href: '/app/comments', group: 'operations', roles: ['owner', 'staff'] },
   // Trang Thành viên chỉ Owner (docs/13 §3.1); Staff nhận 404 nên không hiện liên kết.
   { key: 'members', href: '/app/members', group: 'settings', roles: ['owner'] },
+  // Nhật ký (FR-092): Owner thấy tất cả, Staff chỉ dòng của mình (lọc ở truy vấn `listActionLogs`).
+  { key: 'activity', href: '/app/activity', group: 'settings', roles: ['owner', 'staff'] },
   { key: 'security', href: '/app/security', group: 'settings', roles: ['owner', 'staff'] },
 ];
 
