@@ -365,6 +365,23 @@ describe('FR-055 kb_chunks', () => {
     expect(await codeOf(admin.query(q, [ws, source, key]))).toBe('23505');
   });
 
+  it('FR-130 context_header và FR-133 embedding_model: hệ thống ghi được, đọc lại đúng', async () => {
+    expect(
+      await run(
+        'system',
+        `UPDATE cf.kb_chunks SET context_header = 'FAQ › Vận chuyển', embedding_model = 'model-x@rev1' WHERE id = '${chunk}'`,
+      ),
+    ).toBe(1);
+    const row = await admin.query(
+      'SELECT context_header, embedding_model FROM cf.kb_chunks WHERE id = $1',
+      [chunk],
+    );
+    expect(row.rows[0]).toEqual({
+      context_header: 'FAQ › Vận chuyển',
+      embedding_model: 'model-x@rev1',
+    });
+  });
+
   it('FR-139 embedding halfvec(1024): lưu vector 1024 chiều, từ chối chiều khác, truy vấn cosine chạy', async () => {
     const set = (v: string) =>
       run(
