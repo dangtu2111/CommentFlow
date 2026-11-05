@@ -6,7 +6,7 @@ export type EmailKind = StaticEmailKind | 'workspace-invite' | 'owner-change';
 
 export type WorkspaceRole = 'owner' | 'staff';
 /** Thay đổi Owner cần báo cho mọi Owner (docs/13 §3.1): thêm / đổi vai trò / gỡ. */
-export type OwnerChange = 'added' | 'role_changed' | 'removed' | 'suspended' | 'restored';
+export type OwnerChange = 'added' | 'role_changed' | 'removed' | 'suspended' | 'restored' | 'left';
 
 export type EmailInput =
   | { kind: 'verify-email'; url: string }
@@ -185,6 +185,7 @@ function dynamicCopy(
       removed: `${actor} đã gỡ Owner ${target}`,
       suspended: `${actor} đã tạm khóa Owner ${target}`,
       restored: `${actor} đã mở khóa Owner ${target}`,
+      left: `${target} đã tự rời khỏi`,
     },
     en: {
       added: `${actor} added ${target} as an Owner`,
@@ -192,20 +193,27 @@ function dynamicCopy(
       removed: `${actor} removed the Owner ${target}`,
       suspended: `${actor} suspended the Owner ${target}`,
       restored: `${actor} restored the Owner ${target}`,
+      left: `${target} left`,
     },
   }[locale][input.change];
   return locale === 'vi'
     ? {
-        subject: `Thay đổi Owner ở "${workspace}" — ${BRAND}`,
+        subject:
+          input.change === 'left'
+            ? `Có thành viên rời "${workspace}" — ${BRAND}`
+            : `Thay đổi Owner ở "${workspace}" — ${BRAND}`,
         greeting: (name) => `Chào ${name},`,
-        intro: `${what} trong workspace "${workspace}". Bạn nhận thư này vì bạn là Owner của workspace.`,
+        intro: `${what} ${input.change === 'left' ? '' : 'trong '}workspace "${workspace}". Bạn nhận thư này vì bạn là Owner của workspace.`,
         action: 'Xem thành viên',
         footer: 'Nếu bạn không nhận ra thay đổi này, hãy vào trang Thành viên để kiểm tra ngay.',
       }
     : {
-        subject: `Owner change in "${workspace}" — ${BRAND}`,
+        subject:
+          input.change === 'left'
+            ? `A member left "${workspace}" — ${BRAND}`
+            : `Owner change in "${workspace}" — ${BRAND}`,
         greeting: (name) => `Hi ${name},`,
-        intro: `${what} in the workspace "${workspace}". You receive this because you are an Owner of the workspace.`,
+        intro: `${what} ${input.change === 'left' ? '' : 'in '}the workspace "${workspace}". You receive this because you are an Owner of the workspace.`,
         action: 'View members',
         footer: "If you don't recognise this change, open the Members page and review it now.",
       };

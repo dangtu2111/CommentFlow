@@ -10,6 +10,7 @@ export type WorkspaceSwitcherLabels = {
   search: string;
   empty: string;
   create: string;
+  leave: string;
   roles: Record<WorkspaceMembership['role'], string>;
 };
 
@@ -65,6 +66,11 @@ export function WorkspaceSwitcherList({
         <li>
           <a className="ws-switch-item" href="/app/onboarding/workspace">
             {labels.create}
+          </a>
+        </li>
+        <li>
+          <a className="ws-switch-item" href="/app/leave">
+            {labels.leave}
           </a>
         </li>
       </ul>

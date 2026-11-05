@@ -4,6 +4,7 @@ import { actionLabelKey, diffRows, formatLogValue } from './action-log-format';
 describe('FR-092 nhãn hành động', () => {
   it('FR-092 mã đã biết có khóa dịch, mã lạ thì null (hiện mã thô)', () => {
     expect(actionLabelKey('member.role_changed')).toBe('member.role_changed');
+    expect(actionLabelKey('member.left')).toBe('member.left');
     expect(actionLabelKey('khong.biet')).toBeNull();
   });
 });

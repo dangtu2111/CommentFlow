@@ -197,6 +197,13 @@
       "when": 1793856599669,
       "tag": "0027_comment_hides",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793867022328,
+      "tag": "0028_member_leave",
+      "breakpoints": true
     }
   ]
 }
