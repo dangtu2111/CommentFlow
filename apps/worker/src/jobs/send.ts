@@ -249,10 +249,11 @@ async function recordFailure(
   // Lỗi vĩnh viễn: ghi thất bại CÓ RÀO (job khác đã tiếp quản/ghi rồi thì không đụng); chỉ đánh dấu kênh khi ghi được.
   const settled = await settle(tx, row, 'failed', error.code, 'send_failed', attemptsSoFar);
   if (!settled) return false;
-  if (error.code === 'TOKEN_EXPIRED' || error.code === 'PERMISSION') {
-    const channelStatus = error.code === 'TOKEN_EXPIRED' ? 'expired' : 'revoked';
+  // Chỉ TOKEN_EXPIRED (token của cả kênh hỏng) đổi trạng thái kênh. PERMISSION ở lệnh gửi MỘT bình luận có thể là từ chối
+  // theo đối tượng (bình luận không trả lời được), không đủ để kết luận cả kênh bị thu hồi: ghi `failed` mã PERMISSION.
+  if (error.code === 'TOKEN_EXPIRED') {
     await tx.execute(sql`
-      UPDATE cf.channels SET status = ${channelStatus}, updated_at = now()
+      UPDATE cf.channels SET status = 'expired', updated_at = now()
        WHERE id = ${row.channel_id}::uuid AND status = 'connected'`);
   }
   return false;

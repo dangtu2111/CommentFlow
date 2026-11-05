@@ -11,5 +11,5 @@
 - Tài liệu Meta: không có `X-Page-Usage` (dùng `X-Business-Use-Case-Usage`); trang Comment bản tiếng Việt thiếu trường `from/message/created_time`.
 
 ## Việc còn lại
-- `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`, `FB-FETCH-PAGE-WIDE` (gap-matrix), KT-010 cần Page thật.
+- `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`, `FB-FETCH-PAGE-WIDE` (gap-matrix), KT-012 cần Page thật.
 - Mã chuẩn thêm cho lỗi 100 (đề xuất, chưa làm).

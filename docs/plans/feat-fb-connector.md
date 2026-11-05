@@ -37,7 +37,8 @@ Ghi chú: các mục "Hoãn" trên là thẻ CẦN LÀM RÕ đã được xử l
 8. Timeout dùng `AbortSignal` (mặc định 30 giây, cấu hình > 60 giây bị từ chối lúc dựng); không retry ngầm (đúng 1 lần gọi fetch cho mỗi lệnh ghi) — test.
 9. Phản hồi lạ (JSON sai cấu trúc, rỗng, có chứa nội dung bình luận trong thông báo lỗi) không ném nội dung ra — test.
 10. `checkConnectorContract` trả rỗng cho connector Facebook; `verifyWebhook` dùng chữ ký; `parseWebhook` dùng `parseMetaWebhook` — test.
-11. Mọi công cụ xanh, coverage `@flow/connectors` đạt ngưỡng.
+11. (sau verifier-security) Id sai (`.`, `..`, `../x`, rỗng, ký tự lạ) → `UNKNOWN` không gọi mạng/token; thân phản hồi > 2 MB → `facebook_bad_response`; tổng thời hạn nhiều trang (45 giây) + 5 trang cho `fetchReplies`, kiểm trước + reply < 90 giây; lỗi không chứa token/proof/URL ở mọi kịch bản; `PERMISSION` ở `send.ts` không đổi kênh sang `revoked` — kiểm bằng connector.test.ts + send.int.test.ts.
+12. Mọi công cụ xanh, coverage `@flow/connectors` đạt ngưỡng.
 
 ## File sẽ đọc (đã đọc)
 
@@ -46,6 +47,7 @@ Ghi chú: các mục "Hoãn" trên là thẻ CẦN LÀM RÕ đã được xử l
 ## File sẽ sửa / tạo
 
 - tạo `packages/connectors/src/facebook/connector.ts` (+ `connector.test.ts`, `connector.fixtures.ts`), `graph-errors.ts` (+ test nếu cần)
+- sửa `apps/worker/src/jobs/send.ts` + `apps/worker/tests/send.int.test.ts` (PERMISSION không đổi kênh `revoked`; được phép sau verifier-security)
 - sửa `packages/connectors/src/types.ts` (thêm `fetchReplies?`), `index.ts` (export)
 - tạo `docs/decisions/010-facebook-connector.md`; sửa `docs/codemap.md`, `docs/gap-matrix.md`, `docs/plans/MASTER.md`, `docs/testing/KIEM_TRA_TAY.md`, `docs/handoff/feat-fb-connector.md`
 

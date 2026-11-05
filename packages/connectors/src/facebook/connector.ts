@@ -24,7 +24,19 @@ export const DEFAULT_GRAPH_API_VERSION = 'v27.0';
 /** Ngắn hơn hẳn thời hạn thuê 90 giây của job `send` (ADR 008). */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 export const MAX_TIMEOUT_MS = 60_000;
+/**
+ * Tổng thời hạn cho một thao tác NHIỀU TRANG (kiểm trước khi gửi lại / quét bài). Job `send` thuê 90 giây:
+ * kiểm trước (≤ DEFAULT_TOTAL_TIMEOUT_MS) + `reply` (≤ DEFAULT_TIMEOUT_MS) = 75 giây < 90 (ADR 010 §2).
+ */
+export const DEFAULT_TOTAL_TIMEOUT_MS = 45_000;
+export const MAX_TOTAL_TIMEOUT_MS = 45_000;
+/** Giới hạn byte đọc từ một thân phản hồi; vượt → `facebook_bad_response`. */
+export const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const DEFAULT_MAX_PAGES = 20;
+/** Đường kiểm-trước-khi-gửi-lại: tối đa 5 trang × 100 = 500 trả lời trực tiếp; nhiều hơn → UNKNOWN (không đoán). */
+const DEFAULT_MAX_REPLY_PAGES = 5;
+/** ID Graph của Page/bài/bình luận: chữ số, tối đa 3 đoạn nối bằng "_" (vd `pageId_postId`, `postId_commentId`). */
+const GRAPH_ID = /^[0-9]{1,30}(_[0-9]{1,30}){0,2}$/;
 const PAGE_SIZE = 100;
 const MAX_RETRY_AFTER_SECONDS = 86_400;
 const COMMENT_FIELDS = 'id,message,created_time,from{id,name},parent{id}';
@@ -39,8 +51,12 @@ export type FacebookConnectorOptions = {
   fetch?: typeof fetch;
   apiVersion?: string;
   timeoutMs?: number;
-  /** Số trang tối đa cho một lần đọc có phân trang; vượt → lỗi (không trả kết quả thiếu). */
+  /** Số trang tối đa cho `fetchPostComments`; vượt → lỗi (không trả kết quả thiếu). */
   maxPages?: number;
+  /** Số trang tối đa cho `fetchReplies` (đường kiểm-trước-khi-gửi-lại); mặc định nhỏ hơn. */
+  maxReplyPages?: number;
+  /** Tổng thời hạn cho cả vòng phân trang (mặc định và tối đa 45 giây). */
+  totalTimeoutMs?: number;
 };
 
 export type PageSubscription = { subscribed: boolean; fields: string[] };
@@ -50,13 +66,13 @@ export interface FacebookConnector extends PlatformConnector {
   fetchReplies(
     channel: ChannelRef,
     parentCommentId: string,
-    options?: { postExternalId?: string },
+    options?: { postExternalId?: string; totalTimeoutMs?: number },
   ): Promise<NormalizedComment[]>;
   /** Bình luận mọi cấp của MỘT bài (`filter=stream`), lọc `since` phía mình (tài liệu không có tham số này cho edge). */
   fetchPostComments(
     channel: ChannelRef,
     postExternalId: string,
-    options?: { since?: Date },
+    options?: { since?: Date; totalTimeoutMs?: number },
   ): Promise<NormalizedComment[]>;
   getPageSubscription(channel: ChannelRef): Promise<PageSubscription>;
   subscribePage(channel: ChannelRef, fields?: string[]): Promise<void>;
@@ -200,6 +216,8 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     apiVersion = DEFAULT_GRAPH_API_VERSION,
     timeoutMs = DEFAULT_TIMEOUT_MS,
     maxPages = DEFAULT_MAX_PAGES,
+    maxReplyPages = DEFAULT_MAX_REPLY_PAGES,
+    totalTimeoutMs = DEFAULT_TOTAL_TIMEOUT_MS,
   } = options;
   const doFetch = options.fetch ?? fetch;
   if (!appSecret) throw new Error('Thiếu khóa ứng dụng Meta (appSecret).');
@@ -211,6 +229,44 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     );
   if (!Number.isInteger(maxPages) || maxPages <= 0)
     throw new Error('maxPages phải là số nguyên dương.');
+  if (!Number.isInteger(maxReplyPages) || maxReplyPages <= 0)
+    throw new Error('maxReplyPages phải là số nguyên dương.');
+  if (
+    !Number.isInteger(totalTimeoutMs) ||
+    totalTimeoutMs <= 0 ||
+    totalTimeoutMs > MAX_TOTAL_TIMEOUT_MS
+  )
+    throw new Error(`totalTimeoutMs phải trong (0, ${MAX_TOTAL_TIMEOUT_MS}].`);
+
+  /** Kiểm id TRƯỚC khi ghép đường dẫn/gọi mạng; sai → UNKNOWN (mã không chứa id). */
+  function graphId(id: string): string {
+    if (typeof id !== 'string' || !GRAPH_ID.test(id)) throw fail('UNKNOWN', 'facebook_invalid_id');
+    return id;
+  }
+
+  /** Đọc thân tối đa MAX_RESPONSE_BYTES (theo byte nhận được, không tin Content-Length). */
+  async function readBoundedText(response: Response): Promise<string> {
+    const declared = Number(response.headers.get('content-length'));
+    if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
+      await response.body?.cancel();
+      throw badResponse();
+    }
+    if (!response.body) return '';
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_RESPONSE_BYTES) {
+        await reader.cancel();
+        throw badResponse();
+      }
+      chunks.push(value);
+    }
+    return Buffer.concat(chunks).toString('utf8');
+  }
 
   async function tokenOf(channel: ChannelRef): Promise<string> {
     try {
@@ -227,6 +283,7 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     method: 'GET' | 'POST',
     path: string,
     params: Record<string, string>,
+    overall?: AbortSignal,
   ): Promise<unknown> {
     const token = await tokenOf(channel);
     const all = {
@@ -237,7 +294,9 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     const url = new URL(`${GRAPH_BASE_URL}/${apiVersion}/${path}`);
     const init: RequestInit = {
       method,
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: overall
+        ? AbortSignal.any([AbortSignal.timeout(timeoutMs), overall])
+        : AbortSignal.timeout(timeoutMs),
       redirect: 'error',
     };
     // Ghi: token trong THÂN POST (không nằm trong URL/log truy cập); đọc: tham số truy vấn (tài liệu dùng cách này).
@@ -253,8 +312,9 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       const response = await doFetch(url, init);
       status = response.status;
       headers = response.headers;
-      text = await response.text();
-    } catch {
+      text = await readBoundedText(response);
+    } catch (error) {
+      if (isPlatformError(error)) throw error;
       // Mạng/timeout/hủy: ở bước ghi nghĩa là KHÔNG BIẾT đã thực hiện chưa → UNKNOWN. Bỏ lỗi gốc (có thể chứa URL/token).
       throw fail('UNKNOWN', 'facebook_network_error');
     }
@@ -281,17 +341,20 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     path: string,
     extra: Record<string, string>,
     map: (node: z.infer<typeof commentNodeSchema>) => NormalizedComment | null,
+    limits: { pages: number; totalTimeoutMs: number },
   ): Promise<NormalizedComment[]> {
+    // Một đồng hồ chung cho CẢ vòng phân trang (không chỉ từng trang): trang chậm nối trang chậm vẫn bị cắt.
+    const overall = AbortSignal.timeout(Math.min(limits.totalTimeoutMs, MAX_TOTAL_TIMEOUT_MS));
     const result: NormalizedComment[] = [];
     let after: string | undefined;
-    for (let page = 1; page <= maxPages; page++) {
+    for (let page = 1; page <= limits.pages; page++) {
       const params: Record<string, string> = {
         ...extra,
         fields: COMMENT_FIELDS,
         limit: String(PAGE_SIZE),
       };
       if (after !== undefined) params.after = after;
-      const parsed = pageSchema.safeParse(await call(channel, 'GET', path, params));
+      const parsed = pageSchema.safeParse(await call(channel, 'GET', path, params, overall));
       if (!parsed.success) throw badResponse();
       for (const item of parsed.data.data) {
         const node = commentNodeSchema.safeParse(item);
@@ -331,9 +394,10 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       const postExternalId = opts.postExternalId ?? '';
       return readAllComments(
         channel,
-        `${encodeURIComponent(parentCommentId)}/comments`,
+        `${graphId(parentCommentId)}/comments`,
         {},
         (node) => toNormalized(node, channel, postExternalId, parentCommentId),
+        { pages: maxReplyPages, totalTimeoutMs: opts.totalTimeoutMs ?? totalTimeoutMs },
       );
     },
 
@@ -341,7 +405,7 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       const since = opts.since?.getTime();
       return readAllComments(
         channel,
-        `${encodeURIComponent(postExternalId)}/comments`,
+        `${graphId(postExternalId)}/comments`,
         { filter: 'stream' },
         (node) => {
           const comment = toNormalized(node, channel, postExternalId, node.parent?.id ?? null);
@@ -349,11 +413,12 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
             ? comment
             : null;
         },
+        { pages: maxPages, totalTimeoutMs: opts.totalTimeoutMs ?? totalTimeoutMs },
       );
     },
 
     async reply(channel, commentId, text) {
-      const body = await call(channel, 'POST', `${encodeURIComponent(commentId)}/comments`, {
+      const body = await call(channel, 'POST', `${graphId(commentId)}/comments`, {
         message: text,
       });
       const created = createdSchema.safeParse(body);
@@ -364,7 +429,7 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
 
     async setHidden(channel, commentId, hidden) {
       expectSuccess(
-        await call(channel, 'POST', encodeURIComponent(commentId), {
+        await call(channel, 'POST', graphId(commentId), {
           is_hidden: hidden ? 'true' : 'false',
         }),
       );
@@ -372,7 +437,7 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
 
     async getPageSubscription(channel) {
       const parsed = subscribedAppsSchema.safeParse(
-        await call(channel, 'GET', `${encodeURIComponent(channel.externalId)}/subscribed_apps`, {}),
+        await call(channel, 'GET', `${graphId(channel.externalId)}/subscribed_apps`, {}),
       );
       if (!parsed.success) throw badResponse();
       const mine = parsed.data.data.find((app) => app.id === appId);
@@ -381,7 +446,7 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
 
     async subscribePage(channel, fields = ['feed']) {
       expectSuccess(
-        await call(channel, 'POST', `${encodeURIComponent(channel.externalId)}/subscribed_apps`, {
+        await call(channel, 'POST', `${graphId(channel.externalId)}/subscribed_apps`, {
           subscribed_fields: fields.join(','),
         }),
       );
