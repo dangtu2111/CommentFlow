@@ -1,5 +1,17 @@
 import { deserializeEvent } from '@flow/connectors';
-import { and, type Database, eq, type FlowDb, isNull, lte, ne, or, schema, sql } from '@flow/db';
+import {
+  and,
+  type Database,
+  eq,
+  type FlowDb,
+  isNull,
+  lte,
+  markCommentDeleted,
+  ne,
+  or,
+  schema,
+  sql,
+} from '@flow/db';
 import { type IngestJob, ingestJobSchema } from '@flow/shared';
 import type { Logger } from '../logger';
 import { INGEST_RETRY_LIMIT } from '../queue/definitions';
@@ -147,19 +159,8 @@ async function applyDelete(
   commentExternalId: string,
   occurredAt?: Date,
 ): Promise<void> {
-  const updated = await tx
-    .update(comments)
-    .set({ deletedAt: occurredAt ?? new Date() })
-    .where(
-      and(
-        eq(comments.workspaceId, job.workspaceId),
-        eq(comments.channelId, channelId),
-        eq(comments.externalId, commentExternalId),
-        isNull(comments.deletedAt),
-      ),
-    )
-    .returning({ id: comments.id });
-  const id = updated[0]?.id;
+  // Hàm DB đặt deleted_at VÀ xóa trắng nội dung/danh tính khách + bản sao trong webhook_events (FR-048, migration 0025).
+  const id = await markCommentDeleted(tx, channelId, commentExternalId, occurredAt);
   if (id) await logSystemAction(tx, job.workspaceId, 'comment.deleted', id);
 }
 

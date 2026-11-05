@@ -369,6 +369,7 @@
       "authorId": "Mã người bình luận",
       "isReply": "Đây là trả lời cho một bình luận khác.",
       "noText": "(Không có nội dung chữ)",
+      "redacted": "Khách đã xóa bình luận này; nội dung và thông tin người bình luận đã được xóa khỏi hệ thống.",
       "notFoundTitle": "Không tìm thấy bình luận",
       "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này."
     },

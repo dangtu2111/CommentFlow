@@ -86,8 +86,13 @@ describe('FR-048 trigger: người dùng không đặt/gỡ deleted_at', () => {
       )
       .then(() => 'ok', code);
     expect(synced).toBe('42501'); // mốc đồng bộ nội dung cũng chỉ hệ thống ghi
+    // Từ migration 0025 chỉ hàm DEFINER (kèm xóa trắng) đặt được deleted_at — xem comment-redact.int.test.ts.
     const system = await db.withJob(ws, (tx) =>
-      tx.execute(sql.raw(`UPDATE cf.comments SET deleted_at = now() WHERE id = '${live}'`)),
+      tx.execute(
+        sql.raw(
+          `SELECT cf.mark_comment_deleted('${channel}'::uuid, (SELECT external_id FROM cf.comments WHERE id = '${live}'), NULL)`,
+        ),
+      ),
     );
     expect(system.rowCount).toBe(1);
     expect(

@@ -74,6 +74,8 @@ export const comments = cf.table(
     privateRepliedAt: timestamptz('private_replied_at'),
     /** Khách xóa bình luận trên nền tảng (FR-048): ẩn khỏi inbox, GIỮ dòng + log. Chỉ đường hệ thống ghi (trigger). */
     deletedAt: timestamptz('deleted_at'),
+    /** Thời điểm xóa trắng nội dung + danh tính khách sau khi khách xóa bình luận (FR-048). Chỉ hàm `cf.mark_comment_deleted` ghi. */
+    redactedAt: timestamptz('redacted_at'),
     /** Thời điểm (theo nền tảng) của lần sửa nội dung đã áp dụng gần nhất: lần sửa cũ đến muộn không ghi đè. Chỉ hệ thống ghi. */
     textSyncedAt: timestamptz('text_synced_at'),
     createdAt: createdAt(),

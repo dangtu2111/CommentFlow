@@ -14,6 +14,7 @@ export {
   setChannelToken,
 } from './channel-tokens';
 export { createDb, type Database, type FlowDb } from './client';
+export { markCommentDeleted } from './comment-redact';
 export {
   type ChannelAlert,
   type ChannelAlertStatus,
