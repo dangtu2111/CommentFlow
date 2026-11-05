@@ -267,9 +267,19 @@
       "roleInvalid": "Vai trò không hợp lệ.",
       "rateLimited": "Bạn đã gửi quá nhiều lời mời. Vui lòng thử lại sau {minutes} phút.",
       "lastOwner": "Workspace phải luôn còn ít nhất một Owner đang hoạt động.",
+      "leaveLastOwner": "Bạn là Owner đang hoạt động cuối cùng. Hãy nâng một thành viên khác lên Owner (hoặc xóa workspace) trước khi rời.",
       "invalid": "Thông tin chưa hợp lệ. Vui lòng tải lại trang rồi thử lại.",
       "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
     }
+  },
+  "leave": {
+    "title": "Rời workspace",
+    "subtitle": "Rời khỏi workspace “{workspace}”. Bạn sẽ mất quyền truy cập ngay và chỉ vào lại được khi được mời lại.",
+    "button": "Rời workspace",
+    "warning": "Bạn sẽ không còn xem được bình luận, nhật ký hay dữ liệu của workspace này. Các Owner sẽ nhận email báo bạn đã rời.",
+    "confirm": "Xác nhận rời workspace",
+    "cancel": "Hủy",
+    "lastOwner": "Bạn là Owner đang hoạt động cuối cùng nên chưa thể rời. Hãy nâng một thành viên khác lên Owner trước."
   },
   "invite": {
     "title": "Lời mời tham gia",
@@ -487,7 +497,8 @@
       "comments": "Bình luận",
       "members": "Thành viên",
       "activity": "Nhật ký",
-      "security": "Bảo mật"
+      "security": "Bảo mật",
+      "leave": "Rời workspace"
     },
     "logout": "Đăng xuất",
     "brand": "CommentFlow AI",
@@ -553,6 +564,7 @@
     "actions": {
       "workspace.created": "Tạo workspace",
       "member.role_changed": "Đổi vai trò thành viên",
+      "member.left": "Thành viên tự rời workspace",
       "invitation.created": "Gửi lời mời",
       "invitation.accepted": "Nhận lời mời",
       "invitation.revoked": "Thu hồi lời mời",

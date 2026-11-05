@@ -469,6 +469,7 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.workspaces', 'w', 'is_workspace_owner'],
   ['core.workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
   ['core.action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+  ['core.action_logs', 'r', 'is_workspace_owner'], // đọc: Owner cả workspace, Staff chỉ dòng của mình (0028)
   // CH-SCHEMA (feat/ch-schema, ADR 007): ghi theo vai trò hoặc ĐƯỜNG HỆ THỐNG (withJob → is_system_context()).
   // Không có policy INSERT cho cf.channels (cf_app không INSERT: tạo kênh qua hàm DEFINER của TOKEN-ENC).
   ['cf.channels', 'w', 'is_workspace_owner'], // + is_system_context (trigger giới hạn cột cho đường người dùng)
@@ -667,6 +668,34 @@ async function checkWebhookFunction(db: Queryable, violations: RlsViolation[]): 
   }
 }
 
+/**
+ * Hàm tự rời workspace (0028): phải tồn tại, PUBLIC không EXECUTE, cf_app có EXECUTE, đúng MỘT tham số (không nhận
+ * user id), người rời lấy từ current_user_id(), có khóa tư vấn theo workspace và chặn Owner cuối (members_last_owner).
+ */
+async function checkLeaveFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* leave-function */
+    SELECT 'core.leave_workspace' AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN p.pronargs <> 1 THEN 'chỉ được nhận MỘT tham số (workspace); không nhận user id'
+        ELSE 'thân hàm thiếu current_user_id() / pg_advisory_xact_lock / members_last_owner'
+      END AS problem
+    FROM (SELECT 1) AS one
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = 'leave_workspace'
+    WHERE p.oid IS NULL
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR p.pronargs <> 1
+      OR p.prosrc NOT LIKE '%core.current_user_id()%'
+      OR p.prosrc NOT LIKE '%pg_advisory_xact_lock%'
+      OR p.prosrc NOT LIKE '%members_last_owner%'`);
+  for (const row of found.rows) {
+    violations.push({ subject: String(row.name), message: `hàm tự rời: ${String(row.problem)}` });
+  }
+}
+
 export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   const violations: RlsViolation[] = [];
 
@@ -842,6 +871,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkNoDelete(db, violations);
   await checkTokenFunctions(db, violations);
   await checkWebhookFunction(db, violations);
+  await checkLeaveFunction(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

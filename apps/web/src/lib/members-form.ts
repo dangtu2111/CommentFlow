@@ -6,6 +6,7 @@ export type MembersMessageKey =
   | 'roleInvalid'
   | 'rateLimited'
   | 'lastOwner'
+  | 'leaveLastOwner'
   | 'invalid'
   | 'generic';
 

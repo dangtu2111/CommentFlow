@@ -56,7 +56,7 @@ describe('createWorkspace', () => {
       defaultLang: 'en',
     });
     const read = (id: string) =>
-      db.withWorkspace(id, async (tx) => ({
+      db.withJob(id, async (tx) => ({
         ws: (await tx.select().from(workspaces).where(eq(workspaces.id, id)))[0],
         logs: await tx.select().from(actionLogs).where(eq(actionLogs.workspaceId, id)),
       }));

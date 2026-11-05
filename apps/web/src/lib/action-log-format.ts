@@ -4,6 +4,7 @@
 const KNOWN_ACTIONS = [
   'workspace.created',
   'member.role_changed',
+  'member.left',
   'invitation.created',
   'invitation.accepted',
   'invitation.revoked',

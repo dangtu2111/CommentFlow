@@ -1,6 +1,7 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { InvitationActions } from '../../../../components/app/invitation-actions';
 import { InviteForm } from '../../../../components/app/invite-form';
+import { LeaveWorkspace } from '../../../../components/app/leave-workspace';
 import { MemberActions } from '../../../../components/app/member-actions';
 import { getAuthRuntime } from '../../../../server/auth';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -106,6 +107,10 @@ export default async function MembersPage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="card stack">
+        <LeaveWorkspace lastOwner={activeOwners <= 1} withHeading />
       </section>
     </main>
   );
