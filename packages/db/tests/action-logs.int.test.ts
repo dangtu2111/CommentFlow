@@ -219,3 +219,75 @@ describe('FR-092 lọc và phân trang', () => {
     expect(second.nextCursor).toBeNull();
   });
 });
+
+describe('LOG-STAFF-SYSTEM-ROWS: dòng hệ thống theo yêu cầu (on_behalf_of, migration 0029)', () => {
+  let wsC: string;
+  let ownerC: string;
+  let s1: string;
+  let s2: string;
+
+  async function sys(onBehalf: string | null, action: string, minutes: number): Promise<void> {
+    await admin.query(
+      `INSERT INTO core.action_logs (workspace_id, actor_type, on_behalf_of, action, target_type, target_id, created_at)
+       VALUES ($1, 'system', $2, $3, 'comment', 'c1', $4)`,
+      [wsC, onBehalf, action, new Date(base + minutes * 60_000)],
+    );
+  }
+
+  beforeAll(async () => {
+    wsC = await seedWorkspace(admin);
+    ownerC = await seedUser(admin, 'Chủ C');
+    s1 = await seedUser(admin, 'NV Một');
+    s2 = await seedUser(admin, 'NV Hai');
+    await seedMember(admin, wsC, ownerC, 'owner');
+    await seedMember(admin, wsC, s1, 'staff');
+    await seedMember(admin, wsC, s2, 'staff');
+    await sys(s1, 'comment.replied', 1);
+    await sys(s2, 'comment.hidden', 2);
+    await sys(null, 'comment.unhidden', 3);
+    await admin.query(
+      `INSERT INTO core.action_logs (workspace_id, actor_type, action, created_at) VALUES ($1, 'ai', 'ai.auto_reply', $2)`,
+      [wsC, new Date(base + 4 * 60_000)],
+    );
+  });
+
+  const runC = (userId: string, role: 'owner' | 'staff', filter = {}) =>
+    as<Awaited<ReturnType<typeof listActionLogs>>>(userId, wsC, (tx) =>
+      listActionLogs(tx, wsC, { userId, role }, filter, 'UTC'),
+    );
+
+  it('Staff thấy dòng system do mình yêu cầu (kèm người yêu cầu), không thấy của người khác/không người yêu cầu/AI', async () => {
+    const page = await runC(s1, 'staff');
+    expect(page.items.map((i) => i.action)).toEqual(['comment.replied']);
+    expect(page.items[0]).toMatchObject({
+      actorType: 'system',
+      onBehalfOfId: s1,
+      onBehalfOfName: 'NV Một',
+    });
+    expect((await runC(s1, 'staff', { actorType: 'ai' })).items).toEqual([]);
+    expect((await runC(s1, 'staff', { actorType: 'system' })).items).toHaveLength(1);
+  });
+
+  it('chi tiết và danh sách hành động của Staff theo cùng quy tắc', async () => {
+    const own = (await runC(s1, 'staff')).items[0] as { id: string };
+    const other = (await runC(s2, 'staff')).items[0] as { id: string };
+    const viewer = { userId: s1, role: 'staff' as const };
+    expect(
+      await as<unknown>(s1, wsC, (tx) => getActionLog(tx, wsC, viewer, own.id)),
+    ).not.toBeNull();
+    expect(await as<unknown>(s1, wsC, (tx) => getActionLog(tx, wsC, viewer, other.id))).toBeNull();
+    expect(await as<string[]>(s1, wsC, (tx) => listActionLogActions(tx, wsC, viewer))).toEqual([
+      'comment.replied',
+    ]);
+  });
+
+  it('Owner thấy cả bốn dòng, kèm tên người yêu cầu (null khi không có)', async () => {
+    const page = await runC(ownerC, 'owner');
+    expect(page.items.map((i) => [i.action, i.onBehalfOfName])).toEqual([
+      ['ai.auto_reply', null],
+      ['comment.unhidden', null],
+      ['comment.hidden', 'NV Hai'],
+      ['comment.replied', 'NV Một'],
+    ]);
+  });
+});

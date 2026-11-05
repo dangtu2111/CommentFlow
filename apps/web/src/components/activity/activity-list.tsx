@@ -7,7 +7,7 @@ import {
   type ActivityView,
   buildActivityHref,
 } from '../../lib/action-log-filters';
-import { actionLabelKey } from '../../lib/action-log-format';
+import { actionLabelKey, onBehalfOfDisplay } from '../../lib/action-log-format';
 import { formatAbsoluteTime } from '../../lib/inbox-format';
 
 export type ActivityListItem = {
@@ -15,20 +15,32 @@ export type ActivityListItem = {
   createdAt: Date;
   actorType: ActivityActorKey;
   actorName: string | null;
+  onBehalfOfId: string | null;
+  onBehalfOfName: string | null;
   action: string;
   targetType: string | null;
 };
 
 type ActivityT = Awaited<ReturnType<typeof getTranslations<'activity'>>>;
 
-/** Tên hiển thị của người thực hiện: người dùng theo tên, loại khác theo nhãn loại; người đã rời thì "Thành viên cũ". */
+/**
+ * Tên hiển thị của người thực hiện: người dùng theo tên, loại khác theo nhãn loại; người đã rời thì "Thành viên cũ".
+ * Dòng hệ thống có người yêu cầu: "Hệ thống (theo yêu cầu của bạn / của <tên>)".
+ */
 export function actorDisplay(
   t: ActivityT,
-  actorType: ActivityActorKey,
-  actorName: string | null,
+  item: Pick<ActivityListItem, 'actorType' | 'actorName' | 'onBehalfOfId' | 'onBehalfOfName'>,
+  viewerId: string,
 ): string {
-  if (actorType !== 'user') return t(`actors.${actorType}`);
-  return actorName ?? t('actors.formerMember');
+  if (item.actorType === 'system') {
+    const onBehalf = onBehalfOfDisplay(item.onBehalfOfId, item.onBehalfOfName, viewerId);
+    if (onBehalf?.kind === 'self') return t('actors.systemOnBehalf.self');
+    if (onBehalf?.kind === 'named')
+      return t('actors.systemOnBehalf.named', { name: onBehalf.name });
+    if (onBehalf?.kind === 'former') return t('actors.systemOnBehalf.former');
+  }
+  if (item.actorType !== 'user') return t(`actors.${item.actorType}`);
+  return item.actorName ?? t('actors.formerMember');
 }
 
 /** Danh sách dòng nhật ký (cột giữa). Chỉ hiển thị dữ liệu thật của `action_logs`. */
@@ -37,11 +49,13 @@ export async function ActivityList({
   items,
   nextCursor,
   timeZone,
+  viewerId,
 }: {
   view: ActivityView;
   items: ActivityListItem[];
   nextCursor: ActivityCursorValue | null;
   timeZone: string;
+  viewerId: string;
 }) {
   const [t, rawLocale] = await Promise.all([getTranslations('activity'), getLocale()]);
   const locale = isLocale(rawLocale) ? rawLocale : 'vi';
@@ -66,7 +80,7 @@ export async function ActivityList({
                   </time>
                 </div>
                 <div className="inbox-source">
-                  {actorDisplay(t, item.actorType, item.actorName)}
+                  {actorDisplay(t, item, viewerId)}
                   {item.targetType ? ` · ${item.targetType}` : ''}
                 </div>
               </Link>

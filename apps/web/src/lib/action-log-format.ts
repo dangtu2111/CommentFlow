@@ -52,3 +52,22 @@ export function diffRows(before: unknown, after: unknown): DiffRow[] {
     return { key, before: beforeText, after: afterText, changed: beforeText !== afterText };
   });
 }
+
+export type OnBehalfOfDisplay =
+  | { kind: 'self' }
+  | { kind: 'named'; name: string }
+  | { kind: 'former' };
+
+/**
+ * Cách hiển thị "Hệ thống (theo yêu cầu của …)" cho dòng `system` có người yêu cầu (`on_behalf_of`). `null` khi không có.
+ * Chính người xem → `self`; người khác có tên → `named`; không còn tên → `former` (không bao giờ hiện mã người dùng).
+ */
+export function onBehalfOfDisplay(
+  onBehalfOfId: string | null,
+  onBehalfOfName: string | null,
+  viewerId: string,
+): OnBehalfOfDisplay | null {
+  if (!onBehalfOfId) return null;
+  if (onBehalfOfId === viewerId) return { kind: 'self' };
+  return onBehalfOfName ? { kind: 'named', name: onBehalfOfName } : { kind: 'former' };
+}

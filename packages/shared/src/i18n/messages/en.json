@@ -535,7 +535,7 @@
     "title": "Activity log",
     "subtitle": {
       "owner": "Actions by members, AI and the system in this workspace. Read-only; entries cannot be edited or deleted.",
-      "staff": "Actions you performed yourself. Read-only; entries cannot be edited or deleted."
+      "staff": "Actions you performed yourself, including work the system did at your request. Read-only; entries cannot be edited or deleted."
     },
     "readOnly": "Read-only",
     "list": {
@@ -560,7 +560,12 @@
       "ai": "AI",
       "system": "System",
       "admin": "Administrator",
-      "formerMember": "Former member"
+      "formerMember": "Former member",
+      "systemOnBehalf": {
+        "self": "System (at your request)",
+        "named": "System (at the request of {name})",
+        "former": "System (at the request of a former member)"
+      }
     },
     "actions": {
       "workspace.created": "Workspace created",

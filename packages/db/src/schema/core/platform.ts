@@ -64,6 +64,8 @@ export const actionLogs = core.table(
       .references(() => workspaces.id, { onDelete: 'cascade' }),
     actorType: text('actor_type').notNull(),
     actorId: uuid('actor_id'),
+    /** Người yêu cầu việc do đường hệ thống làm (chỉ `actor_type='system'`; migration 0029); không FK. */
+    onBehalfOf: uuid('on_behalf_of'),
     action: text('action').notNull(),
     targetType: text('target_type'),
     targetId: text('target_id'),
@@ -75,6 +77,10 @@ export const actionLogs = core.table(
   },
   (t) => [
     check('action_logs_actor_type_check', sql`${t.actorType} in ('user', 'ai', 'system', 'admin')`),
+    check(
+      'action_logs_on_behalf_of_check',
+      sql`${t.onBehalfOf} is null or ${t.actorType} = 'system'`,
+    ),
     index('action_logs_workspace_created_idx').on(t.workspaceId, t.createdAt),
   ],
 );

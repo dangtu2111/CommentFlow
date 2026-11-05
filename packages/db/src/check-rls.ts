@@ -469,10 +469,12 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.workspaces', 'w', 'is_workspace_owner'],
   ['core.workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
   ['core.action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+  ['core.action_logs', 'a', 'on_behalf_of'], // 0029: đường người dùng không tự đặt người yêu cầu (on_behalf_of IS NULL)
   // đọc (0028): Owner cả workspace, Staff chỉ dòng `user` của mình; mọi policy SELECT permissive phải chứa đủ ba marker
   ['core.action_logs', 'r', 'is_workspace_owner'],
   ['core.action_logs', 'r', 'current_user_id'],
   ['core.action_logs', 'r', 'actor_type'],
+  ['core.action_logs', 'r', 'on_behalf_of'], // 0029: Staff thấy dòng system do mình yêu cầu
   // CH-SCHEMA (feat/ch-schema, ADR 007): ghi theo vai trò hoặc ĐƯỜNG HỆ THỐNG (withJob → is_system_context()).
   // Không có policy INSERT cho cf.channels (cf_app không INSERT: tạo kênh qua hàm DEFINER của TOKEN-ENC).
   ['cf.channels', 'w', 'is_workspace_owner'], // + is_system_context (trigger giới hạn cột cho đường người dùng)

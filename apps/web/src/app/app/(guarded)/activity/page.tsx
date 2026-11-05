@@ -64,12 +64,13 @@ export default async function ActivityPage({
             items={page.items}
             nextCursor={page.nextCursor}
             timeZone={timeZone}
+            viewerId={user.id}
           />
         )}
       </section>
       <aside className="log-detail" aria-label={t('detail.title')}>
         {detail ? (
-          <ActivityDetailPanel entry={detail} timeZone={timeZone} />
+          <ActivityDetailPanel entry={detail} timeZone={timeZone} viewerId={user.id} />
         ) : view.selected ? (
           <div className="inbox-empty" role="alert">
             <h2>{t('detail.notFoundTitle')}</h2>

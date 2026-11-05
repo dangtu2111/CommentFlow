@@ -535,7 +535,7 @@
     "title": "Nhật ký hoạt động",
     "subtitle": {
       "owner": "Ghi nhận hành động của thành viên, AI và hệ thống trong workspace. Chỉ đọc, không sửa hay xóa được.",
-      "staff": "Các hành động do chính bạn thực hiện. Chỉ đọc, không sửa hay xóa được."
+      "staff": "Các hành động do chính bạn thực hiện, kể cả việc hệ thống làm theo yêu cầu của bạn. Chỉ đọc, không sửa hay xóa được."
     },
     "readOnly": "Chỉ đọc",
     "list": {
@@ -560,7 +560,12 @@
       "ai": "AI",
       "system": "Hệ thống",
       "admin": "Quản trị viên",
-      "formerMember": "Thành viên cũ"
+      "formerMember": "Thành viên cũ",
+      "systemOnBehalf": {
+        "self": "Hệ thống (theo yêu cầu của bạn)",
+        "named": "Hệ thống (theo yêu cầu của {name})",
+        "former": "Hệ thống (theo yêu cầu của thành viên cũ)"
+      }
     },
     "actions": {
       "workspace.created": "Tạo workspace",

@@ -745,6 +745,20 @@ describe('checkRls: hàm tự rời workspace và policy đọc nhật ký', () 
   });
 });
 
+describe('checkRls: on_behalf_of của action_logs (0029)', () => {
+  it('báo khi policy SELECT/INSERT của action_logs thiếu marker on_behalf_of', async () => {
+    // Hàng của fake = các cặp VI PHẠM (thiếu marker).
+    const missing = [
+      { tbl: 'core.action_logs', cmd: 'r', marker: 'on_behalf_of' },
+      { tbl: 'core.action_logs', cmd: 'a', marker: 'on_behalf_of' },
+    ];
+    const v = await checkRls(fakeDb({ actorPolicies: missing }));
+    const messages = v.filter((x) => x.subject === 'core.action_logs').map((x) => x.message);
+    expect(messages).toContainEqual(expect.stringContaining(`(on_behalf_of) cho lệnh 'r'`));
+    expect(messages).toContainEqual(expect.stringContaining(`(on_behalf_of) cho lệnh 'a'`));
+  });
+});
+
 describe('checkRls: bảng không được DELETE', () => {
   it('báo khi cf_app có quyền DELETE trên bảng cấm', async () => {
     const v = await checkRls(fakeDb({ noDelete: [{ tbl: 'cf.comments' }] }));
