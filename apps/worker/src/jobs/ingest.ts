@@ -96,8 +96,11 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
           isOwn: false,
         })
         .onConflictDoNothing()
-        .returning({ id: comments.id });
-      if (inserted.length > 0) {
+        .returning({ id: comments.id, deletedAt: comments.deletedAt });
+      const born = inserted[0];
+      // Dòng sinh ra ĐÃ XÓA (dấu xóa đến trước, migration 0026): đã xóa trắng bởi trigger; không tính vào số đếm bài.
+      if (born?.deletedAt) await logSystemAction(tx, job.workspaceId, 'comment.deleted', born.id);
+      else if (born) {
         await tx
           .update(posts)
           .set({

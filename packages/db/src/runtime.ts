@@ -53,6 +53,7 @@ export {
   ReplyRequestFailedError,
   requestCommentReply,
 } from './replies';
+export { purgeExpiredWebhookPayloads, WEBHOOK_PAYLOAD_RETENTION_DAYS } from './retention';
 export { schema } from './schema';
 export {
   type RecordedWebhookEvent,
