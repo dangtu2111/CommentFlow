@@ -36,7 +36,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | AUTH-SESSIONS-UI | FR-001 (thiết bị) | US-005 | AUTH-2FA | — | không | ✅ (trang tạm) |
 | AUTH-RATELIMIT | FR-001 (giới hạn đăng nhập) | — | AUTH-CORE | S | không | ✅ (M1; xô 2FA ở M3 xong) |
 | AUTH-FORGOT, AUTH-PWNED | FR-001 | US-001 | AUTH-CORE | S | không | ✅ |
-| GĐ0-TENANCY | FR-002–005 | US-001, 004, 006 | AUTH-CORE | S+DB | không | ✅ (trừ `MEMBER-LEAVE`, `FR-005-SEARCH`) |
+| GĐ0-TENANCY | FR-002–005 | US-001, 004, 006 | AUTH-CORE | S+DB | không | ✅ (trừ `MEMBER-LEAVE`, `FR-005-COUNT`) |
 | AUTH-INVITE | FR-003 | US-004 | TENANCY | S+DB | không | ✅ |
 | RLS-ACTOR-CTX | FR-003, 004 (DB) | — | TENANCY | S+DB | không | ✅ |
 | GĐ0-FLAGS | FR-117 (mã) | — | DB | S | không | ✅ |
@@ -70,7 +70,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ⏳ |
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ⏳ |
 | E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ⏳ |
-| FR-005-SEARCH | FR-005 (tìm kiếm + số việc cần xử lý của bộ chuyển workspace) | US-006 | INBOX-LIST | — | không | ⏳ |
+| FR-005-SEARCH | FR-005 (ô tìm kiếm của bộ chuyển workspace; số việc cần xử lý tách thành `FR-005-COUNT`) | US-006 | INBOX-LIST | — | không | ✅ (tìm kiếm) |
 | TEST-COVERAGE-GAP | — (nâng coverage `saas-core` 41% → 85%, ratchet) | — | — | — | không | ⏳ (liên tục) |
 | TRACE-DEBT | — (xóa dần `trace-baseline.json`: 10 mã FR cần test mang mã) | — | — | — | không | ⏳ (liên tục) |
 
