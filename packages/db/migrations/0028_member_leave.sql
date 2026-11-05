@@ -20,6 +20,10 @@
 -- Đường lùi: LÙI CODE TRƯỚC (web gọi leave_workspace); DROP FUNCTION core.leave_workspace(uuid); DROP POLICY
 -- action_logs_select ON core.action_logs; CREATE POLICY action_logs_select ON core.action_logs FOR SELECT
 -- USING (workspace_id = (SELECT core.current_workspace_id())) (bản 0001).
+-- PHẢI lùi CẢ check-rls (packages/db/src/check-rls.ts: các mục ACTOR_POLICIES của core.action_logs 'r' và hàm
+-- checkLeaveFunction), nếu không `pnpm db:check-rls` đỏ. HỆ QUẢ khi lùi: Staff lại đọc được MỌI dòng nhật ký của
+-- workspace ở tầng RLS (chỉ còn lọc ở truy vấn listActionLogs); các dòng `member.left` đã ghi và thành viên đã
+-- `removed` KHÔNG hoàn tác được (muốn quay lại phải được mời lại).
 -- ===================================================================================================
 
 CREATE FUNCTION core.leave_workspace(p_workspace_id uuid)
@@ -45,7 +49,7 @@ BEGIN
   SELECT * INTO v_member
   FROM core.members m
   WHERE m.workspace_id = p_workspace_id AND m.user_id = v_user AND m.status = 'active'
-  FOR UPDATE;
+  FOR NO KEY UPDATE; -- không có FK nào trỏ vào members.id; không chặn INSERT bảng con (FOR KEY SHARE)
   IF NOT FOUND THEN
     RAISE EXCEPTION 'not_a_member' USING ERRCODE = 'CF404';
   END IF;
@@ -78,6 +82,9 @@ REVOKE ALL ON FUNCTION core.leave_workspace(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION core.leave_workspace(uuid) TO cf_app;
 --> statement-breakpoint
 
+-- Giới hạn thời gian chờ khóa chỉ cho bước đổi policy (DROP/CREATE cần khóa ngắn trên action_logs); trả về mặc định sau đó.
+SET LOCAL lock_timeout = '5s';
+--> statement-breakpoint
 DROP POLICY action_logs_select ON core.action_logs;
 --> statement-breakpoint
 CREATE POLICY action_logs_select ON core.action_logs FOR SELECT
@@ -93,3 +100,5 @@ CREATE POLICY action_logs_select ON core.action_logs FOR SELECT
       )
     )
   );
+--> statement-breakpoint
+SET LOCAL lock_timeout = DEFAULT;

@@ -229,6 +229,32 @@ describe('core.leave_workspace: quy tắc rời', () => {
   });
 });
 
+describe('race: Owner rời trong khi Owner khác bị hạ/gỡ cùng lúc', () => {
+  it.each(['removed', 'suspended'] as const)(
+    'A rời song song với việc A đặt Owner B thành %s → luôn còn ít nhất một Owner active',
+    async (status) => {
+      for (let round = 0; round < 5; round += 1) {
+        const { ws, people } = await newWorkspace(['owner', 'owner']);
+        const [a, b] = people;
+        if (!a || !b) throw new Error('seed');
+        await Promise.allSettled([
+          leave(a.id, ws),
+          db.withActor(ws, a.id, (tx) =>
+            tx.execute(
+              sql`UPDATE core.members SET status = ${status} WHERE id = ${b.memberId}::uuid`,
+            ),
+          ),
+        ]);
+        const remaining = await admin.query(
+          `SELECT count(*)::int AS n FROM core.members WHERE workspace_id = $1 AND role = 'owner' AND status = 'active'`,
+          [ws],
+        );
+        expect(remaining.rows[0].n).toBeGreaterThanOrEqual(1);
+      }
+    },
+  );
+});
+
 describe('người đã rời không còn thấy dữ liệu workspace', () => {
   it('không còn là thành viên active, không đọc được action_logs, không ghi nhật ký giả danh được', async () => {
     const { ws, people } = await newWorkspace(['owner', 'staff']);
@@ -298,6 +324,23 @@ describe('RLS action_logs SELECT (LOG-RLS-STAFF)', () => {
     ]);
     expect(await actions(staff1.id)).toEqual(['a.staff1']);
     expect(await actions(staff2.id)).toEqual(['a.staff2']);
+  });
+
+  it("Staff không thấy dòng actor_type='admin' hay dòng 'user' không có actor_id", async () => {
+    const { ws, people } = await newWorkspace(['owner', 'staff']);
+    const staff = people[1];
+    if (!staff) throw new Error('seed');
+    await admin.query(
+      `INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action) VALUES
+         ($1, 'admin', NULL, 'z.admin'), ($1, 'user', NULL, 'z.user_null'), ($1, 'user', $2, 'z.mine')`,
+      [ws, staff.id],
+    );
+    const seen = await db.withActor(ws, staff.id, async (tx) =>
+      (await tx.execute<{ action: string }>(sql`SELECT action FROM core.action_logs`)).rows.map(
+        (r) => r.action,
+      ),
+    );
+    expect(seen).toEqual(['z.mine']);
   });
 
   it('Staff không đọc được dòng của người khác dù lọc theo id (RLS, không chỉ truy vấn)', async () => {
