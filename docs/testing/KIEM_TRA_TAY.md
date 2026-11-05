@@ -20,6 +20,7 @@
 | KT-010 | Ẩn / Bỏ ẩn bình luận | FB-HIDE | chưa | chưa | — |
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
+| KT-016 | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
 
 ---
@@ -180,7 +181,9 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 
 ## KT-012 — Connector Facebook thật (FB-CONNECTOR-CONTRACT, ADR 010)
 
-**Chưa thử được ở bước này:** connector mới chỉ có code + test bằng phản hồi viết tay; CHƯA đăng ký vào worker nên giao diện vẫn báo "Chưa kết nối được tới nền tảng để gửi" (đúng, xem KT-007). Mục này dành cho SAU KHI có `FB-OAUTH` + một Page thử + token thật và connector được nối vào worker (gap `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`). Dùng Page thử, không dùng Page khách.
+**Kích hoạt (KT-016):** đặt `FB_CONNECTOR_ENABLED=true` (kèm `META_APP_ID`, `META_APP_SECRET`, `TOKEN_ENC_KEYS`) cho worker rồi khởi động lại; cờ tắt (mặc định) → sổ connector rỗng, giao diện vẫn báo chưa kết nối được. Worker log `send bị nền tảng chặn (BLOCKED)` kèm id kênh khi Meta trả mã 368 (chưa tự tạm khóa kênh — gap `SEND-SUSPEND-ADMIN`). Kiểm tay chỉ làm được sau khi `SEND-SWEEP`/`HIDE-SWEEP` merge.
+
+**Trạng thái trước KT-016:** connector mới chỉ có code + test bằng phản hồi viết tay; CHƯA đăng ký vào worker nên giao diện vẫn báo "Chưa kết nối được tới nền tảng để gửi" (đúng, xem KT-007). Mục này dành cho SAU KHI có `FB-OAUTH` + một Page thử + token thật và connector được nối vào worker (gap `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`). Dùng Page thử, không dùng Page khách.
 
 | # | Bước | Kết quả mong đợi |
 |---|---|---|
