@@ -8,6 +8,15 @@
     "vi": "Tiếng Việt",
     "en": "English"
   },
+  "settings": {
+    "pageTitle": "Settings",
+    "title": "Account & Security",
+    "subtitle": "Manage two-step verification, your signed-in sessions and your interface language.",
+    "language": {
+      "title": "Interface language",
+      "body": "Applies to your whole interface on this device."
+    }
+  },
   "auth": {
     "brand": "CommentFlow AI",
     "tabs": {
@@ -501,7 +510,7 @@
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
-      "security": "Security"
+      "settings": "Settings"
     },
     "logout": "Sign out",
     "brand": "CommentFlow AI",
