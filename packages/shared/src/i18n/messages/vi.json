@@ -206,6 +206,7 @@
       "label": "Chuyển workspace",
       "create": "+ Tạo workspace mới",
       "leave": "Rời workspace này",
+      "pending": "{count} bình luận cần xử lý",
       "role": {
         "owner": "Owner",
         "staff": "Staff"
