@@ -1,3 +1,4 @@
+SET LOCAL lock_timeout = '5s';--> statement-breakpoint
 CREATE INDEX "comment_hides_stuck_idx" ON "cf"."comment_hides" USING btree ("updated_at") WHERE "cf"."comment_hides"."status" in ('queued', 'sending');--> statement-breakpoint
 CREATE INDEX "comment_replies_stuck_idx" ON "cf"."comment_replies" USING btree ("updated_at") WHERE "cf"."comment_replies"."status" in ('queued', 'sending');
 
@@ -76,3 +77,5 @@ REVOKE ALL ON FUNCTION cf.list_stuck_outbox(text, integer, integer, integer) FRO
 REVOKE EXECUTE ON FUNCTION cf.list_stuck_outbox(text, integer, integer, integer) FROM cf_app;
 --> statement-breakpoint
 GRANT EXECUTE ON FUNCTION cf.list_stuck_outbox(text, integer, integer, integer) TO cf_worker;
+--> statement-breakpoint
+SET LOCAL lock_timeout = DEFAULT;
