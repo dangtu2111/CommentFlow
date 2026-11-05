@@ -90,6 +90,7 @@ flowchart LR
 - Migration production chỉ chạy trong job CI có **duyệt tay**; migration phải tương thích ngược (expand → migrate → contract).
 - Deploy: `docker compose pull && up -d` theo thứ tự `migrate` → `worker` → `web`; healthcheck; lỗi → rollback về tag trước.
 - Registry: GHCR (private).
+- **Migration staging (đường đã chốt):** chỉ qua workflow `migrate-staging.yml` (environment `staging-migrate`, người duyệt: chủ dự án, runner `cf-staging`): `pnpm db:migrate:staging` rồi `queue:install:staging`, mỗi bước có `--dry-run` trước; CLI chỉ chạy khi `APP_ENV=staging`, DB có dấu `cf.env=staging`, `CF_STAGING_DB_HOSTS` khớp và `CF_CONFIRM_STAGING_MIGRATE` đúng. Runner nối Postgres staging qua cổng **chỉ `127.0.0.1`** trên máy ảo (publish `127.0.0.1:<cổng>:5432`, không bao giờ `0.0.0.0`). Không chạy migration staging/production từ máy dev.
 
 ## 7. Sao lưu & khôi phục
 

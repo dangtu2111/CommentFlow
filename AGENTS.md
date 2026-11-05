@@ -77,11 +77,18 @@ Chủ dự án đọc TypeScript ở mức cơ bản. Mọi kế hoạch, báo c
 - Thuật ngữ kỹ thuật lần đầu xuất hiện phải giải thích ngắn trong ngoặc.
 - Điểm cần chủ dự án quyết định ghi rõ ở mục **Cần bạn quyết định**.
 
+## Quy tắc hỏi (chủ dự án chốt 05/11/2026)
+
+- Mặc định **tự chọn phương án khuyến nghị** (an toàn, ít quyền, đảo ngược được), ghi vào `docs/plans/QUYET_DINH_CHO_DUYET.md` (quyết định, lý do, cách đảo ngược) rồi làm tiếp. Được sửa `docs/01–16` cho khớp quyết định đó; ghi danh sách thay đổi vào cùng file.
+- **Chỉ hỏi** khi: cần việc/tài nguyên chỉ chủ dự án làm được; tốn tiền hoặc không đảo ngược được; đổi phạm vi/trải nghiệm lớn; không có phương án đủ an toàn.
+- Chỉ `git add` đúng file của việc đang làm; không bao giờ `git add -A`/`git add .` hay gom file ngoài việc.
+- Báo cáo ≤ 10 dòng, mỗi ngày một lần hoặc khi dừng; tách riêng mục "Việc chỉ bạn làm được".
+
 ## Cấm
 
 - Đọc `.env*` hoặc bất kỳ file bí mật nào; in biến môi trường.
 - Chạy migration hoặc lệnh ghi lên database production/staging từ máy dev.
-- Sửa `docs/01–16` khi chưa được yêu cầu (đề xuất thay đổi bằng lời).
+- Sửa `docs/01–16` ngoài phạm vi § Quy tắc hỏi (chỉ được sửa để khớp một quyết định đã ghi vào `QUYET_DINH_CHO_DUYET.md`).
 - Tạo dữ liệu khách giả làm số liệu; seed chỉ `plans` và từ điển viết tắt hệ thống.
 - Thêm thư viện mới mà không nêu lý do và giấy phép.
 
