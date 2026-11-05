@@ -140,6 +140,18 @@ export function createTenancy(db: FlowDb) {
       return rows.map((r) => ({ ...r, role: r.role as MemberRole }));
     },
 
+    /**
+     * Lưu ngôn ngữ ưa thích của chính người dùng (FR-119). `cf_app` qua `withUser` chỉ được GHI users.name/image/locale
+     * (migration 0010) và chỉ dòng của mình, nên userId từ phiên là đủ — không nhận id từ client.
+     */
+    async setUserLocale(userId: string, locale: 'vi' | 'en'): Promise<void> {
+      const uid = parse(uuidSchema, userId, 'userId không hợp lệ.');
+      const value = parse(langSchema, locale, 'Ngôn ngữ phải là vi hoặc en.');
+      await db.withUser(uid, (tx) =>
+        tx.update(users).set({ locale: value, updatedAt: new Date() }).where(eq(users.id, uid)),
+      );
+    },
+
     /** Workspace mà người dùng là thành viên (để chuyển workspace), kèm vai trò. */
     async listWorkspacesOfUser(userId: string): Promise<WorkspaceMembership[]> {
       const uid = parse(uuidSchema, userId, 'userId không hợp lệ.');

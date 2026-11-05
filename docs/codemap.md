@@ -72,7 +72,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/log-on-behalf-of` · Gói 
 | Trang Bình luận (UI) | Chưa có | | UI prompt 7.1 |
 | Thanh toán / gói | Chưa có | | 10 §3.6 |
 | Admin | Chưa có (có cột `is_admin`, phiên Admin 8 giờ) | | Admin prompt |
-| i18n | `packages/shared/src/i18n/`, `apps/web/src/i18n/` | Chuỗi `vi.json`/`en.json`, test khớp khóa, cookie `NEXT_LOCALE` | 08 §8 |
+| i18n | `packages/shared/src/i18n/`, `apps/web/src/i18n/` | Chuỗi `vi.json`/`en.json`, test khớp khóa, cookie `NEXT_LOCALE`; `setLocale` (`app/actions.ts`) → `server/locale-choice.ts` (`applyLocaleChoice`: cookie + `tenancy.setUserLocale` → `users.locale`, FR-119); bộ chọn ở thanh trên và `/app/security` | 08 §8 |
 | Test | `*.test.ts` cạnh mã (đơn vị) · `tests/*.int.test.ts` (tích hợp) | Vitest; pytest cho `ml` | 14 |
 
 ## Điểm vào quan trọng

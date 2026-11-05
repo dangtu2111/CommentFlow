@@ -24,4 +24,6 @@
 - 05/11: `docs/15` §6 — thêm đoạn "Migration staging (đường đã chốt)" (qua `migrate-staging.yml`, cổng DB chỉ `127.0.0.1`).
 - 05/11: `docs/05` FR-005 — làm rõ "số cần xử lý": thêm "chưa gộp", "Mới = new + processing", loại trạng thái AI tự xử lý/spam/đã xong, hiển thị tối đa "99+" (quyết định Q4).
 
+| Q-LANG-1 | 05/11 | AUTH-LANG-PREF: nơi ghi `users.locale` | Dùng lại action `setLocale` (một đường) — đặt cookie `NEXT_LOCALE` rồi, nếu có phiên, `tenancy.setUserLocale` qua `withUser`; lỗi DB chỉ log, cookie vẫn đổi. Bộ chọn đặt thêm ở `/app/security` (Cài đặt tạm tới SETTINGS-PAGE). Không migration | `cf_app` đã có GRANT UPDATE `users.locale` (0010, đã test); một đường duy nhất tránh cookie và DB lệch nhau; khách chưa đăng nhập không có user để ghi | Bỏ lời gọi `saveLocale` trong `app/actions.ts` (trở lại chỉ cookie) |
+
 | Q3 | 05/11 | SEND-SWEEP + HIDE-SWEEP cần migration | Làn c (`feat/send-hide-sweep`) dừng; làn b (`feat/worker-db-role`) giữ quyền migration trước (đã chạy). Làn c làm tiếp (migration số kế tiếp) SAU khi PR của làn b merge | Quy tắc "mỗi lúc chỉ một nhánh có migration"; sweep cần hàm DEFINER (quét `queued`/`sending` quá hạn) vì `cf_app` không tự đổi trạng thái hệ thống | Đổi thứ tự nếu bạn muốn sweep trước worker-db-role |
