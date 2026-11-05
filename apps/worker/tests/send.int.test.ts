@@ -166,12 +166,13 @@ describe('FR-042 job send — gửi thành công', () => {
     expect(comment.replied_at).not.toBeNull();
     const log = (
       await admin.query(
-        "SELECT actor_type, actor_id, after FROM core.action_logs WHERE target_id = $1 AND action = 'comment.replied'",
+        "SELECT actor_type, actor_id, on_behalf_of, after FROM core.action_logs WHERE target_id = $1 AND action = 'comment.replied'",
         [fx.commentId],
       )
     ).rows;
     expect(log).toHaveLength(1);
-    expect(log[0]).toMatchObject({ actor_type: 'system', actor_id: null });
+    // LOG-STAFF-SYSTEM-ROWS: dòng hệ thống ghi người yêu cầu để Staff thấy dòng của chính mình.
+    expect(log[0]).toMatchObject({ actor_type: 'system', actor_id: null, on_behalf_of: staff });
     expect(JSON.stringify(log)).not.toContain('size M');
   });
 

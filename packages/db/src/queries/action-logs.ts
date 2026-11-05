@@ -5,8 +5,9 @@ import type { Database } from '../client';
  * Truy vấn trang Nhật ký (FR-092). CHỈ ĐỌC. Luôn gọi trong `withActor(workspaceId, userId, …)`.
  *
  * Quyền xem (FR-092): Owner thấy mọi dòng của workspace; Staff chỉ thấy dòng do CHÍNH MÌNH thực hiện
- * (`actor_type = 'user'` và `actor_id` = người xem). Từ migration 0028 RLS của `action_logs` cũng ép quy tắc này (Owner cả workspace;
- * Staff chỉ dòng của mình) nên đây là lớp thứ hai — vẫn MỘT chỗ duy nhất (`viewerConditions`), áp cho cả danh sách, chi tiết và danh sách
+ * (`actor_type = 'user'` và `actor_id` = người xem) và dòng hệ thống do CHÍNH MÌNH yêu cầu (`actor_type = 'system'` và
+ * `on_behalf_of` = người xem, migration 0029); KHÔNG thấy dòng AI, dòng của người khác, dòng hệ thống không có `on_behalf_of`.
+ * Từ migration 0028/0029 RLS của `action_logs` cũng ép quy tắc này nên đây là lớp thứ hai — vẫn MỘT chỗ duy nhất (`viewerConditions`), áp cho cả danh sách, chi tiết và danh sách
  * hành động; bộ lọc người dùng nhập chỉ THU HẸP thêm, không bao giờ mở rộng.
  */
 
@@ -36,6 +37,10 @@ export type ActionLogItem = {
   actorId: string | null;
   /** Tên người thực hiện (chỉ loại `user`, và chỉ khi còn là thành viên đang hoạt động); `null` nếu không có. */
   actorName: string | null;
+  /** Người đã yêu cầu việc do hệ thống làm (chỉ dòng `system`); `null` nếu không có. */
+  onBehalfOfId: string | null;
+  /** Tên người yêu cầu; `null` khi không có người yêu cầu hoặc người đó không còn là thành viên ĐANG HOẠT ĐỘNG (đã rời/tạm khóa/xóa) — RLS của `users` không cho đọc tên. */
+  onBehalfOfName: string | null;
   action: string;
   targetType: string | null;
   targetId: string | null;
@@ -56,13 +61,16 @@ const MAX_ACTION_CHOICES = 200;
 
 const FROM = sql`
   FROM core.action_logs l
-  LEFT JOIN core.users u ON l.actor_type = 'user' AND u.id = l.actor_id`;
+  LEFT JOIN core.users u ON l.actor_type = 'user' AND u.id = l.actor_id
+  LEFT JOIN core.users ob ON l.actor_type = 'system' AND ob.id = l.on_behalf_of`;
 
-/** Quy tắc quyền xem: Owner không thêm điều kiện; Staff chỉ dòng của chính mình. */
+/** Quy tắc quyền xem (khớp policy `action_logs_select`): Owner không thêm điều kiện; Staff: dòng của mình + dòng hệ thống do mình yêu cầu. */
 function viewerConditions(viewer: ActionLogViewer): SQL[] {
-  return viewer.role === 'owner'
-    ? []
-    : [sql`l.actor_type = 'user'`, sql`l.actor_id = ${viewer.userId}::uuid`];
+  if (viewer.role === 'owner') return [];
+  return [
+    sql`((l.actor_type = 'user' AND l.actor_id = ${viewer.userId}::uuid)
+      OR (l.actor_type = 'system' AND l.on_behalf_of = ${viewer.userId}::uuid))`,
+  ];
 }
 
 function baseConditions(workspaceId: string, viewer: ActionLogViewer): SQL[] {
@@ -78,6 +86,8 @@ type Row = {
   actor_type: ActionLogActorType;
   actor_id: string | null;
   actor_name: string | null;
+  on_behalf_of: string | null;
+  on_behalf_of_name: string | null;
   action: string;
   target_type: string | null;
   target_id: string | null;
@@ -87,7 +97,7 @@ type Row = {
 };
 
 const COLUMNS = sql`l.id, l.created_at, l.created_at::text AS created_key, l.actor_type, l.actor_id,
-  u.name AS actor_name, l.action, l.target_type, l.target_id`;
+  u.name AS actor_name, l.on_behalf_of, ob.name AS on_behalf_of_name, l.action, l.target_type, l.target_id`;
 
 function toItem(row: Row): ActionLogItem {
   return {
@@ -96,6 +106,8 @@ function toItem(row: Row): ActionLogItem {
     actorType: row.actor_type,
     actorId: row.actor_id,
     actorName: row.actor_name,
+    onBehalfOfId: row.on_behalf_of,
+    onBehalfOfName: row.on_behalf_of_name,
     action: row.action,
     targetType: row.target_type,
     targetId: row.target_id,

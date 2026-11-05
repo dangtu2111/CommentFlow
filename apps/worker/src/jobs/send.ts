@@ -212,8 +212,8 @@ async function recordSent(
            replied_at = now(), locked_by = NULL, locked_until = NULL
      WHERE id = ${row.comment_id}::uuid AND status = 'sending'`);
   await tx.execute(sql`
-    INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action, target_type, target_id, after)
-    SELECT workspace_id, 'system', NULL, 'comment.replied', 'comment', ${row.comment_id}, jsonb_build_object('reply_id', ${row.reply_id}::text, 'requested_by', ${row.requested_by}::text)
+    INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, on_behalf_of, action, target_type, target_id, after)
+    SELECT workspace_id, 'system', NULL, ${row.requested_by}::uuid, 'comment.replied', 'comment', ${row.comment_id}, jsonb_build_object('reply_id', ${row.reply_id}::text, 'requested_by', ${row.requested_by}::text)
       FROM cf.comment_replies WHERE id = ${row.reply_id}::uuid`);
 }
 

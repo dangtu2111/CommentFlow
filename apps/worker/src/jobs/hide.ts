@@ -207,8 +207,8 @@ async function recordDone(tx: Database, row: Row, fenceAttempts: number): Promis
        WHERE id = ${row.comment_id}::uuid`);
   }
   await tx.execute(sql`
-    INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, action, target_type, target_id, after)
-    SELECT workspace_id, 'system', NULL,
+    INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, on_behalf_of, action, target_type, target_id, after)
+    SELECT workspace_id, 'system', NULL, ${row.requested_by}::uuid,
            ${row.action === 'hide' ? 'comment.hidden' : 'comment.unhidden'}, 'comment', ${row.comment_id},
            jsonb_build_object('hide_id', ${row.hide_id}::text, 'requested_by', ${row.requested_by}::text)
       FROM cf.comment_hides WHERE id = ${row.hide_id}::uuid`);

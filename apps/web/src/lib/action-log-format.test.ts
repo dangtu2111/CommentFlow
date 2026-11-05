@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionLabelKey, diffRows, formatLogValue } from './action-log-format';
+import { actionLabelKey, diffRows, formatLogValue, onBehalfOfDisplay } from './action-log-format';
 
 describe('FR-092 nhãn hành động', () => {
   it('FR-092 mã đã biết có khóa dịch, mã lạ thì null (hiện mã thô)', () => {
@@ -34,5 +34,20 @@ describe('FR-092 diffRows (trước/sau)', () => {
     ]);
     expect(diffRows('x', [1])).toEqual([]);
     expect(diffRows(null, null)).toEqual([]);
+  });
+});
+
+describe('LOG-STAFF-SYSTEM-ROWS onBehalfOfDisplay', () => {
+  it('không có người yêu cầu → null (hiện "Hệ thống" trơn)', () => {
+    expect(onBehalfOfDisplay(null, null, 'u1')).toBeNull();
+  });
+
+  it('người yêu cầu là chính người xem → self (không cần tên)', () => {
+    expect(onBehalfOfDisplay('u1', 'An', 'u1')).toEqual({ kind: 'self' });
+  });
+
+  it('người khác có tên → named; không còn tên (đã rời/xóa) → former, không lộ mã người dùng', () => {
+    expect(onBehalfOfDisplay('u2', 'Bình', 'u1')).toEqual({ kind: 'named', name: 'Bình' });
+    expect(onBehalfOfDisplay('u2', null, 'u1')).toEqual({ kind: 'former' });
   });
 });

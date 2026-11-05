@@ -169,12 +169,13 @@ describe('FR-044 job hide — ẩn / bỏ ẩn thành công', () => {
     expect((await hideRow(fx.hideId)).done_at).not.toBeNull();
     const log = (
       await admin.query(
-        "SELECT actor_type, after::text AS after FROM core.action_logs WHERE target_id = $1 AND action = 'comment.hidden'",
+        "SELECT actor_type, on_behalf_of, after::text AS after FROM core.action_logs WHERE target_id = $1 AND action = 'comment.hidden'",
         [fx.commentId],
       )
     ).rows;
     expect(log).toHaveLength(1);
     expect(log[0].actor_type).toBe('system');
+    expect(log[0].on_behalf_of).toBe(staff); // LOG-STAFF-SYSTEM-ROWS
     expect(log[0].after).not.toContain('Giá bao nhiêu');
   });
 
@@ -219,6 +220,11 @@ describe('FR-044 job hide — ẩn / bỏ ẩn thành công', () => {
       job: { workspaceId: ws, hideId: unhideId as string },
     });
     expect(await commentRow(fx.commentId)).toEqual({ status: 'needs_human', is_hidden: false });
+    const unhidden = await admin.query(
+      "SELECT on_behalf_of FROM core.action_logs WHERE target_id = $1 AND action = 'comment.unhidden'",
+      [fx.commentId],
+    );
+    expect(unhidden.rows).toEqual([{ on_behalf_of: staff }]); // LOG-STAFF-SYSTEM-ROWS
   });
 });
 
@@ -458,10 +464,11 @@ describe('FR-044 job hide — bổ sung sau kiểm chứng', () => {
     expect(calls).toHaveLength(1);
     expect((await hideRow(fx.hideId)).status).toBe('done');
     const log = await admin.query(
-      "SELECT after->>'requested_by' AS by FROM core.action_logs WHERE target_id = $1 AND action = 'comment.hidden'",
+      "SELECT after->>'requested_by' AS by, on_behalf_of FROM core.action_logs WHERE target_id = $1 AND action = 'comment.hidden'",
       [fx.commentId],
     );
     expect(log.rows[0].by).toBeNull();
+    expect(log.rows[0].on_behalf_of).toBeNull();
   });
 });
 

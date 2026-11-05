@@ -51,7 +51,7 @@
 | Tự rời workspace (`core.leave_workspace`, migration 0028: người rời = người gọi, không nhận user id; Owner chỉ rời khi còn Owner `active` khác — trigger + khóa tư vấn chặn cả khi chạy song song; ghi nhật ký `member.left` + email báo mọi Owner) | ✅ | ✅ |
 | Nhận lời mời | đúng email đã xác minh của tài khoản đang đăng nhập (mọi lý do thất bại cho cùng một phản hồi) | |
 | Báo cáo | ✅ | ✅ (không thấy chi phí) |
-| Nhật ký | ✅ (cả workspace) | ✅ (chỉ thao tác của chính mình; **ép ở tầng RLS** — policy SELECT của `action_logs`) |
+| Nhật ký | ✅ (cả workspace) | ✅ (chỉ thao tác của chính mình và việc hệ thống làm theo yêu cầu của chính mình, ví dụ gửi trả lời/ẩn bình luận; không thấy dòng AI tự gửi hay của người khác; **ép ở tầng RLS** — policy SELECT của `action_logs`) |
 
 Kiểm quyền ở server (middleware theo route + kiểm trong service), không dựa vào ẩn nút ở UI.
 

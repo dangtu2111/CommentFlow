@@ -14,9 +14,11 @@ export type ActivityDetail = ActivityListItem & {
 export async function ActivityDetailPanel({
   entry,
   timeZone,
+  viewerId,
 }: {
   entry: ActivityDetail;
   timeZone: string;
+  viewerId: string;
 }) {
   const [t, rawLocale] = await Promise.all([getTranslations('activity'), getLocale()]);
   const locale = isLocale(rawLocale) ? rawLocale : 'vi';
@@ -30,7 +32,7 @@ export async function ActivityDetailPanel({
         <dt>{t('detail.time')}</dt>
         <dd>{formatAbsoluteTime(entry.createdAt, locale, timeZone)}</dd>
         <dt>{t('detail.actor')}</dt>
-        <dd>{actorDisplay(t, entry.actorType, entry.actorName)}</dd>
+        <dd>{actorDisplay(t, entry, viewerId)}</dd>
         {entry.targetType ? (
           <>
             <dt>{t('detail.target')}</dt>
