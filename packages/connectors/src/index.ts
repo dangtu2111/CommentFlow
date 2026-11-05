@@ -26,6 +26,13 @@ export {
   type PlatformErrorCode,
 } from './errors';
 export {
+  createFacebookConnector,
+  DEFAULT_GRAPH_API_VERSION,
+  type FacebookConnector,
+  type FacebookConnectorOptions,
+  type PageSubscription,
+} from './facebook/connector';
+export {
   deserializeEvent,
   eventHashOf,
   parseMetaWebhook,

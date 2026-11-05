@@ -17,6 +17,7 @@
 | KT-007 | Hộp soạn trả lời, Gửi, Thử lại | #26 | có | chưa | — |
 | KT-008 | Khách sửa/xóa bình luận | COMMENT-EDIT-DELETE | chưa | chưa | — |
 | KT-009 | Trang Nhật ký (Owner thấy tất cả, Staff chỉ của mình) | LOG-PAGE | chưa | chưa | — |
+| KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 
 ---
 
@@ -171,6 +172,21 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 | 5 | Nhờ agent kiểm `cf.action_logs`. | Có dòng `comment.edited`/`comment.deleted` (actor hệ thống), KHÔNG chứa nội dung bình luận. |
 
 Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
+
+---
+
+## KT-012 — Connector Facebook thật (FB-CONNECTOR-CONTRACT, ADR 010)
+
+**Chưa thử được ở bước này:** connector mới chỉ có code + test bằng phản hồi viết tay; CHƯA đăng ký vào worker nên giao diện vẫn báo "Chưa kết nối được tới nền tảng để gửi" (đúng, xem KT-007). Mục này dành cho SAU KHI có `FB-OAUTH` + một Page thử + token thật và connector được nối vào worker (gap `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`). Dùng Page thử, không dùng Page khách.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng một tài khoản khác bình luận dưới bài của Page thử | Bình luận vào hộp thư (webhook) |
+| 2 | Bấm Gửi trả lời | Trên Facebook có câu trả lời dưới bình luận đó, đúng nội dung; hộp thư hiện "đã trả lời" |
+| 3 | Bấm Ẩn rồi Bỏ ẩn (khi FB-HIDE đã nối) | Facebook ẩn/hiện bình luận tương ứng; không có nút xóa |
+| 4 | Gỡ quyền Page của ứng dụng rồi thử Gửi | Báo lỗi dễ hiểu (mất quyền), kênh chuyển trạng thái cần kết nối lại; log KHÔNG chứa token |
+| 5 | Bình luận có `from` của khách: đọc lại trả lời của chính Page (kiểm trước khi gửi lại) | Thấy câu trả lời của Page (`isFromPage` đúng); nếu KHÔNG thấy → báo agent (xem ADR 010 §4) |
+| 6 | Đăng ký webhook cho Page (`subscribed_apps`) rồi đọc lại | Trường `feed` được liệt kê |
 
 ---
 
