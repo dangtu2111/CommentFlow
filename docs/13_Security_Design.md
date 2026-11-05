@@ -50,7 +50,7 @@
 | Thành viên: xem danh sách, mời, thu hồi/gửi lại lời mời, đổi vai trò, tạm khóa, gỡ (Owner phải đã bật 2FA; không tự đổi/gỡ mình; luôn còn ≥ 1 Owner; mỗi thay đổi Owner báo email cho mọi Owner + ghi nhật ký; **ép ở cả dịch vụ lẫn DB (RLS `withActor`, ADR 005 §3)**) | ✅ | ❌ |
 | Nhận lời mời | đúng email đã xác minh của tài khoản đang đăng nhập (mọi lý do thất bại cho cùng một phản hồi) | |
 | Báo cáo | ✅ | ✅ (không thấy chi phí) |
-| Nhật ký | ✅ | ❌ |
+| Nhật ký | ✅ (cả workspace) | ✅ (chỉ thao tác của chính mình; **ép ở tầng RLS** — policy SELECT của `action_logs`) |
 
 Kiểm quyền ở server (middleware theo route + kiểm trong service), không dựa vào ẩn nút ở UI.
 
