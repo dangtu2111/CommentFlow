@@ -435,6 +435,49 @@ export function createWorkspaceAdmin(options: {
       if (event) notifyOwners(event);
     },
 
+    /**
+     * Thành viên TỰ rời workspace (mọi vai trò). Chỉ userId của phiên: hàm DB `core.leave_workspace` (0028) lấy người rời
+     * từ app.user_id, không nhận id người khác. Owner cuối cùng → CONFLICT (DB chặn, kể cả chạy song song); không phải
+     * thành viên đang hoạt động (kể cả đã rời) → NOT_FOUND. Thành công: ghi `member.left` (trong hàm) và báo MỌI Owner còn lại.
+     */
+    async leaveWorkspace(input: { workspaceId: string; userId: string }): Promise<void> {
+      const workspaceId = parse(uuidSchema, input.workspaceId, 'workspaceId không hợp lệ.');
+      const userId = parse(uuidSchema, input.userId, 'userId không hợp lệ.');
+
+      const event = await runMemberChange(async () => {
+        try {
+          // withActor: còn là thành viên khi đọc tên workspace/Owner/người rời; cùng giao dịch với việc rời.
+          return await db.withActor(workspaceId, userId, async (tx): Promise<OwnerEvent> => {
+            const ws = await workspaceInfo(tx, workspaceId);
+            const [self] = await activePeople(tx, workspaceId, ws.lang, { userId });
+            await tx.execute(sql`SELECT * FROM core.leave_workspace(${workspaceId}::uuid)`);
+            const owners = (await activePeople(tx, workspaceId, ws.lang, { role: 'owner' })).filter(
+              (p) => p.userId !== userId,
+            );
+            return {
+              change: 'left',
+              workspaceName: ws.name,
+              owners,
+              targetName: self?.name ?? '',
+              actorName: self?.name ?? '',
+            };
+          });
+        } catch (error) {
+          if (pgField(error, 'code') === 'CF404') {
+            throw new AppError(
+              'NOT_FOUND',
+              'Bạn không phải thành viên đang hoạt động của workspace này.',
+              {
+                cause: error,
+              },
+            );
+          }
+          throw error;
+        }
+      });
+      notifyOwners(event);
+    },
+
     /** Lời mời đang chờ (chưa dùng, chưa thu hồi), kể cả đã hết hạn để Owner gửi lại/thu hồi. Chỉ Owner. */
     async listInvitations(input: {
       workspaceId: string;

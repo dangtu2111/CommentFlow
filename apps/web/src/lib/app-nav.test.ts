@@ -10,6 +10,12 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
     expect(keys('staff')).toEqual(['comments', 'activity', 'security']);
   });
 
+  it('FR-040 "Rời workspace" không phải mục menu chính (nằm ở bộ chuyển workspace, trang /app/leave)', () => {
+    for (const role of ['owner', 'staff'] as const) {
+      expect(keys(role)).not.toContain('leave');
+    }
+  });
+
   it('FR-040 chia nhóm: vận hành (Bình luận) và cài đặt; không nhóm rỗng; href thuộc /app/ và không trùng', () => {
     for (const role of ['owner', 'staff'] as const) {
       const groups = navGroupsFor(role);

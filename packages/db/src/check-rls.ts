@@ -263,6 +263,12 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.comment_replies', 'comment_id', 'UPDATE'],
   ['cf_app', 'cf.comment_replies', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.comment_replies', 'previous_status', 'UPDATE'],
+  // hàng đợi ẩn/bỏ ẩn (ADR 009): hành động/người yêu cầu/đích không sửa được sau khi tạo
+  ['cf_app', 'cf.comment_hides', 'action', 'UPDATE'],
+  ['cf_app', 'cf.comment_hides', 'requested_by', 'UPDATE'],
+  ['cf_app', 'cf.comment_hides', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.comment_hides', 'comment_id', 'UPDATE'],
+  ['cf_app', 'cf.comment_hides', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.webhook_events', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.webhook_events', 'event_hash', 'UPDATE'],
   ['cf_app', 'cf.webhook_events', 'payload', 'UPDATE'],
@@ -428,12 +434,12 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
   // cf_app không có INSERT ở bất kỳ cột nào: kênh chỉ tạo qua cf.create_channel, sự kiện webhook chỉ ghi qua
   // cf.record_webhook_event (hàm DEFINER tự kiểm quyền/ngữ cảnh).
   const noInsert = await db.query(`/* channels-no-insert */
-    SELECT v.t AS name FROM (VALUES ('cf.channels'), ('cf.webhook_events'), ('cf.comment_replies'), ('cf.comment_tombstones')) AS v(t)
+    SELECT v.t AS name FROM (VALUES ('cf.channels'), ('cf.webhook_events'), ('cf.comment_replies'), ('cf.comment_hides'), ('cf.comment_tombstones')) AS v(t)
     WHERE has_any_column_privilege('${APP_ROLE}', v.t::regclass, 'INSERT')`);
   for (const row of noInsert.rows) {
     violations.push({
       subject: String(row.name),
-      message: `${APP_ROLE} không được INSERT (ghi qua hàm DEFINER: cf.create_channel / cf.record_webhook_event / cf.request_comment_reply)`,
+      message: `${APP_ROLE} không được INSERT (ghi qua hàm DEFINER: cf.create_channel / cf.record_webhook_event / cf.request_comment_reply / cf.request_comment_hide)`,
     });
   }
   const trigger = await db.query(`/* last-owner-trigger */
@@ -463,6 +469,10 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.workspaces', 'w', 'is_workspace_owner'],
   ['core.workspaces', 'a', 'created_by'], // INSERT ghi đúng người tạo (đường khởi tạo Owner)
   ['core.action_logs', 'a', 'current_user_id'], // người ghi không giả được người khác
+  // đọc (0028): Owner cả workspace, Staff chỉ dòng `user` của mình; mọi policy SELECT permissive phải chứa đủ ba marker
+  ['core.action_logs', 'r', 'is_workspace_owner'],
+  ['core.action_logs', 'r', 'current_user_id'],
+  ['core.action_logs', 'r', 'actor_type'],
   // CH-SCHEMA (feat/ch-schema, ADR 007): ghi theo vai trò hoặc ĐƯỜNG HỆ THỐNG (withJob → is_system_context()).
   // Không có policy INSERT cho cf.channels (cf_app không INSERT: tạo kênh qua hàm DEFINER của TOKEN-ENC).
   ['cf.channels', 'w', 'is_workspace_owner'], // + is_system_context (trigger giới hạn cột cho đường người dùng)
@@ -478,6 +488,9 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   // cf.comment_replies: KHÔNG INSERT cho cf_app (chỉ qua cf.request_comment_reply); UPDATE kết quả chỉ hệ thống.
   ['cf.comment_replies', 'w', 'is_system_context'],
   ['cf.comment_replies', 'r', 'is_workspace_member'],
+  // cf.comment_hides: KHÔNG INSERT cho cf_app (chỉ qua cf.request_comment_hide); UPDATE kết quả chỉ hệ thống.
+  ['cf.comment_hides', 'w', 'is_system_context'],
+  ['cf.comment_hides', 'r', 'is_workspace_member'],
   ['cf.webhook_events', 'r', 'is_workspace_owner'],
   // cf.comment_tombstones: cf_app KHÔNG có quyền trực tiếp (hàm DEFINER cf.mark_comment_deleted ghi); RLS chỉ hệ thống.
   ['cf.comment_tombstones', 'a', 'is_system_context'],
@@ -491,6 +504,9 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.comment_replies', 'w', 'is_workspace_member'],
   ['cf.comment_replies', 'w', 'is_workspace_owner'],
   ['cf.comment_replies', 'w', 'IS NULL'],
+  ['cf.comment_hides', 'w', 'is_workspace_member'],
+  ['cf.comment_hides', 'w', 'is_workspace_owner'],
+  ['cf.comment_hides', 'w', 'IS NULL'],
   ['cf.webhook_events', 'w', 'is_workspace_owner'],
   ['cf.posts', 'a', 'is_workspace_member'],
   ['cf.posts', 'w', 'is_workspace_member'],
@@ -566,6 +582,7 @@ const NO_DELETE_TABLES = [
   'cf.comments',
   'cf.webhook_events',
   'cf.comment_replies',
+  'cf.comment_hides',
   'cf.comment_tombstones',
   'cf.ai_usage',
   'core.members',
@@ -651,6 +668,40 @@ async function checkWebhookFunction(db: Queryable, violations: RlsViolation[]): 
       OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'`);
   for (const row of found.rows) {
     violations.push({ subject: String(row.name), message: `hàm webhook: ${String(row.problem)}` });
+  }
+}
+
+/**
+ * Hàm tự rời workspace (0028): phải tồn tại, PUBLIC không EXECUTE, cf_app có EXECUTE, đúng MỘT tham số (không nhận
+ * user id), người rời lấy từ current_user_id(), có khóa tư vấn theo workspace và chặn Owner cuối (members_last_owner).
+ * Giới hạn: phần "thân hàm" chỉ kiểm bằng chuỗi con của prosrc (bắt xóa/đổi tên hạng mục, không chứng minh logic đúng —
+ * logic được kiểm bằng test tích hợp member-leave.int.test.ts). Cũng đòi SECURITY DEFINER và cf_auth KHÔNG có EXECUTE.
+ */
+async function checkLeaveFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* leave-function */
+    SELECT 'core.leave_workspace' AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        WHEN p.pronargs <> 1 THEN 'chỉ được nhận MỘT tham số (workspace); không nhận user id'
+        ELSE 'thân hàm thiếu current_user_id() / pg_advisory_xact_lock / members_last_owner'
+      END AS problem
+    FROM (SELECT 1) AS one
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = 'leave_workspace'
+    WHERE p.oid IS NULL
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR NOT p.prosecdef
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR p.pronargs <> 1
+      OR p.prosrc NOT LIKE '%core.current_user_id()%'
+      OR p.prosrc NOT LIKE '%pg_advisory_xact_lock%'
+      OR p.prosrc NOT LIKE '%members_last_owner%'`);
+  for (const row of found.rows) {
+    violations.push({ subject: String(row.name), message: `hàm tự rời: ${String(row.problem)}` });
   }
 }
 
@@ -829,6 +880,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkNoDelete(db, violations);
   await checkTokenFunctions(db, violations);
   await checkWebhookFunction(db, violations);
+  await checkLeaveFunction(db, violations);
 
   // --- Hàm trong core/cf: PUBLIC không được có EXECUTE (trừ hàm trigger) ---
   const functions = await db.query(`/* public-functions */

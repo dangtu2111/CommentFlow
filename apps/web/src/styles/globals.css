@@ -1353,6 +1353,22 @@ a {
   overflow-wrap: anywhere;
 }
 
+/* ===== Nút Ẩn / Bỏ ẩn (FR-044) ===== */
+.hide-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.hide-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
 /* ===== Trang Nhật ký (FR-092) ===== */
 .log-page {
   display: grid;

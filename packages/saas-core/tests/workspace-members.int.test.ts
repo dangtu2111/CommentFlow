@@ -92,7 +92,7 @@ const tokenFrom = (mail: MailMessage): string => {
 };
 
 const logsOf = (workspaceId: string, action: string) =>
-  db.withWorkspace(workspaceId, (tx) =>
+  db.withJob(workspaceId, (tx) =>
     tx
       .select()
       .from(actionLogs)
@@ -272,7 +272,7 @@ describe('thành viên: danh sách, vai trò, trạng thái', () => {
     expect(rows[0]?.status).toBe('removed');
     expect(await codeOf(act('active'))).toBe('NOT_FOUND');
     const actions = (
-      await db.withWorkspace(ws.id, (tx) =>
+      await db.withJob(ws.id, (tx) =>
         tx
           .select({ action: actionLogs.action })
           .from(actionLogs)
@@ -767,5 +767,62 @@ describe('DB ép chỉ-Owner độc lập với mã kiểm quyền (feat/rls-act
     ).toBe(true);
     expect(await tenancy.getRole(ws.id, owner)).toBe('owner');
     expect(await tenancy.getRole(ws.id, s1)).toBe('staff');
+  });
+});
+
+describe('thành viên tự rời workspace (MEMBER-LEAVE)', () => {
+  it('Staff rời được: không còn trong danh sách workspace, ghi member.left, báo mọi Owner (không báo người rời)', async () => {
+    const { owner, ws, staff } = await setup(2);
+    const [s1, s2] = staff as [string, string];
+    const second = await person('Chủ thứ hai');
+    await seedMemberForTest(ws.id, second, 'owner');
+    transport.sent.length = 0;
+    await admin.leaveWorkspace({ workspaceId: ws.id, userId: s1 });
+    expect((await tenancy.listWorkspacesOfUser(s1)).map((w) => w.id)).not.toContain(ws.id);
+    expect((await tenancy.listWorkspacesOfUser(s2)).map((w) => w.id)).toContain(ws.id);
+    const logs = await logsOf(ws.id, 'member.left');
+    expect(logs).toHaveLength(1);
+    expect(logs[0]?.actorId).toBe(s1);
+    expect(logs[0]?.before).toEqual({ role: 'staff', status: 'active' });
+    const sent = await mails(2, (m) => /rời|left/i.test(m.subject));
+    expect(sent.map((m) => m.to).sort()).toEqual(
+      [await emailOf(owner), await emailOf(second)].sort(),
+    );
+    expect(sent.every((m) => m.text.includes('Nhân viên 1'))).toBe(true);
+    await settle();
+    const leaverEmail = await emailOf(s1);
+    expect(transport.sent.some((m) => m.to === leaverEmail)).toBe(false);
+  });
+
+  it('Owner cuối cùng bị chặn (CONFLICT), không ghi nhật ký, không gửi thư; Owner có Owner khác rời được', async () => {
+    const { owner, ws } = await setup(1);
+    expect(await codeOf(admin.leaveWorkspace({ workspaceId: ws.id, userId: owner }))).toBe(
+      'CONFLICT',
+    );
+    expect(await logsOf(ws.id, 'member.left')).toHaveLength(0);
+    await settle();
+    expect(transport.sent).toHaveLength(0);
+    const second = await person('Chủ thứ hai');
+    await seedMemberForTest(ws.id, second, 'owner');
+    transport.sent.length = 0;
+    await admin.leaveWorkspace({ workspaceId: ws.id, userId: owner });
+    expect(await tenancy.getRole(ws.id, owner)).toBeNull();
+    const sent = await mails(1, (m) => /rời|left/i.test(m.subject));
+    expect(sent.map((m) => m.to)).toEqual([await emailOf(second)]);
+  });
+
+  it('người lạ hoặc đã rời → NOT_FOUND; id không hợp lệ → VALIDATION_FAILED', async () => {
+    const { ws, staff } = await setup(1);
+    const [s1] = staff as [string];
+    expect(
+      await codeOf(admin.leaveWorkspace({ workspaceId: ws.id, userId: await person('Lạ') })),
+    ).toBe('NOT_FOUND');
+    await admin.leaveWorkspace({ workspaceId: ws.id, userId: s1 });
+    expect(await codeOf(admin.leaveWorkspace({ workspaceId: ws.id, userId: s1 }))).toBe(
+      'NOT_FOUND',
+    );
+    expect(await codeOf(admin.leaveWorkspace({ workspaceId: 'x', userId: s1 }))).toBe(
+      'VALIDATION_FAILED',
+    );
   });
 });

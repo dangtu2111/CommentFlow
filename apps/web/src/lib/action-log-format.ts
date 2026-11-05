@@ -4,6 +4,7 @@
 const KNOWN_ACTIONS = [
   'workspace.created',
   'member.role_changed',
+  'member.left',
   'invitation.created',
   'invitation.accepted',
   'invitation.revoked',
@@ -12,6 +13,11 @@ const KNOWN_ACTIONS = [
   'channel.token_set',
   'channel.token_cleared',
   'comment.reply_requested',
+  'comment.hide_requested',
+  'comment.hide_cancelled',
+  'comment.unhide_requested',
+  'comment.hidden',
+  'comment.unhidden',
 ] as const;
 
 export function actionLabelKey(action: string): string | null {

@@ -205,6 +205,7 @@
       "empty": "No workspace found",
       "label": "Switch workspace",
       "create": "+ Create a new workspace",
+      "leave": "Leave this workspace",
       "role": {
         "owner": "Owner",
         "staff": "Staff"
@@ -267,9 +268,20 @@
       "roleInvalid": "The role is not valid.",
       "rateLimited": "You have sent too many invitations. Please try again in {minutes} minutes.",
       "lastOwner": "The workspace must always keep at least one active Owner.",
+      "leaveLastOwner": "You are the last active Owner. Promote another member to Owner (or delete the workspace) before leaving.",
       "invalid": "The information is not valid. Please reload the page and try again.",
       "generic": "Could not complete that. Please try again in a few minutes."
     }
+  },
+  "leave": {
+    "title": "Leave workspace",
+    "subtitle": "Leave the workspace “{workspace}”. You lose access immediately and can only return if you are invited again.",
+    "button": "Leave workspace",
+    "warning": "You will no longer see this workspace's comments, activity log or data. All Owners will receive an email saying you left.",
+    "confirm": "Confirm leaving",
+    "cancel": "Cancel",
+    "lastOwner": "You are the last active Owner, so you cannot leave yet. Promote another member to Owner first.",
+    "membersLink": "Open the Members page"
   },
   "invite": {
     "title": "Invitation",
@@ -433,6 +445,49 @@
         "retriesExhausted": "Tried several times but could not send. Please try again later.",
         "generic": "Sending failed. Please try again later."
       }
+    },
+    "hide": {
+      "section": "Hide comment",
+      "hide": "Hide",
+      "unhide": "Unhide",
+      "retry": "Try again",
+      "working": "Working…",
+      "stateHiding": "Hiding the comment on the platform…",
+      "stateUnhiding": "Unhiding the comment on the platform…",
+      "stateSlow": "This is taking a while. Reload the page in a few minutes.",
+      "failedHide": "Hiding failed",
+      "failedUnhide": "Unhiding failed",
+      "failedWhy": "Reason:",
+      "blocked": {
+        "lockedNamed": "{name} is working on this comment, so you cannot hide it yet.",
+        "lockedAnonymous": "A teammate is working on this comment, so you cannot hide it yet.",
+        "channelUnavailable": "The channel is not connected, so hiding or unhiding is not possible. The workspace owner needs to reconnect the channel.",
+        "notHideable": "This comment cannot be hidden right now (it is being processed or a reply is being sent)."
+      },
+      "failures": {
+        "not_found": "Comment not found.",
+        "not_hideable": "This comment can no longer be hidden or unhidden (it is being processed, deleted or merged).",
+        "locked_by_other": "A teammate is working on this comment.",
+        "channel_not_connected": "The channel is not connected, so this could not be done.",
+        "forbidden": "You do not have permission to hide or unhide comments.",
+        "queue_unavailable": "Could not do this right now. Please try again in a few minutes.",
+        "unavailable": "Could not do this right now. Please try again in a few minutes."
+      },
+      "errors": {
+        "tokenExpired": "The channel connection has expired. The workspace owner needs to reconnect the channel.",
+        "permission": "The channel no longer has permission to hide comments. The workspace owner needs to grant it again.",
+        "blocked": "The platform is temporarily blocking actions from this channel. Please try again later.",
+        "rateLimit": "The platform is rate limiting requests. Please try again in a few minutes.",
+        "unknown": "It is unclear whether the platform received the request. You can safely try again; it will not duplicate anything.",
+        "recheckH1": "The customer deleted the comment or it was merged, so it was not hidden.",
+        "recheckH2": "The comment changed status, so it was not hidden.",
+        "recheckH3": "The channel is not connected.",
+        "connectorUnavailable": "Could not reach the platform. Please try again later.",
+        "actionUnsupported": "This platform does not support hiding or unhiding comments.",
+        "windowExpired": "The time allowed for acting on this comment has passed.",
+        "retriesExhausted": "Tried several times but could not complete it. Please try again later.",
+        "generic": "The action failed. Please try again later."
+      }
     }
   },
   "shell": {
@@ -510,6 +565,7 @@
     "actions": {
       "workspace.created": "Workspace created",
       "member.role_changed": "Member role changed",
+      "member.left": "Member left the workspace",
       "invitation.created": "Invitation sent",
       "invitation.accepted": "Invitation accepted",
       "invitation.revoked": "Invitation revoked",
@@ -517,7 +573,12 @@
       "channel.reconnected": "Channel reconnected",
       "channel.token_set": "Channel access token updated",
       "channel.token_cleared": "Channel access token removed",
-      "comment.reply_requested": "Comment reply requested"
+      "comment.reply_requested": "Comment reply requested",
+      "comment.hide_requested": "Comment hide requested",
+      "comment.hide_cancelled": "Comment hide request cancelled",
+      "comment.unhide_requested": "Comment unhide requested",
+      "comment.hidden": "Comment hidden on the platform",
+      "comment.unhidden": "Comment unhidden on the platform"
     },
     "empty": {
       "title": "No log entries yet",

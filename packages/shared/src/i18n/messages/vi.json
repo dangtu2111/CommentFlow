@@ -205,6 +205,7 @@
       "empty": "Không tìm thấy workspace",
       "label": "Chuyển workspace",
       "create": "+ Tạo workspace mới",
+      "leave": "Rời workspace này",
       "role": {
         "owner": "Owner",
         "staff": "Staff"
@@ -267,9 +268,20 @@
       "roleInvalid": "Vai trò không hợp lệ.",
       "rateLimited": "Bạn đã gửi quá nhiều lời mời. Vui lòng thử lại sau {minutes} phút.",
       "lastOwner": "Workspace phải luôn còn ít nhất một Owner đang hoạt động.",
+      "leaveLastOwner": "Bạn là Owner đang hoạt động cuối cùng. Hãy nâng một thành viên khác lên Owner (hoặc xóa workspace) trước khi rời.",
       "invalid": "Thông tin chưa hợp lệ. Vui lòng tải lại trang rồi thử lại.",
       "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
     }
+  },
+  "leave": {
+    "title": "Rời workspace",
+    "subtitle": "Rời khỏi workspace “{workspace}”. Bạn sẽ mất quyền truy cập ngay và chỉ vào lại được khi được mời lại.",
+    "button": "Rời workspace",
+    "warning": "Bạn sẽ không còn xem được bình luận, nhật ký hay dữ liệu của workspace này. Các Owner sẽ nhận email báo bạn đã rời.",
+    "confirm": "Xác nhận rời workspace",
+    "cancel": "Hủy",
+    "lastOwner": "Bạn là Owner đang hoạt động cuối cùng nên chưa thể rời. Hãy nâng một thành viên khác lên Owner trước.",
+    "membersLink": "Mở trang Thành viên"
   },
   "invite": {
     "title": "Lời mời tham gia",
@@ -433,6 +445,49 @@
         "retriesExhausted": "Đã thử nhiều lần nhưng chưa gửi được. Hãy thử lại sau.",
         "generic": "Gửi không thành công. Hãy thử lại sau."
       }
+    },
+    "hide": {
+      "section": "Ẩn bình luận",
+      "hide": "Ẩn",
+      "unhide": "Bỏ ẩn",
+      "retry": "Thử lại",
+      "working": "Đang xử lý…",
+      "stateHiding": "Đang ẩn bình luận trên nền tảng…",
+      "stateUnhiding": "Đang bỏ ẩn bình luận trên nền tảng…",
+      "stateSlow": "Đang chờ xử lý lâu. Hãy tải lại trang sau ít phút.",
+      "failedHide": "Ẩn không thành công",
+      "failedUnhide": "Bỏ ẩn không thành công",
+      "failedWhy": "Lý do:",
+      "blocked": {
+        "lockedNamed": "{name} đang xử lý bình luận này nên bạn chưa ẩn được.",
+        "lockedAnonymous": "Đồng nghiệp đang xử lý bình luận này nên bạn chưa ẩn được.",
+        "channelUnavailable": "Kênh chưa kết nối được nên chưa ẩn hoặc bỏ ẩn được. Chủ workspace cần kết nối lại kênh.",
+        "notHideable": "Bình luận này hiện không thể ẩn (đang được xử lý hoặc gửi trả lời)."
+      },
+      "failures": {
+        "not_found": "Không tìm thấy bình luận.",
+        "not_hideable": "Bình luận này không còn ẩn hoặc bỏ ẩn được (đang được xử lý, đã xóa hoặc đã gộp).",
+        "locked_by_other": "Đồng nghiệp đang xử lý bình luận này.",
+        "channel_not_connected": "Kênh chưa kết nối được nên chưa thực hiện được.",
+        "forbidden": "Bạn không có quyền ẩn hoặc bỏ ẩn bình luận.",
+        "queue_unavailable": "Chưa thực hiện được lúc này. Hãy thử lại sau ít phút.",
+        "unavailable": "Chưa thực hiện được lúc này. Hãy thử lại sau ít phút."
+      },
+      "errors": {
+        "tokenExpired": "Kết nối của kênh đã hết hạn. Chủ workspace cần kết nối lại kênh.",
+        "permission": "Kênh không còn quyền ẩn bình luận. Chủ workspace cần cấp lại quyền.",
+        "blocked": "Nền tảng đang tạm chặn thao tác từ kênh này. Hãy thử lại sau.",
+        "rateLimit": "Nền tảng đang giới hạn tốc độ. Hãy thử lại sau ít phút.",
+        "unknown": "Chưa rõ nền tảng đã nhận lệnh chưa. Bạn có thể thử lại an toàn, thao tác này không gây trùng lặp.",
+        "recheckH1": "Khách đã xóa hoặc bình luận đã được gộp nên không ẩn nữa.",
+        "recheckH2": "Bình luận đã đổi trạng thái nên không ẩn nữa.",
+        "recheckH3": "Kênh đang không kết nối.",
+        "connectorUnavailable": "Chưa kết nối được tới nền tảng. Hãy thử lại sau.",
+        "actionUnsupported": "Nền tảng này chưa hỗ trợ ẩn hoặc bỏ ẩn bình luận.",
+        "windowExpired": "Đã quá thời hạn được phép thao tác trên bình luận này.",
+        "retriesExhausted": "Đã thử nhiều lần nhưng chưa thực hiện được. Hãy thử lại sau.",
+        "generic": "Thao tác không thành công. Hãy thử lại sau."
+      }
     }
   },
   "shell": {
@@ -510,6 +565,7 @@
     "actions": {
       "workspace.created": "Tạo workspace",
       "member.role_changed": "Đổi vai trò thành viên",
+      "member.left": "Thành viên tự rời workspace",
       "invitation.created": "Gửi lời mời",
       "invitation.accepted": "Nhận lời mời",
       "invitation.revoked": "Thu hồi lời mời",
@@ -517,7 +573,12 @@
       "channel.reconnected": "Kết nối lại kênh",
       "channel.token_set": "Cập nhật mã truy cập kênh",
       "channel.token_cleared": "Xóa mã truy cập kênh",
-      "comment.reply_requested": "Yêu cầu gửi trả lời bình luận"
+      "comment.reply_requested": "Yêu cầu gửi trả lời bình luận",
+      "comment.hide_requested": "Yêu cầu ẩn bình luận",
+      "comment.hide_cancelled": "Đã hủy yêu cầu ẩn bình luận",
+      "comment.unhide_requested": "Yêu cầu bỏ ẩn bình luận",
+      "comment.hidden": "Đã ẩn bình luận trên nền tảng",
+      "comment.unhidden": "Đã bỏ ẩn bình luận trên nền tảng"
     },
     "empty": {
       "title": "Chưa có nhật ký",

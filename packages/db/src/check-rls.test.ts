@@ -22,6 +22,7 @@ function fakeDb(parts: {
   noDelete?: Row[];
   tokenFunctions?: Row[];
   webhookFn?: Row[];
+  leaveFn?: Row[];
   guards?: Row[];
   systemFn?: Row[];
   channelInsert?: Row[];
@@ -76,6 +77,7 @@ function fakeDb(parts: {
       if (text.includes('/* is-system-context-body */')) return { rows: parts.systemFn ?? [] };
       if (text.includes('/* channels-no-insert */')) return { rows: parts.channelInsert ?? [] };
       if (text.includes('/* webhook-function */')) return { rows: parts.webhookFn ?? [] };
+      if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
       if (text.includes('/* no-delete */')) return { rows: parts.noDelete ?? [] };
       if (text.includes('/* actor-forbidden */')) return { rows: parts.actorForbidden ?? [] };
@@ -713,6 +715,32 @@ describe('checkRls: policy người gọi (chỉ-Owner)', () => {
     expect(v).toContainEqual({
       subject: 'core.members',
       message: expect.stringContaining('policy "người gọi" (is_workspace_owner)'),
+    });
+  });
+});
+
+describe('checkRls: hàm tự rời workspace và policy đọc nhật ký', () => {
+  it('báo khi hàm tự rời thiếu/mở rộng quyền', async () => {
+    const v = await checkRls(
+      fakeDb({
+        leaveFn: [{ name: 'core.leave_workspace', problem: 'PUBLIC có quyền EXECUTE' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.leave_workspace',
+      message: 'hàm tự rời: PUBLIC có quyền EXECUTE',
+    });
+  });
+
+  it('báo khi policy đọc action_logs không phân Owner/Staff', async () => {
+    const v = await checkRls(
+      fakeDb({
+        actorPolicies: [{ tbl: 'core.action_logs', cmd: 'r', marker: 'is_workspace_owner' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.action_logs',
+      message: expect.stringContaining(`policy "người gọi" (is_workspace_owner) cho lệnh 'r'`),
     });
   });
 });

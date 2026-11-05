@@ -25,6 +25,15 @@ export type CommentDetail = {
   channelStatus: string;
   /** Khách đã xóa bình luận trên nền tảng (FR-048); `null` nếu còn. */
   deletedAt: Date | null;
+  /** Đã ẩn trên nền tảng (chỉ worker ghi, SAU khi nền tảng xác nhận — ADR 009). */
+  isHidden: boolean;
+  /** Yêu cầu ẩn/bỏ ẩn MỚI NHẤT của bình luận (hàng đợi ẩn, ADR 009); `null` nếu chưa có. */
+  latestHide: {
+    id: string;
+    action: 'hide' | 'unhide';
+    status: string;
+    errorCode: string | null;
+  } | null;
   /** Yêu cầu trả lời MỚI NHẤT của bình luận (hàng đợi gửi, ADR 008); `null` nếu chưa có. */
   latestReply: {
     id: string;
@@ -54,6 +63,11 @@ type Row = {
   is_ad: boolean;
   channel_status: string;
   deleted_at: Date | null;
+  is_hidden: boolean;
+  hide_id: string | null;
+  hide_action: 'hide' | 'unhide' | null;
+  hide_status: string | null;
+  hide_error_code: string | null;
   reply_id: string | null;
   reply_status: string | null;
   reply_text: string | null;
@@ -74,7 +88,8 @@ export async function getCommentDetail(
   const result = await tx.execute<Row>(sql`
     SELECT c.id, c.status, c.text, c.author_name, c.author_external_id, c.created_time, c.label, c.needs_followup,
            c.parent_external_id, c.channel_id, ch.name AS channel_name, ch.platform, p.external_id AS post_external_id,
-           p.is_ad, ch.status AS channel_status, c.deleted_at,
+           p.is_ad, ch.status AS channel_status, c.deleted_at, c.is_hidden,
+           lh.id AS hide_id, lh.action AS hide_action, lh.status AS hide_status, lh.error_code AS hide_error_code,
            lr.id AS reply_id, lr.status AS reply_status, lr.text AS reply_text,
            lr.error_code AS reply_error_code, lr.sent_at AS reply_sent_at,
            c.locked_by, c.locked_until, (c.locked_until > now()) AS lock_active, u.name AS holder_name
@@ -89,6 +104,13 @@ export async function getCommentDetail(
          ORDER BY r.created_at DESC, r.id DESC
          LIMIT 1
       ) lr ON true
+      LEFT JOIN LATERAL (
+        SELECT h.id, h.action, h.status, h.error_code
+          FROM cf.comment_hides h
+         WHERE h.workspace_id = c.workspace_id AND h.comment_id = c.id
+         ORDER BY h.created_at DESC, h.id DESC
+         LIMIT 1
+      ) lh ON true
      WHERE c.workspace_id = ${workspaceId}::uuid AND c.id = ${commentId}::uuid`);
   const row = result.rows[0];
   if (!row) return null;
@@ -109,6 +131,16 @@ export async function getCommentDetail(
     isAd: row.is_ad,
     channelStatus: row.channel_status,
     deletedAt: row.deleted_at,
+    isHidden: row.is_hidden,
+    latestHide:
+      row.hide_id && row.hide_action && row.hide_status
+        ? {
+            id: row.hide_id,
+            action: row.hide_action,
+            status: row.hide_status,
+            errorCode: row.hide_error_code,
+          }
+        : null,
     latestReply:
       row.reply_id && row.reply_status && row.reply_text !== null
         ? {
