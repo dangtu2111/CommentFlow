@@ -2,6 +2,8 @@
 
 > Dán nguyên khối dưới vào Claude Code trên máy code **sau khi `feat/workspace-members` đã merge**. Phiên sau chỉ cần nhắn: *"Tiếp tục theo docs/PROMPT_BUILD_TOAN_BO.md, đọc docs/plans/MASTER.md và handoff."*
 
+> **Cập nhật 05/11/2026 — quy tắc hỏi thay thế mục 2 ở chỗ mâu thuẫn:** xem `AGENTS.md` § Quy tắc hỏi. Mặc định tự chọn phương án khuyến nghị và ghi `docs/plans/QUYET_DINH_CHO_DUYET.md`; chỉ DỪNG hỏi khi (a) cần việc/tài nguyên chỉ chủ dự án làm được, (b) tốn tiền/không đảo ngược, (c) đổi phạm vi/trải nghiệm lớn, (d) không có phương án đủ an toàn. Được sửa `docs/01–16` cho khớp (ghi vào cùng file). Vẫn giữ: kiểm tra tay cuối mỗi tính năng và xác nhận ở cổng giai đoạn. Chỉ `git add` đúng file của việc; không `git add -A`. Báo cáo ≤ 10 dòng/ngày + mục "Việc chỉ bạn làm được".
+
 ```
 # Nhiệm vụ: xây CommentFlow từ GĐ0 đến GĐ5 theo docs/16, từng tính năng một; chủ dự án kiểm tra tay sau mỗi tính năng
 
