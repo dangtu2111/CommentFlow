@@ -363,6 +363,21 @@ describe('FR-048 job ingest — khách sửa/xóa bình luận', () => {
     await handler()(job(ws, removed)); // chạy lại cùng sự kiện
     const first = await commentRowOf(channelId);
     expect(first.deleted_at).not.toBeNull();
+    // FR-048 + COMMENT-PRIVACY-ON-DELETE: nội dung và danh tính khách bị xóa trắng; bản sao ở sự kiện TẠO cũng xóa.
+    const redacted = (
+      await admin.query(
+        'SELECT text, text_normalized, author_name, author_external_id, redacted_at FROM cf.comments WHERE id = $1',
+        [first.id],
+      )
+    ).rows[0];
+    expect(redacted).toMatchObject({
+      text: '',
+      text_normalized: null,
+      author_name: null,
+      author_external_id: '',
+    });
+    expect(redacted.redacted_at).not.toBeNull();
+    expect((await eventRow(removed)).status).toBe('done');
     await new Promise((resolve) => setTimeout(resolve, 20));
     await handler()(job(ws, await recordAt(pageId, withVerb(created, 'remove'), 200))); // xóa lần hai (sự kiện khác)
     expect(new Date((await commentRowOf(channelId)).deleted_at).getTime()).toBe(

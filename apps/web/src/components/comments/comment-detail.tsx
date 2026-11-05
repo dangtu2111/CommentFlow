@@ -64,7 +64,10 @@ export async function CommentDetailPanel({
   const platform = (PLATFORMS as readonly string[]).includes(comment.platform)
     ? t(`platforms.${comment.platform as (typeof PLATFORMS)[number]}`)
     : comment.platform;
-  const reply = deriveReplyUi({ ...comment, deleted: comment.deletedAt !== null });
+  const isDeleted = comment.deletedAt !== null;
+  // Khách đã xóa: nội dung và danh tính đã bị xóa trắng ở DB (FR-048) → báo rõ thay vì khung rỗng.
+  const bodyText = isDeleted ? t('detail.redacted') : comment.text || t('detail.noText');
+  const reply = deriveReplyUi({ ...comment, deleted: isDeleted });
   const composerLabels = {
     field: t('reply.field'),
     placeholder: t('reply.placeholder'),
@@ -121,15 +124,17 @@ export async function CommentDetailPanel({
             {comment.isAd ? <span className="chip">{t('list.ad')}</span> : null}
           </dd>
         </div>
-        <div>
-          <dt>{t('detail.authorId')}</dt>
-          <dd className="comment-detail-code">{comment.authorExternalId}</dd>
-        </div>
+        {isDeleted ? null : (
+          <div>
+            <dt>{t('detail.authorId')}</dt>
+            <dd className="comment-detail-code">{comment.authorExternalId}</dd>
+          </div>
+        )}
       </dl>
       {comment.parentExternalId ? (
         <p className="comment-detail-reply">{t('detail.isReply')}</p>
       ) : null}
-      <blockquote className="comment-detail-text">{comment.text || t('detail.noText')}</blockquote>
+      <blockquote className="comment-detail-text">{bodyText}</blockquote>
       <div className="inbox-chips">
         <span className={`chip chip-status chip-${comment.status}`}>{status}</span>
         {comment.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}

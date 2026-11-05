@@ -176,6 +176,13 @@
       "when": 1793782194656,
       "tag": "0024_comment_deleted_at",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793846456726,
+      "tag": "0025_comment_redact",
+      "breakpoints": true
     }
   ]
 }

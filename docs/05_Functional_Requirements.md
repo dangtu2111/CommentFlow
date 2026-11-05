@@ -56,7 +56,7 @@
 | FR-045 | Hành động hàng loạt: Bỏ qua, Ẩn (xác nhận), Đổi nhãn; không gửi hàng loạt | Bắt buộc |
 | FR-046 | Nhắn riêng từ bình luận (1 tin, ≤ 7 ngày) | Sau (GĐ5) |
 | FR-047 | Hội thoại tin nhắn: cửa sổ 24 giờ/7 ngày; AI theo hội thoại; tối đa lượt AI; chuyển người khi khách hỏi lại ≥ 3 lần hoặc đòi gặp người | Sau (GĐ5) |
-| FR-048 | Bình luận bị khách sửa → cập nhật, phân loại lại nếu chưa trả lời; bị xóa → ẩn khỏi inbox, giữ log | Bắt buộc |
+| FR-048 | Bình luận bị khách sửa → cập nhật, phân loại lại nếu chưa trả lời. Bị xóa → ẩn khỏi inbox, **giữ** dòng, trạng thái, thời điểm, liên kết trả lời và nhật ký, nhưng **xóa trắng** nội dung và danh tính khách (`text`, `text_normalized`, `author_name`, `author_external_id`, `attachments`; ghi `redacted_at`) và xóa bản sao nội dung ở nơi khác (bản sao trong `webhook_events.payload`; khi có: cache câu trả lời, `kb_answer_examples`, `retrieval_logs`, Langfuse) | Bắt buộc |
 
 ## FR-E — Cơ sở kiến thức & lập chỉ mục
 

@@ -164,8 +164,9 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 |---|---|---|
 | 1 | Trên Facebook, dùng tài khoản khách bình luận vào bài của Page thử; đợi vài giây. | Bình luận xuất hiện ở tab **Mới/Chờ duyệt**. |
 | 2 | Khách **sửa** nội dung bình luận; đợi vài giây; tải lại panel chi tiết. | Nội dung trong inbox đổi theo bản đã sửa. Sửa lần hai cũng cập nhật. |
-| 3 | Khách **xóa** bình luận; đợi vài giây; tải lại danh sách. | Bình luận biến mất khỏi danh sách và số trên tab giảm; mở trực tiếp bằng đường dẫn `?c=` thì thấy "Khách đã xóa bình luận này trên nền tảng nên không thể trả lời." và không có ô soạn. |
+| 3 | Khách **xóa** bình luận; đợi vài giây; tải lại danh sách. | Bình luận biến mất khỏi danh sách và số trên tab giảm; mở trực tiếp bằng đường dẫn `?c=` thì thấy "Khách đã xóa bình luận này trên nền tảng nên không thể trả lời." và không có ô soạn. Panel chi tiết cũng ghi nội dung và thông tin người bình luận đã bị xóa khỏi hệ thống (không còn nội dung/tên/mã khách). |
 | 4 | (Tùy chọn) Bấm Gửi trả lời cho một bình luận rồi để khách xóa nó trước khi worker gửi. | Yêu cầu bị hủy (không gửi lên Facebook); bình luận trở về trạng thái trước. |
+| 4b | Nhờ agent kiểm dòng bình luận trong DB. | `text` rỗng, `author_name` trống, `redacted_at` có giá trị; trạng thái, thời điểm tạo, nhật ký vẫn còn. |
 | 5 | Nhờ agent kiểm `cf.action_logs`. | Có dòng `comment.edited`/`comment.deleted` (actor hệ thống), KHÔNG chứa nội dung bình luận. |
 
 Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
