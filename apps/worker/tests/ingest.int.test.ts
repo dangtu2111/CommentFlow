@@ -391,6 +391,30 @@ describe('FR-048 job ingest — khách sửa/xóa bình luận', () => {
     expect(await commentsOf(channelId)).toHaveLength(1);
   });
 
+  it('xóa trước → tạo sau: dòng được lưu NGAY ở dạng đã xóa trắng, không tính vào số đếm bài, vẫn không vào inbox; thứ tự ngược lại cho cùng kết quả', async () => {
+    const { pageId, channelId } = await seedPage();
+    const created = change(pageId);
+    const removed = await recordAt(pageId, withVerb(created, 'remove'), 100);
+    await handler()(job(ws, removed)); // chưa có dòng → ghi dấu xóa
+    expect(await commentsOf(channelId)).toHaveLength(0);
+    await handler()(job(ws, await record(pageId, created))); // tạo đến sau
+    const row = (
+      await admin.query(
+        'SELECT text, author_name, author_external_id, deleted_at, redacted_at FROM cf.comments WHERE channel_id = $1',
+        [channelId],
+      )
+    ).rows[0];
+    expect(row).toMatchObject({ text: '', author_name: null, author_external_id: '' });
+    expect(row.deleted_at).not.toBeNull();
+    expect(row.redacted_at).not.toBeNull();
+    const counts = (
+      await admin.query('SELECT comment_count, pending_count FROM cf.posts WHERE channel_id = $1', [
+        channelId,
+      ])
+    ).rows[0];
+    expect(counts).toMatchObject({ comment_count: 0, pending_count: 0 });
+  });
+
   it('sửa/xóa vẫn đồng bộ khi kênh hết hạn SAU khi nhận sự kiện (là dữ liệu, không phải gửi)', async () => {
     const { pageId, channelId } = await seedPage();
     const created = change(pageId);

@@ -402,7 +402,8 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
   // Giới hạn cột ở đường người dùng (channels/comments) dựa hoàn toàn vào hai trigger này (0019): phải tồn tại và đang bật.
   const guards = await db.query(`/* column-guard-triggers */
     SELECT v.tbl AS name, v.trg AS trg FROM (VALUES
-      ('cf.channels', 'channels_guard_user_update'), ('cf.comments', 'comments_guard_user_update')) AS v(tbl, trg)
+      ('cf.channels', 'channels_guard_user_update'), ('cf.comments', 'comments_guard_user_update'),
+      ('cf.comments', 'comments_apply_tombstone')) AS v(tbl, trg)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t
       WHERE t.tgrelid = v.tbl::regclass AND t.tgname = v.trg AND NOT t.tgisinternal AND t.tgenabled = 'O')`);
@@ -427,7 +428,7 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
   // cf_app không có INSERT ở bất kỳ cột nào: kênh chỉ tạo qua cf.create_channel, sự kiện webhook chỉ ghi qua
   // cf.record_webhook_event (hàm DEFINER tự kiểm quyền/ngữ cảnh).
   const noInsert = await db.query(`/* channels-no-insert */
-    SELECT v.t AS name FROM (VALUES ('cf.channels'), ('cf.webhook_events'), ('cf.comment_replies')) AS v(t)
+    SELECT v.t AS name FROM (VALUES ('cf.channels'), ('cf.webhook_events'), ('cf.comment_replies'), ('cf.comment_tombstones')) AS v(t)
     WHERE has_any_column_privilege('${APP_ROLE}', v.t::regclass, 'INSERT')`);
   for (const row of noInsert.rows) {
     violations.push({
@@ -478,6 +479,8 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.comment_replies', 'w', 'is_system_context'],
   ['cf.comment_replies', 'r', 'is_workspace_member'],
   ['cf.webhook_events', 'r', 'is_workspace_owner'],
+  // cf.comment_tombstones: cf_app KHÔNG có quyền trực tiếp (hàm DEFINER cf.mark_comment_deleted ghi); RLS chỉ hệ thống.
+  ['cf.comment_tombstones', 'a', 'is_system_context'],
 ];
 
 /** Chuỗi KHÔNG được xuất hiện trong policy của lệnh đó. */
@@ -506,6 +509,9 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.comments', 'w', 'IS NULL'],
   ['cf.webhook_events', 'w', 'IS NULL'],
   ['cf.webhook_events', 'r', 'IS NULL'],
+  ['cf.comment_tombstones', 'a', 'is_workspace_member'],
+  ['cf.comment_tombstones', 'a', 'is_workspace_owner'],
+  ['cf.comment_tombstones', 'a', 'IS NULL'],
 ];
 
 async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -560,6 +566,7 @@ const NO_DELETE_TABLES = [
   'cf.comments',
   'cf.webhook_events',
   'cf.comment_replies',
+  'cf.comment_tombstones',
   'cf.ai_usage',
   'core.members',
   'core.invitations',
