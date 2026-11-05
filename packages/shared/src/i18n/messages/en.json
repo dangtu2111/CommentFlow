@@ -205,6 +205,7 @@
       "empty": "No workspace found",
       "label": "Switch workspace",
       "create": "+ Create a new workspace",
+      "leave": "Leave this workspace",
       "role": {
         "owner": "Owner",
         "staff": "Staff"
@@ -267,9 +268,20 @@
       "roleInvalid": "The role is not valid.",
       "rateLimited": "You have sent too many invitations. Please try again in {minutes} minutes.",
       "lastOwner": "The workspace must always keep at least one active Owner.",
+      "leaveLastOwner": "You are the last active Owner. Promote another member to Owner (or delete the workspace) before leaving.",
       "invalid": "The information is not valid. Please reload the page and try again.",
       "generic": "Could not complete that. Please try again in a few minutes."
     }
+  },
+  "leave": {
+    "title": "Leave workspace",
+    "subtitle": "Leave the workspace “{workspace}”. You lose access immediately and can only return if you are invited again.",
+    "button": "Leave workspace",
+    "warning": "You will no longer see this workspace's comments, activity log or data. All Owners will receive an email saying you left.",
+    "confirm": "Confirm leaving",
+    "cancel": "Cancel",
+    "lastOwner": "You are the last active Owner, so you cannot leave yet. Promote another member to Owner first.",
+    "membersLink": "Open the Members page"
   },
   "invite": {
     "title": "Invitation",
@@ -553,6 +565,7 @@
     "actions": {
       "workspace.created": "Workspace created",
       "member.role_changed": "Member role changed",
+      "member.left": "Member left the workspace",
       "invitation.created": "Invitation sent",
       "invitation.accepted": "Invitation accepted",
       "invitation.revoked": "Invitation revoked",

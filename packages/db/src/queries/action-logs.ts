@@ -5,8 +5,8 @@ import type { Database } from '../client';
  * Truy vấn trang Nhật ký (FR-092). CHỈ ĐỌC. Luôn gọi trong `withActor(workspaceId, userId, …)`.
  *
  * Quyền xem (FR-092): Owner thấy mọi dòng của workspace; Staff chỉ thấy dòng do CHÍNH MÌNH thực hiện
- * (`actor_type = 'user'` và `actor_id` = người xem). RLS của `action_logs` chỉ giới hạn theo workspace nên quy tắc
- * Staff-chỉ-của-mình nằm ở đây — MỘT chỗ duy nhất (`viewerConditions`), áp cho cả danh sách, chi tiết và danh sách
+ * (`actor_type = 'user'` và `actor_id` = người xem). Từ migration 0028 RLS của `action_logs` cũng ép quy tắc này (Owner cả workspace;
+ * Staff chỉ dòng của mình) nên đây là lớp thứ hai — vẫn MỘT chỗ duy nhất (`viewerConditions`), áp cho cả danh sách, chi tiết và danh sách
  * hành động; bộ lọc người dùng nhập chỉ THU HẸP thêm, không bao giờ mở rộng.
  */
 

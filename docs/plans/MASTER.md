@@ -36,7 +36,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | AUTH-SESSIONS-UI | FR-001 (thiết bị) | US-005 | AUTH-2FA | — | không | ✅ (trang tạm) |
 | AUTH-RATELIMIT | FR-001 (giới hạn đăng nhập) | — | AUTH-CORE | S | không | ✅ (M1; xô 2FA ở M3 xong) |
 | AUTH-FORGOT, AUTH-PWNED | FR-001 | US-001 | AUTH-CORE | S | không | ✅ |
-| GĐ0-TENANCY | FR-002–005 | US-001, 004, 006 | AUTH-CORE | S+DB | không | ✅ (trừ `MEMBER-LEAVE`, `FR-005-COUNT`) |
+| GĐ0-TENANCY | FR-002–005 | US-001, 004, 006 | AUTH-CORE | S+DB | không | ✅ (trừ `FR-005-COUNT`) |
 | AUTH-INVITE | FR-003 | US-004 | TENANCY | S+DB | không | ✅ |
 | RLS-ACTOR-CTX | FR-003, 004 (DB) | — | TENANCY | S+DB | không | ✅ |
 | GĐ0-FLAGS | FR-117 (mã) | — | DB | S | không | ✅ |
@@ -60,7 +60,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | MEMBER-DIRECT-ADD | FR-003 (chỉ `accept_invitation` thêm thành viên) | US-004 | AUTH-INVITE | S+DB | không (đã có đề xuất của verifier; chủ dự án đã chọn hướng) | ✅ |
-| MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S | không | ⏳ |
+| MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/member-leave`, migration 0028) |
 | CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ⏳ |
 | AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ⏳ |
 | AUTH-LANG-PREF | FR-119 (`users.locale` từ Cài đặt) | — | I18N | — | không | ⏳ |
@@ -95,7 +95,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | POLLING-BACKFILL | FR-023 (polling bù sót; cảnh báo webhook im lặng) | UF-2 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
 | ATTACHMENTS-STORE | FR-143 (lưu loại + link tệp đính kèm) | — | CH-SCHEMA | DB | không | ⏳ |
 | ADS-POSTS-LIST | FR-123 (bài quảng cáo/dark post của Page + bài thường) | — | FB-OAUTH | — | **có** — Meta App | ⛔ |
-| LOG-PAGE | FR-092 (trang Nhật ký: lọc, trước/sau, Staff chỉ thấy của mình) | — | GĐ0-DB | DB | không | ✅ (`/app/activity`: danh sách + lọc tác nhân/hành động/ngày + trước/sau; Staff chỉ của mình ép ở truy vấn, chưa ở RLS — xem gap `LOG-RLS-STAFF`) |
+| LOG-PAGE | FR-092 (trang Nhật ký: lọc, trước/sau, Staff chỉ thấy của mình) | — | GĐ0-DB | DB | không | ✅ (`/app/activity`: danh sách + lọc tác nhân/hành động/ngày + trước/sau; Staff chỉ của mình ép ở truy vấn VÀ ở RLS từ migration 0028 — gap `LOG-RLS-STAFF` ✅) |
 | STAGING-H5-H6 | — (H5 web staging; H6 che `/invite/*` trong log) | — | STAGING-DEPLOY | S | **có** — tên miền (hoãn) | ⛔ |
 | **CỔNG 1** | xem đầu mục GĐ1 | | tất cả 1B | | chủ dự án xác nhận | ⏳ |
 
