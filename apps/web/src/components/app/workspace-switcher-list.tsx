@@ -18,13 +18,20 @@ export type WorkspaceSwitcherLabels = {
  * Danh sách workspace của bộ chuyển (FR-005) kèm ô tìm kiếm theo tên. Chỉ lọc phía trình duyệt trên danh sách đã nạp;
  * chọn workspace vẫn gửi id qua server action, server kiểm lại thành viên (id từ client không được tin).
  */
+export type SwitcherWorkspace = WorkspaceMembership & {
+  /** Nhãn số cần xử lý ("7", "99+"); `null` = không hiện (0 hoặc không đọc được). */
+  pendingLabel: string | null;
+  /** Mô tả đầy đủ cho trình đọc màn hình ("7 bình luận cần xử lý"). */
+  pendingAria: string | null;
+};
+
 export function WorkspaceSwitcherList({
   currentId,
   memberships,
   labels,
 }: {
   currentId: string;
-  memberships: WorkspaceMembership[];
+  memberships: SwitcherWorkspace[];
   labels: WorkspaceSwitcherLabels;
 }) {
   const [query, setQuery] = useState('');
@@ -53,6 +60,15 @@ export function WorkspaceSwitcherList({
               >
                 <span className="ws-switch-name">{workspace.name}</span>
                 <span className="muted">{labels.roles[workspace.role]}</span>
+                {workspace.pendingLabel ? (
+                  <span
+                    className="ws-switch-count"
+                    role="img"
+                    aria-label={workspace.pendingAria ?? undefined}
+                  >
+                    {workspace.pendingLabel}
+                  </span>
+                ) : null}
                 {workspace.id === currentId ? <Check size={16} aria-hidden="true" /> : null}
               </button>
             </form>

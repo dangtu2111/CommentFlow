@@ -10,6 +10,7 @@ import { SubmitButton } from '../../../components/ui/submit-button';
 import { navGroupsFor } from '../../../lib/app-nav';
 import { getAuthRuntime } from '../../../server/auth';
 import { requireAppUser } from '../../../server/require-app-user';
+import { loadActionableCounts } from '../../../server/workspace-counts';
 import { logoutAction } from '../../(auth)/actions';
 
 /**
@@ -23,6 +24,7 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
     getAuthRuntime().tenancy.listWorkspacesOfUser(user.id),
     getTranslations('shell'),
   ]);
+  const counts = await loadActionableCounts(user.id, memberships);
   const groups = navGroupsFor(workspace.role).map((group) => ({
     key: group.key,
     label: t(`groups.${group.key}`),
@@ -37,7 +39,7 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
           </span>
           {t('brand')}
         </Link>
-        <WorkspaceSwitcher current={workspace} memberships={memberships} />
+        <WorkspaceSwitcher current={workspace} memberships={memberships} counts={counts} />
         <div className="shell-top-end">
           <LocaleSwitcher />
           <span className="shell-user" title={user.name}>
