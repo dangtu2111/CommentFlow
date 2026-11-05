@@ -9,6 +9,12 @@ describe('FR-016 hợp đồng connector (checkConnectorContract)', () => {
     expect(checkConnectorContract(createFakeConnector(platform))).toEqual([]);
   });
 
+  it('FR-016 platform lạ → vi phạm', () => {
+    const fb = createFakeConnector('facebook');
+    const broken = { ...fb, platform: 'myspace' } as unknown as PlatformConnector;
+    expect(checkConnectorContract(broken).join('\n')).toMatch(/platform lạ/);
+  });
+
   it('FR-016 khai báo hỗ trợ ẩn nhưng thiếu setHidden → vi phạm', () => {
     const fb = createFakeConnector('facebook');
     const broken: PlatformConnector = { ...fb, setHidden: undefined };

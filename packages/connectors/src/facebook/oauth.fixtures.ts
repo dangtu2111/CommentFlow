@@ -54,8 +54,3 @@ export const graphError = (code: number, subcode?: number) => ({
 
 /** `POST /{page-id}/subscribed_apps` và các lệnh ghi trả `{success:true}`. */
 export const successResponse = { success: true };
-
-/** `GET /{page-id}/subscribed_apps` */
-export const subscribedAppsResponse = (appId: string, fields: string[] = ['feed']) => ({
-  data: [{ id: appId, name: 'CommentFlow', subscribed_fields: fields }],
-});

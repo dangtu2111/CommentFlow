@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { isPlatformError } from '../errors';
 import { createFacebookOAuthClient } from './oauth';
 import {
@@ -41,6 +41,58 @@ const client = (fetchFn: typeof fetch, extra: object = {}) =>
     fetch: fetchFn,
     ...extra,
   });
+
+describe('cấu hình client', () => {
+  const f = mockFetch(() => ({ body: {} })).fn;
+  it('timeoutMs ngoài (0, tối đa] bị từ chối', () => {
+    expect(() => client(f, { timeoutMs: 0 })).toThrow(/timeoutMs/);
+    expect(() => client(f, { timeoutMs: 10 ** 9 })).toThrow(/timeoutMs/);
+  });
+  it('redirectUri không phải URL bị từ chối', () => {
+    expect(() => client(f, { redirectUri: 'không-phải-url' })).toThrow(/redirectUri/);
+  });
+  it('thiếu appSecret, redirectUri có fragment, state rỗng bị từ chối', () => {
+    expect(() => client(f, { appSecret: '' })).toThrow(/appSecret/);
+    expect(() => client(f, { redirectUri: `${FIXTURE_REDIRECT_URI}#x` })).toThrow(/fragment/);
+    expect(() => client(f).buildAuthorizeUrl('')).toThrow(/state/);
+  });
+  it('không truyền fetch → dùng fetch toàn cục', async () => {
+    const spy = vi.fn(async () => new Response(JSON.stringify(accessTokenResponse('T'))));
+    vi.stubGlobal('fetch', spy);
+    try {
+      const c = createFacebookOAuthClient({
+        appId: FIXTURE_APP_ID,
+        appSecret: FIXTURE_APP_SECRET,
+        redirectUri: FIXTURE_REDIRECT_URI,
+      });
+      await expect(c.exchangeCode('CODE')).resolves.toBe('T');
+      expect(spy).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+  it('thân phản hồi quá lớn → lỗi nền tảng (không rơi vào facebook_network_error)', async () => {
+    const big = (async () =>
+      new Response('x', { headers: { 'content-length': '99999999' } })) as unknown as typeof fetch;
+    await expect(client(big).getTokenOwnerId('t')).rejects.toMatchObject({ code: 'UNKNOWN' });
+  });
+  it('me/accounts sai dạng, me sai dạng → UNKNOWN; tasks thiếu → []', async () => {
+    const badAccounts = client(mockFetch(() => ({ body: { data: 'x' } })).fn);
+    await expect(badAccounts.listPages('t')).rejects.toMatchObject({ code: 'UNKNOWN' });
+    const badMe = client(mockFetch(() => ({ body: { id: 'abc' } })).fn);
+    await expect(badMe.getTokenOwnerId('t')).rejects.toMatchObject({ code: 'UNKNOWN' });
+    const noTasks = client(
+      mockFetch(() => ({ body: { data: [{ id: '1', name: 'P', access_token: 'tk' }] } })).fn,
+    );
+    await expect(noTasks.listPages('t')).resolves.toEqual([
+      { id: '1', name: 'P', accessToken: 'tk', tasks: [] },
+    ]);
+  });
+  it('phản hồi 200 không phải JSON → UNKNOWN', async () => {
+    const raw = (async () => new Response('<html>', { status: 200 })) as unknown as typeof fetch;
+    await expect(client(raw).exchangeCode('CODE')).rejects.toMatchObject({ code: 'UNKNOWN' });
+  });
+});
 
 describe('buildAuthorizeUrl', () => {
   it('dùng v27.0, state, redirect cố định và scope khi không có config_id', () => {
