@@ -20,6 +20,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/member-leave` · Gói nộ
 | Ranh giới gói | `pnpm depcruise` | luật ở `.dependency-cruiser.cjs`, test luật ở `tools/boundaries` |
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |
+| Migration / hàng đợi STAGING | `pnpm db:migrate:staging [--dry-run]` · `pnpm --filter @flow/worker queue:install:staging [--dry-run]` | CHỈ trong job `migrate-staging.yml` (trên `main`): `APP_ENV=staging`, `CF_STAGING_DB_NAME`, `CF_STAGING_DB_HOSTS` (host:cổng), DB có dấu `cf.env=staging`, `CF_CONFIRM_STAGING_MIGRATE=<tên-db>@<số-cuối>`; khóa tư vấn mức DB; không đọc `.env`; production bị từ chối cứng |
 | Cài hàng đợi pg-boss | `pnpm --filter @flow/worker queue:install` | chạy bằng `cf_owner`; worker chạy bằng `cf_app` |
 | Máy ảo `cf-dev` | `pnpm cf:dev <up\|ps\|logs\|stats\|sync\|env-init…>` · `pnpm stack:check` | chỉ project `cf-dev`; 7 cổng (có Mailpit 1025/8025); xem `scripts/lib/cf-dev-command.mjs` |
 | Python (ml) | `cd services/ml && uv run pytest` · `uv run ruff check .` | |
@@ -80,6 +81,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/member-leave` · Gói nộ
 | Kết nối DB / mở giao dịch có ngữ cảnh | `createDb` · `withWorkspace` | `packages/db/src/client.ts:93` · `:96` |
 | Pool role `cf_auth` cho bảng xác thực (chỉ module auth import) | `createAuthDb` · `openAuthDb` | `packages/db/src/auth-db.ts:24` · `packages/saas-core/src/auth/auth-db.ts:9` |
 | Chặn migration nhầm môi trường | `assertMigrationAllowed` | `packages/db/src/migration-guard.ts:41` |
+| Cổng + logic migrate staging (hàm thuần: host, mã xác nhận, journal, migration chờ) · chạy (trước/sau, dry-run READ ONLY) | `assertStagingMigrateAllowed` · `runStagingMigrate` | `packages/db/src/staging-migrate-guard.ts` · `staging-migrate.ts` (CLI `src/cli/migrate-staging.ts`; worker: `installQueueSchemaStaging` ở `apps/worker/src/queue/install.ts`) |
 | Kiểm RLS | `checkRls` | `packages/db/src/check-rls.ts:204` |
 | Luồng đăng ký/đăng nhập/quên mật khẩu (kết quả trung tính) | `createAuthFlows` | `packages/saas-core/src/auth/flows.ts:76` |
 | Gửi thư theo ngôn ngữ người nhận | `createNotifier` · `createSmtpTransport` · `renderEmail` | `packages/saas-core/src/notify/notifier.ts:17` · `smtp.ts:36` · `templates.ts:106` |

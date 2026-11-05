@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "queue:install": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/queue-install.ts",
+    "queue:install:staging": "tsx src/cli/queue-install-staging.ts",
     "test:db": "vitest run --config vitest.int.config.ts"
   },
   "dependencies": {
