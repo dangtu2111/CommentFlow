@@ -254,6 +254,15 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.posts', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.posts', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.posts', 'external_id', 'UPDATE'],
+  // PRODUCTS-VARIANTS (0031): khóa định danh + rev không sửa được (rev chỉ do trigger đặt)
+  ['cf_app', 'cf.products', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.products', 'source', 'UPDATE'],
+  ['cf_app', 'cf.products', 'external_id', 'UPDATE'],
+  ['cf_app', 'cf.products', 'rev', 'UPDATE'],
+  ['cf_app', 'cf.products', 'rev', 'INSERT'],
+  ['cf_app', 'cf.product_variants', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.product_variants', 'product_id', 'UPDATE'],
+  ['cf_app', 'cf.product_variants', 'external_id', 'UPDATE'],
   ['cf_app', 'cf.comments', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.comments', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.comments', 'post_id', 'UPDATE'],
@@ -411,7 +420,8 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
   const guards = await db.query(`/* column-guard-triggers */
     SELECT v.tbl AS name, v.trg AS trg FROM (VALUES
       ('cf.channels', 'channels_guard_user_update'), ('cf.comments', 'comments_guard_user_update'),
-      ('cf.comments', 'comments_apply_tombstone')) AS v(tbl, trg)
+      ('cf.comments', 'comments_apply_tombstone'), ('cf.products', 'products_set_rev'),
+      ('cf.product_variants', 'product_variants_bump_rev')) AS v(tbl, trg)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t
       WHERE t.tgrelid = v.tbl::regclass AND t.tgname = v.trg AND NOT t.tgisinternal AND t.tgenabled = 'O')`);
@@ -487,6 +497,17 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.posts', 'a', 'is_system_context'],
   ['cf.posts', 'w', 'is_system_context'],
   ['cf.posts', 'r', 'is_workspace_member'],
+  // PRODUCTS-VARIANTS (0031): thành viên (Owner+Staff) hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  ['cf.products', 'a', 'is_workspace_member'],
+  ['cf.products', 'a', 'is_system_context'],
+  ['cf.products', 'w', 'is_workspace_member'],
+  ['cf.products', 'w', 'is_system_context'],
+  ['cf.products', 'r', 'is_workspace_member'],
+  ['cf.product_variants', 'a', 'is_workspace_member'],
+  ['cf.product_variants', 'a', 'is_system_context'],
+  ['cf.product_variants', 'w', 'is_workspace_member'],
+  ['cf.product_variants', 'w', 'is_system_context'],
+  ['cf.product_variants', 'r', 'is_workspace_member'],
   ['cf.comments', 'a', 'is_system_context'],
   ['cf.comments', 'w', 'is_workspace_member'], // + is_system_context (trigger chặn sửa dữ liệu nền tảng ở đường người dùng)
   ['cf.comments', 'r', 'is_workspace_member'],
@@ -521,6 +542,11 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.posts', 'w', 'is_workspace_owner'],
   ['cf.comments', 'a', 'is_workspace_member'],
   ['cf.comments', 'a', 'is_workspace_owner'],
+  // sản phẩm: không nhánh "không người dùng" trong policy GHI (withWorkspace trần không được ghi)
+  ['cf.products', 'a', 'IS NULL'],
+  ['cf.products', 'w', 'IS NULL'],
+  ['cf.product_variants', 'a', 'IS NULL'],
+  ['cf.product_variants', 'w', 'IS NULL'],
   ['cf.channels', 'w', 'is_workspace_member'], // Staff không ghi kênh
   ['cf.channels', 'r', 'is_workspace_owner'], // đọc kênh không riêng Owner
   ['cf.webhook_events', 'r', 'is_workspace_member'], // Staff không đọc payload
@@ -587,6 +613,8 @@ const NO_DELETE_TABLES = [
   'cf.channels',
   'cf.posts',
   'cf.comments',
+  'cf.products',
+  'cf.product_variants',
   'cf.webhook_events',
   'cf.comment_replies',
   'cf.comment_hides',

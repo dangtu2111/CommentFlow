@@ -21,6 +21,7 @@
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-016 | Bảng sản phẩm + biến thể (chỉ DB, chưa có giao diện) | feat-products-variants | chưa | chưa | — |
 
 ---
 
@@ -301,6 +302,20 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 9 | Trên máy ảo, trong `psql` vào `cf_dev`: `SELECT has_function_privilege('cf_app','cf.read_channel_token(uuid)','execute'), has_function_privilege('cf_worker','cf.read_channel_token(uuid)','execute');` | `f` và `t`. |
 
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-016 — Bảng sản phẩm + biến thể (PRODUCTS-VARIANTS, feat-products-variants) · Products and variants tables
+
+Chưa có giao diện (trang Sản phẩm làm ở KB-IMPORT-*). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0031 áp được; check-rls "đạt". |
+| 2 | `pnpm --filter @flow/db test:db` (hoặc `CF_LANE=<làn> pnpm test:db`). | Mọi test xanh, gồm `products.int.test.ts`. |
+| 3 | `pnpm --filter @flow/shared test`. | Test `FR-129/FR-056/FR-058` xanh (chuẩn hóa màu/size, thẻ ≤ 600 ký tự, văn bản vector không có giá/tồn). |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
 
 ---
 
