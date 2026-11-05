@@ -35,4 +35,33 @@ describe('cookieHeaderFromJar', () => {
     expect(cookieHeaderFromJar(null, [{ name: 'a', value: 'b' }])).toBe('a=b');
     expect(cookieHeaderFromJar(null, [])).toBe('');
   });
+
+  it('mã hóa giá trị độc hại: không chèn được cookie khác hay xuống dòng', () => {
+    expect(cookieHeaderFromJar(null, [{ name: 's', value: 'a; evil=1\r\nx,y' }])).toBe(
+      's=a%3B%20evil%3D1%0D%0Ax%2Cy',
+    );
+  });
+
+  it('bỏ cookie giá trị rỗng (đã xóa)', () => {
+    expect(
+      cookieHeaderFromJar('a=1; b=2', [
+        { name: 'a', value: '1' },
+        { name: 'b', value: '' },
+      ]),
+    ).toBe('a=1');
+  });
+
+  it('tên trùng trong header gốc: so khớp với giá trị đứng sau cùng', () => {
+    expect(cookieHeaderFromJar('a=1; a=2', [{ name: 'a', value: '2' }])).toBe('a=2');
+    expect(cookieHeaderFromJar('a=1; a=2', [{ name: 'a', value: '1' }])).toBe('a=1');
+  });
+
+  it('mục không có dấu "=" trong header gốc bị bỏ qua', () => {
+    expect(cookieHeaderFromJar('novalue; a=1', [{ name: 'a', value: '1' }])).toBe('a=1');
+  });
+
+  it('giá trị mã hóa hỏng (a=%E0) không làm hàm ném lỗi', () => {
+    expect(cookieHeaderFromJar('a=%E0', [{ name: 'a', value: '%E0' }])).toBe('a=%E0');
+    expect(cookieHeaderFromJar('a=%E0', [{ name: 'a', value: 'x' }])).toBe('a=x');
+  });
 });
