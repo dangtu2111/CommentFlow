@@ -151,7 +151,7 @@ describe('FR-050 kb_sources', () => {
       () => `UPDATE cf.kb_sources SET title = 'Đổi', status = 'syncing' WHERE id = '${source}'`,
     );
     expectOnly(results, ['owner', 'system']);
-    for (const col of ["workspace_id = '" + other + "'", "type = 'excel'", "external_key = 'k'"]) {
+    for (const col of [`workspace_id = '${other}'`, "type = 'excel'", "external_key = 'k'"]) {
       expect(await run('owner', `UPDATE cf.kb_sources SET ${col} WHERE id = '${source}'`)).toBe(
         'denied',
       );
@@ -159,7 +159,9 @@ describe('FR-050 kb_sources', () => {
   });
 
   it('cách ly chéo workspace: Owner workspace B không thấy hay sửa nguồn của A', async () => {
-    expect(await run('otherOwner', `SELECT id FROM cf.kb_sources WHERE id = '${source}'`, other)).toBe(0);
+    expect(
+      await run('otherOwner', `SELECT id FROM cf.kb_sources WHERE id = '${source}'`, other),
+    ).toBe(0);
     expect(
       await run(
         'otherOwner',
@@ -181,9 +183,10 @@ describe('FR-050 kb_sources', () => {
   it('CHECK type/status; external_key duy nhất theo (workspace, type) khi nguồn chưa xóa', async () => {
     expect(
       await codeOf(
-        admin.query("INSERT INTO cf.kb_sources (workspace_id, type, title) VALUES ($1, 'zzz', 't')", [
-          ws,
-        ]),
+        admin.query(
+          "INSERT INTO cf.kb_sources (workspace_id, type, title) VALUES ($1, 'zzz', 't')",
+          [ws],
+        ),
       ),
     ).toBe('23514');
     expect(
@@ -218,7 +221,10 @@ describe('FR-055 kb_versions', () => {
     );
     expectOnly(results, ['owner', 'system']);
     expect(
-      await run('owner', `INSERT INTO cf.kb_versions (workspace_id, number) VALUES ('${other}', 7)`),
+      await run(
+        'owner',
+        `INSERT INTO cf.kb_versions (workspace_id, number) VALUES ('${other}', 7)`,
+      ),
     ).toBe('denied');
   });
 
@@ -232,18 +238,28 @@ describe('FR-055 kb_versions', () => {
   });
 
   it('SELECT chéo workspace: B không thấy phiên bản của A; (workspace, number) duy nhất; number >= 1', async () => {
-    expect(await run('otherOwner', `SELECT id FROM cf.kb_versions WHERE id = '${version}'`, other)).toBe(0);
-    expect(await codeOf(admin.query('INSERT INTO cf.kb_versions (workspace_id, number) VALUES ($1, 1)', [ws]))).toBe('23505');
-    expect(await codeOf(admin.query('INSERT INTO cf.kb_versions (workspace_id, number) VALUES ($1, 0)', [ws]))).toBe('23514');
+    expect(
+      await run('otherOwner', `SELECT id FROM cf.kb_versions WHERE id = '${version}'`, other),
+    ).toBe(0);
+    expect(
+      await codeOf(
+        admin.query('INSERT INTO cf.kb_versions (workspace_id, number) VALUES ($1, 1)', [ws]),
+      ),
+    ).toBe('23505');
+    expect(
+      await codeOf(
+        admin.query('INSERT INTO cf.kb_versions (workspace_id, number) VALUES ($1, 0)', [ws]),
+      ),
+    ).toBe('23514');
     const results = await matrix(() => `SELECT id FROM cf.kb_versions WHERE id = '${version}'`);
     expectOnly(results, ['owner', 'staff', 'system', 'bare']);
   });
 });
 
 describe('FR-055 kb_chunks', () => {
-  const insertChunk = (workspaceId: string, key: string, extra = '') =>
-    `INSERT INTO cf.kb_chunks (workspace_id, source_id, version_id, chunk_key, content, lang, content_hash, is_draft${extra ? ', ' + extra.split('=')[0] : ''})
-     VALUES ('${workspaceId}', '${source}', NULL, '${key}', 'nội dung', 'vi', 'h', true${extra ? ', ' + extra.split('=')[1] : ''})`;
+  const insertChunk = (workspaceId: string, key: string) =>
+    `INSERT INTO cf.kb_chunks (workspace_id, source_id, version_id, chunk_key, content, lang, content_hash, is_draft)
+     VALUES ('${workspaceId}', '${source}', NULL, '${key}', 'nội dung', 'vi', 'h', true)`;
 
   it('SELECT: thành viên đang hoạt động, hệ thống, withWorkspace trần; người ngoài/tạm khóa không', async () => {
     const results = await matrix(() => `SELECT id FROM cf.kb_chunks WHERE id = '${chunk}'`);
@@ -254,7 +270,8 @@ describe('FR-055 kb_chunks', () => {
     const ins = await matrix((who) => insertChunk(ws, `ins-${who}-${newId()}`));
     expectOnly(ins, ['system']);
     const upd = await matrix(
-      () => `UPDATE cf.kb_chunks SET content = 'sửa', injection_suspected = true WHERE id = '${chunk}'`,
+      () =>
+        `UPDATE cf.kb_chunks SET content = 'sửa', injection_suspected = true WHERE id = '${chunk}'`,
     );
     expectOnly(upd, ['system']);
     const del = await matrix(
@@ -267,17 +284,30 @@ describe('FR-055 kb_chunks', () => {
       [ws, source],
     );
     expect(await run('system', "DELETE FROM cf.kb_chunks WHERE chunk_key = 'to-del'")).toBe(1);
-    expect(await run('owner', "DELETE FROM cf.kb_chunks WHERE chunk_key = 'k1'")).toBe('denied');
+    // Owner có quyền DELETE mức bảng nhưng policy chỉ cho hệ thống → 0 dòng
+    expect([0, 'denied']).toContain(
+      await run('owner', "DELETE FROM cf.kb_chunks WHERE chunk_key = 'k1'"),
+    );
+    const remaining = await admin.query("SELECT 1 FROM cf.kb_chunks WHERE chunk_key = 'k1'");
+    expect(remaining.rowCount).toBe(1);
   });
 
   it('không đổi được cột định danh (workspace_id, source_id, version_id) kể cả hệ thống', async () => {
-    for (const col of [`workspace_id = '${other}'`, `source_id = '${source}'`, `version_id = '${version}'`]) {
-      expect(await run('system', `UPDATE cf.kb_chunks SET ${col} WHERE id = '${chunk}'`)).toBe('denied');
+    for (const col of [
+      `workspace_id = '${other}'`,
+      `source_id = '${source}'`,
+      `version_id = '${version}'`,
+    ]) {
+      expect(await run('system', `UPDATE cf.kb_chunks SET ${col} WHERE id = '${chunk}'`)).toBe(
+        'denied',
+      );
     }
   });
 
   it('cách ly chéo workspace: B không thấy đoạn của A; hệ thống ở B không ghi được workspace_id của A', async () => {
-    expect(await run('otherOwner', `SELECT id FROM cf.kb_chunks WHERE id = '${chunk}'`, other)).toBe(0);
+    expect(
+      await run('otherOwner', `SELECT id FROM cf.kb_chunks WHERE id = '${chunk}'`, other),
+    ).toBe(0);
     expect(await run('system', `SELECT id FROM cf.kb_chunks WHERE id = '${chunk}'`, other)).toBe(0);
     expect(await run('system', insertChunk(ws, 'x-ws'), other)).toBe('denied');
   });
@@ -310,9 +340,13 @@ describe('FR-055 kb_chunks', () => {
       return a;
     };
     expect(await codeOf(admin.query(base, args({ 5: false })))).toBe('23514'); // xuất bản, thiếu version_id
-    expect(await codeOf(admin.query(base, args({ 6: '2026-02-01', 7: '2026-01-01' })))).toBe('23514');
+    expect(await codeOf(admin.query(base, args({ 6: '2026-02-01', 7: '2026-01-01' })))).toBe(
+      '23514',
+    );
     expect(await codeOf(admin.query(base, args({ 4: 'fr' })))).toBe('23514');
-    expect(await codeOf(admin.query(base, args({ 6: '2026-01-01', 7: '2026-02-01' })))).toBeUndefined();
+    expect(
+      await codeOf(admin.query(base, args({ 6: '2026-01-01', 7: '2026-02-01' }))),
+    ).toBeUndefined();
   });
 
   it('chunk_key duy nhất theo (workspace, nguồn, phiên bản), kể cả khi version_id rỗng (nháp)', async () => {
@@ -325,9 +359,16 @@ describe('FR-055 kb_chunks', () => {
 
   it('FR-139 embedding halfvec(1024): lưu vector 1024 chiều, từ chối chiều khác, truy vấn cosine chạy', async () => {
     const set = (v: string) =>
-      run('system', `UPDATE cf.kb_chunks SET embedding = '${v}'::halfvec, embedding_model = 'test-model' WHERE id = '${chunk}'`);
+      run(
+        'system',
+        `UPDATE cf.kb_chunks SET embedding = '${v}'::halfvec, embedding_model = 'test-model' WHERE id = '${chunk}'`,
+      );
     expect(await set(vec(1024))).toBe(1);
-    expect(await codeOf(admin.query(`UPDATE cf.kb_chunks SET embedding = '${vec(3)}' WHERE id = $1`, [chunk]))).toBeDefined();
+    expect(
+      await codeOf(
+        admin.query(`UPDATE cf.kb_chunks SET embedding = '${vec(3)}' WHERE id = $1`, [chunk]),
+      ),
+    ).toBeDefined();
     const type = await admin.query(
       "SELECT format_type(atttypid, atttypmod) AS t FROM pg_attribute WHERE attrelid = 'cf.kb_chunks'::regclass AND attname = 'embedding'",
     );
@@ -343,9 +384,14 @@ describe('FR-055 kb_chunks', () => {
   });
 
   it('tsv full-text: GIN dùng được trên cột tsv do worker điền', async () => {
-    await run('system', `UPDATE cf.kb_chunks SET tsv = to_tsvector('simple', 'ship hai ngay') WHERE id = '${chunk}'`);
+    await run(
+      'system',
+      `UPDATE cf.kb_chunks SET tsv = to_tsvector('simple', 'ship hai ngay') WHERE id = '${chunk}'`,
+    );
     const res = await db.withWorkspace(ws, (tx) =>
-      tx.execute(sql.raw(`SELECT id FROM cf.kb_chunks WHERE tsv @@ websearch_to_tsquery('simple', 'ship')`)),
+      tx.execute(
+        sql.raw(`SELECT id FROM cf.kb_chunks WHERE tsv @@ websearch_to_tsquery('simple', 'ship')`),
+      ),
     );
     expect(res.rows.map((r) => r.id)).toContain(chunk);
   });
