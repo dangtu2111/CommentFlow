@@ -835,6 +835,26 @@ describe('checkRls: role worker cf_worker (WORKER-DB-ROLE, 0030)', () => {
     expect(bad).toContainEqual({ subject: 'cf_worker', message: 'có BYPASSRLS' });
   });
 
+  it('báo khi cf_worker là thành viên cf_owner (test tích hợp không dựng được: cf_owner không có ADMIN option)', async () => {
+    const v = await checkRls(
+      fakeDb({
+        workerRole: {
+          rolsuper: false,
+          rolbypassrls: false,
+          rolcreatedb: false,
+          rolcreaterole: false,
+          owner_member: true,
+        },
+      }),
+    );
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf_worker',
+        message: expect.stringContaining('cf_owner'),
+      }),
+    );
+  });
+
   it('báo khi cf_app là thành viên cf_worker hoặc cf_worker không kế thừa cf_app', async () => {
     const v = await checkRls(
       fakeDb({

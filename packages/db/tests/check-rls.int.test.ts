@@ -281,7 +281,7 @@ describe('check-rls', () => {
     );
   });
 
-  it('WORKER-DB-ROLE: bắt được quyền TRỰC TIẾP của cf_worker (bảng, cột, sequence, hàm), thành viên cf_owner và OR viết thường', async () => {
+  it('WORKER-DB-ROLE: bắt được quyền TRỰC TIẾP của cf_worker (bảng, cột, sequence, hàm) và OR viết thường', async () => {
     const direct = (ddl: string, name: string) =>
       violationsAfter(ddl).then((v) =>
         expect(v).toContainEqual(
@@ -301,13 +301,8 @@ describe('check-rls', () => {
       'GRANT EXECUTE ON FUNCTION cf.set_channel_token(uuid, bytea, integer, timestamptz) TO cf_worker',
       'cf.set_channel_token',
     );
-    const member = await violationsAfter('GRANT cf_owner TO cf_worker');
-    expect(member).toContainEqual(
-      expect.objectContaining({
-        subject: 'cf_worker',
-        message: expect.stringContaining('cf_owner'),
-      }),
-    );
+    // "cf_worker là thành viên cf_owner": GRANT cf_owner TO cf_worker cần ADMIN option/superuser (PG16+), kết nối quản trị
+    // cf_owner không có → ca này được phủ bằng unit test (src/check-rls.test.ts) thay vì dựng thật.
     const lower = await violationsAfter(
       "CREATE OR REPLACE FUNCTION core.is_system_context() RETURNS boolean LANGUAGE sql STABLE SET search_path = pg_catalog, core, pg_temp AS $$ SELECT COALESCE(current_setting('app.ctx', true) = 'system' AND core.current_user_id() IS NULL AND session_user = 'cf_worker' or true, false) $$",
     );
