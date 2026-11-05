@@ -69,7 +69,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ⏳ |
 | FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ⏳ |
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ⏳ |
-| E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ⏳ |
+| E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | 🟡 job viết xong, đỏ do lỗi 2FA thật (xem gap matrix) |
 | FR-005-SEARCH | FR-005 (ô tìm kiếm của bộ chuyển workspace; số việc cần xử lý tách thành `FR-005-COUNT`) | US-006 | INBOX-LIST | — | không | ✅ (tìm kiếm) |
 | TEST-COVERAGE-GAP | — (nâng coverage `saas-core` 41% → 85%, ratchet) | — | — | — | không | ⏳ (liên tục) |
 | TRACE-DEBT | — (xóa dần `trace-baseline.json`: 10 mã FR cần test mang mã) | — | — | — | không | ⏳ (liên tục) |
@@ -209,7 +209,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 | PRICE-QUOTE-MENTION | FR-150 (khách nhắc giá khác giá kho) | US-108 | DA-RULES-PRICE | S | không | ⏳ |
 | DB-BOOTSTRAP | — (extension/role cho staging) | — | — | DB | không | ⏳ |
 | QUEUE-PROD-INSTALL | — (cài pg-boss cho staging/production, CI có duyệt tay) | — | STAGING-DEPLOY | S+DB | không | ⏳ |
-| STAGING-DEPLOY | — (compose `cf-staging`, Dockerfile web/worker, runner, Cloudflare Tunnel) | — | PUBLIC-PAGES | S | **có** — tên miền + VPS | ⛔ |
+| STAGING-DEPLOY | — (compose `cf-staging`, Dockerfile web/worker, runner, Cloudflare Tunnel) | — | PUBLIC-PAGES | S | **có** — tên miền + VPS | 🟡 khung xong (chore/h5-staging-prep), chưa chạy — `docs/staging/H5-CHECKLIST.md` |
 | BACKUP-RESTORE | — (sao lưu hằng ngày + thử khôi phục) | — | STAGING-DEPLOY | DB | **có** — VPS | ⛔ |
 | MONITORING | — (theo dõi lỗi + uptime) | — | STAGING-DEPLOY | — | **có** — dịch vụ ngoài | ⛔ |
 | PILOT-REAL-PAGE | — (chạy thử 1–3 shop thật, 7 ngày) | — | tất cả trên | — | **có** — shop thử | ⛔ |

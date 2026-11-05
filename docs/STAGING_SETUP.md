@@ -1,6 +1,6 @@
 # Hướng dẫn dựng staging — từng bước cho chủ dự án
 
-> **Phải merge SAU PR #37** (`chore/h5-staging-prep`; PR #39 `STAGING-MIGRATE` đã vào `main`): tài liệu này tham chiếu `infra/docker-compose.staging.yml`, `infra/env.cf-staging.example`, `.github/workflows/deploy-staging.yml`, `docs/staging/H5-CHECKLIST.md` — các file đó chỉ có sau khi #37 vào `main`.
+> Đã đồng bộ với `main` sau khi PR #37 (`chore/h5-staging-prep`) và #39 (`STAGING-MIGRATE`) vào. Tài liệu tham chiếu `infra/docker-compose.staging.yml`, `infra/env.cf-staging.example`, `.github/workflows/deploy-staging.yml`, `.github/workflows/migrate-staging.yml`, `docs/staging/H5-CHECKLIST.md`.
 
 **Tóm tắt.** "Staging" là bản chạy thử của CommentFlow trên máy ảo Ubuntu (project Docker Compose `cf-staging`), ra internet qua Cloudflare Tunnel, để thử với Page Facebook thật trước khi lên production. Tài liệu này dẫn bạn làm theo thứ tự: cài "người làm việc" của GitHub trên máy ảo (runner), sinh file bí mật ngay trên máy ảo, nối tên miền Cloudflare, bật các công tắc trên GitHub, rồi kiểm tra sau khi deploy. **Rủi ro chính:** (1) mất `TOKEN_ENC_KEYS` = mọi kênh phải kết nối lại; (2) runner tự host chạy lệnh trên máy ảo của bạn nên phải cài đúng cách (dưới đây).
 

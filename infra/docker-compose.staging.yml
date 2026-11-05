@@ -1,0 +1,74 @@
+# Ghi đè cho project cf-staging (docs/15 §2, §5): thêm web + worker (+ khung cloudflared) lên compose nền.
+# KHÔNG publish cổng nào ra máy chủ: web chỉ truy cập được qua cloudflared cùng mạng Compose (CLIENT_IP_SOURCE=cf-connecting-ip
+# chỉ an toàn khi đúng như vậy — ADR 004 §2). Không có Mailpit ở staging (chỉ ở docker-compose.dev.yml): SMTP thật qua biến SMTP_*.
+#
+# CHƯA CHẠY ở đâu cả (H5 phần không cần tên miền). Cách dùng khi bật (trên máy ảo, do deploy-staging hoặc chủ dự án):
+#   docker compose -p cf-staging --env-file .env.cf-staging -f infra/docker-compose.yml -f infra/docker-compose.staging.yml up -d --build
+#   (thêm `--profile tunnel` khi đã có tên miền + token cloudflared)
+# Biến: tên + mô tả ở infra/env.cf-staging.example; file thật `.env.cf-staging` chỉ nằm trên máy ảo, không commit.
+# Migration + `queue:install` KHÔNG chạy trong compose này: CLI hiện từ chối APP_ENV=staging (migration-guard) — xem
+# docs/staging/H5-CHECKLIST.md mục "Migration lên staging".
+
+x-app-env: &app-env
+  APP_ENV: staging
+  DATABASE_URL: postgresql://cf_app:${CF_APP_PASSWORD:?}@postgres:5432/${CF_APP_DATABASE:?}
+  TOKEN_ENC_KEYS: ${TOKEN_ENC_KEYS:-}
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    image: cf/web:${IMAGE_TAG:-local}
+    restart: unless-stopped
+    mem_limit: 768m
+    depends_on:
+      postgres: { condition: service_healthy }
+      valkey: { condition: service_healthy }
+    environment:
+      <<: *app-env
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?}
+      DATABASE_AUTH_URL: postgresql://cf_auth:${CF_AUTH_PASSWORD:?}@postgres:5432/${CF_APP_DATABASE:?}
+      REDIS_URL: redis://:${VALKEY_PASSWORD:?}@valkey:6379/0
+      REDIS_KEY_PREFIX: "staging:"
+      CLIENT_IP_SOURCE: ${CLIENT_IP_SOURCE:-none}
+      PWNED_CHECK: "on"
+      SMTP_HOST: ${SMTP_HOST:?}
+      SMTP_PORT: ${SMTP_PORT:?}
+      SMTP_FROM: ${SMTP_FROM:?}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      META_APP_ID: ${META_APP_ID:-}
+      META_APP_SECRET: ${META_APP_SECRET:-}
+      META_WEBHOOK_VERIFY_TOKEN: ${META_WEBHOOK_VERIFY_TOKEN:-}
+    # Cố ý KHÔNG có `ports:` — xem ghi chú đầu file.
+
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    image: cf/worker:${IMAGE_TAG:-local}
+    restart: unless-stopped
+    mem_limit: 512m
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      <<: *app-env
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WORKER_PORT: "3001"
+
+  # Khung Cloudflare Tunnel: chỉ chạy khi bật profile `tunnel` (chưa có tên miền/token nên mặc định không chạy).
+  # Khi bật: ghim lại phiên bản image theo bản mới nhất đã kiểm, đặt CLOUDFLARE_TUNNEL_TOKEN trong .env.cf-staging,
+  # cấu hình route (hostname → http://web:3000) trong Cloudflare Zero Trust.
+  cloudflared:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:2025.11.1
+    restart: unless-stopped
+    mem_limit: 128m
+    depends_on:
+      web: { condition: service_healthy }
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    command: ["tunnel", "--no-autoupdate", "run"]

@@ -48,7 +48,7 @@ export async function beginTwoFactorAction(
   };
 }
 
-/** Bước 2: mã 6 chữ số đầu tiên → 2FA bật. Không `revalidatePath` ở đây để mã dự phòng còn hiện trên màn hình. */
+/** Bước 2: mã 6 chữ số đầu tiên → 2FA bật. Trang dựng lại sau khi đặt cookie phải đọc phiên MỚI (qua `requestContext()` → cookie-header.ts), nếu không sẽ về /login và mất mã dự phòng. */
 export async function confirmTwoFactorAction(
   _previous: SecurityState,
   data: FormData,

@@ -130,7 +130,7 @@
       "twoFactor": {
         "title": "Two-step verification (TOTP)",
         "offBody": "Add a second layer of protection: besides your password you need a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password...).",
-        "onBody": "On. Each sign-in also needs a code from your authenticator app.",
+        "onBody": "On. Each sign-in also needs a code from your authenticator app. If you lose your backup codes, generate new ones under “Regenerate backup codes” below.",
         "statusOn": "On",
         "statusOff": "Off",
         "passwordLabel": "Current password",
@@ -143,7 +143,7 @@
         "confirmLabel": "The 6-digit code shown in the app",
         "confirm": "Confirm and turn on",
         "backupTitle": "Save your backup codes",
-        "backupBody": "Use them if you lose your phone. Each code works once and is shown only now. Keep them somewhere safe.",
+        "backupBody": "Use them if you lose your phone. Each code works once and is shown only now. Keep them somewhere safe. If you lose them, you can generate new ones under “Regenerate backup codes”.",
         "copy": "Copy all",
         "copied": "Copied",
         "saved": "I saved these codes",
