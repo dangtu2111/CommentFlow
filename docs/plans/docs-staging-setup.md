@@ -21,7 +21,7 @@ Không có (các điểm cần chủ dự án chọn nằm ở mục "Cần bạ
 
 ## File sẽ sửa / tạo
 
-Tạo: `docs/STAGING_SETUP.md`, `infra/scripts/gen-staging-env.sh`, plan này. Sửa: `docs/gap-matrix.md`, `docs/codemap.md`.
+Sửa thêm (theo trả lời chủ dự án): `docs/CAN_BAN_CUNG_CAP.md` §1.3 mục 2 và 5. Tạo: `docs/STAGING_SETUP.md`, `infra/scripts/gen-staging-env.sh`, plan này. Sửa: `docs/gap-matrix.md`, `docs/codemap.md`.
 
 ## Migration
 
