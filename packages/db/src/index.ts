@@ -4,3 +4,19 @@ export { resetTestSchemas, runMigrations } from './admin';
 export { checkRls, type Queryable, type RlsViolation } from './check-rls';
 export { assertMigrationAllowed, assertTestResetAllowed } from './migration-guard';
 export * from './runtime';
+export {
+  guardStagingFromEnv,
+  readMigrationJournal,
+  runStagingMigrate,
+  type StagingMigrateEnv,
+  type StagingMigrateResult,
+} from './staging-migrate';
+export {
+  assertStagingMigrateAllowed,
+  CONFIRM_FORMAT,
+  expectedConfirmation,
+  lastMigrationNumber,
+  type MigrationEntry,
+  parseMigrationJournal,
+  planMigrations,
+} from './staging-migrate-guard';
