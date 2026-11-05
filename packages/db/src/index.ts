@@ -5,11 +5,14 @@ export { checkRls, type Queryable, type RlsViolation } from './check-rls';
 export { assertMigrationAllowed, assertTestResetAllowed } from './migration-guard';
 export * from './runtime';
 export {
+  assertStagingDatabaseIdentity,
   guardStagingFromEnv,
   readMigrationJournal,
   runStagingMigrate,
+  STAGING_DB_MARKER_SETTING,
   type StagingMigrateEnv,
   type StagingMigrateResult,
+  withStagingDatabase,
 } from './staging-migrate';
 export {
   assertStagingMigrateAllowed,
@@ -19,4 +22,5 @@ export {
   type MigrationEntry,
   parseMigrationJournal,
   planMigrations,
+  verifyAppliedHashes,
 } from './staging-migrate-guard';

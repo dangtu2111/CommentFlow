@@ -8,6 +8,10 @@ export type MigrationEntry = { idx: number; when: number; tag: string };
 
 /** Tham số URL an toàn; mọi tham số khác (host, dbname, options…) bị từ chối vì có thể đổi đích kết nối. */
 const SAFE_URL_PARAMS = new Set(['sslmode', 'connect_timeout', 'application_name']);
+/** Nếu có `sslmode` thì chỉ các giá trị bắt buộc mã hóa (không disable/allow/prefer). */
+const SAFE_SSLMODES = new Set(['require', 'verify-ca', 'verify-full']);
+/** Workflow duy nhất được chạy CLI này. Chỉ chống chạy NHẦM; lớp bảo vệ thật là pg_hba + secret của environment. */
+const ALLOWED_WORKFLOW_REF_SUFFIX = '/.github/workflows/migrate-staging.yml@refs/heads/main';
 const DB_NAME_PATTERN = /^[a-z0-9_]{1,63}$/i;
 const HOST_PATTERN = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/i;
 const SYSTEM_DATABASES = new Set(['postgres', 'template0', 'template1']);
@@ -65,7 +69,7 @@ export function planMigrations(
   };
 }
 
-function parseAllowedHosts(raw: string | undefined): { host: string; port?: string }[] {
+function parseAllowedHosts(raw: string | undefined): { host: string; port: string }[] {
   const items = (raw ?? '')
     .split(',')
     .map((s) => s.trim().toLowerCase())
@@ -78,18 +82,13 @@ function parseAllowedHosts(raw: string | undefined): { host: string; port?: stri
   }
   return items.map((item) => {
     const [host, port, ...rest] = item.split(':');
-    if (
-      !host ||
-      rest.length > 0 ||
-      !HOST_PATTERN.test(host) ||
-      (port !== undefined && !/^\d{1,5}$/.test(port))
-    ) {
+    if (!host || !port || rest.length > 0 || !HOST_PATTERN.test(host) || !/^\d{1,5}$/.test(port)) {
       throw new AppError(
         'CONFIG_INVALID',
-        'CF_STAGING_DB_HOSTS chỉ gồm host hoặc host:cổng, cách nhau dấu phẩy (không dùng ký tự đại diện).',
+        'CF_STAGING_DB_HOSTS chỉ gồm các mục host:cổng (bắt buộc có cổng), cách nhau dấu phẩy, không dùng ký tự đại diện.',
       );
     }
-    return port === undefined ? { host } : { host, port };
+    return { host, port };
   });
 }
 
@@ -110,6 +109,16 @@ function parseAdminUrl(adminUrl: string | undefined): ParsedTarget {
     throw invalid();
   }
   if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') throw invalid();
+  if (!url.port) {
+    throw new AppError('CONFIG_INVALID', 'Chuỗi kết nối phải ghi cổng tường minh (host:cổng).');
+  }
+  const sslmode = url.searchParams.get('sslmode');
+  if (sslmode !== null && !SAFE_SSLMODES.has(sslmode)) {
+    throw new AppError(
+      'CONFIG_INVALID',
+      'sslmode chỉ được là require, verify-ca hoặc verify-full.',
+    );
+  }
   for (const key of url.searchParams.keys()) {
     if (!SAFE_URL_PARAMS.has(key)) {
       throw new AppError(
@@ -132,7 +141,7 @@ function parseAdminUrl(adminUrl: string | undefined): ParsedTarget {
       'Tên database trong chuỗi kết nối thiếu hoặc có ký tự lạ.',
     );
   }
-  return { databaseName, host, port: url.port || '5432' };
+  return { databaseName, host, port: url.port };
 }
 
 export type StagingMigrateInput = {
@@ -140,6 +149,12 @@ export type StagingMigrateInput = {
   adminUrl: string | undefined;
   /** Giá trị CF_STAGING_DB_HOSTS. */
   allowedHosts: string | undefined;
+  /** Giá trị CF_STAGING_DB_NAME: tên DB staging chính xác (không chỉ "không chứa prod"). */
+  expectedDatabase: string | undefined;
+  /** Giá trị GITHUB_ACTIONS. */
+  githubActions: string | undefined;
+  /** Giá trị GITHUB_WORKFLOW_REF. */
+  workflowRef: string | undefined;
   /** Giá trị CF_CONFIRM_STAGING_MIGRATE. */
   confirmation: string | undefined;
   entries: MigrationEntry[];
@@ -161,6 +176,19 @@ export function assertStagingMigrateAllowed(input: StagingMigrateInput): {
   if (input.appEnv !== 'staging') {
     throw new AppError('FORBIDDEN', 'Từ chối: APP_ENV phải đúng là "staging".');
   }
+  // Chỉ chống chạy NHẦM từ máy dev/nhánh khác; kẻ sửa được workflow vẫn phải vượt pg_hba + secret của environment.
+  if (input.githubActions !== 'true' || !input.workflowRef?.endsWith(ALLOWED_WORKFLOW_REF_SUFFIX)) {
+    throw new AppError(
+      'FORBIDDEN',
+      'Từ chối: chỉ chạy trong workflow migrate-staging.yml của nhánh main trên GitHub Actions.',
+    );
+  }
+  if (!input.expectedDatabase || !DB_NAME_PATTERN.test(input.expectedDatabase)) {
+    throw new AppError(
+      'CONFIG_INVALID',
+      'Thiếu hoặc sai CF_STAGING_DB_NAME (tên database staging).',
+    );
+  }
   const allowed = parseAllowedHosts(input.allowedHosts);
   const target = parseAdminUrl(input.adminUrl);
   if (
@@ -172,11 +200,15 @@ export function assertStagingMigrateAllowed(input: StagingMigrateInput): {
       'Từ chối: tên database trông như production hoặc database hệ thống.',
     );
   }
-  const hostOk = allowed.some(
-    (a) => a.host === target.host && (a.port === undefined || a.port === target.port),
-  );
+  if (target.databaseName !== input.expectedDatabase) {
+    throw new AppError('FORBIDDEN', 'Từ chối: tên database trong URL khác CF_STAGING_DB_NAME.');
+  }
+  const hostOk = allowed.some((a) => a.host === target.host && a.port === target.port);
   if (!hostOk) {
-    throw new AppError('FORBIDDEN', 'Từ chối: host database không nằm trong CF_STAGING_DB_HOSTS.');
+    throw new AppError(
+      'FORBIDDEN',
+      'Từ chối: host:cổng database không nằm trong CF_STAGING_DB_HOSTS.',
+    );
   }
   if (input.requireConfirmation) {
     if (
@@ -190,4 +222,28 @@ export function assertStagingMigrateAllowed(input: StagingMigrateInput): {
     }
   }
   return { databaseName: target.databaseName, host: target.host };
+}
+
+export type AppliedMigrationRow = { hash: string; createdAt: number };
+export type HashedMigrationEntry = MigrationEntry & { hash: string };
+
+/**
+ * Đối chiếu bảng `drizzle.__drizzle_migrations` với journal:
+ *  - `gaps`: mục chưa áp nhưng `when` ≤ lần áp cuối (drizzle sẽ BỎ QUA vĩnh viễn → phải dừng);
+ *  - `unknown`: dòng đã áp có hash không khớp mục nào trong mã (migration bị sửa sau khi áp, hoặc mã cũ hơn DB).
+ */
+export function verifyAppliedHashes(
+  entries: HashedMigrationEntry[],
+  applied: AppliedMigrationRow[],
+): { gaps: string[]; unknown: number } {
+  if (applied.length === 0) return { gaps: [], unknown: 0 };
+  const appliedHashes = new Set(applied.map((r) => r.hash));
+  const entryHashes = new Set(entries.map((e) => e.hash));
+  const lastAppliedAt = Math.max(...applied.map((r) => r.createdAt));
+  return {
+    gaps: entries
+      .filter((e) => !appliedHashes.has(e.hash) && e.when <= lastAppliedAt)
+      .map((e) => e.tag),
+    unknown: applied.filter((r) => !entryHashes.has(r.hash)).length,
+  };
 }

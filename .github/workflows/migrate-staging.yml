@@ -2,21 +2,29 @@ name: Migrate staging (CHƯA BẬT)
 
 # Áp migration + cài hàng đợi pg-boss lên cf-staging bằng CLI RIÊNG (`pnpm db:migrate:staging`,
 # `queue:install:staging`), trên self-hosted runner. MẶC ĐỊNH TẮT, nhiều lớp:
-#  1) chỉ chạy tay (workflow_dispatch) và phải nhập "staging";
+#  1) chỉ chạy tay (workflow_dispatch); bước đầu so sánh CHÍNH XÁC (phân biệt hoa thường) đầu vào "staging"
+#     (biểu thức `==` của GitHub Actions không phân biệt hoa thường nên không dùng để kiểm đầu vào);
 #  2) mọi job có điều kiện `vars.DEPLOY_STAGING_ENABLED == 'true'` (biến Repository chưa tạo → job bị bỏ qua);
 #  3) chỉ chạy từ nhánh `main` (nhánh khác không được dùng bí mật của environment);
 #  4) cả hai job dùng GitHub Environment `staging-migrate` (Required reviewers = chủ dự án): job `dry-run` (chỉ đọc)
 #     cần duyệt trước, đọc kết quả rồi mới duyệt job `migrate` (ghi thật);
-#  5) CLI tự kiểm: APP_ENV=staging, host DB nằm trong CF_STAGING_DB_HOSTS, mã xác nhận <tên-db>@<số-migration-cuối>
-#     đúng (ví dụ `cf_staging@0028`); production luôn bị từ chối.
+#  5) CLI tự kiểm: APP_ENV=staging, đang ở GitHub Actions và đúng workflow này trên main (chỉ chống chạy NHẦM; lớp
+#     bảo vệ thật là pg_hba của DB + secret của environment), tên DB đúng CF_STAGING_DB_NAME, host:cổng trong
+#     CF_STAGING_DB_HOSTS, DB có dấu `cf.env=staging`, mã xác nhận <tên-db>@<số-migration-cuối> đúng
+#     (ví dụ `cf_staging@0028`, so sánh chính xác trong CLI); production luôn bị từ chối.
 #
 # Cấu hình trong Settings → Environments → `staging-migrate` (KHÔNG có giá trị nào nằm trong file này):
 #   - Required reviewers: chủ dự án; Deployment branches: chỉ `main`.
-#   - Secret   STAGING_DATABASE_ADMIN_URL : chuỗi kết nối role cf_owner tới DB staging (chỉ nhả sau khi duyệt).
-#   - Variable CF_STAGING_DB_HOSTS        : host (hoặc host:cổng) DB staging được phép, cách nhau dấu phẩy.
+#   - Secret   STAGING_DATABASE_ADMIN_URL : chuỗi kết nối role cf_owner tới DB staging, có cổng tường minh
+#                                           và (nếu dùng) sslmode=require|verify-ca|verify-full.
+#   - Variable CF_STAGING_DB_HOSTS        : các mục host:cổng DB staging được phép, cách nhau dấu phẩy.
+#   - Variable CF_STAGING_DB_NAME         : tên database staging chính xác.
+# Một lần trên DB staging (do chủ dự án, quyền cao): ALTER DATABASE <db> SET cf.env = 'staging';
 # Repository variable: DEPLOY_STAGING_ENABLED=true. Runner: nhãn `self-hosted, linux, cf-staging`, có Node 24 + corepack,
-# nối được tới DB staging.
+# nối được tới DB staging; nên đặt trong runner group chỉ cho repo này/nhánh main (xem gap STAGING-RUNNER-GROUP).
 #
+# `pnpm install --ignore-scripts`: không chạy script cài đặt của gói phụ thuộc trên runner có quyền cao
+# (đã thử: tsx chạy được khi bỏ qua script).
 # Phụ thuộc: cùng nhóm với `.github/workflows/deploy-staging.yml` (PR #37, chưa merge) nhưng độc lập về mã; chạy migrate
 # TRƯỚC khi deploy. CLI không đọc file .env nào. Chi tiết: docs/plans/feat-staging-migrate.md.
 
@@ -24,11 +32,11 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Gõ "staging" để xác nhận'
+        description: 'Gõ đúng "staging" (phân biệt hoa thường) để xác nhận'
         required: true
         type: string
       confirm_migrate:
-        description: "Mã xác nhận áp thật: <tên-db>@<số-migration-cuối> (ví dụ cf_staging@0028; số cuối = tiền tố của migration chờ cuối cùng trong kết quả dry-run)"
+        description: "Mã xác nhận áp thật: <tên-db>@<số-migration-cuối> (ví dụ cf_staging@0028; số cuối = tiền tố của migration chờ cuối cùng trong kết quả dry-run). CLI so sánh chính xác, phân biệt hoa thường."
         required: true
         type: string
 
@@ -42,16 +50,20 @@ concurrency:
 jobs:
   dry-run:
     name: Dry-run (chỉ đọc, liệt kê migration chờ)
-    if: ${{ vars.DEPLOY_STAGING_ENABLED == 'true' && inputs.confirm == 'staging' && github.ref == 'refs/heads/main' }}
+    if: ${{ vars.DEPLOY_STAGING_ENABLED == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: [self-hosted, linux, cf-staging]
     environment: staging-migrate
     timeout-minutes: 15
     env:
       APP_ENV: staging
-      DATABASE_ADMIN_URL: ${{ secrets.STAGING_DATABASE_ADMIN_URL }}
       CF_STAGING_DB_HOSTS: ${{ vars.CF_STAGING_DB_HOSTS }}
+      CF_STAGING_DB_NAME: ${{ vars.CF_STAGING_DB_NAME }}
       # Cố ý KHÔNG đặt CF_CONFIRM_STAGING_MIGRATE ở job này: dù lỡ chạy nhầm lệnh ghi, CLI vẫn từ chối.
     steps:
+      - name: Kiểm đầu vào "staging" (so sánh chính xác)
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: '[ "$CONFIRM" = "staging" ] || { echo "Đầu vào confirm phải đúng là staging"; exit 1; }'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -60,26 +72,32 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Dry-run migrate (đọc trạng thái, không ghi)
+        env:
+          DATABASE_ADMIN_URL: ${{ secrets.STAGING_DATABASE_ADMIN_URL }}
         run: pnpm db:migrate:staging --dry-run
       - name: Dry-run hàng đợi (không kết nối DB)
+        env:
+          DATABASE_ADMIN_URL: ${{ secrets.STAGING_DATABASE_ADMIN_URL }}
         run: pnpm --filter @flow/worker queue:install:staging --dry-run
 
   migrate:
     name: Áp migration + cài hàng đợi (GHI THẬT)
     needs: dry-run
-    if: ${{ vars.DEPLOY_STAGING_ENABLED == 'true' && inputs.confirm == 'staging' && github.ref == 'refs/heads/main' }}
+    if: ${{ vars.DEPLOY_STAGING_ENABLED == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: [self-hosted, linux, cf-staging]
     environment: staging-migrate # duyệt lần hai, sau khi đã đọc kết quả dry-run
     timeout-minutes: 30
     env:
       APP_ENV: staging
-      DATABASE_ADMIN_URL: ${{ secrets.STAGING_DATABASE_ADMIN_URL }}
       CF_STAGING_DB_HOSTS: ${{ vars.CF_STAGING_DB_HOSTS }}
-      # Đầu vào người dùng đi qua biến môi trường, không ghép vào câu lệnh shell.
-      CF_CONFIRM_STAGING_MIGRATE: ${{ inputs.confirm_migrate }}
+      CF_STAGING_DB_NAME: ${{ vars.CF_STAGING_DB_NAME }}
     steps:
+      - name: Kiểm đầu vào "staging" (so sánh chính xác)
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: '[ "$CONFIRM" = "staging" ] || { echo "Đầu vào confirm phải đúng là staging"; exit 1; }'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -88,8 +106,15 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Migrate staging (kiểm trước/sau, dừng nếu còn migration chờ)
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      # Bí mật và mã xác nhận chỉ có ở đúng hai bước ghi (đầu vào người dùng đi qua env, không ghép vào shell).
+      - name: Migrate staging (kiểm trước/sau, dừng nếu lịch sử lệch hoặc còn migration chờ)
+        env:
+          DATABASE_ADMIN_URL: ${{ secrets.STAGING_DATABASE_ADMIN_URL }}
+          CF_CONFIRM_STAGING_MIGRATE: ${{ inputs.confirm_migrate }}
         run: pnpm db:migrate:staging
       - name: Cài hàng đợi pg-boss (ingest, send, hide, system.ping)
+        env:
+          DATABASE_ADMIN_URL: ${{ secrets.STAGING_DATABASE_ADMIN_URL }}
+          CF_CONFIRM_STAGING_MIGRATE: ${{ inputs.confirm_migrate }}
         run: pnpm --filter @flow/worker queue:install:staging

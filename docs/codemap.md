@@ -20,7 +20,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/member-leave` · Gói nộ
 | Ranh giới gói | `pnpm depcruise` | luật ở `.dependency-cruiser.cjs`, test luật ở `tools/boundaries` |
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |
-| Migration / hàng đợi STAGING | `pnpm db:migrate:staging [--dry-run]` · `pnpm --filter @flow/worker queue:install:staging [--dry-run]` | CHỈ trong job `migrate-staging.yml`: `APP_ENV=staging`, `CF_STAGING_DB_HOSTS`, `CF_CONFIRM_STAGING_MIGRATE=<tên-db>@<số-cuối>`; không đọc `.env`; production bị từ chối cứng |
+| Migration / hàng đợi STAGING | `pnpm db:migrate:staging [--dry-run]` · `pnpm --filter @flow/worker queue:install:staging [--dry-run]` | CHỈ trong job `migrate-staging.yml` (trên `main`): `APP_ENV=staging`, `CF_STAGING_DB_NAME`, `CF_STAGING_DB_HOSTS` (host:cổng), DB có dấu `cf.env=staging`, `CF_CONFIRM_STAGING_MIGRATE=<tên-db>@<số-cuối>`; khóa tư vấn mức DB; không đọc `.env`; production bị từ chối cứng |
 | Cài hàng đợi pg-boss | `pnpm --filter @flow/worker queue:install` | chạy bằng `cf_owner`; worker chạy bằng `cf_app` |
 | Máy ảo `cf-dev` | `pnpm cf:dev <up\|ps\|logs\|stats\|sync\|env-init…>` · `pnpm stack:check` | chỉ project `cf-dev`; 7 cổng (có Mailpit 1025/8025); xem `scripts/lib/cf-dev-command.mjs` |
 | Python (ml) | `cd services/ml && uv run pytest` · `uv run ruff check .` | |

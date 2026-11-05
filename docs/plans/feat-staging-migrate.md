@@ -18,7 +18,9 @@ Không có. Quyết định chủ dự án (đã nêu trong yêu cầu): CLI ri�
 6. `queue:install:staging` dùng cùng bộ guard + xác nhận; thiếu xác nhận → từ chối; `--dry-run` không mở kết nối ghi — kiểm bằng: test đơn vị worker.
 7. Cả hai CLI không đọc `.env*`, từ chối tham số lạ, fail-closed khi thiếu biến — kiểm bằng: test parse tham số + đọc mã.
 8. Workflow `migrate-staging.yml`: chỉ `workflow_dispatch`, nhập `staging`, job `if vars.DEPLOY_STAGING_ENABLED == 'true'` và chỉ trên `main`, environment `staging-migrate`, runner `[self-hosted, linux, cf-staging]`, hai job (dry-run → migrate thật `needs`), action ghim SHA, không bí mật trong file, đầu vào đi qua `env` — kiểm bằng: đọc file + `gitleaks`/CI.
-9. Công cụ xanh: biome, lint:i18n, typecheck, depcruise, check:plans, test, `test:db` phần liên quan — kiểm bằng: chạy từng lệnh.
+9. Cổng bổ sung sau kiểm chứng: DB thiếu dấu `cf.env=staging` → từ chối kể cả dry-run; `CF_STAGING_DB_NAME` khớp chính xác; `host:cổng` bắt buộc ở cả danh sách và URL; `sslmode` yếu bị từ chối; chỉ chạy trong workflow `migrate-staging.yml@refs/heads/main` trên GitHub Actions; khóa tư vấn mức DB (kết nối riêng, có timeout); đối chiếu hash `drizzle.__drizzle_migrations` (mục bị bỏ sót/dòng lạ → CONFLICT) — kiểm bằng: `staging-migrate-guard.test.ts`, `staging-migrate.int.test.ts`, `install-staging.test.ts`.
+10. Workflow: biến bí mật + mã xác nhận chỉ ở `env` của đúng bước ghi; so sánh "staging" chính xác bằng shell; `pnpm install --ignore-scripts` — kiểm bằng: đọc file; đã chạy thử trong worktree sạch.
+11. Công cụ xanh: biome, lint:i18n, typecheck, depcruise, check:plans, test, `test:db` phần liên quan — kiểm bằng: chạy từng lệnh.
 
 ## File sẽ đọc (đã đọc)
 

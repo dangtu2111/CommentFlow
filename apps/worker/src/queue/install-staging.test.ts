@@ -8,7 +8,10 @@ const ADMIN_URL = 'postgresql://cf_owner:matkhau-bi-mat@db.staging.invalid:5432/
 const baseEnv = {
   APP_ENV: 'staging',
   DATABASE_ADMIN_URL: ADMIN_URL,
-  CF_STAGING_DB_HOSTS: 'db.staging.invalid',
+  CF_STAGING_DB_HOSTS: 'db.staging.invalid:5432',
+  CF_STAGING_DB_NAME: 'cf_staging',
+  GITHUB_ACTIONS: 'true',
+  GITHUB_WORKFLOW_REF: 'o/r/.github/workflows/migrate-staging.yml@refs/heads/main',
 };
 
 async function codeOf(promise: Promise<unknown>): Promise<string | undefined> {
@@ -40,7 +43,7 @@ describe('installQueueSchemaStaging', () => {
   });
 
   it('host ngoài danh sách hoặc thiếu danh sách → từ chối', async () => {
-    expect(await codeOf(run({ ...baseEnv, CF_STAGING_DB_HOSTS: 'khac.example' }, true))).toBe(
+    expect(await codeOf(run({ ...baseEnv, CF_STAGING_DB_HOSTS: 'khac.example:5432' }, true))).toBe(
       'FORBIDDEN',
     );
     expect(await codeOf(run({ ...baseEnv, CF_STAGING_DB_HOSTS: undefined }, true))).toBe(
@@ -57,5 +60,22 @@ describe('installQueueSchemaStaging', () => {
     for (const secret of ['matkhau-bi-mat', 'cf_owner', 'db.staging.invalid']) {
       expect(text).not.toContain(secret);
     }
+  });
+});
+
+describe('installQueueSchemaStaging — cổng bổ sung', () => {
+  it('ngoài GitHub Actions / sai workflow / thiếu CF_STAGING_DB_NAME → từ chối kể cả dry-run', async () => {
+    expect(await codeOf(run({ ...baseEnv, GITHUB_ACTIONS: undefined }, true))).toBe('FORBIDDEN');
+    expect(
+      await codeOf(
+        run(
+          { ...baseEnv, GITHUB_WORKFLOW_REF: 'o/r/.github/workflows/ci.yml@refs/heads/main' },
+          true,
+        ),
+      ),
+    ).toBe('FORBIDDEN');
+    expect(await codeOf(run({ ...baseEnv, CF_STAGING_DB_NAME: undefined }, true))).toBe(
+      'CONFIG_INVALID',
+    );
   });
 });

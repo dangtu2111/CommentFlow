@@ -8,6 +8,7 @@ import {
   type MigrationEntry,
   parseMigrationJournal,
   planMigrations,
+  verifyAppliedHashes,
 } from './staging-migrate-guard';
 
 const ENTRIES: MigrationEntry[] = [
@@ -21,7 +22,12 @@ const URL_OK = `postgresql://cf_owner:${SECRET}@db.staging.internal:5432/cf_stag
 const base = {
   appEnv: 'staging' as string | undefined,
   adminUrl: URL_OK as string | undefined,
-  allowedHosts: 'db.staging.internal' as string | undefined,
+  allowedHosts: 'db.staging.internal:5432' as string | undefined,
+  expectedDatabase: 'cf_staging' as string | undefined,
+  githubActions: 'true' as string | undefined,
+  workflowRef: 'dangtu2111/CommentFlow/.github/workflows/migrate-staging.yml@refs/heads/main' as
+    | string
+    | undefined,
   confirmation: 'cf_staging@0002' as string | undefined,
   entries: ENTRIES,
   requireConfirmation: true,
@@ -67,22 +73,38 @@ describe('assertStagingMigrateAllowed — đường đúng', () => {
       'FORBIDDEN',
     );
     expect(
-      codeOf(() => assertStagingMigrateAllowed({ ...dry, allowedHosts: 'khac.example' })),
+      codeOf(() => assertStagingMigrateAllowed({ ...dry, allowedHosts: 'khac.example:5432' })),
     ).toBe('FORBIDDEN');
   });
 
-  it('danh sách host nhiều mục, có/không kèm cổng, không phân biệt hoa thường', () => {
+  it('danh sách host:cổng nhiều mục, không phân biệt hoa thường', () => {
     expect(
       assertStagingMigrateAllowed({
         ...base,
-        allowedHosts: ' a.example , DB.Staging.Internal:5432 ',
+        allowedHosts: ' a.example:5432 , DB.Staging.Internal:5432 ',
       }),
     ).toMatchObject({ host: 'db.staging.internal' });
+  });
+
+  it('cổng khác với cổng được phép → FORBIDDEN', () => {
     expect(
       codeOf(() =>
         assertStagingMigrateAllowed({ ...base, allowedHosts: 'db.staging.internal:6543' }),
       ),
     ).toBe('FORBIDDEN');
+  });
+
+  it('mục thiếu cổng trong CF_STAGING_DB_HOSTS → CONFIG_INVALID', () => {
+    for (const allowedHosts of ['db.staging.internal', 'a.example:5432,db.staging.internal']) {
+      expect(codeOf(() => assertStagingMigrateAllowed({ ...base, allowedHosts }))).toBe(
+        'CONFIG_INVALID',
+      );
+    }
+  });
+
+  it('URL không ghi cổng tường minh → CONFIG_INVALID (không dựa PGPORT)', () => {
+    const adminUrl = `postgresql://u:${SECRET}@db.staging.internal/cf_staging`;
+    expect(codeOf(() => assertStagingMigrateAllowed({ ...base, adminUrl }))).toBe('CONFIG_INVALID');
   });
 });
 
@@ -155,8 +177,8 @@ describe('assertStagingMigrateAllowed — host', () => {
     }
   });
 
-  it('cho phép tham số an toàn (sslmode, connect_timeout)', () => {
-    const url = `${URL_OK}?sslmode=require&connect_timeout=10`;
+  it('cho phép tham số an toàn (sslmode bắt buộc mã hóa, connect_timeout)', () => {
+    const url = `${URL_OK}?sslmode=verify-full&connect_timeout=10`;
     expect(assertStagingMigrateAllowed({ ...base, adminUrl: url }).databaseName).toBe('cf_staging');
   });
 });
@@ -235,7 +257,7 @@ describe('không lộ bí mật', () => {
     const cases = [
       { ...base, appEnv: 'production' },
       { ...base, appEnv: undefined },
-      { ...base, allowedHosts: 'khac.example' },
+      { ...base, allowedHosts: 'khac.example:5432' },
       { ...base, allowedHosts: undefined },
       { ...base, confirmation: 'sai' },
       { ...base, adminUrl: `postgresql://cf_owner:${SECRET}@db.staging.internal/commentflow_prod` },
@@ -294,5 +316,97 @@ describe('planMigrations', () => {
   it('DB đã áp migration mới hơn mã → aheadOfCode', () => {
     expect(planMigrations(ENTRIES, 9999)).toEqual({ pending: [], aheadOfCode: true });
     expect(planMigrations(ENTRIES, 3000).aheadOfCode).toBe(false);
+  });
+});
+
+describe('cổng bổ sung (verifier-security)', () => {
+  it('sslmode yếu (disable/allow/prefer/rỗng) → CONFIG_INVALID; require/verify-* được', () => {
+    for (const mode of ['disable', 'allow', 'prefer', '', 'REQUIRE']) {
+      const adminUrl = `${URL_OK}?sslmode=${mode}`;
+      expect(codeOf(() => assertStagingMigrateAllowed({ ...base, adminUrl }))).toBe(
+        'CONFIG_INVALID',
+      );
+    }
+    for (const mode of ['require', 'verify-ca', 'verify-full']) {
+      const adminUrl = `${URL_OK}?sslmode=${mode}`;
+      expect(assertStagingMigrateAllowed({ ...base, adminUrl }).databaseName).toBe('cf_staging');
+    }
+  });
+
+  it('CF_STAGING_DB_NAME: thiếu/sai định dạng → CONFIG_INVALID; khác tên trong URL → FORBIDDEN', () => {
+    for (const expectedDatabase of [undefined, '', 'cf staging']) {
+      expect(codeOf(() => assertStagingMigrateAllowed({ ...base, expectedDatabase }))).toBe(
+        'CONFIG_INVALID',
+      );
+    }
+    expect(
+      codeOf(() => assertStagingMigrateAllowed({ ...base, expectedDatabase: 'cf_staging2' })),
+    ).toBe('FORBIDDEN');
+    expect(
+      codeOf(() => assertStagingMigrateAllowed({ ...base, expectedDatabase: 'CF_STAGING' })),
+    ).toBe('FORBIDDEN');
+  });
+
+  it('tên khớp CF_STAGING_DB_NAME nhưng chứa "prod" vẫn bị từ chối', () => {
+    const adminUrl = 'postgresql://u:p@db.staging.internal:5432/cf_prod_copy';
+    expect(
+      codeOf(() =>
+        assertStagingMigrateAllowed({
+          ...base,
+          adminUrl,
+          expectedDatabase: 'cf_prod_copy',
+          confirmation: 'cf_prod_copy@0002',
+        }),
+      ),
+    ).toBe('FORBIDDEN');
+  });
+
+  it('chỉ chạy trong GitHub Actions: thiếu/sai GITHUB_ACTIONS → FORBIDDEN (kể cả dry-run)', () => {
+    for (const githubActions of [undefined, '', 'false', 'TRUE']) {
+      for (const requireConfirmation of [true, false]) {
+        expect(
+          codeOf(() =>
+            assertStagingMigrateAllowed({ ...base, githubActions, requireConfirmation }),
+          ),
+        ).toBe('FORBIDDEN');
+      }
+    }
+  });
+
+  it('GITHUB_WORKFLOW_REF phải là migrate-staging.yml@refs/heads/main', () => {
+    for (const workflowRef of [
+      undefined,
+      '',
+      'o/r/.github/workflows/deploy-staging.yml@refs/heads/main',
+      'o/r/.github/workflows/migrate-staging.yml@refs/heads/feat/x',
+      'o/r/.github/workflows/migrate-staging.yml@refs/heads/main2',
+      'o/r/.github/workflows/migrate-staging.yml@refs/pull/1/merge',
+      'o/r/x.github/workflows/migrate-staging.yml@refs/heads/main',
+      'migrate-staging.yml@refs/heads/main',
+    ]) {
+      expect(codeOf(() => assertStagingMigrateAllowed({ ...base, workflowRef }))).toBe('FORBIDDEN');
+    }
+  });
+});
+
+describe('verifyAppliedHashes', () => {
+  const hashed = ENTRIES.map((e) => ({ ...e, hash: `h${e.idx}` }));
+  const row = (i: number) => ({ hash: `h${i}`, createdAt: ENTRIES[i]?.when ?? 0 });
+
+  it('DB sạch hoặc áp đúng thứ tự (có thể còn chờ ở cuối) → không lệch', () => {
+    expect(verifyAppliedHashes(hashed, [])).toEqual({ gaps: [], unknown: 0 });
+    expect(verifyAppliedHashes(hashed, [row(0), row(1)])).toEqual({ gaps: [], unknown: 0 });
+    expect(verifyAppliedHashes(hashed, [row(0), row(1), row(2)])).toEqual({ gaps: [], unknown: 0 });
+  });
+
+  it('mục chưa áp mà when ≤ lần áp cuối → gaps (drizzle sẽ bỏ qua vĩnh viễn)', () => {
+    expect(verifyAppliedHashes(hashed, [row(0), row(2)])).toEqual({
+      gaps: ['0001_rls'],
+      unknown: 0,
+    });
+  });
+
+  it('dòng đã áp có hash không có trong mã → unknown', () => {
+    expect(verifyAppliedHashes(hashed, [row(0), { hash: 'la', createdAt: 1500 }]).unknown).toBe(1);
   });
 });

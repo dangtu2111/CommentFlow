@@ -1,5 +1,9 @@
-import { assertMigrationAllowed, guardStagingFromEnv, type StagingMigrateEnv } from '@flow/db';
-import { AppError } from '@flow/shared';
+import {
+  assertMigrationAllowed,
+  guardStagingFromEnv,
+  type StagingMigrateEnv,
+  withStagingDatabase,
+} from '@flow/db';
 import pg from 'pg';
 import { PgBoss } from 'pg-boss';
 import { QUEUE_SCHEMA, type QueueDefinition } from './definitions';
@@ -40,24 +44,10 @@ export async function installQueueSchemaStaging(input: {
     `Hàng đợi sẽ đảm bảo có (${input.queues.length}): ${input.queues.map((q) => q.name).join(', ')}`,
   );
   if (input.dryRun) return;
-  await assertConnectedTo(adminUrl, databaseName);
-  await performQueueInstall(adminUrl, input.queues);
-}
-
-/** Database thật sự đang kết nối phải đúng tên đã xác nhận (chặn URL trỏ lệch). */
-async function assertConnectedTo(adminUrl: string, expected: string): Promise<void> {
-  const pool = new pg.Pool({ connectionString: adminUrl, max: 1 });
-  try {
-    const { rows } = await pool.query<{ db: string }>('SELECT current_database() AS db');
-    if (rows[0]?.db !== expected) {
-      throw new AppError(
-        'FORBIDDEN',
-        'Từ chối: database thật sự đang kết nối khác tên đã xác nhận.',
-      );
-    }
-  } finally {
-    await pool.end();
-  }
+  // Kiểm danh tính DB (tên + dấu cf.env=staging) và giữ khóa tư vấn cùng lúc với migrate.
+  await withStagingDatabase(adminUrl, databaseName, async () => {
+    await performQueueInstall(adminUrl, input.queues);
+  });
 }
 
 async function performQueueInstall(adminUrl: string, queues: QueueDefinition[]): Promise<void> {
@@ -86,6 +76,7 @@ async function performQueueInstall(adminUrl: string, queues: QueueDefinition[]):
   }
 
   const pool = new pg.Pool({ connectionString: adminUrl, max: 1 });
+  pool.on('error', () => {}); // lỗi nền không được in chi tiết kết nối
   try {
     // Tên schema/role là hằng số trong mã (không phải dữ liệu người dùng).
     const s = QUEUE_SCHEMA;
