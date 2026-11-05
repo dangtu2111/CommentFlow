@@ -52,6 +52,8 @@ export {
   releaseCommentLock,
 } from './queries/comment-lock';
 export {
+  ACTIONABLE_COMMENT_STATUSES,
+  countActionableComments,
   countCommentsByTab,
   DEFAULT_INBOX_LIMIT,
   escapeLikePattern,

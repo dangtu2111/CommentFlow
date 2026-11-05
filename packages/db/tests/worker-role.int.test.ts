@@ -113,7 +113,8 @@ describe('WORKER-DB-ROLE — cf_worker là đường hệ thống duy nhất', (
   it('cf_worker không có ngữ cảnh hệ thống khi withWorkspace trần hoặc khi có người dùng (withActor)', async () => {
     // Không tự đặt app.ctx = system: withWorkspace trần không phải hệ thống dù kết nối là cf_worker.
     const plain = async (tx: Database): Promise<boolean> =>
-      ((await tx.execute(sql`select core.is_system_context() as ok`)).rows[0] as { ok: boolean }).ok;
+      ((await tx.execute(sql`select core.is_system_context() as ok`)).rows[0] as { ok: boolean })
+        .ok;
     expect(await worker.withWorkspace(ws, plain)).toBe(false);
     // Có người dùng trong ngữ cảnh thì app.ctx = system cũng không làm thành hệ thống.
     expect(await worker.withActor(ws, owner, isSystem)).toBe(false);
