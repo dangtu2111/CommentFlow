@@ -17,6 +17,8 @@
 | KT-007 | Hộp soạn trả lời, Gửi, Thử lại | #26 | có | chưa | — |
 | KT-008 | Khách sửa/xóa bình luận | COMMENT-EDIT-DELETE | chưa | chưa | — |
 | KT-009 | Trang Nhật ký (Owner thấy tất cả, Staff chỉ của mình) | LOG-PAGE | chưa | chưa | — |
+| KT-010 | Ẩn / Bỏ ẩn bình luận | FB-HIDE | chưa | chưa | — |
+| KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 
 ---
 
@@ -174,6 +176,21 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 
 ---
 
+## KT-012 — Connector Facebook thật (FB-CONNECTOR-CONTRACT, ADR 010)
+
+**Chưa thử được ở bước này:** connector mới chỉ có code + test bằng phản hồi viết tay; CHƯA đăng ký vào worker nên giao diện vẫn báo "Chưa kết nối được tới nền tảng để gửi" (đúng, xem KT-007). Mục này dành cho SAU KHI có `FB-OAUTH` + một Page thử + token thật và connector được nối vào worker (gap `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`). Dùng Page thử, không dùng Page khách.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng một tài khoản khác bình luận dưới bài của Page thử | Bình luận vào hộp thư (webhook) |
+| 2 | Bấm Gửi trả lời | Trên Facebook có câu trả lời dưới bình luận đó, đúng nội dung; hộp thư hiện "đã trả lời" |
+| 3 | Bấm Ẩn rồi Bỏ ẩn (khi FB-HIDE đã nối) | Facebook ẩn/hiện bình luận tương ứng; không có nút xóa |
+| 4 | Gỡ quyền Page của ứng dụng rồi thử Gửi | Báo lỗi dễ hiểu (mất quyền), kênh chuyển trạng thái cần kết nối lại; log KHÔNG chứa token |
+| 5 | Bình luận có `from` của khách: đọc lại trả lời của chính Page (kiểm trước khi gửi lại) | Thấy câu trả lời của Page (`isFromPage` đúng); nếu KHÔNG thấy → báo agent (xem ADR 010 §4) |
+| 6 | Đăng ký webhook cho Page (`subscribed_apps`) rồi đọc lại | Trường `feed` được liệt kê |
+
+---
+
 ## KT-009 — Trang Nhật ký (LOG-PAGE, FR-092)
 
 Điều kiện: chạy `pnpm --filter @flow/web dev`; có workspace với một Owner và một Staff đã nhận lời mời. Trang đọc dữ liệu THẬT từ `action_logs` nên cần tự tạo vài hành động trước (không có số liệu giả): tạo workspace, mời Staff, Staff nhận lời mời, Owner đổi vai trò một thành viên (hoặc Staff bấm Gửi trả lời ở một bình luận, xem KT-007).
@@ -204,6 +221,25 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 5 | Chuyển sang tiếng Anh (nút ngôn ngữ) và mở lại danh sách. | Ô hiện "Search workspaces". |
 
 Chưa có "số việc cần xử lý" (gap `FR-005-COUNT`). Nếu hỏng: ghi số bước và ảnh chụp.
+
+---
+
+## KT-010 — Ẩn / Bỏ ẩn bình luận (FB-HIDE, FR-044)
+
+Điều kiện: migration 0027 đã áp lên `cf_dev` (`pnpm db:migrate`) và hàng đợi đã cài (`pnpm --filter @flow/worker queue:install`); có bình luận ở trạng thái Chờ duyệt/Mới trên một kênh `connected` (xem KT-003); chạy `pnpm --filter @flow/web dev` và `pnpm --filter @flow/worker dev`. **Chưa có connector Facebook thật** nên khi bấm Ẩn, worker báo lỗi "Chưa kết nối được tới nền tảng…" — đó là kết quả ĐÚNG ở bước này (bình luận KHÔNG chuyển sang "Đã ẩn" khi nền tảng chưa xác nhận); ẩn thật chỉ thử được sau `FB-OAUTH` + connector Facebook (bước 7–8, cần Page thử).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở một bình luận Chờ duyệt ở trang Bình luận. | Dưới chi tiết (dưới hộp soạn trả lời) có nút **Ẩn**. |
+| 2 | Bấm **Ẩn**. | Hiện "Đang ẩn bình luận trên nền tảng…" (không báo "Đã ẩn"); bấm đúp không tạo hai yêu cầu. |
+| 3 | Đợi vài giây (worker chạy). | Hiện **Ẩn không thành công** + "Lý do: Chưa kết nối được tới nền tảng. Hãy thử lại sau." và nút **Thử lại**; trạng thái bình luận vẫn như cũ, không có trong tab **Đã ẩn**. |
+| 4 | Bấm **Thử lại**. | Lại "Đang ẩn…" rồi cùng lỗi (chưa có connector thật). |
+| 5 | Hai tài khoản: A mở bình luận (khóa), B mở cùng bình luận. | B thấy "<tên A> đang xử lý bình luận này nên bạn chưa ẩn được", không có nút. |
+| 6 | Đặt kênh sang `expired` (nhờ agent) rồi mở bình luận; đổi sang **English** và thu nhỏ ~390px. | Thấy "Kênh chưa kết nối được…", không có nút; chữ đúng tiếng Anh, không tràn ngang. |
+| 7 | (Sau FB-OAUTH + connector Facebook) Bấm **Ẩn** với bình luận trên Page thử. | Sau vài giây bình luận chuyển sang tab **Đã ẩn**, nút đổi thành **Bỏ ẩn**; trên Facebook bình luận bị ẩn với người ngoài. |
+| 8 | (Như bước 7) Bấm **Bỏ ẩn**. | Bình luận về tab cũ (trạng thái trước khi ẩn), nút lại là **Ẩn**; trên Facebook bình luận hiện lại. Nhật ký có "đã ẩn"/"bỏ ẩn", không có nội dung bình luận. |
+
+Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hiện trên màn hình.
 
 ---
 

@@ -12,6 +12,9 @@ export {
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
 export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
 export {
+  HIDE_QUEUE,
+  type HideJob,
+  hideJobSchema,
   INGEST_QUEUE,
   type IngestJob,
   ingestJobSchema,

@@ -3,13 +3,14 @@ import { createDb } from '@flow/db';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
 import { startHealthServer } from './health';
+import { createHideHandler } from './jobs/hide';
 import { createIngestHandler } from './jobs/ingest';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
-import { INGEST_QUEUE, SEND_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
+import { HIDE_QUEUE, INGEST_QUEUE, SEND_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -39,6 +40,12 @@ async function main(): Promise<void> {
     SEND_QUEUE,
     { batchSize: 1, localConcurrency: 3 },
     createSendHandler({ db, registry: createConnectorRegistry([]), logger }),
+  );
+  // FR-044: hide — ẩn/bỏ ẩn bình luận; kiểm lại trước khi gọi nền tảng, ẩn lặp lại idempotent. Sổ connector RỖNG như `send`.
+  await boss.work(
+    HIDE_QUEUE,
+    { batchSize: 1, localConcurrency: 3 },
+    createHideHandler({ db, registry: createConnectorRegistry([]), logger }),
   );
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
   const stopRetention = startRetention({ db, logger });
