@@ -27,7 +27,15 @@ export async function leaveWorkspaceAction(): Promise<MembersFormState> {
       }
       // NOT_FOUND: đã rời rồi (bấm hai lần/tab khác) → coi như thành công.
     } else {
-      console.error(JSON.stringify({ event: 'leave_workspace_failed' }));
+      // Chỉ tên lỗi + mã Postgres (nếu có); KHÔNG log message thô (có thể chứa dữ liệu).
+      const e = error as { name?: string; code?: string; cause?: { code?: string } };
+      console.error(
+        JSON.stringify({
+          event: 'leave_workspace_failed',
+          error: e?.name ?? 'unknown',
+          pgCode: e?.cause?.code ?? e?.code ?? null,
+        }),
+      );
       return { status: 'error', message: 'generic' };
     }
   }

@@ -7,7 +7,7 @@
  */
 export type NavRole = 'owner' | 'staff';
 export type NavGroupKey = 'operations' | 'settings';
-export type NavItemKey = 'comments' | 'members' | 'activity' | 'security' | 'leave';
+export type NavItemKey = 'comments' | 'members' | 'activity' | 'security';
 
 export type NavItem = { key: NavItemKey; href: string };
 export type NavGroup = { key: NavGroupKey; items: NavItem[] };
@@ -21,8 +21,6 @@ const ENTRIES: readonly Entry[] = [
   // Nhật ký (FR-092): Owner thấy tất cả, Staff chỉ dòng của mình (lọc ở truy vấn `listActionLogs`).
   { key: 'activity', href: '/app/activity', group: 'settings', roles: ['owner', 'staff'] },
   { key: 'security', href: '/app/security', group: 'settings', roles: ['owner', 'staff'] },
-  // Tự rời workspace: Owner có khối này ngay trên trang Thành viên; Staff không vào được trang đó nên có mục riêng.
-  { key: 'leave', href: '/app/leave', group: 'settings', roles: ['staff'] },
 ];
 
 const GROUP_ORDER: readonly NavGroupKey[] = ['operations', 'settings'];

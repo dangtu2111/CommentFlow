@@ -249,13 +249,13 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 
 | # | Bước | Kết quả mong đợi |
 |---|---|---|
-| 1 | Đăng nhập **Staff**, thấy menu **Cài đặt > Rời workspace** (`/app/leave`); Staff không thấy mục Thành viên. | Có mục "Rời workspace"; trang hiện tên workspace và nút "Rời workspace". |
+| 1 | Đăng nhập **Staff**, mở bộ chuyển workspace (góc trên) và chọn **Rời workspace này** (`/app/leave`); menu chính KHÔNG có mục rời. | Trang hiện tên workspace và nút "Rời workspace". |
 | 2 | Bấm "Rời workspace" (chưa xác nhận). | Hộp xác nhận mở ra kèm cảnh báo mất quyền truy cập; chưa rời. |
 | 3 | Bấm "Xác nhận rời workspace". | Được chuyển về `/app`: nếu Staff còn workspace khác thì vào workspace đó, nếu không thì sang trang tạo workspace. Mở lại workspace cũ (dán đường dẫn `/app/comments`) không còn truy cập. |
 | 4 | Đăng nhập **Owner A**, mở **Thành viên** và **Nhật ký**. | Staff không còn trong danh sách; Nhật ký có dòng "Thành viên tự rời workspace" do Staff thực hiện. |
 | 5 | Kiểm hộp thư của Owner A và Owner B. | Cả hai nhận email "Có thành viên rời …" nêu tên Staff; Staff không nhận thư nào. |
-| 6 | Owner A mở **Thành viên**, kéo xuống khối "Rời workspace", bấm xác nhận. | Rời được vì còn Owner B; Owner B nhận email báo. |
-| 7 | Đăng nhập **Owner B** (giờ là Owner cuối), mở **Thành viên**. | Khối "Rời workspace" không có nút, hiện lời giải thích phải nâng người khác lên Owner trước. |
+| 6 | Owner A mở bộ chuyển workspace > **Rời workspace này**, bấm "Rời workspace" rồi xác nhận. | Rời được vì còn Owner B; Owner B nhận email báo. |
+| 7 | Đăng nhập **Owner B** (giờ là Owner cuối), mở bộ chuyển workspace > **Rời workspace này**. | Trang không có nút xác nhận, chỉ giải thích phải nâng người khác lên Owner trước và có link "Mở trang Thành viên". |
 | 8 | (Nhờ agent) gọi thẳng hành động rời bằng Owner B. | Báo lỗi "Bạn là Owner đang hoạt động cuối cùng…", Owner B vẫn là Owner. |
 | 9 | Mời lại Staff, Staff nhận lời mời, Staff làm một hành động, rồi Owner mở **Nhật ký**; Staff mở **Nhật ký**. | Owner thấy cả dòng của Staff lẫn của mình; Staff chỉ thấy dòng của chính mình (ép ở cả cơ sở dữ liệu). |
 | 10 | Đổi sang **English** và thu nhỏ ~390px, lặp bước 1–3. | Chuỗi tiếng Anh đúng, nút không vỡ bố cục. |

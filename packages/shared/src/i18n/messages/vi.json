@@ -205,6 +205,7 @@
       "empty": "Không tìm thấy workspace",
       "label": "Chuyển workspace",
       "create": "+ Tạo workspace mới",
+      "leave": "Rời workspace này",
       "role": {
         "owner": "Owner",
         "staff": "Staff"
@@ -279,7 +280,8 @@
     "warning": "Bạn sẽ không còn xem được bình luận, nhật ký hay dữ liệu của workspace này. Các Owner sẽ nhận email báo bạn đã rời.",
     "confirm": "Xác nhận rời workspace",
     "cancel": "Hủy",
-    "lastOwner": "Bạn là Owner đang hoạt động cuối cùng nên chưa thể rời. Hãy nâng một thành viên khác lên Owner trước."
+    "lastOwner": "Bạn là Owner đang hoạt động cuối cùng nên chưa thể rời. Hãy nâng một thành viên khác lên Owner trước.",
+    "membersLink": "Mở trang Thành viên"
   },
   "invite": {
     "title": "Lời mời tham gia",
@@ -497,8 +499,7 @@
       "comments": "Bình luận",
       "members": "Thành viên",
       "activity": "Nhật ký",
-      "security": "Bảo mật",
-      "leave": "Rời workspace"
+      "security": "Bảo mật"
     },
     "logout": "Đăng xuất",
     "brand": "CommentFlow AI",

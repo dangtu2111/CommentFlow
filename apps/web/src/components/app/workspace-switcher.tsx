@@ -29,6 +29,7 @@ export async function WorkspaceSwitcher({
           search: t('search'),
           empty: t('empty'),
           create: t('create'),
+          leave: t('leave'),
           roles: { owner: t('role.owner'), staff: t('role.staff') },
         }}
       />

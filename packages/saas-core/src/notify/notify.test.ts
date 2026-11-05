@@ -193,11 +193,13 @@ describe('thư mời workspace và báo đổi Owner', () => {
 
   it('thư báo thành viên tự rời nêu tên người rời, tên workspace và chủ đề riêng (vi/en)', () => {
     const vi = renderEmail({ ...change('Hà'), change: 'left' } as EmailInput, 'vi', recipient);
-    expect(vi.text).toContain('Hà đã tự rời workspace');
+    expect(vi.text).toContain('Hà đã tự rời khỏi workspace "Shop An"');
+    expect(vi.text).not.toMatch(/workspace.*trong workspace/);
     expect(vi.subject).toContain('Có thành viên rời');
     expect(vi.text).toContain('Shop An');
     const en = renderEmail({ ...change('Hà'), change: 'left' } as EmailInput, 'en', recipient);
-    expect(en.text).toContain('Hà left the workspace');
+    expect(en.text).toContain('Hà left the workspace "Shop An"');
+    expect(en.text).not.toMatch(/in the workspace.*the workspace/);
     expect(en.subject).toContain('A member left');
   });
 

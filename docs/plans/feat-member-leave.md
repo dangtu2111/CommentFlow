@@ -59,7 +59,7 @@ Có: RLS + migration + hàm DEFINER + quyền Owner → `verifier-security` và 
 
 ## Rủi ro / câu hỏi cho chủ dự án
 
-- Staff không vào được trang Thành viên (docs/13 §3.1: 404). Để Staff có chỗ bấm, thêm trang riêng `/app/leave` (mục menu "Rời workspace" chỉ Staff thấy); Owner thấy khối "Rời workspace" ngay trên trang Thành viên. **Cần bạn xác nhận cách đặt này.**
+- Staff không vào được trang Thành viên (docs/13 §3.1: 404). Quyết định chủ dự án: lối vào ở bộ chuyển workspace (cả Owner và Staff) dẫn tới `/app/leave`; không có mục menu chính, không có khối ở trang Thành viên. Owner cuối: giải thích + link Thành viên, không có nút.
 - Thành viên đang `suspended` không tự rời được (chỉ `active`).
 - Dòng nhật ký của người đã rời vẫn còn (Owner xem được); Staff đã rời không đọc được nữa.
 
