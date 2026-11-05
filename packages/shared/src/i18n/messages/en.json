@@ -85,6 +85,7 @@
       "passwordCommon": "This password is too common and easy to guess. Choose a different one.",
       "passwordPwned": "This password has appeared in data breaches. Choose a different one.",
       "passwordMismatch": "The two passwords don't match. Enter them again.",
+      "passwordSame": "The new password must be different from the current one.",
       "nameInvalid": "Enter your full name (up to 80 characters).",
       "required": "Fill in this field.",
       "generic": "Something went wrong on our side. Try again in a few minutes.",
@@ -127,6 +128,15 @@
       "subtitle": "Manage two-step verification and the devices signed in to your account.",
       "requiredBanner": "Workspace owners and administrators must turn on two-step verification. Turn it on now to keep using the app.",
       "backToApp": "Back to the app",
+      "changePassword": {
+        "title": "Change password",
+        "body": "After changing it you will be signed out of every device and need to sign in again with the new password.",
+        "currentLabel": "Current password",
+        "newLabel": "New password",
+        "newHint": "10 to 128 characters, not too common or found in data breaches.",
+        "confirmLabel": "Repeat the new password",
+        "submit": "Change password"
+      },
       "twoFactor": {
         "title": "Two-step verification (TOTP)",
         "offBody": "Add a second layer of protection: besides your password you need a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password...).",

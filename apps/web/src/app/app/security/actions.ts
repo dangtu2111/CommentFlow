@@ -4,10 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { applyCookies } from '../../../lib/apply-cookies';
+import { changePasswordToState, parseChangePasswordForm } from '../../../lib/change-password-form';
 import {
   reauthFailureToState,
   SECURITY_IDLE,
   type SecurityState,
+  securityError,
 } from '../../../lib/security-form';
 import { getAuthRuntime } from '../../../server/auth';
 import { requestContext } from '../../../server/request-context';
@@ -92,6 +94,26 @@ export async function disableTwoFactorAction(
   applyCookies(await cookies(), result.cookies);
   revalidatePath('/app/security');
   return SECURITY_IDLE;
+}
+
+/**
+ * Đổi mật khẩu: người dùng lấy từ phiên (không nhận userId từ form). Thành công → mọi phiên đã bị xóa → về /login
+ * (`redirect` ném ngoại lệ nên đặt SAU khi đã có kết quả, ngoài try/catch).
+ */
+export async function changePasswordAction(
+  _previous: SecurityState,
+  data: FormData,
+): Promise<SecurityState> {
+  await requireAppUser(SECURITY_ACCESS);
+  const input = parseChangePasswordForm(data);
+  if (!input.ok) return securityError(input.message);
+  const result = await getAuthRuntime().changePassword.changePassword({
+    currentPassword: input.currentPassword,
+    newPassword: input.newPassword,
+    headers: (await requestContext()).headers,
+  });
+  if (result.status === 'ok' || result.status === 'unauthenticated') redirect('/login');
+  return changePasswordToState(result);
 }
 
 /** Đăng xuất MỘT phiên khác của chính mình (id từ form chỉ là gợi ý; saas-core kiểm phiên thuộc về người dùng). */

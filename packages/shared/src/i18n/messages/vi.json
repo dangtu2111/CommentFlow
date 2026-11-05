@@ -85,6 +85,7 @@
       "passwordCommon": "Mật khẩu này quá phổ biến nên dễ bị đoán. Hãy chọn mật khẩu khác.",
       "passwordPwned": "Mật khẩu này đã xuất hiện trong các vụ lộ dữ liệu. Hãy chọn mật khẩu khác.",
       "passwordMismatch": "Hai mật khẩu chưa giống nhau. Hãy nhập lại.",
+      "passwordSame": "Mật khẩu mới phải khác mật khẩu hiện tại.",
       "nameInvalid": "Hãy nhập họ tên (tối đa 80 ký tự).",
       "required": "Hãy điền ô này.",
       "generic": "Có lỗi xảy ra phía chúng tôi. Hãy thử lại sau ít phút.",
@@ -127,6 +128,15 @@
       "subtitle": "Quản lý xác thực 2 bước và các thiết bị đang đăng nhập.",
       "requiredBanner": "Tài khoản của chủ workspace hoặc quản trị viên bắt buộc bật xác thực 2 bước. Hãy bật ngay để tiếp tục sử dụng.",
       "backToApp": "Về trang chính",
+      "changePassword": {
+        "title": "Đổi mật khẩu",
+        "body": "Sau khi đổi, bạn sẽ bị đăng xuất khỏi mọi thiết bị và cần đăng nhập lại bằng mật khẩu mới.",
+        "currentLabel": "Mật khẩu hiện tại",
+        "newLabel": "Mật khẩu mới",
+        "newHint": "Từ 10 đến 128 ký tự, không quá phổ biến hay đã bị lộ.",
+        "confirmLabel": "Nhập lại mật khẩu mới",
+        "submit": "Đổi mật khẩu"
+      },
       "twoFactor": {
         "title": "Xác thực 2 bước (TOTP)",
         "offBody": "Thêm một lớp bảo vệ: ngoài mật khẩu, bạn cần mã 6 chữ số từ ứng dụng xác thực (Google Authenticator, Microsoft Authenticator, 1Password...).",
