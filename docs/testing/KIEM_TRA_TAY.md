@@ -21,6 +21,7 @@
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 
 ---
 
@@ -299,6 +300,24 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 7 | Tắt worker, xóa `DATABASE_WORKER_URL` (hoặc đặt URL dùng `cf_app`) rồi chạy lại worker. | Worker KHÔNG khởi động, thông báo nêu tên biến `DATABASE_WORKER_URL`, không in mật khẩu. Khôi phục sau đó. |
 | 8 | Thử đường nghiệp vụ: gửi webhook thử (`pnpm webhook:send`) khi worker chạy, hoặc gửi một trả lời (KT-007). | Worker xử lý như trước (job `ingest`/`send` xong). |
 | 9 | Trên máy ảo, trong `psql` vào `cf_dev`: `SELECT has_function_privilege('cf_app','cf.read_channel_token(uuid)','execute'), has_function_privilege('cf_worker','cf.read_channel_token(uuid)','execute');` | `f` và `t`. |
+
+Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-016 — Quét yêu cầu gửi/ẩn kẹt (SEND-SWEEP + HIDE-SWEEP, ADR 008/009)
+
+Điều kiện: nhánh `feat-send-hide-sweep`; máy ảo `cf` bật; đã `pnpm db:migrate` (0031) và chạy worker bản mới. Sổ connector của worker còn RỖNG (chưa có connector thật) nên bước gửi/ẩn kết thúc `connector_unavailable` — đủ để thấy quét hoạt động.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` rồi `pnpm db:check-rls`. | Áp 0031; 0 vi phạm. |
+| 2 | Chạy worker (`pnpm --filter @flow/worker dev`) và để mở. | Sẵn sàng; không lỗi `42501` về `list_stuck_outbox`. |
+| 3 | Trên máy ảo, `psql` vào `cf_dev`: tạo yêu cầu kẹt bằng cách sửa một yêu cầu `queued` mới: `UPDATE cf.comment_replies SET updated_at = now() - interval '10 minutes' WHERE id = '<id yêu cầu queued>';` (chỉ dữ liệu thử). | — |
+| 4 | Chờ ≤ 60 giây rồi xem lại dòng đó. | Yêu cầu không còn `queued` (hiện `failed`/`connector_unavailable` vì chưa có connector thật); bình luận hiện lỗi gửi + nút Thử lại. Log worker có dòng "đã quét yêu cầu gửi/ẩn kẹt", không có nội dung bình luận. |
+| 5 | Lặp bước 3–4 với một yêu cầu ẩn (`cf.comment_hides`). | Tương tự: hết `queued`, ghi `failed`. |
+| 6 | Tạo yêu cầu `queued` mới (không sửa giờ), chờ 60 giây. | KHÔNG bị quét (còn mới < 5 phút) — vẫn do job thường xử lý. |
+| 7 | Trên máy ảo, `psql` bằng web (`cf_app`): `SELECT * FROM cf.list_stuck_outbox('reply', 300, 150, 10);` | Lỗi `permission denied` (chỉ `cf_worker` gọi được). |
 
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
 

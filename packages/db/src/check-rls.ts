@@ -663,11 +663,12 @@ async function checkWorkerDirectPrivileges(
          LATERAL aclexplode(t.attacl) a, w
     WHERE t.attacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
     UNION ALL
-    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token)'
+    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox)'
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
-      AND NOT (n.nspname = 'cf' AND p.proname = 'read_channel_token' AND a.privilege_type = 'EXECUTE')`);
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox')
+               AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({
       subject: String(row.name),
@@ -733,6 +734,44 @@ async function checkWebhookFunction(db: Queryable, violations: RlsViolation[]): 
       OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'`);
   for (const row of found.rows) {
     violations.push({ subject: String(row.name), message: `hàm webhook: ${String(row.problem)}` });
+  }
+}
+
+/**
+ * Hàm liệt kê yêu cầu gửi/ẩn kẹt (0031, SEND-SWEEP/HIDE-SWEEP): phải tồn tại, SECURITY DEFINER, PUBLIC và cf_app KHÔNG có
+ * EXECUTE (chỉ cf_worker), và thân hàm chỉ cho NGỮ CẢNH TRẦN của kết nối cf_worker (từ chối khi có workspace/người
+ * dùng/ngữ cảnh job hoặc session_user khác) — nếu không, đường khác liệt kê được yêu cầu của mọi workspace.
+ * Phần thân chỉ kiểm bằng chuỗi con của prosrc; logic được kiểm bằng test tích hợp stuck-outbox.int.test.ts.
+ */
+async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* stuck-outbox-function */
+    SELECT 'cf.list_stuck_outbox' AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} (web) không được có quyền EXECUTE (chỉ ${WORKER_ROLE})'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE') THEN '${WORKER_ROLE} thiếu quyền EXECUTE'
+        ELSE 'thân hàm phải từ chối khi có workspace, người dùng, ngữ cảnh job hoặc session_user khác cf_worker (chỉ ngữ cảnh trần của worker)'
+      END AS problem
+    FROM (SELECT 1) AS one
+    LEFT JOIN pg_proc p ON p.pronamespace = 'cf'::regnamespace AND p.proname = 'list_stuck_outbox'
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%current_workspace_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%current_user_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'
+      OR p.prosrc NOT LIKE '%session_user <> ''${WORKER_ROLE}''%'`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm liệt kê yêu cầu kẹt: ${String(row.problem)}`,
+    });
   }
 }
 
@@ -975,6 +1014,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkNoDelete(db, violations);
   await checkTokenFunctions(db, violations);
   await checkWebhookFunction(db, violations);
+  await checkStuckOutboxFunction(db, violations);
   await checkLeaveFunction(db, violations);
   await checkActionLogsOnBehalfCheck(db, violations);
 
