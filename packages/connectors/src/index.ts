@@ -33,6 +33,13 @@ export {
   type PageSubscription,
 } from './facebook/connector';
 export {
+  createFacebookOAuthClient,
+  FACEBOOK_OAUTH_SCOPES,
+  type FacebookOAuthClient,
+  type FacebookOAuthOptions,
+  type FacebookPageGrant,
+} from './facebook/oauth';
+export {
   deserializeEvent,
   eventHashOf,
   parseMetaWebhook,
