@@ -201,6 +201,8 @@
       "rateLimited": "You have created too many workspaces in the last 24 hours. Please try again later."
     },
     "switcher": {
+      "search": "Search workspaces",
+      "empty": "No workspace found",
       "label": "Switch workspace",
       "create": "+ Create a new workspace",
       "role": {

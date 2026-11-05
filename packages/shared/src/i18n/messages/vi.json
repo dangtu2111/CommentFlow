@@ -201,6 +201,8 @@
       "rateLimited": "Bạn đã tạo quá nhiều workspace trong 24 giờ qua. Vui lòng thử lại sau."
     },
     "switcher": {
+      "search": "Tìm workspace",
+      "empty": "Không tìm thấy workspace",
       "label": "Chuyển workspace",
       "create": "+ Tạo workspace mới",
       "role": {
