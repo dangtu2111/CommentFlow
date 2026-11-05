@@ -16,6 +16,22 @@ export {
 export { createDb, type Database, type FlowDb } from './client';
 export { markCommentDeleted } from './comment-redact';
 export {
+  ACTION_LOG_ACTOR_TYPES,
+  type ActionLogActorType,
+  type ActionLogCursor,
+  type ActionLogDetail,
+  type ActionLogFilter,
+  type ActionLogItem,
+  type ActionLogPage,
+  type ActionLogViewer,
+  DEFAULT_ACTION_LOG_LIMIT,
+  getActionLog,
+  listActionLogActions,
+  listActionLogs,
+  MAX_ACTION_LENGTH,
+  MAX_ACTION_LOG_LIMIT,
+} from './queries/action-logs';
+export {
   type ChannelAlert,
   type ChannelAlertStatus,
   listChannelAlerts,

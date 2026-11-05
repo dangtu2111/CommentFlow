@@ -95,7 +95,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | POLLING-BACKFILL | FR-023 (polling bù sót; cảnh báo webhook im lặng) | UF-2 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
 | ATTACHMENTS-STORE | FR-143 (lưu loại + link tệp đính kèm) | — | CH-SCHEMA | DB | không | ⏳ |
 | ADS-POSTS-LIST | FR-123 (bài quảng cáo/dark post của Page + bài thường) | — | FB-OAUTH | — | **có** — Meta App | ⛔ |
-| LOG-PAGE | FR-092 (trang Nhật ký: lọc, trước/sau, Staff chỉ thấy của mình) | — | GĐ0-DB | DB | không | ⏳ |
+| LOG-PAGE | FR-092 (trang Nhật ký: lọc, trước/sau, Staff chỉ thấy của mình) | — | GĐ0-DB | DB | không | ✅ (`/app/activity`: danh sách + lọc tác nhân/hành động/ngày + trước/sau; Staff chỉ của mình ép ở truy vấn, chưa ở RLS — xem gap `LOG-RLS-STAFF`) |
 | STAGING-H5-H6 | — (H5 web staging; H6 che `/invite/*` trong log) | — | STAGING-DEPLOY | S | **có** — tên miền (hoãn) | ⛔ |
 | **CỔNG 1** | xem đầu mục GĐ1 | | tất cả 1B | | chủ dự án xác nhận | ⏳ |
 

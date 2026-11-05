@@ -441,6 +441,7 @@
     "nav": {
       "comments": "Bình luận",
       "members": "Thành viên",
+      "activity": "Nhật ký",
       "security": "Bảo mật"
     },
     "logout": "Đăng xuất",
@@ -471,6 +472,75 @@
         }
       },
       "more": "và {count} kênh khác"
+    }
+  },
+  "activity": {
+    "title": "Nhật ký hoạt động",
+    "subtitle": {
+      "owner": "Ghi nhận hành động của thành viên, AI và hệ thống trong workspace. Chỉ đọc, không sửa hay xóa được.",
+      "staff": "Các hành động do chính bạn thực hiện. Chỉ đọc, không sửa hay xóa được."
+    },
+    "readOnly": "Chỉ đọc",
+    "list": {
+      "label": "Danh sách nhật ký",
+      "shown": "Hiển thị {shown} dòng",
+      "first": "Về đầu",
+      "next": "Trang sau"
+    },
+    "toolbar": {
+      "label": "Lọc nhật ký",
+      "actor": "Tác nhân",
+      "allActors": "Mọi tác nhân",
+      "action": "Hành động",
+      "allActions": "Mọi hành động",
+      "from": "Từ ngày",
+      "to": "Đến ngày",
+      "apply": "Lọc",
+      "clear": "Xóa bộ lọc"
+    },
+    "actors": {
+      "user": "Thành viên",
+      "ai": "AI",
+      "system": "Hệ thống",
+      "admin": "Quản trị viên",
+      "formerMember": "Thành viên cũ"
+    },
+    "actions": {
+      "workspace.created": "Tạo workspace",
+      "member.role_changed": "Đổi vai trò thành viên",
+      "invitation.created": "Gửi lời mời",
+      "invitation.accepted": "Nhận lời mời",
+      "invitation.revoked": "Thu hồi lời mời",
+      "channel.connected": "Kết nối kênh",
+      "channel.reconnected": "Kết nối lại kênh",
+      "channel.token_set": "Cập nhật mã truy cập kênh",
+      "channel.token_cleared": "Xóa mã truy cập kênh",
+      "comment.reply_requested": "Yêu cầu gửi trả lời bình luận"
+    },
+    "empty": {
+      "title": "Chưa có nhật ký",
+      "body": "Các hành động ghi nhận được sẽ xuất hiện ở đây.",
+      "filteredTitle": "Không có dòng phù hợp",
+      "filteredBody": "Thử bỏ bớt bộ lọc hoặc mở rộng khoảng ngày."
+    },
+    "detail": {
+      "title": "Chi tiết nhật ký",
+      "empty": "Chọn một dòng để xem chi tiết.",
+      "notFoundTitle": "Không tìm thấy dòng nhật ký",
+      "notFoundBody": "Dòng này không tồn tại hoặc bạn không có quyền xem.",
+      "time": "Thời điểm",
+      "actor": "Người thực hiện",
+      "target": "Đối tượng",
+      "changes": "Thay đổi (trước và sau)",
+      "noChanges": "Dòng này không ghi giá trị trước/sau.",
+      "field": "Trường",
+      "before": "Trước",
+      "after": "Sau",
+      "none": "—"
+    },
+    "error": {
+      "title": "Không tải được nhật ký",
+      "body": "Có lỗi khi tải dữ liệu. Hãy thử lại sau."
     }
   }
 }

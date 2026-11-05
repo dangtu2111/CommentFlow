@@ -441,6 +441,7 @@
     "nav": {
       "comments": "Comments",
       "members": "Members",
+      "activity": "Activity log",
       "security": "Security"
     },
     "logout": "Sign out",
@@ -471,6 +472,75 @@
         }
       },
       "more": "and {count} more channels"
+    }
+  },
+  "activity": {
+    "title": "Activity log",
+    "subtitle": {
+      "owner": "Actions by members, AI and the system in this workspace. Read-only; entries cannot be edited or deleted.",
+      "staff": "Actions you performed yourself. Read-only; entries cannot be edited or deleted."
+    },
+    "readOnly": "Read-only",
+    "list": {
+      "label": "Log entries",
+      "shown": "Showing {shown} entries",
+      "first": "Back to start",
+      "next": "Next page"
+    },
+    "toolbar": {
+      "label": "Filter log",
+      "actor": "Actor",
+      "allActors": "All actors",
+      "action": "Action",
+      "allActions": "All actions",
+      "from": "From date",
+      "to": "To date",
+      "apply": "Filter",
+      "clear": "Clear filters"
+    },
+    "actors": {
+      "user": "Member",
+      "ai": "AI",
+      "system": "System",
+      "admin": "Administrator",
+      "formerMember": "Former member"
+    },
+    "actions": {
+      "workspace.created": "Workspace created",
+      "member.role_changed": "Member role changed",
+      "invitation.created": "Invitation sent",
+      "invitation.accepted": "Invitation accepted",
+      "invitation.revoked": "Invitation revoked",
+      "channel.connected": "Channel connected",
+      "channel.reconnected": "Channel reconnected",
+      "channel.token_set": "Channel access token updated",
+      "channel.token_cleared": "Channel access token removed",
+      "comment.reply_requested": "Comment reply requested"
+    },
+    "empty": {
+      "title": "No log entries yet",
+      "body": "Recorded actions will appear here.",
+      "filteredTitle": "No matching entries",
+      "filteredBody": "Try removing a filter or widening the date range."
+    },
+    "detail": {
+      "title": "Log entry details",
+      "empty": "Select an entry to see its details.",
+      "notFoundTitle": "Log entry not found",
+      "notFoundBody": "This entry does not exist or you are not allowed to see it.",
+      "time": "Time",
+      "actor": "Performed by",
+      "target": "Target",
+      "changes": "Changes (before and after)",
+      "noChanges": "This entry has no before/after values.",
+      "field": "Field",
+      "before": "Before",
+      "after": "After",
+      "none": "—"
+    },
+    "error": {
+      "title": "Could not load the log",
+      "body": "Something went wrong while loading. Please try again later."
     }
   }
 }
