@@ -26,6 +26,12 @@ function useError(state: SecurityState): string | undefined {
 function BackupCodes({ codes, onSaved }: { codes: string[]; onSaved?: () => void }) {
   const t = useTranslations('auth.security.twoFactor');
   const [copied, setCopied] = useState(false);
+  // Mã chỉ hiện một lần: cảnh báo trước khi đóng/tải lại tab trong lúc còn hiện (gỡ khi bấm "Đã lưu" hoặc rời màn này).
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, []);
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(codes.join('\n'));

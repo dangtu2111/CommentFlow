@@ -90,6 +90,9 @@ export async function enableTwoFactor(page: Page, t: Translate, user: TestUser):
 
   await expect(page.getByRole('heading', { name: tf('backupTitle') })).toBeVisible();
   await page.getByRole('button', { name: tf('saved'), ...exact }).click();
+  // Sau "Đã lưu": mã dự phòng biến mất và màn quản lý (có mục tạo lại mã) hiện ra.
+  await expect(page.getByRole('heading', { name: tf('backupTitle') })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: tf('regenTitle') })).toBeVisible();
   await expect(page.getByText(tf('statusOn'), exact)).toBeVisible();
 }
 
