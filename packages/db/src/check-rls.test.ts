@@ -16,6 +16,7 @@ function fakeDb(parts: {
   authRole?: Row | null;
   workerRole?: Row | null;
   workerMembership?: Row[];
+  workerDirect?: Row[];
   authPrivileges?: Row[];
   definerFunctions?: Row[];
   lastOwnerTrigger?: Row[];
@@ -72,6 +73,8 @@ function fakeDb(parts: {
       }
       if (text.includes('/* worker-create-privileges */')) return { rows: [noCreate] };
       if (text.includes('/* worker-membership */')) return { rows: parts.workerMembership ?? [] };
+      if (text.includes('/* worker-direct-privileges */'))
+        return { rows: parts.workerDirect ?? [] };
       if (text.includes('/* sensitive-columns */')) return { rows: parts.sensitive ?? [] };
       if (text.includes('/* users-columns */')) return { rows: parts.usersColumns ?? [] };
       if (text.includes('/* admin-insert-guard */')) {
@@ -847,6 +850,38 @@ describe('checkRls: role worker cf_worker (WORKER-DB-ROLE, 0030)', () => {
       subject: 'cf_worker',
       message: expect.stringContaining('web nâng quyền'),
     });
+  });
+
+  it('báo quyền TRỰC TIẾP của cf_worker trên bảng/cột/sequence/hàm ngoài read_channel_token', async () => {
+    const v = await checkRls(
+      fakeDb({
+        workerDirect: [
+          { name: 'cf.channels', problem: 'có quyền SELECT trực tiếp trên bảng/sequence' },
+        ],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.channels',
+      message: expect.stringContaining('cf_worker không được có quyền trực tiếp'),
+    });
+  });
+
+  it('SQL quyền trực tiếp quét bảng, cột, sequence và hàm; thân is_system_context so OR không phân biệt hoa thường', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({});
+    await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
+    expect(direct).toContain('relacl');
+    expect(direct).toContain('attacl');
+    expect(direct).toContain('proacl');
+    expect(direct).toContain('read_channel_token');
+    const system = queries.find((q) => q.includes('/* is-system-context-body */')) ?? '';
+    expect(system).toContain("NOT ILIKE '% OR %'");
   });
 
   it('SQL kiểm thân is_system_context đòi session_user và cf_worker; read_channel_token chặn cf_app', async () => {

@@ -281,6 +281,39 @@ describe('check-rls', () => {
     );
   });
 
+  it('WORKER-DB-ROLE: bắt được quyền TRỰC TIẾP của cf_worker (bảng, cột, sequence, hàm), thành viên cf_owner và OR viết thường', async () => {
+    const direct = (ddl: string, name: string) =>
+      violationsAfter(ddl).then((v) =>
+        expect(v).toContainEqual(
+          expect.objectContaining({
+            subject: name,
+            message: expect.stringContaining('cf_worker không được có quyền trực tiếp'),
+          }),
+        ),
+      );
+    await direct('GRANT SELECT ON cf.channels TO cf_worker', 'cf.channels');
+    await direct('GRANT UPDATE (name) ON cf.channels TO cf_worker', 'cf.channels');
+    await direct(
+      'CREATE SEQUENCE cf.tmp_worker_seq; GRANT USAGE ON SEQUENCE cf.tmp_worker_seq TO cf_worker',
+      'cf.tmp_worker_seq',
+    );
+    await direct(
+      'GRANT EXECUTE ON FUNCTION cf.set_channel_token(uuid, bytea, integer, timestamptz) TO cf_worker',
+      'cf.set_channel_token',
+    );
+    const member = await violationsAfter('GRANT cf_owner TO cf_worker');
+    expect(member).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf_worker',
+        message: expect.stringContaining('cf_owner'),
+      }),
+    );
+    const lower = await violationsAfter(
+      "CREATE OR REPLACE FUNCTION core.is_system_context() RETURNS boolean LANGUAGE sql STABLE SET search_path = pg_catalog, core, pg_temp AS $$ SELECT COALESCE(current_setting('app.ctx', true) = 'system' AND core.current_user_id() IS NULL AND session_user = 'cf_worker' or true, false) $$",
+    );
+    expect(lower).toContainEqual(expect.objectContaining({ subject: 'core.is_system_context' }));
+  });
+
   it('TOKEN-ENC: bắt được khi tắt trigger giới hạn cột, nới thân is_system_context, cấp key_version/INSERT kênh, nới policy comments', async () => {
     const trg = await violationsAfter(
       'ALTER TABLE cf.channels DISABLE TRIGGER channels_guard_user_update',

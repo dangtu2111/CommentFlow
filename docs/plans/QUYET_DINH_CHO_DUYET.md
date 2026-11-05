@@ -19,6 +19,7 @@
 ## Thay đổi `docs/01–16`
 
 - 05/11 (WORKER-DB-ROLE, Q3–Q6): `docs/15` §5 (bảng biến môi trường DB: thêm `DATABASE_WORKER_URL`) và §6 (role `cf_worker` phải có trước migrate).
+- 06/11 (WORKER-DB-ROLE, sửa sau kiểm chứng): `docs/10_Database_Design.md` §4 (dòng ~191, ~202) — `cf.read_channel_token` chỉ `EXECUTE` cho `cf_worker` (không còn `cf_app`); ngữ cảnh hệ thống = `app.ctx = 'system'` + `session_user = 'cf_worker'` (migration 0030).
 - 05/11: `docs/15` §6 — thêm đoạn "Migration staging (đường đã chốt)" (qua `migrate-staging.yml`, cổng DB chỉ `127.0.0.1`).
 - 05/11: `docs/05` FR-005 — làm rõ "số cần xử lý": thêm "chưa gộp", "Mới = new + processing", loại trạng thái AI tự xử lý/spam/đã xong, hiển thị tối đa "99+" (quyết định Q4).
 

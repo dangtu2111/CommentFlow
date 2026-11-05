@@ -427,7 +427,7 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
       SELECT 1 FROM pg_proc p WHERE p.pronamespace = 'core'::regnamespace AND p.proname = 'is_system_context'
         AND p.prosrc LIKE '%app.ctx%' AND p.prosrc LIKE '%''system''%' AND p.prosrc LIKE '%current_user_id() IS NULL%'
         AND p.prosrc LIKE '%session_user = ''${WORKER_ROLE}''%'
-        AND p.prosrc NOT LIKE '% OR %' AND p.prosrc NOT LIKE '%<>%' AND p.prosrc NOT LIKE '%!=%')`);
+        AND p.prosrc NOT ILIKE '% OR %' AND p.prosrc NOT LIKE '%<>%' AND p.prosrc NOT LIKE '%!=%')`);
   for (const row of systemFn.rows) {
     violations.push({
       subject: String(row.name),
@@ -640,6 +640,39 @@ async function checkWorkerMembership(db: Queryable, violations: RlsViolation[]):
     WHERE v.bad`);
   for (const row of found.rows) {
     violations.push({ subject: String(row.name), message: String(row.problem) });
+  }
+}
+
+/**
+ * cf_worker không được có quyền TRỰC TIẾP nào (mọi quyền bảng/cột/sequence/hàm đến từ việc kế thừa cf_app) ngoại trừ
+ * EXECUTE cf.read_channel_token. Đọc thẳng ACL (relacl/attacl/proacl) nên không phụ thuộc người chạy kiểm tra.
+ */
+async function checkWorkerDirectPrivileges(
+  db: Queryable,
+  violations: RlsViolation[],
+): Promise<void> {
+  const found = await db.query(`/* worker-direct-privileges */
+    WITH w AS (SELECT oid FROM pg_roles WHERE rolname = '${WORKER_ROLE}')
+    SELECT n.nspname || '.' || c.relname AS name, 'quyền ' || a.privilege_type || ' trên bảng/sequence' AS problem
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace,
+         LATERAL aclexplode(c.relacl) a, w
+    WHERE c.relacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
+    UNION ALL
+    SELECT n.nspname || '.' || c.relname, 'quyền ' || a.privilege_type || ' trên cột ' || t.attname
+    FROM pg_attribute t JOIN pg_class c ON c.oid = t.attrelid JOIN pg_namespace n ON n.oid = c.relnamespace,
+         LATERAL aclexplode(t.attacl) a, w
+    WHERE t.attacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
+    UNION ALL
+    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token)'
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
+         LATERAL aclexplode(p.proacl) a, w
+    WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
+      AND NOT (n.nspname = 'cf' AND p.proname = 'read_channel_token' AND a.privilege_type = 'EXECUTE')`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `${WORKER_ROLE} không được có quyền trực tiếp (chỉ kế thừa từ ${APP_ROLE}): ${String(row.problem)}`,
+    });
   }
 }
 
@@ -932,6 +965,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkRole(db, AUTH_ROLE, 'auth-', violations);
   await checkRole(db, WORKER_ROLE, 'worker-', violations);
   await checkWorkerMembership(db, violations);
+  await checkWorkerDirectPrivileges(db, violations);
   await checkAuthRolePrivileges(db, policies.rows, violations);
   await checkSensitiveColumns(db, violations);
   await checkUsersColumnAllowlist(db, violations);

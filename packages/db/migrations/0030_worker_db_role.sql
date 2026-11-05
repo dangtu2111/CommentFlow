@@ -48,6 +48,12 @@ BEGIN
   IF pg_has_role('cf_app', 'cf_worker', 'member') THEN
     RAISE EXCEPTION 'cf_app không được là thành viên của cf_worker (web sẽ nâng quyền thành worker được).';
   END IF;
+  -- cf_worker không được thừa hưởng quyền chủ sở hữu schema (cf_owner) hay role đang migrate: sẽ vượt mọi RLS/GRANT.
+  IF EXISTS (SELECT 1 FROM pg_roles o
+             WHERE o.rolname IN ('cf_owner', current_user) AND o.rolname <> 'cf_worker'
+               AND pg_has_role('cf_worker', o.oid, 'member')) THEN
+    RAISE EXCEPTION 'cf_worker không được là thành viên của cf_owner (hoặc role chạy migration): REVOKE cf_owner FROM cf_worker.';
+  END IF;
 END
 $$;
 --> statement-breakpoint
@@ -73,6 +79,11 @@ AS $$
 $$;
 --> statement-breakpoint
 
+REVOKE ALL ON FUNCTION cf.read_channel_token(uuid) FROM PUBLIC;
+--> statement-breakpoint
 REVOKE EXECUTE ON FUNCTION cf.read_channel_token(uuid) FROM cf_app;
 --> statement-breakpoint
 GRANT EXECUTE ON FUNCTION cf.read_channel_token(uuid) TO cf_worker;
+--> statement-breakpoint
+
+SET LOCAL lock_timeout = DEFAULT;

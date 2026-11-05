@@ -10,9 +10,10 @@
 # Migration + `queue:install` KHÔNG chạy trong compose này: CLI hiện từ chối APP_ENV=staging (migration-guard) — xem
 # docs/staging/H5-CHECKLIST.md mục "Migration lên staging".
 
+# Anchor chung CHỈ gồm biến không phải thông tin đăng nhập DB: mỗi service tự nhận URL DB của role mình (ADR 011 §3) —
+# web chỉ cf_app/cf_auth, worker chỉ cf_worker (không DATABASE_URL: worker không đọc biến này).
 x-app-env: &app-env
   APP_ENV: staging
-  DATABASE_URL: postgresql://cf_app:${CF_APP_PASSWORD:?}@postgres:5432/${CF_APP_DATABASE:?}
   TOKEN_ENC_KEYS: ${TOKEN_ENC_KEYS:-}
 
 services:
@@ -32,6 +33,7 @@ services:
       valkey: { condition: service_healthy }
     environment:
       <<: *app-env
+      DATABASE_URL: postgresql://cf_app:${CF_APP_PASSWORD:?}@postgres:5432/${CF_APP_DATABASE:?}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:?}
       DATABASE_AUTH_URL: postgresql://cf_auth:${CF_AUTH_PASSWORD:?}@postgres:5432/${CF_APP_DATABASE:?}
