@@ -13,6 +13,7 @@ function setup(over: { session?: boolean; verdict?: Verdict; allowed?: boolean }
     .fn()
     .mockResolvedValue(over.session === false ? null : { user: { id: 'u1' } });
   const changeAndRevoke = vi.fn().mockResolvedValue(undefined);
+  const revokeAll = vi.fn().mockResolvedValue(2);
   const limiter = {
     check: vi
       .fn()
@@ -27,9 +28,10 @@ function setup(over: { session?: boolean; verdict?: Verdict; allowed?: boolean }
     authDb: {} as never,
     limiter: limiter as never,
     passwordPolicy: { check },
-    changeAndRevoke,
+    changeCredential: changeAndRevoke,
+    revokeAll,
   });
-  return { flow, limiter, check, changeAndRevoke };
+  return { flow, limiter, check, changeAndRevoke, revokeAll };
 }
 
 const run = (
@@ -96,19 +98,49 @@ describe('FR-001 đổi mật khẩu (saas-core)', () => {
     expect(s.limiter.check).toHaveBeenCalledWith('reauth', { userId: 'u1' });
   });
 
-  it('Better Auth từ chối mật khẩu hiện tại (400/401/403) → wrong_password, không xóa bộ đếm', async () => {
-    for (const status of [400, 401, 403]) {
-      const s = setup();
-      s.changeAndRevoke.mockRejectedValueOnce({ status });
-      expect(await run(s.flow)).toEqual({ status: 'wrong_password' });
-      expect(s.limiter.reset).not.toHaveBeenCalled();
-    }
+  it('Better Auth INVALID_PASSWORD → wrong_password, không xóa bộ đếm, không xóa phiên', async () => {
+    const s = setup();
+    s.changeAndRevoke.mockRejectedValueOnce({
+      statusCode: 400,
+      body: { code: 'INVALID_PASSWORD' },
+    });
+    expect(await run(s.flow)).toEqual({ status: 'wrong_password' });
+    expect(s.limiter.reset).not.toHaveBeenCalled();
+    expect(s.revokeAll).not.toHaveBeenCalled();
   });
 
-  it('lỗi khác → ném AppError INTERNAL, không nuốt', async () => {
+  it('401 (phiên vừa bị thu hồi) → unauthenticated; 400 mã khác → INTERNAL, cause không có thông báo gốc', async () => {
+    const a = setup();
+    a.changeAndRevoke.mockRejectedValueOnce({ status: 401 });
+    expect(await run(a.flow)).toEqual({ status: 'unauthenticated' });
+    const b = setup();
+    b.changeAndRevoke.mockRejectedValueOnce(
+      Object.assign(new Error('argon2id$secret-hash'), {
+        statusCode: 400,
+        body: { code: 'CREDENTIAL_ACCOUNT_NOT_FOUND' },
+      }),
+    );
+    const error = await run(b.flow).catch((e) => e);
+    expect(error).toMatchObject({ code: 'INTERNAL' });
+    expect(JSON.stringify(error.cause)).not.toContain('argon2id');
+  });
+
+  it('đổi xong mà xóa phiên lỗi → thử lại một lần, vẫn lỗi thì vẫn ok (không báo chưa đổi)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const s = setup();
-    s.changeAndRevoke.mockRejectedValueOnce(new Error('db down'));
-    await expect(run(s.flow)).rejects.toMatchObject({ code: 'INTERNAL' });
+    s.revokeAll.mockRejectedValue(new Error('db down'));
+    expect(await run(s.flow)).toEqual({ status: 'ok' });
+    expect(s.revokeAll).toHaveBeenCalledTimes(2);
+    expect(warn.mock.calls[0]?.[0]).toContain('change_password_revoke_failed');
+    expect(s.limiter.reset).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('xóa phiên lỗi lần đầu, lần hai được → ok, gọi 2 lần', async () => {
+    const s = setup();
+    s.revokeAll.mockRejectedValueOnce(new Error('tạm thời'));
+    expect(await run(s.flow)).toEqual({ status: 'ok' });
+    expect(s.revokeAll).toHaveBeenCalledTimes(2);
   });
 
   it('thành công → đổi + xóa mọi phiên đúng một lần với headers của phiên, xóa bộ đếm', async () => {
@@ -120,6 +152,7 @@ describe('FR-001 đổi mật khẩu (saas-core)', () => {
       currentPassword: GOOD_OLD,
       newPassword: GOOD_NEW,
     });
+    expect(s.revokeAll).toHaveBeenCalledWith('u1');
     expect(s.limiter.reset).toHaveBeenCalledWith('reauth', { userId: 'u1' });
   });
 });
