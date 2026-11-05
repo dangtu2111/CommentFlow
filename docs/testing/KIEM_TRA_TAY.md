@@ -18,6 +18,7 @@
 | KT-008 | Khách sửa/xóa bình luận | COMMENT-EDIT-DELETE | chưa | chưa | — |
 | KT-009 | Trang Nhật ký (Owner thấy tất cả, Staff chỉ của mình) | LOG-PAGE | chưa | chưa | — |
 | KT-010 | Ẩn / Bỏ ẩn bình luận | FB-HIDE | chưa | chưa | — |
+| KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
 
@@ -278,6 +279,26 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 5 | Staff 1 lọc tác nhân "Hệ thống" (nếu có ô lọc cho Staff) hoặc mở chi tiết dòng hệ thống của mình. | Chỉ dòng của mình; chi tiết mở được. Dán đường dẫn chi tiết dòng hệ thống của Staff 2 → báo không tìm thấy. |
 | 6 | Bật AI tự gửi (nếu có) để một bình luận được AI trả lời. Staff 1 mở **Nhật ký**. | Không thấy dòng "AI" tự gửi; Owner thấy. |
 | 7 | Đổi sang **English**, thu nhỏ ~390px. | "System (at your request)" / "System (at the request of <name>)", không vỡ bố cục. |
+
+Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-015 — Role DB riêng cho worker (WORKER-DB-ROLE, ADR 011)
+
+Điều kiện: nhánh `feat/worker-db-role`; máy ảo `cf` bật. Thứ tự BẮT BUỘC: tạo role → sinh lại `.env` → migrate.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm cf:dev add-worker-role` (máy ảo, không in mật khẩu). Chạy lại lần hai. | Cả hai lần báo "Đã đảm bảo role cf_worker…"; không lỗi (idempotent). |
+| 2 | Sinh lại `.env`: `ssh cf "~/CommentFlow/infra/scripts/print-dev-env.sh" > .env`. Mở `.env` kiểm có thêm `DATABASE_WORKER_URL` và `TEST_DATABASE_WORKER_URL` (người dùng `cf_worker`). | Có hai biến mới; `env.example` có đúng tên đó. |
+| 3 | `pnpm db:migrate` (cf_dev). | Áp migration 0030, không lỗi. Chạy khi CHƯA có role → dừng với thông báo "Thiếu role cf_worker…". |
+| 4 | `pnpm db:check-rls`. | 0 vi phạm. |
+| 5 | `CF_LANE=b pnpm test:db` (hoặc làn của bạn). | Xanh, gồm `worker-role.int.test.ts`. |
+| 6 | `pnpm --filter @flow/worker dev`; mở `http://localhost:3001/health`. | Báo sẵn sàng; log không có lỗi `42501`. |
+| 7 | Tắt worker, xóa `DATABASE_WORKER_URL` (hoặc đặt URL dùng `cf_app`) rồi chạy lại worker. | Worker KHÔNG khởi động, thông báo nêu tên biến `DATABASE_WORKER_URL`, không in mật khẩu. Khôi phục sau đó. |
+| 8 | Thử đường nghiệp vụ: gửi webhook thử (`pnpm webhook:send`) khi worker chạy, hoặc gửi một trả lời (KT-007). | Worker xử lý như trước (job `ingest`/`send` xong). |
+| 9 | Trên máy ảo, trong `psql` vào `cf_dev`: `SELECT has_function_privilege('cf_app','cf.read_channel_token(uuid)','execute'), has_function_privilege('cf_worker','cf.read_channel_token(uuid)','execute');` | `f` và `t`. |
 
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
 

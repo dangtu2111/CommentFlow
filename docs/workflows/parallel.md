@@ -15,7 +15,7 @@ corepack enable && pnpm install --frozen-lockfile
 
 - Copy `.env` và `.env.local` từ repo chính sang thư mục làn (chủ dự án tự copy; agent không đọc `.env*`).
 - Đặt làn cho test tích hợp: `CF_LANE=a pnpm test:db` (biến môi trường cho từng lệnh; hoặc đặt trong cửa sổ terminal của làn). Không đặt `CF_LANE` thì dùng `cf_test` như cũ.
-- `CF_LANE` chỉ đổi ba URL test (`TEST_DATABASE_URL`, `TEST_DATABASE_ADMIN_URL`, `TEST_DATABASE_AUTH_URL`) sang `cf_test_<làn>`; `DATABASE_URL` (dev) không đổi. Tên làn: chữ thường/số, tối đa 8 ký tự.
+- `CF_LANE` chỉ đổi bốn URL test (`TEST_DATABASE_URL`, `TEST_DATABASE_ADMIN_URL`, `TEST_DATABASE_AUTH_URL`, `TEST_DATABASE_WORKER_URL`) sang `cf_test_<làn>`; `DATABASE_URL` (dev) không đổi. Tên làn: chữ thường/số, tối đa 8 ký tự.
 - Lần đầu cho mỗi làn, tạo DB trên máy ảo (idempotent): `pnpm cf:dev sync <nhánh>` rồi `pnpm cf:dev add-test-db a` (cần nhánh chứa script đã có trên origin).
 - Dọn làn khi xong: `git worktree remove ../CommentFlow-lane-a` (sau khi nhánh đã merge).
 

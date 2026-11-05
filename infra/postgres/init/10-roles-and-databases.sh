@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # Mật khẩu được ghép vào câu SQL nên phải là chuỗi hex (script sinh bí mật dùng openssl rand -hex).
-for var in CF_OWNER_PASSWORD CF_APP_PASSWORD CF_AUTH_PASSWORD LITELLM_DB_PASSWORD LANGFUSE_DB_PASSWORD; do
+for var in CF_OWNER_PASSWORD CF_APP_PASSWORD CF_AUTH_PASSWORD CF_WORKER_PASSWORD LITELLM_DB_PASSWORD LANGFUSE_DB_PASSWORD; do
   if [[ ! "${!var:-}" =~ ^[0-9a-zA-Z_-]+$ ]]; then
     echo "${var} chỉ được chứa chữ, số, '_' hoặc '-' (khuyến nghị hex)." >&2
     exit 1
@@ -17,6 +17,10 @@ CREATE ROLE cf_owner LOGIN PASSWORD '${CF_OWNER_PASSWORD}';
 CREATE ROLE cf_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${CF_APP_PASSWORD}';
 -- cf_auth: role riêng của adapter Better Auth; chỉ có quyền trên bảng xác thực (cấp ở migration 0010).
 CREATE ROLE cf_auth LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${CF_AUTH_PASSWORD}';
+-- cf_worker: role RIÊNG của worker (migration 0030, ADR 011); thành viên cf_app (kế thừa quyền), chỉ role này là "hệ thống"
+-- và đọc được ciphertext token. cf_app KHÔNG được là thành viên cf_worker.
+CREATE ROLE cf_worker LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${CF_WORKER_PASSWORD}';
+GRANT cf_app TO cf_worker;
 CREATE ROLE litellm LOGIN PASSWORD '${LITELLM_DB_PASSWORD}';
 CREATE ROLE langfuse LOGIN PASSWORD '${LANGFUSE_DB_PASSWORD}';
 CREATE DATABASE litellm OWNER litellm;
@@ -37,7 +41,7 @@ for db in ${CF_DATABASES}; do
     -c "CREATE DATABASE \"$db\" OWNER cf_owner"
   psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db" <<SQL
 REVOKE ALL ON DATABASE "$db" FROM PUBLIC;
-GRANT CONNECT ON DATABASE "$db" TO cf_app, cf_auth;
+GRANT CONNECT ON DATABASE "$db" TO cf_app, cf_auth, cf_worker;
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS unaccent;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;

@@ -32,9 +32,10 @@ let staff: string;
 const quiet = { error: () => {} };
 
 beforeAll(async () => {
-  const url = process.env.TEST_DATABASE_URL;
+  const url = process.env.TEST_DATABASE_WORKER_URL;
   const adminUrl = process.env.TEST_DATABASE_ADMIN_URL;
-  if (!url || !adminUrl) throw new Error('Thiếu TEST_DATABASE_URL / TEST_DATABASE_ADMIN_URL');
+  if (!url || !adminUrl)
+    throw new Error('Thiếu TEST_DATABASE_WORKER_URL / TEST_DATABASE_ADMIN_URL');
   db = createDb({ connectionString: url, max: 6 });
   admin = new pg.Pool({ connectionString: adminUrl, max: 3 });
   ws = randomUUID();

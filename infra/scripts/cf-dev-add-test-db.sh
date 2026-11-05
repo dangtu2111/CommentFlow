@@ -37,6 +37,12 @@ fi
 "${COMPOSE[@]}" exec -T postgres sh -c "psql -v ON_ERROR_STOP=1 --username \"\$POSTGRES_USER\" --dbname \"$DB\"" <<SQL
 REVOKE ALL ON DATABASE "$DB" FROM PUBLIC;
 GRANT CONNECT ON DATABASE "$DB" TO cf_app, cf_auth;
+-- cf_worker (migration 0030): cấp CONNECT nếu role đã có (máy ảo cũ chưa chạy add-worker-role thì bỏ qua; add-worker-role cấp bù).
+DO \$\$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'cf_worker') THEN
+    EXECUTE format('GRANT CONNECT ON DATABASE %I TO cf_worker', current_database());
+  END IF;
+END \$\$;
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS unaccent;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;

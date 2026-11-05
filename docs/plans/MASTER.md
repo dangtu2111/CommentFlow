@@ -18,7 +18,7 @@
 4. `WH-INGEST` — ✅ webhook (xác minh chữ ký) → job `ingest`, chống trùng, bỏ bình luận của chính Page
 5. `INBOX-LIST` — ✅ trang Bình luận (tab, lọc, tìm)
 
-**Bắt buộc trước khi lên staging:** `WEBHOOK-PAYLOAD-RETENTION` (job dọn payload webhook > 14 ngày — ✅ đã làm ở `feat/comment-tombstone`; phải CHẠY trên staging: worker bản mới + `pnpm db:migrate`, kiểm hàng đợi/log "đã dọn payload"), `WORKER-DB-ROLE` (role DB riêng cho worker; web/`cf_app` không đọc được ciphertext token — gap matrix, ADR 007 §2) — chủ dự án chốt 06/11/2026. Kiểm tra khóa lúc khởi động ở web gắn cùng `FB-OAUTH` (gap `TOKEN-KEY-STARTUP-WEB`).
+**Bắt buộc trước khi lên staging:** `WEBHOOK-PAYLOAD-RETENTION` (job dọn payload webhook > 14 ngày — ✅ đã làm ở `feat/comment-tombstone`; phải CHẠY trên staging: worker bản mới + `pnpm db:migrate`, kiểm hàng đợi/log "đã dọn payload"), `WORKER-DB-ROLE` (✅ code + test ở `feat/worker-db-role`, ADR 011/migration 0030, chờ chủ dự án duyệt; phải CHẠY trên staging: tạo role `cf_worker` TRƯỚC migrate rồi worker mới — `docs/staging/H5-CHECKLIST.md`; web/`cf_app` không đọc được ciphertext token) — chủ dự án chốt 06/11/2026. Kiểm tra khóa lúc khởi động ở web gắn cùng `FB-OAUTH` (gap `TOKEN-KEY-STARTUP-WEB`).
 
 Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000/...`, App ID/Secret ở `.env.local`; hướng dẫn `docs/CAN_BAN_CUNG_CAP.md`) nên `FB-OAUTH` không còn chờ tên miền; vẫn cần **Page thử** khi kiểm tra tay các tính năng gọi Graph API. Chạy E2E cổng 0 lần đầu — chủ dự án.
 
@@ -63,6 +63,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | MEMBER-DIRECT-ADD | FR-003 (chỉ `accept_invitation` thêm thành viên) | US-004 | AUTH-INVITE | S+DB | không (đã có đề xuất của verifier; chủ dự án đã chọn hướng) | ✅ |
 | MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/member-leave`, migration 0028) |
 | LOG-STAFF-SYSTEM-ROWS | FR-092 | — | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/log-on-behalf-of`, migration 0029) |
+| WORKER-DB-ROLE | ADR 007 §2 (token Page), ADR 011 | — | LOG-STAFF-SYSTEM-ROWS | S+DB | verifier-security + verifier-db | 🟡 (`feat/worker-db-role`, migration 0030; chờ duyệt + KT-015) |
 | CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ⏳ |
 | AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ⏳ |
 | AUTH-LANG-PREF | FR-119 (`users.locale` từ Cài đặt) | — | I18N | — | không | ⏳ |
