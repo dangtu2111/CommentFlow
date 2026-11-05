@@ -325,6 +325,21 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 
 ---
 
+## KT-016 — Chỉ mục Nhật ký của Staff (ACTION-LOGS-ACTOR-INDEX, migration 0031)
+
+Điều kiện: nhánh `feat-action-logs-actor-index`; máy ảo `cf` bật; đã có `.env`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (cf_dev). | Áp migration 0031, không lỗi; chạy lại lần hai cũng không lỗi. |
+| 2 | Trên máy ảo, `psql` vào `cf_dev`: `\d core.action_logs`. | Thấy hai chỉ mục `action_logs_ws_actor_created_idx` và `action_logs_ws_on_behalf_created_idx` (có `WHERE`). |
+| 3 | `pnpm db:check-rls`. | 0 vi phạm. |
+| 4 | Đăng nhập Staff, mở **Nhật ký**. | Vẫn chỉ thấy dòng của mình + dòng hệ thống do mình yêu cầu (hành vi không đổi). |
+
+Nếu hỏng: ghi số bước và nội dung hiện trên màn hình.
+
+---
+
 ## Mẫu cho mục mới
 
 ```

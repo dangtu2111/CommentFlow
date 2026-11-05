@@ -21,7 +21,9 @@
 
 - 05/11 (WORKER-DB-ROLE, Q3–Q6): `docs/15` §5 (bảng biến môi trường DB: thêm `DATABASE_WORKER_URL`) và §6 (role `cf_worker` phải có trước migrate).
 - 06/11 (WORKER-DB-ROLE, sửa sau kiểm chứng): `docs/10_Database_Design.md` §4 (dòng ~191, ~202) — `cf.read_channel_token` chỉ `EXECUTE` cho `cf_worker` (không còn `cf_app`); ngữ cảnh hệ thống = `app.ctx = 'system'` + `session_user = 'cf_worker'` (migration 0030).
+- 06/11 (ACTION-LOGS-ACTOR-INDEX, Q-AI1): `docs/10_Database_Design.md` §4 (đoạn migration 0029) — thay "theo dõi ở ACTION-LOGS-ACTOR-INDEX" bằng mô tả hai chỉ mục của migration 0031.
 - 05/11: `docs/15` §6 — thêm đoạn "Migration staging (đường đã chốt)" (qua `migrate-staging.yml`, cổng DB chỉ `127.0.0.1`).
 - 05/11: `docs/05` FR-005 — làm rõ "số cần xử lý": thêm "chưa gộp", "Mới = new + processing", loại trạng thái AI tự xử lý/spam/đã xong, hiển thị tối đa "99+" (quyết định Q4).
 
 | Q3 | 05/11 | SEND-SWEEP + HIDE-SWEEP cần migration | Làn c (`feat/send-hide-sweep`) dừng; làn b (`feat/worker-db-role`) giữ quyền migration trước (đã chạy). Làn c làm tiếp (migration số kế tiếp) SAU khi PR của làn b merge | Quy tắc "mỗi lúc chỉ một nhánh có migration"; sweep cần hàm DEFINER (quét `queued`/`sending` quá hạn) vì `cf_app` không tự đổi trạng thái hệ thống | Đổi thứ tự nếu bạn muốn sweep trước worker-db-role |
+| Q-AI1 | 06/11 | `feat-action-logs-actor-index`: không dùng CONCURRENTLY | Migration 0031 dùng `CREATE INDEX IF NOT EXISTS` + `SET LOCAL lock_timeout='5s'`; bảng lớn ở production thì tạo tay `CONCURRENTLY` trước (hướng dẫn ở đầu file migration) | Runner drizzle chạy cả đợt trong MỘT giao dịch, Postgres cấm CONCURRENTLY trong giao dịch; bảng hiện nhỏ; `IF NOT EXISTS` cho phép tạo tay trước | `DROP INDEX IF EXISTS` hai chỉ mục (không đổi dữ liệu/quyền) |

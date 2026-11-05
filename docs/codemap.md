@@ -62,6 +62,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/log-on-behalf-of` · Gói 
 | Feature flag | `packages/saas-core/src/flags/` | `evaluateFlag` thuần + `createFlags` (cache 30 giây, `NOTIFY flags_changed`) | 09 §10 |
 | DB client / migrations / RLS | `packages/db/` | `withWorkspace`/`withUser`/`withSystem`, policy RLS (migration 0001, 0004), `checkRls` | 10 §4 |
 | Role DB worker (`cf_worker`) | `migrations/0030_worker_db_role.sql`, `infra/scripts/cf-dev-add-worker-role.sh`, `apps/worker/src/config.ts` (`DATABASE_WORKER_URL`), `packages/db/tests/worker-role.int.test.ts` | Chỉ role này là "hệ thống" + đọc ciphertext token; tạo role NGOÀI migration (init script / `pnpm cf:dev add-worker-role`) | ADR 011 |
+| Chỉ mục Nhật ký Staff | `migrations/0031_action_logs_actor_index.sql`, `schema/core/platform.ts` (`actionLogs`), `packages/db/tests/action-logs-actor-index.int.test.ts` | Hai chỉ mục một phần theo `actor_id` / `on_behalf_of`; không CONCURRENTLY (runner trong giao dịch → `lock_timeout`, Q-AI1) | 10 §4 |
 | Hàng đợi | `apps/worker/src/{queue,jobs}/` | pg-boss: `installQueueSchema`, `createBoss`, `workspaceJob`/`systemJob` | 09 §9 |
 | Webhook Meta | Chưa có | | 12 §1 · 11 §13 |
 | Gửi trả lời / ẩn | Chưa có | | 09 §6.1 |
