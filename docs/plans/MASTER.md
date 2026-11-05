@@ -6,6 +6,7 @@
 - Mỗi tính năng ≤ 1–2 ngày công (2–4 giờ/ngày); việc lớn đã tách. Đang làm dở mà thấy quá cỡ → tách thêm dòng, không kéo dài.
 - **Nhạy cảm:** `S` = cần `verifier-security`, `DB` = cần `verifier-db`, `S+DB` = cả hai, `—` = không (kiểm chứng độc lập chỉ cho diff nhạy cảm, `AGENTS.md`). Quyết định cuối nằm ở plan của việc đó.
 - **Ngoài:** có = cần tài nguyên/quyết định ngoài repo (Meta App, Google Cloud, khóa LLM trả phí, tên miền, bộ bình luận thật, Shopify dev store…) → **DỪNG và hỏi chủ dự án** (PROMPT §2). Việc "có" không chặn các việc khác không phụ thuộc nó; chọn việc kế tiếp theo cột Phụ thuộc.
+- **Xong-mock (05/11/2026):** việc cần tài nguyên ngoài (cột Ngoài = có) được xây hết sau interface + fixture, flag mặc định TẮT; không còn DỪNG chờ. Cột Ngoài nay nghĩa: cần tài nguyên để **bật đường thật** (xem `docs/CAN_BAN_CUNG_CAP.md`). Ký hiệu: 🧪 Xong-mock · ⛔ Chờ tài nguyên (chưa xây được cả mock, vd. cần quyết định sản phẩm).
 - **Trạng thái:** ✅ Xong · 🔧 Đang làm · ⏳ Chưa · ⛔ Chờ ngoài/quyết định.
 - US = `docs/04`, UF = `docs/07`, FR = `docs/05`. Cổng giai đoạn: `docs/16` §3, `docs/14` §8 — **dừng chờ chủ dự án xác nhận** ở mỗi cổng.
 
