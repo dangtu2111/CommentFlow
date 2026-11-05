@@ -1,3 +1,13 @@
+SET LOCAL lock_timeout = '5s';
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector'
+                 AND string_to_array(extversion, '.')::int[] >= ARRAY[0,7]) THEN
+    RAISE EXCEPTION 'KB-SCHEMA cần extension vector >= 0.7 (halfvec); tạo ở bước khởi tạo DB';
+  END IF;
+END $$;
+--> statement-breakpoint
 CREATE TABLE "cf"."kb_chunks" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"workspace_id" uuid NOT NULL,
@@ -126,7 +136,10 @@ CREATE POLICY kb_versions_select ON cf.kb_versions FOR SELECT
 CREATE POLICY kb_versions_insert ON cf.kb_versions FOR INSERT
   WITH CHECK (
     workspace_id = (SELECT core.current_workspace_id())
-    AND ((SELECT core.is_workspace_owner()) OR (SELECT core.is_system_context()))
+    AND (
+      ((SELECT core.is_workspace_owner()) AND published_by IS NOT DISTINCT FROM (SELECT core.current_user_id()))
+      OR (SELECT core.is_system_context())
+    )
   );
 --> statement-breakpoint
 GRANT SELECT, INSERT, DELETE ON cf.kb_chunks TO cf_app;

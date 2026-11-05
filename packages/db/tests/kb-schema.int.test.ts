@@ -217,9 +217,17 @@ describe('FR-055 kb_versions', () => {
   it('INSERT: chỉ Owner hoặc hệ thống; sai workspace bị chặn', async () => {
     let n = 100;
     const results = await matrix(
-      () => `INSERT INTO cf.kb_versions (workspace_id, number) VALUES ('${ws}', ${n++})`,
+      (who) =>
+        `INSERT INTO cf.kb_versions (workspace_id, number, published_by) VALUES ('${ws}', ${n++}, ${who === 'owner' ? `'${ids.owner}'` : 'NULL'})`,
     );
     expectOnly(results, ['owner', 'system']);
+    // Owner không được ghi tên người khác vào "ai xuất bản"
+    expect(
+      await run(
+        'owner',
+        `INSERT INTO cf.kb_versions (workspace_id, number, published_by) VALUES ('${ws}', ${n++}, '${ids.staff}')`,
+      ),
+    ).toBe('denied');
     expect(
       await run(
         'owner',
