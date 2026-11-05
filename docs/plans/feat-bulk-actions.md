@@ -8,7 +8,7 @@ Mã gap matrix: `BULK-ACTIONS` · Spec: FR-045 (docs/05), US-010, docs/08 (phím
 
 ## Điểm chưa rõ
 
-Không có. (Tự chọn khuyến nghị, ghi `QUYET_DINH_CHO_DUYET.md` Q3–Q6: bộ nhãn, trần 50 bình luận/lần, phím tắt, bình luận bị khóa.)
+Không có. (Tự chọn khuyến nghị, ghi `QUYET_DINH_CHO_DUYET.md` QB1–QB4: bộ nhãn, trần 50 bình luận/lần, phím tắt, bình luận bị khóa.)
 
 ## Tiêu chí nghiệm thu
 
@@ -77,4 +77,4 @@ Không có (không thư viện mới; `comment-labels` trong `shared` có ≥ 2 
 
 ## Trạng thái duyệt
 
-**Đã duyệt** (tự chọn khuyến nghị theo AGENTS.md § Quy tắc hỏi; ghi `QUYET_DINH_CHO_DUYET.md` Q3–Q6).
+**Đã duyệt** (tự chọn khuyến nghị theo AGENTS.md § Quy tắc hỏi; ghi `QUYET_DINH_CHO_DUYET.md` QB1–QB4).

@@ -13,7 +13,7 @@ Kế hoạch: `docs/plans/feat-bulk-actions.md`
 | `server/hide-action.ts` | `createHideAction` là đường ẩn duy nhất; bulk chỉ gọi lại nó |
 
 ## Quyết định đã chốt
-- `QUYET_DINH_CHO_DUYET.md` Q3–Q6.
+- `QUYET_DINH_CHO_DUYET.md` QB1–QB4.
 
 ## Còn lại
 1. Chạy `pnpm --filter @flow/db exec vitest run -c vitest.int.config.ts tests/comment-bulk.int.test.ts` trên máy có DB `cf_test` (làn c không có `.env`).

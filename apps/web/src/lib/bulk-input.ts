@@ -1,7 +1,7 @@
 import { type CommentLabel, isCommentLabel } from '@flow/shared';
 import { z } from 'zod';
 
-/** Trần số bình luận mỗi lần hành động hàng loạt (FR-045; Q4 trong QUYET_DINH_CHO_DUYET). */
+/** Trần số bình luận mỗi lần hành động hàng loạt (FR-045; QB2 trong QUYET_DINH_CHO_DUYET). */
 export const BULK_MAX = 50;
 
 export type BulkInputRejection = 'invalid_input' | 'too_many' | 'invalid_label';

@@ -81,6 +81,37 @@ const TAB_PREDICATE: Record<InboxTab, SQL | null> = {
   all: null,
 };
 
+/**
+ * Trạng thái tính là "cần xử lý" (FR-005, docs/05): Mới (`new` + `processing`, cùng tab "Mới"), Chờ duyệt, Cần người,
+ * Gửi lỗi. Không gồm các trạng thái AI đang/đã tự xử lý (`scheduled_auto`, `sending`, `auto_replied`), nghi spam,
+ * hay đã xong (`replied`, `hidden`, `skipped`).
+ */
+export const ACTIONABLE_COMMENT_STATUSES = [
+  'new',
+  'processing',
+  'pending_review',
+  'needs_human',
+  'send_failed',
+] as const;
+
+/**
+ * Số bình luận cần xử lý của MỘT workspace (bộ chuyển workspace, FR-005): chưa xóa (`deleted_at`), chưa gộp. CHỈ ĐỌC;
+ * gọi trong `withActor(workspaceId, userId, …)` của chính workspace đó (RLS: người ngoài/workspace khác → 0).
+ */
+export async function countActionableComments(tx: Database, workspaceId: string): Promise<number> {
+  const result = await tx.execute<{ n: number }>(sql`
+    SELECT count(*)::int AS n
+      FROM cf.comments c
+     WHERE c.workspace_id = ${workspaceId}::uuid
+       AND c.merged_into_id IS NULL
+       AND c.deleted_at IS NULL
+       AND c.status IN (${sql.join(
+         ACTIONABLE_COMMENT_STATUSES.map((status) => sql`${status}`),
+         sql`, `,
+       )})`);
+  return Number(result.rows[0]?.n ?? 0);
+}
+
 /** Thoát `\`, `%`, `_` để chuỗi người dùng nhập luôn là ký tự thường trong LIKE. */
 export function escapeLikePattern(value: string): string {
   return value.replace(/[\\%_]/g, (ch) => `\\${ch}`);

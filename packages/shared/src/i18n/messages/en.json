@@ -206,6 +206,7 @@
       "label": "Switch workspace",
       "create": "+ Create a new workspace",
       "leave": "Leave this workspace",
+      "pending": "{count} comments to handle",
       "role": {
         "owner": "Owner",
         "staff": "Staff"

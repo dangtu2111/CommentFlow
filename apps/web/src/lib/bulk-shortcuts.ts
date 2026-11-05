@@ -1,5 +1,5 @@
 /**
- * Phím tắt của hành động hàng loạt (docs/08, Q5). Hàm thuần để test; thành phần React chỉ đọc sự kiện rồi gọi hàm này.
+ * Phím tắt của hành động hàng loạt (docs/08, QB3). Hàm thuần để test; thành phần React chỉ đọc sự kiện rồi gọi hàm này.
  * `H` chỉ MỞ hộp xác nhận ẩn — không bao giờ ẩn trực tiếp. Phím bị bỏ qua khi đang gõ hoặc có Ctrl/⌘/Alt.
  */
 export type BulkShortcut =
