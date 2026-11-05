@@ -32,8 +32,9 @@ Thứ tự: A → B → D (trừ công tắc bật) → **dừng** → khi có t
 
 **Còn mở — cần bạn quyết định:**
 - **Tên miền staging** (ví dụ `staging.<tên-miền-của-bạn>`) và **tên miền gửi thư** (có thể cùng miền gốc).
-- **Đường cho runner nối tới Postgres staging (mục E):** compose staging cố ý không publish cổng nào, mà CLI migrate cần `host:cổng` tới được từ runner. Cần một cách (ví dụ publish cổng chỉ ở `127.0.0.1` trên máy ảo). Việc này chưa có trong repo — báo máy code làm một nhánh nhỏ trước khi chạy E; đừng tự mở cổng DB.
 - **TLS của Postgres staging:** nếu URL có `sslmode` thì CLI chỉ chấp nhận `require`, `verify-ca`, `verify-full`; để trống thì được, nhưng nên có TLS khi không đi qua loopback.
+
+**Đường runner → Postgres staging (đã có trong repo):** compose staging publish Postgres **chỉ ở `127.0.0.1`** của máy ảo (`127.0.0.1:${CF_STAGING_DB_PORT:-5434}:5432`; web vẫn không publish cổng nào). Runner `cf-staging` chạy cùng máy ảo nên dùng `CF_STAGING_DB_HOSTS=127.0.0.1:5434` và URL secret `…@127.0.0.1:5434/<tên-db>` (đi loopback nên không cần `sslmode`). Nếu đổi `CF_STAGING_DB_PORT` trong `.env.cf-staging` thì đổi cả hai chỗ này cho khớp. Test `scripts/lib/compose-ports.test.mjs` chặn việc đổi thành `0.0.0.0`; **đừng tự mở cổng DB ra ngoài loopback.** Cổng chỉ có hiệu lực sau khi chạy lại `docker compose … up -d` (compose staging chưa chạy ở đâu cả đến khi bạn deploy lần đầu).
 
 ---
 
@@ -288,7 +289,7 @@ Mong đợi: in `{cf.env=staging}`. (Thay `commentflow` nếu bạn đổi `CF_D
 2. Duyệt job `dry-run` → đọc log: danh sách migration chờ và số cuối. Sai số xác nhận thì chạy lại với số đúng.
 3. Duyệt job `migrate` (ghi thật).
 
-Kiểm sau: cả hai job xanh; log báo đã áp migration và cài hàng đợi `ingest`, `send`, `hide`, `system.ping`. Chạy lại workflow → dry-run báo không còn migration chờ. **Điều kiện còn mở:** đường runner tới Postgres (mục "Còn mở"). Không chạy `pnpm db:check-rls` hay lệnh ghi tay lên staging.
+Kiểm sau: cả hai job xanh; log báo đã áp migration và cài hàng đợi `ingest`, `send`, `hide`, `system.ping`. Chạy lại workflow → dry-run báo không còn migration chờ. Đường runner tới Postgres: xem "Đường runner → Postgres staging" ở đầu tài liệu (loopback `127.0.0.1:5434`; cần compose staging đã `up`). Không chạy `pnpm db:check-rls` hay lệnh ghi tay lên staging.
 
 ---
 

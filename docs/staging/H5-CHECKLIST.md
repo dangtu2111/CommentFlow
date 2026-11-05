@@ -11,11 +11,11 @@ Trạng thái: **khung đã viết, CHƯA chạy ở đâu**. Nhánh `chore/h5-s
 ## Triển khai (làm trên máy ảo, theo thứ tự; mục có dấu ⛔ chưa làm được)
 
 1. ⛔ Tạo `.env.cf-staging` trên máy ảo từ `infra/env.cf-staging.example` (secret sinh ngẫu nhiên; `BETTER_AUTH_SECRET`, `TOKEN_ENC_KEYS`).
-2. ⛔ Migration lên staging: `pnpm db:migrate` (đến migration mới nhất, gồm 0026 dấu xóa + 0027 hide) và `pnpm db:check-rls`. LƯU Ý: CLI hiện **từ chối `APP_ENV=staging`** (`migration-guard`); cần quyết định đường chạy có duyệt (xem plan, mục "Điểm chưa rõ").
+2. ⛔ Migration lên staging: `pnpm db:migrate` (đến migration mới nhất, gồm 0026 dấu xóa + 0027 hide) và `pnpm db:check-rls`. Đường chạy đã chốt: workflow `migrate-staging.yml` (STAGING_SETUP mục E), nối DB qua `127.0.0.1:5434` (compose staging publish loopback).
 3. ⛔ Cài hàng đợi: `pnpm --filter @flow/worker queue:install` — phải tạo đủ hàng đợi `ingest`, `send`, `hide` (và `system.ping`); cùng vấn đề guard như mục 2.
 4. Chạy worker, rồi web (`docker compose ... up -d --wait`). Health: web `/api/health`, worker `/health` (cổng 3001, chỉ trong mạng Compose).
 5. **Kiểm worker dọn payload webhook 14 ngày đang chạy** (`WEBHOOK-PAYLOAD-RETENTION`): log worker có dòng "đã dọn payload" sau khi khởi động (job chạy lúc khởi động rồi mỗi giờ).
-6. Web KHÔNG publish cổng: `docker compose ps` không có cổng publish của `web`; truy cập chỉ qua `cloudflared`.
+6. Web KHÔNG publish cổng: `docker compose ps` không có cổng publish của `web`; truy cập chỉ qua `cloudflared`. Cổng duy nhất publish là Postgres, chỉ ở `127.0.0.1:5434` (cho runner migrate): `docker compose ps` phải hiện `127.0.0.1:5434->5432/tcp`, tuyệt đối không `0.0.0.0:`.
 7. ⛔ Khi có tên miền: tạo Cloudflare Tunnel, đặt `CLOUDFLARE_TUNNEL_TOKEN`, bật `--profile tunnel`, rồi mới đặt `CLIENT_IP_SOURCE=cf-connecting-ip` + `BETTER_AUTH_URL` thật.
 8. `WORKER-DB-ROLE` (role DB riêng cho worker) — bắt buộc trước staging theo MASTER; hiện cả web và worker dùng `cf_app`.
 
