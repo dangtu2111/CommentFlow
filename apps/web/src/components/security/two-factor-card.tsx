@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useActionState, useState } from 'react';
+import { useActionState, useCallback, useEffect, useState } from 'react';
 import {
   beginTwoFactorAction,
   confirmTwoFactorAction,
@@ -10,6 +10,7 @@ import {
   regenerateBackupCodesAction,
 } from '../../app/app/security/actions';
 import { SECURITY_IDLE, type SecurityState } from '../../lib/security-form';
+import { showEnableFlow } from '../../lib/two-factor-view';
 import { Banner } from '../ui/banner';
 import { CodeField, PasswordField } from '../ui/fields';
 import { SubmitButton } from '../ui/submit-button';
@@ -61,16 +62,35 @@ function BackupCodes({ codes, onSaved }: { codes: string[]; onSaved?: () => void
 }
 
 /** Chưa bật: mật khẩu → quét QR + nhập mã đầu tiên → lưu mã dự phòng. */
-function EnableFlow() {
+function EnableFlow({
+  onEnrolling,
+  onFinished,
+}: {
+  onEnrolling: () => void;
+  onFinished: () => void;
+}) {
   const t = useTranslations('auth.security.twoFactor');
   const router = useRouter();
   const [begin, beginAction] = useActionState(beginTwoFactorAction, SECURITY_IDLE);
   const [confirm, confirmAction] = useActionState(confirmTwoFactorAction, SECURITY_IDLE);
   const beginError = useError(begin);
   const confirmError = useError(confirm);
+  const enrolling = begin.status === 'enroll';
+  // Báo thẻ cha giữ luồng này khi máy chủ dựng lại trang với 2FA đã bật (để mã dự phòng không biến mất).
+  useEffect(() => {
+    if (enrolling) onEnrolling();
+  }, [enrolling, onEnrolling]);
 
   if (begin.status === 'enroll' && confirm.status === 'done') {
-    return <BackupCodes codes={begin.backupCodes} onSaved={() => router.refresh()} />;
+    return (
+      <BackupCodes
+        codes={begin.backupCodes}
+        onSaved={() => {
+          onFinished();
+          router.refresh();
+        }}
+      />
+    );
   }
   if (begin.status === 'enroll') {
     return (
@@ -143,6 +163,9 @@ function ManageFlow({ required }: { required: boolean }) {
 
 export function TwoFactorCard({ enabled, required }: { enabled: boolean; required: boolean }) {
   const t = useTranslations('auth.security.twoFactor');
+  const [enrolling, setEnrolling] = useState(false);
+  const startEnrolling = useCallback(() => setEnrolling(true), []);
+  const finishEnrolling = useCallback(() => setEnrolling(false), []);
   return (
     <section className="card stack" aria-labelledby="two-factor-title">
       <div className="row row-between">
@@ -154,7 +177,11 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
         </span>
       </div>
       <p className="muted">{enabled ? t('onBody') : t('offBody')}</p>
-      {enabled ? <ManageFlow required={required} /> : <EnableFlow />}
+      {showEnableFlow({ enabled, enrolling }) ? (
+        <EnableFlow onEnrolling={startEnrolling} onFinished={finishEnrolling} />
+      ) : (
+        <ManageFlow required={required} />
+      )}
     </section>
   );
 }
