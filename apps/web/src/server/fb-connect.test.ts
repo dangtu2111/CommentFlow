@@ -60,6 +60,7 @@ function setup(o: Opts = {}) {
         return channelId;
       },
       markWebhookSubscribed: async (id) => void log.push(`mark:${id}`),
+      clearWebhookSubscribed: async (id) => void log.push(`clear:${id}`),
     },
     encrypt: (plaintext, ctx) => {
       log.push(`encrypt:${ctx.channelId}`);
@@ -88,6 +89,7 @@ describe('connectFacebookPages — thứ tự và WEBHOOK-SUBSCRIBE-VERIFY', () 
       `me:${A.id}`,
       `encrypt:chan-${A.id}`,
       `save:${A.id}`,
+      `clear:chan-${A.id}`,
       `subscribe:${A.id}:TOKEN-A`,
       `mark:chan-${A.id}`,
     ]);
@@ -114,6 +116,10 @@ describe('connectFacebookPages — thứ tự và WEBHOOK-SUBSCRIBE-VERIFY', () 
     expect(result[0]?.outcome).toBe('connected_without_webhook');
     expect(log.some((l) => l.startsWith('mark:'))).toBe(false);
     expect(log).toContain(`save:${A.id}`);
+    // HỒI QUY (verifier): cờ cũ của lần kết nối trước phải được xóa TRƯỚC khi đăng ký lại.
+    expect(log.indexOf(`clear:chan-${A.id}`)).toBeLessThan(
+      log.indexOf(`subscribe:${A.id}:TOKEN-A`),
+    );
   });
 
   it('lưu DB lỗi → failed, không subscribe, không đặt cờ', async () => {

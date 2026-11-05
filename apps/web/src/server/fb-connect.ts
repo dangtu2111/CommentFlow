@@ -49,6 +49,8 @@ export type FbChannelStore = {
   ): Promise<string>;
   /** Đặt `webhook_subscribed = true` (đường hệ thống, chỉ gọi sau khi đã xác nhận đăng ký). */
   markWebhookSubscribed(channelId: string): Promise<void>;
+  /** Đặt `webhook_subscribed = false` — gọi TRƯỚC khi đăng ký lại để cờ cũ của lần kết nối trước không còn đúng khi đăng ký lỗi. */
+  clearWebhookSubscribed(channelId: string): Promise<void>;
 };
 
 export type FbConnectDeps = {
@@ -136,6 +138,7 @@ export async function connectFacebookPages(
 
     try {
       // 3. Webhook đích danh + xác nhận; 4. đặt cờ.
+      await deps.store.clearWebhookSubscribed(channelId);
       await deps.subscribeAndVerify(
         {
           id: channelId,

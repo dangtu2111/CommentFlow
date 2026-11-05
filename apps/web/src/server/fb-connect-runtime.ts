@@ -7,7 +7,7 @@ import {
 } from '@flow/connectors';
 import { createChannel, setChannelToken, sql } from '@flow/db/runtime';
 import { getDb } from './db';
-import type { FbChannelStore, FbConnectDeps } from './fb-connect';
+import { type FbChannelStore, type FbConnectDeps, FbConnectError } from './fb-connect';
 import { type FbOAuthConfig, loadFbOAuthConfig } from './fb-oauth-env';
 import { createSubscribeAndVerify } from './fb-subscribe';
 
@@ -40,7 +40,11 @@ export function buildFbOAuthClient(
   });
 }
 
-export function buildChannelStore(workspaceId: string, userId: string): FbChannelStore {
+export function buildChannelStore(
+  workspaceId: string,
+  userId: string,
+  limit = Number.POSITIVE_INFINITY,
+): FbChannelStore {
   const db = getDb();
   return {
     async listActiveExternalIds() {
@@ -53,6 +57,15 @@ export function buildChannelStore(workspaceId: string, userId: string): FbChanne
     },
     saveChannel: (page, sealToken) =>
       db.withActor(workspaceId, userId, async (tx) => {
+        // Chống vượt giới hạn do hai yêu cầu đồng thời: khóa theo workspace trong giao dịch, đếm lại rồi mới tạo.
+        await tx.execute(
+          sql`SELECT pg_advisory_xact_lock(hashtext(${`fb-channels:${workspaceId}`}))`,
+        );
+        const current = await tx.execute<{ external_id: string }>(sql`
+          SELECT external_id FROM cf.channels
+           WHERE workspace_id = ${workspaceId}::uuid AND platform = 'facebook' AND status <> 'revoked'`);
+        const isNew = !current.rows.some((row) => row.external_id === page.externalId);
+        if (isNew && current.rows.length >= limit) throw new FbConnectError('limit_exceeded');
         const channelId = await createChannel(tx, {
           platform: 'facebook',
           externalId: page.externalId,
@@ -69,15 +82,20 @@ export function buildChannelStore(workspaceId: string, userId: string): FbChanne
         });
         return channelId;
       }),
-    async markWebhookSubscribed(channelId) {
-      await db.withJob(workspaceId, (tx) =>
-        tx.execute(sql`
-          UPDATE cf.channels SET webhook_subscribed = true, updated_at = now()
-           WHERE id = ${channelId}::uuid AND workspace_id = ${workspaceId}::uuid
-             AND platform = 'facebook' AND status = 'connected'`),
-      );
-    },
+    markWebhookSubscribed: (channelId) => setFlag(channelId, true),
+    clearWebhookSubscribed: (channelId) => setFlag(channelId, false),
   };
+
+  /** Đường hệ thống; 0 dòng bị đổi (kênh vừa bị ngắt/đổi trạng thái) → ném để không báo thành công sai. */
+  async function setFlag(channelId: string, value: boolean): Promise<void> {
+    const result = await db.withJob(workspaceId, (tx) =>
+      tx.execute(sql`
+        UPDATE cf.channels SET webhook_subscribed = ${value}, updated_at = now()
+         WHERE id = ${channelId}::uuid AND workspace_id = ${workspaceId}::uuid
+           AND platform = 'facebook' AND status = 'connected'`),
+    );
+    if (result.rowCount !== 1) throw new Error('channel_not_updated');
+  }
 }
 
 export function buildConnectDeps(
@@ -88,7 +106,7 @@ export function buildConnectDeps(
   const cipher = createTokenCipher(parseTokenKeys(config.tokenEncKeys));
   return {
     oauth: buildFbOAuthClient(config, fetchImpl),
-    store: buildChannelStore(who.workspaceId, who.userId),
+    store: buildChannelStore(who.workspaceId, who.userId, config.channelsLimit),
     encrypt: cipher.encrypt,
     subscribeAndVerify: createSubscribeAndVerify({
       appId: config.appId,
