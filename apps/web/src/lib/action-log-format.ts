@@ -12,6 +12,10 @@ const KNOWN_ACTIONS = [
   'channel.token_set',
   'channel.token_cleared',
   'comment.reply_requested',
+  'comment.hide_requested',
+  'comment.unhide_requested',
+  'comment.hidden',
+  'comment.unhidden',
 ] as const;
 
 export function actionLabelKey(action: string): string | null {

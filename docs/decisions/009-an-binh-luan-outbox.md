@@ -1,0 +1,31 @@
+# 009 — Ẩn / bỏ ẩn bình luận: hàng đợi (outbox), hàm DEFINER, job `hide` (05/11/2026)
+
+Trạng thái: **Đã áp dụng** ở `feat/fb-hide` (migration 0027). Căn cứ: FR-044 (ẩn/bỏ ẩn, không có xóa), nguyên tắc bất biến #3 (AI không bao giờ tự ẩn), docs/08 nguyên tắc 6 (ẩn ↔ bỏ ẩn đảo ngược được), docs/09 §6.1, §9; ADR 008 (mẫu).
+
+## 1. Vấn đề
+
+Nhân viên bấm Ẩn/Bỏ ẩn. Hệ thống phải (a) chỉ hiện "đã ẩn" khi nền tảng đã xác nhận (không để người dùng tự đặt `is_hidden`), (b) không gọi trùng/song song khi job chạy lại, (c) xử lý lỗi nền tảng đúng, (d) không có đường nào cho AI/hệ thống tự ẩn.
+
+## 2. Quyết định
+
+Theo đúng khuôn ADR 008, khác ở các điểm sau.
+
+- **Bảng outbox `cf.comment_hides`:** `action` ∈ {`hide`, `unhide`}; trạng thái `queued → sending → done | failed | cancelled`; `attempts`, `error_code` (chỉ mã an toàn), `previous_status`, `done_at`. Unique **một yêu cầu đang hoạt động** (`queued`/`sending`) cho mỗi bình luận. RLS: thành viên/đường hệ thống đọc; **chỉ đường hệ thống UPDATE** cột kết quả (`status`, `attempts`, `error_code`, `updated_at`, `done_at`); `cf_app` không INSERT/DELETE. Không có cột `previous_is_hidden` (suy ra từ `action`) và không có nội dung nên không có PII.
+- **Bình luận KHÔNG đổi khi yêu cầu:** khác `request_comment_reply` (đặt `sending`), hàm yêu cầu ẩn không đụng `comments`. `comments.is_hidden = true` và `status = 'hidden'` chỉ do worker ghi SAU khi `connector.setHidden` thành công. Nhờ vậy lỗi/hủy không cần hoàn trạng thái; giao diện suy ra "đang ẩn" từ yêu cầu mới nhất.
+- **`cf.request_comment_hide(comment_id, hide boolean)`** (DEFINER, `withActor`): thành viên đang hoạt động. Bình luận chưa xóa (`deleted_at`) / chưa gộp. Yêu cầu đang chạy cùng chiều hoặc đã ở trạng thái đích → trả `NULL` (idempotent, không tạo dòng); yêu cầu đang chạy trái chiều → `CF409`. Ẩn chỉ từ {`new`, `pending_review`, `needs_human`, `send_failed`, `skipped`, `spam_suspected`, `replied`, `auto_replied`}; bỏ ẩn cần `is_hidden`. Kênh `connected`; không ai khác giữ khóa mềm còn hạn. Ghi `action_logs` (không kèm nội dung). SQLSTATE: `CF404`, `CF409`, `CF423`, `CF424`, `42501` (như ADR 008, không có `CF422`). **`cf.cancel_comment_hide`**: người yêu cầu hủy yêu cầu còn `queued`.
+- **Trạng thái khôi phục khi bỏ ẩn:** `previous_status` của yêu cầu `unhide` = `previous_status` của lần ẩn xong (`done`) gần nhất; không có (bình luận ẩn từ trước) → `replied` nếu có `external_reply_id`, ngược lại `pending_review`. Ẩn rồi bỏ ẩn nên trả đúng trạng thái cũ.
+- **Hàm trả lời** (`cf.request_comment_reply`, thay bản 0024): từ chối (`CF409`) khi có yêu cầu ẩn đang chạy; ngược lại ẩn từ chối khi bình luận đang `sending` (không nằm trong danh sách ẩn được). Hai việc loại trừ nhau.
+- **Trigger bình luận** (thay bản 0025): đường người dùng **không đổi `is_hidden`** (đóng nửa `is_hidden` của gap `COMMENT-HIDE-MERGE-GUARD`; trạng thái `hidden` đã bị chặn từ ADR 008). `merged_into_id` còn mở cho việc gộp (hàm riêng).
+- **Job `hide`** (worker, `withJob`, hàng đợi pg-boss `hide`, thử lại 3 lần, backoff mũ): kiểm lại trong MỘT giao dịch khóa dòng yêu cầu + bình luận: H1 chưa bị khách xóa/gộp (→ `cancelled recheck:H1`); H2 đã ở trạng thái đích → `done` mà KHÔNG gọi nền tảng, trạng thái hết ẩn được → `cancelled recheck:H2`; H3 kênh `connected` (→ `failed recheck:H3`); rồi `evaluateAction('hide'|'unhide')` theo khai báo connector và có `setHidden` (thiếu → `ACTION_UNSUPPORTED`; sổ rỗng → `connector_unavailable`). Đánh dấu `sending` (+`attempts`, thuê 90 giây); gọi `connector.setHidden` NGOÀI giao dịch; ghi kết quả ở giao dịch riêng, **có rào** (`status = 'sending' AND attempts = lượt này`): job quá hạn thuê mà job khác tiếp quản thì không ghi đè.
+- **Khác ADR 008 — không cần "kiểm trước khi gửi lại":** ẩn/bỏ ẩn là idempotent trên nền tảng (đặt cờ, không tạo nội dung), nên `RATE_LIMIT`/`UNKNOWN` (còn lượt) đều trả `queued` rồi gọi lại thẳng; không cần `fetchComments` để dò. Hết lượt → `failed` (`UNKNOWN` nếu đã gọi, `retries_exhausted` nếu chưa). `TOKEN_EXPIRED` → kênh `expired`; `PERMISSION` → kênh `revoked`; `BLOCKED` → `failed` (không đổi kênh; tạm khóa gửi áp cho trả lời, không cho ẩn). Thất bại KHÔNG đổi bình luận.
+- **Sổ connector của worker còn rỗng** → `failed connector_unavailable` cho tới khi có connector Facebook thật (`feat/fb-connector`, kèm `setHidden`).
+- **Giao diện:** nút Ẩn/Bỏ ẩn ở chi tiết, hiện theo khả năng nền tảng (`DECLARED_CAPABILITIES`); không hộp xác nhận cho từng bình luận (đảo ngược được); xác nhận chỉ cho Ẩn hàng loạt (FR-045, `BULK-ACTIONS`). Bình luận đã ẩn nằm ở tab "Đã ẩn"/"Tất cả" (`status = 'hidden'`, sẵn có từ INBOX-LIST). Lỗi hiện lý do dễ hiểu theo `error_code` + nút Thử lại.
+- **AI không tự ẩn:** không có hàm/hàng đợi nào ngoài `request_comment_hide` (đòi `withActor` + thành viên) tạo yêu cầu ẩn; `AUTO-HIDE` (FR-081) sau này phải đi qua cùng đường với tác nhân là quy tắc do Owner bật, không phải model.
+
+## 3. Giới hạn đã biết / gap
+
+`HIDE-SWEEP` (quét yêu cầu `queued` bị bỏ quên khi đẩy job lỗi + bù hủy cũng lỗi, và `sending` hết thuê lâu không có job — chung hướng với `SEND-SWEEP`); đồng bộ ngược khi người dùng ẩn/bỏ ẩn trực tiếp trên Facebook (webhook `verb=hide`, gap của COMMENT-SYNC); `merged_into_id` còn sửa được bởi người dùng (gộp bình luận); web và worker dùng chung role `cf_app` (gap `WORKER-DB-ROLE`, như ADR 008 §3); thử với Page thật cần `feat/fb-connector` + `FB-OAUTH`.
+
+## 4. Sửa `docs/10` — phạm vi
+
+Chỉ phần liên quan: thêm bảng `comment_hides` (§3.2), dòng quyền + hàm `cf.request_comment_hide`/`cf.cancel_comment_hide` (§4), ghi chú trigger không cho người dùng đổi `is_hidden`. Không sửa `docs/01–16` khác.

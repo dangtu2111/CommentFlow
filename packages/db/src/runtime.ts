@@ -16,6 +16,14 @@ export {
 export { createDb, type Database, type FlowDb } from './client';
 export { markCommentDeleted } from './comment-redact';
 export {
+  cancelCommentHide,
+  HIDE_REJECTIONS,
+  HideRejectedError,
+  type HideRejection,
+  HideRequestFailedError,
+  requestCommentHide,
+} from './hides';
+export {
   ACTION_LOG_ACTOR_TYPES,
   type ActionLogActorType,
   type ActionLogCursor,
