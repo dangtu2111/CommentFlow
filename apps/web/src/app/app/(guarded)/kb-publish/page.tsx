@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { KbFrame } from '../../../../components/kb/kb-frame';
 import { KbPublishForm } from '../../../../components/kb-publish/kb-publish-form';
 import { kbPublish } from '../../../../server/kb-publish';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -31,31 +32,33 @@ export default async function KbPublishPage() {
   }
   const { preview, versions, currentNumber } = overview;
   return (
-    <main className="app-page">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle')}</p>
-      <KbPublishForm
-        currentNumber={currentNumber}
-        preview={
-          preview.ok
-            ? {
-                added: preview.added,
-                changed: preview.changed,
-                removed: preview.removed,
-                blockedInjection: preview.blockedInjection,
-                categories: preview.changedCategories,
-                needsConfirm: preview.needsConfirm,
-              }
-            : null
-        }
-        versions={versions.map((v) => ({
-          number: v.number,
-          publishedAt: v.publishedAt.toISOString(),
-          note: v.note,
-          categories: v.changedCategories,
-          chunkCount: v.chunkCount,
-        }))}
-      />
+    <main className="app-page app-page-kb">
+      <KbFrame active="kbPublish">
+        <h1 className="auth-title">{t('title')}</h1>
+        <p className="auth-subtitle">{t('subtitle')}</p>
+        <KbPublishForm
+          currentNumber={currentNumber}
+          preview={
+            preview.ok
+              ? {
+                  added: preview.added,
+                  changed: preview.changed,
+                  removed: preview.removed,
+                  blockedInjection: preview.blockedInjection,
+                  categories: preview.changedCategories,
+                  needsConfirm: preview.needsConfirm,
+                }
+              : null
+          }
+          versions={versions.map((v) => ({
+            number: v.number,
+            publishedAt: v.publishedAt.toISOString(),
+            note: v.note,
+            categories: v.changedCategories,
+            chunkCount: v.chunkCount,
+          }))}
+        />
+      </KbFrame>
     </main>
   );
 }

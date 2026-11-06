@@ -1,0 +1,6 @@
+# UI-FIDELITY làm lại — Cơ sở kiến thức + Bài viết (QUKP2)
+
+Ảnh: `kb-*`, `bai-viet-*` ở 1440px và 390px; `-truoc-` = bản lượt đầu (không có khung ứng dụng), `-sau-` = bản mới (trong `DevShell`). Nguồn: `/dev/ui/kb`, `/dev/ui/kb-posts` (dữ liệu [MẪU]). So với `design/stitch/knowledge-base.png`, `posts.png`.
+
+**Đã khớp:** menu con có biểu tượng, mục chọn tô màu nút chính, nhóm có tiêu đề chữ hoa; đầu trang + hai nút (Kiểm thử, Xuất bản); thanh độ đầy đủ nền nhạt + thanh tiến độ bo tròn + gợi ý; thẻ lối tắt có ô biểu tượng. Bài viết: breadcrumb, tiêu đề + chip số bài, thẻ lọc (tab pill có chấm màu + số đếm [MẪU]), ô tìm/lọc nền nhạt, tiêu đề mục + "Sắp xếp", thẻ bài riêng với thanh nhấn trái, huy hiệu nền tảng (Facebook đặc), chip Quảng cáo hồng, phân trang kiểu số + mũi tên, panel Cấu hình bài viết & AI (dev, [MẪU], nút tắt). Mobile 390px: menu con cuộn ngang, thẻ xếp dọc.
+**Chưa khớp / bỏ có chủ ý (QUKP2):** ảnh bìa bài, gợi ý AI/độ tin cậy, chip "Chưa gắn sản phẩm", biểu ngữ "chưa liên kết" (chỉ dev), số đếm tab ở trang thật, "Dữ liệu 30 ngày", chuyển danh sách/lưới, "Bộ lọc nâng cao", mục menu chưa có trang (Thông tin cửa hàng, Chính sách, FAQ, Tài liệu, Giọng văn…), khối Shopify/crawl/xem trước sản phẩm/Playground, "RAG Engine v12.4", "Áp dụng cho kênh".

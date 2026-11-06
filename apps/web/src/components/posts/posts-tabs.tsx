@@ -9,11 +9,22 @@ import {
 
 /**
  * Tab nền tảng (design/stitch/posts.png): liên kết thường (không cần JavaScript), đổi nền tảng thì về trang 1 và bỏ
- * lọc kênh (kênh thuộc một nền tảng). Chưa hiện số đếm theo nền tảng — cần truy vấn đếm (gap POSTS-LIST-LINK-FILTER).
+ * lọc kênh (kênh thuộc một nền tảng). `counts` (tùy chọn) là số bài theo tab — trang thật chưa truyền vì cần truy vấn
+ * đếm (gap POSTS-LIST-LINK-FILTER); chỉ trang dev [MẪU] truyền.
  */
-export async function PostsTabs({ view }: { view: PostsView }) {
+export async function PostsTabs({
+  view,
+  counts,
+}: {
+  view: PostsView;
+  counts?: Partial<Record<PostsPlatformKey | 'all', number>>;
+}) {
   const t = await getTranslations('posts');
-  const tabs: Array<{ key: string; platform: PostsPlatformKey | undefined; label: string }> = [
+  const tabs: Array<{
+    key: PostsPlatformKey | 'all';
+    platform: PostsPlatformKey | undefined;
+    label: string;
+  }> = [
     { key: 'all', platform: undefined, label: t('tabs.all') },
     ...POSTS_PLATFORM_KEYS.map((platform) => ({
       key: platform,
@@ -26,6 +37,7 @@ export async function PostsTabs({ view }: { view: PostsView }) {
     <nav className="posts-tabs" aria-label={t('tabs.label')}>
       {tabs.map((tab) => {
         const active = (view.platform ?? undefined) === tab.platform;
+        const count = counts?.[tab.key];
         return (
           <Link
             key={tab.key}
@@ -38,7 +50,9 @@ export async function PostsTabs({ view }: { view: PostsView }) {
             data-platform={tab.platform}
             aria-current={active ? 'page' : undefined}
           >
+            <span className="posts-tab-dot" aria-hidden="true" />
             {tab.label}
+            {count === undefined ? null : <span className="posts-tab-count">{count}</span>}
           </Link>
         );
       })}

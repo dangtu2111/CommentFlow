@@ -16,7 +16,7 @@ export default async function TryAiPage() {
   await requireAppUser({ role: 'owner' });
   const t = await getTranslations('tryAi');
   return (
-    <main className="app-page app-page-wide">
+    <main className="app-page app-page-kb">
       <KbFrame active="tryAi">
         <h1 className="auth-title">{t('title')}</h1>
         <p className="auth-subtitle">{t('subtitle')}</p>

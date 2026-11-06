@@ -1657,7 +1657,9 @@
       "pending": "{count} chờ xử lý",
       "noPending": "Không có bình luận chờ",
       "viewOriginal": "Xem bài gốc",
-      "unknownTime": "Chưa rõ thời gian đăng"
+      "unknownTime": "Chưa rõ thời gian đăng",
+      "heading": "Danh sách bài đăng theo thời gian",
+      "sortedBy": "Sắp xếp: {sort}"
     },
     "pagination": {
       "label": "Phân trang",

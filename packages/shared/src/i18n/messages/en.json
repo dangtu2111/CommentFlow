@@ -1657,7 +1657,9 @@
       "pending": "{count} pending",
       "noPending": "No pending comments",
       "viewOriginal": "View original",
-      "unknownTime": "Posted time unknown"
+      "unknownTime": "Posted time unknown",
+      "heading": "Posts by time",
+      "sortedBy": "Sorted by: {sort}"
     },
     "pagination": {
       "label": "Pagination",

@@ -34,7 +34,7 @@ export default async function ReadinessPage() {
   }
 
   return (
-    <main className="app-page app-page-wide">
+    <main className="app-page app-page-kb">
       <KbFrame active="readiness">
         <h1 className="auth-title">{t('title')}</h1>
         <p className="auth-subtitle">{t('subtitle', { min: result.minPercent })}</p>

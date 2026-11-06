@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import {
@@ -24,6 +25,7 @@ export async function PostsToolbar({
   return (
     <form className="inbox-toolbar" method="get" aria-label={t('toolbar.label')}>
       <label className="inbox-field inbox-field-search">
+        <Search size={16} aria-hidden="true" className="posts-search-icon" />
         <span className="visually-hidden">{t('toolbar.searchLabel')}</span>
         <input
           type="search"

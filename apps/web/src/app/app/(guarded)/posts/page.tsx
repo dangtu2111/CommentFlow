@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { PostsHeader } from '../../../../components/posts/posts-header';
 import { PostsList } from '../../../../components/posts/posts-list';
 import { PostsTabs } from '../../../../components/posts/posts-tabs';
 import { PostsToolbar } from '../../../../components/posts/posts-toolbar';
@@ -48,23 +49,12 @@ export default async function PostsPage({
   const filtered = Boolean(view.platform || view.channelId || view.kind || view.search);
   return (
     <main className="posts">
-      <header className="posts-header">
-        <nav className="posts-breadcrumb" aria-label={t('breadcrumb.label')}>
-          <span>{t('breadcrumb.operations')}</span>
-          <span aria-hidden="true">›</span>
-          <span>{t('breadcrumb.content')}</span>
-          <span aria-hidden="true">›</span>
-          <span aria-current="page">{t('breadcrumb.current')}</span>
-        </nav>
-        <div className="posts-title-row">
-          <h1>{t('heading')}</h1>
-          <span className="posts-total">{t('count', { count: page.total })}</span>
-        </div>
-        <p className="muted">{t('subtitle')}</p>
-      </header>
-      <PostsTabs view={view} />
-      <section className="posts-panel">
+      <PostsHeader total={page.total} />
+      <section className="posts-filters">
+        <PostsTabs view={view} />
         <PostsToolbar view={view} channels={channels} />
+      </section>
+      <section className="posts-panel">
         {page.items.length === 0 ? (
           <div className="inbox-empty">
             <h2>{filtered || view.page > 1 ? t('empty.filteredTitle') : t('empty.title')}</h2>

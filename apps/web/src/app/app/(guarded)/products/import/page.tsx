@@ -13,7 +13,7 @@ export default async function ProductImportPage() {
   await requireAppUser({ role: 'owner' });
   const t = await getTranslations('productImport');
   return (
-    <main className="app-page app-page-wide">
+    <main className="app-page app-page-kb">
       <KbFrame active="productImport">
         <h1 className="auth-title">{t('title')}</h1>
         <p className="auth-subtitle">{t('subtitle')}</p>
