@@ -58,9 +58,9 @@ describe('parseHaravanMoney', () => {
 
 describe('buildHaravanImportPlan', () => {
   it('bỏ sản phẩm chưa xuất bản', () => {
-    expect(plan(product({ published: false }), product({ id: '2' })).map((p) => p.externalId)).toEqual(
-      ['2'],
-    );
+    expect(
+      plan(product({ published: false }), product({ id: '2' })).map((p) => p.externalId),
+    ).toEqual(['2']);
   });
 
   it('dựng sản phẩm/biến thể: id là chuỗi id Haravan, thuộc tính theo tên tùy chọn', () => {

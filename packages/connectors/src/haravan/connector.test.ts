@@ -61,14 +61,15 @@ describe('fetchCatalog', () => {
     expect(catalog.products).toHaveLength(1);
     expect(calls).toHaveLength(1);
     const [call] = calls;
-    expect(call?.url.origin + call?.url.pathname).toBe('https://apis.haravan.com/com/products.json');
+    expect(call?.url.origin + call?.url.pathname).toBe(
+      'https://apis.haravan.com/com/products.json',
+    );
     expect(call?.url.searchParams.get('page')).toBe('1');
     expect(call?.url.searchParams.get('published_status')).toBe('published');
     expect(call?.init.method).toBe('GET');
     expect(call?.init.redirect).toBe('error');
-    expect((call?.init.headers as Record<string, string>).Authorization).toBe(
-      `Bearer ${FAKE_TOKEN}`,
-    );
+    const headers = (call?.init.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe(`Bearer ${FAKE_TOKEN}`);
     expect(call?.url.href).not.toContain(FAKE_TOKEN);
   });
 
@@ -184,7 +185,9 @@ describe('fetchCatalog', () => {
   });
 
   it('thân phản hồi quá lớn (khai báo hoặc thực tế) → haravan_bad_response', async () => {
-    const declared = new Response('{}', { headers: { 'content-length': String(64 * 1024 * 1024) } });
+    const declared = new Response('{}', {
+      headers: { 'content-length': String(64 * 1024 * 1024) },
+    });
     const streamed = new Response(new Uint8Array(17 * 1024 * 1024));
     for (const response of [declared, streamed]) {
       const { connector } = harness([response]);

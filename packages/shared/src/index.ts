@@ -66,6 +66,7 @@ export {
 } from './draft-feedback';
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
+export { type HaravanConfig, readHaravanConfig } from './haravan-config';
 export {
   DEFAULT_LOCALE,
   isLocale,
@@ -411,7 +412,6 @@ export {
   readShopifyConfig,
   type ShopifyConfig,
 } from './shopify-config';
-export { type HaravanConfig, readHaravanConfig } from './haravan-config';
 export {
   canRunManualReconcile,
   checkWebhookTopics,
