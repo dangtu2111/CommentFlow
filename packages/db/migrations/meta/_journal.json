@@ -281,6 +281,13 @@
       "when": 1793939346962,
       "tag": "0039_usage_counters",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793940482755,
+      "tag": "0040_retrieval_logs_kb_gaps",
+      "breakpoints": true
     }
   ]
 }

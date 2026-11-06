@@ -27,10 +27,12 @@
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
 | KT-023 | `two_factors` một dòng mỗi user (chỉ DB) | feat-auth-harden-4b | chưa | chưa | — |
 | KT-022 | Bảng sản phẩm + biến thể (chỉ DB, chưa có giao diện) | feat-products-variants | chưa | chưa | — |
+| KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
+| KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
@@ -44,6 +46,15 @@
 Chưa có giao diện/pipeline nối (còn `VARIATION-WIRE`); mục này chỉ kiểm test. Không cần tiếng Việt/Anh.
 1. Chạy `pnpm --filter @flow/ai exec vitest run src/variation src/draft`. — Mong đợi: tất cả test xanh.
 2. (Khi đã có khóa LLM, tùy chọn) gọi `createLlmDrafter` với `DRAFT_LLM_ENABLED=true` cho cùng một câu hỏi vài lần. — Mong đợi: `variants` 3–5 câu khác chữ, cùng giá/link; không có câu đổi số tiền (câu đổi số bị loại).
+
+---
+
+## KT-RL — Nhật ký tìm kiếm + câu hỏi AI chưa trả lời được (RETRIEVAL-LOG, FR-134, migration 0040)
+
+Chỉ phần máy (chưa có giao diện — `KB-GAPS-UI`/`KB-TRYAI`; chưa có nơi ghi — `PIPE-RETRIEVE`): người thử cần `pnpm db:migrate` (DB dev/test của bạn) rồi chạy test.
+1. `CF_LANE=<làn> pnpm test:db` → file `retrieval-log.int.test.ts` xanh (đua 20 lệnh song song cho đúng một dòng `kb_gaps` count = 20). Kết quả mong đợi: không test đỏ.
+2. `pnpm db:check-rls` → không báo vi phạm `cf.retrieval_logs`/`cf.kb_gaps`. Kết quả mong đợi: "đạt".
+3. (Tùy chọn, vi + en) Khi `KB-GAPS-UI` xong: câu AI chưa trả lời hiện gộp theo chủ đề/sản phẩm kèm số lần; "Đã bổ sung"/"Bỏ qua" đổi trạng thái; khách hỏi lại điều đã bổ sung thì mục mở lại.
 
 ---
 
@@ -90,6 +101,15 @@ Chưa có giao diện (ô Thử AI là `KB-TRYAI`; nối pipeline là `PIPE-RETR
 | 4 | (Tùy chọn, `psql` trên `cf_dev`) `SELECT search_norm, tsv FROM cf.kb_chunks LIMIT 1;` sau khi có đoạn. | `search_norm` thường + không dấu; `tsv` có từ không dấu (vi). |
 
 Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
+
+---
+
+## KT-034 — Viết lại câu hỏi theo ngữ cảnh (PIPE-REWRITE-CTX, FR-137/144)
+
+Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/rewrite`. — Mong đợi: tất cả test xanh, không gọi mạng.
+2. Mở `env.example`. — Mong đợi: có `REWRITE_LLM_ENABLED` (để trống = tắt) và `REWRITE_LLM_MODEL`.
+3. (Khi đã có khóa LLM, tùy chọn) đặt `REWRITE_LLM_ENABLED=true` + `REWRITE_LLM_MODEL`, gọi `createLlmRewriter` với "còn không shop" + bình luận cha "áo này giá sao". — Mong đợi: `source: 'llm'`, câu tìm kiếm nêu rõ sản phẩm, không có SĐT/email; dòng `ai_usage` bước `rewrite`.
 
 ---
 
