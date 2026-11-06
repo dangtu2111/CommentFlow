@@ -9,7 +9,21 @@ import { z } from 'zod';
  * phản hồi/khóa API.
  */
 
-export type LlmMessage = { role: 'system' | 'user' | 'assistant'; content: MaskedText };
+export type LlmMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: MaskedText;
+  /** Đánh dấu điểm cache của nhà cung cấp (FR-138): phần đầu prompt ít đổi. Bỏ qua = tin nhắn thường. */
+  cache?: boolean;
+};
+
+/** Dạng gửi LiteLLM: tin nhắn `cache` thành khối nội dung có `cache_control` (Anthropic). */
+function toWireMessage(message: { role: LlmMessage['role']; content: string; cache?: boolean }) {
+  if (!message.cache) return { role: message.role, content: message.content };
+  return {
+    role: message.role,
+    content: [{ type: 'text', text: message.content, cache_control: { type: 'ephemeral' } }],
+  };
+}
 
 export type LlmCallInput = {
   workspaceId: string;
@@ -59,6 +73,7 @@ const inputSchema = z.object({
       z.object({
         role: z.enum(['system', 'user', 'assistant']),
         content: z.string().min(1),
+        cache: z.boolean().optional(),
       }),
     )
     .min(1),
@@ -121,7 +136,7 @@ export function createLlmClient(options: LlmClientOptions) {
           },
           body: JSON.stringify({
             model: input.model,
-            messages: input.messages,
+            messages: input.messages.map(toWireMessage),
             ...(input.maxTokens !== undefined ? { max_tokens: input.maxTokens } : {}),
             ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
             user: input.workspaceId,
