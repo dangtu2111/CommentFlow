@@ -249,6 +249,9 @@ Logic kiểm tra (1 tin, ≤ 7 ngày, chỉ nhân viên bấm Gửi) đã xong v
 ## 2y. `QR-PAYMENT` (FR-091, US-061) — cần tài khoản ngân hàng nhận tiền
 Mã QR chuyển khoản (VietQR) và nút "Tôi đã chuyển khoản" đã xong dạng mock, chạy sau cờ `QR_PAYMENT_ENABLED` (web) mặc định TẮT. Bạn cần cung cấp: (1) tài khoản ngân hàng nhận tiền của công ty: **mã BIN ngân hàng** (6 chữ số, tra theo danh mục NAPAS), **số tài khoản**, **tên chủ tài khoản** → đặt vào biến `PAYMENT_BANK_BIN`, `PAYMENT_ACCOUNT_NUMBER`, `PAYMENT_ACCOUNT_NAME` (chỉ tên biến nằm trong `env.example`; giá trị đặt ở máy chạy thật, không commit); (2) chỉ bật cờ khi đã thử quét QR bằng app ngân hàng thật với số tiền nhỏ và đối chiếu số tiền/nội dung hiện đúng; (3) quyết định tài khoản cá nhân hay doanh nghiệp (ảnh hưởng xuất hóa đơn, ngoài phạm vi việc này). Chưa có đường Admin xác nhận (`ADMIN-PAYMENTS`) nên hóa đơn "chờ xác nhận" tạm chỉ chuyển `paid` bằng hàm hệ thống. Kiểm tay mã KT-QRP.
 
+## 2t. `SEMANTIC-CACHE` (FR-026) — cần khi bật semantic cache thật (GĐ5)
+Logic đã xong sau interface `SemanticCacheStore`, cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT. Để bật thật bạn cần: (1) Redis Stack (RediSearch/vector) và bản cài đặt `SemanticCacheStore` nối Redis; (2) model embedding thật thay `createFixtureEmbedder`; (3) chỉnh ngưỡng độ giống theo dữ liệu thật của shop.
+
 ## 2w. Connector TikTok — `TIKTOK-CONNECTOR` (FR-015, Xong-mock)
 
 Code connector TikTok đã nối vào worker nhưng cờ **tắt mặc định**, chưa từng gọi TikTok thật (chỉ fixture viết tay theo tài liệu công khai). Để bật thật bạn cần cung cấp (dùng tài khoản thử, không dùng tài khoản khách):
