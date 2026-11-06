@@ -9,7 +9,20 @@ import {
   type InboxView,
 } from '../../lib/inbox-filters';
 import { inboxTabGroup, labelTone } from '../../lib/inbox-visual';
+import { Icon, type IconName } from '../ui/icon';
 import { Tabs } from '../ui/tabs';
+
+/** Icon từng tab theo thiết kế Stitch (comments.html § Trạng thái xử lý); tab không có icon dùng chấm màu. */
+const TAB_ICON: Partial<Record<InboxTabKey, IconName>> = {
+  pending_review: 'schedule',
+  auto_replied: 'auto_mode',
+  spam_suspected: 'shield',
+  send_failed: 'error',
+  replied: 'done_all',
+  hidden: 'visibility_off',
+  skipped: 'archive',
+  all: 'all_inbox',
+};
 
 /**
  * Cột trái (224px): tab trạng thái kèm số lượng thật, chia hai cụm (đang xử lý · đã xong), lọc nền tảng, chú giải
@@ -31,7 +44,13 @@ export async function InboxTabs({
         className="inbox-tab"
         aria-current={view.tab === tab ? 'page' : undefined}
       >
-        <span className="inbox-tab-dot" data-tab={tab} aria-hidden="true" />
+        {TAB_ICON[tab] ? (
+          <span className="inbox-tab-icon" data-tab={tab}>
+            <Icon name={TAB_ICON[tab] as IconName} />
+          </span>
+        ) : (
+          <span className="inbox-tab-dot" data-tab={tab} aria-hidden="true" />
+        )}
         <span className="inbox-tab-name">{t(`tabs.${tab}`)}</span>
         <span className="inbox-tab-count">{counts[tab]}</span>
       </Link>
@@ -52,7 +71,10 @@ export async function InboxTabs({
   }));
   return (
     <nav className="inbox-tabs" aria-label={t('tabsLabel')}>
-      <p className="inbox-section-title">{t('tabsLabel')}</p>
+      <p className="inbox-section-title inbox-section-title-tools">
+        {t('tabsLabel')}
+        <Icon name="tune" />
+      </p>
       <ul>{INBOX_TAB_KEYS.filter((k) => inboxTabGroup(k) === 'active').map(renderTab)}</ul>
       <ul className="inbox-tabs-done">
         {INBOX_TAB_KEYS.filter((k) => inboxTabGroup(k) === 'done').map(renderTab)}
