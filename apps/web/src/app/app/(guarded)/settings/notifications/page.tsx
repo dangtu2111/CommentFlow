@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 import { NotificationsView } from '../../../../../components/settings/notifications-view';
-import { SettingsFrame } from '../../../../../components/settings/settings-frame';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import { loadSettingsCounts } from '../../../../../server/settings-counts';
 
@@ -19,9 +18,7 @@ export default async function NotificationsPage() {
   });
   return (
     <main className="app-page app-page-settings">
-      <SettingsFrame viewerRole={workspace.role} active="notifications" counts={counts}>
-        <NotificationsView />
-      </SettingsFrame>
+      <NotificationsView frame={{ viewerRole: workspace.role, counts }} />
     </main>
   );
 }

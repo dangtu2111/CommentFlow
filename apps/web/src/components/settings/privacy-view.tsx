@@ -1,7 +1,9 @@
 import { Download, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import type { PrivacyNotice } from '../../lib/data-privacy';
+import { PageHeader } from '../ui/page-header';
 import { SectionHead } from '../ui/section-head';
+import { SettingsFrame, type SettingsFrameScope } from './settings-frame';
 
 export type PrivacyActions = {
   exportData: (formData: FormData) => Promise<void>;
@@ -17,18 +19,20 @@ export async function PrivacyView({
   workspaceName,
   notice,
   actions,
+  frame,
 }: {
+  frame: SettingsFrameScope;
   workspaceName: string;
   notice: PrivacyNotice | null;
   actions: PrivacyActions;
 }) {
   const t = await getTranslations('settings');
   return (
-    <>
-      <header className="stack-tight">
-        <h1 className="page-title">{t('privacy.title')}</h1>
-        <p className="page-subtitle">{t('privacy.subtitle')}</p>
-      </header>
+    <SettingsFrame
+      {...frame}
+      active="privacy"
+      header={<PageHeader title={t('privacy.title')} subtitle={t('privacy.subtitle')} />}
+    >
       {notice ? (
         <div className="banner banner-warning" role="status">
           <div>{t(`privacy.notices.${notice}`)}</div>
@@ -88,6 +92,6 @@ export async function PrivacyView({
           </button>
         </form>
       </section>
-    </>
+    </SettingsFrame>
   );
 }

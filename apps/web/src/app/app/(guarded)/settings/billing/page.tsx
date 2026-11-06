@@ -1,7 +1,6 @@
 import { listInvoices } from '@flow/db/runtime';
 import { getTranslations } from 'next-intl/server';
 import { BillingView } from '../../../../../components/settings/billing-view';
-import { SettingsFrame } from '../../../../../components/settings/settings-frame';
 import { buildInvoiceRows } from '../../../../../lib/billing-view';
 import { getDb } from '../../../../../server/db';
 import {
@@ -52,15 +51,14 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
     params.payment === 'reported' || params.payment === 'error' ? params.payment : null;
   return (
     <main className="app-page app-page-settings">
-      <SettingsFrame viewerRole={workspace.role} active="billing" counts={counts}>
-        <BillingView
-          currentPlan={null}
-          usage={usage}
-          invoices={buildInvoiceRows(invoices)}
-          payment={payment}
-          paymentNotice={notice}
-        />
-      </SettingsFrame>
+      <BillingView
+        frame={{ viewerRole: workspace.role, counts }}
+        currentPlan={null}
+        usage={usage}
+        invoices={buildInvoiceRows(invoices)}
+        payment={payment}
+        paymentNotice={notice}
+      />
     </main>
   );
 }
