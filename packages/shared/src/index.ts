@@ -10,6 +10,15 @@ export {
 } from './abbreviation';
 export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } from './brand';
 export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
+export {
+  buildSourceChips,
+  classifyDraftOutcome,
+  type DraftOutcome,
+  editDistance,
+  normalizeReplyText,
+  SOURCE_CHIP_MAX,
+  type SourceChip,
+} from './draft-feedback';
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
 export {

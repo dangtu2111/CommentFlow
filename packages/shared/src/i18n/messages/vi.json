@@ -493,6 +493,21 @@
       "heldNamed": "{name} đang xử lý bình luận này (còn khoảng {seconds} giây). Bạn chỉ xem được.",
       "heldAnonymous": "Đồng nghiệp đang xử lý bình luận này (còn khoảng {seconds} giây). Bạn chỉ xem được."
     },
+    "suggestion": {
+      "title": "Gợi ý của AI",
+      "use": "Dùng gợi ý",
+      "edited": "Đã sửa so với gợi ý",
+      "needsHuman": "AI đề nghị người xem lại câu này trước khi gửi.",
+      "sources": "Nguồn của gợi ý",
+      "sourceFallback": "Nguồn kiến thức",
+      "more": "+{count} nguồn"
+    },
+    "relabel": {
+      "field": "Đổi nhãn",
+      "apply": "Lưu nhãn",
+      "working": "Đang lưu…",
+      "failed": "Không đổi được nhãn. Hãy thử lại."
+    },
     "reply": {
       "field": "Câu trả lời",
       "placeholder": "Nhập câu trả lời gửi cho khách…",
