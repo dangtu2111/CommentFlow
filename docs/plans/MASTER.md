@@ -250,7 +250,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | DA-ORDER-IN-COMMENT | FR-156 (đặt hàng trong bình luận → Khách tiềm năng), FR-157 (mẫu ngưng/hết hàng khi tự gửi) | US-112 | LEADS-KANBAN | S (PII) | không | ⏳ |
 | SPAM-RULES | FR-080 (quy tắc spam, xem trước số bình luận khớp 7 ngày) | US-050 | INBOX-LIST | — | không | ✅ Xong-mock (feat-spam-rules, Q-SPR1: xem trước thật; Lưu: bảng `cf.rules` 0050, feat-spam-rules-store, Q-SRS1 — còn UI danh sách/bật-tắt `SPAM-RULES-LIST-UI`) |
 | AUTO-HIDE | FR-081 (Tự ẩn SĐT/link sau khi chạy đánh dấu; lưu khách trước khi ẩn); **AI không tự ẩn** | US-050, UF-4 | SPAM-RULES, FB-HIDE | S | không | ⏳ |
-| LEADS-KANBAN | FR-082 (Khách tiềm năng: trích SĐT/địa chỉ/sản phẩm, Kanban, giao người) | US-051 | PII-MASK-PIPE | S (PII) | không | ⏳ |
+| LEADS-KANBAN | FR-082 (Khách tiềm năng: trích SĐT/địa chỉ/sản phẩm, Kanban, giao người) — phần dữ liệu `LEADS-STORE` ✅ Xong-mock (feat-leads-store, migration 0051); còn giao diện Kanban + nối pipeline | US-051 | PII-MASK-PIPE | S (PII) | không | ⏳ (một phần) |
 | LEADS-EXPORT | FR-082 (xuất Excel/CSV) | US-051 | LEADS-KANBAN | S (PII) | không | ⏳ |
 | IG-CONNECTOR | FR-013 (bình luận Instagram: đọc, trả lời, ẩn; cùng Meta App) | UF-2 | CONNECTOR-IFACE, FB-OAUTH | S | **có** — IG Business thử | ⛔ |
 | SHOPIFY-IMPORT | FR-052 (chỉ đọc sản phẩm/biến thể/giá/tồn/chính sách), FR-122 (nguồn Shopify) | US-030 | PRODUCTS-VARIANTS | S (OAuth) | **có** — Shopify dev store | ⛔ |
