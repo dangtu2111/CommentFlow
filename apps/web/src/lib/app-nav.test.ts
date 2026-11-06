@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { getMessages } from '../i18n/messages';
-import { isNavActive, navGroupsFor } from './app-nav';
+import { isNavActive, navGroupsFor, splitNavByRole } from './app-nav';
+
+describe('FR-040 trang 403: chia mục điều hướng theo vai trò (docs/08 §7.8)', () => {
+  it('FR-040 Staff: "dùng được" khớp điều hướng của Staff; "chỉ Owner" là phần còn lại', () => {
+    const split = splitNavByRole('staff');
+    expect(split.allowed.map((i) => i.key)).toEqual(
+      navGroupsFor('staff').flatMap((g) => g.items.map((i) => i.key)),
+    );
+    expect(split.ownerOnly.map((i) => i.key)).toContain('members');
+    expect(split.ownerOnly.map((i) => i.key)).toContain('channels');
+    expect(split.ownerOnly.some((i) => split.allowed.some((a) => a.key === i.key))).toBe(false);
+  });
+
+  it('FR-040 Owner: không có mục nào "chỉ Owner" bị khóa', () => {
+    expect(splitNavByRole('owner').ownerOnly).toEqual([]);
+  });
+});
 
 const keys = (role: 'owner' | 'staff') =>
   navGroupsFor(role).flatMap((group) => group.items.map((item) => item.key));

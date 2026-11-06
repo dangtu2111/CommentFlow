@@ -72,6 +72,17 @@ export function navGroupsFor(role: NavRole): NavGroup[] {
   })).filter((group) => group.items.length > 0);
 }
 
+/**
+ * Trang 403 (docs/08 §7.8): mục vai trò này dùng được và mục chỉ dành cho Owner (khóa với vai trò hiện tại).
+ * Lấy từ cùng bảng `ENTRIES` với thanh điều hướng nên không lệch quyền thật.
+ */
+export function splitNavByRole(role: NavRole): { allowed: NavItem[]; ownerOnly: NavItem[] } {
+  const strip = ({ key, href }: Entry): NavItem => ({ key, href });
+  const allowed = ENTRIES.filter((e) => e.roles.includes(role)).map(strip);
+  const ownerOnly = ENTRIES.filter((e) => !e.roles.includes(role)).map(strip);
+  return { allowed, ownerOnly };
+}
+
 /** Mục đang mở: đúng đường dẫn hoặc trang con (bỏ query/hash, dấu `/` cuối); không khớp tiền tố giả. */
 export function isNavActive(pathname: string, href: string): boolean {
   const path = pathname.split(/[?#]/, 1)[0]?.replace(/\/+$/, '') ?? '';
