@@ -1,9 +1,10 @@
 // pnpm dev:seed-demo [--reset] — dữ liệu mẫu [MẪU] CHỈ cho DB dev `cf_dev` (Q-UIF1). Mật khẩu in một lần, không lưu file.
 import { createDb } from '@flow/db/runtime';
 import { hashPassword } from '@flow/saas-core';
-import { isAppError, parseEnv } from '@flow/shared';
+import { parseEnv } from '@flow/shared';
 import pg from 'pg';
 import { z } from 'zod';
+import { describeSeedError } from './describe-error';
 import { assertDevSeedAllowed } from './guard';
 import { seedDemo } from './seed';
 
@@ -55,11 +56,6 @@ try {
     await Promise.all([admin.end(), appDb.close(), workerDb.close()]);
   }
 } catch (error) {
-  // Không in nguyên đối tượng lỗi (lỗi pg có thể kèm host/chi tiết dòng dữ liệu).
-  console.error(
-    isAppError(error)
-      ? `[${error.code}] ${error.message}`
-      : `Lỗi: ${error instanceof Error ? error.message : 'không rõ'}`,
-  );
+  console.error(describeSeedError(error));
   process.exit(1);
 }

@@ -250,7 +250,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | ⏳ |
 | ABUSE-JOB | FR-115 (phát hiện lạm dụng: Đánh dấu sai, câu bị xóa, lỗi 368, tăng đột biến) | — | AI-SENT-HISTORY | S | không | ⏳ |
 | ADMIN-SEND-LOCK | FR-116 (Admin tạm khóa gửi; trang Sức khỏe Meta App) | US-084 | ADMIN-SHELL, ABUSE-JOB | S | không | ⏳ |
-| DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ⏳ |
+| DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ✅ lõi thuần (`feat-da-holder`, Q-DH1; nối pipeline → `DA-HOLDER-WIRE`; KT-DH) |
 | DA-IMPERSONATION | FR-155 (chống mạo danh Page/shop) | US-111 | AUTO-SEND-GATE | S | không | ⏳ |
 | DA-ORDER-IN-COMMENT | FR-156 (đặt hàng trong bình luận → Khách tiềm năng), FR-157 (mẫu ngưng/hết hàng khi tự gửi) | US-112 | LEADS-KANBAN | S (PII) | không | ⏳ |
 | SPAM-RULES | FR-080 (quy tắc spam, xem trước số bình luận khớp 7 ngày) | US-050 | INBOX-LIST | — | không | ✅ Xong-mock (feat-spam-rules, Q-SPR1: xem trước thật; Lưu: bảng `cf.rules` 0050, feat-spam-rules-store, Q-SRS1 — còn UI danh sách/bật-tắt `SPAM-RULES-LIST-UI`) |
