@@ -145,12 +145,16 @@
 /* Chỉ ở /dev/ui/kb-posts với dữ liệu [MẪU]: cột "Cấu hình bài viết & AI" chưa có chức năng thật */
 .dev-kb-posts {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: repeat(
+      12,
+      minmax(0, 1fr)
+    ); /* Stitch: grid-cols-12, cột trái span 7, cột phải span 5 */
   gap: var(--space-4);
   align-items: start;
 }
 
 .posts-dev-feed {
+  grid-column: span 7;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -158,6 +162,7 @@
 }
 
 .post-config {
+  grid-column: span 5;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -214,6 +219,11 @@
 
 @media (max-width: 900px) {
   .dev-kb-posts {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .posts-dev-feed,
+  .post-config {
+    grid-column: auto;
   }
 }

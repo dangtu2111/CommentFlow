@@ -1,0 +1,14 @@
+== 1440px
+  div x284 w465 .md:col-span-5 relative
+  div x272 w665 .lg:col-span-7 space-y-space-md
+  div x953 w471 .lg:col-span-5 bg-surface-container-lowes
+  .dev-kb-posts x16 w1152
+  .posts-dev-feed x16 w665
+  .post-config x697 w471
+== 1920px
+  div x284 w665 .md:col-span-5 relative
+  div x272 w945 .lg:col-span-7 space-y-space-md
+  div x1233 w671 .lg:col-span-5 bg-surface-container-lowes
+  .dev-kb-posts x16 w1632
+  .posts-dev-feed x16 w945
+  .post-config x977 w671
