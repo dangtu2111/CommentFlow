@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { AuthTabs } from '../../../components/auth/auth-shell';
+import { SocialLogin } from '../../../components/auth/auth-social';
 import { RegisterForm } from '../../../components/auth/forms';
 import { getBrand } from '../../../server/brand';
 import { getCurrentUser } from '../../../server/session';
@@ -20,6 +21,7 @@ export default async function RegisterPage() {
         <h1 className="auth-title">{t('register.title')}</h1>
         <p className="auth-subtitle">{t('register.subtitle')}</p>
       </div>
+      <SocialLogin />
       <RegisterForm />
     </>
   );
