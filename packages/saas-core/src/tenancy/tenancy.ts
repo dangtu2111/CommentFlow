@@ -30,7 +30,7 @@ const themeSchema = z.enum(USER_THEMES);
 const imageSchema = z
   .string()
   .max(500)
-  .regex(/^(https:\/\/|\/)[^\s]*$/)
+  .regex(/^(https:\/\/|\/(?!\/))[^\s]*$/)
   .nullable();
 
 export const DEFAULT_TIME_ZONE = 'Asia/Ho_Chi_Minh';

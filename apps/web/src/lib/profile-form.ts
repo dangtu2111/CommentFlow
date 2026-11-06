@@ -1,19 +1,14 @@
 import { isValidTimeZone } from '@flow/saas-core';
 import { z } from 'zod';
+import { PROFILE_NAME_MAX, type ProfileErrors } from './profile-state';
 
-/** Giới hạn ký tự hiển thị ở bộ đếm "(n/50 ký tự)" của Stitch. */
-export const PROFILE_NAME_MAX = 50;
-
-export type ProfileErrors = { name?: 'required' | 'too_long'; timezone?: 'invalid' };
-
-/** Kết quả của form "Chỉnh sửa thông tin" (đọc bằng `useActionState`). Không bao giờ chứa dữ liệu nhạy cảm. */
-export type ProfileState =
-  | { status: 'idle' }
-  | { status: 'saved' }
-  | { status: 'invalid'; errors: ProfileErrors }
-  | { status: 'error' };
-
-export const PROFILE_IDLE: ProfileState = { status: 'idle' };
+// Chỉ dùng phía máy chủ (kéo `@flow/saas-core`); trình duyệt dùng `profile-state.ts`.
+export {
+  PROFILE_IDLE,
+  PROFILE_NAME_MAX,
+  type ProfileErrors,
+  type ProfileState,
+} from './profile-state';
 
 const profileSchema = z.object({
   name: z.string().trim().min(1, 'required').max(PROFILE_NAME_MAX, 'too_long'),

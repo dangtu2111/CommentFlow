@@ -148,12 +148,17 @@ export function createPhoneVerifyFlows(options: {
         await store.remove(input.userId);
         return { status: 'invalid' };
       }
+      // Giữ chỗ MỘT lượt thử bằng câu nguyên tử TRƯỚC khi so mã: nhập song song không vượt trần 5 lần.
+      const attempts = await store.addAttempt(input.userId);
+      if (attempts > OTP_MAX_ATTEMPTS) {
+        await store.remove(input.userId);
+        return { status: 'invalid' };
+      }
       const code = input.code.replace(/[\s-]/g, '');
       const matches =
         /^\d{6}$/.test(code) &&
         safeEqualHex(challenge.codeHash, hashOtp(secret, input.userId, challenge.phone, code));
       if (!matches) {
-        const attempts = await store.addAttempt(input.userId);
         if (attempts >= OTP_MAX_ATTEMPTS) await store.remove(input.userId);
         return { status: 'invalid' };
       }

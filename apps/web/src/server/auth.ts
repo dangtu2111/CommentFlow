@@ -50,7 +50,7 @@ export type AuthRuntime = {
   flows: AuthFlows;
   twoFactor: TwoFactorFlows;
   /** Hồ sơ phần `cf_app` không đọc được (múi giờ, giao diện, SĐT) — đọc bằng `cf_auth` theo userId của phiên. */
-  profileStore: AuthProfileStore;
+  profileStore: Pick<AuthProfileStore, 'readProfile'>;
   /** Xác minh SĐT bằng OTP; `enabled` theo cờ `PHONE_VERIFY_ENABLED` (SMS MOCK, chỉ dev/test/ci). */
   phoneVerify: PhoneVerifyFlows;
   /** Đổi mật khẩu của chính mình (kiểm mật khẩu lộ + rate limit + xóa mọi phiên). */
@@ -146,7 +146,8 @@ function createRuntime(): AuthRuntime {
     authHandle,
     flows: createAuthFlows({ auth, limiter, passwordPolicy, twoFactor }),
     twoFactor,
-    profileStore,
+    // Chỉ đọc: kho thử thách OTP (`challenges`, có `markVerified`) KHÔNG đưa ra ngoài — SĐT chỉ được ghi qua `phoneVerify`.
+    profileStore: { readProfile: profileStore.readProfile },
     phoneVerify,
     changePassword: createChangePasswordFlow({
       auth,

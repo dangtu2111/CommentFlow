@@ -244,6 +244,30 @@ describe('verify', () => {
     expect(limited).toBe(true);
   });
 
+  it('nhập SONG SONG không vượt trần 5 lần so mã (giữ chỗ lượt thử trước khi so)', async () => {
+    const t = setup();
+    await t.flows.start({ userId: USER, phoneInput: '0912345678' });
+    // 10 lần đoán sai song song, rồi nhập ĐÚNG mã: mã đã chết nên vẫn bị từ chối.
+    await Promise.all(
+      Array.from({ length: 10 }, () => t.flows.verify({ userId: USER, code: '000000' })),
+    );
+    expect(await t.flows.verify({ userId: USER, code: '123456' })).toEqual({ status: 'invalid' });
+    expect(t.verified.size).toBe(0);
+  });
+
+  it('cùng một SĐT bị nhiều tài khoản dồn tin: xô theo riêng SĐT chặn', async () => {
+    const t = setup();
+    const users = ['a', 'b', 'c', 'd', 'e', 'f'].map(
+      (c) => c.repeat(8) + '-1111-4111-8111-111111111111',
+    );
+    const statuses: string[] = [];
+    for (const userId of users) {
+      statuses.push((await t.flows.start({ userId, phoneInput: '0912345678' })).status);
+    }
+    expect(statuses.slice(0, 5)).toEqual(Array(5).fill('sent'));
+    expect(statuses[5]).toBe('rate_limited');
+  });
+
   it('cờ TẮT → disabled', async () => {
     const t = setup({ enabled: false });
     expect(await t.flows.verify({ userId: USER, code: '123456' })).toEqual({ status: 'disabled' });

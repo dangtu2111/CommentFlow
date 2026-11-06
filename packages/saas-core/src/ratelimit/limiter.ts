@@ -116,6 +116,8 @@ export const RATE_POLICIES: Record<
     buckets: [
       { bucket: 'user-phone', needs: ['userId', 'phone'], max: 3, windowSeconds: 10 * 60 },
       { bucket: 'user', needs: ['userId'], max: 6, windowSeconds: 24 * 3600 },
+      // Theo riêng SĐT: nhiều tài khoản không dồn tin vào một máy (5 lần/giờ).
+      { bucket: 'phone', needs: ['phone'], max: 5, windowSeconds: 3600 },
     ],
     onStoreFailure: 'deny',
   },

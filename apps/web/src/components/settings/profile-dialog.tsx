@@ -9,7 +9,7 @@ import {
   saveProfileAction,
   uploadAvatarAction,
 } from '../../app/app/(guarded)/settings/profile-actions';
-import { PROFILE_IDLE, PROFILE_NAME_MAX } from '../../lib/profile-form';
+import { PROFILE_IDLE, PROFILE_NAME_MAX } from '../../lib/profile-state';
 import { userInitials } from '../../lib/user-initials';
 import { Icon } from '../ui/icon';
 import { TwDialog, TwDialogTrigger } from './tw/dialog';

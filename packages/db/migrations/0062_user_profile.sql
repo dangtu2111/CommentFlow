@@ -5,9 +5,10 @@
 --   * phone, phone_verified_at: cf_app KHÔNG có quyền nào; chỉ cf_auth (ngữ cảnh 'auth') ghi sau khi OTP đúng.
 --   * core.phone_verifications: chỉ cf_auth trong app.ctx = 'auth' (mẫu two_factors 0013); cf_app không có quyền nào.
 -- Không UNIQUE theo SĐT: tránh lộ "SĐT này đã có người dùng" (chống liệt kê).
--- Đường lùi: DROP TABLE core.phone_verifications; ALTER TABLE core.users DROP COLUMN timezone, DROP COLUMN phone,
---   DROP COLUMN phone_verified_at, DROP COLUMN theme; REVOKE UPDATE (timezone, theme) ON core.users FROM cf_app;
---   REVOKE UPDATE (timezone, theme, phone, phone_verified_at) ON core.users FROM cf_auth.
+-- Đường lùi (MẤT dữ liệu SĐT/múi giờ/giao diện; chỉ lùi sau khi đã triển khai lại code cũ): DROP TABLE core.phone_verifications;
+--   ALTER TABLE core.users DROP COLUMN timezone, DROP COLUMN phone, DROP COLUMN phone_verified_at, DROP COLUMN theme.
+--   (Quyền theo cột và các CHECK users_* tự mất cùng cột, không cần REVOKE.)
+-- Ghi chú vận hành: không có meta/0062_snapshot.json (migration viết tay, mẫu 0010–0014); quyết định Q-WPROF1.
 ALTER TABLE core.users ADD COLUMN timezone text NOT NULL DEFAULT 'Asia/Ho_Chi_Minh';
 --> statement-breakpoint
 ALTER TABLE core.users ADD COLUMN phone text;

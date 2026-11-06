@@ -37,6 +37,14 @@ function lastOtp(): string {
   return (JSON.parse(lines.at(-1) ?? '{}') as { code?: string }).code ?? '';
 }
 
+/** Chụp ảnh đối chiếu giao diện (chỉ khi đặt `E2E_SHOT_DIR`, ví dụ docs/plans/ui-fidelity/settings-profile) ở 1440px. */
+async function shot(page: Page, name: string, fullPage = false) {
+  const dir = process.env.E2E_SHOT_DIR;
+  if (!dir) return;
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.screenshot({ path: `${dir}/${name}.png`, fullPage });
+}
+
 function runScenarios(locale: Locale) {
   const t = translator(locale);
   let baseURL = '';
@@ -88,6 +96,7 @@ function runScenarios(locale: Locale) {
       await opener(page, t('settings.account.edit')).click();
       const dialog = page.locator('#profile-edit-dialog');
       await expect(dialog).toBeVisible();
+      await shot(page, `${locale}-hoso-hop-thoai`);
 
       const email = dialog.getByLabel(t('settings.profile.emailLabel'), { exact: true });
       await expect(email).toBeDisabled();
@@ -146,6 +155,7 @@ function runScenarios(locale: Locale) {
       await opener(page, t('settings.account.verifyPhone')).click();
       const dialog = page.locator('#phone-verify-dialog');
       await expect(dialog).toBeVisible();
+      await shot(page, `${locale}-sdt-buoc1`);
 
       const phone = dialog.getByLabel(t('settings.phone.numberLabel'), { exact: false });
       const send = dialog.getByRole('button', { name: t('settings.phone.send'), exact: true });
@@ -160,6 +170,7 @@ function runScenarios(locale: Locale) {
       await expect(dialog.getByText(/^(Gửi lại sau|Resend in) \d+/)).toBeVisible();
       const boxes = dialog.locator('fieldset input');
       await expect(boxes).toHaveCount(6);
+      await shot(page, `${locale}-sdt-buoc2`);
 
       const fillCode = async (code: string) => {
         for (let i = 0; i < 6; i++) await boxes.nth(i).fill(code[i] ?? '');
@@ -172,6 +183,7 @@ function runScenarios(locale: Locale) {
 
       await fillCode(real);
       await expect(dialog.getByText(t('settings.phone.successTitle'))).toBeVisible();
+      await shot(page, `${locale}-sdt-buoc3`);
       await dialog.getByRole('button', { name: t('settings.phone.done'), exact: false }).click();
       await expect(dialog).toBeHidden();
 
@@ -196,6 +208,7 @@ function runScenarios(locale: Locale) {
       await page.getByRole('button', { name: t('settings.display.dark'), exact: false }).click();
       await expect(html).toHaveAttribute('data-theme', 'dark');
       await expect(setting).toHaveCSS('background-color', 'rgb(14, 22, 27)');
+      await shot(page, `${locale}-che-do-toi`, true);
 
       // Tải lại: thuộc tính đã có ngay khi tài liệu được phân tích (script chống nháy), không đợi hydrate.
       await page.reload({ waitUntil: 'commit' });

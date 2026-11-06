@@ -42,6 +42,7 @@ export async function saveProfileAction(
       });
     }
   } catch {
+    console.warn(JSON.stringify({ event: 'profile_save_failed' }));
     return { status: 'error' };
   }
   revalidatePath(SETTINGS_PATH);
@@ -60,7 +61,7 @@ export async function setThemeAction(data: FormData): Promise<void> {
     sameSite: 'lax',
     // Script chống nháy đọc cookie này ở phía trình duyệt nên KHÔNG httpOnly; chỉ chứa light/dark/system.
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
+    secure: getAuthRuntime().secureCookies,
   });
   revalidatePath(SETTINGS_PATH);
 }
