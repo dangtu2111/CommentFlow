@@ -1,12 +1,14 @@
 import { DECLARED_CAPABILITIES } from '@flow/connectors';
-import { isLocale } from '@flow/shared';
+import { isCommentLabel, isLocale } from '@flow/shared';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { hideErrorKey } from '../../lib/hide-errors';
 import { deriveHideUi, type HideUiDetail } from '../../lib/hide-state';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
+import { labelTone, platformBadgeText } from '../../lib/inbox-visual';
 import { replyErrorKey } from '../../lib/reply-errors';
 import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
 import type { SuggestionView } from '../../lib/suggestion';
+import { userInitials } from '../../lib/user-initials';
 import { CommentLock } from './comment-lock';
 import { HideButton } from './hide-button';
 import { HideProgress } from './hide-progress';
@@ -62,10 +64,13 @@ export async function CommentDetailPanel({
   comment,
   timeZone,
   now,
+  preview = false,
 }: {
   comment: CommentDetailView;
   timeZone: string;
   now: Date;
+  /** Trang xem mẫu `/dev/ui/comments`: không lấy khóa mềm (không có phiên). */
+  preview?: boolean;
 }) {
   const [t, rawLocale] = await Promise.all([getTranslations('comments'), getLocale()]);
   const locale = isLocale(rawLocale) ? rawLocale : 'vi';
@@ -154,16 +159,22 @@ export async function CommentDetailPanel({
   };
   return (
     <article className="comment-detail" aria-label={t('detail.title')}>
-      <CommentLock
-        commentId={comment.id}
-        labels={{
-          mine: t('lock.mine'),
-          // Chỗ giữ chỗ {name}/{seconds} được client thay khi biết người giữ khóa (ICU không phân tích lại giá trị tham số).
-          heldNamed: t('lock.heldNamed', { name: '{name}', seconds: '{seconds}' }),
-          heldAnonymous: t('lock.heldAnonymous', { seconds: '{seconds}' }),
-        }}
-      />
+      {preview ? null : (
+        <CommentLock
+          commentId={comment.id}
+          labels={{
+            mine: t('lock.mine'),
+            // Chỗ giữ chỗ {name}/{seconds} được client thay khi biết người giữ khóa (ICU không phân tích lại giá trị tham số).
+            heldNamed: t('lock.heldNamed', { name: '{name}', seconds: '{seconds}' }),
+            heldAnonymous: t('lock.heldAnonymous', { seconds: '{seconds}' }),
+          }}
+        />
+      )}
       <header className="comment-detail-head">
+        <span className="inbox-avatar inbox-avatar-lg" aria-hidden="true">
+          {userInitials(comment.authorName ?? t('list.anonymous'))}
+          <span className="inbox-avatar-platform">{platformBadgeText(comment.platform)}</span>
+        </span>
         <h2 className="comment-detail-author">{comment.authorName ?? t('list.anonymous')}</h2>
         <time
           dateTime={comment.createdTime?.toISOString()}
@@ -200,7 +211,11 @@ export async function CommentDetailPanel({
       <div className="inbox-chips">
         <span className={`chip chip-status chip-${comment.status}`}>{status}</span>
         {comment.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
-        {comment.label ? <span className="chip">{comment.label}</span> : null}
+        {comment.label ? (
+          <span className={`chip chip-label chip-tone-${labelTone(comment.label)}`}>
+            {isCommentLabel(comment.label) ? t(`labels.${comment.label}`) : comment.label}
+          </span>
+        ) : null}
       </div>
       {isDeleted ? null : (
         <RelabelSelect commentId={comment.id} current={comment.label} labels={relabelLabels} />

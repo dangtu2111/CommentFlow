@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { KbFrame } from '../../../../components/kb/kb-frame';
 import { TryAiForm } from '../../../../components/try-ai/try-ai-form';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -15,11 +16,13 @@ export default async function TryAiPage() {
   await requireAppUser({ role: 'owner' });
   const t = await getTranslations('tryAi');
   return (
-    <main className="app-page">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle')}</p>
-      <p className="muted">{t('mockNote')}</p>
-      <TryAiForm />
+    <main className="app-page app-page-wide">
+      <KbFrame active="tryAi">
+        <h1 className="auth-title">{t('title')}</h1>
+        <p className="auth-subtitle">{t('subtitle')}</p>
+        <p className="muted">{t('mockNote')}</p>
+        <TryAiForm />
+      </KbFrame>
     </main>
   );
 }

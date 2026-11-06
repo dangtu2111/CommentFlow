@@ -586,6 +586,14 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 | 3 | (Sau khi nối) Cùng bình luận trên bài đã gắn đúng 1 sản phẩm | AI trả lời bình thường |
 | 4 | (Sau khi nối) Chỉ gửi sticker kèm chữ | Không bị coi là hỏi về ảnh |
 
+## KT-DRL — Cam kết pháp lý/uy tín (DA-RULES-LEGAL, FR-160) · Legal/trust commitments
+
+Chưa có giao diện (lõi hàm thuần, chưa nối pipeline). / No UI yet (pure core, not wired).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/decide/legal-rules.test.ts` | Xanh: hỏi chính hãng/VAT/bảo hành/nguồn gốc/hoàn tiền mà kho không nhắc → cờ `legalUnsourced`; nháp khẳng định không nguồn hoặc thời hạn lạ → bị chặn. |
+
 ## KT-DROH — Hỏi đơn hàng + câu mời theo giờ làm việc (DA-RULES-ORDER-HOURS, FR-153/152, feat-da-rules-order-hours)
 
 > Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verify by command.
@@ -614,6 +622,19 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 | 1 | `pnpm --filter @flow/ai exec vitest run src/decide/stock-rules.test.ts` | Mọi test xanh: tồn cũ hơn 3 ngày (nhập tay/Excel) → không nói còn/hết hàng; đúng ngưỡng vẫn tươi. |
 | 2 | Xem nhóm "FR-157 gợi ý thay thế" trong cùng file | Chỉ gợi ý khi bật; tối đa 2 mẫu cùng danh mục, đang bán, còn hàng, kèm giá từ biến thể. |
 | 3 | `pnpm --filter @flow/ai test:coverage` | Đạt ngưỡng; `src/decide/*.ts` ≥ 95% nhánh. |
+
+## KT-DSD — Dữ liệu mẫu DEV (DEV-SEED-DEMO, feat-dev-seed-demo) — chưa thử
+
+> Cần `.env` + máy ảo bật, DB `cf_dev` đã migrate. Chỉ dev. / Needs `.env` + dev VM; dev DB only.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `APP_ENV=staging pnpm dev:seed-demo` (hoặc trỏ `DATABASE_ADMIN_URL` sang `cf_test`) | Từ chối `[FORBIDDEN]`, không ghi gì |
+| 2 | `pnpm dev:seed-demo` (APP_ENV=dev, `cf_dev`) | In cảnh báo "[MẪU]", số lượng, email + mật khẩu Owner/Staff MỘT lần |
+| 3 | Chạy lại lệnh | "Workspace mẫu đã có — không làm gì", không tạo trùng |
+| 4 | Đăng nhập Owner bằng email/mật khẩu vừa in | Vào được `/app`, thấy "[MẪU] Demo Shop", 2 kênh, 4 bài, 42 bình luận; trang Sản phẩm/Kiến thức/Tự động hóa có dữ liệu |
+| 5 | `pnpm dev:seed-demo --reset` | Tạo lại, mật khẩu mới; mật khẩu cũ không còn đăng nhập được |
+| 6 | Mọi tên kênh/sản phẩm/tác giả | Bắt đầu bằng "[MẪU]"; không SĐT/email thật |
 
 ## KT-KB-EMBED-COL — Chỉ mục embedding của `kb_chunks` (KB-EMBED-COL, FR-133/139, migration 0042) · Embedding indexes
 
@@ -1003,6 +1024,14 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UKP — Giao diện Cơ sở kiến thức + Bài viết (UI-FIDELITY-KB-POSTS, QUKP1)
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/web dev` (cổng riêng), mở `/dev/ui/kb-posts` (bản dev). | Thẻ bài + tab nền tảng + phân trang số + panel cấu hình; mọi nội dung có nhãn [MẪU]; bản production trả 404. |
+| 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
+| 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 

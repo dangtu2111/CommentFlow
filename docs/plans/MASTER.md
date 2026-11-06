@@ -33,6 +33,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | GĐ0-DB | FR-092 (bảng), 117 (bảng), 118 | — | COMPOSE-DEV | S+DB | không | ✅ |
 | GĐ0-AUTH-CORE | FR-001–005 (lõi) | US-001, 005 | DB | S | không | ✅ |
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
+| UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-AUTH-FIDELITY | FR-001, 119 | US-001, UF-1 | UI-AUTH | — | không | 🟡 giao diện đăng nhập/đăng ký khớp Stitch; phần còn lại xem gap matrix |
 | AUTH-2FA | FR-001 (TOTP + mã dự phòng) | US-005 | AUTH-CORE | S | không | ✅ |
 | AUTH-SESSIONS-UI | FR-001 (thiết bị) | US-005 | AUTH-2FA | — | không | ✅ (trang tạm) |
@@ -73,6 +74,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | SETTINGS-PAGE | FR-001, 119 (gom bảo mật/ngôn ngữ vào Cài đặt theo Stitch `settings-security`) | US-005 | AUTH-CHANGE-PW-UI, AUTH-LANG-PREF | — | không | 🟡 (`feat-settings-page`: 2FA + phiên + ngôn ngữ xong; đổi mật khẩu/`users.locale` chờ AUTH-CHANGE-PW-UI, AUTH-LANG-PREF; KT-016) |
 | AUTH-HARDEN-4a | FR-001 (REDIS_KEY_PREFIX bắt buộc, Zod ở Server Action bảo mật, `checkAdminInsertGuard` chính xác) | — | — | S | không | ✅ `feat-auth-harden-4a` |
 | AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ✅ `feat-auth-harden-4b` |
+| DEV-SEED-DEMO | UI-first: `pnpm dev:seed-demo` dữ liệu mẫu [MẪU] chỉ `cf_dev` (Q-UIF1) | — | — | S | không | 🟡 Xong-mock `feat-dev-seed-demo` (chưa chạy với DB thật) |
 | FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ✅ |
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ✅ Xong (`feat-cli-parseenv`; chờ CI) |
 | E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ✅ xanh 6/6 trên CI (nguyên nhân gốc: cookie phiên cũ sau xoay phiên — đã sửa ở fix/2fa-backup-codes) |
@@ -169,7 +171,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | DA-RULES-PRICE | FR-150 (lệch giá quảng cáo ↔ kho → chuyển người), FR-158 (khoảng giá khi chưa rõ biến thể) | US-108 | PIPE-DECIDE-ACTION | S | không | ✅ lõi thuần (feat-da-rules-price); lưu DB → `DA-RULES-PRICE-DB` |
 | DA-RULES-STOCK | FR-151 (độ tươi tồn kho), FR-157 mẫu ngưng/hết hàng (phần gợi ý; tự gửi ở GĐ4) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-stock); nối DB/pipeline → `DA-RULES-STOCK-WIRE` |
 | DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-order-hours, Q-DROH1; nối giờ làm việc DB/pipeline → `DA-RULES-ORDER-HOURS-WIRE`; KT-DROH) |
-| DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ⏳ |
+| DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ✅ lõi thuần (feat-da-rules-legal); nối pipeline → `DA-RULES-LEGAL-WIRE` |
 | DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-handoff-rules); nối pipeline → `DA-HANDOFF-WIRE` |
 | PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ✅ Xong-mock (lõi hàm thuần, `feat-pipe-variation`; còn `VARIATION-WIRE`: Redis `…:recent` + ghi `drafts.variants`, và `VARIATION-NAME`: chèn tên khách) |
 | PIPE-MERGE-BURST | FR-148 (gộp bình luận liên tiếp < 30 giây) | US-109 | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; ghi `merged_into_id` chờ migration làn b) |

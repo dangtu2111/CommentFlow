@@ -30,6 +30,15 @@ export {
   MAX_SHORT_TEXT_WORDS,
 } from './handoff-rules';
 export {
+  checkDraftLegal,
+  type DraftLegalCheck,
+  evaluateLegalRules,
+  LEGAL_TOPICS,
+  type LegalEvaluation,
+  type LegalSource,
+  type LegalTopic,
+} from './legal-rules';
+export {
   type BusinessHoursState,
   detectOrderStatusIntent,
   evaluateBusinessHours,

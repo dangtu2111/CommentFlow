@@ -2,7 +2,8 @@ import { isLocale } from '@flow/shared';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { formatAbsoluteTime } from '../../lib/inbox-format';
-import { buildPostsHref, type PostsView } from '../../lib/posts-filters';
+import { buildPostsHref, POSTS_PAGE_SIZE, type PostsView } from '../../lib/posts-filters';
+import { postsPageWindow } from '../../lib/posts-pagination';
 
 export type PostsListItem = {
   id: string;
@@ -35,16 +36,26 @@ function safeHref(url: string | null): string | null {
 export async function PostsList({
   view,
   items,
+  total,
   pageCount,
   timeZone,
 }: {
   view: PostsView;
   items: PostsListItem[];
+  total: number;
   pageCount: number;
   timeZone: string;
 }) {
   const [t, rawLocale] = await Promise.all([getTranslations('posts'), getLocale()]);
   const locale = isLocale(rawLocale) ? rawLocale : 'vi';
+  const rangeFrom = (view.page - 1) * POSTS_PAGE_SIZE + 1;
+  const rangeTo = rangeFrom + items.length - 1;
+  let lastPage = 0;
+  const pageItems = postsPageWindow(view.page, pageCount).map((token) => {
+    if (token === 'gap') return { key: `gap-after-${lastPage}`, token };
+    lastPage = token;
+    return { key: `page-${token}`, token };
+  });
   return (
     <>
       <ul className="posts-list" aria-label={t('list.label')}>
@@ -53,11 +64,13 @@ export async function PostsList({
           return (
             <li key={post.id} className="posts-item">
               <div className="posts-meta">
-                <span className="posts-badge">
+                <span className="posts-badge posts-badge-platform" data-platform={post.platform}>
                   {t(`platforms.${post.platform as 'facebook' | 'instagram' | 'tiktok'}`)}:{' '}
                   {post.channelName}
                 </span>
-                <span className="posts-badge">{t(post.isAd ? 'kind.ads' : 'kind.organic')}</span>
+                <span className="posts-badge" data-kind={post.isAd ? 'ads' : 'organic'}>
+                  {t(post.isAd ? 'kind.ads' : 'kind.organic')}
+                </span>
                 <span className="posts-time">
                   {post.createdTime
                     ? formatAbsoluteTime(post.createdTime, locale, timeZone)
@@ -85,19 +98,48 @@ export async function PostsList({
           );
         })}
       </ul>
-      <nav className="posts-pagination" aria-label={t('pagination.label')}>
-        {view.page > 1 ? (
-          <Link href={buildPostsHref(view, { page: view.page - 1 })} rel="prev">
-            {t('pagination.prev')}
-          </Link>
-        ) : null}
-        <span>{t('pagination.summary', { page: view.page, pages: pageCount })}</span>
-        {view.page < pageCount ? (
-          <Link href={buildPostsHref(view, { page: view.page + 1 })} rel="next">
-            {t('pagination.next')}
-          </Link>
-        ) : null}
-      </nav>
+      <div className="posts-footer">
+        <span className="posts-range">{t('range', { from: rangeFrom, to: rangeTo, total })}</span>
+        <nav className="posts-pagination" aria-label={t('pagination.label')}>
+          {view.page > 1 ? (
+            <Link
+              href={buildPostsHref(view, { page: view.page - 1 })}
+              rel="prev"
+              className="posts-page"
+              aria-label={t('pagination.prev')}
+            >
+              ‹
+            </Link>
+          ) : null}
+          {pageItems.map(({ key, token }) =>
+            token === 'gap' ? (
+              <span key={key} className="posts-page-gap" aria-hidden="true">
+                …
+              </span>
+            ) : (
+              <Link
+                key={token}
+                href={buildPostsHref(view, { page: token })}
+                className="posts-page"
+                aria-label={t('pageNumber', { page: token })}
+                aria-current={token === view.page ? 'page' : undefined}
+              >
+                {token}
+              </Link>
+            ),
+          )}
+          {view.page < pageCount ? (
+            <Link
+              href={buildPostsHref(view, { page: view.page + 1 })}
+              rel="next"
+              className="posts-page"
+              aria-label={t('pagination.next')}
+            >
+              ›
+            </Link>
+          ) : null}
+        </nav>
+      </div>
     </>
   );
 }

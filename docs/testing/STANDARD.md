@@ -50,7 +50,7 @@ Công cụ: `fast-check` (TS, MIT), `hypothesis` (Python, MPL-2.0). **Chưa cài
 
 ## 6. Dữ liệu và fixture
 
-- Không dữ liệu khách giả làm số liệu; seed chỉ `plans` và từ điển viết tắt hệ thống (`AGENTS.md`).
+- Không dữ liệu khách giả làm số liệu; seed chỉ `plans` và từ điển viết tắt hệ thống (`AGENTS.md`). Ngoại lệ: dữ liệu mẫu `[MẪU]` của `pnpm dev:seed-demo` chỉ trên `cf_dev` để dựng giao diện (Q-UIF1) — test không được dựa vào nó.
 - Fixture tối thiểu, đặt tên/chú thích rõ là fixture (`*.fixture.ts`/`fixtures/`), không giống dữ liệu thật.
 - Bình luận thật chỉ dùng bản **đã che PII**; không dán bình luận thật chưa che vào test, issue, hay phiên Codex.
 - Không đọc/in `.env*`; test tích hợp lấy biến qua `scripts/lib/load-env.mjs`.
