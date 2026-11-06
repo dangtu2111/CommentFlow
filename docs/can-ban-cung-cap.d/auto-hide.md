@@ -1,0 +1,2 @@
+## 2t. `AUTO-HIDE` (FR-081) — chưa cần ngay, cần khi bật Tự ẩn thật
+Hiện chỉ có logic thuần + interface; cờ `AUTO_HIDE_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi Facebook. Để bật thật bạn cần: (1) kênh Facebook đã kết nối thật có quyền ẩn bình luận (`FB-OAUTH`, `feat/fb-connector` với `setHidden`); (2) bật `LEADS_CAPTURE_ENABLED` + khóa `LEADS_ENC_KEYS`/`LEADS_HASH_KEY` (khách được lưu TRƯỚC khi ẩn); (3) sau khi có migration `AUTO-HIDE-DB`, đặt `AUTO_HIDE_ENABLED=true` và bật quy tắc Tự ẩn có `shadow_until` vài ngày để xem số "sẽ ẩn" trước khi ẩn thật.
