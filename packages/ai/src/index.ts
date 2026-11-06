@@ -165,3 +165,26 @@ export {
   type LlmClientOptions,
   type LlmMessage,
 } from './llm-client';
+export {
+  type AbbreviationDict,
+  createAbbreviationDict,
+  type DetectedLang,
+  type KnownLang,
+  type LangDetection,
+  type LangDetector,
+  type LangRule,
+  type NormalizeLangInput,
+  type NormalizeLangResult,
+  normalizeAndDetectLang,
+  normalizeText,
+} from './normalize/normalize-lang';
+export {
+  type GuardVariantsInput,
+  type GuardVariantsResult,
+  guardVariants,
+  MAX_VARIANTS,
+  type PickedVariant,
+  pickVariant,
+  REASON_VARIANTS_EXHAUSTED,
+  replyFingerprint,
+} from './variation/variation';

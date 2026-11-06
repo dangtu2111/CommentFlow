@@ -31,9 +31,28 @@
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
+| KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
+| KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
+
+---
+
+## KT-PV — Đa dạng diễn đạt (PIPE-VARIATION, FR-161)
+
+Chưa có giao diện/pipeline nối (còn `VARIATION-WIRE`); mục này chỉ kiểm test. Không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/variation src/draft`. — Mong đợi: tất cả test xanh.
+2. (Khi đã có khóa LLM, tùy chọn) gọi `createLlmDrafter` với `DRAFT_LLM_ENABLED=true` cho cùng một câu hỏi vài lần. — Mong đợi: `variants` 3–5 câu khác chữ, cùng giá/link; không có câu đổi số tiền (câu đổi số bị loại).
+
+---
+
+## KT-UC — Bộ đếm lượt AI (USAGE-COUNTERS, FR-090)
+
+Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate` (DB dev/test của bạn) rồi chạy test.
+1. `CF_LANE=<làn> pnpm test:db` → file `usage-counters.int.test.ts` xanh (đua 20 lệnh song song chỉ cho đúng 10 lượt). Kết quả mong đợi: không test đỏ.
+2. `pnpm db:check-rls` → không báo vi phạm `core.usage_counters`/`core.consume_usage`. Kết quả mong đợi: "đạt".
+3. (Tùy chọn, vi + en) Khi `USAGE-METER-UI` xong: đồng hồ lượt hiện "80%" màu cảnh báo, "100%" chặn AI và đề xuất mua thêm/nâng gói.
 
 ---
 
@@ -71,6 +90,16 @@ Chưa có giao diện (ô Thử AI là `KB-TRYAI`; nối pipeline là `PIPE-RETR
 | 4 | (Tùy chọn, `psql` trên `cf_dev`) `SELECT search_norm, tsv FROM cf.kb_chunks LIMIT 1;` sau khi có đoạn. | `search_norm` thường + không dấu; `tsv` có từ không dấu (vi). |
 
 Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
+
+---
+
+## KT-033 — Chuẩn hóa + nhận ngôn ngữ (PIPE-NORMALIZE-LANG, FR-025/120/159; chỉ lõi hàm thuần, chưa nối pipeline)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/normalize/normalize-lang.test.ts` | Xanh; không gọi mạng/DB/LLM |
+| 2 | Đọc nhanh test quy tắc §5: "áo này còn size M không" → vi; "How much is this shirt…" → en; chữ Hán/Thái/Hàn/Nga → other | Khớp ý bạn (muốn đổi ngưỡng/từ khóa → nói để sửa Q-PNL1) |
+| 3 | Khi ABBREV-DICT + pipeline được nối: bình luận "ib giá sz M bn" | Chuẩn hóa thành "inbox giá size m bao nhiêu", lang = vi |
 
 ---
 

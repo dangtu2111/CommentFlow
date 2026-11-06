@@ -30,6 +30,16 @@ const base = (over: Partial<DraftInput> = {}): DraftInput => ({
   ...over,
 });
 
+describe('FR-161 prompt yêu cầu biến thể', () => {
+  it('khối hệ thống nói rõ variants, giữ nguyên nội dung/số/link, 3–5 câu gồm câu gốc', () => {
+    const system = buildDraftMessages(base())[0]?.content ?? '';
+    expect(system).toContain('variants');
+    expect(system).toMatch(/giữ nguyên/i);
+    expect(system).toMatch(/số tiền|số/);
+    expect(system).toMatch(/link/);
+  });
+});
+
 describe('FR-138 thứ tự prompt để trúng cache', () => {
   const msgs = buildDraftMessages(base());
   it('hướng dẫn hệ thống → giọng văn/chính sách (kb_version) → nguồn + câu hỏi', () => {

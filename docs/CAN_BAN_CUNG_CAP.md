@@ -113,6 +113,7 @@ Code đã có bước `extract` (`packages/ai/src/classify/`) gọi LLM qua Lite
 Code đã có bước `draft` (`packages/ai/src/draft/`) gọi LLM qua LiteLLM sẵn có (prompt xếp ổn định + đánh dấu cache), nhưng cờ **tắt mặc định** và chưa nối vào pipeline; test chạy bằng fixture/giả lập. Chỉ khi muốn chạy thật, bạn cần cung cấp:
 - Khóa ảo LiteLLM (`LITELLM_API_KEY`) được cấp quyền cho **model soạn câu** (nên là model hỗ trợ prompt caching, ví dụ dòng Claude/GPT/Gemini); khóa nhà cung cấp đặt trong cấu hình LiteLLM trên máy ảo, không vào repo.
 - Đặt `DRAFT_LLM_MODEL=<tên model trong LiteLLM>` và `DRAFT_LLM_ENABLED=true` (chỉ staging/thử; chưa đo chất lượng và tỉ lệ trúng cache — chờ `EVAL-RUNNER`).
+- `PIPE-VARIATION` (FR-161, mã KT-PV) dùng chung đúng khóa/model này (3–5 biến thể câu trong cùng một lần gọi, không thêm tài nguyên); chất lượng đa dạng thật chỉ đo được khi bật thật.
 
 ## 2h. `PIPE-RULE-FILTER` + `PIPE-MERGE-BURST` (FR-024, FR-148) — không cần tài nguyên ngoài
 
@@ -123,6 +124,10 @@ Hai hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-032. Không c
 Tìm kiếm toàn văn + trigram chạy hoàn toàn trong Postgres (không cần khóa). Nhánh **vector** nhận vector dựng sẵn qua interface `Embedder` (`packages/ai/src/embedding/`); hiện chỉ có bản fixture (băm ký tự, không gọi mạng), chưa có bản gọi mô hình thật. Chỉ khi muốn chạy thật, bạn cần cung cấp:
 - Một model embedding **1024 chiều** trong LiteLLM (ví dụ dòng BGE-M3/multilingual-e5-large, hoặc dịch vụ trả phí hỗ trợ giảm chiều về 1024) + khóa ảo LiteLLM (`LITELLM_API_KEY`) có quyền model đó; tên model dự kiến đặt ở `EMBEDDING_MODEL` (chưa thêm vào `env.example` cho tới khi có bản thật).
 - Quyết định có tự host (máy ảo) hay dùng dịch vụ trả phí; kèm giá để đưa vào `ai_usage`.
+
+## 2h. Nhận diện ngôn ngữ (lingua) — `PIPE-NORMALIZE-LANG` (FR-025/120/159, Xong-mock, mã KT-033)
+
+Không cần khóa hay dịch vụ ngoài: `normalizeAndDetectLang` chạy bằng heuristic từ khóa mặc định. Muốn độ chính xác cao hơn cho câu không dấu/ngôn ngữ Latin khác (Pháp, Tây Ban Nha…), bạn **quyết định** có thêm thư viện lingua (MIT) hay không — khi đó sẽ cắm qua interface `LangDetector`, kèm bộ đánh giá 4 nhóm (FR-120). Từ điển viết tắt lấy từ bảng `abbreviations` (việc ABBREV-DICT).
 
 ## 2i. `AUTO-SEND-GATE` (FR-031, FR-141) — không cần tài nguyên ngoài
 

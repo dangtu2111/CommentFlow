@@ -24,6 +24,22 @@ function codeOf(text: string): unknown {
   return 'không ném';
 }
 
+describe('FR-161 trường variants', () => {
+  it('mặc định rỗng; làm sạch khoảng trắng và chuỗi rỗng', () => {
+    expect(parseDraftOutput(JSON.stringify(good)).variants).toEqual([]);
+    const r = parseDraftOutput(JSON.stringify({ ...good, variants: [' Cách hai ', '', '  '] }));
+    expect(r.variants).toEqual(['Cách hai']);
+  });
+
+  it('variants sai kiểu → không đọc được', () => {
+    expect(codeOf(JSON.stringify({ ...good, variants: 'x' }))).toBe('LLM_UNAVAILABLE');
+  });
+
+  it('needsHumanResult có variants rỗng', () => {
+    expect(needsHumanResult('x').variants).toEqual([]);
+  });
+});
+
 describe('FR-029 đọc đầu ra soạn trả lời', () => {
   it('đọc JSON hợp lệ, khử trùng sources, làm sạch unanswered_topics', () => {
     const r = parseDraftOutput(JSON.stringify(good));

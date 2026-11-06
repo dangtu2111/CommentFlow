@@ -1,5 +1,6 @@
 import { REASON_HANDOFF_ACTION } from '../confidence/confidence';
 import type { LlmClient } from '../llm-client';
+import { guardVariants } from '../variation/variation';
 import { type ActionBrief, buildDraftMessages, type DraftInput } from './draft-prompt';
 import {
   type DraftResult,
@@ -9,8 +10,13 @@ import {
 } from './draft-result';
 
 export const DRAFT_STEP = 'draft';
-/** Đổi khi sửa prompt (ghi vào `ai_usage.prompt_version`). `@2`: thêm hướng dẫn theo hành động (FR-147). */
-export const DRAFT_PROMPT_VERSION = 'draft@2';
+/**
+ * Đổi khi sửa prompt (ghi vào `ai_usage.prompt_version`). `@2`: hướng dẫn theo hành động (FR-147);
+ * `@3`: thêm `variants[]` đa dạng diễn đạt (FR-161).
+ */
+export const DRAFT_PROMPT_VERSION = 'draft@3';
+/** Nhiệt độ soạn thấp (FR-161: khởi điểm 0,3, chỉnh theo bộ đánh giá). */
+export const DRAFT_TEMPERATURE = 0.3;
 /** Ngưỡng liên quan mặc định; chưa hiệu chuẩn (chờ EVAL), người gọi có thể ghi đè. */
 export const DEFAULT_MIN_RELEVANCE = 0.35;
 export const REASON_NO_RELEVANT_SOURCE = 'Không có kiến thức liên quan';
@@ -50,14 +56,21 @@ export function createLlmDrafter(options: { llm: LlmClient; model: string }): Dr
         model: options.model,
         promptVersion: DRAFT_PROMPT_VERSION,
         messages: buildDraftMessages({ ...input, sources }),
-        temperature: 0.2,
-        maxTokens: 800,
+        temperature: DRAFT_TEMPERATURE,
+        maxTokens: 1200,
         draftId: input.draftId,
       });
-      return enforceClaimSources(
+      const checked = enforceClaimSources(
         parseDraftOutput(result.text),
         new Set(sources.map((source) => source.id)),
       );
+      if (checked.needs_human) return checked;
+      const { variants } = guardVariants({
+        reply: checked.reply,
+        variants: checked.variants,
+        sources: sources.map((source) => source.text),
+      });
+      return { ...checked, variants };
     },
   };
 }

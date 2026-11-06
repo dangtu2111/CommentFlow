@@ -153,7 +153,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | PIPE-RULE-FILTER | FR-024 (emoji/sticker/tag → Bỏ qua, không trừ lượt) | — | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; chưa nối pipeline) |
-| PIPE-NORMALIZE-LANG | FR-025 (NFC, viết thường, viết tắt), FR-120 (nhận vi/en), FR-159 (ngôn ngữ khác → `other`) | US-036 | ABBREV-DICT | — | không | ⏳ |
+| PIPE-NORMALIZE-LANG | FR-025 (NFC, viết thường, viết tắt), FR-120 (nhận vi/en), FR-159 (ngôn ngữ khác → `other`) | US-036 | ABBREV-DICT | — | không | ✅ Xong-mock (lõi hàm thuần; từ điển + lingua qua interface; chưa nối pipeline) |
 | PII-MASK-PIPE | FR-033 (che SĐT/email trước LLM/Langfuse; lưu số vào Khách tiềm năng trước khi che) | — | PIPE-NORMALIZE-LANG | S | không | ⏳ |
 | PIPE-CACHE-EXACT | FR-026 (khớp chính xác; khóa chứa `workspace_id`, bài, `kb_version`, `product_revs`) | — | KB-SEARCH-FTS | S+DB | không | ⏳ |
 | PIPE-CLASSIFY-EXTRACT | FR-027 (6 nhãn bằng model nhỏ), FR-145 (`labels[]`), FR-162 (một bước `extract`) | US-100–103 | PII-MASK-PIPE, AI-WRAPPER | — | **có** — khóa LLM trả phí | 🟡 Xong-mock (`feat-pipe-classify-extract`; cờ `CLASSIFY_LLM_ENABLED` tắt; chưa có nhánh ml; KT-030) |
@@ -170,15 +170,15 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ⏳ |
 | DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ⏳ |
 | DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ⏳ |
+| PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ✅ Xong-mock (lõi hàm thuần, `feat-pipe-variation`; còn `VARIATION-WIRE`: Redis `…:recent` + ghi `drafts.variants`, và `VARIATION-NAME`: chèn tên khách) |
 | PIPE-MERGE-BURST | FR-148 (gộp bình luận liên tiếp < 30 giây) | US-109 | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; ghi `merged_into_id` chờ migration làn b) |
-| PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ⏳ |
 | PIPE-CACHE-SEMANTIC-STUB | FR-026 (semantic cache LiteLLM — cấu hình tối thiểu; phần đầy đủ ở GĐ5) | — | PIPE-CACHE-EXACT | — | không | ⏳ |
 
 ### 2D. Hạn mức, chi phí, đánh giá
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| USAGE-COUNTERS | FR-090 (`usage_counters`, hạn mức, chặn 100%) | US-060 | GĐ0-AI-WRAPPER | S+DB | không | ⏳ |
+| USAGE-COUNTERS | FR-090 (`usage_counters`, hạn mức, chặn 100%) | US-060 | GĐ0-AI-WRAPPER | S+DB | không | ✅ (feat-usage-counters, migration 0039; chưa nối pipeline AI → `USAGE-GATE-PIPE`; `test:db` chạy ở CI) |
 | USAGE-METER-UI | FR-090 (đồng hồ lượt, cảnh báo 80%) | US-060 | USAGE-COUNTERS | — | không | ⏳ |
 | AI-VIRTUALKEY | FR-034 (khóa ảo LiteLLM theo workspace, ngân sách riêng) | — | USAGE-COUNTERS | S | **có** — khóa LLM | ⛔ |
 | AI-TRY-BOX-UI | FR-059 + FR-029 (Thử AI chạy cả pipeline, không trừ lượt) | US-034 | PIPE-DRAFT | — | không | ⏳ |
