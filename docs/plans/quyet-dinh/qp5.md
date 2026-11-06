@@ -1,0 +1,1 @@
+| QP5 | 06/11 | FB-BACKFILL giao diện | Làm hàm `backfillChannel(days ∈ 3/7/30)`; nút chọn số ngày khi kết nối + enqueue hoãn → gap `FB-BACKFILL-UI` | Tách phần lõi kiểm được; UI cần quyết định trải nghiệm | Làm UI sau |

@@ -1,0 +1,1 @@
+| QP2 | 06/11 | POLLING: cửa sổ và chu kỳ | Lần đầu 7 ngày; sau đó `last_polled_at` − 15 phút chồng, không cũ hơn 7 ngày; chu kỳ 5 phút; bỏ bình luận mới hơn 5 phút (chờ webhook) và của Page | Chồng bù trễ/lệch giờ; 5 phút để "webhook im lặng" chỉ báo khi thật sự rớt | Đổi hằng số ở `polling-window.ts` |

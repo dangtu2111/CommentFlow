@@ -1,0 +1,1 @@
+- **Lời mời (ADR 005):** nhận lời mời chỉ qua `core.accept_invitation(token_hash)` (SECURITY DEFINER, gọi trong `withUser`, KHÔNG nhận email/user id, mọi lỗi → 0 dòng). Tên cột trả về khác tên cột bảng (plpgsql nhập nhằng). `cf_app` chỉ UPDATE `invitations.revoked_at`; không DELETE. Trong hàm DEFINER, `search_path` không có `public` nên citext phải so bằng `lower(x::text)`.

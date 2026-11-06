@@ -1,0 +1,1 @@
+- 06/11 (AUTH-HARDEN-4b, Q-AH4b): `docs/10_Database_Design.md` §3.1 (dòng `two_factors`: `user_id` UNIQUE) và §4 (bảng quyền `two_factors`: thêm migration 0035).

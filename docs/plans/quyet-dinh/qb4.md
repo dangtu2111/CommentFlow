@@ -1,0 +1,1 @@
+| QB4 | 05/11 | BULK-ACTIONS: bình luận đang bị đồng nghiệp khóa | Bỏ qua cái đó (gộp vào "không áp dụng được" trong báo kết quả); không ghi đè khóa | Trigger 0027 chặn ghi đè khóa còn hạn; tránh giành việc | — |

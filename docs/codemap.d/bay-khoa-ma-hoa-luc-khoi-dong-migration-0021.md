@@ -1,0 +1,1 @@
+- **Khóa mã hóa lúc khởi động (migration 0021):** worker gọi `verifyTokenKeysAtStartup` (`cf.channel_key_versions()` + `assertTokenKeysCoverVersions`); thiếu khóa cho phiên bản đang dùng → dừng khởi động. `TokenKeyMissingError` (lỗi cấu hình) KHÔNG làm kênh `expired`; sai khóa/AAD mới `expired`.

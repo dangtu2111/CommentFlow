@@ -8,7 +8,7 @@
 Việc: `<mã gap matrix>` (người dùng cung cấp)
 
 1. Nếu có `docs/handoff/<nhánh hiện tại>.md` → đọc trước, dùng lại "Đã đọc và rút ra", không đọc lại các file đó trừ khi đã đổi.
-2. Đọc dòng `<mã>` trong `docs/gap-matrix.md`, mục spec tương ứng theo `docs/specs/README.md`, và phần liên quan của `docs/codemap.md`. Không đọc thêm spec khác.
+2. Đọc dòng `<mã>` trong `docs/gap-matrix.md`, mục spec tương ứng theo `docs/specs/README.md`, và phần liên quan của `docs/codemap.md` (file sinh ra từ `docs/codemap.d/`; khi cần sửa thì thêm file riêng ở đó + `pnpm codemap:build`). Không đọc thêm spec khác.
 3. Lập kế hoạch theo mẫu `docs/plans/TEMPLATE.md`, gồm đúng các mục:
    - **Việc** + tóm tắt 2–3 câu dễ hiểu
    - **Điểm chưa rõ** — mỗi chỗ mơ hồ là một thẻ `[CẦN LÀM RÕ: câu hỏi cụ thể]` kèm khuyến nghị; **không tự đoán**. Không có → "Không có"

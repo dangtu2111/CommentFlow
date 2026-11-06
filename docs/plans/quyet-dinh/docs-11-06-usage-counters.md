@@ -1,0 +1,1 @@
+- 06/11 (USAGE-COUNTERS, Q-UC1): `docs/10_Database_Design.md` §3.6 dòng `usage_counters` — cột `limit` → `limit_amount`, ghi PK, quyền (chỉ đọc với `cf_app`, ghi qua hàm `core.consume_usage`, migration 0039).
