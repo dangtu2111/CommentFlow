@@ -39,6 +39,7 @@ export {
   type PasswordPolicyWarning,
   type PasswordVerdict,
 } from './password-policy';
+export * from './recovery';
 export {
   changePasswordAndRevokeAll,
   revokeAllSessionsOfUser,

@@ -203,7 +203,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | EVAL-SET-REAL | FR-165 (~300 bình luận thật đã che PII; mỗi mẫu có hành động đúng) | — | — | S (PII) | **có** — chủ dự án cung cấp | ⛔ |
 | EVAL-RUNNER | FR-120 (bộ đánh giá 4 nhóm ngôn ngữ), FR-165, `14` §4 (promptfoo, chạy CI) | — | EVAL-SET-REAL, PIPE-DECIDE-ACTION | — | **có** — khóa LLM; cài promptfoo (nêu giấy phép) | ⛔ |
 | COST-GATE | — (đo ≤ $2/1.000 lượt từ `ai_usage`) | — | EVAL-RUNNER | — | không | 🟡 Xong-mock phần cổng chặn trần chi phí (`feat-cost-gate`, Q-CG1, FR-071: `packages/ai/src/cost-gate/`; còn nối `COST-GATE-WIRE`/`-PERSIST`/`-PLAN-DEFAULT`); phép đo ≤ $2/1.000 lượt vẫn chờ EVAL-RUNNER |
-| AUTH-2FA-RECOVERY | FR-001 (khôi phục khi mất điện thoại + mã dự phòng) | US-005 | AUTH-2FA | S | **có** — quyết định sản phẩm | ⛔ |
+| AUTH-2FA-RECOVERY | FR-001 (khôi phục khi mất điện thoại + mã dự phòng) | US-005 | AUTH-2FA | S | không (QRCV1) | Xong-mock (logic; chờ bảng DB + giao diện) |
 | **CỔNG 2** | xem đầu mục GĐ2 | | tất cả 2A–2D | | chủ dự án xác nhận | ⏳ |
 
 ---
