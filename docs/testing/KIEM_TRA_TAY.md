@@ -30,8 +30,16 @@
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
+| KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 
 ---
+
+## KT-PC — Độ tin cậy do code tính (PIPE-CONFIDENCE, FR-163/032)
+
+Hàm thuần, chưa nối cổng tự gửi (AUTO-SEND-GATE) → chưa có bước bấm tay; không cần khóa LLM, không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/confidence`. — Mong đợi: tất cả test xanh (có test property-based `fast-check`, seed cố định).
+2. Mở `packages/ai/src/confidence/confidence.ts`, xem `DEFAULT_CONFIDENCE_WEIGHTS`. — Mong đợi: trọng số `default@1`; không có chỗ nào đọc trường `confidence`/`self_score` của JSON LLM.
+3. Kiểm tay khi nối pipeline: bản nháp có JSON hỏng hoặc hành động lạ → độ tin cậy 0, bình luận vào "Cần người", không tự gửi.
 
 ## KT-031 — Soạn trả lời bằng LLM (PIPE-DRAFT, FR-029/138/140/142)
 
