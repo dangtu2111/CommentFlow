@@ -41,6 +41,8 @@ export type SeedDeps = {
   workerDb: FlowDb;
   hashPassword: (password: string) => Promise<string>;
   now: Date;
+  /** Chỉ test tích hợp đặt (cho DB `cf_test_<làn>`); CLI KHÔNG đặt nên luôn dùng cổng chỉ-`cf_dev`. */
+  assertDatabase?: (row: { database: string; marker: string | null }) => void;
 };
 
 export type SeedResult =
@@ -70,7 +72,7 @@ export async function verifyConnectedDatabases(deps: SeedDeps): Promise<void> {
   const fromWorker = (await deps.workerDb.withSystem((tx) => tx.execute<Row>(query))).rows[0];
   for (const row of [fromAdmin, fromApp, fromWorker]) {
     if (!row) throw new AppError('FORBIDDEN', 'Không đọc được database đang kết nối.');
-    assertDbMarkerAllowed({ database: row.db, marker: row.marker });
+    (deps.assertDatabase ?? assertDbMarkerAllowed)({ database: row.db, marker: row.marker });
   }
 }
 
@@ -204,24 +206,19 @@ export async function seedDemo(deps: SeedDeps, options: { reset: boolean }): Pro
   await deps.appDb.withActor(workspaceId, owner.id, async (tx) => {
     for (const p of DEMO_PRODUCTS) {
       const prices = p.variants.map((v) => v.priceVnd);
-      const [row] = await tx
-        .insert(schema.products)
-        .values({
-          workspaceId,
-          source: 'manual',
-          name: p.name,
-          sku: p.sku,
-          category: p.category,
-          priceVnd: Math.min(...prices),
-          stock: p.variants.reduce((sum, v) => sum + v.stock, 0),
-          searchText: productSearchText({
-            name: p.name,
-            sku: p.sku,
-            variants: p.variants.map((v) => ({ attrs: v.attrs })),
-          }),
-        })
-        .returning({ id: schema.products.id });
-      const productId = (row as { id: string }).id;
+      // SQL thô với danh sách cột tường minh: cf_app chỉ có GRANT INSERT theo cột (không có `rev`, do trigger đặt),
+      // còn drizzle `.insert()` luôn liệt kê cả cột `rev` (DEFAULT) → "permission denied for table products".
+      const searchText = productSearchText({
+        name: p.name,
+        sku: p.sku,
+        variants: p.variants.map((v) => ({ attrs: v.attrs })),
+      });
+      const inserted = await tx.execute<{ id: string }>(sql`
+        INSERT INTO cf.products (workspace_id, source, name, sku, category, price_vnd, stock, search_text)
+        VALUES (${workspaceId}::uuid, 'manual', ${p.name}, ${p.sku}, ${p.category}, ${Math.min(...prices)},
+          ${p.variants.reduce((sum, v) => sum + v.stock, 0)}, ${searchText})
+        RETURNING id`);
+      const productId = (inserted.rows[0] as { id: string }).id;
       productIds.set(p.key, productId);
       await tx.insert(schema.productVariants).values(
         p.variants.map((v) => ({
