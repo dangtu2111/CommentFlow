@@ -231,6 +231,9 @@ Code connector Instagram đã nối vào worker nhưng cờ **tắt mặc địn
 - Trên **máy chạy worker** đặt `IG_CONNECTOR_ENABLED=true` cùng `META_APP_ID`, `META_APP_SECRET`, `TOKEN_ENC_KEYS` (cùng giá trị với mục 1). Không commit giá trị.
 - Chưa bật được đường thật cho tới khi xong gap `IG-WEBHOOK-ROUTE` (route web nhận webhook Instagram) và `IG-CHANNEL-CONNECT` (lưu IG Business ID làm kênh) — cả hai cần migration/route do làn khác làm. Kiểm tay: KT-IG.
 
+## 2x. `LEADS-EXPORT` (FR-082, US-051) — chỉ cần quyết định chính sách, chưa cần tài nguyên ngoài
+Lõi xuất CSV/XLSX khách tiềm năng đã xong (chưa nối DB/giao diện nên chưa ảnh hưởng người dùng); cờ `LEADS_EXPORT_ENABLED` mặc định TẮT. Bạn cần: (1) xác nhận mặc định che SĐT/email và trần 5000 dòng/5 MB (Q-LEX1; đổi bằng biến `LEADS_EXPORT_PHONE_MODE`, `LEADS_EXPORT_MAX_ROWS`); (2) quyết định có cho Owner xuất SĐT đầy đủ không (`full` — dữ liệu nhạy cảm, nên chỉ bật khi thật sự cần và đã có nhật ký xuất, việc `LEADS-EXPORT-WIRE`); (3) chỉ bật cờ ở staging/production khi đã nối nguồn thật và giao diện. Kiểm tay mã KT-LEX.
+
 ## 2v. `LEADS-STORE` (FR-082, FR-033) — chỉ cần khóa mã hóa khi bật ghi khách tiềm năng
 Bảng `cf.leads` (migration 0051) và `ContactSink` thật đã xong nhưng chưa nối vào pipeline; cờ `LEADS_CAPTURE_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật). Khi bật bạn cần: (1) tự sinh `LEADS_ENC_KEYS=v1:<openssl rand -hex 32>` (xoay khóa: thêm `v2:…`, giữ khóa cũ để giải mã) và `LEADS_HASH_KEY=<openssl rand -hex 32>` — **khác** `TOKEN_ENC_KEYS` và khác nhau, chỉ đặt ở máy staging/production (worker + web đều cần để ghi/xem), KHÔNG đặt trên máy ảo dev dùng chung; (2) **sao lưu khóa an toàn**: mất `LEADS_ENC_KEYS` = không đọc lại được số/email đã lưu; đổi `LEADS_HASH_KEY` = mất khả năng chống trùng cho lead cũ; (3) quyết định chính sách lưu giữ/xóa dữ liệu khách tiềm năng (hiện chỉ Owner xóa tay). Kiểm tay mã KT-LDS.
 
