@@ -119,7 +119,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | KB-SHOP-POLICY-FAQ | FR-050 (thông tin shop, chính sách, FAQ, giọng văn theo ngôn ngữ, quy tắc) | US-003, UF-1 | KB-SCHEMA | — | không | ✅ (feat-kb-shop-policy-faq, migration 0036: `shop_profiles`/`policy_items`/`faq_items`/`brand_voice` + `@flow/shared` kiểm đầu vào + `queries/kb-content.ts`; giao diện → `KB-CONTENT-UI`, phạm vi kênh → `KB-SCOPE-CHANNEL`) |
 | PRODUCTS-VARIANTS | FR-129 (`products`, `product_variants`, `products.rev`), FR-056 (giá/tồn không vào vector), FR-058 (thẻ sản phẩm) | US-101 | KB-SCHEMA | DB | không | ✅ (feat-products-variants, migration 0034) |
 | PRODUCT-ALIAS | FR-128 (bí danh sản phẩm) | US-100 | PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-product-alias, migration 0043, Q-PA1; còn API/UI tab Bí danh, gợi ý chờ xác nhận, nối pipeline) |
-| SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
+| SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-size-table, migration 0044, Q-ST1; còn API/UI "Bảng size", nối pipeline) |
 | ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ✅ Xong-mock (feat-abbrev-dict, migration 0041; chưa nối pipeline/giao diện) |
 | KB-IMPORT-EXCEL | FR-051 (Excel/CSV: tải → khớp cột → xem lỗi → xác nhận) | US-003 | PRODUCTS-VARIANTS | — | không | ✅ Xong (feat-kb-import-excel, Q-KBIX1, không migration; parse đồng bộ trong web → KB-IMPORT-EXCEL-WORKER; KT-KBIX) |
 | KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ✅ Xong-mock (feat-kb-publish-version, Q-KPV1; con trỏ phiên bản/snapshot nguồn/hạ nhãn → gap matrix) |
