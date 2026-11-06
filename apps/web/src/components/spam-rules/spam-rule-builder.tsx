@@ -13,7 +13,7 @@ export function SpamRuleBuilder() {
   const [state, action, pending] = useActionState(spamRuleAction, IDLE);
 
   return (
-    <form action={action} className="card stack">
+    <form action={action} className="card stack spam-builder">
       <label htmlFor="sr-name">{t('nameLabel')}</label>
       <input id="sr-name" name="name" className="input" maxLength={80} required />
       <label htmlFor="sr-type">{t('typeLabel')}</label>

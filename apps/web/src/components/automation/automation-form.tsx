@@ -3,6 +3,7 @@ import type { InboxChannel } from '@flow/db/runtime';
 import { getTranslations } from 'next-intl/server';
 import { saveAutomationAction } from '../../app/app/(guarded)/automation/actions';
 import type { AutomationFormDefaults } from '../../lib/automation-form';
+import { modeTone } from '../../lib/automation-ui';
 
 const DAYS = [1, 2, 3, 4, 5, 6, 0] as const;
 
@@ -24,17 +25,33 @@ export async function AutomationForm({
     )?.mode ?? 'off';
 
   return (
-    <form action={saveAutomationAction} className="stack">
-      <section className="card stack" aria-labelledby="automation-matrix-title">
-        <h2 id="automation-matrix-title" className="section-title">
-          {t('matrix.title')}
-        </h2>
-        <p className="muted">{t('matrix.body')}</p>
+    <form action={saveAutomationAction} className="stack auto-form">
+      <section className="card auto-card stack" aria-labelledby="automation-matrix-title">
+        <div className="auto-card-head">
+          <div>
+            <h2 id="automation-matrix-title" className="section-title auto-numbered">
+              {t('matrix.title')}
+            </h2>
+            <p className="muted">{t('matrix.body')}</p>
+          </div>
+          <ul className="auto-legend" aria-label={t('matrix.legend')}>
+            {[...AUTOMATION_MODES].reverse().map((mode) => (
+              <li key={mode} className={`mode-pill mode-pill-${modeTone(mode)}`}>
+                {t(`mode.${mode}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
         {channels.length === 0 ? <p className="muted">{t('matrix.empty')}</p> : null}
         {channels.map((channel) => (
-          <fieldset key={channel.id} className="stack">
-            <legend className="member-name">{channel.name}</legend>
-            <table className="table">
+          <fieldset key={channel.id} className="auto-channel stack">
+            <legend className="auto-channel-name">
+              <span className="auto-avatar" aria-hidden="true">
+                {channel.name.slice(0, 1).toUpperCase()}
+              </span>
+              {channel.name}
+            </legend>
+            <table className="table auto-table">
               <thead>
                 <tr>
                   <th scope="col">{t('matrix.label')}</th>
@@ -60,7 +77,7 @@ export async function AutomationForm({
                             id={id}
                             name={`mode:${channel.id}:${target}:${label}`}
                             defaultValue={modeOf(channel.id, target, label)}
-                            className="input"
+                            className={`input mode-select mode-pill-${modeTone(modeOf(channel.id, target, label))}`}
                           >
                             {AUTOMATION_MODES.map((mode) => (
                               <option key={mode} value={mode}>
@@ -77,11 +94,13 @@ export async function AutomationForm({
             </table>
           </fieldset>
         ))}
-        <p className="muted">{t('matrix.complaintNote')}</p>
+        <p role="note" className="auto-note">
+          {t('matrix.complaintNote')}
+        </p>
       </section>
 
-      <section className="card stack" aria-labelledby="automation-general-title">
-        <h2 id="automation-general-title" className="section-title">
+      <section className="card auto-card auto-general" aria-labelledby="automation-general-title">
+        <h2 id="automation-general-title" className="section-title auto-numbered">
           {t('general.title')}
         </h2>
         <label className="field">
@@ -186,9 +205,12 @@ export async function AutomationForm({
         </label>
       </section>
 
-      <button type="submit" className="btn btn-primary">
-        {t('save')}
-      </button>
+      <div className="auto-savebar">
+        <p className="muted">{t('saveHint')}</p>
+        <button type="submit" className="btn btn-primary">
+          {t('save')}
+        </button>
+      </div>
     </form>
   );
 }

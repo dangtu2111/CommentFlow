@@ -1,0 +1,2 @@
+## Redis cho cache câu trả lời — `PIPE-CACHE-EXACT` (FR-026, Xong-mock, mã KT-PCX)
+Cache khớp chính xác chạy sau interface `ExactCacheStore` với bản bộ nhớ; chưa có biến môi trường/Redis mới. Khi nối pipeline (`PIPE-ORCHESTRATOR`) cần Redis 7 đã có trong hạ tầng (docs/09 §2, dùng lại URL Redis của hệ thống) và cờ `cf.cache.answers` (docs/09 §10; mặc định TẮT cho đường thật). Không cần khóa/tài khoản mới.

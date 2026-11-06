@@ -29,7 +29,7 @@ Bạn là agent làm việc tự động trong làn `{{lane}}` (worktree riêng,
 
 ## File chung dễ xung đột
 
-Bản đồ code, gap matrix, danh sách quyết định: mỗi nhánh thêm **fragment/dòng riêng của mình** (ví dụ `docs/codemap.d/{{task}}.md` nếu repo có thư mục đó), không viết lại cả file.
+Bản đồ code, gap matrix, danh sách quyết định, danh sách cần cung cấp, kiểm tra tay, export công khai: mỗi nhánh thêm **FILE RIÊNG của mình**, không sửa file chung. Nếu repo có `AGENTS.md` mục "Thêm FILE RIÊNG", làm đúng bảng đó (ví dụ `docs/codemap.d/…`, `docs/plans/quyet-dinh/q<mã>.md`, `docs/can-ban-cung-cap.d/{{task}}.md`, `docs/testing/kiem-tra-tay.d/kt-<mã>.md` + `tt-<mã>.md`, `packages/ai/src/<module>/index.ts`) rồi chạy lệnh `…:build` tương ứng. Không sửa tay file ghép (`docs/codemap.md`, `docs/plans/QUYET_DINH_CHO_DUYET.md`, `docs/CAN_BAN_CUNG_CAP.md`, `docs/testing/KIEM_TRA_TAY.md`) và không sửa `packages/ai/src/index.ts`.
 
 ## Kết thúc
 

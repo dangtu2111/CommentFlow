@@ -716,7 +716,9 @@
     "subtitle": "Chọn AI được làm gì với từng loại bình luận/tin nhắn: Tắt (chỉ gợi ý cho nhân viên), Chạy thử (ghi lại câu sẽ gửi nhưng không gửi) hoặc Tự động (AI tự gửi khi qua mọi cổng kiểm tra). Mặc định mọi ô là Tắt.",
     "notWired": "Lưu ý: cấu hình được lưu bền nhưng chưa áp dụng cho việc tự gửi thật (sẽ nối khi có đường gửi tự động).",
     "save": "Lưu cài đặt",
+    "saveHint": "Chỉ Owner chỉnh được. Thay đổi có hiệu lực sau khi bấm Lưu cài đặt.",
     "matrix": {
+      "legend": "Chú thích mức tự gửi",
       "title": "Mức tự gửi theo kênh và nhãn",
       "body": "Mỗi ô là một mức riêng cho bình luận và tin nhắn của từng kênh.",
       "label": "Nhãn",
@@ -855,6 +857,10 @@
   },
   "spamRules": {
     "title": "Quy tắc spam",
+    "principle": {
+      "title": "Nguyên tắc an toàn cốt lõi: AI không bao giờ tự ý ẩn bình luận",
+      "body": "Quy tắc chỉ đánh dấu hoặc bỏ qua bình luận. Ẩn bình luận luôn là hành động của người, có bước xác nhận."
+    },
     "subtitle": "Tạo quy tắc để đánh dấu hoặc bỏ qua bình luận spam. Bấm Xem trước để biết quy tắc khớp bao nhiêu bình luận trong 7 ngày qua; xem trước chỉ đọc, không đổi bình luận nào. AI không bao giờ tự ẩn bình luận.",
     "nameLabel": "Tên quy tắc",
     "typeLabel": "Loại quy tắc",

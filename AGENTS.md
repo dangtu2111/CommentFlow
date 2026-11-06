@@ -46,6 +46,15 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - **Không đọc lại:** file đã đọc trong phiên thì dùng lại nội dung đã có, chỉ đọc lại sau khi chính mình sửa hoặc có thay đổi từ bên ngoài. Đọc theo khoảng dòng khi file dài.
 - **Bàn giao giữa phiên:** cuối phiên ghi `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại). Phiên sau đọc file này thay vì đọc lại source.
 - **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → **thêm/sửa file riêng trong `docs/codemap.d/`** (tiền tố `lenh-`/`cay-`/`mien-`/`diem-vao-`/`bay-`, một hàng một file) rồi chạy `pnpm codemap:build`; **không sửa tay `docs/codemap.md`** (file sinh ra, CI chạy `pnpm codemap:check`); xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
+- **Thêm FILE RIÊNG, không sửa file chung** (để nhánh song song không xung đột; mỗi cái có script ghép + `--check` trong CI):
+
+  | Cần ghi | Thêm file riêng | Rồi chạy |
+  |---|---|---|
+  | Bản đồ code | `docs/codemap.d/<tiền-tố>-….md` | `pnpm codemap:build` |
+  | Quyết định tự chọn | `docs/plans/quyet-dinh/q<mã>.md` | `pnpm quyet:build` |
+  | Tài nguyên cần chủ dự án cung cấp | `docs/can-ban-cung-cap.d/<mã-gap>.md` (cả mục `## …`) — **không** sửa `docs/CAN_BAN_CUNG_CAP.md` | `pnpm cbcc:build` |
+  | Kiểm tra tay | `docs/testing/kiem-tra-tay.d/kt-<mã>.md` (cả mục `## KT-<MÃ> — …`) **và** `tt-<mã>.md` (một hàng bảng "Trạng thái") — **không** sửa `docs/testing/KIEM_TRA_TAY.md`; mã KT phải duy nhất | `pnpm kt:build` |
+  | Export công khai của `@flow/ai` | thêm vào `packages/ai/src/<module>/index.ts` của module đó; **không** sửa `packages/ai/src/index.ts` (chỉ thêm một dòng `export * from './<module>';` khi tạo thư mục module mới) | `pnpm --filter @flow/ai typecheck` |
 
 ## Thiết kế giao diện
 

@@ -1,0 +1,1 @@
+| `docs/can-ban-cung-cap.d/` · `docs/testing/kiem-tra-tay.d/` | Nguồn của hai file tài liệu sinh ra: mỗi tài nguyên ngoài / mỗi mục kiểm tay là MỘT file riêng (xem `AGENTS.md` bảng "Thêm FILE RIÊNG"); file `_*.md` là phần đầu/mẫu, giữ nguyên |
