@@ -56,7 +56,7 @@ describe('parseHaravanMoney', () => {
   });
 });
 
-describe('buildHaravanImportPlan', () => {
+describe('FR-122 buildHaravanImportPlan', () => {
   it('bỏ sản phẩm chưa xuất bản', () => {
     expect(
       plan(product({ published: false }), product({ id: '2' })).map((p) => p.externalId),

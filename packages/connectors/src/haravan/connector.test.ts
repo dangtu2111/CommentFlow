@@ -41,7 +41,7 @@ const page = (nodes: unknown[], limitHeader?: string) =>
     limitHeader === undefined ? {} : { headers: { 'X-Haravan-Api-Call-Limit': limitHeader } },
   );
 
-describe('createHaravanConnector — cấu hình', () => {
+describe('FR-122 createHaravanConnector — cấu hình', () => {
   it.each([0, 251, 1.5])('pageSize không hợp lệ (%s) bị từ chối', (pageSize) => {
     expect(() =>
       createHaravanConnector({ getAccessToken: async () => FAKE_TOKEN, pageSize }),
@@ -54,14 +54,14 @@ describe('createHaravanConnector — cấu hình', () => {
   });
 });
 
-describe('fetchCatalog', () => {
+describe('FR-122 Haravan fetchCatalog', () => {
   it('GET đúng máy chủ Omni API, token Bearer ở header, không theo redirect', async () => {
     const { connector, calls } = harness([page([productNode(1)])]);
     const catalog = await connector.fetchCatalog();
     expect(catalog.products).toHaveLength(1);
     expect(calls).toHaveLength(1);
-    const [call] = calls;
-    expect(call?.url.origin + call?.url.pathname).toBe(
+    const call = calls[0] as Call;
+    expect(`${call.url.origin}${call.url.pathname}`).toBe(
       'https://apis.haravan.com/com/products.json',
     );
     expect(call?.url.searchParams.get('page')).toBe('1');

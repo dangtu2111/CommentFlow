@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readHaravanConfig } from './haravan-config';
 
-describe('readHaravanConfig', () => {
+describe('FR-122 readHaravanConfig', () => {
   it('mặc định TẮT', () => {
     expect(readHaravanConfig({})).toEqual({ enabled: false });
     expect(readHaravanConfig({ HARAVAN_ENABLED: '' })).toEqual({ enabled: false });

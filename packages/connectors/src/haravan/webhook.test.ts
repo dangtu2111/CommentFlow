@@ -4,7 +4,7 @@ import { signHaravanBody, verifyHaravanWebhook } from './webhook';
 const SECRET = 'ss-test';
 const BODY = '{"id":1,"title":"Áo"}';
 
-describe('verifyHaravanWebhook', () => {
+describe('FR-122 verifyHaravanWebhook', () => {
   it('chữ ký đúng → true (chuỗi và byte)', () => {
     const hmacHeader = signHaravanBody(BODY, SECRET);
     expect(verifyHaravanWebhook({ rawBody: BODY, hmacHeader, secret: SECRET })).toBe(true);
