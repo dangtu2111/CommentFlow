@@ -414,6 +414,13 @@
       "when": 1793971010961,
       "tag": "0058_msg_store",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1793973395040,
+      "tag": "0059_integration_health",
+      "breakpoints": true
     }
   ]
 }

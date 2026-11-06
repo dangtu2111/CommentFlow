@@ -13,6 +13,7 @@ import { formatAbsoluteTime } from '../../lib/inbox-format';
 import { activityTone } from '../../lib/settings-visual';
 import { userInitials } from '../../lib/user-initials';
 import { Avatar } from '../ui/avatar';
+import { DataTable } from '../ui/data-table';
 
 export type ActivityListItem = {
   id: string;
@@ -78,36 +79,46 @@ export async function ActivityList({
   const locale = isLocale(rawLocale) ? rawLocale : 'vi';
   return (
     <>
-      <ul className="inbox-items" aria-label={t('list.label')}>
+      <DataTable
+        label={t('list.label')}
+        columns={[
+          { label: t('table.time') },
+          { label: t('table.actor') },
+          { label: t('table.action') },
+          { label: t('table.target') },
+        ]}
+      >
         {items.map((item) => {
           const key = actionLabelKey(item.action);
+          const name = actorDisplay(t, item, viewerId);
           return (
-            <li key={item.id} className="inbox-item">
-              <Link
-                href={buildActivityHref(view, { selected: item.id })}
-                className="inbox-item-link"
-                aria-current={view.selected === item.id ? 'true' : undefined}
-              >
-                <ActorAvatar item={item} name={actorDisplay(t, item, viewerId)} />
-                <div className="log-row-body">
-                  <div className="inbox-item-head">
-                    <span className={`chip chip-tone-${activityTone(item.action)}`}>
-                      {key ? t(`actions.${key as 'workspace_created'}`) : item.action}
-                    </span>
-                    <time className="inbox-time" dateTime={item.createdAt.toISOString()}>
-                      {formatAbsoluteTime(item.createdAt, locale, timeZone)}
-                    </time>
-                  </div>
-                  <div className="inbox-source">
-                    {actorDisplay(t, item, viewerId)}
-                    {item.targetType ? ` · ${item.targetType}` : ''}
-                  </div>
-                </div>
-              </Link>
-            </li>
+            <tr key={item.id} aria-current={view.selected === item.id ? 'true' : undefined}>
+              <td>
+                <Link
+                  href={buildActivityHref(view, { selected: item.id })}
+                  className="log-row-link"
+                >
+                  <time dateTime={item.createdAt.toISOString()}>
+                    {formatAbsoluteTime(item.createdAt, locale, timeZone)}
+                  </time>
+                </Link>
+              </td>
+              <td>
+                <span className="log-actor">
+                  <ActorAvatar item={item} name={name} />
+                  {name}
+                </span>
+              </td>
+              <td>
+                <span className={`chip chip-tone-${activityTone(item.action)}`}>
+                  {key ? t(`actions.${key as 'workspace_created'}`) : item.action}
+                </span>
+              </td>
+              <td>{item.targetType ?? t('table.noTarget')}</td>
+            </tr>
           );
         })}
-      </ul>
+      </DataTable>
       <footer className="inbox-footer">
         <span>{t('list.shown', { shown: items.length })}</span>
         <span className="inbox-pager">

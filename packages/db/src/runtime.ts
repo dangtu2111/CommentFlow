@@ -151,6 +151,15 @@ export {
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
 export {
+  type DeadLetter,
+  getIntegrationErrorCounts,
+  type IncidentKind,
+  type IntegrationErrorCount,
+  type IntegrationIncidentInput,
+  listDeadLetters,
+  recordIntegrationIncident,
+} from './queries/integration-health';
+export {
   type DraftChunkState,
   type DraftChunkWrite,
   deleteDraftChunks,

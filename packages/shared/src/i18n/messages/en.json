@@ -1639,6 +1639,8 @@
     "nav": {
       "comments": "Comments",
       "posts": "Posts",
+      "leads": "Leads",
+      "reports": "Reports",
       "kb": "Knowledge base",
       "tryAi": "Try AI",
       "readiness": "AI readiness",
@@ -1926,6 +1928,86 @@
       "filteredBody": "Try removing some filters or changing the keyword."
     }
   },
+  "leads": {
+    "title": "Leads",
+    "subtitle": "People who left a phone number or email in comments and messages. View only; phone numbers show the last 4 digits.",
+    "kpi": {
+      "label": "Leads by stage",
+      "total": "Total leads"
+    },
+    "stages": {
+      "new": "New (to contact)",
+      "contacted": "In conversation",
+      "won": "Won",
+      "lost": "Lost / unreachable"
+    },
+    "card": {
+      "unknownName": "Unnamed lead",
+      "noPhone": "No phone number",
+      "hasEmail": "Has email",
+      "assigned": "Assigned",
+      "source": {
+        "comment": "Comment",
+        "message": "Message"
+      }
+    },
+    "emptyColumn": "No leads at this stage.",
+    "moreInColumn": "Showing the latest {shown} of {total}.",
+    "empty": {
+      "title": "No leads yet.",
+      "body": "Leads appear here when someone leaves a phone number or email and the Owner has turned on lead capture."
+    },
+    "error": {
+      "title": "Could not load leads.",
+      "body": "Please try again later."
+    }
+  },
+  "reports": {
+    "title": "Performance report",
+    "subtitle": {
+      "owner": "How fast comments are handled across the workspace and what the AI sent on its own.",
+      "staff": "Your own numbers: the comments you replied to."
+    },
+    "range": {
+      "label": "Time range",
+      "days": "Last {days} days"
+    },
+    "kpi": {
+      "label": "Key figures",
+      "received": "Comments received",
+      "answered": "You replied to",
+      "answerRate": "Reply rate",
+      "answeredOf": "{answered} of {received} comments",
+      "within15": "Replied within 15 minutes",
+      "median": "Response time (median)",
+      "autoReplied": "AI auto-sent",
+      "hoursSaved": "Saves about {hours} hours"
+    },
+    "hourly": {
+      "title": "Comments by hour of day",
+      "description": "Peak hours are darker (UTC+7).",
+      "chartLabel": "Chart of comments per hour",
+      "barTitle": "{hour}h: {count} comments",
+      "axisHour": "{hour}h"
+    },
+    "staff": {
+      "title": "Staff productivity",
+      "description": "Comments each person replied to.",
+      "empty": "No comments were replied to by staff in this range.",
+      "member": "Member {n}",
+      "columns": {
+        "who": "Staff",
+        "answered": "Replied",
+        "within15": "Within 15 min",
+        "median": "Median"
+      }
+    },
+    "truncated": "This range has too many comments, so the report only covers the first part. Pick a shorter range.",
+    "error": {
+      "title": "Could not load the report.",
+      "body": "Please try again later."
+    }
+  },
   "activity": {
     "title": "Activity log",
     "subtitle": {
@@ -1933,6 +2015,13 @@
       "staff": "Actions you performed yourself, including work the system did at your request. Read-only; entries cannot be edited or deleted."
     },
     "readOnly": "Read-only",
+    "table": {
+      "time": "Time",
+      "actor": "Actor",
+      "action": "Action",
+      "target": "Target",
+      "noTarget": "—"
+    },
     "list": {
       "label": "Log entries",
       "shown": "Showing {shown} entries",

@@ -29,17 +29,26 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
     expect(keys('owner')).toEqual([
       'comments',
       'posts',
+      'leads',
+      'reports',
       'kb',
       'automation',
       'spamRules',
       'activity',
       'settings',
     ]);
-    expect(keys('staff')).toEqual(['comments', 'posts', 'activity', 'settings']);
+    expect(keys('staff')).toEqual([
+      'comments',
+      'posts',
+      'leads',
+      'reports',
+      'activity',
+      'settings',
+    ]);
   });
 
-  it('FR-040 không hiện mục chưa có trang thật (Tin nhắn, Khách tiềm năng, Báo cáo) và không hiện trang con ở thanh bên', () => {
-    const hidden = ['messages', 'leads', 'reports', 'aiSent', 'tryAi', 'channels', 'members'];
+  it('FR-040 không hiện mục chưa có trang thật (Tin nhắn) và không hiện trang con ở thanh bên', () => {
+    const hidden = ['messages', 'aiSent', 'tryAi', 'channels', 'members'];
     for (const role of ['owner', 'staff'] as const) {
       for (const key of hidden) expect(keys(role)).not.toContain(key);
     }

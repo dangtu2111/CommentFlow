@@ -32,6 +32,7 @@
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
+| KT-AIH | Sức khỏe tích hợp & dead letter (chỉ logic + DB + test, chưa có giao diện; không cần khóa/dịch vụ ngoài) | feat-integration-health | chưa | chưa | — |
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
@@ -72,6 +73,7 @@
 | KT-UIC | Tự động hóa + Quy tắc spam đủ thành phần | — | chưa | chưa | — |
 | KT-UIHA | Tự động hóa + Quy tắc spam khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
+| KT-UIHLR | Khách tiềm năng, Báo cáo, Nhật ký dựng từ HTML Stitch | — | có | chưa | — |
 | KT-UIHS | Khung Cài đặt khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
@@ -560,6 +562,12 @@ Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy te
 | 2 | Mở `env.example` | Có tên biến `AUTO_HIDE_ENABLED=` để trống (cờ tắt mặc định). |
 | 3 | Khi có `AUTO-HIDE-DB` + `AUTO-HIDE-WIRE`: bật cờ + quy tắc Tự ẩn có `shadow_until`, gửi bình luận mẫu chứa SĐT từ Page thử | Trong thời gian shadow: chỉ có dòng "sẽ ẩn", bình luận chưa bị ẩn; sau đó bình luận bị ẩn và khách xuất hiện trong Khách tiềm năng TRƯỚC khi ẩn. |
 | 4 | Gửi bình luận không SĐT/link nhưng bị AI gán nhãn spam | KHÔNG bị ẩn (AI không tự ẩn). |
+
+## KT-AIH — Sức khỏe tích hợp & dead letter (ADMIN-INTEGRATION-HEALTH, FR-104)
+
+Chỉ phần máy (chưa có giao diện, chưa nối connector): người thử chạy test.
+1. `pnpm --filter @flow/shared exec vitest run src/integration-health.test.ts` → xanh. Mong đợi: chỉ Super Admin xem được; ngưỡng ok/suy giảm/sập đúng; thông báo lỗi bị che email/SĐT/chuỗi giống token.
+2. `pnpm test:db` (cần `.env` + máy phụ bật), file `integration-health.int.test.ts` → xanh. Mong đợi: chỉ worker ghi được sự cố; support/finance/Owner đọc tổng hợp và dead letter bị từ chối; payload webhook không lộ.
 
 ## KT-ALP1 — Tự gửi theo ngôn ngữ (AUTOSEND-LANG-PARTIAL, feat-autosend-lang-partial)
 
@@ -1381,6 +1389,18 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Chọn một bình luận | Cột phải hiện thẻ bối cảnh, khách + bình luận, AI phân tích (nhãn, Đổi nhãn), ô trả lời AI; thanh dưới có Ẩn và Gửi kèm `Ctrl + Enter` dính đáy khi cuộn |
 | 6 | Gõ trả lời rồi bấm Ctrl+Enter | Gửi như trước (không đổi logic) |
 | 7 | Thu cửa sổ còn 390px | Hai ngăn (danh sách / chi tiết) đúng; không cuộn ngang cả trang |
+
+## KT-UIHLR — Khách tiềm năng, Báo cáo, Nhật ký dựng từ HTML Stitch (UI-HTML-LEADS-REPORTS, feat-ui-html-leads-reports)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Đăng nhập Owner, thanh bên có "Khách tiềm năng" và "Báo cáo"; mở /app/leads | 4 ô số + Kanban 4 cột (Mới, Đang tư vấn, Đã chốt, Hủy) có số đếm; workspace chưa có lead → dải thông báo "Chưa có khách tiềm năng" |
+| 2 | Xem một thẻ lead (khi đã có dữ liệu) | Chỉ hiện chữ viết tắt, tên, nguồn (Bình luận/Tin nhắn), 4 số cuối SĐT dạng "•••• 1234"; không có SĐT/email đầy đủ |
+| 3 | Mở /app/reports, bấm "30 ngày qua" | URL có `?range=30`; số liệu đổi; biểu đồ 24 cột theo giờ, giờ cao điểm đậm hơn |
+| 4 | Đăng nhập Staff, mở /app/reports | Chỉ có "Bạn đã trả lời", "Trả lời trong 15 phút", "Thời gian phản hồi"; không có tỷ lệ cả workspace, AI tự gửi, bảng nhân viên |
+| 5 | Mở /app/activity | Danh sách là bảng Thời gian · Tác nhân · Hành động · Đối tượng; bấm giờ ở một dòng → ngăn chi tiết bên phải, dòng đó được tô nền |
+| 6 | Thu cửa sổ còn 390px ở cả ba trang | Không tràn ngang; bảng cuộn ngang trong khung riêng |
+| 7 | Chuyển English | Mọi chữ đổi sang tiếng Anh, không còn khóa thô (ví dụ `reports.title`) |
 
 ## KT-UIHS — Khung Cài đặt khớp HTML Stitch (UI-HTML-SETTINGS, feat-ui-html-settings)
 

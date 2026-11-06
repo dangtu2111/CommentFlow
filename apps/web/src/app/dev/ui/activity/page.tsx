@@ -5,6 +5,8 @@ import { ActivityDetailPanel } from '../../../../components/activity/activity-de
 import { ActivityList, type ActivityListItem } from '../../../../components/activity/activity-list';
 import { ActivityToolbar } from '../../../../components/activity/activity-toolbar';
 import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
+import { Chip } from '../../../../components/ui/chip';
+import { PageHeader } from '../../../../components/ui/page-header';
 import { parseActivitySearchParams } from '../../../../lib/action-log-filters';
 
 const TZ = 'Asia/Ho_Chi_Minh';
@@ -78,18 +80,15 @@ export default async function DevActivityPage() {
   return (
     <DevShell>
       <main className="log-page">
-        <header className="log-header">
-          <h1 className="page-title">{t('title')}</h1>
-          <p>
-            <span className="chip chip-muted">
-              <Lock size={12} aria-hidden="true" /> {t('readOnly')}
-            </span>
-          </p>
-          <p className="page-subtitle">{t('subtitle.owner')}</p>
+        <div className="log-header">
+          <PageHeader title={t('title')} subtitle={t('subtitle.owner')} />
+          <Chip>
+            <Lock size={12} aria-hidden="true" /> {t('readOnly')}
+          </Chip>
           <p className="inbox-sample-note" role="note">
             {DEV_SAMPLE_NOTE}
           </p>
-        </header>
+        </div>
         <section className="log-list" aria-label={t('list.label')}>
           <ActivityToolbar view={view} actions={[]} showActor />
           <ActivityList

@@ -1,0 +1,99 @@
+/* Nhật ký hoạt động (FR-092, design/stitch/activity-log.html): bảng + ngăn chi tiết. Tách khỏi globals.css. */
+.log-page {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.log-header {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.log-list,
+.log-detail {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+
+.log-detail {
+  padding: var(--space-6);
+  color: var(--color-text-muted);
+}
+
+.log-detail h2 {
+  color: var(--color-text);
+  font-size: var(--text-lg);
+}
+
+.log-detail code.chip {
+  margin-left: 0;
+}
+
+@media (min-width: 1100px) {
+  .log-page {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
+    align-items: start;
+  }
+}
+
+.log-actor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.log-row-link {
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.log-row-link:hover,
+.log-row-link:focus-visible {
+  text-decoration: underline;
+}
+
+.log-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0;
+  color: var(--color-text);
+}
+
+.log-meta dt {
+  color: var(--color-text-muted);
+}
+
+.log-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.log-diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.log-diff th,
+.log-diff td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.log-diff-changed td:last-child {
+  color: var(--color-primary-600);
+  font-weight: var(--weight-semibold);
+}

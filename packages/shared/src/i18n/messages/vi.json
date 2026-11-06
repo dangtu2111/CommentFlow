@@ -1639,6 +1639,8 @@
     "nav": {
       "comments": "Bình luận",
       "posts": "Bài viết",
+      "leads": "Khách tiềm năng",
+      "reports": "Báo cáo",
       "kb": "Cơ sở kiến thức",
       "tryAi": "Thử AI",
       "readiness": "Độ sẵn sàng AI",
@@ -1926,6 +1928,86 @@
       "filteredBody": "Thử bỏ bớt bộ lọc hoặc đổi từ khóa."
     }
   },
+  "leads": {
+    "title": "Khách tiềm năng",
+    "subtitle": "Khách để lại số điện thoại hoặc email trong bình luận và tin nhắn. Chỉ xem; số điện thoại chỉ hiện 4 số cuối.",
+    "kpi": {
+      "label": "Số khách theo giai đoạn",
+      "total": "Tổng số khách"
+    },
+    "stages": {
+      "new": "Mới (chờ liên hệ)",
+      "contacted": "Đang tư vấn",
+      "won": "Đã chốt đơn",
+      "lost": "Hủy / không nghe"
+    },
+    "card": {
+      "unknownName": "Khách chưa rõ tên",
+      "noPhone": "Chưa có số điện thoại",
+      "hasEmail": "Có email",
+      "assigned": "Đã giao người phụ trách",
+      "source": {
+        "comment": "Bình luận",
+        "message": "Tin nhắn"
+      }
+    },
+    "emptyColumn": "Chưa có khách ở giai đoạn này.",
+    "moreInColumn": "Đang hiện {shown} khách mới nhất / tổng {total}.",
+    "empty": {
+      "title": "Chưa có khách tiềm năng.",
+      "body": "Khách xuất hiện ở đây khi họ để lại số điện thoại hoặc email và Owner đã bật lưu khách tiềm năng."
+    },
+    "error": {
+      "title": "Không tải được danh sách khách.",
+      "body": "Hãy thử lại sau."
+    }
+  },
+  "reports": {
+    "title": "Báo cáo hiệu suất",
+    "subtitle": {
+      "owner": "Tốc độ xử lý bình luận của cả workspace và phần việc AI đã tự gửi.",
+      "staff": "Số liệu của riêng bạn: các bình luận bạn đã trả lời."
+    },
+    "range": {
+      "label": "Khoảng thời gian",
+      "days": "{days} ngày qua"
+    },
+    "kpi": {
+      "label": "Chỉ số chính",
+      "received": "Bình luận nhận được",
+      "answered": "Bạn đã trả lời",
+      "answerRate": "Tỷ lệ đã trả lời",
+      "answeredOf": "{answered} / {received} bình luận",
+      "within15": "Trả lời trong 15 phút",
+      "median": "Thời gian phản hồi (trung vị)",
+      "autoReplied": "AI tự gửi",
+      "hoursSaved": "Tiết kiệm khoảng {hours} giờ"
+    },
+    "hourly": {
+      "title": "Bình luận theo giờ trong ngày",
+      "description": "Giờ cao điểm tô đậm (múi giờ UTC+7).",
+      "chartLabel": "Biểu đồ số bình luận theo từng giờ",
+      "barTitle": "{hour}h: {count} bình luận",
+      "axisHour": "{hour}h"
+    },
+    "staff": {
+      "title": "Năng suất nhân viên",
+      "description": "Số bình luận mỗi người đã trả lời.",
+      "empty": "Chưa có bình luận nào được nhân viên trả lời trong khoảng này.",
+      "member": "Thành viên {n}",
+      "columns": {
+        "who": "Nhân viên",
+        "answered": "Đã trả lời",
+        "within15": "Trong 15 phút",
+        "median": "Trung vị"
+      }
+    },
+    "truncated": "Có quá nhiều bình luận trong khoảng này nên báo cáo chỉ tính phần đầu. Hãy chọn khoảng ngắn hơn.",
+    "error": {
+      "title": "Không tải được báo cáo.",
+      "body": "Hãy thử lại sau."
+    }
+  },
   "activity": {
     "title": "Nhật ký hoạt động",
     "subtitle": {
@@ -1933,6 +2015,13 @@
       "staff": "Các hành động do chính bạn thực hiện, kể cả việc hệ thống làm theo yêu cầu của bạn. Chỉ đọc, không sửa hay xóa được."
     },
     "readOnly": "Chỉ đọc",
+    "table": {
+      "time": "Thời gian",
+      "actor": "Tác nhân",
+      "action": "Hành động",
+      "target": "Đối tượng",
+      "noTarget": "—"
+    },
     "list": {
       "label": "Danh sách nhật ký",
       "shown": "Hiển thị {shown} dòng",

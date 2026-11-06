@@ -57,6 +57,23 @@ export {
 } from './i18n/locales';
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
 export {
+  canViewIntegrationHealth,
+  evaluateProviderHealth,
+  evaluateQueueHealth,
+  type HealthStatus,
+  INCIDENT_MESSAGE_MAX_LENGTH,
+  INGEST_BACKLOG_LIMIT_SECONDS,
+  INTEGRATION_PROVIDERS,
+  type IntegrationHealthInput,
+  type IntegrationHealthSummary,
+  type IntegrationProvider,
+  OTHER_QUEUE_BACKLOG_LIMIT_SECONDS,
+  PROVIDER_DOWN_ERROR_COUNT,
+  type QueueSnapshot,
+  sanitizeIncidentMessage,
+  summarizeIntegrationHealth,
+} from './integration-health';
+export {
   type ConfirmPaymentParsed,
   type CreateInvoiceInput,
   computeInvoiceTotal,
