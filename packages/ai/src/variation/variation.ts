@@ -96,6 +96,8 @@ export function pickVariant(
     .filter((candidate) => !usedFingerprints.has(candidate.fingerprint));
   if (unused.length === 0) return null;
   const draw = random();
-  const slot = Number.isFinite(draw) ? Math.min(Math.floor(draw * unused.length), unused.length - 1) : 0;
+  const slot = Number.isFinite(draw)
+    ? Math.min(Math.floor(draw * unused.length), unused.length - 1)
+    : 0;
   return unused[slot] ?? null;
 }

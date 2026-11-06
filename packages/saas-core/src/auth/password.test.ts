@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { hashPassword, verifyPassword } from './password';
 
-describe('hashPassword / verifyPassword (argon2id)', () => {
+// argon2id cố ý chậm (m=19456 KiB, t=2); mỗi lần băm/verify ~0,3–2 s trên runner CI bị tải
+// (coverage v8 + hai run song song). Một test gọi 4 lần → vượt mặc định 5 s (CI #42160999703).
+// Nới timeout cho riêng khối này, không đổi tham số băm, không skip test.
+describe('hashPassword / verifyPassword (argon2id)', { timeout: 30_000 }, () => {
   it('băm ra chuỗi PHC argon2id với tham số OWASP (m=19456, t=2, p=1)', async () => {
     const hash = await hashPassword('mat-khau-dai-du-10');
     expect(hash).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$[A-Za-z0-9+/]+\$[A-Za-z0-9+/]+$/);

@@ -208,9 +208,9 @@ describe('FR-030 property-based', () => {
     fc.assert(
       fc.property(money, money, fmt, fmt, (x, y, fa, fb) => {
         fc.pre(x !== y);
-        const reply = `Giá là ${fmts[fa]!(x)} ạ`;
-        expect(kinds(reply, [`Bảng giá ${fmts[fb]!(y)}`])).toEqual(['money']);
-        expect(kinds(reply, [`Bảng giá ${fmts[fb]!(x)}`])).toEqual([]);
+        const reply = `Giá là ${fmts[fa]?.(x)} ạ`;
+        expect(kinds(reply, [`Bảng giá ${fmts[fb]?.(y)}`])).toEqual(['money']);
+        expect(kinds(reply, [`Bảng giá ${fmts[fb]?.(x)}`])).toEqual([]);
         expect(kinds(reply, [], [x])).toEqual([]);
       }),
       { seed: 20261106, numRuns: 300 },

@@ -444,7 +444,7 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
     SELECT v.tbl AS name, v.trg AS trg FROM (VALUES
       ('cf.channels', 'channels_guard_user_update'), ('cf.comments', 'comments_guard_user_update'),
       ('cf.comments', 'comments_apply_tombstone'), ('cf.products', 'products_set_rev'),
-      ('cf.product_variants', 'product_variants_bump_rev')) AS v(tbl, trg)
+      ('cf.product_variants', 'product_variants_bump_rev'), ('cf.kb_chunks', 'kb_chunks_fill_search')) AS v(tbl, trg)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t
       WHERE t.tgrelid = v.tbl::regclass AND t.tgname = v.trg AND NOT t.tgisinternal AND t.tgenabled = 'O')`);

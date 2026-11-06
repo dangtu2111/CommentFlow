@@ -11,6 +11,7 @@
 | KT-001 | Workspace, thành viên, lời mời, chỉ-Owner ở DB | #7, #11 | có | chưa | — |
 | KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | #19 | có | chưa | — |
 | KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | #20 | có | chưa | — |
+| KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-023 | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | #21 | có | chưa | — |
 | KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | #22 | có | chưa | — |
@@ -30,6 +31,7 @@
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
+| KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 
@@ -43,12 +45,35 @@ Chưa có giao diện/pipeline nối (còn `VARIATION-WIRE`); mục này chỉ k
 
 ---
 
+## KT-DA — Thang xử lý khi AI không chắc (PIPE-DECIDE-ACTION, FR-147/141)
+
+Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần khóa LLM, không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/decide src/draft`. — Mong đợi: tất cả test xanh (có test property-based `fast-check`, seed cố định).
+2. Mở `packages/ai/src/decide/decide-action.ts`, xem hàm `riskReason` và `decideAction`. — Mong đợi: rủi ro (ngôn ngữ khác, khiếu nại, mạo danh, lệch giá, pháp lý, hỏi lại ≥ 3) được xét TRƯỚC mọi thứ; không có chỗ nào đọc trường `action`/`needs_human` do AI tự ghi.
+3. Mở `packages/ai/src/draft/draft-prompt.ts`, xem `SYSTEM_PROMPT`. — Mong đợi: có câu "chỉ viết câu cho đúng hành động đó" và "Không tự tính tổng tiền, giảm giá, phí ship".
+4. Kiểm tay khi nối pipeline: bình luận "giá bao nhiêu, ship về Hà Nội bao nhiêu" với kiến thức chỉ có giá → câu gợi ý nêu giá + mời ib về phí ship, bình luận có tag Cần hỗ trợ thêm, không tự gửi khi `allow_partial` tắt.
+
 ## KT-PC — Độ tin cậy do code tính (PIPE-CONFIDENCE, FR-163/032)
 
 Hàm thuần, chưa nối cổng tự gửi (AUTO-SEND-GATE) → chưa có bước bấm tay; không cần khóa LLM, không cần tiếng Việt/Anh.
 1. Chạy `pnpm --filter @flow/ai exec vitest run src/confidence`. — Mong đợi: tất cả test xanh (có test property-based `fast-check`, seed cố định).
 2. Mở `packages/ai/src/confidence/confidence.ts`, xem `DEFAULT_CONFIDENCE_WEIGHTS`. — Mong đợi: trọng số `default@1`; không có chỗ nào đọc trường `confidence`/`self_score` của JSON LLM.
 3. Kiểm tay khi nối pipeline: bản nháp có JSON hỏng hoặc hành động lạ → độ tin cậy 0, bình luận vào "Cần người", không tự gửi.
+
+## KT-KB-SEARCH — Tìm kiếm kiến thức/sản phẩm (KB-SEARCH-FTS, FR-057/127/135) · Knowledge/product search
+
+Chưa có giao diện (ô Thử AI là `KB-TRYAI`; nối pipeline là `PIPE-RETRIEVE`). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0038 áp được (cần extension `vector`, `unaccent`, `pg_trgm`); check-rls "đạt". |
+| 2 | `pnpm --filter @flow/db test:db` (hoặc `CF_LANE=<làn> pnpm test:db`). | Mọi test xanh, gồm `kb-search.int.test.ts` (toàn văn không dấu, lỗi gõ, RRF, lọc hiệu lực/phiên bản/ngôn ngữ, chéo workspace, sản phẩm gần đúng, cache theo rev). |
+| 3 | `pnpm --filter @flow/shared exec vitest run src/search.test.ts` và `pnpm --filter @flow/ai exec vitest run src/embedding`. | Xanh (chuẩn hóa, RRF, ngưỡng chọn sản phẩm, kiểm cache, embedding mock). |
+| 4 | (Tùy chọn, `psql` trên `cf_dev`) `SELECT search_norm, tsv FROM cf.kb_chunks LIMIT 1;` sau khi có đoạn. | `search_norm` thường + không dấu; `tsv` có từ không dấu (vi). |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
+
+---
 
 ## KT-031 — Soạn trả lời bằng LLM (PIPE-DRAFT, FR-029/138/140/142)
 

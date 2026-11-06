@@ -1,0 +1,120 @@
+import { describe, expect, it } from 'vitest';
+import {
+  isProductCacheStale,
+  normalizeSearchText,
+  pickProductMatch,
+  productSearchText,
+  RRF_K,
+  reciprocalRankFusion,
+} from './search';
+
+describe('FR-127 normalizeSearchText (chuẩn hóa chuỗi tìm kiếm)', () => {
+  it('thường, bỏ dấu kể cả đ, bỏ dấu câu, gộp khoảng trắng', () => {
+    expect(normalizeSearchText('  Áo LEN,  Đỏ!! ')).toBe('ao len do');
+    expect(normalizeSearchText('Đầm Xòe (Size-M)')).toBe('dam xoe size m');
+  });
+  it('rỗng hoặc chỉ dấu câu → chuỗi rỗng', () => {
+    expect(normalizeSearchText('')).toBe('');
+    expect(normalizeSearchText('?!…')).toBe('');
+  });
+  it('giữ chữ số và chữ latin; lũy đẳng', () => {
+    const once = normalizeSearchText('Áo thun 100% cotton, SKU: AT-01');
+    expect(once).toBe('ao thun 100 cotton sku at 01');
+    expect(normalizeSearchText(once)).toBe(once);
+  });
+});
+
+describe('FR-127 productSearchText (search_text của sản phẩm)', () => {
+  it('gồm tên, SKU, thuộc tính biến thể, bí danh; không có giá/tồn; bỏ trùng từ', () => {
+    const text = productSearchText({
+      name: 'Áo len Cổ Tròn',
+      sku: 'AL-01',
+      variants: [{ attrs: { size: 'M', color: 'Đỏ' } }, { attrs: { size: 'M' } }],
+      aliases: ['áo len'],
+    });
+    expect(text).toBe('ao len co tron al 01 size m color do');
+  });
+  it('thiếu SKU/biến thể/bí danh vẫn chạy', () => {
+    expect(productSearchText({ name: 'Mũ' })).toBe('mu');
+  });
+});
+
+describe('FR-057 reciprocalRankFusion (RRF k=60)', () => {
+  it('đúng công thức Σ 1/(k+rank), xếp giảm dần', () => {
+    expect(RRF_K).toBe(60);
+    const fused = reciprocalRankFusion([
+      ['a', 'b', 'c'],
+      ['b', 'a'],
+    ]);
+    expect(fused.map((x) => x.id)).toEqual(['a', 'b', 'c']);
+    expect(fused[0]?.score).toBeCloseTo(1 / 61 + 1 / 62, 10);
+    expect(fused[1]?.score).toBeCloseTo(1 / 62 + 1 / 61, 10);
+    expect(fused[2]?.score).toBeCloseTo(1 / 63, 10);
+  });
+  it('hòa điểm giữ thứ tự xuất hiện đầu tiên (ổn định); rỗng → rỗng', () => {
+    expect(reciprocalRankFusion([['x'], ['y']]).map((r) => r.id)).toEqual(['x', 'y']);
+    expect(reciprocalRankFusion([])).toEqual([]);
+    expect(reciprocalRankFusion([[], []])).toEqual([]);
+  });
+  it('trùng id trong cùng một danh sách chỉ tính lần đầu; k tùy chỉnh', () => {
+    const fused = reciprocalRankFusion([['a', 'a', 'b']], 10);
+    expect(fused[0]?.score).toBeCloseTo(1 / 11, 10);
+    expect(fused[1]?.score).toBeCloseTo(1 / 12, 10); // bản trùng không chiếm hạng
+  });
+});
+
+describe('FR-127/128 pickProductMatch (dưới ngưỡng thì không chọn)', () => {
+  it('chọn khi đủ ngưỡng và hơn hạng hai đủ biên', () => {
+    const r = pickProductMatch([
+      { id: 'p1', score: 0.8 },
+      { id: 'p2', score: 0.5 },
+    ]);
+    expect(r).toEqual({ status: 'matched', id: 'p1', score: 0.8 });
+  });
+  it('một ứng viên đủ ngưỡng → chọn', () => {
+    expect(pickProductMatch([{ id: 'p1', score: 0.45 }]).status).toBe('matched');
+  });
+  it('điểm cao nhất dưới ngưỡng → không chọn', () => {
+    expect(pickProductMatch([{ id: 'p1', score: 0.449 }])).toEqual({
+      status: 'none',
+      reason: 'below_threshold',
+    });
+  });
+  it('không có ứng viên → không chọn', () => {
+    expect(pickProductMatch([])).toEqual({ status: 'none', reason: 'no_candidates' });
+  });
+  it('hạng hai sát hạng một (< biên) → mơ hồ, trả ứng viên để hỏi lại', () => {
+    const r = pickProductMatch([
+      { id: 'p1', score: 0.7 },
+      { id: 'p2', score: 0.66 },
+      { id: 'p3', score: 0.1 },
+    ]);
+    expect(r).toEqual({ status: 'ambiguous', ids: ['p1', 'p2'] });
+  });
+  it('không phụ thuộc thứ tự đầu vào; tham số tùy chỉnh', () => {
+    const a = pickProductMatch([
+      { id: 'p2', score: 0.5 },
+      { id: 'p1', score: 0.65 },
+    ]);
+    expect(a).toMatchObject({ status: 'matched', id: 'p1' });
+    expect(
+      pickProductMatch([{ id: 'p1', score: 0.3 }], { threshold: 0.3, margin: 0.05 }).status,
+    ).toBe('matched');
+  });
+});
+
+describe('FR-135 isProductCacheStale (cache không trả giá cũ)', () => {
+  it('khớp hết → không trượt; rỗng ↔ rỗng → không trượt', () => {
+    expect(isProductCacheStale({ a: 1, b: 4 }, { a: 1, b: 4 })).toBe(false);
+    expect(isProductCacheStale({}, {})).toBe(false);
+  });
+  it('lệch rev một sản phẩm → trượt', () => {
+    expect(isProductCacheStale({ a: 1, b: 4 }, { a: 1, b: 5 })).toBe(true);
+  });
+  it('sản phẩm đã dùng không còn (thiếu) → trượt', () => {
+    expect(isProductCacheStale({ a: 1, b: 4 }, { a: 1 })).toBe(true);
+  });
+  it('current có thêm sản phẩm không dùng → không ảnh hưởng', () => {
+    expect(isProductCacheStale({ a: 1 }, { a: 1, z: 9 })).toBe(false);
+  });
+});

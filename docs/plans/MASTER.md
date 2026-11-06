@@ -125,7 +125,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
 | KB-TESTSET | FR-054 (bộ câu kiểm thử trước khi xuất bản) | US-034 | KB-PUBLISH-VERSION | — | không | ⏳ |
 | KB-CHUNKING | FR-055, 130 (cắt đoạn, `context_header`, `content_hash`), FR-131 (hạn hiệu lực) | — | KB-SCHEMA | DB | không | ✅ Xong-mock (feat-kb-chunking; embedding thật → KB-EMBED-LITELLM) |
-| KB-SEARCH-FTS | FR-057 (toàn văn `simple`+`unaccent`/`english`, `pg_trgm`), FR-127 (gần đúng), FR-135 (cache không trả giá cũ: `product_revs`) | US-100 | KB-CHUNKING, PRODUCTS-VARIANTS | DB | không | ⏳ |
+| KB-SEARCH-FTS | FR-057 (toàn văn `simple`+`unaccent`/`english`, `pg_trgm`), FR-127 (gần đúng), FR-135 (cache không trả giá cũ: `product_revs`) | US-100 | KB-CHUNKING, PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-kb-search-fts, migration 0037; embedding bản fixture, còn bí danh/rerank/ngưỡng/trần token → PIPE-RETRIEVE) |
 | RETRIEVAL-LOG | FR-134 (`retrieval_logs`, kb_gaps) | US-106, UF-11 | KB-SEARCH-FTS | DB | không | ⏳ |
 | KB-TRYAI | FR-059 (ô Thử AI hiện đoạn tìm được + điểm) | US-034 | KB-SEARCH-FTS | — | không | ⏳ |
 | KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | ⏳ |
@@ -164,7 +164,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PIPE-GUARD-MONEY | FR-030 (mọi số tiền/%/ngày/SĐT/link phải có trong nguồn — kiểm bằng code) | US-103 | PIPE-DRAFT | S | không | ✅ (lõi; nối pipeline ở PIPE-DRAFT) |
 | PRICE-SNAPSHOT | FR-111 (lưu `drafts.price_snapshot` khi soạn) | US-045 | PIPE-GUARD-MONEY | S+DB | không | ⏳ |
 | PIPE-CONFIDENCE | FR-163 (độ tin cậy do code tính), FR-032 (kết quả không đọc được → 0, chuyển người) | US-041 | PIPE-DRAFT | S | không | ✅ (lõi hàm thuần, `feat-pipe-confidence`; nối cổng 5 ở AUTO-SEND-GATE; KT-PC) |
-| PIPE-DECIDE-ACTION | FR-147 (`decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người), FR-141 (gợi ý một phần, không tự tính) | UF-2b | PIPE-CONFIDENCE | S | không | ⏳ |
+| PIPE-DECIDE-ACTION | FR-147 (`decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người), FR-141 (gợi ý một phần, không tự tính) | UF-2b | PIPE-CONFIDENCE | S | không | ✅ (lõi hàm thuần, `feat-pipe-decide-action`; cờ rủi ro chờ `DA-RULES-*`; nối pipeline/cổng ở AUTO-SEND-GATE; KT-DA) |
 | DA-RULES-PRICE | FR-150 (lệch giá quảng cáo ↔ kho → chuyển người), FR-158 (khoảng giá khi chưa rõ biến thể) | US-108 | PIPE-DECIDE-ACTION | S | không | ⏳ |
 | DA-RULES-STOCK | FR-151 (độ tươi tồn kho), FR-157 mẫu ngưng/hết hàng (phần gợi ý; tự gửi ở GĐ4) | — | PIPE-DECIDE-ACTION | — | không | ⏳ |
 | DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ⏳ |
