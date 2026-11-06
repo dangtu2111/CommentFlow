@@ -1,5 +1,18 @@
 # Kiểm tra tay — danh sách dồn
 
+## KT-DSD — Dữ liệu mẫu DEV (DEV-SEED-DEMO, feat-dev-seed-demo) — chưa thử
+
+> Cần `.env` + máy ảo bật, DB `cf_dev` đã migrate. Chỉ dev. / Needs `.env` + dev VM; dev DB only.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `APP_ENV=staging pnpm dev:seed-demo` (hoặc trỏ `DATABASE_ADMIN_URL` sang `cf_test`) | Từ chối `[FORBIDDEN]`, không ghi gì |
+| 2 | `pnpm dev:seed-demo` (APP_ENV=dev, `cf_dev`) | In cảnh báo "[MẪU]", số lượng, email + mật khẩu Owner/Staff MỘT lần |
+| 3 | Chạy lại lệnh | "Workspace mẫu đã có — không làm gì", không tạo trùng |
+| 4 | Đăng nhập Owner bằng email/mật khẩu vừa in | Vào được `/app`, thấy "[MẪU] Demo Shop", 2 kênh, 4 bài, 42 bình luận; trang Sản phẩm/Kiến thức/Tự động hóa có dữ liệu |
+| 5 | `pnpm dev:seed-demo --reset` | Tạo lại, mật khẩu mới; mật khẩu cũ không còn đăng nhập được |
+| 6 | Mọi tên kênh/sản phẩm/tác giả | Bắt đầu bằng "[MẪU]"; không SĐT/email thật |
+
 ## KT-CG — Cổng chi phí AI (COST-GATE, FR-071, feat-cost-gate)
 
 > Chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Not wired to UI yet — verify by command.
@@ -1055,3 +1068,11 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 4 | Đã bật 2FA: "Tạo lại mã dự phòng" và "Tắt xác thực 2 bước" (Owner không thấy nút tắt). | Mỗi nút mở hộp thoại đúng; cần mật khẩu; kết quả như trước khi đổi giao diện. |
 | 5 | `/app/members`, `/app/activity`. | Dòng có ảnh đại diện chữ, chip vai trò/trạng thái/hành động; thao tác thành viên và bộ lọc nhật ký hoạt động như cũ. |
 | 6 | Mở `/dev/ui/settings`, `/dev/ui/members`, `/dev/ui/activity` (chỉ dev). | Có nhãn [MẪU]; bản production trả 404. |
+
+## KT-UKP — Giao diện Cơ sở kiến thức + Bài viết (UI-FIDELITY-KB-POSTS, QUKP1)
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/web dev` (cổng riêng), mở `/dev/ui/kb-posts` (bản dev). | Thẻ bài + tab nền tảng + phân trang số + panel cấu hình; mọi nội dung có nhãn [MẪU]; bản production trả 404. |
+| 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
+| 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |

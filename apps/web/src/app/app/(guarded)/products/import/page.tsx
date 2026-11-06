@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { KbFrame } from '../../../../../components/kb/kb-frame';
 import { ImportWizard } from '../../../../../components/products/import-wizard';
 import { requireAppUser } from '../../../../../server/require-app-user';
 
@@ -12,10 +13,12 @@ export default async function ProductImportPage() {
   await requireAppUser({ role: 'owner' });
   const t = await getTranslations('productImport');
   return (
-    <main className="app-page">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle')}</p>
-      <ImportWizard />
+    <main className="app-page app-page-wide">
+      <KbFrame active="productImport">
+        <h1 className="auth-title">{t('title')}</h1>
+        <p className="auth-subtitle">{t('subtitle')}</p>
+        <ImportWizard />
+      </KbFrame>
     </main>
   );
 }

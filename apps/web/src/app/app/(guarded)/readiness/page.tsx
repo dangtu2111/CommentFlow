@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { KbFrame } from '../../../../components/kb/kb-frame';
 import { ReadinessView } from '../../../../components/readiness/readiness-view';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -33,11 +34,13 @@ export default async function ReadinessPage() {
   }
 
   return (
-    <main className="app-page">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle', { min: result.minPercent })}</p>
-      <p className="muted">{t('basisNote')}</p>
-      <ReadinessView result={result} />
+    <main className="app-page app-page-wide">
+      <KbFrame active="readiness">
+        <h1 className="auth-title">{t('title')}</h1>
+        <p className="auth-subtitle">{t('subtitle', { min: result.minPercent })}</p>
+        <p className="muted">{t('basisNote')}</p>
+        <ReadinessView result={result} />
+      </KbFrame>
     </main>
   );
 }

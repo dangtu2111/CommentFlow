@@ -1094,6 +1094,47 @@
       "skip": "Bỏ qua (không xử lý)"
     }
   },
+  "kb": {
+    "pageTitle": "Cơ sở kiến thức",
+    "title": "Cơ sở kiến thức AI",
+    "subtitle": "Nơi gom mọi thứ AI dùng để trả lời khách: sản phẩm, câu hỏi đáp, kiểm thử và phiên bản.",
+    "navLabel": "Cấu trúc kiến thức",
+    "overview": "Tổng quan",
+    "completeness": "Độ đầy đủ kiến thức",
+    "completenessAria": "Độ đầy đủ kiến thức: {score}%",
+    "completenessReady": "Đủ điều kiện bật tự động",
+    "completenessNotReady": "Cần tối thiểu {min}% để bật tự động",
+    "completenessDetail": "Xem chi tiết",
+    "groups": { "structure": "Cấu trúc tri thức", "tuning": "Tinh chỉnh & kiểm thử" },
+    "cards": {
+      "productImport": {
+        "title": "Sản phẩm",
+        "body": "Nhập sản phẩm, giá, tồn kho từ Excel/CSV. AI chỉ đọc giá và tồn kho từ đây."
+      },
+      "kbGaps": {
+        "title": "Hỏi – đáp",
+        "body": "Câu khách hỏi mà AI chưa trả lời được — bổ sung nhanh thành kiến thức."
+      },
+      "readiness": {
+        "title": "Độ sẵn sàng AI",
+        "body": "Xem còn thiếu gì trước khi bật chế độ tự động."
+      },
+      "tryAi": {
+        "title": "Thử AI",
+        "body": "Gõ một câu khách hỏi để xem AI sẽ trả lời gì. Không trừ lượt."
+      },
+      "kbTestset": {
+        "title": "Kiểm thử",
+        "body": "Chạy bộ câu hỏi mẫu để chắc AI vẫn đúng trước khi xuất bản."
+      },
+      "kbPublish": { "title": "Phiên bản", "body": "Xuất bản hoặc khôi phục phiên bản kiến thức." }
+    },
+    "open": "Mở",
+    "error": {
+      "title": "Không tải được tổng quan kiến thức",
+      "body": "Đã có lỗi khi tải dữ liệu. Hãy tải lại trang sau ít phút."
+    }
+  },
   "tryAi": {
     "pageTitle": "Thử AI",
     "title": "Thử AI",
@@ -1172,6 +1213,7 @@
     "nav": {
       "comments": "Bình luận",
       "posts": "Bài viết",
+      "kb": "Cơ sở kiến thức",
       "tryAi": "Thử AI",
       "readiness": "Độ sẵn sàng AI",
       "automation": "Cài đặt tự gửi",
@@ -1362,6 +1404,16 @@
     "title": "Bài viết",
     "subtitle": "Bài đăng của các kênh đã kết nối, kèm số bình luận đang chờ xử lý.",
     "count": "{count} bài",
+    "heading": "Bài viết đa kênh",
+    "breadcrumb": {
+      "label": "Đường dẫn",
+      "operations": "Vận hành đa kênh",
+      "content": "Quản lý nội dung",
+      "current": "Bài viết"
+    },
+    "tabs": { "label": "Lọc theo nền tảng", "all": "Tất cả bài viết" },
+    "range": "Hiển thị {from} - {to} trên {total} bài đăng",
+    "pageNumber": "Trang {page}",
     "error": {
       "title": "Không tải được danh sách bài viết",
       "body": "Đã có lỗi khi tải dữ liệu. Hãy tải lại trang sau ít phút."
