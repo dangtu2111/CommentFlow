@@ -181,3 +181,6 @@ Bộ câu kiểm thử chạy qua pipeline Thử AI bằng mô phỏng (không L
 
 ## 2o. `KB-SAMPLES` (FR-132) — không cần tài nguyên ngoài
 Câu mẫu của shop chỉ là mã thuần + kho trong bộ nhớ, không khóa/LLM/dịch vụ ngoài. Lưu thật cần bảng `kb_answer_examples` (migration làn b, `KB-SAMPLES-PERSIST`) và embedding ở 2g. Bạn không phải làm gì.
+
+## 2p. `AUTO-MATRIX-UI` (FR-070/071) — không cần tài nguyên ngoài
+Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, không cần khóa hay dịch vụ ngoài. Cấu hình hiện lưu tạm trong bộ nhớ và chưa áp dụng cho việc tự gửi thật; việc cắm bảng DB là `AUTO-MATRIX-DB` (migration, làn b). Bạn **không** phải làm gì.

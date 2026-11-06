@@ -68,6 +68,19 @@
 | 6 | Bấm **Lưu quy tắc** | Báo chưa khả dụng (chờ bảng `rules`); không bình luận nào bị đổi |
 | 7 | Đổi ngôn ngữ en | Mọi chuỗi trang đã dịch |
 
+## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
+
+> Cấu hình lưu tạm trong bộ nhớ máy chủ (mất khi khởi động lại) và chưa áp dụng cho việc gửi thật (`AUTO-MATRIX-DB`). Cần ≥ 1 kênh để thấy ma trận.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Đăng nhập Owner, mở menu **Cài đặt tự gửi** (vi) | Trang `/app/automation`; dòng lưu ý "chưa áp dụng…"; mọi ô ma trận là **Tắt**; ngưỡng 85, trễ 1 phút, 50 câu/ngày |
+| 2 | Đặt Hỏi giá × Bình luận = **Tự động**, Hỏi giá × Tin nhắn = **Chạy thử**, bấm **Lưu cài đặt** | Về trang với "Đã lưu cài đặt."; hai ô giữ giá trị vừa chọn |
+| 3 | Nhập ngưỡng 79 rồi lưu | Báo lỗi "Ngưỡng tin cậy phải từ 80 đến 100.", không đổi gì đã lưu |
+| 4 | Bật giờ hoạt động, bỏ hết ngày, lưu | Báo lỗi giờ hoạt động |
+| 5 | Nhập từ khóa chặn "ship" và "giảm giá" (mỗi dòng một từ), chữ ký "— Trợ lý AI", lưu | Đã lưu; tải lại trang vẫn thấy hai từ khóa và chữ ký |
+| 6 | Đổi sang English | Menu "Auto-send settings", mọi nhãn/lỗi bằng tiếng Anh |
+| 7 | Đăng nhập Staff, mở `/app/automation` | 404; menu không có mục này |
 ## KT-ASH — AI đã gửi + Đánh dấu sai (AI-SENT-HISTORY, FR-075, feat-ai-sent-history)
 
 > Chưa có bảng `drafts`/`automation_events` (`AI-SENT-HISTORY-DB`) nên danh sách luôn trống; chỉ kiểm được giao diện trống + menu + 2 ngôn ngữ. Nút Đánh dấu sai kiểm bằng test tự động (store bộ nhớ).
