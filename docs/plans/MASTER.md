@@ -161,7 +161,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PIPE-REWRITE-CTX | FR-137 (viết lại câu hỏi theo ngữ cảnh), FR-144 (nhớ 5 lượt gần nhất) | — | PIPE-CLASSIFY-EXTRACT | — | không | ⏳ |
 | PIPE-RETRIEVE | FR-028 (tìm kiến thức cho nhãn cần trả lời; Khiếu nại không soạn) | — | KB-SEARCH-FTS, PIPE-ROUTE | — | không | ⏳ |
 | PIPE-DRAFT | FR-029 (JSON `{reply, lang, sources[], needs_human, reason}`), FR-138 (prompt caching), FR-140 (`claims[]` trích nguồn từng ý), FR-142 (xưng hô) | US-011, 012 | PIPE-RETRIEVE | — | **có** — khóa LLM | 🟡 Xong-mock (`feat-pipe-draft`; cờ `DRAFT_LLM_ENABLED` tắt; nguồn là đầu vào, chờ PIPE-RETRIEVE nối; KT-031) |
-| PIPE-GUARD-MONEY | FR-030 (mọi số tiền/%/ngày/SĐT/link phải có trong nguồn — kiểm bằng code) | US-103 | PIPE-DRAFT | S | không | ⏳ |
+| PIPE-GUARD-MONEY | FR-030 (mọi số tiền/%/ngày/SĐT/link phải có trong nguồn — kiểm bằng code) | US-103 | PIPE-DRAFT | S | không | ✅ (lõi; nối pipeline ở PIPE-DRAFT) |
 | PRICE-SNAPSHOT | FR-111 (lưu `drafts.price_snapshot` khi soạn) | US-045 | PIPE-GUARD-MONEY | S+DB | không | ⏳ |
 | PIPE-CONFIDENCE | FR-163 (độ tin cậy do code tính), FR-032 (kết quả không đọc được → 0, chuyển người) | US-041 | PIPE-DRAFT | S | không | ⏳ |
 | PIPE-DECIDE-ACTION | FR-147 (`decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người), FR-141 (gợi ý một phần, không tự tính) | UF-2b | PIPE-CONFIDENCE | S | không | ⏳ |

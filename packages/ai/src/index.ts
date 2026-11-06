@@ -56,6 +56,15 @@ export {
   FIXTURE_DRAFT_DEFAULT,
 } from './draft/fixture-drafter';
 export {
+  checkGuardMoney,
+  extractClaims,
+  type GuardClaim,
+  type GuardClaimKind,
+  type GuardMoneyInput,
+  type GuardMoneyResult,
+  type GuardViolation,
+} from './guard-money';
+export {
   createLlmClient,
   type LlmCallInput,
   type LlmCallResult,
