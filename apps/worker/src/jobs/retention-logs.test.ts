@@ -6,6 +6,8 @@ vi.mock('@flow/db', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@flow/db')>()),
   purgeExpiredWebhookPayloads: vi.fn(),
   purgeExpiredRetrievalLogs: vi.fn(),
+  purgeExpiredWorkspaceData: vi.fn(async () => ({ comments: 0, drafts: 0, leads: 0 })),
+  compactAiUsage: vi.fn(async () => 0),
 }));
 
 const logger = () => ({ info: vi.fn(), error: vi.fn() });

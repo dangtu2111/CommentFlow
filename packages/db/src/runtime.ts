@@ -241,7 +241,13 @@ export {
   ReplyRequestFailedError,
   requestCommentReply,
 } from './replies';
-export { purgeExpiredWebhookPayloads, WEBHOOK_PAYLOAD_RETENTION_DAYS } from './retention';
+export {
+  compactAiUsage,
+  purgeExpiredWebhookPayloads,
+  purgeExpiredWorkspaceData,
+  WEBHOOK_PAYLOAD_RETENTION_DAYS,
+} from './retention';
+export * from './retention-policy';
 export {
   insertRetrievalLog,
   type KbGapFilter,

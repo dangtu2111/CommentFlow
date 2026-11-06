@@ -45,6 +45,7 @@
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
+| KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
@@ -992,6 +993,16 @@ Chưa có giao diện/pipeline nối (còn `VARIATION-WIRE`); mục này chỉ k
 2. (Khi đã có khóa LLM, tùy chọn) gọi `createLlmDrafter` với `DRAFT_LLM_ENABLED=true` cho cùng một câu hỏi vài lần. — Mong đợi: `variants` 3–5 câu khác chữ, cùng giá/link; không có câu đổi số tiền (câu đổi số bị loại).
 
 ---
+
+## KT-RET — Job retention dữ liệu 12 tháng (RETENTION-JOB, feat-retention-job)
+
+> Chỉ chạy trên DB dev `cf_dev`, KHÔNG chạy trên staging/production. / DEV `cf_dev` only.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Trên dev, chèn một bình luận có `created_at` cách đây 400 ngày và một bình luận 10 ngày | Có 2 dòng |
+| 2 | Chạy worker dev (`pnpm --filter @flow/worker dev`), chờ log | Log "đã xóa dữ liệu workspace quá thời hạn lưu" chỉ có SỐ lượng; bình luận 400 ngày mất, bình luận 10 ngày còn |
+| 3 | Chèn vài dòng `cf.ai_usage` cũ 100 ngày rồi chờ chu kỳ kế | Dòng cũ biến mất khỏi `cf.ai_usage`, xuất hiện trong `cf.ai_usage_daily` với tổng token/chi phí bằng tổng cũ; `core.action_logs` không đổi |
 
 ## KT-RL — Nhật ký tìm kiếm + câu hỏi AI chưa trả lời được (RETRIEVAL-LOG, FR-134, migration 0040)
 

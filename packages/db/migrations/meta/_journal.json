@@ -372,6 +372,13 @@
       "when": 1793959319145,
       "tag": "0052_invoices",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1793961530995,
+      "tag": "0053_retention_job",
+      "breakpoints": true
     }
   ]
 }

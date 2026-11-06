@@ -1,11 +1,14 @@
 import {
+  bigint,
   boolean,
+  date,
   index,
   integer,
   numeric,
   pgSchema,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { workspaces } from '../core';
@@ -14,7 +17,7 @@ import { workspaces } from '../core';
 export const cf = pgSchema('cf');
 
 /**
- * Mỗi lần gọi LLM ghi một dòng (nguyên tắc bất biến #7). Chỉ thêm, không sửa/xóa.
+ * Mỗi lần gọi LLM ghi một dòng (nguyên tắc bất biến #7). Chỉ thêm; chỉ hàm DEFINER `cf.compact_ai_usage` được xóa dòng cũ > 90 ngày (gộp vào `aiUsageDaily`).
  * `prompt_version` có trong nguyên tắc #7 nhưng chưa có trong cột liệt kê ở docs/10 §3.3 — đã thêm.
  */
 export const aiUsage = cf.table(
@@ -37,4 +40,39 @@ export const aiUsage = cf.table(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('ai_usage_workspace_created_idx').on(t.workspaceId, t.createdAt)],
+);
+
+/**
+ * Bản gộp theo ngày của `ai_usage` cũ hơn 90 ngày (FR-126, migration 0053). Chỉ hàm DEFINER
+ * `cf.compact_ai_usage` ghi (job retention của worker); thành viên chỉ đọc. Không chứa nội dung khách.
+ */
+export const aiUsageDaily = cf.table(
+  'ai_usage_daily',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    day: date('day', { mode: 'string' }).notNull(),
+    step: text('step').notNull(),
+    model: text('model').notNull(),
+    promptVersion: text('prompt_version').notNull().default(''),
+    cacheHit: boolean('cache_hit').notNull(),
+    calls: integer('calls').notNull(),
+    inputTokens: bigint('input_tokens', { mode: 'number' }).notNull(),
+    outputTokens: bigint('output_tokens', { mode: 'number' }).notNull(),
+    cachedTokens: bigint('cached_tokens', { mode: 'number' }).notNull(),
+    costUsd: numeric('cost_usd', { precision: 14, scale: 6 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('ai_usage_daily_key_unique').on(
+      t.workspaceId,
+      t.day,
+      t.step,
+      t.model,
+      t.promptVersion,
+      t.cacheHit,
+    ),
+  ],
 );
