@@ -32,6 +32,7 @@
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
+| KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
@@ -538,6 +539,16 @@ Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy te
 | 2 | Mở `env.example` | Có tên biến `AUTO_HIDE_ENABLED=` để trống (cờ tắt mặc định). |
 | 3 | Khi có `AUTO-HIDE-DB` + `AUTO-HIDE-WIRE`: bật cờ + quy tắc Tự ẩn có `shadow_until`, gửi bình luận mẫu chứa SĐT từ Page thử | Trong thời gian shadow: chỉ có dòng "sẽ ẩn", bình luận chưa bị ẩn; sau đó bình luận bị ẩn và khách xuất hiện trong Khách tiềm năng TRƯỚC khi ẩn. |
 | 4 | Gửi bình luận không SĐT/link nhưng bị AI gán nhãn spam | KHÔNG bị ẩn (AI không tự ẩn). |
+
+## KT-ALP1 — Tự gửi theo ngôn ngữ (AUTOSEND-LANG-PARTIAL, feat-autosend-lang-partial)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/gate/lang-autosend.test.ts` | Mọi test xanh (30 ca, gồm property-based) |
+| 2 | Khi đã nối pipeline: đặt ô Tự động chỉ cho tiếng Việt, gửi bình luận tiếng Anh | Không tự gửi (mức tắt) — hiện lý do "Mức kênh × nhãn" |
+| 3 | Ngôn ngữ chưa đạt bộ đánh giá, ô Tự động | Chỉ ghi "sẽ gửi" (Chạy thử), không gửi thật |
+| 4 | Bình luận bằng ngôn ngữ ngoài vi/en | Chuyển người, không tự gửi |
+| 5 | Câu hỏi lại size ("Chị lấy size S, M hay L ạ?") ở ô Tự động, `allow_clarify` bật | Tự gửi; tắt `allow_clarify` → chờ duyệt |
 
 ## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
 
