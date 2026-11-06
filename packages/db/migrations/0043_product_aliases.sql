@@ -50,7 +50,7 @@ CREATE POLICY product_aliases_insert ON cf.product_aliases FOR INSERT
   WITH CHECK (
     workspace_id = (SELECT core.current_workspace_id())
     AND ((SELECT core.is_workspace_member()) OR (SELECT core.is_system_context()))
-    AND (confirmed_by IS NULL OR confirmed_by = (SELECT core.current_user_id()))
+    AND (num_nulls(confirmed_by) = 1 OR confirmed_by = (SELECT core.current_user_id()))
     AND (source <> 'ai_suggested' OR confirmed_by IS NOT NULL)
   );
 --> statement-breakpoint
