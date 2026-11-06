@@ -128,9 +128,28 @@ describe('cf_app KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính
     ).toBe(RLS_OR_PRIVILEGE_DENIED);
   });
 
+  it('two_factors: mỗi user đúng một dòng (UNIQUE user_id) — chèn dòng thứ hai bị từ chối (23505)', async () => {
+    const u = await seedUser(admin);
+    await admin.query(
+      "INSERT INTO core.two_factors (user_id, secret, backup_codes) VALUES ($1, 'a', 'b')",
+      [u],
+    );
+    await expect(
+      admin.query(
+        "INSERT INTO core.two_factors (user_id, secret, backup_codes) VALUES ($1, 'c', 'd')",
+        [u],
+      ),
+    ).rejects.toMatchObject({ code: '23505' });
+  });
+
   it('two_factors: cf_auth chỉ đọc/ghi được khi có app.ctx = auth (thiếu ngữ cảnh → 0 dòng, ghi bị từ chối)', async () => {
+    const own = await seedUser(admin); // tự seed, không dựa vào test trước
+    await admin.query(
+      "INSERT INTO core.two_factors (user_id, secret, backup_codes) VALUES ($1, 's', 'k')",
+      [own],
+    );
     const withCtx = await authDb.transaction((tx) =>
-      tx.select({ id: twoFactors.id }).from(twoFactors).where(eq(twoFactors.userId, u1)),
+      tx.select({ id: twoFactors.id }).from(twoFactors).where(eq(twoFactors.userId, own)),
     );
     expect(withCtx.length).toBeGreaterThan(0);
     const { rows } = await authNoCtx.query('SELECT count(*)::int AS n FROM core.two_factors');
@@ -138,7 +157,7 @@ describe('cf_app KHÔNG có ngữ cảnh → không thấy dòng nào (âm tính
     await expect(
       authNoCtx.query(
         "INSERT INTO core.two_factors (user_id, secret, backup_codes) VALUES ($1, 'x', 'y')",
-        [u1],
+        [own],
       ),
     ).rejects.toMatchObject({ code: RLS_OR_PRIVILEGE_DENIED });
   });

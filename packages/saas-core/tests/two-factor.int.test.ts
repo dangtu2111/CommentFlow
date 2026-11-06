@@ -169,6 +169,30 @@ describe('bật 2FA', () => {
     for (const code of user.backupCodes) expect(row.backup_codes).not.toContain(code);
   });
 
+  it('bắt đầu bật lần hai khi dòng cũ (chưa xác nhận) còn đó: vẫn đúng MỘT dòng (UNIQUE user_id), xác nhận bằng khóa lần hai', async () => {
+    const user = await newUser();
+    const jar = await login(user);
+    const first = await twoFactor.beginEnrollment({
+      password: user.password,
+      headers: jar.headers,
+    });
+    const second = await twoFactor.beginEnrollment({
+      password: user.password,
+      headers: jar.headers,
+    });
+    if (first.status !== 'ok' || second.status !== 'ok') throw new Error('begin lần hai hỏng');
+    expect(
+      (
+        await owner.query('SELECT count(*)::int AS n FROM core.two_factors WHERE user_id = $1', [
+          user.userId,
+        ])
+      ).rows[0].n,
+    ).toBe(1);
+    expect(
+      await twoFactor.confirmEnrollment({ code: totp(second.manualKey), headers: jar.headers }),
+    ).toMatchObject({ status: 'ok' });
+  });
+
   it('chưa đăng nhập → unauthenticated; đã bật rồi thì không bật lại', async () => {
     expect(
       await twoFactor.beginEnrollment({ password: 'x'.repeat(12), headers: new Headers() }),

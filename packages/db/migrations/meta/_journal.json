@@ -246,6 +246,13 @@
       "when": 1793930951645,
       "tag": "0034_products_variants",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793933439726,
+      "tag": "0035_two_factors_user_unique",
+      "breakpoints": true
     }
   ]
 }
