@@ -248,9 +248,9 @@ Webhook Shopify có thể bị mất (app lỗi, Shopify thử lại hết lư�
 | Phạm vi | Toàn bộ sản phẩm/biến thể đã nhập: giá, giá so sánh, tồn kho, trạng thái (active/archived/deleted), tên; chính sách cửa hàng (`content_hash`) |
 | Cách lấy | Shop nhỏ: GraphQL phân trang chỉ các trường cần; shop lớn (> 2.000 biến thể): bulk operation |
 | So sánh | Theo `external_id`; lệch → ghi `reconcile_diffs` (trường, giá trị cũ, giá trị Shopify) |
-| Xử lý lệch | Giá/tồn/trạng thái: **cập nhật theo Shopify ngay** (Shopify là nguồn đúng) + xóa cache liên quan. Sản phẩm bị xóa ở Shopify: đánh dấu `archived`, gỡ khỏi trả lời, báo Owner bài nào đang gắn. Chính sách đổi: vào hàng chờ duyệt như crawl URL |
+| Xử lý lệch | Giá/tồn/trạng thái: **ghi `reconcile_diffs` ở trạng thái chờ Owner duyệt, KHÔNG tự sửa** (Q-SRC1; webhook thường lệ vẫn cập nhật như cũ). Shopify là nguồn đúng: Owner duyệt thì mới áp + xóa cache liên quan. Sản phẩm không còn ở Shopify: đánh dấu lệch `gone_in_shopify`, Owner duyệt mới `archived`/gỡ khỏi trả lời, báo Owner bài nào đang gắn. Chính sách đổi: vào hàng chờ duyệt như crawl URL |
 | Kiểm webhook | Mỗi lần đối soát gọi danh sách webhook subscriptions; thiếu → đăng ký lại; ghi `kb_connections.webhook_ok_at` |
-| Cảnh báo | Lệch > 0 giá trong 1 lần đối soát → thông báo Owner ("Đã cập nhật 12 giá bị lệch"); lệch > 5% sản phẩm hoặc webhook mất → cảnh báo Admin (sức khỏe tích hợp) |
+| Cảnh báo | Lệch > 0 giá trong 1 lần đối soát → thông báo Owner ("Có 12 giá bị lệch, chờ bạn duyệt"); lệch > 5% sản phẩm hoặc webhook mất → cảnh báo Admin (sức khỏe tích hợp) |
 | Kết quả | `reconcile_runs`: thời gian, số sản phẩm, số lệch, lỗi; hiển thị ở trang Nguồn dữ liệu ("Đối soát lần cuối 02:00 — 0 lệch") |
 
 Nguồn website (crawl URL) đã có lịch kiểm hằng ngày bằng `content_hash` nên không cần job riêng.

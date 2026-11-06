@@ -82,6 +82,19 @@ export const policiesResponse = {
   extensions: throttle(1900, 4),
 };
 
+export const webhooksResponse = {
+  data: {
+    webhookSubscriptions: {
+      nodes: [
+        { topic: 'PRODUCTS_UPDATE' },
+        { topic: 'PRODUCTS_DELETE' },
+        { topic: 'PRODUCTS_UPDATE' },
+      ],
+    },
+  },
+  extensions: throttle(1900, 3),
+};
+
 export const jsonResponse = (body: unknown, init: ResponseInit = {}): Response =>
   new Response(JSON.stringify(body), {
     status: 200,

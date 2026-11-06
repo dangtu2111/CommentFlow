@@ -75,6 +75,15 @@ const POLICIES_QUERY = `query CfPolicies {
   shop { shopPolicies { type title body url } }
 }`;
 
+/** Danh sách webhook đã đăng ký cho app (FR-113); chỉ cần chủ đề, tối đa 100 (đủ cho vài chủ đề bắt buộc). */
+const WEBHOOKS_QUERY = `query CfWebhooks {
+  webhookSubscriptions(first: 100) { nodes { topic } }
+}`;
+
+const webhooksDataSchema = z.object({
+  webhookSubscriptions: z.object({ nodes: z.array(z.object({ topic: z.string() })) }),
+});
+
 const pageInfoSchema = z.object({
   hasNextPage: z.boolean(),
   endCursor: z.string().nullable(),
@@ -183,6 +192,8 @@ export interface ShopifyConnector {
   fetchCatalog(): Promise<ShopifyCatalog>;
   /** Chính sách cửa hàng có nội dung (đổi trả, vận chuyển…). */
   fetchPolicies(): Promise<ShopifyPolicy[]>;
+  /** Chủ đề webhook (enum `WebhookSubscriptionTopic`) app đã đăng ký, loại trùng; để đối soát (FR-113). */
+  listWebhookSubscriptions(): Promise<string[]>;
 }
 
 const fail = (
@@ -427,6 +438,11 @@ export function createShopifyConnector(options: ShopifyConnectorOptions): Shopif
     async fetchPolicies() {
       const data = await run(POLICIES_QUERY, {}, policiesDataSchema);
       return data.shop.shopPolicies.filter((policy) => policy.body.trim() !== '');
+    },
+
+    async listWebhookSubscriptions() {
+      const data = await run(WEBHOOKS_QUERY, {}, webhooksDataSchema);
+      return [...new Set(data.webhookSubscriptions.nodes.map((node) => node.topic))];
     },
   };
 }
