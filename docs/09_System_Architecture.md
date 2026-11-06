@@ -290,6 +290,7 @@ Dùng để bật dần tính năng mới, rollback nhanh mà không deploy lạ
 | Đọc | `isEnabled(key, ctx)`; cache trong bộ nhớ 30 giây + xóa ngay qua `NOTIFY flags_changed` |
 | Ghi | Chỉ Super Admin qua trang Admin "Feature flags"; mọi thay đổi ghi `action_logs` |
 | Lỗi đọc | Không đọc được → dùng `default_on` (mã nguồn khai báo); flag `kill_switch` mặc định là **không chặn** nhưng mọi đường tự gửi coi lỗi đọc là **tắt tự gửi** |
+| Mất LISTEN | Kết nối nghe `flags_changed` đứt → xóa cache, tự nối lại lùi dần (1s, 2s, … tối đa 60s), báo cảnh báo qua `onListenEvent`; nối lại được → xóa cache lần nữa (có thể đã lỡ thông báo). Trong lúc mất, flag tươi theo TTL 30 giây |
 
 **Danh sách flag ban đầu:**
 
