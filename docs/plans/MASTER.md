@@ -298,7 +298,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | SRC-SAPO | FR-122 (Sapo) | — | SRC-HARAVAN | S | **có** | ⛔ |
 | SRC-KIOTVIET | FR-122 (KiotViet) | — | SRC-SAPO | S | **có** | ⛔ |
 | SRC-PANCAKE | FR-122 (Pancake POS) | — | SRC-KIOTVIET | S | **có** | ⛔ |
-| AUTO-PAYMENT-CONFIRM | FR-124 (xác nhận thanh toán tự động: SePay/Casso…) | — | QR-PAYMENT | S+DB | **có** — nhà cung cấp | ⛔ |
+| AUTO-PAYMENT-CONFIRM | FR-124 (xác nhận thanh toán tự động: SePay/Casso…) | — | QR-PAYMENT | S+DB | **có** — nhà cung cấp | ✅ Xong-mock phần code (`feat-auto-payment-confirm`, Q-APC1, không migration; cờ TẮT; chưa nối DB: gap `AUTO-PAYMENT-CONFIRM-DB` làn b; KT-APC) |
 | ATTACH-VISION | FR-143 (đọc ảnh, tùy chọn) | — | ATTACHMENTS-STORE | S (PII) | **có** — khóa LLM đa phương thức | ⛔ |
 
 ---
