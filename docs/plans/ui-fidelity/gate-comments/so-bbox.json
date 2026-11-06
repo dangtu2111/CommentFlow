@@ -1,0 +1,294 @@
+{
+  "stitch": [
+    {
+      "name": "thanh-bên",
+      "w": 256,
+      "h": 900,
+      "x": 0,
+      "y": 0,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(16, 29, 37)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "64px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "thanh-trên",
+      "w": 1440,
+      "h": 64,
+      "x": 0,
+      "y": 0,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(16, 29, 37)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "dải-phụ",
+      "w": 1184,
+      "h": 44,
+      "x": 256,
+      "y": 64,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(16, 29, 37)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "16px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "cột-1",
+      "w": 224,
+      "h": 792,
+      "x": 256,
+      "y": 108,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(16, 29, 37)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "cột-2",
+      "w": 384,
+      "h": 792,
+      "x": 480,
+      "y": 108,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(16, 29, 37)",
+        "backgroundColor": "rgb(234, 245, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "cột-3",
+      "w": 576,
+      "h": 792,
+      "x": 864,
+      "y": 108,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(16, 29, 37)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "tab-đang-chọn",
+      "w": 200,
+      "h": 32,
+      "x": 268,
+      "y": 215,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "color": "rgb(255, 255, 255)",
+        "backgroundColor": "rgb(11, 114, 133)",
+        "paddingTop": "6px",
+        "paddingLeft": "10px",
+        "borderRadius": "4px"
+      }
+    },
+    {
+      "name": "thẻ-bình-luận-1",
+      "w": 384,
+      "h": 122,
+      "x": 480,
+      "y": 226,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(16, 29, 37)",
+        "backgroundColor": "rgba(171, 237, 255, 0.2)",
+        "paddingTop": "12px",
+        "paddingLeft": "12px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "nút-gửi",
+      "w": 168,
+      "h": 40,
+      "x": 1260,
+      "y": 848,
+      "style": {
+        "fontSize": "15px",
+        "fontWeight": "700",
+        "color": "rgb(255, 255, 255)",
+        "backgroundColor": "rgb(0, 88, 104)",
+        "paddingTop": "0px",
+        "paddingLeft": "20px",
+        "borderRadius": "4px"
+      }
+    }
+  ],
+  "build": [
+    {
+      "name": "thanh-bên",
+      "w": 256,
+      "h": 836,
+      "x": 0,
+      "y": 64,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(15, 28, 36)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "16px",
+        "paddingLeft": "12px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "thanh-trên",
+      "w": 1440,
+      "h": 64,
+      "x": 0,
+      "y": 0,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(15, 28, 36)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "24px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "dải-phụ",
+      "w": 1184,
+      "h": 44,
+      "x": 256,
+      "y": 64,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(15, 28, 36)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "16px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "cột-1",
+      "w": 224,
+      "h": 792,
+      "x": 256,
+      "y": 108,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(15, 28, 36)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "cột-2",
+      "w": 384,
+      "h": 792,
+      "x": 480,
+      "y": 108,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(15, 28, 36)",
+        "backgroundColor": "rgb(246, 248, 249)",
+        "paddingTop": "0px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "cột-3",
+      "w": 576,
+      "h": 792,
+      "x": 864,
+      "y": 108,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "color": "rgb(15, 28, 36)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "paddingTop": "0px",
+        "paddingLeft": "0px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "tab-đang-chọn",
+      "w": 200,
+      "h": 32,
+      "x": 268,
+      "y": 179,
+      "style": {
+        "fontSize": "13px",
+        "fontWeight": "600",
+        "color": "rgb(255, 255, 255)",
+        "backgroundColor": "rgb(11, 114, 133)",
+        "paddingTop": "6px",
+        "paddingLeft": "10px",
+        "borderRadius": "4px"
+      }
+    },
+    {
+      "name": "thẻ-bình-luận-1",
+      "w": 354,
+      "h": 127,
+      "x": 510,
+      "y": 297,
+      "style": {
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "color": "rgb(15, 28, 36)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "paddingTop": "12px",
+        "paddingLeft": "12px",
+        "borderRadius": "0px"
+      }
+    },
+    {
+      "name": "nút-gửi",
+      "w": 297,
+      "h": 40,
+      "x": 1123,
+      "y": 848,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "700",
+        "color": "rgb(255, 255, 255)",
+        "backgroundColor": "rgb(11, 114, 133)",
+        "paddingTop": "0px",
+        "paddingLeft": "20px",
+        "borderRadius": "4px"
+      }
+    }
+  ]
+}

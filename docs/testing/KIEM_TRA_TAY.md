@@ -73,6 +73,7 @@
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
 | KT-UIC | Tự động hóa + Quy tắc spam đủ thành phần | — | chưa | chưa | — |
+| KT-UIGC | Bình luận đủ thành phần theo HTML Stitch | — | có | chưa | — |
 | KT-UIHA | Tự động hóa + Quy tắc spam khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHLR | Khách tiềm năng, Báo cáo, Nhật ký dựng từ HTML Stitch | — | có | chưa | — |
@@ -1397,6 +1398,17 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 6 | Tạo quy tắc từ khóa → Xem trước 7 ngày → Lưu quy tắc | Xem trước hiện số khớp thật; lưu như trước đây |
 | 7 | Thu hẹp cửa sổ 390px | Không cuộn ngang cả trang |
 | 8 | Mở trang trên staging/production | Không có `[MẪU]`; số liệu hiện "—", danh sách quy tắc trống |
+
+## KT-UIGC — Bình luận đủ thành phần theo HTML Stitch (UI-GATE-COMMENTS, feat-ui-gate-comments)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Mở `/dev/ui/comments` ở 1440px | Dải phụ 44px một hàng: "Luồng quản lý bình luận", Phiên làm việc, SLA còn lại, Phím tắt, "3 cột chuẩn"/"Tập trung" (mờ, "Sắp có") |
+| 2 | Cột trái | Tab trạng thái, nền tảng, nhãn AI, "Chỉ bài quảng cáo", ô "Giao cho tôi" mờ, thẻ "Độ chính xác AI" |
+| 3 | Cột giữa | Ô tìm, "Sắp xếp: …", "Ưu tiên: …", dải "2 bình luận mới · Bấm để tải" (mờ), thẻ có "Có AI"/"Lượt"/ghi chú/ADS, chân "Hiển thị 4 / 18 chờ duyệt" + "Xem trang kế tiếp" |
+| 4 | Cột phải | Bối cảnh bài + sản phẩm, "Mở trên Facebook" (mờ), khách VIP + lịch sử, AI phân tích kèm độ tin cậy + lý do, ô soạn đã điền câu AI + chip nguồn + bộ đếm |
+| 5 | Thanh hành động | Ẩn bình luận · Bỏ qua · Nhắn riêng · ⋯ (mờ, tooltip "Phím tắt: … · Sắp có") và "Duyệt & gửi trả lời" |
+| 6 | Mở `/app/comments` | Không có số liệu mẫu: ca làm/SLA/độ chính xác hiện "—"/"Sắp có"; gửi/ẩn hoạt động như trước |
 
 ## KT-UIHA — Tự động hóa + Quy tắc spam khớp HTML Stitch (UI-HTML-AUTOMATION, feat-ui-html-automation)
 
