@@ -124,5 +124,9 @@ Tìm kiếm toàn văn + trigram chạy hoàn toàn trong Postgres (không cần
 - Một model embedding **1024 chiều** trong LiteLLM (ví dụ dòng BGE-M3/multilingual-e5-large, hoặc dịch vụ trả phí hỗ trợ giảm chiều về 1024) + khóa ảo LiteLLM (`LITELLM_API_KEY`) có quyền model đó; tên model dự kiến đặt ở `EMBEDDING_MODEL` (chưa thêm vào `env.example` cho tới khi có bản thật).
 - Quyết định có tự host (máy ảo) hay dùng dịch vụ trả phí; kèm giá để đưa vào `ai_usage`.
 
+## 2i. `AUTO-SEND-GATE` (FR-031, FR-141) — không cần tài nguyên ngoài
+
+Hàm thuần `decideAutoSend` (`packages/ai/src/gate/`), không khóa/dịch vụ/cờ; kiểm tay mã KT-ASG. Không có gì để chủ dự án cung cấp. Mutation testing (Stryker) chưa cài — xem gap `MUTATION-STRYKER`, cần bạn đồng ý thêm thư viện dev (Apache-2.0) ở một nhánh riêng.
+
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").

@@ -6,6 +6,7 @@ import { AUTO_SEND_POLICIES } from '../decide/decide-action';
 import {
   AUTO_SEND_OUTCOMES,
   type AutoSendInput,
+  CLOCK_SKEW_MS,
   DEFAULT_THRESHOLD,
   decideAutoSend,
   GATE_COUNT,
@@ -54,8 +55,9 @@ function base(over: Partial<AutoSendInput> = {}): AutoSendInput {
       reply: 'Dạ áo thun A giá 199.000đ ạ.',
       needsHuman: false,
       claims: [{ kind: 'fact' }],
-      sources: ['Áo thun A: 199.000đ'],
+      unansweredTopics: [],
     },
+    grounding: { sourceTexts: ['Áo thun A: 199.000đ'] },
     flags: {
       customerAngry: false,
       promptInjection: false,
@@ -255,10 +257,16 @@ describe('FR-031 FR-141 FR-147 cổng 6 — code tính lại "cần người"', 
     );
   });
   it('giá đọc từ products (knownPricesVnd) là nguồn hợp lệ', () => {
-    const r = decideAutoSend(
-      base({ draft: { ...base().draft, sources: [], knownPricesVnd: [199_000] } }),
-    );
+    const r = decideAutoSend(base({ grounding: { sourceTexts: [], knownPricesVnd: [199_000] } }));
     expect(r.outcome).toBe('auto_send');
+  });
+  it('nguồn kiểm tiền tách khỏi bản nháp: AI tự ghi sources trong draft không được tính', () => {
+    const raw = {
+      ...base(),
+      grounding: { sourceTexts: [] },
+      draft: { ...base().draft, sources: ['Áo thun A: 199.000đ'] },
+    };
+    expectHold(raw as AutoSendInput, 6, 'money_unsourced');
   });
   it('khách rất bực → customer_angry', () => {
     expectHold(base({ flags: { ...base().flags, customerAngry: true } }), 6, 'customer_angry');
@@ -313,11 +321,11 @@ describe('FR-031 FR-141 FR-147 cổng 6 — code tính lại "cần người"', 
       autoSendPolicy: 'allow_clarify',
       unansweredTopics: [],
     };
-    const draft = {
+    const draft: AutoSendInput['draft'] = {
       reply: 'Dạ chị hỏi mẫu nào ạ?',
       needsHuman: false,
       claims: [{ kind: 'question_back' }],
-      sources: [],
+      unansweredTopics: [],
     };
     expectHold(
       base({ decision, draft, settings: { ...base().settings, allowClarify: false } }),
@@ -334,6 +342,39 @@ describe('FR-031 FR-141 FR-147 cổng 6 — code tính lại "cần người"', 
       unansweredTopics: ['shipping'],
     };
     expectHold(base({ decision }), 6, 'partial_not_allowed');
+  });
+  it('FR-031 hồi quy: AI thêm ý fact vào câu hỏi lại KHÔNG mở được cổng khi allow_clarify tắt', () => {
+    const decision: AutoSendInput['decision'] = {
+      action: 'redirect',
+      needsHuman: false,
+      autoSendPolicy: 'allow_clarify',
+      unansweredTopics: ['shipping'],
+    };
+    const settings = { ...base().settings, allowClarify: false, allowPartial: true };
+    expectHold(
+      base({ decision, settings, draft: { ...base().draft, claims: [] } }),
+      6,
+      'clarify_not_allowed',
+    );
+    expectHold(
+      base({ decision, settings, draft: { ...base().draft, claims: [{ kind: 'fact' }] } }),
+      6,
+      'clarify_not_allowed',
+    );
+  });
+  it('FR-141 hồi quy: AI tự ghi unanswered_topics → trả lời một phần → cần allow_partial', () => {
+    const draft = { ...base().draft, unansweredTopics: ['shipping'] };
+    expectHold(base({ draft }), 6, 'partial_not_allowed');
+    expect(
+      decideAutoSend(base({ draft, settings: { ...base().settings, allowPartial: true } })).outcome,
+    ).toBe('auto_send');
+  });
+  it('FR-141 ý kind=handoff (câu mời ib) trong bản nháp → trả lời một phần', () => {
+    expectHold(
+      base({ draft: { ...base().draft, claims: [{ kind: 'fact' }, { kind: 'handoff' }] } }),
+      6,
+      'partial_not_allowed',
+    );
   });
   it('FR-146 độ sẵn sàng < 80% → readiness_low; đúng 80 → qua', () => {
     expect(READINESS_MIN_PERCENT).toBe(80);
@@ -354,6 +395,11 @@ describe('FR-031 cổng 7 — từ khóa chặn', () => {
       7,
       'blocked_keyword',
     );
+  });
+  it('không lách được bằng ký tự rộng 0 hay chữ toàn khổ (NFKC)', () => {
+    const reply = (s: string) => base({ draft: { ...base().draft, reply: s } });
+    expectHold(reply('Dạ áo 199.000đ, bả​o hà‍nh 6 tháng ạ.'), 7, 'blocked_keyword');
+    expectHold(reply('Dạ áo 199.000đ, ｂảｏ ｈàｎｈ ạ.'), 7, 'blocked_keyword');
   });
   it('từ khóa rỗng/chỉ dấu câu bị bỏ qua, không chặn mọi câu', () => {
     const r = decideAutoSend(
@@ -477,6 +523,18 @@ describe('FR-031 cổng 11 — cửa sổ 24 giờ (chỉ tin nhắn)', () => {
   it('tin nhắn thiếu mốc tin cuối → chặn (thiên về chặn)', () => {
     expectHold(base({ target: 'message', message: null }), 11, 'message_window_closed');
   });
+  it('mốc tin cuối ở tương lai: lệch ≤ 5 phút chấp nhận, quá → chặn (dữ liệu hỏng)', () => {
+    expect(CLOCK_SKEW_MS).toBe(300_000);
+    const at = (ms: number) =>
+      decideAutoSend(
+        base({
+          target: 'message',
+          message: { lastInboundAt: new Date(Date.parse(NOW) + ms).toISOString() },
+        }),
+      );
+    expect(at(60_000).outcome).toBe('auto_send');
+    expect(at(CLOCK_SKEW_MS + 1).failedGate).toBe('gate:11');
+  });
   it('bình luận bỏ qua cổng 11 dù có mốc cũ', () => {
     const last = new Date(Date.parse(NOW) - 72 * HOUR_MS).toISOString();
     expect(
@@ -525,6 +583,20 @@ describe('FR-031 FR-032 đầu vào hỏng → chờ duyệt, không ném', () =
     ['độ tin cậy > 1', base({ confidence: 1.2 })],
     ['số đã gửi âm', base({ usage: { autoSentToday: -1 } })],
     ['now không phải ngày', base({ now: 'hôm nay' })],
+    ['now không phải ISO ("1" → năm 2001)', base({ now: '1' })],
+    [
+      'loại ý lạ do AI đặt ("Fact")',
+      base({ draft: { ...base().draft, claims: [{ kind: 'Fact' as never }] } }),
+    ],
+    [
+      'nhãn chặn không phải mã chuẩn ("Spam")',
+      base({ settings: { ...base().settings, blockedLabels: ['Spam' as never] } }),
+    ],
+    ['thiếu grounding', { ...base(), grounding: undefined }],
+    [
+      'thiếu draft.unansweredTopics',
+      { ...base(), draft: { reply: 'x', needsHuman: false, claims: [] } },
+    ],
     [
       'múi giờ lạ',
       base({
@@ -616,10 +688,14 @@ const inputArb: fc.Arbitrary<AutoSendInput> = fc.record({
   draft: fc.record({
     reply: fc.constantFrom('Dạ áo giá 199.000đ ạ.', 'Dạ chị hỏi mẫu nào ạ?', 'Giá 250k ạ'),
     needsHuman: fc.boolean(),
-    claims: fc.array(fc.record({ kind: fc.constantFrom('fact', 'greeting', 'question_back') }), {
-      maxLength: 2,
-    }),
-    sources: fc.subarray(['Áo thun A: 199.000đ', 'Giao hàng 2–3 ngày']),
+    claims: fc.array(
+      fc.record({ kind: fc.constantFrom('fact', 'greeting', 'question_back', 'handoff' as const) }),
+      { maxLength: 2 },
+    ),
+    unansweredTopics: fc.uniqueArray(topicArb, { maxLength: 2 }),
+  }),
+  grounding: fc.record({
+    sourceTexts: fc.subarray(['Áo thun A: 199.000đ', 'Giao hàng 2–3 ngày']),
   }),
   flags: fc.record({
     customerAngry: fc.boolean(),
@@ -693,7 +769,7 @@ describe('FR-031 property-based — thứ tự cổng và đơn điệu', () => 
           blockedLabels: shuffled(input.settings.blockedLabels),
           blockedKeywords: shuffled(input.settings.blockedKeywords),
           claims: shuffled(input.draft.claims),
-          sources: shuffled(input.draft.sources),
+          sources: shuffled(input.grounding.sourceTexts),
         })
         .map((v): [AutoSendInput, AutoSendInput] => [
           input,
@@ -705,7 +781,8 @@ describe('FR-031 property-based — thứ tự cổng và đơn điệu', () => 
               blockedLabels: v.blockedLabels,
               blockedKeywords: v.blockedKeywords,
             },
-            draft: { ...input.draft, claims: v.claims, sources: v.sources },
+            draft: { ...input.draft, claims: v.claims },
+            grounding: { ...input.grounding, sourceTexts: v.sources },
           },
         ]),
     );

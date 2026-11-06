@@ -229,7 +229,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| AUTO-SEND-GATE | FR-031 (11 cổng theo `09` §6, AI chỉ thêm điều kiện "cần duyệt"), FR-141 (tự gửi một phần) | US-040, UF-5 | PIPE-DECIDE-ACTION | S | không | ⏳ |
+| AUTO-SEND-GATE | FR-031 (11 cổng theo `09` §6, AI chỉ thêm điều kiện "cần duyệt"), FR-141 (tự gửi một phần) | US-040, UF-5 | PIPE-DECIDE-ACTION | S | không | ✅ (lõi hàm thuần `decideAutoSend`, `feat-auto-send-gate`; nối pipeline/`automation_settings`/`automation_events` ở AUTO-MATRIX-UI + PIPE-ROUTE; Stryker → `MUTATION-STRYKER`; KT-ASG) |
 | SEND-RECHECK | FR-110 (R1–R9 ngay trước khi gọi API; bị chặn → lý do hiển thị) | US-045 | AUTO-SEND-GATE, FB-REPLY | S | không | ⏳ |
 | AUTO-MATRIX-UI | FR-070 (Tắt/Chạy thử/Tự động theo kênh × nhãn), FR-071 (ngưỡng, khoảng trễ, giới hạn/ngày, giờ hoạt động, từ khóa chặn, chữ ký) | US-040, UF-5 | AUTO-SEND-GATE | S | không | ⏳ |
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ⏳ |

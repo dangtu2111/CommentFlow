@@ -95,11 +95,17 @@ const nonNegativeInt = z.number().int().min(0);
 const nonNegative = z.number().finite().min(0);
 const unit = z.number().finite().min(0).max(1);
 
-/** Chuỗi ISO hoặc `Date`; không đọc được → đầu vào hỏng. */
+/** Chuỗi ISO 8601 (có giờ) hoặc `Date` hợp lệ; dạng khác → đầu vào hỏng. */
 const instant = z
-  .union([z.date(), z.string()])
+  .union([z.date(), z.iso.datetime({ offset: true })])
   .transform((v) => (v instanceof Date ? v : new Date(v)))
   .refine((d) => Number.isFinite(d.getTime()), 'Thời điểm không hợp lệ');
+
+/** Lệch đồng hồ chấp nhận được khi mốc tin cuối ở "tương lai"; quá → coi dữ liệu hỏng, chặn. */
+export const CLOCK_SKEW_MS = 5 * 60_000;
+
+/** Loại ý trong `claims[]` (FR-140, FR-141); giá trị lạ → đầu vào hỏng (không cho AI tự đặt tên). */
+export const GATE_CLAIM_KINDS = ['fact', 'greeting', 'question_back', 'handoff'] as const;
 
 function isKnownTimeZone(tz: string): boolean {
   try {
@@ -140,7 +146,8 @@ export const autoSendInputSchema = z.object({
   settings: z.object({
     threshold: unit,
     dailyCap: nonNegativeInt.nullable(),
-    blockedLabels: z.array(z.string()),
+    /** Mã nhãn chuẩn; giá trị lạ (ví dụ "Khiếu nại") → đầu vào hỏng, không lặng lẽ bỏ. */
+    blockedLabels: z.array(z.enum(COMMENT_LABELS)),
     blockedKeywords: z.array(z.string()),
     allowPartial: z.boolean(),
     allowClarify: z.boolean(),
@@ -157,13 +164,24 @@ export const autoSendInputSchema = z.object({
     autoSendPolicy: z.enum(AUTO_SEND_POLICIES),
     unansweredTopics: z.array(z.string()),
   }),
-  /** Bản nháp + nguồn đã đưa vào prompt; trường lạ do AI thêm bị bỏ. */
+  /**
+   * Bản nháp của AI (JSON đã qua `parseDraftOutput`); trường lạ bị bỏ. Mọi trường ở đây chỉ có thể
+   * CHẶN thêm (`needsHuman`, `unansweredTopics`, ý `handoff`, ý `fact` → cần `allow_partial`), không mở.
+   */
   draft: z.object({
     reply: z.string(),
-    /** AI xin duyệt (`needs_human` của JSON) — chỉ có thể CHẶN, không mở. */
+    /** AI xin duyệt (`needs_human` của JSON). */
     needsHuman: z.boolean(),
-    claims: z.array(z.object({ kind: z.string() }).loose()),
-    sources: z.array(z.string()),
+    claims: z.array(z.object({ kind: z.enum(GATE_CLAIM_KINDS) }).loose()),
+    /** `unanswered_topics` AI tự ghi (FR-141) — khác rỗng = trả lời một phần → xét `allow_partial`. */
+    unansweredTopics: z.array(z.string()),
+  }),
+  /**
+   * Nguồn để kiểm số tiền/SĐT/link — DO CODE DỰNG từ bước tìm kiếm và bảng `products`,
+   * KHÔNG BAO GIỜ lấy từ `sources[]` trong JSON của AI (nguyên tắc #4).
+   */
+  grounding: z.object({
+    sourceTexts: z.array(z.string()),
     knownPricesVnd: z.array(nonNegative).optional(),
   }),
   /** Cờ "cần người" do bước khác đo (`DA-*`, `PII-*`, onboarding). BẮT BUỘC đủ: thiếu = không đọc được. */
@@ -221,36 +239,48 @@ const gate5Confidence: Gate = (i) => {
 
 /** Cổng 6 — mọi lý do "cần người" do code tính lại; thứ tự cố định, lý do đầu tiên được báo. */
 const gate6NeedsHuman: Gate = (i) => {
-  const { decision, draft, flags, settings } = i;
+  const { decision, draft, flags, settings, grounding } = i;
   if (decision.action === 'handoff') return 'handoff_action';
   if (decision.needsHuman) return 'decision_needs_human';
-  const policy = effectiveAutoSendPolicy(decision.autoSendPolicy, draft);
-  if (policy === 'never') return 'policy_never';
+  const basePolicy = decision.autoSendPolicy;
+  if (basePolicy === 'never') return 'policy_never';
   if (draft.needsHuman) return 'draft_needs_human';
   const guard = checkGuardMoney({
     reply: draft.reply,
-    sources: draft.sources,
-    ...(draft.knownPricesVnd === undefined ? {} : { knownPricesVnd: draft.knownPricesVnd }),
+    sources: grounding.sourceTexts,
+    ...(grounding.knownPricesVnd === undefined ? {} : { knownPricesVnd: grounding.knownPricesVnd }),
   });
   if (!guard.ok) return 'money_unsourced';
   if (flags.customerAngry) return 'customer_angry';
   if (flags.promptInjection) return 'prompt_injection';
   if (flags.repeatCount >= REPEAT_HUMAN_THRESHOLD) return 'repeat_limit';
   if (flags.imageProductUnresolved) return 'image_product_unresolved';
-  if (policy === 'allow_clarify') {
-    if (!settings.allowClarify) return 'clarify_not_allowed';
-  } else if (policy === 'allow_partial' || decision.unansweredTopics.length > 0) {
-    if (!settings.allowPartial) return 'partial_not_allowed';
-  }
+  // Câu hỏi lại / chuyển hướng (chính sách gốc do code chọn) LUÔN cần `allow_clarify`.
+  if (basePolicy === 'allow_clarify' && !settings.allowClarify) return 'clarify_not_allowed';
+  // Trả lời một phần (FR-141) cần `allow_partial`: policy gốc `allow_partial`, hoặc AI thêm ý `fact`
+  // vào câu hỏi lại (`effectiveAutoSendPolicy` nâng lên — CỘNG THÊM điều kiện, không thay thế),
+  // hoặc có `unanswered_topics` (của code hay của AI), hoặc có ý `handoff` (câu mời ib).
+  const effective = effectiveAutoSendPolicy(basePolicy, draft);
+  const partial =
+    effective === 'allow_partial' ||
+    decision.unansweredTopics.length > 0 ||
+    draft.unansweredTopics.length > 0 ||
+    draft.claims.some((claim) => claim.kind === 'handoff');
+  if (partial && !settings.allowPartial) return 'partial_not_allowed';
   if (flags.readinessPercent < READINESS_MIN_PERCENT) return 'readiness_low';
   if (flags.humanHolding) return 'human_holding';
   return null;
 };
 
+/** Chuẩn hóa để so từ khóa: NFKC (chữ toàn khổ → ASCII), bỏ ký tự định dạng (zero-width…), bỏ dấu/thường. */
+export function keywordFold(text: string): string {
+  return normalizeSearchText(text.normalize('NFKC').replace(/\p{Cf}/gu, ''));
+}
+
 const gate7Keywords: Gate = (i) => {
-  const text = ` ${normalizeSearchText(i.draft.reply)} `;
+  const text = ` ${keywordFold(i.draft.reply)} `;
   const hit = i.settings.blockedKeywords
-    .map((keyword) => normalizeSearchText(keyword))
+    .map((keyword) => keywordFold(keyword))
     .filter((keyword) => keyword.length > 0)
     .some((keyword) => text.includes(keyword));
   return hit ? 'blocked_keyword' : null;
@@ -281,8 +311,11 @@ const WEEKDAY_INDEX: Readonly<Record<string, number>> = {
   Sat: 6,
 };
 
-/** Thứ (0–6) và phút trong ngày của `now` theo múi giờ. */
-export function localDayMinute(now: Date, timezone: string): { day: number; minute: number } {
+/** Thứ (0–6) và phút trong ngày của `now` theo múi giờ; không đọc được → `null` (người gọi coi là ngoài giờ). */
+export function localDayMinute(
+  now: Date,
+  timezone: string,
+): { day: number; minute: number } | null {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     weekday: 'short',
@@ -292,13 +325,18 @@ export function localDayMinute(now: Date, timezone: string): { day: number; minu
   }).formatToParts(now);
   const read = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((p) => p.type === type)?.value ?? '';
-  const day = WEEKDAY_INDEX[read('weekday')] ?? 0;
-  return { day, minute: Number(read('hour')) * 60 + Number(read('minute')) };
+  const day = WEEKDAY_INDEX[read('weekday')];
+  const hour = Number(read('hour'));
+  const minute = Number(read('minute'));
+  if (day === undefined || !Number.isInteger(hour) || !Number.isInteger(minute)) return null;
+  return { day, minute: hour * 60 + minute };
 }
 
 /** Trong khung giờ? `from < to` cùng ngày; `from > to` qua đêm (kéo sang ngày sau); `from = to` rỗng. */
 export function isWithinActiveHours(now: Date, hours: z.output<typeof activeHoursSchema>): boolean {
-  const { day, minute } = localDayMinute(now, hours.timezone);
+  const local = localDayMinute(now, hours.timezone);
+  if (local === null) return false;
+  const { day, minute } = local;
   return hours.windows.some((window) => {
     const from = minutesOf(window.from);
     const to = minutesOf(window.to);
@@ -324,6 +362,8 @@ const gate11MessageWindow: Gate = (i) => {
   if (i.target !== 'message') return null;
   if (i.message === null) return 'message_window_closed';
   const elapsedMs = i.now.getTime() - i.message.lastInboundAt.getTime();
+  // Mốc ở tương lai quá mức lệch đồng hồ = dữ liệu hỏng (nhầm giây/mili-giây…) → chặn, không "mở mãi".
+  if (elapsedMs < -CLOCK_SKEW_MS) return 'message_window_closed';
   return elapsedMs < MESSAGE_WINDOW_HOURS * 3_600_000 ? null : 'message_window_closed';
 };
 
