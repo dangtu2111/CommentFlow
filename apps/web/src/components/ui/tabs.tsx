@@ -1,3 +1,4 @@
+import { cva } from 'class-variance-authority';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -14,16 +15,33 @@ export type TabItem = {
   disabled?: boolean;
 };
 
-const CLASSES = {
-  /** Hai/ba tab nằm trong một thanh nền (Đăng nhập | Đăng ký). */
-  segmented: { nav: 'tabs', item: 'tab' },
-  /** Tab mục của trang cha (Bình luận ⟵ AI đã gửi). */
-  section: { nav: 'section-tabs', item: 'section-tab' },
-  /** Viên thuốc lọc theo nền tảng (Tất cả | Facebook | Instagram). */
-  pill: { nav: 'pill-tabs', item: 'pill-tab' },
-  /** Thanh công cụ nền nhạt, tab có biểu tượng + huy hiệu (Tự động hóa, Quy tắc spam). */
-  toolbar: { nav: 'toolbar-tabs', item: 'toolbar-tab' },
-} as const;
+type TabsVariant = 'segmented' | 'section' | 'pill' | 'toolbar';
+
+const tabsNav = cva('', {
+  variants: {
+    /** Hai/ba tab nằm trong một thanh nền (Đăng nhập | Đăng ký). */
+    variant: {
+      segmented: 'tabs',
+      /** Tab mục của trang cha (Bình luận ⟵ AI đã gửi). */
+      section: 'section-tabs',
+      /** Viên thuốc lọc theo nền tảng (Tất cả | Facebook | Instagram). */
+      pill: 'pill-tabs',
+      /** Thanh công cụ nền nhạt, tab có biểu tượng + huy hiệu (Tự động hóa, Quy tắc spam). */
+      toolbar: 'toolbar-tabs',
+    },
+  },
+});
+
+const tabsItem = cva('', {
+  variants: {
+    variant: {
+      segmented: 'tab',
+      section: 'section-tab',
+      pill: 'pill-tab',
+      toolbar: 'toolbar-tab',
+    },
+  },
+});
 
 /**
  * Thanh tab là các liên kết thật (đổi URL, không cần JS); tab hiện tại gắn `aria-current="page"`.
@@ -38,10 +56,10 @@ export function Tabs({
 }: {
   items: readonly TabItem[];
   label: string;
-  variant?: keyof typeof CLASSES;
+  variant?: TabsVariant;
   disabledNote?: string;
 }) {
-  const classes = CLASSES[variant];
+  const classes = { nav: tabsNav({ variant }), item: tabsItem({ variant }) };
   return (
     <nav className={classes.nav} aria-label={label}>
       {items.map((item) => {

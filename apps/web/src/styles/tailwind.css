@@ -1,0 +1,137 @@
+/*
+ * Tailwind cùng tồn tại với CSS cũ (docs/decisions/013-tailwind.md).
+ * - `preflight` TẮT (tailwind.config.ts) nên không có reset toàn trang → trang cũ không đổi.
+ * - `important: '.tw'` → mọi class tiện ích chỉ có hiệu lực BÊN TRONG phần tử bọc `.tw` (hoặc `[data-tw]`),
+ *   nên không đè lên class cũ trùng tên (.block, .table, .container…).
+ * - Khối `@layer base` dưới đây là phần reset tối thiểu của preflight, cũng chỉ trong phạm vi `.tw`.
+ * Trang mới: bọc nội dung trong <div className="tw">…</div>.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .tw,
+  .tw *,
+  .tw ::before,
+  .tw ::after,
+  [data-tw],
+  [data-tw] *,
+  [data-tw] ::before,
+  [data-tw] ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: #dde3e7;
+  }
+
+  .tw h1,
+  .tw h2,
+  .tw h3,
+  .tw h4,
+  .tw h5,
+  .tw h6,
+  .tw p,
+  .tw figure,
+  .tw blockquote,
+  .tw dl,
+  .tw dd,
+  [data-tw] h1,
+  [data-tw] h2,
+  [data-tw] h3,
+  [data-tw] h4,
+  [data-tw] h5,
+  [data-tw] h6,
+  [data-tw] p,
+  [data-tw] figure,
+  [data-tw] blockquote,
+  [data-tw] dl,
+  [data-tw] dd {
+    margin: 0;
+  }
+
+  .tw h1,
+  .tw h2,
+  .tw h3,
+  .tw h4,
+  .tw h5,
+  .tw h6,
+  [data-tw] h1,
+  [data-tw] h2,
+  [data-tw] h3,
+  [data-tw] h4,
+  [data-tw] h5,
+  [data-tw] h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  .tw ul,
+  .tw ol,
+  [data-tw] ul,
+  [data-tw] ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tw a,
+  [data-tw] a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  .tw img,
+  .tw svg,
+  .tw video,
+  .tw canvas,
+  [data-tw] img,
+  [data-tw] svg,
+  [data-tw] video,
+  [data-tw] canvas {
+    display: block;
+    vertical-align: middle;
+  }
+
+  .tw img,
+  .tw video,
+  [data-tw] img,
+  [data-tw] video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .tw button,
+  .tw input,
+  .tw optgroup,
+  .tw select,
+  .tw textarea,
+  [data-tw] button,
+  [data-tw] input,
+  [data-tw] optgroup,
+  [data-tw] select,
+  [data-tw] textarea {
+    font-family: inherit;
+    font-size: 100%;
+    font-weight: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tw button,
+  [data-tw] button {
+    background-color: transparent;
+    background-image: none;
+    cursor: pointer;
+  }
+
+  .tw table,
+  [data-tw] table {
+    border-collapse: collapse;
+    border-color: inherit;
+    text-indent: 0;
+  }
+}

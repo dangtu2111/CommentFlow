@@ -1,28 +1,36 @@
+import { cva } from 'class-variance-authority';
 import type { ButtonHTMLAttributes } from 'react';
+import { cn } from '../../lib/cn';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'danger-ghost';
 
-const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: 'btn btn-primary',
-  secondary: 'btn btn-secondary',
-  danger: 'btn btn-danger',
-  ghost: 'btn btn-ghost',
-  'danger-ghost': 'btn btn-danger-ghost',
-};
+// Biến thể khai báo bằng cva; class vẫn là lớp của kit (button.css) để trang cũ ngoài `.tw` không đổi.
+// Khi trang được port sang Tailwind, thay chuỗi class dưới đây bằng class tiện ích — props công khai giữ nguyên.
+const buttonVariants = cva('btn', {
+  variants: {
+    variant: {
+      primary: 'btn-primary',
+      secondary: 'btn-secondary',
+      danger: 'btn-danger',
+      ghost: 'btn-ghost',
+      'danger-ghost': 'btn-danger-ghost',
+    },
+    block: { true: 'btn-block', false: '' },
+  },
+  defaultVariants: { variant: 'primary', block: false },
+});
 
 /** Chuỗi class của nút — dùng cho liên kết trông như nút (`<Link className={buttonClass({ variant: 'primary' })}>`). */
 export function buttonClass({
-  variant = 'primary',
-  block = false,
+  variant,
+  block,
   className,
 }: {
   variant?: ButtonVariant;
   block?: boolean;
   className?: string;
 } = {}): string {
-  return [VARIANT_CLASS[variant], block ? 'btn-block' : '', className ?? '']
-    .filter(Boolean)
-    .join(' ');
+  return cn(buttonVariants({ variant, block }), className);
 }
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

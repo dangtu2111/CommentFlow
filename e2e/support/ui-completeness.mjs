@@ -6,6 +6,8 @@
 //             = gộp chữ của mọi route (màn có nhiều tab/khung nhìn). Trên Git Bash gõ `//dev/ui/x` để tránh đổi đường dẫn.
 // Nhiều màn: node e2e/support/ui-completeness.mjs --batch <file.json> [--base url] [--out file.md]
 //   file.json = [{ "slug": "...", "routes": ["/dev/ui/..."] }, …] — in bảng tóm tắt + mục thiếu từng màn (chạy nhanh).
+// Thêm --geometry [--tolerance 2]: so cả HÌNH HỌC (hộp bao + padding/margin/cỡ chữ/màu của header, thanh bên, tiêu đề, card, nút chính);
+//   chiều rộng ô nhìn = 1440px. HTML Stitch nạp Tailwind CDN nên cần mạng khi đo. Lệnh gọn: pnpm ui:fidelity <slug> <route>.
 // Thoát 1 khi có màn dưới ngưỡng --min (mặc định 95%).
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -16,18 +18,30 @@ import {
   compareTexts,
   formatReport,
 } from '../../scripts/lib/ui-completeness.mjs';
+import {
+  compareGeometry,
+  DEFAULT_LANDMARKS,
+  formatGeometryReport,
+  measureLandmarksInBrowser,
+  STYLE_PROPS,
+} from '../../scripts/lib/ui-geometry.mjs';
 
 const args = process.argv.slice(2);
 const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : fallback;
 };
-const positional = args.filter((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
+const FLAGS = new Set(['--geometry']);
+const positional = args.filter(
+  (a, i) => !a.startsWith('--') && (FLAGS.has(args[i - 1]) || !args[i - 1]?.startsWith('--')),
+);
 const base = opt('base', 'http://localhost:3101');
 const min = Number(opt('min', '95'));
 const out = opt('out');
 const scope = opt('scope', 'main'); // chỉ đối chiếu vùng <main> (vỏ ứng dụng có kit riêng); '' = cả trang
 const batchFile = opt('batch');
+const geometry = args.includes('--geometry');
+const tolerance = Number(opt('tolerance', '2'));
 
 const normalizeRoute = (route) => route.replace(/^\/\/+/, '/');
 
@@ -57,6 +71,19 @@ async function compareJob(page, { slug, routes }) {
   return compareTexts(htmlTexts, texts);
 }
 
+const measureArg = { landmarks: DEFAULT_LANDMARKS, styleProps: STYLE_PROPS };
+
+async function geometryReport(page, { slug, routes }) {
+  const htmlUrl = pathToFileURL(resolve('design/stitch', `${slug}.html`)).href;
+  await page.goto(htmlUrl, { waitUntil: 'networkidle' }).catch(() => {});
+  const stitch = await page.evaluate(measureLandmarksInBrowser, measureArg);
+  await page.goto(`${base}${routes[0]}`, { waitUntil: 'networkidle' });
+  const real = await page.evaluate(measureLandmarksInBrowser, measureArg);
+  const rows = compareGeometry(stitch, real, tolerance);
+  if (rows.some((r) => !r.ok)) process.exitCode = 1;
+  return formatGeometryReport(slug, routes[0], rows, tolerance);
+}
+
 const browser = await chromium.launch();
 const reports = [];
 const rows = [];
@@ -68,6 +95,7 @@ try {
       const result = await compareJob(page, { slug: job.slug, routes });
       reports.push(formatReport(job.slug, routes.join(' + '), result));
       rows.push({ slug: job.slug, routes, result });
+      if (geometry) reports.push(await geometryReport(page, { slug: job.slug, routes }));
       if (result.percent < min) process.exitCode = 1;
     } catch (error) {
       const reason = error instanceof Error ? error.message.split('\n')[0] : 'lỗi không rõ';

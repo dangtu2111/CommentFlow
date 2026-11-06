@@ -20,6 +20,7 @@
     "check:plans": "node scripts/check-plans.mjs",
     "check:gitleaks-allowlist": "node scripts/check-gitleaks-allowlist.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
+    "ui:fidelity": "node e2e/support/ui-completeness.mjs --geometry",
     "codemap:build": "node scripts/build-codemap.mjs",
     "codemap:check": "node scripts/build-codemap.mjs --check",
     "quyet:build": "node scripts/build-quyet-dinh.mjs",

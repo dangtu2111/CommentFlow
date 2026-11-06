@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useId, useState } from 'react';
 import { FormField } from './form-field';
+import { Input } from './input';
 
 const ICONS = { mail: Mail, user: User, lock: Lock };
 
@@ -33,9 +34,8 @@ export function TextField({
       {(control) => (
         <div className="input-wrap">
           <Icon className="input-icon" size={18} aria-hidden="true" />
-          <input
+          <Input
             {...control}
-            className="input"
             type={type}
             name={props.name}
             autoComplete={props.autoComplete}
@@ -66,9 +66,9 @@ export function PasswordField(
       {(control) => (
         <div className="input-wrap">
           <Lock className="input-icon" size={18} aria-hidden="true" />
-          <input
+          <Input
             {...control}
-            className="input has-toggle"
+            kind="toggle"
             type={visible ? 'text' : 'password'}
             name={props.name}
             autoComplete={props.autoComplete}
@@ -113,9 +113,9 @@ export function CodeField(props: {
       {(control) => (
         <div className="input-wrap">
           <ShieldCheck className="input-icon" size={18} aria-hidden="true" />
-          <input
+          <Input
             {...control}
-            className="input code-input"
+            kind="code"
             name={props.name}
             type="text"
             inputMode={backup ? 'text' : 'numeric'}
