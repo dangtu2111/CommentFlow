@@ -269,8 +269,11 @@ export function createHaravanConnector(options: HaravanConnectorOptions): Harava
         }
         if (waitMs > 0) await sleep(waitMs);
         const result = await fetchPage(page);
+        const before = byId.size;
         for (const product of result.products) byId.set(product.id, product);
         if (result.products.length < pageSize) return { products: [...byId.values()] };
+        // Trang đầy mà không có sản phẩm mới: API bỏ qua `page` → dừng sớm, không trả danh mục không tin được.
+        if (byId.size === before) throw fail('UNKNOWN', 'haravan_bad_response');
         waitMs = result.nextWaitMs;
       }
       throw fail('UNKNOWN', 'haravan_too_many_pages');

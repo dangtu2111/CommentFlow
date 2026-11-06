@@ -120,6 +120,14 @@ describe('FR-122 Haravan fetchCatalog', () => {
     expect((await connector.fetchCatalog()).products[0]?.published).toBe(false);
   });
 
+  it('trang đầy toàn id đã thấy (API bỏ qua page) → lỗi sớm', async () => {
+    const { connector, calls } = harness([page([productNode(1)]), page([productNode(1)])], {
+      pageSize: 1,
+    });
+    expect((await failureOf(connector.fetchCatalog())).message).toBe('haravan_bad_response');
+    expect(calls).toHaveLength(2);
+  });
+
   it('vượt maxPages → lỗi, không trả danh mục dang dở', async () => {
     const { connector } = harness([page([productNode(1)]), page([productNode(2)])], {
       pageSize: 1,
