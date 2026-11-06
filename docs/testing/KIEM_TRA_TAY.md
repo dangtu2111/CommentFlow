@@ -1011,3 +1011,11 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/shared exec vitest run src/post-products.test.ts`. | 14 test xanh: loại trùng, sản phẩm chính phải nằm trong danh sách, trần 200 bài × 20 sản phẩm, đề xuất AI chưa xác nhận không được dùng để trả lời. |
 | 2 | CI job `database` chạy `tests/post-products.int.test.ts` và `pnpm db:check-rls`. | Gắn nhiều sản phẩm, tối đa một chính/bài, gắn hàng loạt không trùng; worker chỉ tạo được đề xuất, không tự xác nhận; workspace khác không thấy. |
+
+## KT-UKP — Giao diện Cơ sở kiến thức + Bài viết (UI-FIDELITY-KB-POSTS, QUKP1)
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/web dev` (cổng riêng), mở `/dev/ui/kb-posts` (bản dev). | Thẻ bài + tab nền tảng + phân trang số + panel cấu hình; mọi nội dung có nhãn [MẪU]; bản production trả 404. |
+| 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
+| 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |

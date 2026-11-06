@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { PostsList } from '../../../../components/posts/posts-list';
+import { PostsTabs } from '../../../../components/posts/posts-tabs';
 import { PostsToolbar } from '../../../../components/posts/posts-toolbar';
 import {
   POSTS_PAGE_SIZE,
@@ -48,10 +49,20 @@ export default async function PostsPage({
   return (
     <main className="posts">
       <header className="posts-header">
-        <h1>{t('title')}</h1>
-        <span className="posts-total">{t('count', { count: page.total })}</span>
-        <p>{t('subtitle')}</p>
+        <nav className="posts-breadcrumb" aria-label={t('breadcrumb.label')}>
+          <span>{t('breadcrumb.operations')}</span>
+          <span aria-hidden="true">›</span>
+          <span>{t('breadcrumb.content')}</span>
+          <span aria-hidden="true">›</span>
+          <span aria-current="page">{t('breadcrumb.current')}</span>
+        </nav>
+        <div className="posts-title-row">
+          <h1>{t('heading')}</h1>
+          <span className="posts-total">{t('count', { count: page.total })}</span>
+        </div>
+        <p className="muted">{t('subtitle')}</p>
       </header>
+      <PostsTabs view={view} />
       <section className="posts-panel">
         <PostsToolbar view={view} channels={channels} />
         {page.items.length === 0 ? (
@@ -63,6 +74,7 @@ export default async function PostsPage({
           <PostsList
             view={view}
             items={page.items}
+            total={page.total}
             pageCount={postsPageCount(page.total, POSTS_PAGE_SIZE)}
             timeZone={timeZone}
           />

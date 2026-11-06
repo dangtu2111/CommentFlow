@@ -1,0 +1,2 @@
+- Nhập Excel sản phẩm (`/app/products/import`, trình hướng dẫn nhập) — chưa có màn thiết kế riêng (làn d, UI-FIDELITY-KB-POSTS); hiện chỉ bọc khung Cơ sở kiến thức
+- Cơ sở kiến thức: Nguồn dữ liệu / Thông tin cửa hàng / Chính sách / Tài liệu / Giọng văn / Từ điển viết tắt — có trong menu thiết kế nhưng chưa có tính năng; cần thiết kế từng màn khi làm
