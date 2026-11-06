@@ -9,6 +9,7 @@ import { replyErrorKey } from '../../lib/reply-errors';
 import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
 import type { SuggestionView } from '../../lib/suggestion';
 import { userInitials } from '../../lib/user-initials';
+import { Avatar } from '../ui/avatar';
 import { CommentLock } from './comment-lock';
 import { HideButton } from './hide-button';
 import { HideProgress } from './hide-progress';
@@ -171,10 +172,9 @@ export async function CommentDetailPanel({
         />
       )}
       <header className="comment-detail-head">
-        <span className="inbox-avatar inbox-avatar-lg" aria-hidden="true">
+        <Avatar size="lg" badge={platformBadgeText(comment.platform)}>
           {userInitials(comment.authorName ?? t('list.anonymous'))}
-          <span className="inbox-avatar-platform">{platformBadgeText(comment.platform)}</span>
-        </span>
+        </Avatar>
         <h2 className="comment-detail-author">{comment.authorName ?? t('list.anonymous')}</h2>
         <time
           dateTime={comment.createdTime?.toISOString()}

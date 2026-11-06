@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import {
   buildPostsHref,
@@ -6,6 +5,7 @@ import {
   type PostsPlatformKey,
   type PostsView,
 } from '../../lib/posts-filters';
+import { Tabs } from '../ui/tabs';
 
 /**
  * Tab nền tảng (design/stitch/posts.png): liên kết thường (không cần JavaScript), đổi nền tảng thì về trang 1 và bỏ
@@ -13,35 +13,13 @@ import {
  */
 export async function PostsTabs({ view }: { view: PostsView }) {
   const t = await getTranslations('posts');
-  const tabs: Array<{ key: string; platform: PostsPlatformKey | undefined; label: string }> = [
-    { key: 'all', platform: undefined, label: t('tabs.all') },
-    ...POSTS_PLATFORM_KEYS.map((platform) => ({
-      key: platform,
-      platform,
-      label: t(`platforms.${platform}`),
-    })),
-  ];
+  const platforms: Array<PostsPlatformKey | undefined> = [undefined, ...POSTS_PLATFORM_KEYS];
   const { platform: _platform, channelId: _channelId, ...kept } = view;
-  return (
-    <nav className="posts-tabs" aria-label={t('tabs.label')}>
-      {tabs.map((tab) => {
-        const active = (view.platform ?? undefined) === tab.platform;
-        return (
-          <Link
-            key={tab.key}
-            href={buildPostsHref({
-              ...kept,
-              ...(tab.platform ? { platform: tab.platform } : {}),
-              page: 1,
-            })}
-            className="posts-tab"
-            data-platform={tab.platform}
-            aria-current={active ? 'page' : undefined}
-          >
-            {tab.label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
+  const items = platforms.map((platform) => ({
+    key: platform ?? 'all',
+    label: platform ? t(`platforms.${platform}`) : t('tabs.all'),
+    current: (view.platform ?? undefined) === platform,
+    href: buildPostsHref({ ...kept, ...(platform ? { platform } : {}), page: 1 }),
+  }));
+  return <Tabs variant="pill" label={t('tabs.label')} items={items} />;
 }

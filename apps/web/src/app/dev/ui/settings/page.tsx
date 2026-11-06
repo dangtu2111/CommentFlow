@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
 import { ChangePasswordCard } from '../../../../components/security/change-password-card';
 import { type SessionRow, SessionsCard } from '../../../../components/security/sessions-card';
-import { Stepper, TwoFactorCard } from '../../../../components/security/two-factor-card';
+import { EnrollStepper, TwoFactorCard } from '../../../../components/security/two-factor-card';
 import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
 import { SettingsFrame } from '../../../../components/settings/settings-frame';
@@ -76,7 +76,7 @@ export default async function DevSettingsPage({
             icon={<LockKeyhole size={22} />}
           >
             <div className="stack">
-              <Stepper step={2} />
+              <EnrollStepper step={2} />
               <div className="setup-grid">
                 <div className="setup-qr">
                   <h3 className="section-subtitle">{t('auth.security.twoFactor.scanTitle')}</h3>

@@ -1,6 +1,7 @@
 /* Avatar. Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
 
 .avatar {
+  position: relative;
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -25,6 +26,26 @@
   width: 32px;
   height: 32px;
   font-size: var(--text-xs);
+}
+
+.avatar-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  padding: 0 3px;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-size: 9px;
+  font-weight: var(--weight-bold);
+  line-height: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .avatar {
+    color: var(--color-primary-300);
+  }
 }
 
 .avatar-ai {
