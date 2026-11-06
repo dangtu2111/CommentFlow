@@ -548,6 +548,50 @@ describe('FR-110 R9 — còn hạn mức tốc độ gửi theo Page → hoãn j
     expect(sendRecheck(human({ rate: null })).ok).toBe(true);
     expect(sendRecheck(auto({ rate: null })).ok).toBe(true);
   });
+  it('FR-114 tự gửi bị chặn theo Page/bài/nội dung lặp → hold_review với lý do cụ thể', () => {
+    expectFail(
+      auto({ rate: { remaining: 3, hold: 'rate_limited_page_auto' } }),
+      9,
+      'rate_limited_page_auto',
+      'hold_review',
+    );
+    expectFail(
+      auto({ rate: { remaining: 3, hold: 'rate_limited_post' } }),
+      9,
+      'rate_limited_post',
+      'hold_review',
+    );
+    expectFail(
+      auto({ rate: { remaining: 3, hold: 'rate_limited_repeat' } }),
+      9,
+      'rate_limited_repeat',
+      'hold_review',
+    );
+  });
+  it('FR-114 mức dùng Meta App cao → tự gửi bị hoãn (không phải Chờ duyệt)', () => {
+    expectFail(
+      auto({ rate: { remaining: 3, hold: 'rate_limited_app' } }),
+      9,
+      'rate_limited_app',
+      'defer',
+    );
+  });
+  it('FR-114 hết lượt theo Page ưu tiên hoãn kể cả khi có hold khác', () => {
+    expectFail(
+      auto({ rate: { remaining: 0, hold: 'rate_limited_repeat' } }),
+      9,
+      'rate_limited',
+      'defer',
+    );
+  });
+  it('FR-114 `hold` ở chế độ người gửi bị bỏ qua (chỉ giới hạn tự gửi)', () => {
+    expect(sendRecheck(human({ rate: { remaining: 2, hold: 'rate_limited_post' } })).ok).toBe(true);
+    expect(sendRecheck(human({ rate: { remaining: 2, hold: 'rate_limited_app' } })).ok).toBe(true);
+  });
+  it('FR-114 `hold` lạ → đầu vào hỏng, không gửi', () => {
+    const r = sendRecheck(auto({ rate: { remaining: 2, hold: 'zzz' as never } }));
+    expect(r).toMatchObject({ ok: false, rule: 'recheck:input' });
+  });
 });
 
 describe('FR-110 thứ tự và đầu vào hỏng', () => {

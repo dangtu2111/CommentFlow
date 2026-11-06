@@ -50,6 +50,7 @@
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
+| KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
@@ -1041,6 +1042,13 @@ Chỉ phần máy (chưa có giao diện — `KB-GAPS-UI`/`KB-TRYAI`; chưa có 
 1. `CF_LANE=<làn> pnpm test:db` → file `retrieval-log.int.test.ts` xanh (đua 20 lệnh song song cho đúng một dòng `kb_gaps` count = 20). Kết quả mong đợi: không test đỏ.
 2. `pnpm db:check-rls` → không báo vi phạm `cf.retrieval_logs`/`cf.kb_gaps`. Kết quả mong đợi: "đạt".
 3. (Tùy chọn, vi + en) Khi `KB-GAPS-UI` xong: câu AI chưa trả lời hiện gộp theo chủ đề/sản phẩm kèm số lần; "Đã bổ sung"/"Bỏ qua" đổi trạng thái; khách hỏi lại điều đã bổ sung thì mục mở lại.
+
+---
+
+## KT-RLP — Giới hạn tốc độ gửi theo Page/bài/nội dung lặp (RATE-LIMIT-PAGE, FR-114)
+
+Chỉ phần máy (chưa nối job `send`, chưa có Redis): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/ratelimit src/recheck` → xanh. Kết quả mong đợi: không test đỏ (vượt 30/phút hoặc 600/giờ → hoãn; tự gửi vượt 60/giờ, 20/10 phút/bài hoặc 5 câu giống hệt/giờ → Chờ duyệt; mức dùng Meta App ≥90% chặn tự gửi nhưng không chặn người bấm).
 
 ---
 
