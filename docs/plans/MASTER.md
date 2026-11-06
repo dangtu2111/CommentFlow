@@ -35,6 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-HTML-COMMENTS | docs/08 §7.1 (comments.html) | UF-3 | UI-FIDELITY-COMMENTS | — | không | ✅ Dựng lại từ HTML Stitch: kit `Workbench`/`Kbd`, 3 cột 224/384/co giãn khớp bbox (`feat-ui-html-comments`, Q-UIHC1) |
+| UI-HTML-LEADS-REPORTS | docs/08 (leads.html, reports.html, activity-log.html) | UF-4 | LEADS-KANBAN, REPORTS, LOG-PAGE | — | không | ✅ Xong-UI: `/app/leads` + `/app/reports` chỉ đọc (dùng hàm đã có), Nhật ký thành bảng, kit `DataTable` (`feat-ui-html-leads-reports`, Q-UIHLR1) |
 | UI-HTML-AUTOMATION | docs/08 (automation.html, spam-rules.html) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | ✅ Dựng lại từ HTML Stitch: kit `Inset`, bảng kênh × nhãn, spam điều kiện / hành động; không tràn 390px (`feat-ui-html-automation`, Q-UIHA1) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
 | UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (Q-UIKIT1) · PR2 avatar/pill/Stepper (`feat-ui-kit-migrate`, Q-UIKIT2); còn EmptyState/Table/AppShell + trang nhóm 2 |

@@ -3,6 +3,8 @@ import { getTranslations } from 'next-intl/server';
 import { ActivityDetailPanel } from '../../../../components/activity/activity-detail';
 import { ActivityList } from '../../../../components/activity/activity-list';
 import { ActivityToolbar } from '../../../../components/activity/activity-toolbar';
+import { Chip } from '../../../../components/ui/chip';
+import { PageHeader } from '../../../../components/ui/page-header';
 import { parseActivitySearchParams } from '../../../../lib/action-log-filters';
 import { loadActionLog } from '../../../../server/action-log';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -45,15 +47,15 @@ export default async function ActivityPage({
   const isOwner = workspace.role === 'owner';
   return (
     <main className="log-page">
-      <header className="log-header">
-        <h1 className="page-title">{t('title')}</h1>
-        <p>
-          <span className="chip chip-muted">
-            <Lock size={12} aria-hidden="true" /> {t('readOnly')}
-          </span>
-        </p>
-        <p className="page-subtitle">{isOwner ? t('subtitle.owner') : t('subtitle.staff')}</p>
-      </header>
+      <div className="log-header">
+        <PageHeader
+          title={t('title')}
+          subtitle={isOwner ? t('subtitle.owner') : t('subtitle.staff')}
+        />
+        <Chip>
+          <Lock size={12} aria-hidden="true" /> {t('readOnly')}
+        </Chip>
+      </div>
       <section className="log-list" aria-label={t('list.label')}>
         <ActivityToolbar view={view} actions={actions} showActor={isOwner} />
         {page.items.length === 0 ? (

@@ -13,6 +13,8 @@ coverage/
 test-results/
 .stryker-tmp/
 reports/
+# Mã nguồn trang Báo cáo (UI-HTML-LEADS-REPORTS) không phải báo cáo sinh ra
+!apps/web/src/**/reports/
 playwright-report/
 .turbo/
 *.tsbuildinfo

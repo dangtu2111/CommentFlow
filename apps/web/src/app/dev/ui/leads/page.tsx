@@ -1,92 +1,52 @@
+import type { LeadRow } from '@flow/db/runtime';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
+import { LeadsView } from '../../../../components/leads/leads-view';
+import { PageHeader } from '../../../../components/ui/page-header';
 
-/** Mọi chữ ở trang mẫu dev đều gắn "[MẪU]" (không đi qua i18n vì không phải giao diện thật). */
-const SAMPLE = {
-  banner: '[MẪU] Dữ liệu mẫu — không phải số liệu thật. Trang thật chờ bảng leads (LEADS-KANBAN).',
-  title: '[MẪU] Khách tiềm năng',
-  kpis: '[MẪU] Chỉ số',
-  board: '[MẪU] Bảng Kanban',
-  detail: '[MẪU] Chi tiết khách',
-  ai: '[MẪU] AI trích xuất',
-  name: '[MẪU] Khách A',
-  fullName: '[MẪU] Họ và tên',
-  phoneLabel: '[MẪU] Số điện thoại',
-  phone: '09xx.xxx.xxx',
-  productLabel: '[MẪU] Sản phẩm',
-  product: '[MẪU] Sản phẩm mẫu',
-} as const;
+const NOW = Date.now();
+const ago = (minutes: number) => new Date(NOW - minutes * 60_000);
 
-const KPIS = [
-  { label: '[MẪU] Tổng leads tháng này', value: '[MẪU] 00' },
-  { label: '[MẪU] Tự động trích xuất', value: '[MẪU] 00' },
-  { label: '[MẪU] Đã chốt đơn', value: '[MẪU] 00' },
-  { label: '[MẪU] Doanh thu ước tính', value: '[MẪU] 0 đ' },
-] as const;
+const lead = (n: number, stage: LeadRow['stage'], patch: Partial<LeadRow> = {}): LeadRow => ({
+  id: `sample-${n}`,
+  channelId: 'sample-channel',
+  sourceType: n % 2 === 0 ? 'message' : 'comment',
+  sourceId: null,
+  name: `[MẪU] Khách ${n}`,
+  phoneLast4: String(1000 + n * 37).slice(-4),
+  hasEmail: n % 3 === 0,
+  note: null,
+  stage,
+  assignedTo: null,
+  createdAt: ago(n * 47),
+  updatedAt: ago(n * 47),
+  ...patch,
+});
 
-const COLUMNS = [
-  {
-    key: 'new',
-    title: '[MẪU] Mới (chờ liên hệ)',
-    cards: [{ who: '[MẪU] Khách A', phone: '09xx.xxx.xxx', ai: true }],
-  },
-  {
-    key: 'talking',
-    title: '[MẪU] Đang tư vấn',
-    cards: [{ who: '[MẪU] Khách B', phone: '09xx.xxx.xxx', ai: true }],
-  },
-  {
-    key: 'won',
-    title: '[MẪU] Đã chốt đơn',
-    cards: [{ who: '[MẪU] Khách C', phone: '09xx.xxx.xxx', ai: false }],
-  },
-  { key: 'lost', title: '[MẪU] Hủy / không nghe', cards: [] },
-] as const;
+const LEADS: LeadRow[] = [
+  lead(1, 'new'),
+  lead(2, 'new', { name: null }),
+  lead(3, 'new', { assignedTo: 'u1' }),
+  lead(4, 'contacted', { note: '[MẪU] Khách phân vân size, hẹn gọi lại chiều nay.' }),
+  lead(5, 'contacted'),
+  lead(6, 'won'),
+  lead(7, 'won'),
+];
 
-/**
- * Giao diện Khách tiềm năng (design/stitch/leads.png) với DỮ LIỆU MẪU — CHỈ khi `NODE_ENV !== 'production'`
- * (UI-first 06/11/2026, QAL1). Không có chức năng; trang thật chờ bảng leads.
- */
-export default function DevLeadsPage() {
+/** Giao diện Khách tiềm năng với DỮ LIỆU MẪU — chỉ khi `NODE_ENV !== 'production'`; dùng đúng `LeadsView` của trang thật. */
+export default async function DevLeadsPage() {
   if (process.env.NODE_ENV === 'production') notFound();
+  const t = await getTranslations('leads');
   return (
-    <main className="app-page app-page-wide stack">
-      <p className="badge badge-off">{SAMPLE.banner}</p>
-      <h1 className="auth-title">{SAMPLE.title}</h1>
-      <section className="leads-kpis" aria-label={SAMPLE.kpis}>
-        {KPIS.map((kpi) => (
-          <div key={kpi.label} className="leads-kpi">
-            <p className="muted">{kpi.label}</p>
-            <p className="leads-kpi-value">{kpi.value}</p>
-          </div>
-        ))}
-      </section>
-      <div className="leads-layout">
-        <section className="leads-board" aria-label={SAMPLE.board}>
-          {COLUMNS.map((col) => (
-            <div key={col.key} className="leads-col">
-              <p className="leads-col-head">{col.title}</p>
-              {col.cards.map((card) => (
-                <article key={card.who} className="leads-card">
-                  {card.ai ? <span className="leads-card-ai">{SAMPLE.ai}</span> : null}
-                  <strong>{card.who}</strong>
-                  <span>{card.phone}</span>
-                </article>
-              ))}
-            </div>
-          ))}
-        </section>
-        <aside className="leads-detail" aria-label={SAMPLE.detail}>
-          <h2>{SAMPLE.name}</h2>
-          <dl>
-            <dt>{SAMPLE.fullName}</dt>
-            <dd>{SAMPLE.name}</dd>
-            <dt>{SAMPLE.phoneLabel}</dt>
-            <dd>{SAMPLE.phone}</dd>
-            <dt>{SAMPLE.productLabel}</dt>
-            <dd>{SAMPLE.product}</dd>
-          </dl>
-        </aside>
-      </div>
-    </main>
+    <DevShell>
+      <main className="app-page app-page-wide stack">
+        <PageHeader title={t('title')} subtitle={t('subtitle')} />
+        <p className="inbox-sample-note" role="note">
+          {DEV_SAMPLE_NOTE}
+        </p>
+        <LeadsView leads={LEADS} counts={{ new: 3, contacted: 2, won: 2, lost: 0 }} />
+      </main>
+    </DevShell>
   );
 }

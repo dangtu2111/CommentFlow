@@ -1,0 +1,62 @@
+/* Báo cáo (design/stitch/reports.html): chọn khoảng ngày + biểu đồ cột theo giờ. Token, không màu cứng. */
+.report-range {
+  display: inline-flex;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.report-range a {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.report-range a[aria-current="true"] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+}
+
+.report-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.hourly-chart {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.hourly-bars {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  align-items: end;
+  gap: 3px;
+  height: 160px;
+}
+
+.hourly-bar {
+  min-height: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--color-primary-300);
+}
+
+.hourly-bar.is-peak {
+  background: var(--color-primary-600);
+}
+
+.hourly-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
