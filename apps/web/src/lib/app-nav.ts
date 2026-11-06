@@ -11,6 +11,7 @@ export type NavItemKey =
   | 'comments'
   | 'posts'
   | 'tryAi'
+  | 'readiness'
   | 'channels'
   | 'members'
   | 'activity'
@@ -28,6 +29,8 @@ const ENTRIES: readonly Entry[] = [
   // Trang Kênh (kết nối Facebook, FR-010) chỉ Owner; Staff nhận 404 nên không hiện liên kết.
   // Thử AI (FR-059, US-034): Owner thử trước khi bật tự gửi; không trừ lượt, chạy bằng mock.
   { key: 'tryAi', href: '/app/try-ai', group: 'settings', roles: ['owner'] },
+  // Độ sẵn sàng của AI (FR-146, US-107): Owner xem thiếu gì trước khi bật Tự động.
+  { key: 'readiness', href: '/app/readiness', group: 'settings', roles: ['owner'] },
   { key: 'channels', href: '/app/channels', group: 'settings', roles: ['owner'] },
   // Trang Thành viên chỉ Owner (docs/13 §3.1); Staff nhận 404 nên không hiện liên kết.
   { key: 'members', href: '/app/members', group: 'settings', roles: ['owner'] },
