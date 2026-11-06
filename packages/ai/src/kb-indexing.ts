@@ -27,6 +27,8 @@ export type ChunkRow = HashedDraft & { embedding: number[]; embeddingModel: stri
 
 export type IndexingPlan = {
   toEmbed: HashedDraft[];
+  /** Đoạn không đổi embedding; vẫn cần làm mới hạn hiệu lực/sản phẩm (không nằm trong hash). */
+  unchanged: ChunkDraft[];
   unchangedKeys: string[];
   removedKeys: string[];
 };
@@ -36,7 +38,9 @@ export type IndexingPlan = {
  * Đổi `chunk_key`, hạn hiệu lực hay sản phẩm KHÔNG đổi hash (không cần embed lại).
  */
 export function contentHash(chunk: Pick<ChunkDraft, 'contextHeader' | 'content' | 'lang'>): string {
-  return createHash('sha256').update(`${chunk.lang}\n${indexText(chunk)}`).digest('hex');
+  return createHash('sha256')
+    .update(`${chunk.lang}\n${indexText(chunk)}`)
+    .digest('hex');
 }
 
 /** FNV-1a 32 bit → hạt giống cho bộ sinh số giả ngẫu nhiên của bản mock. */
@@ -103,7 +107,7 @@ export function planChunkIndexing(input: {
   const known = new Map(input.existing.map((chunk) => [chunk.chunkKey, chunk]));
   const seen = new Set<string>();
   const toEmbed: HashedDraft[] = [];
-  const unchangedKeys: string[] = [];
+  const unchanged: ChunkDraft[] = [];
   for (const draft of input.drafts) {
     if (seen.has(draft.chunkKey)) {
       throw new AppError('VALIDATION_FAILED', `Trùng chunk_key: ${draft.chunkKey}.`);
@@ -112,13 +116,13 @@ export function planChunkIndexing(input: {
     const hash = contentHash(draft);
     const previous = known.get(draft.chunkKey);
     if (previous?.contentHash === hash && previous.embeddingModel === input.model) {
-      unchangedKeys.push(draft.chunkKey);
+      unchanged.push(draft);
     } else {
       toEmbed.push({ ...draft, contentHash: hash });
     }
   }
   const removedKeys = input.existing.map((c) => c.chunkKey).filter((key) => !seen.has(key));
-  return { toEmbed, unchangedKeys, removedKeys };
+  return { toEmbed, unchanged, unchangedKeys: unchanged.map((c) => c.chunkKey), removedKeys };
 }
 
 /** Lập kế hoạch rồi embed theo lô phần cần embed → hàng sẵn sàng ghi bản nháp (`upsertDraftChunks`). */
@@ -127,7 +131,12 @@ export async function buildChunkRows(input: {
   existing: ExistingChunk[];
   embedder: Embedder;
   batchSize?: number;
-}): Promise<{ rows: ChunkRow[]; unchangedKeys: string[]; removedKeys: string[] }> {
+}): Promise<{
+  rows: ChunkRow[];
+  unchanged: ChunkDraft[];
+  unchangedKeys: string[];
+  removedKeys: string[];
+}> {
   const plan = planChunkIndexing({
     drafts: input.drafts,
     existing: input.existing,
@@ -143,5 +152,10 @@ export async function buildChunkRows(input: {
     embedding: vectors[i] as number[],
     embeddingModel: input.embedder.model,
   }));
-  return { rows, unchangedKeys: plan.unchangedKeys, removedKeys: plan.removedKeys };
+  return {
+    rows,
+    unchanged: plan.unchanged,
+    unchangedKeys: plan.unchangedKeys,
+    removedKeys: plan.removedKeys,
+  };
 }

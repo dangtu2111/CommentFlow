@@ -98,5 +98,9 @@ Code đã đọc cấu hình, đang chạy bằng **giá trị tạm** (`Comment
 
 Tên miền còn phải được xác minh (SPF/DKIM) ở nhà cung cấp email trước khi gửi thật.
 
+## 2e. Mô hình embedding thật — `KB-CHUNKING` (Xong-mock)
+
+Lập chỉ mục kiến thức hiện dùng bản mock xác định (`createMockEmbedder`, `packages/ai/src/kb-indexing.ts`), không gọi dịch vụ ngoài. Để dùng embedding thật bạn cần cung cấp: mô hình embedding 1024 chiều đăng ký trong LiteLLM (tên + revision, ghi vào `kb_chunks.embedding_model`) và khóa ảo LiteLLM đã có (`LITELLM_BASE_URL`/khóa ảo của AI-WRAPPER). Việc cắm bản thật (kèm ghi `ai_usage`) là `KB-EMBED-LITELLM`, mặc định tắt cho tới khi có mô hình.
+
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").

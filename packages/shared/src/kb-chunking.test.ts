@@ -14,6 +14,7 @@ import {
   isExpiringSoon,
   parseValidity,
 } from './kb-chunking';
+import { foldText } from './products';
 
 const NOW = new Date('2026-11-06T00:00:00.000Z');
 const day = (n: number) => new Date(NOW.getTime() + n * 86_400_000);
@@ -151,6 +152,13 @@ describe('FR-055 chunkDocument', () => {
 
   it('chạy lại cùng đầu vào cho cùng kết quả (xác định)', () => {
     expect(chunkDocument(base)).toEqual(chunkDocument(base));
+  });
+});
+
+describe('FR-057 foldText cho tsv tiếng Việt (tìm có dấu/không dấu)', () => {
+  it('bỏ dấu, đ → d, thường, gộp khoảng trắng; lũy đẳng', () => {
+    expect(foldText('  Đổi  TRẢ Áo Thun ')).toBe('doi tra ao thun');
+    expect(foldText(foldText('Miễn phí vận chuyển'))).toBe(foldText('Miễn phí vận chuyển'));
   });
 });
 

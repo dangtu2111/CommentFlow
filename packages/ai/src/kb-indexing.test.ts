@@ -85,7 +85,10 @@ describe('FR-055 mock embedder + theo lô', () => {
   it('kích thước lô mặc định áp dụng khi không truyền', async () => {
     const embedder = createMockEmbedder();
     const spy = vi.spyOn(embedder, 'embed');
-    await embedInBatches(embedder, Array.from({ length: 65 }, (_, i) => `t${i}`));
+    await embedInBatches(
+      embedder,
+      Array.from({ length: 65 }, (_, i) => `t${i}`),
+    );
     expect(spy.mock.calls.map((c) => c[0].length)).toEqual([64, 1]);
   });
 
@@ -133,7 +136,11 @@ describe('FR-055 planChunkIndexing: bỏ qua phần không đổi', () => {
 
   it('chỉ embed đoạn đổi nội dung; đoạn không còn trong bản mới bị báo xóa', () => {
     const changed = draft('d#0', 'A đã sửa');
-    const plan = planChunkIndexing({ drafts: [changed], existing: [existing(a), existing(b)], model });
+    const plan = planChunkIndexing({
+      drafts: [changed],
+      existing: [existing(a), existing(b)],
+      model,
+    });
     expect(plan.toEmbed.map((c) => c.chunkKey)).toEqual(['d#0']);
     expect(plan.unchangedKeys).toEqual([]);
     expect(plan.removedKeys).toEqual(['d#1']);
@@ -149,9 +156,9 @@ describe('FR-055 planChunkIndexing: bỏ qua phần không đổi', () => {
   });
 
   it('trùng chunk_key trong đầu vào → lỗi VALIDATION_FAILED', () => {
-    expect(() => planChunkIndexing({ drafts: [a, draft('d#0', 'Z')], existing: [], model })).toThrow(
-      /d#0/,
-    );
+    expect(() =>
+      planChunkIndexing({ drafts: [a, draft('d#0', 'Z')], existing: [], model }),
+    ).toThrow(/d#0/);
   });
 });
 
@@ -180,6 +187,7 @@ describe('FR-055 buildChunkRows', () => {
     });
     expect(result.rows[0]?.embedding).toHaveLength(EMBEDDING_DIMENSIONS);
     expect(result.unchangedKeys).toEqual(['d#0']);
+    expect(result.unchanged).toEqual([a]);
     expect(result.removedKeys).toEqual(['d#2']);
   });
 

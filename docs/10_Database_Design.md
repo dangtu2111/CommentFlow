@@ -117,7 +117,9 @@ erDiagram
 
 **Văn bản đem đi lập chỉ mục (FR-130):** `embedding` và `tsv` tính trên `context_header + "\n" + content`, không chỉ `content`; `content` giữ nguyên để hiển thị và trích dẫn.
 
-**tsvector theo ngôn ngữ đoạn:** `lang = 'vi'` → `to_tsvector('simple', unaccent(content))` (không có bộ tách từ tiếng Việt chuẩn trong Postgres; `unaccent` cho phép tìm có dấu/không dấu); `lang = 'en'` → `to_tsvector('english', content)` (có stemming). Câu hỏi dùng cùng cấu hình theo ngôn ngữ đã nhận diện; câu trộn → chạy cả hai và trộn bằng RRF.
+**Cắt đoạn và băm (KB-CHUNKING, QKC1):** đoạn ≤ 900 ký tự (FAQ ≤ 2000, giữ nguyên cặp Hỏi/Đáp); `chunk_key = <khóa tài liệu>#<thứ tự>`; `content_hash = sha256(lang + "\n" + context_header + "\n" + content)` — chỉ embed lại đoạn mới/đổi hash/đổi `embedding_model`; `product_id`, `valid_*` không nằm trong hash.
+
+**tsvector theo ngôn ngữ đoạn:** `lang = 'vi'` → `to_tsvector('simple', foldText(header + "\n" + content))` (không có bộ tách từ tiếng Việt chuẩn trong Postgres; ứng dụng bỏ dấu bằng `foldText` của `packages/shared` trước khi ghi và trước khi truy vấn, nên tìm có dấu/không dấu cùng khớp và không phụ thuộc extension `unaccent`; ban đầu dự kiến `unaccent(content)`); `lang = 'en'` → `to_tsvector('english', content)` (có stemming). Câu hỏi dùng cùng cấu hình theo ngôn ngữ đã nhận diện; câu trộn → chạy cả hai và trộn bằng RRF.
 
 ### 3.5 Spam, khách tiềm năng
 

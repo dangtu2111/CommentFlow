@@ -551,3 +551,10 @@ Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB 
 | 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-content.int.test.ts` xanh |
 | 2 | Chạy `CF_LANE=b pnpm db:check-rls` | Không vi phạm |
 | 3 | Dùng tài khoản Staff ghi thử FAQ (qua test) | Bị chặn (42501); Staff đọc được |
+
+### KB-CHUNKING (FR-055/130/131; chưa có giao diện)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-chunks.int.test.ts` xanh (ghi nháp qua worker, tsv bỏ dấu, lọc hạn hiệu lực) |
+| 2 | `pnpm --filter @flow/shared exec vitest run src/kb-chunking.test.ts` và `pnpm --filter @flow/ai exec vitest run src/kb-indexing.test.ts` | Xanh; embedding chỉ là mock, không gọi mạng |

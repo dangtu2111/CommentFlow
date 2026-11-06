@@ -53,6 +53,7 @@ export {
 export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
 export {
   CARD_VALUE_MAX,
+  foldText,
   normalizeAttrs,
   type ProductCard,
   type ProductEmbeddingInput,
