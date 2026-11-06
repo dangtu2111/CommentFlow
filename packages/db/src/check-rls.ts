@@ -366,6 +366,11 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.retrieval_logs', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.retrieval_logs', 'query_masked', 'UPDATE'],
   ['cf_app', 'cf.retrieval_logs', 'candidates', 'UPDATE'],
+  // RETENTION-JOB (0053): bản gộp ai_usage chỉ hàm DEFINER ghi — cf_app không INSERT/UPDATE cột nào
+  ['cf_app', 'cf.ai_usage_daily', 'calls', 'INSERT'],
+  ['cf_app', 'cf.ai_usage_daily', 'calls', 'UPDATE'],
+  ['cf_app', 'cf.ai_usage_daily', 'cost_usd', 'INSERT'],
+  ['cf_app', 'cf.ai_usage_daily', 'cost_usd', 'UPDATE'],
   ['cf_app', 'cf.kb_gaps', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.kb_gaps', 'topic', 'UPDATE'],
   ['cf_app', 'cf.kb_gaps', 'product_id', 'UPDATE'],
@@ -723,6 +728,8 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   // RETRIEVAL-LOG (0040): nhật ký + gap chỉ do HỆ THỐNG ghi; thành viên chỉ đọc và (kb_gaps) đổi trạng thái
   ['cf.retrieval_logs', 'a', 'is_system_context'],
   ['cf.retrieval_logs', 'r', 'is_workspace_member'],
+  // RETENTION-JOB (0053): chỉ ĐỌC cho thành viên (không policy ghi)
+  ['cf.ai_usage_daily', 'r', 'is_workspace_member'],
   ['cf.kb_gaps', 'a', 'is_system_context'],
   ['cf.kb_gaps', 'w', 'is_system_context'],
   ['cf.kb_gaps', 'w', 'is_workspace_member'], // + trigger kb_gaps_guard_update chặn thành viên sửa cột đếm
@@ -878,6 +885,7 @@ const NO_DELETE_TABLES = [
   'cf.shop_profiles',
   'cf.brand_voice',
   'cf.ai_usage',
+  'cf.ai_usage_daily',
   'cf.retrieval_logs',
   'cf.kb_gaps',
   'core.members',
@@ -963,7 +971,7 @@ async function checkWorkerDirectPrivileges(
       AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('create_invoice', 'confirm_invoice_payment', 'void_invoice')
                AND a.privilege_type = 'EXECUTE')
-      AND NOT (n.nspname = 'cf' AND p.proname = 'purge_expired_retrieval_logs'
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage')
                AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({

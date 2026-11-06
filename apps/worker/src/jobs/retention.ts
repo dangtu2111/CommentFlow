@@ -1,7 +1,11 @@
 import {
+  AI_USAGE_DETAIL_DAYS,
+  compactAiUsage,
+  DATA_RETENTION_DAYS,
   type FlowDb,
   purgeExpiredRetrievalLogs,
   purgeExpiredWebhookPayloads,
+  purgeExpiredWorkspaceData,
   WEBHOOK_PAYLOAD_RETENTION_DAYS,
 } from '@flow/db';
 import { RETRIEVAL_LOG_RETENTION_DAYS } from '@flow/shared';
@@ -19,7 +23,8 @@ export type RetentionDeps = {
 /**
  * Dọn dữ liệu quá hạn, mỗi loại độc lập (loại này lỗi không chặn loại kia):
  *  - WEBHOOK-PAYLOAD-RETENTION: payload sự kiện webhook cũ hơn 14 ngày (chứa tên/nội dung khách) + dấu xóa cũ;
- *  - RETRIEVAL-LOG (FR-134): nhật ký tìm kiếm cũ hơn 90 ngày.
+ *  - RETRIEVAL-LOG (FR-134): nhật ký tìm kiếm cũ hơn 90 ngày;
+ *  - RETENTION-JOB (FR-126): bình luận/nháp AI/khách tiềm năng cũ hơn 12 tháng; ai_usage cũ hơn 90 ngày gộp theo ngày.
  * Chạy ở ngữ cảnh trần (`withSystem`). Lỗi KHÔNG ném ra (không làm sập worker, lần sau chạy lại); log chỉ có số lượng/tên lỗi.
  */
 export async function runRetention({ db, logger, days }: RetentionDeps): Promise<void> {
@@ -47,6 +52,28 @@ export async function runRetention({ db, logger, days }: RetentionDeps): Promise
     logger.error(
       { error: error instanceof Error ? error.name : 'unknown' },
       'job dọn nhật ký tìm kiếm lỗi',
+    );
+  }
+  try {
+    const purged = await db.withSystem((tx) => purgeExpiredWorkspaceData(tx, DATA_RETENTION_DAYS));
+    if (purged.comments > 0 || purged.drafts > 0 || purged.leads > 0) {
+      logger.info(purged, 'đã xóa dữ liệu workspace quá thời hạn lưu');
+    }
+  } catch (error) {
+    logger.error(
+      { error: error instanceof Error ? error.name : 'unknown' },
+      'job xóa dữ liệu quá thời hạn lưu lỗi',
+    );
+  }
+  try {
+    const aiUsageCompacted = await db.withSystem((tx) => compactAiUsage(tx, AI_USAGE_DETAIL_DAYS));
+    if (aiUsageCompacted > 0) {
+      logger.info({ aiUsageCompacted }, 'đã gộp ai_usage cũ theo ngày');
+    }
+  } catch (error) {
+    logger.error(
+      { error: error instanceof Error ? error.name : 'unknown' },
+      'job gộp ai_usage lỗi',
     );
   }
 }

@@ -9,8 +9,8 @@ describe('WEBHOOK-PAYLOAD-RETENTION: job dọn của worker', () => {
     const withSystem = vi.fn(async (fn: (tx: never) => Promise<unknown>) => fn({} as never));
     const db = { withSystem } as never;
     await runRetention({ db, logger: log });
-    // một lần cho payload webhook, một lần cho nhật ký tìm kiếm (RETRIEVAL-LOG, retention-logs.test.ts)
-    expect(withSystem).toHaveBeenCalledTimes(2);
+    // webhook, nhật ký tìm kiếm (retention-logs.test.ts), dữ liệu workspace, gộp ai_usage (retention-data.test.ts)
+    expect(withSystem).toHaveBeenCalledTimes(4);
   });
 
   it('lỗi KHÔNG ném ra (worker không sập), chỉ log tên lỗi, không log nội dung', async () => {
@@ -31,12 +31,12 @@ describe('WEBHOOK-PAYLOAD-RETENTION: job dọn của worker', () => {
       const withSystem = vi.fn(async () => ({ payloads: 0, tombstones: 0 }));
       const stop = startRetention({ db: { withSystem } as never, logger: logger() }, 1000);
       await vi.advanceTimersByTimeAsync(0);
-      expect(withSystem).toHaveBeenCalledTimes(2);
+      expect(withSystem).toHaveBeenCalledTimes(4);
       await vi.advanceTimersByTimeAsync(2500);
-      expect(withSystem).toHaveBeenCalledTimes(6);
+      expect(withSystem).toHaveBeenCalledTimes(12);
       stop();
       await vi.advanceTimersByTimeAsync(5000);
-      expect(withSystem).toHaveBeenCalledTimes(6);
+      expect(withSystem).toHaveBeenCalledTimes(12);
     } finally {
       vi.useRealTimers();
     }
