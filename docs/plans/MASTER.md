@@ -125,7 +125,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
 | KB-TESTSET | FR-054 (bộ câu kiểm thử trước khi xuất bản) | US-034 | KB-PUBLISH-VERSION | — | không | ⏳ |
 | KB-CHUNKING | FR-055, 130 (cắt đoạn, `context_header`, `content_hash`), FR-131 (hạn hiệu lực) | — | KB-SCHEMA | DB | không | ✅ Xong-mock (feat-kb-chunking; embedding thật → KB-EMBED-LITELLM) |
-| KB-SEARCH-FTS | FR-057 (toàn văn `simple`+`unaccent`/`english`, `pg_trgm`), FR-127 (gần đúng), FR-135 (cache không trả giá cũ: `product_revs`) | US-100 | KB-CHUNKING, PRODUCTS-VARIANTS | DB | không | ⏳ |
+| KB-SEARCH-FTS | FR-057 (toàn văn `simple`+`unaccent`/`english`, `pg_trgm`), FR-127 (gần đúng), FR-135 (cache không trả giá cũ: `product_revs`) | US-100 | KB-CHUNKING, PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-kb-search-fts, migration 0037; embedding bản fixture, còn bí danh/rerank/ngưỡng/trần token → PIPE-RETRIEVE) |
 | RETRIEVAL-LOG | FR-134 (`retrieval_logs`, kb_gaps) | US-106, UF-11 | KB-SEARCH-FTS | DB | không | ⏳ |
 | KB-TRYAI | FR-059 (ô Thử AI hiện đoạn tìm được + điểm) | US-034 | KB-SEARCH-FTS | — | không | ⏳ |
 | KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | ⏳ |
@@ -152,7 +152,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| PIPE-RULE-FILTER | FR-024 (emoji/sticker/tag → Bỏ qua, không trừ lượt) | — | WH-INGEST | — | không | ⏳ |
+| PIPE-RULE-FILTER | FR-024 (emoji/sticker/tag → Bỏ qua, không trừ lượt) | — | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; chưa nối pipeline) |
 | PIPE-NORMALIZE-LANG | FR-025 (NFC, viết thường, viết tắt), FR-120 (nhận vi/en), FR-159 (ngôn ngữ khác → `other`) | US-036 | ABBREV-DICT | — | không | ⏳ |
 | PII-MASK-PIPE | FR-033 (che SĐT/email trước LLM/Langfuse; lưu số vào Khách tiềm năng trước khi che) | — | PIPE-NORMALIZE-LANG | S | không | ⏳ |
 | PIPE-CACHE-EXACT | FR-026 (khớp chính xác; khóa chứa `workspace_id`, bài, `kb_version`, `product_revs`) | — | KB-SEARCH-FTS | S+DB | không | ⏳ |
@@ -170,7 +170,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ⏳ |
 | DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ⏳ |
 | DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ⏳ |
-| PIPE-MERGE-BURST | FR-148 (gộp bình luận liên tiếp < 30 giây) | US-109 | WH-INGEST | — | không | ⏳ |
+| PIPE-MERGE-BURST | FR-148 (gộp bình luận liên tiếp < 30 giây) | US-109 | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; ghi `merged_into_id` chờ migration làn b) |
 | PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ⏳ |
 | PIPE-CACHE-SEMANTIC-STUB | FR-026 (semantic cache LiteLLM — cấu hình tối thiểu; phần đầy đủ ở GĐ5) | — | PIPE-CACHE-EXACT | — | không | ⏳ |
 

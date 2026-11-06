@@ -11,6 +11,7 @@
 | KT-001 | Workspace, thành viên, lời mời, chỉ-Owner ở DB | #7, #11 | có | chưa | — |
 | KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | #19 | có | chưa | — |
 | KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | #20 | có | chưa | — |
+| KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-023 | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | #21 | có | chưa | — |
 | KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | #22 | có | chưa | — |
@@ -49,6 +50,21 @@ Hàm thuần, chưa nối cổng tự gửi (AUTO-SEND-GATE) → chưa có bư�
 1. Chạy `pnpm --filter @flow/ai exec vitest run src/confidence`. — Mong đợi: tất cả test xanh (có test property-based `fast-check`, seed cố định).
 2. Mở `packages/ai/src/confidence/confidence.ts`, xem `DEFAULT_CONFIDENCE_WEIGHTS`. — Mong đợi: trọng số `default@1`; không có chỗ nào đọc trường `confidence`/`self_score` của JSON LLM.
 3. Kiểm tay khi nối pipeline: bản nháp có JSON hỏng hoặc hành động lạ → độ tin cậy 0, bình luận vào "Cần người", không tự gửi.
+
+## KT-KB-SEARCH — Tìm kiếm kiến thức/sản phẩm (KB-SEARCH-FTS, FR-057/127/135) · Knowledge/product search
+
+Chưa có giao diện (ô Thử AI là `KB-TRYAI`; nối pipeline là `PIPE-RETRIEVE`). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0038 áp được (cần extension `vector`, `unaccent`, `pg_trgm`); check-rls "đạt". |
+| 2 | `pnpm --filter @flow/db test:db` (hoặc `CF_LANE=<làn> pnpm test:db`). | Mọi test xanh, gồm `kb-search.int.test.ts` (toàn văn không dấu, lỗi gõ, RRF, lọc hiệu lực/phiên bản/ngôn ngữ, chéo workspace, sản phẩm gần đúng, cache theo rev). |
+| 3 | `pnpm --filter @flow/shared exec vitest run src/search.test.ts` và `pnpm --filter @flow/ai exec vitest run src/embedding`. | Xanh (chuẩn hóa, RRF, ngưỡng chọn sản phẩm, kiểm cache, embedding mock). |
+| 4 | (Tùy chọn, `psql` trên `cf_dev`) `SELECT search_norm, tsv FROM cf.kb_chunks LIMIT 1;` sau khi có đoạn. | `search_norm` thường + không dấu; `tsv` có từ không dấu (vi). |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
+
+---
 
 ## KT-031 — Soạn trả lời bằng LLM (PIPE-DRAFT, FR-029/138/140/142)
 
@@ -619,3 +635,11 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 |---|---|---|
 | 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-chunks.int.test.ts` xanh (ghi nháp qua worker, tsv bỏ dấu, lọc hạn hiệu lực) |
 | 2 | `pnpm --filter @flow/shared exec vitest run src/kb-chunking.test.ts` và `pnpm --filter @flow/ai exec vitest run src/kb-indexing.test.ts` | Xanh; embedding chỉ là mock, không gọi mạng |
+
+### PIPE-RULE-FILTER + PIPE-MERGE-BURST (FR-024, FR-148; chỉ lõi hàm thuần, chưa nối pipeline — KT-032)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/rule-filter.test.ts src/merge-burst.test.ts` | Xanh; không gọi mạng/DB/LLM |
+| 2 | Đọc nhanh `rule-filter.test.ts`: emoji/tag/dấu chấm → bỏ qua; "giá?", "1", "+", ảnh đính kèm → không bỏ qua | Khớp ý bạn muốn (nếu muốn nới/thắt, nói để đổi Q-PRF1) |
+| 3 | Khi pipeline được nối: gõ 3 bình luận ngắn liên tiếp dưới một bài | Một câu trả lời gộp vào bình luận cuối (US-109) |

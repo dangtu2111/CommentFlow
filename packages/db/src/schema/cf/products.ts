@@ -13,6 +13,7 @@ import {
 import { createdAt, timestamptz, updatedAt } from '../core/common';
 import { workspaces } from '../core/tenancy';
 import { cf } from './ai-usage';
+import { halfvec1024 } from './kb';
 
 /** Nguồn sản phẩm (docs/10 §3 `products.source`). */
 export const PRODUCT_SOURCES = [
@@ -57,6 +58,8 @@ export const products = cf.table(
     lockedFields: text('locked_fields').array().notNull().default(sql`'{}'::text[]`),
     updatedFromSourceAt: timestamptz('updated_from_source_at'),
     searchText: text('search_text').notNull().default(''),
+    /** Vector tên sản phẩm (FR-127); đổi KHÔNG tăng `rev`. Ghi bằng `setProductNameEmbedding`. */
+    nameEmbedding: halfvec1024('name_embedding'),
     card: jsonb('card').notNull().default(sql`'{}'::jsonb`),
     rev: bigint('rev', { mode: 'number' }).notNull().default(1),
     status: text('status').notNull().default('active'),
@@ -68,6 +71,7 @@ export const products = cf.table(
     unique('products_workspace_id_id_unique').on(t.workspaceId, t.id),
     unique('products_source_external_unique').on(t.workspaceId, t.source, t.externalId),
     index('products_workspace_status_idx').on(t.workspaceId, t.status),
+    index('products_search_text_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
     check('products_source_check', sql`${t.source} IN (${sqlList(PRODUCT_SOURCES)})`),
     check('products_status_check', sql`${t.status} IN (${sqlList(PRODUCT_STATUSES)})`),
     check('products_card_object_check', sql`jsonb_typeof(${t.card}) = 'object'`),
