@@ -264,7 +264,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | SHOPIFY-RECONCILE | FR-112 (đối soát hằng đêm + Đối soát ngay), FR-113 (kiểm/đăng ký lại webhook) | US-046 | SHOPIFY-IMPORT | S | **có** — Shopify dev store | ⛔ |
 | POLICY-URL-IMPORT | FR-053 (nhập link website, tôn trọng robots.txt), FR-055 (đồng bộ nguồn, `content_hash`) | US-031 | KB-CHUNKING | S (chống SSRF) | không | 🟡 Xong-mock (`feat-policy-url-import`, QPUI1, không migration; chờ CI; còn `POLICY-URL-SOURCES`) |
 | ADMIN-INTEGRATION-HEALTH | FR-104 (sức khỏe tích hợp, hàng đợi & dead letter) | US-083 | ADMIN-SHELL | — | không | ⏳ |
-| OAUTH-TOKEN-ENC | — (mã hóa `accounts.*token` khi bật OAuth, 13 §5) | — | TOKEN-ENC | S+DB | không | ⏳ |
+| OAUTH-TOKEN-ENC | — (mã hóa `accounts.*token` khi bật OAuth, 13 §5) | — | TOKEN-ENC | S+DB | không | 🟡 Xong-mock (`feat-oauth-token-enc`, Q-OTE1, không migration; chờ CI; còn `-ROTATE`/`-UPDATE`) |
 | APP-REVIEW-DOSSIER | — (hồ sơ App Review Facebook + Instagram) | — | IG-CONNECTOR, PUBLIC-PAGES | — | **có** — Meta | ⛔ |
 | **CỔNG 4** | xem đầu mục GĐ4 | | tất cả GĐ4 | | chủ dự án xác nhận | ⏳ |
 

@@ -56,11 +56,9 @@ export default async function DevKbPostsPage() {
     <main className="app-page app-page-wide">
       <p className="badge badge-off">{SAMPLE.banner}</p>
       <div className="dev-kb-posts">
-        <div className="posts">
+        <div className="posts-dev-feed">
           <PostsTabs view={VIEW} />
-          <section className="posts-panel">
-            <PostsList view={VIEW} items={SAMPLE_POSTS} total={142} pageCount={8} timeZone="UTC" />
-          </section>
+          <PostsList view={VIEW} items={SAMPLE_POSTS} total={142} pageCount={8} timeZone="UTC" />
         </div>
         <aside className="post-config" aria-label={SAMPLE.panel}>
           <h2>{SAMPLE.panel}</h2>

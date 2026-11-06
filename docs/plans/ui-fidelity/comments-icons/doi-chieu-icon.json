@@ -1,0 +1,186 @@
+{
+  "stitch": {
+    "Sẽ tự gửi": {
+      "kind": "chấm",
+      "w": 6,
+      "h": 6,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(63, 72, 75)",
+      "bg": "rgb(99, 60, 213)"
+    },
+    "AI đã tự gửi": {
+      "kind": "icon:auto_mode",
+      "w": 14,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(0, 88, 104)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Chờ duyệt": {
+      "kind": "icon:schedule",
+      "w": 14,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(255, 255, 255)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Cần nhân viên": {
+      "kind": "chấm",
+      "w": 8,
+      "h": 8,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(63, 72, 75)",
+      "bg": "rgb(148, 91, 35)"
+    },
+    "Nghi spam": {
+      "kind": "icon:gshield",
+      "w": 28,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(186, 26, 26)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Gửi lỗi": {
+      "kind": "icon:error",
+      "w": 14,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgba(63, 72, 75, 0.6)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Đã trả lời": {
+      "kind": "icon:done_all",
+      "w": 14,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(63, 72, 75)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Đã ẩn": {
+      "kind": "icon:visibility_off",
+      "w": 14,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(63, 72, 75)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Bỏ qua": {
+      "kind": "icon:archive",
+      "w": 14,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(63, 72, 75)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Tất cả": {
+      "kind": "icon:all_inbox",
+      "w": 14,
+      "h": 20,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(63, 72, 75)",
+      "bg": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "build": {
+    "Sẽ tự gửi": {
+      "kind": "chấm",
+      "w": 6,
+      "h": 6,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(74, 90, 102)",
+      "bg": "rgb(121, 80, 242)"
+    },
+    "AI đã tự gửi": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(9, 92, 107)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Chờ duyệt": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(255, 255, 255)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Cần nhân viên": {
+      "kind": "chấm",
+      "w": 8,
+      "h": 8,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(74, 90, 102)",
+      "bg": "rgb(179, 92, 0)"
+    },
+    "Nghi spam": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(201, 42, 42)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Gửi lỗi": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(74, 90, 102)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Đã trả lời": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(74, 90, 102)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Đã ẩn": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(74, 90, 102)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Bỏ qua": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(74, 90, 102)",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "Tất cả": {
+      "kind": "svg",
+      "w": 14,
+      "h": 14,
+      "dx": 10,
+      "dy": 0,
+      "color": "rgb(74, 90, 102)",
+      "bg": "rgba(0, 0, 0, 0)"
+    }
+  }
+}

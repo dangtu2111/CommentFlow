@@ -7,6 +7,10 @@
   color: var(--color-text-muted);
 }
 
+.breadcrumb-part {
+  display: contents;
+}
+
 .breadcrumb [aria-current="page"] {
   color: var(--link);
   font-weight: var(--weight-medium);

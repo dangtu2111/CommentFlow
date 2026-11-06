@@ -52,6 +52,7 @@
 | KT-MSG1 | Tin chào / ngoài giờ / báo chuyển người (logic; Page thử khi nối thật) | — | không | chưa | — |
 | KT-MSW | Messenger (`MESSENGER_CONNECTOR_ENABLED`, **cần Page thử + `pages_messaging`**; sau `MESSENGER-INGEST`) | feat-messenger-webhook | chưa | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
+| KT-OTE | Mã hóa token OAuth ở `accounts` (logic thuần, chưa có giao diện; chạy test) | feat-oauth-token-enc | chưa | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PGVECTOR-HYBRID | Tạo lại embedding khi đổi mô hình + độ chính xác tìm lai (chỉ DB + mã, không migration mới) | feat-pgvector-hybrid | chưa | chưa | — |
@@ -70,6 +71,7 @@
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
+| KT-UKPH | Giao diện KB + Bài viết từ HTML Stitch | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 | KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
 | KT-WSD | Xóa workspace nhiều bước (chờ nối giao diện) | — | chưa | chưa | — |
@@ -988,6 +990,17 @@ Không cần khóa ngoài. Đăng nhập Owner; Facebook để TẮT (mặc đ�
 4. Bước cuối "Mời nhân viên" mở trang Thành viên; "Hoàn tất" về `/app`. "Quay lại" ở bước đầu về trang tạo workspace.
 5. Đăng nhập Staff, mở `/app/onboarding/setup`. Kết quả: 404.
 
+## KT-OTE — Mã hóa token OAuth ở `accounts` (feat-oauth-token-enc)
+
+Điều kiện: chưa có nhà cung cấp OAuth đăng nhập nào bật nên chưa có thao tác giao diện; kiểm bằng lệnh trên máy code.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/saas-core exec vitest run src/auth/oauth-token-vault.test.ts` | Tất cả test xanh (khứ hồi, sửa 1 ký tự bị từ chối, sai user/trường bị từ chối, xoay khóa v1→v2, thiếu khóa v1 báo lỗi cấu hình) |
+| 2 | Đăng ký/đăng nhập email + mật khẩu như thường (không truyền cipher) | Hoạt động y như trước; bảng `accounts` không đổi hành vi |
+
+Nếu hỏng: ghi tên test đỏ và dán thông báo lỗi (không dán khóa/token).
+
 ## KT-PBF — Quét bù bình luận + banner webhook im lặng (POLLING-BACKFILL, FR-023)
 
 Điều kiện: Page thử đã kết nối (KT-014), webhook đang chạy (KT-002), worker bật `POLLING_ENABLED=true`, `POLLING-CHANNEL-LIST` đã có.
@@ -1365,6 +1378,17 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
 | 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |
 | 4 | Mở `/dev/ui/automation`, `/dev/ui/spam-rules`, `/dev/ui/leads` (bản dev). | Ô chế độ có màu Tự động/Chạy thử/Tắt; mọi nội dung mẫu có nhãn [MẪU]; production trả 404. Đăng nhập Owner mở `/app/automation`, `/app/spam-rules`: bố cục thẻ, Lưu vẫn hoạt động. |
+
+## KT-UKPH — Giao diện Cơ sở kiến thức + Bài viết dựng từ HTML Stitch (feat-ui-html-kb-posts)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner mở `/app/kb` | Thanh lệnh có tiêu đề, nút "Chạy kiểm thử"/"Xuất bản", thanh Độ đầy đủ khớp trang Độ sẵn sàng; cột rail 2 nhóm bên trái |
+| 2 | Lần lượt mở Nhập Excel, Thử AI, Độ sẵn sàng, Lỗ hổng, Xuất bản, Bộ kiểm thử | Cả 6 trang cùng khung và cột rail; mục hiện tại tô màu chính; không có số liệu giả |
+| 3 | Thu cửa sổ dưới 800px | Rail thành hàng nhãn xếp ngang phía trên, không tràn ngang |
+| 4 | Mở `/app/posts` | Đường dẫn 3 cấp, chip số bài, khung lọc, thẻ bài có vạch nhấn (đỏ khi còn bình luận chờ) |
+| 5 | Mở `/dev/ui/kb` và `/dev/ui/kb-posts` (chỉ dev) | Hiện dữ liệu [MẪU]; production trả 404 |
+| 6 | Xem nguồn trang trong DevTools, tab Network | Phông Be Vietnam Pro tải từ chính ứng dụng, không có yêu cầu tới `fonts.googleapis.com`/`gstatic` |
 
 ## KT-URL — Giao diện Báo cáo, Landing, Quyền riêng tư, Điều khoản (UI-FIDELITY-REPORTS-LEGAL, feat-ui-reports-legal)
 
