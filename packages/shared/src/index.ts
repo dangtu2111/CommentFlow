@@ -411,6 +411,7 @@ export {
   readShopifyConfig,
   type ShopifyConfig,
 } from './shopify-config';
+export { type HaravanConfig, readHaravanConfig } from './haravan-config';
 export {
   decideSize,
   parseSizeChartRow,

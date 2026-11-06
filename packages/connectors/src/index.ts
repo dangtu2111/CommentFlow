@@ -87,6 +87,17 @@ export {
 export { buildShopifyImportPlan, parseShopifyMoney } from './shopify/normalize';
 export { signShopifyBody, verifyShopifyWebhook } from './shopify/webhook';
 export {
+  createHaravanConnector,
+  HARAVAN_API_BASE,
+  type HaravanCatalog,
+  type HaravanConnector,
+  type HaravanConnectorOptions,
+  type HaravanProduct,
+  type HaravanVariant,
+} from './haravan/connector';
+export { buildHaravanImportPlan, parseHaravanMoney } from './haravan/normalize';
+export { signHaravanBody, verifyHaravanWebhook } from './haravan/webhook';
+export {
   createTikTokConnector,
   type TikTokConnector,
   type TikTokConnectorOptions,
