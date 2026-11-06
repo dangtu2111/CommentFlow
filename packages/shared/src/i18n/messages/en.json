@@ -1214,7 +1214,15 @@
   "shell": {
     "groups": {
       "operations": "Operations",
-      "settings": "Settings"
+      "system": "System & intelligence"
+    },
+    "tabsLabel": "Page sections",
+    "tabs": {
+      "general": "General"
+    },
+    "quota": {
+      "title": "AI quota",
+      "summary": "{used} / {capacity} turns"
     },
     "nav": {
       "comments": "Comments",

@@ -1214,7 +1214,15 @@
   "shell": {
     "groups": {
       "operations": "Điều hướng vận hành",
-      "settings": "Cài đặt"
+      "system": "Hệ thống & trí tuệ"
+    },
+    "tabsLabel": "Mục con của trang",
+    "tabs": {
+      "general": "Chung"
+    },
+    "quota": {
+      "title": "Hạn mức AI",
+      "summary": "{used} / {capacity} lượt"
     },
     "nav": {
       "comments": "Bình luận",

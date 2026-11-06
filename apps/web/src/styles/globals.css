@@ -1807,11 +1807,66 @@ a {
 }
 
 /* Thẻ người dùng chỉ hiện ở thanh bên (màn rộng); màn hẹp thanh điều hướng là dải ngang */
-.shell-nav .user-card {
+.shell-nav .user-card,
+.shell-nav .shell-quota {
   display: none;
 }
 
+/* Thẻ "Hạn mức AI" (comments.png): chỉ hiện ở thanh bên màn rộng */
+.shell-quota {
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+}
+
+.shell-quota-head {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.shell-quota-foot {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+/* Thanh tab của trang cha (Bình luận, Cài đặt) */
+.section-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-tab {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.section-tab:hover {
+  color: var(--color-text);
+}
+
+.section-tab[aria-current="page"] {
+  border-bottom-color: var(--action-bg);
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
 @media (min-width: 900px) {
+  .shell-nav .shell-quota {
+    display: flex;
+  }
+
   .shell-body {
     flex-direction: row;
   }
