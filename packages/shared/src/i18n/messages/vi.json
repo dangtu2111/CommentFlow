@@ -587,6 +587,41 @@
       }
     }
   },
+  "kbGaps": {
+    "pageTitle": "Câu hỏi AI chưa trả lời được",
+    "title": "Câu hỏi AI chưa trả lời được",
+    "subtitle": "Những câu khách hỏi mà AI chưa có kiến thức để trả lời, gom theo chủ đề. Viết câu trả lời để bổ sung vào FAQ, hoặc bỏ qua nếu bạn muốn nhân viên tự xử lý chủ đề đó. Câu ví dụ đã được che thông tin cá nhân.",
+    "filterLabel": "Lọc câu hỏi",
+    "allTopics": "Mọi chủ đề",
+    "empty": "Chưa có câu hỏi nào trong mục này.",
+    "groupTitle": "{topic} · {total} lượt hỏi",
+    "seen": "Hỏi {count} lần · gần nhất {date}",
+    "questionLabel": "Câu hỏi (FAQ)",
+    "answerLabel": "Câu trả lời",
+    "langLabel": "Áp dụng cho ngôn ngữ",
+    "add": "Bổ sung",
+    "ignore": "Bỏ qua",
+    "reopen": "Mở lại",
+    "lang": { "vi": "Tiếng Việt", "en": "English", "all": "Cả hai" },
+    "status": { "open": "Đang mở", "resolved": "Đã bổ sung", "ignored": "Đã bỏ qua" },
+    "topic": {
+      "shipping": "Phí ship & giao hàng",
+      "discount": "Giảm giá & khuyến mãi",
+      "product_info": "Thông tin sản phẩm",
+      "policy": "Chính sách",
+      "order_status": "Tình trạng đơn hàng",
+      "size": "Size",
+      "other": "Khác"
+    },
+    "error": {
+      "invalid_faq": "Cần nhập đủ câu hỏi và câu trả lời hợp lệ.",
+      "unavailable": "Chưa lưu được, vui lòng thử lại."
+    },
+    "loadError": {
+      "title": "Chưa tải được danh sách",
+      "body": "Vui lòng tải lại trang sau ít phút."
+    }
+  },
   "readiness": {
     "pageTitle": "Độ sẵn sàng của AI",
     "title": "Độ sẵn sàng của AI",
@@ -739,6 +774,7 @@
       "posts": "Bài viết",
       "tryAi": "Thử AI",
       "readiness": "Độ sẵn sàng AI",
+      "kbGaps": "Câu hỏi chưa trả lời",
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
