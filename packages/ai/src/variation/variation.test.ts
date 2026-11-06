@@ -151,11 +151,15 @@ describe('FR-161 pickVariant', () => {
     expect(pickVariant(variants, new Set(), () => 1)?.index).toBe(2);
   });
 
+  it('nguồn ngẫu nhiên trả NaN vẫn chọn được biến thể chưa dùng (hồi quy CI)', () => {
+    expect(pickVariant(variants, new Set(), () => Number.NaN)?.index).toBe(0);
+  });
+
   it('property: kết quả luôn thuộc tập chưa dùng', () => {
     fc.assert(
       fc.property(
         fc.array(fc.boolean(), { minLength: 3, maxLength: 3 }),
-        fc.double({ min: 0, max: 1 }),
+        fc.double({ min: 0, max: 1, noNaN: true }),
         (flags, r) => {
           const used = new Set(variants.filter((_, i) => flags[i]).map(replyFingerprint));
           const picked = pickVariant(variants, used, () => r);
