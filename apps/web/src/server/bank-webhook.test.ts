@@ -78,10 +78,14 @@ describe('FR-124 webhook SePay', () => {
   });
 
   it('tiền ra → 200 nhưng không đối soát (nhà cung cấp không gửi lại)', async () => {
-    const { handler, reconcile } = make('sepay');
+    const { handler, reconcile, warn } = make('sepay');
     const res = await handler(post({ ...sepayBody, transferType: 'out' }, ok));
     expect(res.status).toBe(200);
     expect(reconcile).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith({
+      event: 'bank_webhook_ignored',
+      reason: 'not_incoming_or_schema',
+    });
   });
 
   it('kết quả nghiệp vụ không đối soát được (lệch tiền…) → vẫn 200, log chỉ tên kết quả', async () => {

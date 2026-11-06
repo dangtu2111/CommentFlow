@@ -129,6 +129,15 @@ describe('FR-124 đối soát giao dịch ngân hàng với hóa đơn QR-PAYMEN
     expect(s.settle).not.toHaveBeenCalled();
   });
 
+  it('nội dung sinh quá nhiều mã ứng viên → ambiguous, không tra DB', async () => {
+    const s = setup({});
+    const many = Array.from({ length: 6 }, (_, i) => `CFABCDEFG${'HJKLMN'[i]}`).join(' ');
+    await expect(reconcileBankTransaction(tx({ content: many }), s.deps)).resolves.toBe(
+      'ambiguous',
+    );
+    expect(s.findInvoice).not.toHaveBeenCalled();
+  });
+
   it('hai ứng viên cùng trỏ một hóa đơn thì không mơ hồ', async () => {
     const s = setup({ invoices: { [CODE]: match(), CFBCDEFGH2: match() } });
     await expect(reconcileBankTransaction(tx({ content: `${CODE}2` }), s.deps)).resolves.toBe(

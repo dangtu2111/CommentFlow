@@ -68,7 +68,9 @@ async function findUniqueInvoice(
   findInvoice: ReconcileDeps['findInvoice'],
 ): Promise<InvoiceMatch | 'none' | 'ambiguous'> {
   const found = new Map<string, InvoiceMatch>();
-  for (const code of extractTransferCodes(content)) {
+  const codes = extractTransferCodes(content);
+  if (codes.length > 4) return 'ambiguous'; // chặn nội dung cố tình sinh hàng loạt lần tra DB
+  for (const code of codes) {
     const invoice = await findInvoice(code);
     if (invoice) found.set(invoice.invoiceId, invoice);
   }

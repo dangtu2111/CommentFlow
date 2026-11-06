@@ -40,7 +40,7 @@ export function verifyCassoToken(header: string | null, token: string): boolean 
 const amountSchema = z.number().int().min(1).max(1_000_000_000);
 
 const sepaySchema = z.object({
-  id: z.union([z.number().int(), z.string().min(1).max(60)]),
+  id: z.union([z.number().int().safe(), z.string().min(1).max(60)]),
   transferType: z.literal('in'),
   transferAmount: amountSchema,
   content: z.string().max(2000).nullish(),
@@ -62,7 +62,7 @@ export function parseSepayPayload(body: unknown): BankTransaction | null {
 }
 
 const cassoRowSchema = z.object({
-  id: z.union([z.number().int(), z.string().min(1).max(60)]),
+  id: z.union([z.number().int().safe(), z.string().min(1).max(60)]),
   amount: amountSchema,
   description: z.string().max(2000).nullish(),
   bank_sub_acc_id: z.string().max(40).nullish(),

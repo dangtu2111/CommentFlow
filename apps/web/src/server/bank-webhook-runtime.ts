@@ -15,11 +15,16 @@ const settleStore: Pick<ReconcileDeps, 'findInvoice' | 'settle'> | null = null;
 const flagOn = (): boolean => process.env.BANK_WEBHOOK_ENABLED?.trim() === 'true';
 const accountNumber = (): string | null => process.env.PAYMENT_ACCOUNT_NUMBER?.trim() || null;
 
+/** Khóa ngắn hơn 16 ký tự coi như chưa cấu hình (đóng). */
+const longEnough = (v: string | undefined): string | undefined =>
+  v && v.trim().length >= 16 ? v.trim() : undefined;
+
 function build(provider: 'sepay' | 'casso', secretName: string) {
   return createBankWebhookHandler({
     provider,
-    enabled: () => flagOn() && settleStore !== null,
-    secret: () => process.env[secretName]?.trim() || undefined,
+    // Đóng khi thiếu số tài khoản nhận tiền: không để tiền vào tài khoản khác xác nhận được hóa đơn.
+    enabled: () => flagOn() && settleStore !== null && accountNumber() !== null,
+    secret: () => longEnough(process.env[secretName]),
     reconcile: (tx) => {
       if (!settleStore) throw new Error('bank_settle_store_unavailable');
       return reconcileBankTransaction(tx, {

@@ -53,7 +53,11 @@ export function createBankWebhookHandler(deps: BankWebhookDeps) {
     const parsed = deps.provider === 'sepay' ? [parseSepayPayload(body)] : parseCassoPayload(body);
     let infraFailed = false;
     for (const tx of parsed) {
-      if (!tx) continue;
+      if (!tx) {
+        // Tiền ra hoặc payload sai dạng: bỏ qua nhưng để lại dấu vết (không nội dung) để xử lý tay.
+        deps.warn({ event: 'bank_webhook_ignored', reason: 'not_incoming_or_schema' });
+        continue;
+      }
       try {
         const outcome = await deps.reconcile({
           bankRef: tx.bankRef,
