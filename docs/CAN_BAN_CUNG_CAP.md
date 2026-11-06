@@ -123,6 +123,10 @@ Code đã có bước `rewrite` (`packages/ai/src/rewrite/`): phần ghép `sear
 - Khóa ảo LiteLLM (`LITELLM_API_KEY`) được cấp quyền cho **model rẻ** (có thể dùng chung model phân loại).
 - Đặt `REWRITE_LLM_MODEL=<tên model trong LiteLLM>` và `REWRITE_LLM_ENABLED=true` (chỉ staging/thử).
 
+## 2h0a. `DA-RULES-ORDER-HOURS` (FR-153, FR-152) — không cần tài nguyên ngoài
+
+Hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-DROH. Chủ dự án chỉ cần quyết định sau này (khi nối DB): giờ làm việc từng workspace (múi giờ + khung giờ theo thứ) nhập ở đâu trong Cài đặt, và soạn mẫu câu mời trong giờ/ngoài giờ cho từng chủ đề (đã có ở Cơ sở kiến thức → Giọng văn).
+
 ## 2h0. `DA-RULES-STOCK` (FR-151, FR-157) — không cần tài nguyên ngoài
 
 Hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-DRS. Chủ dự án chỉ cần quyết định sau này (khi nối DB): `stock_stale_days` mặc định 3 có phù hợp, và có bật gợi ý mẫu thay thế (`suggest_alternatives`, mặc định TẮT) cho shop nào.
