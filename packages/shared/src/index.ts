@@ -147,6 +147,25 @@ export {
   planLeadsFromContacts,
 } from './lead-contact';
 export {
+  exportLeads,
+  LEAD_EXPORT_DEFAULT_MAX_ROWS,
+  LEAD_EXPORT_HARD_MAX_ROWS,
+  LEAD_EXPORT_MAX_BYTES,
+  type LeadExportConfig,
+  LeadExportError,
+  type LeadExportErrorCode,
+  type LeadExportFormat,
+  type LeadExportPageSource,
+  type LeadExportPhoneMode,
+  type LeadExportRequest,
+  type LeadExportResult,
+  type LeadExportRole,
+  type LeadExportRow,
+  maskLeadEmail,
+  readLeadExportConfig,
+  sanitizeExportText,
+} from './lead-export';
+export {
   type BurstComment,
   type BurstGroup,
   burstKey,
