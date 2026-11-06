@@ -37,13 +37,10 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
   ]);
   const usage = await loadUsageMeterView(workspace.id);
   const roleLabel = tRole(`role.${workspace.role}`);
-  // Nhãn tab = nhãn mục menu; riêng tab đầu của Cài đặt là "Chung" (tránh lặp tên trang cha).
+  // Nhãn tab = nhãn mục menu (Cài đặt dùng cột trái `SettingsFrame`, không dùng tab).
   const tabLabels = {
     comments: t('nav.comments'),
     aiSent: t('nav.aiSent'),
-    settings: t('tabs.general'),
-    channels: t('nav.channels'),
-    members: t('nav.members'),
   };
   const groups = navGroupsFor(workspace.role).map((group) => ({
     key: group.key,

@@ -30,9 +30,11 @@
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
+| KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
+| KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
@@ -48,6 +50,7 @@
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 
 ---
@@ -529,6 +532,13 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 | 8 | (KT-ACS, feat-auto-config-store) Khởi động lại máy chủ web rồi mở lại trang bằng Owner | Mọi giá trị đã lưu ở bước 2–5 vẫn còn; dòng "lần sửa cuối" hiện đúng người + giờ |
 | 9 | Với hai workspace khác nhau, lưu hai cấu hình khác nhau | Mỗi workspace chỉ thấy cấu hình của mình |
 
+## KT-AP — AI tự tạm dừng khi bất thường (AUTO-PAUSE, FR-073)
+
+Chỉ phần máy (chưa có job/banner, chưa ghi DB): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/autopause` → 2 file xanh. Kết quả mong đợi: không test đỏ (Đánh dấu sai >10% và lỗi liên tiếp làm dừng workspace, lỗi 368 chỉ khóa kênh, spike chỉ cảnh báo, chỉ Owner Bật lại).
+
+---
+
 ## KT-AR — Độ sẵn sàng của AI (AI-READINESS, FR-146, US-107)
 
 Không cần khóa/dịch vụ ngoài; chỉ đọc dữ liệu workspace. Đăng nhập bằng tài khoản Owner (có workspace).
@@ -598,6 +608,16 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 2. Mở `packages/ai/src/decide/decide-action.ts`, xem hàm `riskReason` và `decideAction`. — Mong đợi: rủi ro (ngôn ngữ khác, khiếu nại, mạo danh, lệch giá, pháp lý, hỏi lại ≥ 3) được xét TRƯỚC mọi thứ; không có chỗ nào đọc trường `action`/`needs_human` do AI tự ghi.
 3. Mở `packages/ai/src/draft/draft-prompt.ts`, xem `SYSTEM_PROMPT`. — Mong đợi: có câu "chỉ viết câu cho đúng hành động đó" và "Không tự tính tổng tiền, giảm giá, phí ship".
 4. Kiểm tay khi nối pipeline: bình luận "giá bao nhiêu, ship về Hà Nội bao nhiêu" với kiến thức chỉ có giá → câu gợi ý nêu giá + mời ib về phí ship, bình luận có tag Cần hỗ trợ thêm, không tự gửi khi `allow_partial` tắt.
+
+## KT-DH — Nhân viên đang giữ chuỗi thì AI không tự gửi (DA-HOLDER, FR-154, feat-da-holder)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-HOLDER-WIRE`. / Core + automated tests only; manual checks deferred to `DA-HOLDER-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/human-hold-rules.test.ts` | Mọi test xanh |
+| 2 | (Sau khi nối) Nhân viên trả lời một bình luận, 10 phút sau khách hỏi tiếp, AI đang bật Tự động | AI chỉ gợi ý, không tự gửi; lý do "Nhân viên đang giữ chuỗi" |
+| 3 | (Sau khi nối) Chờ quá thời gian giữ (mặc định 2 giờ) rồi khách hỏi tiếp | AI được tự gửi bình thường (nếu qua các cổng khác) |
 
 ## KT-DHR — Chuyển người khi có ảnh/video chưa rõ sản phẩm (DA-HANDOFF-RULES, FR-143, feat-da-handoff-rules)
 
@@ -1094,6 +1114,19 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIS2 — Cài đặt khớp thiết kế (UI-FIDELITY-SETTINGS-V2, feat-ui-settings-v2)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); không có mục Gói/Thông báo/Quyền riêng tư |
+| 2 | Bấm Kênh rồi Thành viên ở cột trái | Cùng khung, mục tương ứng được tô; không còn thanh tab phía trên |
+| 3 | Đăng nhập Staff, mở /app/settings | Cột trái chỉ có Tài khoản & Bảo mật |
+| 4 | Bật 2FA xong, bấm "Tôi đã lưu các mã này" | Hiện banner xanh "Kích hoạt xác thực 2 bước thành công"; tải lại trang → banner biến mất |
+| 5 | Ở hộp thoại mã dự phòng bấm "Tải file .txt" | Tải được file commentflow-backup-codes.txt chứa các mã |
+| 6 | Đăng nhập trên 2 trình duyệt, ở trình duyệt A bấm "Đăng xuất tất cả thiết bị khác" | Trình duyệt B bị đăng xuất, A vẫn đăng nhập; danh sách phiên chỉ còn 1 |
+| 7 | Mục "Tùy chọn hiển thị & Ngôn ngữ" | Đổi vi/en được; nút Giao diện Tối bị khóa kèm "Sắp ra mắt" |
+| 8 | Thu cửa sổ còn 390px | Cột trái thành dải cuộn ngang; không cuộn ngang cả trang |
 
 ## KT-UKP — Giao diện Cơ sở kiến thức + Bài viết (UI-FIDELITY-KB-POSTS, QUKP1)
 

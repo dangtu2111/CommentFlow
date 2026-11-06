@@ -35,6 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
+| UI-FIDELITY-SETTINGS-V2 | docs/08 §7 (settings-security.png) | UF-4 | UI-FIDELITY-SETTINGS | — | verifier-security (xóa phiên) | ✅ Giao diện khớp (`feat-ui-settings-v2`, Q-UISET2; còn `SETTINGS-SECURITY-DATA`) |
 | UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
 | UI-FIDELITY-AUTO-LEADS | docs/08 §2, §7 (automation.png, spam-rules.png, leads.png) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | 🟡 Giao diện khớp một phần (`feat-ui-automation-leads`, QAL1; Leads thật chờ `LEADS-KANBAN`) |
 | UI-FIDELITY-POLISH | docs/08 §2 (rà lại mọi màn đã làm) | UF-1..4 | UI-FIDELITY-* | — | không | 🟡 Vòng 2 sửa lỗi bố cục (`feat-ui-polish-pass`, QPOL1); điểm cần dữ liệu thật giữ ở các dòng UI-FIDELITY-* |
@@ -242,13 +243,13 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-delay-cancel`, Q-ADC1: `packages/ai/src/delay/` máy trạng thái thuần + `AutoSendDelayScheduler` bộ nhớ; bản bền/nối pipeline/nút Hủy UI → `AUTO-DELAY-WIRE` làn b; KT-ADC) |
 | AUTO-CALIBRATION | FR-072 (50/10%/15/0,80; đề xuất kèm lý do), FR-163 (hiệu chuẩn độ tin cậy) | US-041 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-calibration`, Q-AC1: `packages/ai/src/calibration/` hàm thuần đề xuất ngưỡng + hồi quy logistic/ECE; nối DB/UI/job hằng tuần → `AUTO-CALIBRATION-WIRE` làn b; KT-AC) |
 | EMERGENCY-STOP | FR-073 (dừng khẩn cấp toàn workspace) | US-043 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-emergency-stop`, Q-ES1: `packages/ai/src/emergency/` quy tắc vai trò + store + dịch vụ hủy hẹn giờ; DB/UI → `EMERGENCY-STOP-WIRE`) |
-| AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ⏳ |
+| AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ✅ Xong-mock (`feat-auto-pause`, Q-AP1: `packages/ai/src/autopause/` `evaluateAutoPause` thuần + store + dịch vụ hủy hẹn giờ `ai_paused`; DB/job/banner → `AUTO-PAUSE-WIRE`; KT-AP) |
 | AI-SENT-HISTORY | FR-075 (lịch sử AI đã gửi + Đánh dấu sai) | US-040 | AUTO-SEND-GATE | — | không | ✅ Xong-mock (feat-ai-sent-history; phần DB ở AI-SENT-HISTORY-DB) |
 | AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ⏳ |
 | RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | ⏳ |
 | ABUSE-JOB | FR-115 (phát hiện lạm dụng: Đánh dấu sai, câu bị xóa, lỗi 368, tăng đột biến) | — | AI-SENT-HISTORY | S | không | ⏳ |
 | ADMIN-SEND-LOCK | FR-116 (Admin tạm khóa gửi; trang Sức khỏe Meta App) | US-084 | ADMIN-SHELL, ABUSE-JOB | S | không | ⏳ |
-| DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ⏳ |
+| DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ✅ lõi thuần (`feat-da-holder`, Q-DH1; nối pipeline → `DA-HOLDER-WIRE`; KT-DH) |
 | DA-IMPERSONATION | FR-155 (chống mạo danh Page/shop) | US-111 | AUTO-SEND-GATE | S | không | ⏳ |
 | DA-ORDER-IN-COMMENT | FR-156 (đặt hàng trong bình luận → Khách tiềm năng), FR-157 (mẫu ngưng/hết hàng khi tự gửi) | US-112 | LEADS-KANBAN | S (PII) | không | ⏳ |
 | SPAM-RULES | FR-080 (quy tắc spam, xem trước số bình luận khớp 7 ngày) | US-050 | INBOX-LIST | — | không | ✅ Xong-mock (feat-spam-rules, Q-SPR1: xem trước thật; Lưu: bảng `cf.rules` 0050, feat-spam-rules-store, Q-SRS1 — còn UI danh sách/bật-tắt `SPAM-RULES-LIST-UI`) |

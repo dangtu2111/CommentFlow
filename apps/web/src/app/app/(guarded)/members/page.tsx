@@ -1,8 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import { MembersView } from '../../../../components/app/members-view';
+import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
+import { loadSettingsCounts } from '../../../../server/settings-counts';
 
 export async function generateMetadata() {
   const t = await getTranslations('members');
@@ -18,12 +20,21 @@ export default async function MembersPage() {
     admin.listMembers(input),
     admin.listInvitations(input),
   ]);
+  const counts = await loadSettingsCounts({
+    role: workspace.role,
+    workspaceId: workspace.id,
+    userId: user.id,
+  });
   return (
-    <MembersView
-      currentUserId={user.id}
-      workspaceName={workspace.name}
-      members={members}
-      invitations={invitations}
-    />
+    <main className="app-page app-page-settings">
+      <SettingsFrame viewerRole={workspace.role} active="members" counts={counts}>
+        <MembersView
+          currentUserId={user.id}
+          workspaceName={workspace.name}
+          members={members}
+          invitations={invitations}
+        />
+      </SettingsFrame>
+    </main>
   );
 }

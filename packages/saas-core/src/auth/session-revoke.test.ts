@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Auth } from './auth';
 import { unwrapAuthDb, wrapAuthDb } from './auth-db';
-import { changePasswordAndRevokeAll, revokeAllSessionsOfUser } from './revoke';
+import {
+  changePasswordAndRevokeAll,
+  revokeAllSessionsOfUser,
+  revokeOtherSessionsOfUser,
+} from './revoke';
 import { readSession } from './session';
 
 /** AuthDb giả: transaction chạy callback với tx giả; ghi lại số lần xóa. */
@@ -72,6 +76,13 @@ describe('revoke (đơn vị)', () => {
   it('revokeAllSessionsOfUser trả số phiên đã xóa', async () => {
     const { handle } = fakeAuthDb([{ id: 'a' }, { id: 'b' }]);
     expect(await revokeAllSessionsOfUser(handle, 'u')).toBe(2);
+  });
+
+  it('revokeOtherSessionsOfUser: một giao dịch xóa, trả số phiên khác đã xóa (lọc theo user + khác phiên hiện tại)', async () => {
+    const { handle, del, transaction } = fakeAuthDb([{ id: 'a' }, { id: 'b' }]);
+    expect(await revokeOtherSessionsOfUser(handle, 'u', 'hien-tai')).toBe(2);
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(del).toHaveBeenCalledTimes(1);
   });
 
   it('changePasswordAndRevokeAll: chưa đăng nhập → UNAUTHENTICATED, không đổi mật khẩu', async () => {
