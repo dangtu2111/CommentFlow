@@ -105,7 +105,7 @@ const FACEBOOK_CAPABILITIES: ConnectorCapabilities = {
 const RATE_LIMIT_CODES = new Set([4, 17, 32, 613, 80001, 341]);
 
 /** Bảng mã lỗi Graph → mã chuẩn (docs/12 §1; error-handling; rate-limiting — xem ADR 010 §3). `null` = không có mã riêng. */
-function classifyGraphCode(code: number): PlatformErrorCode | null {
+export function classifyGraphCode(code: number): PlatformErrorCode | null {
   if (code === 190 || code === 102) return 'TOKEN_EXPIRED';
   if (code === 10 || (code >= 200 && code <= 299)) return 'PERMISSION';
   if (RATE_LIMIT_CODES.has(code)) return 'RATE_LIMIT';
@@ -124,7 +124,7 @@ const fail = (
   });
 
 /** `X-Business-Use-Case-Usage` → số giây chờ lớn nhất (`estimated_time_to_regain_access` tính bằng phút). Hỏng → undefined. */
-function retryAfterOf(headers: Headers): number | undefined {
+export function retryAfterOf(headers: Headers): number | undefined {
   const raw = headers.get('x-business-use-case-usage');
   if (!raw) return undefined;
   let parsed: unknown;
