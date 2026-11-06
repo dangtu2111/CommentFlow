@@ -27,6 +27,7 @@ export default defineConfig({
         'src/injection/*.ts': { branches: 95 },
         'src/rules/*.ts': { branches: 95 },
         'src/pii/*.ts': { branches: 95 },
+        'src/examples/*.ts': { branches: 95 },
       },
     },
   },

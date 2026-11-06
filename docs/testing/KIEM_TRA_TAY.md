@@ -1,5 +1,15 @@
 # Kiểm tra tay — danh sách dồn
 
+## KT-KSM — Câu mẫu của shop (KB-SAMPLES, FR-132, feat-kb-samples)
+
+> Chưa có giao diện/DB: chỉ có lõi + test tự động; kiểm tay dồn cho `KB-SAMPLES-PERSIST`. / Core + automated tests only; manual UI checks deferred to `KB-SAMPLES-PERSIST`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/examples` | 22 test xanh |
+| 2 | (Sau khi có bảng) Nhân viên gửi câu có SĐT khách + giá | Mẫu lưu `[sđt]` và `{price:…}`, không còn số thật |
+| 3 | (Sau khi có bảng) Owner tắt một mẫu | Mẫu không xuất hiện trong ví dụ giọng văn khi soạn |
+
 ## KT-DRS — Quy tắc tồn kho của decideAction (DA-RULES-STOCK, FR-151/157, feat-da-rules-stock)
 
 > Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verify by command.
@@ -910,6 +920,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
 | 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
+
+## KT-PN — Ghi chú theo bài có hạn (POST-NOTES, FR-062, US-033) · Post notes
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/post-notes.test.ts`. | Test xanh: nội dung chuẩn hóa, hạn phải sau ngày bắt đầu, đúng biên hết hạn, ghi đè chỉ nhận `off`/`shadow`, `effectiveAutoMode` không bao giờ nâng chế độ. |
+| 2 | CI job `database` chạy `tests/post-notes.int.test.ts` và `pnpm db:check-rls`. | Owner ghi được, Staff chỉ đọc, workspace khác không thấy; ghi chú hết hạn không được trả; DB từ chối ghi đè `auto`; xóa bài xóa luôn ghi chú. |
 
 ## KT-ST — Bảng size có cấu trúc (SIZE-TABLE, FR-149, US-102) · Size chart
 

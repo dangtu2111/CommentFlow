@@ -103,6 +103,17 @@ export {
   unsafeMarkMasked,
 } from './pii';
 export {
+  type AutoMode,
+  effectiveAutoMode,
+  POST_NOTE_MAX,
+  type PostAutoOverride,
+  type PostNoteInput,
+  type PostNoteStatus,
+  parsePostAutoOverride,
+  parsePostNoteInput,
+  postNoteStatus,
+} from './post-notes';
+export {
   ALIAS_MATCH_THRESHOLD,
   PRODUCT_ALIAS_MAX,
   PRODUCT_ALIAS_SOURCES,
