@@ -39,7 +39,7 @@ export async function MembersView({
   const [t, format] = await Promise.all([getTranslations('members'), getFormatter()]);
   const activeOwners = members.filter((m) => m.role === 'owner' && m.status === 'active').length;
   return (
-    <main className="app-page app-page-wide">
+    <>
       <h1 className="page-title">{t('title')}</h1>
       <p className="page-subtitle">{t('subtitle', { workspace: workspaceName })}</p>
 
@@ -136,6 +136,6 @@ export async function MembersView({
           ))}
         </ul>
       </section>
-    </main>
+    </>
   );
 }

@@ -30,7 +30,11 @@ export {
   type PasswordPolicyWarning,
   type PasswordVerdict,
 } from './password-policy';
-export { changePasswordAndRevokeAll, revokeAllSessionsOfUser } from './revoke';
+export {
+  changePasswordAndRevokeAll,
+  revokeAllSessionsOfUser,
+  revokeOtherSessionsOfUser,
+} from './revoke';
 export { createSealedValueCodec, type SealedValueCodec } from './sealed-value';
 export { readSession } from './session';
 export {

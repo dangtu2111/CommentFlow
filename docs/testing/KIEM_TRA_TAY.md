@@ -46,6 +46,7 @@
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 
 ---
@@ -1072,6 +1073,19 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIS2 — Cài đặt khớp thiết kế (UI-FIDELITY-SETTINGS-V2, feat-ui-settings-v2)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); không có mục Gói/Thông báo/Quyền riêng tư |
+| 2 | Bấm Kênh rồi Thành viên ở cột trái | Cùng khung, mục tương ứng được tô; không còn thanh tab phía trên |
+| 3 | Đăng nhập Staff, mở /app/settings | Cột trái chỉ có Tài khoản & Bảo mật |
+| 4 | Bật 2FA xong, bấm "Tôi đã lưu các mã này" | Hiện banner xanh "Kích hoạt xác thực 2 bước thành công"; tải lại trang → banner biến mất |
+| 5 | Ở hộp thoại mã dự phòng bấm "Tải file .txt" | Tải được file commentflow-backup-codes.txt chứa các mã |
+| 6 | Đăng nhập trên 2 trình duyệt, ở trình duyệt A bấm "Đăng xuất tất cả thiết bị khác" | Trình duyệt B bị đăng xuất, A vẫn đăng nhập; danh sách phiên chỉ còn 1 |
+| 7 | Mục "Tùy chọn hiển thị & Ngôn ngữ" | Đổi vi/en được; nút Giao diện Tối bị khóa kèm "Sắp ra mắt" |
+| 8 | Thu cửa sổ còn 390px | Cột trái thành dải cuộn ngang; không cuộn ngang cả trang |
 
 ## KT-UKP — Giao diện Cơ sở kiến thức + Bài viết (UI-FIDELITY-KB-POSTS, QUKP1)
 

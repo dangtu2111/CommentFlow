@@ -48,7 +48,27 @@
       "addressSoon": "Cách xưng hô của shop và cách gọi khách sẽ được cài ở phần Giọng văn (sắp có)."
     },
     "breadcrumb": {
-      "label": "Đường dẫn"
+      "label": "Đường dẫn",
+      "root": "Cài đặt hệ thống"
+    },
+    "nav": {
+      "label": "Mục cài đặt",
+      "title": "Cấu hình workspace",
+      "channels": "Kênh đã kết nối",
+      "members": "Thành viên & Phân quyền",
+      "security": "Tài khoản & Bảo mật",
+      "channelsCount": "{connected}/{total} kênh",
+      "membersCount": "{count} người"
+    },
+    "display": {
+      "title": "Tùy chọn hiển thị & Ngôn ngữ",
+      "body": "Tùy chỉnh không gian làm việc CommentFlow AI của riêng bạn.",
+      "languageLabel": "Ngôn ngữ giao diện",
+      "languageHint": "Lựa chọn được lưu cho tài khoản của bạn.",
+      "themeLabel": "Chế độ giao diện",
+      "light": "Giao diện Sáng",
+      "dark": "Giao diện Tối",
+      "soon": "Sắp ra mắt"
     },
     "account": {
       "title": "Thông tin đăng nhập & Tài khoản",
@@ -232,6 +252,12 @@
         "backupBody": "Dùng khi mất điện thoại. Mỗi mã chỉ dùng được một lần và chỉ hiện lần này. Hãy lưu ở nơi an toàn. Nếu lỡ mất mã, bạn có thể tạo lại ở mục “Tạo lại mã dự phòng”.",
         "copy": "Sao chép tất cả",
         "copied": "Đã sao chép",
+        "downloadTxt": "Tải file .txt",
+        "backupBlockTitle": "Mã khôi phục dự phòng",
+        "backupBlockBody": "Mã dự phòng dùng một lần để đăng nhập khi bạn không mang theo điện thoại hoặc mất quyền truy cập ứng dụng xác thực. Vì lý do bảo mật, mã chỉ hiện một lần lúc tạo — hãy tạo lại nếu bạn không còn bản lưu.",
+        "justEnabledTitle": "Kích hoạt xác thực 2 bước thành công",
+        "justEnabledBody": "Tài khoản của bạn giờ được bảo vệ thêm bằng mã từ ứng dụng xác thực (TOTP). Mọi lần đăng nhập mới đều cần mã 6 chữ số.",
+        "dismiss": "Đóng",
         "saved": "Tôi đã lưu các mã này",
         "regenTitle": "Tạo lại mã dự phòng",
         "regenBody": "Mã cũ sẽ mất hiệu lực ngay.",
@@ -253,7 +279,8 @@
         "tiles": {
           "method": "Phương thức chính",
           "methodValue": "Ứng dụng xác thực (TOTP)",
-          "methodHint": "Google / Microsoft / 1Password"
+          "methodHint": "Google / Microsoft / 1Password",
+          "rotation": "Mã thay đổi mỗi 30 giây"
         }
       },
       "sessions": {
@@ -262,6 +289,8 @@
         "current": "Thiết bị này",
         "lastUsed": "Hoạt động gần nhất: {date}",
         "signOut": "Đăng xuất thiết bị này",
+        "revoke": "Thu hồi",
+        "signOutOthers": "Đăng xuất tất cả thiết bị khác",
         "empty": "Không có phiên nào.",
         "device": "{browser} trên {os}",
         "browser": {

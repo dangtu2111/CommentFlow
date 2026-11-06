@@ -7,11 +7,13 @@ import { TwoFactorCard } from '../../../../components/security/two-factor-card';
 import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
 import { ReplyLanguageCard } from '../../../../components/settings/reply-language-card';
+import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { UsageMeterCard } from '../../../../components/settings/usage-meter-card';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getDb } from '../../../../server/db';
 import { requestContext } from '../../../../server/request-context';
 import { requireAppUser } from '../../../../server/require-app-user';
+import { loadSettingsCounts } from '../../../../server/settings-counts';
 import { loadUsageMeterView } from '../../../../server/usage-meter';
 
 export async function generateMetadata() {
@@ -43,27 +45,33 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
   const overview = await getAuthRuntime().twoFactor.overview((await requestContext()).headers);
   if (!overview) redirect('/login');
   const t = await getTranslations('settings');
+  const counts = await loadSettingsCounts({
+    role: workspace.role,
+    workspaceId: workspace.id,
+    userId: user.id,
+  });
   return (
     <main className="app-page app-page-settings">
-      <nav className="breadcrumb" aria-label={t('breadcrumb.label')}>
-        <span>{t('pageTitle')}</span>
-        <span aria-hidden="true">›</span>
-        <span aria-current="page">{t('title')}</span>
-      </nav>
-      <h1 className="page-title">{t('title')}</h1>
-      <p className="page-subtitle">{t('subtitle')}</p>
-      <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
-      <AccountCard
-        name={user.name}
-        email={user.email}
-        emailVerified={user.emailVerified}
-        memberRole={workspace.role}
-      />
-      <ChangePasswordCard />
-      <SessionsCard sessions={overview.sessions} />
-      {usage ? <UsageMeterCard view={usage} /> : null}
-      <LanguageCard />
-      {channels ? <ReplyLanguageCard channels={channels} notice={replyNoticeOf(query.rl)} /> : null}
+      <SettingsFrame viewerRole={workspace.role} active="security" counts={counts}>
+        <header className="stack-tight">
+          <h1 className="page-title">{t('title')}</h1>
+          <p className="page-subtitle">{t('subtitle')}</p>
+        </header>
+        <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
+        <AccountCard
+          name={user.name}
+          email={user.email}
+          emailVerified={user.emailVerified}
+          memberRole={workspace.role}
+        />
+        <ChangePasswordCard />
+        <SessionsCard sessions={overview.sessions} />
+        {usage ? <UsageMeterCard view={usage} /> : null}
+        <LanguageCard />
+        {channels ? (
+          <ReplyLanguageCard channels={channels} notice={replyNoticeOf(query.rl)} />
+        ) : null}
+      </SettingsFrame>
     </main>
   );
 }

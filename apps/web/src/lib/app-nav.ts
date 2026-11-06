@@ -70,8 +70,8 @@ const ENTRIES: readonly Entry[] = [
   { key: 'members', href: '/app/members', group: 'system', roles: OWNER, parent: 'settings' },
 ];
 
-/** Mục cha hiện thanh tab ở đầu trang (Cơ sở kiến thức đã có khung riêng `KbFrame`). */
-const TAB_SECTIONS: readonly NavItemKey[] = ['comments', 'settings'];
+/** Mục cha hiện thanh tab ở đầu trang (Cơ sở kiến thức có `KbFrame`, Cài đặt có `SettingsFrame` — cột trái). */
+const TAB_SECTIONS: readonly NavItemKey[] = ['comments'];
 
 const GROUP_ORDER: readonly NavGroupKey[] = ['operations', 'system'];
 

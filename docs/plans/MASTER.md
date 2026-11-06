@@ -35,6 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
+| UI-FIDELITY-SETTINGS-V2 | docs/08 §7 (settings-security.png) | UF-4 | UI-FIDELITY-SETTINGS | — | verifier-security (xóa phiên) | ✅ Giao diện khớp (`feat-ui-settings-v2`, Q-UISET2; còn `SETTINGS-SECURITY-DATA`) |
 | UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
 | UI-FIDELITY-AUTO-LEADS | docs/08 §2, §7 (automation.png, spam-rules.png, leads.png) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | 🟡 Giao diện khớp một phần (`feat-ui-automation-leads`, QAL1; Leads thật chờ `LEADS-KANBAN`) |
 | UI-FIDELITY-POLISH | docs/08 §2 (rà lại mọi màn đã làm) | UF-1..4 | UI-FIDELITY-* | — | không | 🟡 Vòng 2 sửa lỗi bố cục (`feat-ui-polish-pass`, QPOL1); điểm cần dữ liệu thật giữ ở các dòng UI-FIDELITY-* |

@@ -1,6 +1,6 @@
 import { Laptop, MonitorSmartphone, Smartphone } from 'lucide-react';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { revokeSessionAction } from '../../app/app/security/actions';
+import { revokeOtherSessionsAction, revokeSessionAction } from '../../app/app/security/actions';
 import { SectionHead } from '../ui/section-head';
 import { SubmitButton } from '../ui/submit-button';
 
@@ -24,6 +24,15 @@ export async function SessionsCard({ sessions }: { sessions: SessionRow[] }) {
         icon={<MonitorSmartphone size={22} />}
         title={t('sessions.title')}
         description={t('sessions.body')}
+        end={
+          sessions.some((session) => !session.current) ? (
+            <form action={revokeOtherSessionsAction}>
+              <SubmitButton variant="danger-ghost" block={false}>
+                {t('sessions.signOutOthers')}
+              </SubmitButton>
+            </form>
+          ) : null
+        }
       />
       {sessions.length === 0 ? <p className="muted">{t('sessions.empty')}</p> : null}
       <ul className="session-list">
@@ -57,7 +66,7 @@ export async function SessionsCard({ sessions }: { sessions: SessionRow[] }) {
                 <form action={revokeSessionAction}>
                   <input type="hidden" name="sessionId" value={session.id} />
                   <SubmitButton variant="secondary" block={false}>
-                    {t('sessions.signOut')}
+                    {t('sessions.revoke')}
                   </SubmitButton>
                 </form>
               )}
