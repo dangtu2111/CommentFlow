@@ -29,6 +29,16 @@
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
+| KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
+
+---
+
+## KT-031 — Soạn trả lời bằng LLM (PIPE-DRAFT, FR-029/138/140/142)
+
+Chưa có giao diện/pipeline nối (cần `PIPE-RETRIEVE`, `PIPE-GUARD-MONEY`); mục này chỉ kiểm cờ và test. Không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/draft src/llm-client.test.ts`. — Mong đợi: tất cả test xanh.
+2. Mở `env.example`. — Mong đợi: có `DRAFT_LLM_ENABLED` (để trống = tắt) và `DRAFT_LLM_MODEL`.
+3. (Khi đã có khóa LLM, tùy chọn) đặt `DRAFT_LLM_ENABLED=true` + `DRAFT_LLM_MODEL` ở `.env.local`, gọi `createLlmDrafter` thử với câu hỏi đã che PII và một nguồn. — Mong đợi: JSON hợp lệ có `claims[]` trỏ đúng id nguồn; dòng `ai_usage` bước `draft` có `cached_tokens` > 0 từ lần gọi thứ hai.
 
 ---
 

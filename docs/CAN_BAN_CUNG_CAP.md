@@ -108,5 +108,11 @@ Code đã có bước `extract` (`packages/ai/src/classify/`) gọi LLM qua Lite
 - Khóa ảo LiteLLM (`LITELLM_API_KEY`, đã có trong `env.example`) được cấp quyền cho **một model nhỏ, rẻ** của nhà cung cấp trả phí (khóa nhà cung cấp đặt trong cấu hình LiteLLM trên máy ảo, không vào repo).
 - Đặt `CLASSIFY_LLM_MODEL=<tên model trong LiteLLM>` và `CLASSIFY_LLM_ENABLED=true` (chỉ staging/thử; chưa có đo chất lượng — chờ `EVAL-RUNNER`).
 
+## 2f. Khóa LLM trả phí cho soạn trả lời — `PIPE-DRAFT` (FR-029/138/140/142, Xong-mock, mã KT-031)
+
+Code đã có bước `draft` (`packages/ai/src/draft/`) gọi LLM qua LiteLLM sẵn có (prompt xếp ổn định + đánh dấu cache), nhưng cờ **tắt mặc định** và chưa nối vào pipeline; test chạy bằng fixture/giả lập. Chỉ khi muốn chạy thật, bạn cần cung cấp:
+- Khóa ảo LiteLLM (`LITELLM_API_KEY`) được cấp quyền cho **model soạn câu** (nên là model hỗ trợ prompt caching, ví dụ dòng Claude/GPT/Gemini); khóa nhà cung cấp đặt trong cấu hình LiteLLM trên máy ảo, không vào repo.
+- Đặt `DRAFT_LLM_MODEL=<tên model trong LiteLLM>` và `DRAFT_LLM_ENABLED=true` (chỉ staging/thử; chưa đo chất lượng và tỉ lệ trúng cache — chờ `EVAL-RUNNER`).
+
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").
