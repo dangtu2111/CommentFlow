@@ -14,7 +14,7 @@ const WORKER_ROLE = 'cf_worker';
 /** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
 const SYSTEM_TABLES = ['core.feature_flags', 'cf.system_abbreviations', 'core.plans'];
 /** Bảng hệ thống do Admin quản (0060): RLS bật, KHÔNG policy, cf_app không có quyền nào; truy cập chỉ qua hàm DEFINER. */
-const ADMIN_ONLY_TABLES = ['core.coupons'];
+const ADMIN_ONLY_TABLES = ['core.coupons', 'core.admin_audit_log'];
 /** Hàm DEFINER quản trị gói/mã (0060): PUBLIC/cf_auth không được EXECUTE; cf_app có (cf_worker kế thừa nhưng thân hàm từ chối). */
 const BILLING_ADMIN_FUNCTIONS = [
   'assert_billing_admin',
@@ -23,6 +23,11 @@ const BILLING_ADMIN_FUNCTIONS = [
   'admin_update_coupon',
   'admin_list_coupons',
   'apply_coupon',
+  // 0061 (ADMIN-SHELL): phiên Admin + nhật ký thao tác Admin — cùng quy tắc EXECUTE.
+  'require_admin_session',
+  'admin_session_status',
+  'record_admin_action',
+  'admin_list_audit',
 ];
 /** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace. */
 const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
@@ -1367,6 +1372,29 @@ const DELETION_OWNER_FUNCTIONS = [
 ];
 const DELETION_WORKER_FUNCTIONS = ['list_due_workspace_deletions', 'execute_workspace_deletion'];
 
+/** Nhật ký Admin (0061): phải có trigger chặn UPDATE/DELETE theo dòng và TRUNCATE (chỉ-thêm kể cả với chủ bảng). */
+async function checkAdminAuditTriggers(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* admin-audit-triggers */
+    SELECT 'core.admin_audit_log' AS name,
+      CASE
+        WHEN NOT EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = 'core.admin_audit_log'::regclass
+          AND NOT t.tgisinternal AND t.tgenabled = 'O' AND (t.tgtype & 1) = 1 AND (t.tgtype & 8) = 8 AND (t.tgtype & 16) = 16 AND (t.tgtype & 2) = 2)
+          THEN 'thiếu trigger BEFORE chặn UPDATE/DELETE theo dòng'
+        ELSE 'thiếu trigger chặn TRUNCATE'
+      END AS problem
+    WHERE to_regclass('core.admin_audit_log') IS NULL
+       OR NOT EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = 'core.admin_audit_log'::regclass
+          AND NOT t.tgisinternal AND t.tgenabled = 'O' AND (t.tgtype & 1) = 1 AND (t.tgtype & 8) = 8 AND (t.tgtype & 16) = 16 AND (t.tgtype & 2) = 2)
+       OR NOT EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = 'core.admin_audit_log'::regclass
+          AND NOT t.tgisinternal AND t.tgenabled = 'O' AND (t.tgtype & 32) = 32)`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `nhật ký Admin chỉ-thêm: ${String(row.problem)}`,
+    });
+  }
+}
+
 /**
  * Quản trị gói/mã giảm giá (0060): hàm DEFINER, search_path cố định, PUBLIC/cf_auth KHÔNG có EXECUTE, cf_app có EXECUTE
  * (cf_worker kế thừa qua tư cách thành viên nhưng thân hàm đòi người dùng nên đường job bị 42501). Phân quyền theo vai trò
@@ -1749,6 +1777,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkInvoiceOwnerFunction(db, violations);
   await checkPlanTablesAndFunctions(db, violations);
   await checkBillingAdminFunctions(db, violations);
+  await checkAdminAuditTriggers(db, violations);
   await checkWorkspaceDeletion(db, violations);
   await checkLeaveFunction(db, violations);
   await checkActionLogsOnBehalfCheck(db, violations);
