@@ -55,6 +55,11 @@ try {
     await Promise.all([admin.end(), appDb.close(), workerDb.close()]);
   }
 } catch (error) {
-  console.error(isAppError(error) ? `[${error.code}] ${error.message}` : error);
+  // Không in nguyên đối tượng lỗi (lỗi pg có thể kèm host/chi tiết dòng dữ liệu).
+  console.error(
+    isAppError(error)
+      ? `[${error.code}] ${error.message}`
+      : `Lỗi: ${error instanceof Error ? error.message : 'không rõ'}`,
+  );
   process.exit(1);
 }

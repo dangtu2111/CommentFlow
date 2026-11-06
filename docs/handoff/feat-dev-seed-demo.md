@@ -11,3 +11,7 @@
 ## Còn lại / chưa kiểm
 - `seed.ts` CHƯA chạy với DB thật (làn d không có `.env`): chạy KT-DSD; lỗi có thể gặp: CHECK/RLS (`action_logs` actor_type, `ai_usage` INSERT bằng `cf_worker`), `--reset` xóa `action_logs`/user (FK).
 - `DEV-SEED-DEMO-MORE`: leads, quy tắc spam, giọng văn, tin nhắn khi có bảng.
+
+## Từ verifier-security (không chặn merge)
+- Đã sửa: guard từ chối URL có `?tham số`/thiếu host; CLI không in nguyên đối tượng lỗi.
+- Còn lại (đề xuất): đọc dấu `cf.env` từ `pg_db_role_setting` thay vì phiên; đổi sang danh sách trắng `cf.env=dev` sau khi gắn dấu cho `cf_dev`; nhận diện workspace mẫu bằng slug/id cố định; test thứ tự "kiểm DB trước khi DELETE" với pool giả.

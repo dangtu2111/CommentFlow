@@ -54,6 +54,14 @@ describe('DEV-SEED-DEMO guard môi trường', () => {
     }
   });
 
+  it.each([
+    'postgresql://cf_owner:x@127.0.0.1:5433/cf_dev?host=evil.example',
+    'postgresql://cf_owner:x@127.0.0.1:5433/cf_dev?options=-c%20cf.env%3Ddev',
+    'postgresql:///cf_dev',
+  ])('từ chối URL có tham số truy vấn hoặc không ghi host: %s', (adminUrl) => {
+    expect(() => assertDevSeedAllowed({ ...ok, adminUrl })).toThrow(/tham số|host/);
+  });
+
   it('từ chối khi URL app hoặc worker trỏ DB khác', () => {
     expect(() => assertDevSeedAllowed({ ...ok, appUrl: url('cf_test', 'cf_app') })).toThrow(
       /cf_dev/,

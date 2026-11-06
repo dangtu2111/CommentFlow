@@ -19,11 +19,23 @@ export type SeedGuardInput = {
 
 function databaseNameOf(url: string | undefined, variable: string): string {
   if (!url) throw new AppError('CONFIG_INVALID', `Thiếu chuỗi kết nối database (${variable}).`);
+  let parsed: URL;
   try {
-    return decodeURIComponent(new URL(url).pathname.replace(/^\//, ''));
+    parsed = new URL(url);
   } catch {
     throw new AppError('CONFIG_INVALID', `${variable} không đúng định dạng URL.`);
   }
+  // `pg` đọc cả `?host=`/`?options=` và biến PGHOST: chỉ nhận URL tường minh, không tham số.
+  if (parsed.search !== '') {
+    throw new AppError(
+      'FORBIDDEN',
+      `Từ chối dữ liệu mẫu: ${variable} không được có tham số truy vấn.`,
+    );
+  }
+  if (parsed.hostname === '') {
+    throw new AppError('FORBIDDEN', `Từ chối dữ liệu mẫu: ${variable} phải ghi rõ host.`);
+  }
+  return decodeURIComponent(parsed.pathname.replace(/^\//, ''));
 }
 
 /** Trả về tên database (luôn là `cf_dev`) hoặc ném `FORBIDDEN`/`CONFIG_INVALID`. */
