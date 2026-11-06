@@ -9,7 +9,9 @@ const USER = '00000000-0000-4000-8000-000000000002';
 const EX = '00000000-0000-4000-8000-000000000003';
 const job: DataExportJob = { workspaceId: WS, exportId: EX, requestedBy: USER };
 const NOW = new Date('2026-11-06T00:00:00.000Z');
-const db = { withJob: async (_w: string, fn: (tx: Database) => Promise<unknown>) => fn({} as Database) } as unknown as Pick<FlowDb, 'withJob'>;
+const db = {
+  withJob: async (_w: string, fn: (tx: Database) => Promise<unknown>) => fn({} as Database),
+} as unknown as Pick<FlowDb, 'withJob'>;
 
 function memoryStore(failOnPut = false) {
   const files = new Map<string, string>();
@@ -99,7 +101,10 @@ describe('FR-094 job xuất dữ liệu', () => {
     const readComments = vi
       .fn()
       .mockResolvedValueOnce({ rows: [comment, { ...comment, id: 'c2' }], lastId: 'c2' })
-      .mockResolvedValueOnce({ rows: [{ ...comment, id: 'c3' }], lastId: 'c3' }) as DataExportOps['readComments'];
+      .mockResolvedValueOnce({
+        rows: [{ ...comment, id: 'c3' }],
+        lastId: 'c3',
+      }) as DataExportOps['readComments'];
     const o = ops({
       readComments,
       readAutomationSettings: vi.fn(async () => ({
@@ -110,12 +115,17 @@ describe('FR-094 job xuất dữ liệu', () => {
         signature: null,
       })),
       readRules: vi.fn(async () => ({
-        rows: [{ id: 'r1', name: 'n', type: 'keyword', pattern: 'x', action: 'hide', enabled: true }],
+        rows: [
+          { id: 'r1', name: 'n', type: 'keyword', pattern: 'x', action: 'hide', enabled: true },
+        ],
         lastId: 'r1',
       })) as DataExportOps['readRules'],
     });
     const result = await runDataExport(deps(o, store), job);
-    expect(result).toMatchObject({ outcome: 'ready', counts: { comments: 3, rules: 1, automation_settings: 1, leads: 0, kb_chunks: 0 } });
+    expect(result).toMatchObject({
+      outcome: 'ready',
+      counts: { comments: 3, rules: 1, automation_settings: 1, leads: 0, kb_chunks: 0 },
+    });
     const text = files.get(`exports/${WS}/${EX}.jsonl`) ?? '';
     const lines = parse(text);
     expect(lines[0]?.section).toBe('meta');
@@ -141,7 +151,11 @@ describe('FR-094 job xuất dữ liệu', () => {
     const { store, files } = memoryStore();
     const o = ops({
       readComments: vi.fn(async () => ({
-        rows: [comment, { ...comment, id: 'c2' }, { ...comment, id: 'c3', authorExternalId: 'fb-1' }],
+        rows: [
+          comment,
+          { ...comment, id: 'c2' },
+          { ...comment, id: 'c3', authorExternalId: 'fb-1' },
+        ],
         lastId: null,
       })) as DataExportOps['readComments'],
     });

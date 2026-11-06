@@ -150,7 +150,7 @@ export async function failStaleDataExports(tx: Database, staleMinutes = 60): Pro
   return r.rows.length;
 }
 
-export type ExpiredExport ={ id: string; workspaceId: string; fileKey: string };
+export type ExpiredExport = { id: string; workspaceId: string; fileKey: string };
 
 /**
  * Đánh dấu `expired` các yêu cầu `ready` quá hạn (hệ thống, ngữ cảnh trần) và trả khóa tệp để nơi gọi xóa khỏi kho.

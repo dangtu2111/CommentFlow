@@ -3,8 +3,8 @@ import {
   claimDataExport,
   completeDataExport,
   type Database,
-  failDataExport,
   type FlowDb,
+  failDataExport,
   isActiveOwner,
   readAutomationSettings,
   readCommentsPage,
@@ -13,6 +13,7 @@ import {
   readRulesPage,
 } from '@flow/db';
 import {
+  AppError,
   type AutomationSettingsExportSource,
   type CommentExportSource,
   DATA_EXPORT_MAX_ROWS_PER_SECTION,
@@ -22,7 +23,6 @@ import {
   dataExportJobSchema,
   exportExpiresAt,
   exportFileKey,
-  AppError,
   exportLine,
   type KbChunkExportSource,
   type LeadExportSource,
@@ -176,7 +176,9 @@ export async function runDataExport(
       await deps.ops.fail(tx, workspaceId, exportId, 'forbidden');
       return 'forbidden' as const;
     }
-    return (await deps.ops.claim(tx, workspaceId, exportId)) ? ('go' as const) : ('skipped' as const);
+    return (await deps.ops.claim(tx, workspaceId, exportId))
+      ? ('go' as const)
+      : ('skipped' as const);
   });
   if (start !== 'go') return { outcome: start };
 

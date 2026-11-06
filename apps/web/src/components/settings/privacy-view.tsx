@@ -1,5 +1,6 @@
 import { Download, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import type { PrivacyNotice } from '../../lib/data-privacy';
 import { SectionHead } from '../ui/section-head';
 
 export type PrivacyActions = {
@@ -18,7 +19,7 @@ export async function PrivacyView({
   actions,
 }: {
   workspaceName: string;
-  notice: 'unavailable' | 'mismatch' | null;
+  notice: PrivacyNotice | null;
   actions: PrivacyActions;
 }) {
   const t = await getTranslations('settings');

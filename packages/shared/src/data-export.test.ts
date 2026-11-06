@@ -147,7 +147,17 @@ describe('FR-094 che PII: kiến thức và cấu hình', () => {
     expect(row.active_hours).toEqual({ from: '08:00', to: '22:00' });
     expect(row.blocked_keywords).toEqual(['spam', 'zalo [sđt]']);
     expect(row.signature).toBe('Shop A - [sđt]');
-    expect(shapeAutomationSettingsRow({ ...{ delaySeconds: 1, dailyCap: 1, activeHours: null, blockedKeywords: [], signature: null } }).signature).toBeNull();
+    expect(
+      shapeAutomationSettingsRow({
+        ...{
+          delaySeconds: 1,
+          dailyCap: 1,
+          activeHours: null,
+          blockedKeywords: [],
+          signature: null,
+        },
+      }).signature,
+    ).toBeNull();
   });
 
   it('FR-094 quy tắc lọc: che mẫu chứa liên hệ', () => {

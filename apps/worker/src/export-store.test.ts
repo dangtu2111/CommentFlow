@@ -33,7 +33,12 @@ describe('FR-094 kho tệp xuất cục bộ', () => {
 
   it('FR-094 từ chối khóa lạ (đi ra ngoài thư mục, sai dạng)', async () => {
     const store = createLocalExportStore(dir);
-    for (const key of ['../x.jsonl', `exports/${WS}/../../x.jsonl`, '/etc/passwd', 'exports/a/b.jsonl']) {
+    for (const key of [
+      '../x.jsonl',
+      `exports/${WS}/../../x.jsonl`,
+      '/etc/passwd',
+      'exports/a/b.jsonl',
+    ]) {
       await expect(store.put(key, lines('x'))).rejects.toThrow('export_key_invalid');
       await expect(store.remove(key)).rejects.toThrow('export_key_invalid');
     }

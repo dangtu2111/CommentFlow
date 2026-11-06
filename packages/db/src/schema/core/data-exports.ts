@@ -35,9 +35,7 @@ export const dataExports = core.table(
       .on(t.workspaceId)
       .where(sql`${t.status} in ('pending', 'running')`),
     index('data_exports_workspace_created_idx').on(t.workspaceId, t.createdAt),
-    index('data_exports_expiry_idx')
-      .on(t.expiresAt)
-      .where(sql`${t.status} = 'ready'`),
+    index('data_exports_expiry_idx').on(t.expiresAt).where(sql`${t.status} = 'ready'`),
     check(
       'data_exports_status_check',
       sql`${t.status} in ('pending', 'running', 'ready', 'failed', 'expired')`,
