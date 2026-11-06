@@ -232,6 +232,9 @@ Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm d
 ## 2w. `PLANS-SCHEMA` (FR-090, US-060) — chỉ cần xác nhận bảng giá trước khi bán
 Bảng `core.plans` (migration 0054) đã nạp sẵn 5 gói CommentFlow theo `docs/10` §3.6: Dùng thử (14 ngày, 300 lượt), Starter 299.000đ (1 kênh, 1.000 lượt, không tự gửi), Growth 699.000đ (3 kênh, 3.000 lượt, tự gửi), Business 1.490.000đ (10 kênh, 7.500 lượt, tự gửi), Mua thêm 1.000 lượt 149.000đ. Chưa có nơi gọi trong web/worker nên chưa ảnh hưởng người dùng. Bạn cần: (1) xác nhận giá/hạn mức/quyền tự gửi từng gói (muốn đổi thì báo — sửa bằng migration mới, không sửa tay DB); (2) quyết định chính sách dùng thử (hiện: một lần/workspace, không gia hạn, hết hạn → AI dừng) và gói quá hạn thanh toán (hiện: `past_due` còn kỳ vẫn soạn nhưng không tự gửi). Tài khoản nhận tiền thuộc mục `QR-PAYMENT`. Kiểm tay mã KT-PLN.
 
+## 2x. `PRIVATE-REPLY` (FR-046) — cần Page Facebook thử + quyền Meta để thử thật
+Logic kiểm tra (1 tin, ≤ 7 ngày, chỉ nhân viên bấm Gửi) đã xong với fixture, CHƯA gọi Meta thật. Để thử thật bạn cần: Page Facebook thử đã kết nối, app Meta có quyền `pages_messaging` (cần App Review khi chạy thật) và một bình luận thử của tài khoản ngoài. Chưa có nơi gọi trong web/worker nên chưa ảnh hưởng người dùng. Kiểm tay mã KT-PRP.
+
 ## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
 Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
 

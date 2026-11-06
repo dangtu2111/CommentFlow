@@ -51,6 +51,7 @@
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
+| KT-PRP | Nhắn riêng từ bình luận (chờ nối DB + giao diện) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
@@ -1058,6 +1059,17 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 | 1 | `pnpm --filter @flow/shared run test src/abbreviation.test.ts` | Xanh; không gọi mạng/DB |
 | 2 | Sau khi migrate `0041`: `SELECT short, full FROM cf.system_abbreviations WHERE lang = 'vi' ORDER BY short;` | Có "ib → inbox", "sz → size", "dc → được", "k → không"… Soát danh sách: từ nào sai/thiếu thì báo để thêm bằng migration mới |
 | 3 | Khi có giao diện (`KB-ABBREV-UI`): Owner thêm "cod" → "thanh toán khi nhận hàng", đăng nhập Staff | Staff thấy mục nhưng không thêm/sửa/xóa được; shop khác không thấy |
+
+## KT-PRP — Nhắn riêng từ bình luận (FR-046, feat-private-reply)
+Điều kiện: CHỜ `PRIVATE-REPLY-WIRE` (nối DB + giao diện) và Page Facebook thử có quyền `pages_messaging`. Hiện chỉ kiểm bằng test tự động: `pnpm --filter @flow/ai test`.
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng tài khoản khác bình luận vào bài của Page thử, nhân viên bấm Nhắn riêng | Người bình luận nhận đúng 1 tin trong Messenger |
+| 2 | Bấm Nhắn riêng lần nữa cho cùng bình luận | Bị chặn, hiện "Đã nhắn riêng cho bình luận này (chỉ được 1 tin)" |
+| 3 | Thử bình luận cũ hơn 7 ngày | Bị chặn, hiện "Đã quá 7 ngày…" |
+| 4 | Xóa bình luận trên Facebook rồi bấm Nhắn riêng | Bị chặn, hiện "Bình luận đã bị xóa" |
+| 5 | Bình luận Instagram/TikTok | Không có nút / bị chặn "chưa hỗ trợ" |
+| 6 | Lặp bước 1–3 ở tiếng Anh | Chuỗi đúng ngôn ngữ |
 
 ## KT-PS — Ảnh chụp giá lúc soạn (PRICE-SNAPSHOT, FR-111, US-045) · Price snapshot
 

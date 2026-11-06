@@ -21,6 +21,7 @@ export * from './history';
 export * from './injection';
 export * from './normalize';
 export * from './pii';
+export * from './private-reply';
 export * from './ratelimit';
 export * from './readiness';
 export * from './recheck';
