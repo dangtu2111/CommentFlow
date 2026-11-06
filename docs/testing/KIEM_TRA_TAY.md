@@ -23,6 +23,7 @@
 | KT-021 | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-016 | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-022 | Bảng sản phẩm + biến thể (chỉ DB, chưa có giao diện) | feat-products-variants | chưa | chưa | — |
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 
@@ -335,6 +336,20 @@ Nếu hỏng: ghi số bước và nội dung lỗi (không dán mật khẩu).
 | 9 | Trên máy ảo, trong `psql` vào `cf_dev`: `SELECT has_function_privilege('cf_app','cf.read_channel_token(uuid)','execute'), has_function_privilege('cf_worker','cf.read_channel_token(uuid)','execute');` | `f` và `t`. |
 
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-022 — Bảng sản phẩm + biến thể (PRODUCTS-VARIANTS, feat-products-variants) · Products and variants tables
+
+Chưa có giao diện (trang Sản phẩm làm ở KB-IMPORT-*). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0034 áp được; check-rls "đạt". |
+| 2 | `pnpm --filter @flow/db test:db` (hoặc `CF_LANE=<làn> pnpm test:db`). | Mọi test xanh, gồm `products.int.test.ts`. |
+| 3 | `pnpm --filter @flow/shared test`. | Test `FR-129/FR-056/FR-058` xanh (chuẩn hóa màu/size, thẻ ≤ 600 ký tự, văn bản vector không có giá/tồn). |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
 
 ---
 

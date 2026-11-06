@@ -239,6 +239,13 @@
       "when": 1793929878440,
       "tag": "0033_kb_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793930951645,
+      "tag": "0034_products_variants",
+      "breakpoints": true
     }
   ]
 }

@@ -117,7 +117,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 |---|---|---|---|---|---|---|
 | KB-SCHEMA | FR-050, 055 (bảng `kb_*`, `kb_versions`, `kb_chunks` có `halfvec`) | US-003 | CH-SCHEMA | DB | không | ✅ (feat/kb-schema; HNSW + chỉ mục `embedding_model` còn ở KB-EMBED-COL) |
 | KB-SHOP-POLICY-FAQ | FR-050 (thông tin shop, chính sách, FAQ, giọng văn theo ngôn ngữ, quy tắc) | US-003, UF-1 | KB-SCHEMA | — | không | ⏳ |
-| PRODUCTS-VARIANTS | FR-129 (`products`, `product_variants`, `products.rev`), FR-056 (giá/tồn không vào vector), FR-058 (thẻ sản phẩm) | US-101 | KB-SCHEMA | DB | không | ⏳ |
+| PRODUCTS-VARIANTS | FR-129 (`products`, `product_variants`, `products.rev`), FR-056 (giá/tồn không vào vector), FR-058 (thẻ sản phẩm) | US-101 | KB-SCHEMA | DB | không | ✅ (feat-products-variants, migration 0034) |
 | PRODUCT-ALIAS | FR-128 (bí danh sản phẩm) | US-100 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ⏳ |
