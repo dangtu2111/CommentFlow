@@ -1,16 +1,18 @@
 'use client';
 
+import { Bot, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
   useEffect,
   useRef,
   useState,
   useTransition,
 } from 'react';
 import { replyCommentAction } from '../../app/app/(guarded)/comments/actions';
-import { MAX_REPLY_LENGTH } from '../../lib/reply-input';
+import { MAX_REPLY_LENGTH, REPLY_SEND_KEYS } from '../../lib/reply-input';
 import { deriveSuggestionUi, type SuggestionView } from '../../lib/suggestion';
 import type { ReplyFailure } from '../../server/reply-action';
 import { type SuggestionLabels, SuggestionPanel } from './suggestion-panel';
@@ -38,6 +40,7 @@ export function ReplyComposer({
   isRetry,
   suggestion = null,
   suggestionLabels,
+  dockStart = null,
 }: {
   commentId: string;
   prefill: string;
@@ -46,6 +49,8 @@ export function ReplyComposer({
   /** Gợi ý AI (FR-043); không có → không hiện ô gợi ý. */
   suggestion?: SuggestionView | null;
   suggestionLabels?: SuggestionLabels;
+  /** Hành động phụ đặt bên trái nút gửi trong thanh dính đáy (nút Ẩn). */
+  dockStart?: ReactNode;
 }) {
   const router = useRouter();
   const [text, setText] = useState(prefill);
@@ -89,51 +94,59 @@ export function ReplyComposer({
 
   return (
     <form className="reply-composer" onSubmit={onSubmit}>
-      <label className="reply-label" htmlFor={`reply-${commentId}`}>
-        {labels.field}
-      </label>
-      {suggestion && suggestionLabels && suggestionUi.show ? (
-        <SuggestionPanel
-          text={suggestion.text}
-          ui={suggestionUi}
-          labels={suggestionLabels}
-          onUse={() => {
-            setText(suggestion.text);
-            textareaRef.current?.focus();
-          }}
+      <div className="detail-card reply-card">
+        <label className="reply-label" htmlFor={`reply-${commentId}`}>
+          <Bot size={16} aria-hidden="true" />
+          {labels.field}
+        </label>
+        {suggestion && suggestionLabels && suggestionUi.show ? (
+          <SuggestionPanel
+            text={suggestion.text}
+            ui={suggestionUi}
+            labels={suggestionLabels}
+            onUse={() => {
+              setText(suggestion.text);
+              textareaRef.current?.focus();
+            }}
+          />
+        ) : null}
+        <textarea
+          id={`reply-${commentId}`}
+          ref={textareaRef}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={labels.placeholder}
+          rows={4}
+          disabled={pending}
+          aria-invalid={error !== null}
+          aria-describedby={error ? `reply-error-${commentId}` : undefined}
         />
-      ) : null}
-      <textarea
-        id={`reply-${commentId}`}
-        ref={textareaRef}
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={labels.placeholder}
-        rows={4}
-        disabled={pending}
-        aria-invalid={error !== null}
-        aria-describedby={error ? `reply-error-${commentId}` : undefined}
-      />
-      <div className="reply-meta">
-        <span className="reply-counter" aria-live="polite">
-          {counterText}
-        </span>
-        <span className="reply-hint">{labels.hint}</span>
+        <div className="reply-meta">
+          <span className="reply-counter" aria-live="polite">
+            {counterText}
+          </span>
+        </div>
+        {error ? (
+          <p className="reply-error" role="alert" id={`reply-error-${commentId}`}>
+            {labels.failures[error]}
+          </p>
+        ) : null}
       </div>
-      {error ? (
-        <p className="reply-error" role="alert" id={`reply-error-${commentId}`}>
-          {labels.failures[error]}
-        </p>
-      ) : null}
-      <button
-        type="submit"
-        className="btn btn-primary"
-        disabled={pending || length === 0 || length > MAX_REPLY_LENGTH}
-        aria-busy={pending}
-      >
-        {buttonText}
-      </button>
+      <div className="reply-dock">
+        <div className="reply-dock-start">{dockStart}</div>
+        <button
+          type="submit"
+          className="btn btn-primary reply-send"
+          title={labels.hint}
+          disabled={pending || length === 0 || length > MAX_REPLY_LENGTH}
+          aria-busy={pending}
+        >
+          <Send size={16} aria-hidden="true" />
+          <span>{buttonText}</span>
+          <span className="reply-send-keys">{REPLY_SEND_KEYS}</span>
+        </button>
+      </div>
     </form>
   );
 }

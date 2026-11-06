@@ -1,5 +1,6 @@
 import { DECLARED_CAPABILITIES } from '@flow/connectors';
 import { isCommentLabel, isLocale } from '@flow/shared';
+import { Newspaper, Sparkles } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { hideErrorKey } from '../../lib/hide-errors';
 import { deriveHideUi, type HideUiDetail } from '../../lib/hide-state';
@@ -10,6 +11,7 @@ import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
 import type { SuggestionView } from '../../lib/suggestion';
 import { userInitials } from '../../lib/user-initials';
 import { Avatar } from '../ui/avatar';
+import { Card } from '../ui/card';
 import { CommentLock } from './comment-lock';
 import { HideButton } from './hide-button';
 import { HideProgress } from './hide-progress';
@@ -112,6 +114,17 @@ export async function CommentDetailPanel({
       unavailable: t('hide.failures.unavailable'),
     },
   };
+  // Nút Ẩn vào thanh hành động dính đáy khi đang soạn trả lời (thiết kế Stitch); trạng thái khác giữ khối riêng.
+  const hideInDock = hideUi.mode === 'can' && reply.mode === 'compose';
+  const hideButton =
+    hideUi.mode === 'can' ? (
+      <HideButton
+        commentId={comment.id}
+        action={hideUi.action}
+        isRetry={false}
+        labels={hideLabels}
+      />
+    ) : null;
   const composerLabels = {
     field: t('reply.field'),
     placeholder: t('reply.placeholder'),
@@ -171,165 +184,189 @@ export async function CommentDetailPanel({
           }}
         />
       )}
-      <header className="comment-detail-head">
-        <Avatar size="lg" badge={platformBadgeText(comment.platform)}>
-          {userInitials(comment.authorName ?? t('list.anonymous'))}
-        </Avatar>
-        <h2 className="comment-detail-author">{comment.authorName ?? t('list.anonymous')}</h2>
-        <time
-          dateTime={comment.createdTime?.toISOString()}
-          title={formatAbsoluteTime(comment.createdTime, locale, timeZone)}
-        >
-          {formatRelativeTime(comment.createdTime, now, locale)}
-        </time>
-      </header>
-      <dl className="comment-detail-meta">
-        <div>
-          <dt>{t('detail.source')}</dt>
-          <dd>
-            {platform} · {comment.channelName}
-          </dd>
-        </div>
-        <div>
-          <dt>{t('detail.post')}</dt>
-          <dd>
-            <span className="comment-detail-code">{comment.postExternalId}</span>
+      <div className="comment-detail-body">
+        <Card className="detail-card">
+          <header className="detail-card-head">
+            <span className="detail-card-title">
+              <Newspaper size={16} aria-hidden="true" />
+              {t('detail.postContext')}
+            </span>
             {comment.isAd ? <span className="chip">{t('list.ad')}</span> : null}
-          </dd>
-        </div>
-        {isDeleted ? null : (
-          <div>
-            <dt>{t('detail.authorId')}</dt>
-            <dd className="comment-detail-code">{comment.authorExternalId}</dd>
-          </div>
-        )}
-      </dl>
-      {comment.parentExternalId ? (
-        <p className="comment-detail-reply">{t('detail.isReply')}</p>
-      ) : null}
-      <blockquote className="comment-detail-text">{bodyText}</blockquote>
-      <div className="inbox-chips">
-        <span className={`chip chip-status chip-${comment.status}`}>{status}</span>
-        {comment.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
-        {comment.label ? (
-          <span className={`chip chip-label chip-tone-${labelTone(comment.label)}`}>
-            {isCommentLabel(comment.label) ? t(`labels.${comment.label}`) : comment.label}
-          </span>
-        ) : null}
-      </div>
-      {isDeleted ? null : (
-        <RelabelSelect commentId={comment.id} current={comment.label} labels={relabelLabels} />
-      )}
-      <section className="reply-section" aria-label={t('reply.field')}>
-        {reply.mode === 'compose' ? (
-          <ReplyComposer
-            commentId={comment.id}
-            prefill={reply.prefill}
-            labels={composerLabels}
-            isRetry={false}
-            suggestion={comment.suggestion ?? null}
-            suggestionLabels={suggestionLabels}
-          />
-        ) : null}
-        {reply.mode === 'sending' ? (
-          <ReplyProgress
-            text={reply.text}
-            labels={{
-              sending: t('reply.stateSending'),
-              slow: t('reply.stateSlow'),
-              yourReply: t('reply.yourReply'),
-            }}
-          />
-        ) : null}
-        {reply.mode === 'sent' ? (
-          <div className="reply-state reply-sent" role="status">
-            <p className="reply-state-title">{t('reply.sentTitle')}</p>
-            {reply.text ? <blockquote className="reply-quote">{reply.text}</blockquote> : null}
-          </div>
-        ) : null}
-        {reply.mode === 'failed' ? (
-          <>
-            <div className="reply-state reply-failed" role="alert">
-              <p className="reply-state-title">{t('reply.failedTitle')}</p>
+          </header>
+          <dl className="comment-detail-meta">
+            <div>
+              <dt>{t('detail.source')}</dt>
+              <dd>
+                {platform} · {comment.channelName}
+              </dd>
+            </div>
+            <div>
+              <dt>{t('detail.post')}</dt>
+              <dd className="comment-detail-code">{comment.postExternalId}</dd>
+            </div>
+          </dl>
+        </Card>
+        <Card className="detail-card">
+          <header className="comment-detail-head">
+            <Avatar badge={platformBadgeText(comment.platform)}>
+              {userInitials(comment.authorName ?? t('list.anonymous'))}
+            </Avatar>
+            <div className="comment-detail-author">
+              <h2>{comment.authorName ?? t('list.anonymous')}</h2>
               <p>
-                {t('reply.failedWhy')} {t(`reply.errors.${replyErrorKey(reply.errorCode)}`)}
+                <time
+                  dateTime={comment.createdTime?.toISOString()}
+                  title={formatAbsoluteTime(comment.createdTime, locale, timeZone)}
+                >
+                  {formatRelativeTime(comment.createdTime, now, locale)}
+                </time>
+                {isDeleted ? null : (
+                  <>
+                    {' · '}
+                    <span className="comment-detail-code">{comment.authorExternalId}</span>
+                  </>
+                )}
               </p>
             </div>
-            {reply.canRetry ? (
-              <ReplyComposer
-                commentId={comment.id}
-                prefill={reply.prefill}
-                labels={composerLabels}
-                isRetry
-              />
+          </header>
+          {comment.parentExternalId ? (
+            <p className="comment-detail-reply">{t('detail.isReply')}</p>
+          ) : null}
+          <blockquote className="comment-detail-text">{bodyText}</blockquote>
+        </Card>
+        <Card className="detail-card detail-ai">
+          <header className="detail-card-head">
+            <span className="detail-card-title">
+              <Sparkles size={16} aria-hidden="true" />
+              {t('detail.aiTitle')}
+            </span>
+          </header>
+          <div className="inbox-chips">
+            {comment.label ? (
+              <span className={`chip chip-label chip-tone-${labelTone(comment.label)}`}>
+                {isCommentLabel(comment.label) ? t(`labels.${comment.label}`) : comment.label}
+              </span>
             ) : null}
-          </>
-        ) : null}
-        {reply.mode === 'blocked' ? (
-          <p className="reply-state reply-blocked" role="status">
-            {reply.reason === 'locked_by_other'
-              ? reply.holderName
-                ? t('reply.blocked.lockedNamed', { name: reply.holderName })
-                : t('reply.blocked.lockedAnonymous')
-              : reply.reason === 'channel_unavailable'
-                ? t('reply.blocked.channelUnavailable')
-                : reply.reason === 'deleted'
-                  ? t('reply.blocked.deleted')
-                  : t('reply.blocked.notReplyable')}
-          </p>
-        ) : null}
-      </section>
-      {hideUi.mode === 'none' ? null : (
-        <section className="hide-section" aria-label={t('hide.section')}>
-          {hideUi.mode === 'can' ? (
-            <HideButton
+            <span className={`chip chip-status chip-${comment.status}`}>{status}</span>
+            {comment.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
+          </div>
+          {isDeleted ? null : (
+            <RelabelSelect commentId={comment.id} current={comment.label} labels={relabelLabels} />
+          )}
+        </Card>
+        <section className="reply-section" aria-label={t('reply.field')}>
+          {reply.mode === 'compose' ? (
+            <ReplyComposer
               commentId={comment.id}
-              action={hideUi.action}
+              prefill={reply.prefill}
+              labels={composerLabels}
               isRetry={false}
-              labels={hideLabels}
+              suggestion={comment.suggestion ?? null}
+              suggestionLabels={suggestionLabels}
+              dockStart={hideInDock ? hideButton : null}
             />
           ) : null}
-          {hideUi.mode === 'pending' ? (
-            <HideProgress
+          {reply.mode === 'sending' ? (
+            <ReplyProgress
+              text={reply.text}
               labels={{
-                working: hideUi.action === 'hide' ? t('hide.stateHiding') : t('hide.stateUnhiding'),
-                slow: t('hide.stateSlow'),
+                sending: t('reply.stateSending'),
+                slow: t('reply.stateSlow'),
+                yourReply: t('reply.yourReply'),
               }}
             />
           ) : null}
-          {hideUi.mode === 'failed' ? (
+          {reply.mode === 'sent' ? (
+            <div className="reply-state reply-sent" role="status">
+              <p className="reply-state-title">{t('reply.sentTitle')}</p>
+              {reply.text ? <blockquote className="reply-quote">{reply.text}</blockquote> : null}
+            </div>
+          ) : null}
+          {reply.mode === 'failed' ? (
             <>
               <div className="reply-state reply-failed" role="alert">
-                <p className="reply-state-title">
-                  {hideUi.action === 'hide' ? t('hide.failedHide') : t('hide.failedUnhide')}
-                </p>
+                <p className="reply-state-title">{t('reply.failedTitle')}</p>
                 <p>
-                  {t('hide.failedWhy')} {t(`hide.errors.${hideErrorKey(hideUi.errorCode)}`)}
+                  {t('reply.failedWhy')} {t(`reply.errors.${replyErrorKey(reply.errorCode)}`)}
                 </p>
               </div>
-              {hideUi.canRetry ? (
-                <HideButton
+              {reply.canRetry ? (
+                <ReplyComposer
                   commentId={comment.id}
-                  action={hideUi.action}
+                  prefill={reply.prefill}
+                  labels={composerLabels}
                   isRetry
-                  labels={hideLabels}
                 />
               ) : null}
             </>
           ) : null}
-          {hideUi.mode === 'blocked' ? (
+          {reply.mode === 'blocked' ? (
             <p className="reply-state reply-blocked" role="status">
-              {hideUi.reason === 'locked_by_other'
-                ? hideUi.holderName
-                  ? t('hide.blocked.lockedNamed', { name: hideUi.holderName })
-                  : t('hide.blocked.lockedAnonymous')
-                : hideUi.reason === 'channel_unavailable'
-                  ? t('hide.blocked.channelUnavailable')
-                  : t('hide.blocked.notHideable')}
+              {reply.reason === 'locked_by_other'
+                ? reply.holderName
+                  ? t('reply.blocked.lockedNamed', { name: reply.holderName })
+                  : t('reply.blocked.lockedAnonymous')
+                : reply.reason === 'channel_unavailable'
+                  ? t('reply.blocked.channelUnavailable')
+                  : reply.reason === 'deleted'
+                    ? t('reply.blocked.deleted')
+                    : t('reply.blocked.notReplyable')}
             </p>
           ) : null}
         </section>
-      )}
+        {hideUi.mode === 'none' || hideInDock ? null : (
+          <section className="hide-section" aria-label={t('hide.section')}>
+            {hideUi.mode === 'can' ? (
+              <HideButton
+                commentId={comment.id}
+                action={hideUi.action}
+                isRetry={false}
+                labels={hideLabels}
+              />
+            ) : null}
+            {hideUi.mode === 'pending' ? (
+              <HideProgress
+                labels={{
+                  working:
+                    hideUi.action === 'hide' ? t('hide.stateHiding') : t('hide.stateUnhiding'),
+                  slow: t('hide.stateSlow'),
+                }}
+              />
+            ) : null}
+            {hideUi.mode === 'failed' ? (
+              <>
+                <div className="reply-state reply-failed" role="alert">
+                  <p className="reply-state-title">
+                    {hideUi.action === 'hide' ? t('hide.failedHide') : t('hide.failedUnhide')}
+                  </p>
+                  <p>
+                    {t('hide.failedWhy')} {t(`hide.errors.${hideErrorKey(hideUi.errorCode)}`)}
+                  </p>
+                </div>
+                {hideUi.canRetry ? (
+                  <HideButton
+                    commentId={comment.id}
+                    action={hideUi.action}
+                    isRetry
+                    labels={hideLabels}
+                  />
+                ) : null}
+              </>
+            ) : null}
+            {hideUi.mode === 'blocked' ? (
+              <p className="reply-state reply-blocked" role="status">
+                {hideUi.reason === 'locked_by_other'
+                  ? hideUi.holderName
+                    ? t('hide.blocked.lockedNamed', { name: hideUi.holderName })
+                    : t('hide.blocked.lockedAnonymous')
+                  : hideUi.reason === 'channel_unavailable'
+                    ? t('hide.blocked.channelUnavailable')
+                    : t('hide.blocked.notHideable')}
+              </p>
+            ) : null}
+          </section>
+        )}
+      </div>
     </article>
   );
 }

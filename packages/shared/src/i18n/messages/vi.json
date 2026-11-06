@@ -639,7 +639,10 @@
       "adsOnly": "Chỉ bài quảng cáo",
       "sort": "Sắp xếp",
       "apply": "Áp dụng",
-      "clear": "Xóa bộ lọc"
+      "clear": "Xóa bộ lọc",
+      "platformAll": "Tất cả",
+      "labelsTitle": "Nhãn AI",
+      "advanced": "Bộ lọc nâng cao"
     },
     "sort": {
       "oldest": "Cũ nhất trước",
@@ -720,7 +723,16 @@
       "redacted": "Khách đã xóa bình luận này; nội dung và thông tin người bình luận đã được xóa khỏi hệ thống.",
       "notFoundTitle": "Không tìm thấy bình luận",
       "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này.",
-      "back": "← Quay lại danh sách"
+      "back": "← Quay lại danh sách",
+      "postContext": "Bối cảnh bài viết",
+      "aiTitle": "Phân tích ý định tự động"
+    },
+    "strip": {
+      "shortcuts": "Phím tắt",
+      "send": "Gửi",
+      "move": "Dòng trước/sau",
+      "select": "Chọn",
+      "hide": "Ẩn hàng loạt"
     },
     "error": {
       "title": "Không tải được danh sách bình luận",

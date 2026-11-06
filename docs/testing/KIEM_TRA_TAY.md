@@ -66,6 +66,7 @@
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-UKPH | Giao diện KB + Bài viết từ HTML Stitch | — | có | chưa | — |
@@ -1306,6 +1307,18 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIHC — Hộp thư Bình luận khớp HTML Stitch (UI-HTML-COMMENTS, feat-ui-html-comments)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Mở `/dev/ui/comments` ở 1440px | Thanh trên cao 64px, thanh bên 256px; dải phụ 44px; ba cột 224/384/phần còn lại, mỗi cột cuộn riêng, trang không cuộn |
+| 2 | Cột trái | 12 tab trạng thái có chấm màu + số (tab chọn nền màu chính), nền tảng 2×2, 6 nhãn AI (chú giải), công tắc "Chỉ bài quảng cáo" |
+| 3 | Bấm công tắc quảng cáo và một nền tảng | URL đổi (`ads=1`, `platform=…`), danh sách lọc theo; tab đang chọn được giữ |
+| 4 | Cột giữa | Ô tìm + nút lọc (mở chọn kênh), dòng "Sắp xếp: …" bấm đổi chiều, thẻ có thanh trái khi đang chọn, chân "Hiển thị n / tổng" |
+| 5 | Chọn một bình luận | Cột phải hiện thẻ bối cảnh, khách + bình luận, AI phân tích (nhãn, Đổi nhãn), ô trả lời AI; thanh dưới có Ẩn và Gửi kèm `Ctrl + Enter` dính đáy khi cuộn |
+| 6 | Gõ trả lời rồi bấm Ctrl+Enter | Gửi như trước (không đổi logic) |
+| 7 | Thu cửa sổ còn 390px | Hai ngăn (danh sách / chi tiết) đúng; không cuộn ngang cả trang |
 
 ## KT-UIKIT — Bộ thành phần dùng chung (UI-KIT, feat-ui-kit-foundation)
 
