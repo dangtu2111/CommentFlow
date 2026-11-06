@@ -73,7 +73,8 @@ describe('FR-051 đọc XLSX an toàn', () => {
     const bytes = zipSync({ 'xl/worksheets/sheet1.xml': big });
     expect(bytes.length).toBeLessThan(1024 * 1024);
     expect(() => readXlsx(bytes)).toThrowError(/XLSX_TOO_LARGE_UNZIPPED/);
-  });
+    // Nén 51 MB chậm khi chạy kèm coverage trên CI (timeout mặc định 5s đã từng vượt) → nới riêng bài này.
+  }, 30_000);
 
   it('quá nhiều dòng hoặc cột bị từ chối', () => {
     const manyRows = Array.from(
@@ -163,7 +164,7 @@ describe('FR-051 đọc XLSX an toàn', () => {
     const half = new Uint8Array(26 * 1024 * 1024);
     const bytes = zipSync({ 'xl/worksheets/sheet1.xml': half, 'xl/sharedStrings.xml': half });
     expect(() => readXlsx(bytes)).toThrowError(/XLSX_TOO_LARGE_UNZIPPED/);
-  });
+  }, 30_000);
 
   it('ô thiếu tham chiếu r dùng vị trí liền sau; dòng thiếu r dùng số dòng liền sau', () => {
     const bytes = buildXlsx({
