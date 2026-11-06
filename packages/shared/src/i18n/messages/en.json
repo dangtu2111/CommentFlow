@@ -563,6 +563,7 @@
     },
     "nav": {
       "comments": "Comments",
+      "posts": "Posts",
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
@@ -639,6 +640,64 @@
       "none": "Select at least one Page.",
       "unavailable": "Facebook connection is being reconfigured. Please tell your system administrator.",
       "expiredSession": "The Page selection session expired. Press Connect Facebook to start over."
+    }
+  },
+  "posts": {
+    "title": "Posts",
+    "subtitle": "Posts from your connected channels, with the number of comments waiting for action.",
+    "count": "{count} posts",
+    "error": {
+      "title": "Could not load posts",
+      "body": "Something went wrong while loading data. Please reload in a few minutes."
+    },
+    "toolbar": {
+      "label": "Filter posts",
+      "searchLabel": "Search posts",
+      "search": "Search by text or post ID…",
+      "platform": "Platform",
+      "allPlatforms": "All platforms",
+      "channel": "Channel",
+      "allChannels": "All channels",
+      "kind": "Post type",
+      "allKinds": "All post types",
+      "sort": "Sort by",
+      "apply": "Apply",
+      "clear": "Clear filters"
+    },
+    "platforms": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "kind": {
+      "ads": "Ad",
+      "organic": "Organic"
+    },
+    "sort": {
+      "pending": "Most pending comments",
+      "newest": "Newest first"
+    },
+    "list": {
+      "label": "Post list",
+      "noMessage": "(Post text not synced yet — ID {id})",
+      "postId": "Post ID: {id}",
+      "comments": "{count} comments",
+      "pending": "{count} pending",
+      "noPending": "No pending comments",
+      "viewOriginal": "View original",
+      "unknownTime": "Posted time unknown"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "summary": "Page {page} of {pages}",
+      "prev": "Previous page",
+      "next": "Next page"
+    },
+    "empty": {
+      "title": "No posts yet",
+      "body": "Posts appear once a channel receives its first comment.",
+      "filteredTitle": "No posts match the filters",
+      "filteredBody": "Try removing some filters or changing the keyword."
     }
   },
   "activity": {

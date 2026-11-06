@@ -74,6 +74,18 @@ export {
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
 export {
+  DEFAULT_POSTS_LIMIT,
+  listPosts,
+  MAX_POSTS_LIMIT,
+  POSTS_KINDS,
+  POSTS_SORTS,
+  type PostListItem,
+  type PostsFilter,
+  type PostsKind,
+  type PostsPage,
+  type PostsSort,
+} from './queries/posts';
+export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,
   type WebhookSilentChannel,
