@@ -143,6 +143,11 @@ export { applyProductImport, type ProductImportResult } from './queries/product-
 export { type ActiveVariant, findActiveVariants } from './queries/products';
 export { loadReadinessSource, type ReadinessSourceData } from './queries/readiness';
 export {
+  listRecentCommentTexts,
+  SPAM_PREVIEW_MAX_ROWS,
+  type SpamPreviewRow,
+} from './queries/spam-preview';
+export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,
   type WebhookSilentChannel,

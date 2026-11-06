@@ -660,6 +660,37 @@
       "UNAVAILABLE": "Could not import right now. Please try again later."
     }
   },
+  "spamRules": {
+    "title": "Spam rules",
+    "subtitle": "Create rules to flag or skip spam comments. Press Preview to see how many comments from the last 7 days a rule matches; preview is read-only and changes no comment. AI never hides comments on its own.",
+    "nameLabel": "Rule name",
+    "typeLabel": "Rule type",
+    "type": {
+      "keyword": "Keyword",
+      "regex": "Regex pattern",
+      "phone": "Phone number",
+      "link": "Link",
+      "emoji_only": "Emoji only",
+      "tag_only": "Tags only"
+    },
+    "patternLabel": "Pattern",
+    "patternHint": "Keyword: separate several with commas. Regex: up to 200 characters, no nested repetition. Phone, link, emoji, tags: leave empty.",
+    "actionLabel": "Action",
+    "action": {
+      "mark": "Only flag as suspected spam",
+      "skip": "Skip (no reply drafted)"
+    },
+    "noAutoHide": "Auto-hide is a separate feature enabled only after a trial period; rules here never hide comments.",
+    "preview": "Preview 7 days",
+    "save": "Save rule",
+    "previewResult": "Matches {matched} of {total} comments in the last 7 days",
+    "previewEmpty": "No comment matches.",
+    "saved": "Rule saved.",
+    "error": {
+      "invalid_rule": "The rule is not valid: check the name, pattern (regex must not use nested repetition) and action.",
+      "unavailable": "Could not complete this now (saving rules is not available yet). Please try again later."
+    }
+  },
   "kbGaps": {
     "pageTitle": "Unanswered AI questions",
     "title": "Questions the AI could not answer",
@@ -894,6 +925,7 @@
       "productImport": "Import products",
       "kbGaps": "Unanswered questions",
       "kbPublish": "Knowledge versions",
+      "spamRules": "Spam rules",
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
