@@ -106,6 +106,15 @@ export {
   parseMessengerWebhook,
 } from './messenger/webhook';
 export { type MessengerSendMode, messengerSendMode } from './messenger/window';
+export {
+  createPancakeConnector,
+  type PancakeCatalog,
+  type PancakeConnector,
+  type PancakeConnectorOptions,
+  type PancakeProduct,
+  type PancakeVariant,
+} from './pancake/connector';
+export { buildPancakeImportPlan, parsePancakeMoney } from './pancake/normalize';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
 export {
   createSapoConnector,
