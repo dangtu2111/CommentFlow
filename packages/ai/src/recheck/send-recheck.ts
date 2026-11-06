@@ -43,6 +43,15 @@ export const HUMAN_AGENT_WINDOW_MS = 7 * 24 * 3_600_000;
 /** Lệch đồng hồ chấp nhận được khi mốc tin cuối ở "tương lai"; quá → dữ liệu hỏng, chặn. */
 export const RECHECK_CLOCK_SKEW_MS = 5 * 60_000;
 
+/** Lý do giới hạn tốc độ riêng của tự gửi (FR-114, docs/09 §11.1). */
+export const RATE_HOLD_REASONS = [
+  'rate_limited_app',
+  'rate_limited_page_auto',
+  'rate_limited_post',
+  'rate_limited_repeat',
+] as const;
+export type RateHoldReason = (typeof RATE_HOLD_REASONS)[number];
+
 export const RECHECK_REASONS = [
   'input_unreadable',
   // R1
@@ -77,6 +86,10 @@ export const RECHECK_REASONS = [
   'message_window_closed',
   // R9
   'rate_limited',
+  'rate_limited_app',
+  'rate_limited_page_auto',
+  'rate_limited_post',
+  'rate_limited_repeat',
 ] as const;
 export type RecheckReason = (typeof RECHECK_REASONS)[number];
 
@@ -178,8 +191,16 @@ export const sendRecheckInputSchema = z.object({
     .nullable(),
   /** R8 (tin nhắn): tin cuối của khách; `humanAgent` = người gửi được dùng thẻ HUMAN_AGENT (7 ngày). */
   message: z.object({ lastInboundAt: instant, humanAgent: z.boolean() }).nullable(),
-  /** R9: lượt còn lại của hạn mức tốc độ theo Page; `null` = chưa có bộ giới hạn (`SEND-RATE-LIMIT`) → qua. */
-  rate: z.object({ remaining: nonNegativeInt }).nullable(),
+  /**
+   * R9: lượt còn lại của hạn mức tốc độ theo Page; `null` = chưa có bộ giới hạn (cờ tắt) → qua.
+   * `hold` (FR-114, chỉ áp cho `mode = auto`): giới hạn riêng của tự gửi đã chạm — lý do cụ thể.
+   */
+  rate: z
+    .object({
+      remaining: nonNegativeInt,
+      hold: z.enum(RATE_HOLD_REASONS).optional(),
+    })
+    .nullable(),
 });
 
 export type SendRecheckInput = z.input<typeof sendRecheckInputSchema>;
@@ -294,9 +315,20 @@ const r8MessageWindow: Rule = (i) => {
   return elapsedMs >= windowMs ? review('message_window_closed') : null;
 };
 
+/** Lý do chặn riêng của tự gửi (FR-114) → cách xử lý: mức dùng Meta App = hoãn, còn lại = Chờ duyệt. */
+const RATE_HOLD_ACTION: Readonly<Record<(typeof RATE_HOLD_REASONS)[number], RecheckAction>> = {
+  rate_limited_app: 'defer',
+  rate_limited_page_auto: 'hold_review',
+  rate_limited_post: 'hold_review',
+  rate_limited_repeat: 'hold_review',
+};
+
 const r9RateLimit: Rule = (i) => {
   if (i.rate === null) return null;
-  return i.rate.remaining <= 0 ? { reason: 'rate_limited', action: 'defer' } : null;
+  if (i.rate.remaining <= 0) return { reason: 'rate_limited', action: 'defer' };
+  const hold = i.rate.hold;
+  if (hold === undefined || i.mode !== 'auto') return null;
+  return { reason: hold, action: RATE_HOLD_ACTION[hold] };
 };
 
 /** Thứ tự cố định theo `docs/09` §6.1 — không có đường nào đổi. */
