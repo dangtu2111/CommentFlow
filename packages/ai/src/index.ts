@@ -159,3 +159,13 @@ export {
   type VariantLookup,
   wantedAttrs,
 } from './route/sql-lookup';
+export {
+  type GuardVariantsInput,
+  type GuardVariantsResult,
+  guardVariants,
+  MAX_VARIANTS,
+  type PickedVariant,
+  pickVariant,
+  REASON_VARIANTS_EXHAUSTED,
+  replyFingerprint,
+} from './variation/variation';

@@ -22,6 +22,7 @@ const draft: DraftResult = {
   unanswered_topics: [],
   needs_human: false,
   reason: '',
+  variants: [],
 };
 
 const allowed = new Set(['kb:1', 'kb:2']);
