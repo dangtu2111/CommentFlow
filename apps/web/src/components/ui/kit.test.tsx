@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Avatar } from './avatar';
 import { Button, buttonClass, IconButton } from './button';
 import { Chip } from './chip';
+import { Icon } from './icon';
 import { Kbd } from './kbd';
 import { SplitLayout } from './split-layout';
 import { Stat } from './stat';
@@ -148,6 +149,14 @@ describe('UI-KIT Workbench + Kbd', () => {
     expect(html).toContain('<div class="wb-pane wb-pane-filters">a</div>');
     expect(html).toContain('wb-pane-list');
     expect(html).toContain('<aside class="wb-pane wb-pane-detail">');
+  });
+
+  it('Icon vẽ SVG nội tuyến tô theo currentColor, trang trí', () => {
+    const html = renderToStaticMarkup(<Icon name="shield" size={14} />);
+    expect(html).toContain('viewBox="0 -960 960 960"');
+    expect(html).toContain('fill="currentColor"');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('width="14"');
   });
 
   it('Kbd vẽ thẻ kbd', () => {
