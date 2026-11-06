@@ -101,7 +101,7 @@ Không chờ khóa/tài nguyên của chủ dự án. Việc cần Meta OAuth/we
 - **Một nhánh, một agent tại một thời điểm.** Không để hai agent cùng sửa một nhánh. Đổi agent chỉ ở điểm dừng: sau khi commit và ghi `docs/handoff/<nhánh>.md`.
 - **Trạng thái nằm trong repo, không trong trí nhớ phiên:** `docs/plans/<nhánh>.md` (kế hoạch đã duyệt), `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại, agent vừa làm), `docs/codemap.md`, `docs/gap-matrix.md`. Agent nhận việc đọc các file này trước, không đọc lại source đã được ghi.
 - **Không lập lại kế hoạch, không làm lại việc đã commit.** Thấy kế hoạch sai → ghi đề xuất sửa vào `docs/plans/<nhánh>.md` mục "Đề xuất thay đổi" và dừng chờ chủ dự án.
-- **Chạy song song nhiều nhánh:** xem `docs/workflows/parallel.md` (mỗi làn một worktree + `CF_LANE`).
+- **Chạy song song nhiều nhánh:** xem `docs/workflows/parallel.md` (mỗi làn một worktree + `CF_LANE`). Tự động hóa hàng đợi việc/PR/CI/merge: `tools/orchestrator` — `docs/workflows/orchestrator.md`, ADR 012.
 - **Kiểm chứng chéo chỉ cho diff nhạy cảm** (auth, phiên, token, chữ ký webhook, RLS/`withWorkspace`, thanh toán, cổng tự gửi, `sendRecheck`, che PII, migration): agent **không viết** đoạn đó kiểm chứng theo `docs/workflows/verify.md`, chỉ nhận diff + mục spec. Diff thường không cần agent thứ hai.
 - Ghi agent đã làm vào cột "Nhánh" của gap matrix, ví dụ `feat/ai-usage (codex)`.
 
