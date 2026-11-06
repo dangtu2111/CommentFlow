@@ -90,6 +90,16 @@ export {
   MAX_ACTION_LOG_LIMIT,
 } from './queries/action-logs';
 export {
+  type ApplyCouponResult,
+  applyCoupon,
+  type CouponListRow,
+  type CouponUpdate,
+  createCoupon,
+  listCoupons,
+  updateCoupon,
+  updatePlanAsAdmin,
+} from './queries/admin-billing';
+export {
   type AutomationRuleRow,
   type AutomationSettingsInput,
   type AutomationSettingsRow,

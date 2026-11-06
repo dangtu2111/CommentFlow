@@ -13,6 +13,17 @@ const WORKER_ROLE = 'cf_worker';
 
 /** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
 const SYSTEM_TABLES = ['core.feature_flags', 'cf.system_abbreviations', 'core.plans'];
+/** Bảng hệ thống do Admin quản (0060): RLS bật, KHÔNG policy, cf_app không có quyền nào; truy cập chỉ qua hàm DEFINER. */
+const ADMIN_ONLY_TABLES = ['core.coupons'];
+/** Hàm DEFINER quản trị gói/mã (0060): PUBLIC/cf_auth không được EXECUTE; cf_app có (cf_worker kế thừa nhưng thân hàm từ chối). */
+const BILLING_ADMIN_FUNCTIONS = [
+  'assert_billing_admin',
+  'admin_update_plan',
+  'admin_create_coupon',
+  'admin_update_coupon',
+  'admin_list_coupons',
+  'apply_coupon',
+];
 /** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace. */
 const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
 /** Bảng "của chính mình" với cf_app: policy chỉ cho dòng có user_id/id = current_user_id() (không workspace). */
@@ -73,7 +84,7 @@ function classify(name: string, hasWorkspaceId: boolean): PolicyClass | 'system'
   if (hasWorkspaceId || RLS_BY_OWN_ID_TABLES.includes(name)) return workspaceClass;
   if (OWN_USER_TABLES.includes(name)) return ownUserClass;
   if (AUTH_ONLY_TABLES.includes(name)) return authOnlyClass;
-  if (SYSTEM_TABLES.includes(name)) return 'system';
+  if (SYSTEM_TABLES.includes(name) || ADMIN_ONLY_TABLES.includes(name)) return 'system';
   return 'unknown';
 }
 
@@ -956,6 +967,7 @@ const NO_DELETE_TABLES = [
   'core.invoices',
   'core.payments',
   'core.subscriptions',
+  'core.coupon_redemptions',
   'core.data_exports',
   'core.workspace_deletion_requests',
 ];
@@ -1355,6 +1367,43 @@ const DELETION_OWNER_FUNCTIONS = [
 ];
 const DELETION_WORKER_FUNCTIONS = ['list_due_workspace_deletions', 'execute_workspace_deletion'];
 
+/**
+ * Quản trị gói/mã giảm giá (0060): hàm DEFINER, search_path cố định, PUBLIC/cf_auth KHÔNG có EXECUTE, cf_app có EXECUTE
+ * (cf_worker kế thừa qua tư cách thành viên nhưng thân hàm đòi người dùng nên đường job bị 42501). Phân quyền theo vai trò
+ * nằm trong thân hàm (kiểm bằng admin-billing.int.test.ts).
+ */
+async function checkBillingAdminFunctions(
+  db: Queryable,
+  violations: RlsViolation[],
+): Promise<void> {
+  const names = BILLING_ADMIN_FUNCTIONS.map((f) => `('${f}')`).join(', ');
+  const found = await db.query(`/* billing-admin-functions */
+    SELECT 'core.' || v.f AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN p.proconfig IS NULL OR NOT EXISTS (SELECT 1 FROM unnest(p.proconfig) s WHERE s LIKE 'search_path=%') THEN 'thiếu search_path cố định'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        ELSE '${APP_ROLE} thiếu quyền EXECUTE'
+      END AS problem
+    FROM (VALUES ${names}) AS v(f)
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = v.f
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR p.proconfig IS NULL
+      OR NOT EXISTS (SELECT 1 FROM unnest(p.proconfig) s WHERE s LIKE 'search_path=%')
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm quản trị gói/mã: ${String(row.problem)}`,
+    });
+  }
+}
+
 async function checkWorkspaceDeletion(db: Queryable, violations: RlsViolation[]): Promise<void> {
   const table = await db.query(`/* deletion-table */
     SELECT 'core.workspace_deletion_requests' AS name,
@@ -1525,6 +1574,10 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
         message:
           'không có cột workspace_id và không thuộc nhóm bảng đã khai báo trong check-rls.ts (hệ thống / xác thực)',
       });
+    } else if (ADMIN_ONLY_TABLES.includes(name)) {
+      if (row.rls !== true) {
+        violations.push({ subject: name, message: 'chưa bật RLS (bảng Admin-only)' });
+      }
     } else if (klass !== 'system') {
       rlsTables.set(name, klass);
       if (row.rls !== true) {
@@ -1588,6 +1641,18 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
       violations.push({
         subject: name,
         message: `bảng hệ thống chỉ cho ${APP_ROLE} quyền SELECT (đang có quyền ghi)`,
+      });
+    }
+    if (
+      ADMIN_ONLY_TABLES.includes(name) &&
+      (row.can_select === true ||
+        row.can_insert === true ||
+        row.can_update === true ||
+        row.can_delete === true)
+    ) {
+      violations.push({
+        subject: name,
+        message: `${APP_ROLE} không được có quyền nào trên bảng Admin-only (chỉ qua hàm DEFINER)`,
       });
     }
     if (
@@ -1683,6 +1748,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkInvoiceTablesAndFunctions(db, violations);
   await checkInvoiceOwnerFunction(db, violations);
   await checkPlanTablesAndFunctions(db, violations);
+  await checkBillingAdminFunctions(db, violations);
   await checkWorkspaceDeletion(db, violations);
   await checkLeaveFunction(db, violations);
   await checkActionLogsOnBehalfCheck(db, violations);

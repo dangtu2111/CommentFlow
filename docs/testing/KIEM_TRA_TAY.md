@@ -31,6 +31,7 @@
 | KT-ABJ | Job phát hiện lạm dụng (chỉ logic + test, chưa đăng ký job/DB; không cần khóa/dịch vụ ngoài) | feat-abuse-job | chưa | chưa | — |
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
+| KT-ADP | Quản trị gói cước & mã giảm giá (chỉ logic + DB + test, chưa có giao diện/checkout; không cần khóa/dịch vụ ngoài) | feat-admin-plans-coupons | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
 | KT-AIH | Sức khỏe tích hợp & dead letter (chỉ logic + DB + test, chưa có giao diện; không cần khóa/dịch vụ ngoài) | feat-integration-health | chưa | chưa | — |
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
@@ -550,6 +551,12 @@ Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy te
 | # | Bước / Step | Kết quả mong đợi / Expected |
 |---|---|---|
 | 1 | `pnpm --filter @flow/ai exec vitest run src/delay` | Mọi test xanh (gồm property-based: câu đã hủy không bao giờ được giao; không giao trước `runAt`; mỗi câu giao đúng một lần). / All green. |
+
+## KT-ADP — Quản trị gói cước & mã giảm giá (ADMIN-REST phần dữ liệu, FR-104)
+
+Chỉ phần máy (chưa có giao diện, chưa nối thanh toán; không cần khóa/dịch vụ ngoài): người thử chạy test.
+1. `pnpm --filter @flow/shared exec vitest run src/coupon.test.ts` → xanh. Mong đợi: chỉ Super Admin sửa, Super + Finance xem; mã được chuẩn hóa; hạn dùng/trần lượt/gói áp dụng/số tiền giảm đúng ở các biên.
+2. `pnpm test:db` (cần `.env` + máy phụ bật), file `admin-billing.int.test.ts` và `check-rls.int.test.ts` → xanh. Mong đợi: web/worker không đọc trực tiếp bảng mã; Finance/Support/Owner không sửa được gói/mã; Owner áp mã đúng; 5 workspace tranh mã tối đa 2 lượt chỉ thành công đúng 2; Staff và workspace khác bị từ chối; lượt dùng không lộ chéo workspace.
 
 ## KT-AH — Tự ẩn bình luận chứa SĐT/link (AUTO-HIDE, FR-081, feat-auto-hide)
 

@@ -4,6 +4,7 @@ import {
   check,
   date,
   foreignKey,
+  index,
   integer,
   primaryKey,
   text,
@@ -120,5 +121,74 @@ export const subscriptions = core.table(
       sql`${t.status} in ('trialing', 'active', 'past_due', 'canceled')`,
     ),
     check('subscriptions_period_check', sql`${t.periodEnd} > ${t.periodStart}`),
+  ],
+);
+
+/**
+ * Mã giảm giá (FR-104, ADMIN-REST, migration 0060, Q-ADP1): dữ liệu HỆ THỐNG do Super Admin quản. RLS bật, `cf_app` KHÔNG
+ * có quyền nào (mã không được liệt kê cho web); đọc/ghi chỉ qua hàm DEFINER `core.admin_*` (Super Admin; Finance chỉ xem)
+ * và `core.apply_coupon` (Owner của workspace). `redemption_count` tăng nguyên tử cùng dòng `coupon_redemptions`.
+ */
+export const coupons = core.table(
+  'coupons',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    code: text('code').notNull(),
+    product: text('product').notNull(),
+    discountType: text('discount_type').notNull(),
+    discountValue: integer('discount_value').notNull(),
+    appliesPlanCodes: text('applies_plan_codes').array(),
+    validFrom: timestamptz('valid_from').notNull(),
+    validUntil: timestamptz('valid_until'),
+    maxRedemptions: integer('max_redemptions'),
+    perWorkspaceLimit: integer('per_workspace_limit').notNull().default(1),
+    redemptionCount: integer('redemption_count').notNull().default(0),
+    active: boolean('active').notNull().default(true),
+    note: text('note').notNull().default(''),
+    createdBy: uuid('created_by'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    unique('coupons_code_unique').on(t.code),
+    check('coupons_code_check', sql`${t.code} ~ '^[A-Z0-9][A-Z0-9_-]{2,31}$'`),
+    check('coupons_product_check', sql`${t.product} in ('commentflow', 'excelflow')`),
+    check('coupons_type_check', sql`${t.discountType} in ('percent', 'fixed_vnd')`),
+    check(
+      'coupons_value_check',
+      sql`${t.discountValue} between 1 and 1000000000 and (${t.discountType} <> 'percent' or ${t.discountValue} <= 100)`,
+    ),
+    check('coupons_window_check', sql`${t.validUntil} is null or ${t.validUntil} > ${t.validFrom}`),
+    check(
+      'coupons_limits_check',
+      sql`(${t.maxRedemptions} is null or ${t.maxRedemptions} between 1 and 1000000) and ${t.perWorkspaceLimit} between 1 and 100 and ${t.redemptionCount} >= 0`,
+    ),
+    check('coupons_note_check', sql`length(${t.note}) <= 200`),
+  ],
+);
+
+/**
+ * Lần dùng mã (migration 0060): RLS theo workspace, thành viên được ĐỌC; KHÔNG ghi trực tiếp (chỉ `core.apply_coupon`).
+ * `discount_vnd`/`plan_code` là ảnh chụp lúc áp dụng. Chưa nối thanh toán thật (gap `COUPON-CHECKOUT-WIRE`).
+ */
+export const couponRedemptions = core.table(
+  'coupon_redemptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    couponId: uuid('coupon_id')
+      .notNull()
+      .references(() => coupons.id, { onDelete: 'restrict' }),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    product: text('product').notNull(),
+    planCode: text('plan_code').notNull(),
+    discountVnd: integer('discount_vnd').notNull(),
+    redeemedAt: timestamptz('redeemed_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('coupon_redemptions_coupon_idx').on(t.couponId, t.workspaceId),
+    index('coupon_redemptions_workspace_idx').on(t.workspaceId, t.redeemedAt),
+    check('coupon_redemptions_discount_check', sql`${t.discountVnd} >= 0`),
   ],
 );

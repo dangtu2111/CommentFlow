@@ -1,0 +1,1 @@
+| `packages/shared/src/coupon.ts` | Gói/mã giảm giá (ADMIN-REST, FR-104, Q-ADP1): thuần — `canManagePlansCoupons` (Super), `canViewCoupons` (Super+Finance), `normalizeCouponCode`, `parseCouponInput`, `parsePlanUpdate`, `evaluateCoupon` (hạn dùng, trần lượt, gói áp dụng, số tiền giảm; khớp hàm DB `core.apply_coupon`) |
