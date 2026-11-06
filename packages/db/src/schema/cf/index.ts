@@ -1,5 +1,6 @@
 export * from './abbreviations';
 export * from './ai-usage';
+export * from './automation';
 export * from './channels';
 export * from './comment-hides';
 export * from './comment-replies';

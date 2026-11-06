@@ -277,6 +277,11 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.post_notes', 'post_id', 'UPDATE'],
   ['cf_app', 'cf.post_auto_overrides', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_auto_overrides', 'post_id', 'UPDATE'],
+  // AUTO-CONFIG-STORE (0047): workspace của cài đặt không đổi; ô ma trận không có UPDATE (xóa + chèn lại)
+  ['cf_app', 'cf.automation_settings', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.automation_rules', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.automation_rules', 'channel_id', 'UPDATE'],
+  ['cf_app', 'cf.automation_rules', 'mode', 'UPDATE'],
   // DRAFTS (0046): nội dung soạn + ảnh chụp giá (R5) bất biến sau INSERT; chỉ cột xử lý được sửa
   ['cf_app', 'cf.drafts', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.drafts', 'target_type', 'UPDATE'],
@@ -636,6 +641,15 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.post_auto_overrides', 'w', 'is_workspace_owner'],
   ['cf.post_auto_overrides', 'w', 'is_system_context'],
   ['cf.post_auto_overrides', 'r', 'is_workspace_member'],
+  // AUTO-CONFIG-STORE (0047): Owner hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  ['cf.automation_settings', 'a', 'is_workspace_owner'],
+  ['cf.automation_settings', 'a', 'is_system_context'],
+  ['cf.automation_settings', 'w', 'is_workspace_owner'],
+  ['cf.automation_settings', 'w', 'is_system_context'],
+  ['cf.automation_settings', 'r', 'is_workspace_member'],
+  ['cf.automation_rules', 'a', 'is_workspace_owner'],
+  ['cf.automation_rules', 'a', 'is_system_context'],
+  ['cf.automation_rules', 'r', 'is_workspace_member'],
   // DRAFTS (0046): INSERT chỉ hệ thống; UPDATE thành viên hoặc hệ thống; đọc: thành viên hoặc không người dùng
   ['cf.drafts', 'a', 'is_system_context'],
   ['cf.drafts', 'w', 'is_workspace_member'],
@@ -700,6 +714,15 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.post_auto_overrides', 'w', 'is_workspace_member'],
   ['cf.post_auto_overrides', 'a', 'IS NULL'],
   ['cf.post_auto_overrides', 'w', 'IS NULL'],
+  // cấu hình tự gửi: Staff không ghi; withWorkspace trần (không người dùng) không được ghi
+  ['cf.automation_settings', 'a', 'is_workspace_member'],
+  ['cf.automation_settings', 'w', 'is_workspace_member'],
+  ['cf.automation_settings', 'a', 'IS NULL'],
+  ['cf.automation_settings', 'w', 'IS NULL'],
+  ['cf.automation_rules', 'a', 'is_workspace_member'],
+  ['cf.automation_rules', 'w', 'is_workspace_member'],
+  ['cf.automation_rules', 'a', 'IS NULL'],
+  ['cf.automation_rules', 'w', 'IS NULL'],
   ['cf.product_variants', 'a', 'IS NULL'],
   ['cf.product_variants', 'w', 'IS NULL'],
   // bản nháp AI: INSERT chỉ hệ thống (không nhánh thành viên/Owner/"không người dùng"); withWorkspace trần không sửa được
