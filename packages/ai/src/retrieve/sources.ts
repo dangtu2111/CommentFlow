@@ -1,5 +1,6 @@
 import { unsafeMarkMasked } from '@flow/shared';
 import type { DraftSource } from '../draft/draft-prompt';
+import { scanInjection } from '../injection/injection-scan';
 import type { RouteVariant } from '../route/sql-lookup';
 
 /**
@@ -70,6 +71,8 @@ export type KbSourceOptions = {
   productIds: readonly string[];
   minRelevance?: number;
   maxTokens?: number;
+  /** Miền của shop: link tới đó không bị coi là link lạ khi quét cài lệnh (FR-164). */
+  allowedDomains?: readonly string[];
 };
 
 type Candidate = { source: DraftSource; tokens: number; productTier: boolean };
@@ -81,14 +84,20 @@ type Candidate = { source: DraftSource; tokens: number; productTier: boolean };
 export function kbHitsToSources(
   hits: readonly KbHit[],
   options: KbSourceOptions,
-): { sources: DraftSource[]; truncated: boolean } {
+): { sources: DraftSource[]; truncated: boolean; quarantined: string[] } {
   const minRelevance = options.minRelevance ?? DEFAULT_MIN_RELEVANCE_RETRIEVE;
   const maxTokens = options.maxTokens ?? DEFAULT_MAX_SOURCE_TOKENS;
   const candidates: Candidate[] = [];
+  const quarantined: string[] = [];
   for (const hit of hits) {
     const relevance = rrfRelevance(hit.score);
     if (relevance < minRelevance) continue;
     const text = hit.contextHeader ? `${hit.contextHeader}\n${hit.content}` : hit.content;
+    // Lớp phòng thủ thứ hai (FR-164): đoạn nghi cài lệnh không vào prompt dù DB chưa đánh dấu.
+    if (scanInjection(text, { allowedDomains: options.allowedDomains }).suspected) {
+      quarantined.push(hit.id);
+      continue;
+    }
     candidates.push({
       source: { id: `kb:${hit.id}`, kind: 'kb', text: unsafeMarkMasked(text), relevance },
       tokens: estimateTokens(text),
@@ -111,5 +120,5 @@ export function kbHitsToSources(
     used += candidate.tokens;
     sources.push(candidate.source);
   }
-  return { sources, truncated };
+  return { sources, truncated, quarantined };
 }

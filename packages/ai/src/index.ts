@@ -145,6 +145,16 @@ export {
   type GuardViolation,
 } from './guard-money';
 export {
+  annotateInjection,
+  describeInjectionReasons,
+  INJECTION_REASONS,
+  type InjectionAnnotated,
+  type InjectionReason,
+  type InjectionScanOptions,
+  type InjectionScanResult,
+  scanInjection,
+} from './injection/injection-scan';
+export {
   buildChunkRows,
   type ChunkRow,
   contentHash,

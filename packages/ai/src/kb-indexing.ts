@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { AppError, type ChunkDraft, indexText } from '@flow/shared';
+import { annotateInjection } from './injection/injection-scan';
 
 /** Số chiều vector của `kb_chunks.embedding` (`halfvec(1024)`, FR-139). */
 export const EMBEDDING_DIMENSIONS = 1024;
@@ -23,7 +24,13 @@ export type ExistingChunk = {
 };
 
 export type HashedDraft = ChunkDraft & { contentHash: string };
-export type ChunkRow = HashedDraft & { embedding: number[]; embeddingModel: string };
+export type ChunkRow = HashedDraft & {
+  embedding: number[];
+  embeddingModel: string;
+  /** Kết quả quét cài lệnh (FR-164): true → không xuất bản tự động, vào hàng chờ duyệt. */
+  injectionSuspected: boolean;
+  injectionReason: string | null;
+};
 
 export type IndexingPlan = {
   toEmbed: HashedDraft[];
@@ -131,6 +138,8 @@ export async function buildChunkRows(input: {
   existing: ExistingChunk[];
   embedder: Embedder;
   batchSize?: number;
+  /** Miền của shop: link tới đó không bị coi là link lạ khi quét cài lệnh (FR-164). */
+  allowedDomains?: readonly string[];
 }): Promise<{
   rows: ChunkRow[];
   unchanged: ChunkDraft[];
@@ -147,7 +156,9 @@ export async function buildChunkRows(input: {
     plan.toEmbed.map((chunk) => indexText(chunk)),
     input.batchSize,
   );
-  const rows = plan.toEmbed.map((chunk, i) => ({
+  // Quét cài lệnh chỉ cho đoạn mới/đổi; đoạn không đổi giữ cờ (kể cả đã được chủ shop duyệt) trong DB.
+  const annotated = annotateInjection(plan.toEmbed, { allowedDomains: input.allowedDomains });
+  const rows = annotated.map((chunk, i) => ({
     ...chunk,
     embedding: vectors[i] as number[],
     embeddingModel: input.embedder.model,
