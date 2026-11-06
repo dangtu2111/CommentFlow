@@ -191,3 +191,5 @@ Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, kh�
 
 ## 2q. `AUTO-CONFIG-STORE` (FR-070/071) — không cần tài nguyên ngoài
 Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_rules`, migration 0047). Chỉ cần **chủ dự án duyệt và chạy migration 0047 lên staging/production qua CI có duyệt** (agent không chạy lệnh ghi lên các DB đó). Không cần khóa hay dịch vụ ngoài.
+## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
+Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
