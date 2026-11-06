@@ -202,6 +202,19 @@ export {
   reciprocalRankFusion,
 } from './search';
 export {
+  decideSize,
+  parseSizeChartRow,
+  SIZE_CATEGORY_MAX,
+  SIZE_LABEL_MAX,
+  SIZE_MEASURES_MAX_KEYS,
+  SIZE_NOTE_MAX,
+  type SizeChartRange,
+  type SizeChartRowInput,
+  type SizeDecision,
+  type SizeHandoffReason,
+  type SizeMeasurements,
+} from './size-chart';
+export {
   type ConsumeInput,
   canConsume,
   parseConsumeInput,
