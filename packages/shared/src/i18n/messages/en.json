@@ -16,6 +16,19 @@
       "title": "Interface language",
       "body": "Applies to your whole interface on this device."
     },
+    "usage": {
+      "title": "AI turns this month",
+      "body": "Each comment or message the AI processes counts as one turn. The count resets at the start of each month.",
+      "summary": "Used {used}/{capacity} turns · {remaining} left",
+      "warning": {
+        "title": "AI turns running low",
+        "body": "You have used {percent}% of this month's turns. Consider buying more turns or upgrading before they run out."
+      },
+      "blocked": {
+        "title": "Out of AI turns",
+        "body": "The AI has stopped processing new comments until the next period. Buy more turns or upgrade to resume."
+      }
+    },
     "replyLanguage": {
       "title": "AI reply language",
       "body": "Choose the language the AI uses when drafting replies for each channel. \"Match customer\" replies in the customer's language.",
