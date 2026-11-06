@@ -23,8 +23,3 @@ matchCondition = "AND"
 regexTarget = "line"
 paths = ['''(^|/)packages/ai/src/confidence/confidence\.test\.ts$''']
 regexes = ['''sRetrievalTop2''']
-
-[[allowlists]]
-description = "Token mời GIẢ 'inv_annhien_…' (dummyToken) trong HTML mẫu Stitch của email mời, nằm ở nhánh chore/stitch-fetch-html (gitleaks quét mọi nhánh) — dữ liệu minh họa, không phải bí mật; chỉ áp cho đúng file thiết kế"
-paths = ['''(^|/)design/stitch/email-invite\.html$''']
-regexes = ['''inv_annhien_[0-9a-f]+''']

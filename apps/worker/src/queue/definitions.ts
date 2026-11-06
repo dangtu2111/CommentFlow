@@ -3,9 +3,15 @@ export const QUEUE_SCHEMA = 'pgboss';
 
 export const SYSTEM_PING_QUEUE = 'system.ping';
 
-import { KB_PUBLISH_QUEUE } from '@flow/shared';
+import { DATA_EXPORT_QUEUE, KB_PUBLISH_QUEUE } from '@flow/shared';
 
-export { HIDE_QUEUE, INGEST_QUEUE, KB_PUBLISH_QUEUE, SEND_QUEUE } from '@flow/shared';
+export {
+  DATA_EXPORT_QUEUE,
+  HIDE_QUEUE,
+  INGEST_QUEUE,
+  KB_PUBLISH_QUEUE,
+  SEND_QUEUE,
+} from '@flow/shared';
 
 export type QueueDefinition = { name: string; retryLimit?: number; retryBackoff?: boolean };
 
@@ -38,4 +44,6 @@ export const QUEUES: QueueDefinition[] = [
   { name: KB_PUBLISH_QUEUE, retryLimit: 2, retryBackoff: true },
   // FR-115: abuse — chấm tín hiệu lạm dụng theo workspace (docs/09 §11.2).
   { name: ABUSE_QUEUE, retryLimit: ABUSE_RETRY_LIMIT, retryBackoff: true },
+  // FR-094: data-export — xuất dữ liệu workspace; lỗi nghiệp vụ không ném (→ failed), chỉ lỗi bất ngờ mới thử lại; chạy lại → skipped.
+  { name: DATA_EXPORT_QUEUE, retryLimit: 1, retryBackoff: true },
 ];

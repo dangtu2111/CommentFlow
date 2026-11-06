@@ -115,7 +115,7 @@ export function promisesImmediateReply(text: string): boolean {
   return IMMEDIATE_PROMISE.test(foldText(text));
 }
 
-type InvitationLang = 'vi' | 'en';
+export type InvitationLang = 'vi' | 'en';
 type InvitationVariant = 'inHours' | 'outHours';
 export type InvitationSource = 'shop' | 'default' | 'default_promise_blocked';
 export type Invitation = {
@@ -146,7 +146,8 @@ const WEEKDAY: Record<InvitationLang, readonly string[]> = {
   en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 };
 
-function openingPhrase(lang: InvitationLang, opening: NextOpening): string {
+/** Cụm giờ mở cửa kế tiếp ("08:00 ngày mai" / "08:00 on Monday"); dùng chung với tin ngoài giờ FR-074. */
+export function openingPhrase(lang: InvitationLang, opening: NextOpening): string {
   if (opening.daysAhead === 0) return `${opening.time} ${lang === 'vi' ? 'hôm nay' : 'today'}`;
   if (opening.daysAhead === 1) return `${opening.time} ${lang === 'vi' ? 'ngày mai' : 'tomorrow'}`;
   const weekday = WEEKDAY[lang][opening.day];

@@ -18,6 +18,7 @@
     "test:coverage": "pnpm -r --if-present run test:coverage",
     "test:trace": "node scripts/check-test-trace.mjs",
     "check:plans": "node scripts/check-plans.mjs",
+    "check:gitleaks-allowlist": "node scripts/check-gitleaks-allowlist.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "codemap:build": "node scripts/build-codemap.mjs",
     "codemap:check": "node scripts/build-codemap.mjs --check",

@@ -1,0 +1,115 @@
+/* FormField — nhãn, ô nhập, gợi ý, lỗi. Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.field-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.field-aux {
+  font-size: var(--text-sm);
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--field-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-md);
+  transition:
+    border-color var(--motion),
+    box-shadow var(--motion);
+}
+
+.input-icon ~ .input {
+  padding-left: calc(var(--space-3) * 3);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.input:hover {
+  border-color: var(--color-text-muted);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.input-toggle {
+  position: absolute;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.input-wrap .input.has-toggle {
+  padding-right: 44px;
+}
+
+.field-hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+
+.field-error svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.fieldset-plain {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

@@ -362,6 +362,18 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.usage_counters', 'warned_80_at', 'UPDATE'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'INSERT'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'UPDATE'],
+  // DATA-EXPORT (0056): Owner chỉ INSERT workspace_id/requested_by; mọi cột trạng thái do hệ thống (policy UPDATE) ghi
+  ['cf_app', 'core.data_exports', 'status', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'file_key', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'size_bytes', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'row_counts', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'error_code', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'ready_at', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'expires_at', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'id', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'requested_by', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'created_at', 'UPDATE'],
   // RETRIEVAL-LOG (0040): nhật ký chỉ thêm (không cột nào UPDATE được); kb_gaps khóa định danh không đổi
   ['cf_app', 'cf.retrieval_logs', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.retrieval_logs', 'query_masked', 'UPDATE'],
@@ -700,6 +712,15 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.invoices', 'r', 'is_system_context'],
   ['core.payments', 'r', 'is_workspace_owner'],
   ['core.payments', 'r', 'is_system_context'],
+  // DATA-EXPORT (0056): INSERT Owner + đúng người dùng hiện tại; UPDATE chỉ hệ thống; đọc: Owner hoặc hệ thống
+  ['core.data_exports', 'a', 'is_workspace_owner'],
+  ['core.data_exports', 'a', 'current_user_id'],
+  ['core.data_exports', 'w', 'is_system_context'],
+  ['core.data_exports', 'r', 'is_workspace_owner'],
+  ['core.data_exports', 'r', 'is_system_context'],
+  // WORKSPACE-DELETE (0055): chỉ ĐỌC với cf_app (ghi qua hàm DEFINER); đọc: Owner hoặc hệ thống
+  ['core.workspace_deletion_requests', 'r', 'is_workspace_owner'],
+  ['core.workspace_deletion_requests', 'r', 'is_system_context'],
   // POSTS-LINK-PRODUCT (0049): INSERT/UPDATE thành viên (đề xuất: + hệ thống); DELETE thành viên hoặc hệ thống
   ['cf.post_products', 'a', 'is_workspace_member'],
   ['cf.post_products', 'a', 'is_system_context'],
@@ -896,6 +917,8 @@ const NO_DELETE_TABLES = [
   'core.invoices',
   'core.payments',
   'core.subscriptions',
+  'core.data_exports',
+  'core.workspace_deletion_requests',
 ];
 
 async function checkNoDelete(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -963,7 +986,7 @@ async function checkWorkerDirectPrivileges(
          LATERAL aclexplode(t.attacl) a, w
     WHERE t.attacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
     UNION ALL
-    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox, core.consume_usage, hàm hóa đơn, hàm gói cước, hàm dọn dữ liệu)'
+    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox, core.consume_usage, hàm hóa đơn, hàm gói cước, hàm dọn dữ liệu, hàm xóa workspace của worker)'
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
@@ -974,7 +997,9 @@ async function checkWorkerDirectPrivileges(
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('start_trial', 'activate_plan', 'grant_usage_addon')
                AND a.privilege_type = 'EXECUTE')
-      AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage')
+      AND NOT (n.nspname = 'core' AND p.proname IN ('list_due_workspace_deletions', 'execute_workspace_deletion')
+               AND a.privilege_type = 'EXECUTE')
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage', 'fail_stale_data_exports', 'expire_data_exports')
                AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({
@@ -1241,6 +1266,105 @@ async function checkPlanTablesAndFunctions(
 }
 
 /**
+ * Xóa workspace (0055, WORKSPACE-DELETE, FR-094): `core.workspace_deletion_requests` RLS bật, `cf_app` KHÔNG có quyền ghi
+ * (INSERT/UPDATE/DELETE/TRUNCATE) và KHÔNG có khóa ngoại tới `core.workspaces` (dòng phải sống sót sau khi xóa làm nhật ký
+ * tối thiểu). Ba hàm của Owner (request/confirm/cancel): SECURITY DEFINER, cf_app CÓ EXECUTE, PUBLIC/cf_auth KHÔNG (cf_worker kế thừa cf_app nên có gián tiếp, vô hại vì hàm đòi người dùng),
+ * thân hàm đòi người dùng từ current_user_id(), workspace khớp tham số, không phải đường hệ thống và is_workspace_owner().
+ * Hai hàm của worker (list_due/execute): SECURITY DEFINER, chỉ cf_worker có EXECUTE, thân hàm đòi session_user = cf_worker
+ * (execute còn đòi job hệ thống không người dùng + workspace khớp tham số). Logic kiểm bằng workspace-deletion.int.test.ts.
+ */
+const DELETION_OWNER_FUNCTIONS = [
+  'request_workspace_deletion',
+  'confirm_workspace_deletion',
+  'cancel_workspace_deletion',
+];
+const DELETION_WORKER_FUNCTIONS = ['list_due_workspace_deletions', 'execute_workspace_deletion'];
+
+async function checkWorkspaceDeletion(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const table = await db.query(`/* deletion-table */
+    SELECT 'core.workspace_deletion_requests' AS name,
+      CASE WHEN NOT c.relrowsecurity THEN 'RLS chưa bật'
+           WHEN EXISTS (SELECT 1 FROM pg_constraint k WHERE k.conrelid = c.oid AND k.contype = 'f')
+             THEN 'không được có khóa ngoại (dòng phải còn sau khi xóa workspace)'
+           ELSE '${APP_ROLE} không được có quyền ghi (INSERT/UPDATE/DELETE/TRUNCATE)' END AS problem
+    FROM pg_class c
+    WHERE c.oid = 'core.workspace_deletion_requests'::regclass
+      AND (NOT c.relrowsecurity
+        OR EXISTS (SELECT 1 FROM pg_constraint k WHERE k.conrelid = c.oid AND k.contype = 'f')
+        OR has_any_column_privilege('${APP_ROLE}', c.oid, 'INSERT')
+        OR has_any_column_privilege('${APP_ROLE}', c.oid, 'UPDATE')
+        OR has_table_privilege('${APP_ROLE}', c.oid, 'DELETE')
+        OR has_table_privilege('${APP_ROLE}', c.oid, 'TRUNCATE'))`);
+  for (const row of table.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `xóa workspace: ${String(row.problem)}`,
+    });
+  }
+
+  const ownerNames = DELETION_OWNER_FUNCTIONS.map((f) => `('${f}')`).join(', ');
+  const owner = await db.query(`/* deletion-owner-functions */
+    SELECT 'core.' || v.f AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        ELSE 'thân hàm phải đòi người dùng, workspace khớp tham số, không phải đường hệ thống và is_workspace_owner()'
+      END AS problem
+    FROM (VALUES ${ownerNames}) AS v(f)
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = v.f
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%core.current_user_id()%'
+      OR p.prosrc NOT LIKE '%current_workspace_id() IS DISTINCT FROM p_workspace_id%'
+      OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'
+      OR p.prosrc NOT LIKE '%core.is_workspace_owner()%'`);
+  for (const row of owner.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm xóa workspace (Owner): ${String(row.problem)}`,
+    });
+  }
+
+  const workerNames = DELETION_WORKER_FUNCTIONS.map((f) => `('${f}')`).join(', ');
+  const worker = await db.query(`/* deletion-worker-functions */
+    SELECT 'core.' || v.f AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} (web) không được có quyền EXECUTE (chỉ ${WORKER_ROLE})'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE') THEN '${WORKER_ROLE} thiếu quyền EXECUTE'
+        ELSE 'thân hàm phải đòi session_user = ${WORKER_ROLE} (execute: + job hệ thống không người dùng, workspace khớp tham số)'
+      END AS problem
+    FROM (VALUES ${workerNames}) AS v(f)
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = v.f
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%session_user <> ''${WORKER_ROLE}''%'
+      OR (v.f = 'execute_workspace_deletion'
+          AND (p.prosrc NOT LIKE '%is_system_context() IS NOT TRUE%'
+            OR p.prosrc NOT LIKE '%current_user_id() IS NOT NULL%'
+            OR p.prosrc NOT LIKE '%current_workspace_id() IS DISTINCT FROM p_workspace_id%'))`);
+  for (const row of worker.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm xóa workspace (worker): ${String(row.problem)}`,
+    });
+  }
+}
+
+/**
  * Hàm tự rời workspace (0028): phải tồn tại, PUBLIC không EXECUTE, cf_app có EXECUTE, đúng MỘT tham số (không nhận
  * user id), người rời lấy từ current_user_id(), có khóa tư vấn theo workspace và chặn Owner cuối (members_last_owner).
  * Giới hạn: phần "thân hàm" chỉ kiểm bằng chuỗi con của prosrc (bắt xóa/đổi tên hạng mục, không chứng minh logic đúng —
@@ -1483,6 +1607,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkUsageFunction(db, violations);
   await checkInvoiceTablesAndFunctions(db, violations);
   await checkPlanTablesAndFunctions(db, violations);
+  await checkWorkspaceDeletion(db, violations);
   await checkLeaveFunction(db, violations);
   await checkActionLogsOnBehalfCheck(db, violations);
 

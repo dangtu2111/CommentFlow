@@ -35,8 +35,10 @@
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
+| KT-ASL | Admin tạm khóa gửi (chỉ logic + test, chưa có bảng/giao diện; không cần khóa/dịch vụ ngoài) | feat-admin-send-lock | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
+| KT-DEXP | Xuất dữ liệu workspace (FR-094) | — | có | chưa | — |
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
 | KT-DIM | Mạo danh → chuyển người, gợi ý Ẩn (lõi, chờ nối) | — | không | chưa | — |
 | KT-DOC | Chốt đơn trong bình luận → lưu khách, trả lời không lặp PII (lõi, chờ nối) | — | không | chưa | — |
@@ -46,11 +48,13 @@
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
+| KT-MSG1 | Tin chào / ngoài giờ / báo chuyển người (logic; Page thử khi nối thật) | — | không | chưa | — |
 | KT-MSW | Messenger (`MESSENGER_CONNECTOR_ENABLED`, **cần Page thử + `pages_messaging`**; sau `MESSENGER-INGEST`) | feat-messenger-webhook | chưa | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
+| KT-PRP | Nhắn riêng từ bình luận (chờ nối DB + giao diện) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
@@ -60,9 +64,11 @@
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 | KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
+| KT-WSD | Xóa workspace nhiều bước (chờ nối giao diện) | — | chưa | chưa | — |
 
 ---
 
@@ -607,6 +613,13 @@ Hàm thuần, chưa nối pipeline/DB → chưa có bước bấm tay; không c�
 | 3 | Đăng nhập Staff, mở menu **AI đã gửi** | Staff cũng thấy menu và trang (không 404) |
 | 4 | Mở `/app/ai-sent?status=abc&page=-3` | Không lỗi; hiện như bộ lọc "Tất cả", trang 1 |
 
+## KT-ASL — Admin tạm khóa gửi (ADMIN-SEND-LOCK, FR-116)
+
+Chỉ phần máy (chưa có bảng lưu khóa, chưa có giao diện): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/send-lock src/gate/send-lock-gate.test.ts src/recheck/send-lock-recheck.test.ts` → xanh. Kết quả mong đợi: chỉ `super` (workspace + kênh) và `support` (chỉ kênh) khóa/mở khóa được, `finance` không; khóa Page áp xuyên workspace; khóa hết hạn/đã mở thì không chặn; khóa không đọc được thì chặn; cổng tự gửi cổng 1 và `sendRecheck` R3 đều trượt khi bị khóa.
+
+---
+
 ## KT-ATB — Ô Thử AI chạy cả pipeline, không trừ lượt (AI-TRY-BOX-UI, FR-059, FR-029, US-034, feat-ai-try-box-ui)
 
 | # | Bước | Kết quả mong đợi |
@@ -647,6 +660,19 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 2. Mở `packages/ai/src/decide/decide-action.ts`, xem hàm `riskReason` và `decideAction`. — Mong đợi: rủi ro (ngôn ngữ khác, khiếu nại, mạo danh, lệch giá, pháp lý, hỏi lại ≥ 3) được xét TRƯỚC mọi thứ; không có chỗ nào đọc trường `action`/`needs_human` do AI tự ghi.
 3. Mở `packages/ai/src/draft/draft-prompt.ts`, xem `SYSTEM_PROMPT`. — Mong đợi: có câu "chỉ viết câu cho đúng hành động đó" và "Không tự tính tổng tiền, giảm giá, phí ship".
 4. Kiểm tay khi nối pipeline: bình luận "giá bao nhiêu, ship về Hà Nội bao nhiêu" với kiến thức chỉ có giá → câu gợi ý nêu giá + mời ib về phí ship, bình luận có tag Cần hỗ trợ thêm, không tự gửi khi `allow_partial` tắt.
+
+## KT-DEXP — Xuất dữ liệu workspace (DATA-EXPORT, FR-094, feat-data-export)
+
+Điều kiện: staging có migration 0056, `queue:install` đã chạy lại, `DATA_EXPORT_ENABLED=true` (web + worker), `DATA_EXPORT_DIR` đặt.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Cờ TẮT: Owner mở Cài đặt → Dữ liệu & Quyền riêng tư, bấm "Yêu cầu xuất dữ liệu" | Thông báo "chưa mở"; không có dòng mới ở `core.data_exports` |
+| 2 | Cờ BẬT: bấm lại | Thông báo "Đã ghi nhận yêu cầu xuất dữ liệu…"; trong vài giây dòng `core.data_exports` chuyển `pending` → `running` → `ready`, có `size_bytes`, `expires_at` = +7 ngày |
+| 3 | Bấm lần nữa khi dòng còn `pending`/`running` | "Đang có một yêu cầu xuất dữ liệu chưa xong" |
+| 4 | Mở tệp `$DATA_EXPORT_DIR/exports/<ws>/<id>.jsonl` trên máy worker | Mỗi dòng là JSON; dòng đầu `meta`, dòng cuối `summary`; KHÔNG thấy SĐT/email/tên khách thật (chỉ `[sđt]`, `[email]`, `kh_…`, `***1234`) |
+| 5 | Đăng nhập Staff, mở trang đó | 404 (không vào được) |
+| 6 | Sửa `expires_at` của dòng `ready` về quá khứ, chờ job retention (≤ 1 giờ) | Dòng thành `expired`, tệp bị xóa |
 
 ## KT-DH — Nhân viên đang giữ chuỗi thì AI không tự gửi (DA-HOLDER, FR-154, feat-da-holder)
 
@@ -912,6 +938,17 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 2 | CI job `database` chạy `tests/leads.int.test.ts` và `pnpm db:check-rls`. | Chỉ hệ thống ghi lead; DB không chứa SĐT/email thô; trùng số không tạo lead mới; Staff đổi giai đoạn/giao người (chỉ cho thành viên đang hoạt động); Staff không xóa; workspace khác không thấy bản mã. |
 | 3 | (Khi có khóa trên staging) đặt `LEADS_CAPTURE_ENABLED=true`, `LEADS_ENC_KEYS`, `LEADS_HASH_KEY` rồi chờ việc nối pipeline. | Chưa áp dụng — việc nối pipeline và giao diện Kanban là việc sau (`LEADS-KANBAN`). |
 
+## KT-MSG1 — Tin chào / ngoài giờ / báo chuyển người (MSG-GREETINGS, feat-msg-greetings)
+
+> Chỉ có phần logic (chưa giao diện, chưa gửi thật); mục đầy đủ trên Page thử làm khi nối `MSG-GREETINGS-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/greetings` | Tất cả test đạt / All tests pass |
+| 2 | Đọc tên test nhóm "luật Meta" | Có ca đúng 24 giờ gửi được, 24 giờ + 1 ms bị chặn; bình luận bị chặn / 24h edge and comment target covered |
+| 3 | Đọc tên test nhóm "chọn mẫu theo ngôn ngữ" | vi, en, ngôn ngữ khác → dự phòng, thiếu mẫu → mặc định / vi, en, fallback, default covered |
+| 4 | (Sau khi nối thật) Nhắn tin vào Page thử ngoài giờ làm việc, rồi nhắn thêm lần hai | Nhận đúng 1 tin ngoài giờ nêu giờ mở cửa; lần hai không có tin lặp / One out-of-hours reply with opening time, no repeat |
+
 ## KT-MSW — Messenger với Page thật (MESSENGER-WEBHOOK, FR-014)
 
 Điều kiện: Page thử có quyền `pages_messaging`, webhook đã đăng ký `messages` + `message_echoes`; worker chạy với `MESSENGER_CONNECTOR_ENABLED=true` trên môi trường thử; có `MESSENGER-INGEST`. **Chưa chạy được ở thời điểm Xong-mock.**
@@ -1059,6 +1096,17 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 | 1 | `pnpm --filter @flow/shared run test src/abbreviation.test.ts` | Xanh; không gọi mạng/DB |
 | 2 | Sau khi migrate `0041`: `SELECT short, full FROM cf.system_abbreviations WHERE lang = 'vi' ORDER BY short;` | Có "ib → inbox", "sz → size", "dc → được", "k → không"… Soát danh sách: từ nào sai/thiếu thì báo để thêm bằng migration mới |
 | 3 | Khi có giao diện (`KB-ABBREV-UI`): Owner thêm "cod" → "thanh toán khi nhận hàng", đăng nhập Staff | Staff thấy mục nhưng không thêm/sửa/xóa được; shop khác không thấy |
+
+## KT-PRP — Nhắn riêng từ bình luận (FR-046, feat-private-reply)
+Điều kiện: CHỜ `PRIVATE-REPLY-WIRE` (nối DB + giao diện) và Page Facebook thử có quyền `pages_messaging`. Hiện chỉ kiểm bằng test tự động: `pnpm --filter @flow/ai test`.
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng tài khoản khác bình luận vào bài của Page thử, nhân viên bấm Nhắn riêng | Người bình luận nhận đúng 1 tin trong Messenger |
+| 2 | Bấm Nhắn riêng lần nữa cho cùng bình luận | Bị chặn, hiện "Đã nhắn riêng cho bình luận này (chỉ được 1 tin)" |
+| 3 | Thử bình luận cũ hơn 7 ngày | Bị chặn, hiện "Đã quá 7 ngày…" |
+| 4 | Xóa bình luận trên Facebook rồi bấm Nhắn riêng | Bị chặn, hiện "Bình luận đã bị xóa" |
+| 5 | Bình luận Instagram/TikTok | Không có nút / bị chặn "chưa hỗ trợ" |
+| 6 | Lặp bước 1–3 ở tiếng Anh | Chuỗi đúng ngôn ngữ |
 
 ## KT-PS — Ảnh chụp giá lúc soạn (PRICE-SNAPSHOT, FR-111, US-045) · Price snapshot
 
@@ -1230,6 +1278,17 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
 
+## KT-UIKIT — Bộ thành phần dùng chung (UI-KIT, feat-ui-kit-foundation)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy dev, mở /dev/ui/kit | Thấy nút, chip, avatar, ô nhập (có gợi ý + lỗi), tab, banner, hộp thoại, bố cục 2 cột; mọi chữ mang nhãn [MẪU] |
+| 2 | Bấm "Mở hộp thoại", nhấn Esc | Hộp thoại mở/đóng |
+| 3 | Mở /login, /app/settings, /app/members (đã đăng nhập), /app/activity | Giao diện giống trước khi tách kit (tab đăng nhập, cột trái Cài đặt, danh sách thành viên) |
+| 4 | Nút "Tiếp tục với Facebook" ở /login | Có viền xám nhạt quanh nút (trước đây viền trong suốt) |
+| 5 | Thu cửa sổ còn 390px ở /app/settings | Cột trái thành dải cuộn ngang, không cuộn ngang cả trang |
+| 6 | Chạy production build, mở /dev/ui/kit | 404 |
+
 ## KT-UIS2 — Cài đặt khớp thiết kế (UI-FIDELITY-SETTINGS-V2, feat-ui-settings-v2)
 
 | # | Bước / Step | Kết quả mong đợi / Expected |
@@ -1275,6 +1334,19 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Mở "Thông báo" | Danh sách loại sự kiện, mỗi mục "Sắp có" |
 | 6 | Đăng nhập Staff | Cột trái chỉ có Thông báo + Tài khoản & Bảo mật; mở thẳng /app/settings/billing hoặc /privacy → 404 |
 | 7 | Chuyển English | Mọi chữ ở 3 trang đổi sang tiếng Anh, không còn khóa thô |
+
+## KT-WSD — Xóa workspace nhiều bước (WORKSPACE-DELETE, feat-workspace-delete) — chỉ làm được khi đã nối giao diện
+
+> Hiện chưa có giao diện (nút ở "Dữ liệu & Quyền riêng tư" vẫn "Sắp có"); các bước dưới dành cho lúc đã nối. Kiểm tự động đã phủ phần dữ liệu: `pnpm test:db` (workspace-deletion.int.test.ts).
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner ở workspace THỬ bấm "Xóa workspace" (bước 1) | Hiện ô gõ lại mã workspace; chưa xóa gì |
+| 2 | Gõ sai mã rồi gửi | Báo mã chưa đúng; yêu cầu vẫn chờ xác nhận |
+| 3 | Gõ đúng mã rồi gửi (bước 2) | Báo "sẽ xóa sau 7 ngày", có nút Hủy; workspace vẫn dùng bình thường |
+| 4 | Staff mở cùng trang | Không thấy khối xóa; gọi trực tiếp bị từ chối |
+| 5 | Một Owner khác bấm Hủy | Yêu cầu bị hủy, có thể yêu cầu lại |
+| 6 | (Staging, cờ bật) lùi hạn xóa bằng tay trên DB thử rồi chờ worker | Workspace thử biến mất cùng dữ liệu; dòng nhật ký tối thiểu còn lại |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 

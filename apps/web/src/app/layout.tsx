@@ -5,6 +5,7 @@ import '@fontsource/be-vietnam-pro/700.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import '../components/ui/ui.css';
 import '../styles/globals.css';
 import '../styles/frames.css';
 import '../styles/kb-posts.css';
