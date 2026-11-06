@@ -65,10 +65,12 @@
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
+| KT-SC | Semantic cache đầy đủ (qua interface, mock) | — | không | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIHA | Tự động hóa + Quy tắc spam khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHS | Khung Cài đặt khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
@@ -1237,6 +1239,14 @@ Hàm thuần + cổng (embedder là bản mock), chưa có giao diện/đường
 | 3 | Bình luận "giá sao shop" dưới bài gắn sản phẩm | Nguồn chỉ là biến thể từ `product_variants` (giá/tồn đúng kho), không có đoạn kiến thức |
 | 4 | Bình luận "đổi trả thế nào" | Nguồn là đoạn FAQ/chính sách liên quan nhất, tổng ≤ ~3.000 token |
 
+## KT-SC — Semantic cache đầy đủ (SEMANTIC-CACHE, FR-026) · Semantic cache
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cache/semantic-lookup.test.ts`. | Test xanh: khóa có workspace/bài/kb_version; dưới ngưỡng → miss; câu có giá/dữ liệu sản phẩm không được ghi; khác số/ngôn ngữ → miss; cờ tắt → không gọi embed. |
+
 ## KT-SET — Trang Cài đặt (SETTINGS-PAGE, feat-settings-page)
 
 Điều kiện: đã đăng nhập, có workspace. Làm bằng cả Owner và Staff.
@@ -1341,6 +1351,15 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIHA — Tự động hóa + Quy tắc spam khớp HTML Stitch (UI-HTML-AUTOMATION, feat-ui-html-automation)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner mở `/app/automation` | Hai bảng Bình luận/Tin nhắn (kênh × Hỏi giá/Tư vấn/Mua hàng), ô chọn dạng viên đổi màu theo mức |
+| 2 | Đổi vài ô, chỉnh ngưỡng/giờ/từ khóa, bấm Lưu | Banner "Đã lưu"; tải lại thấy đúng giá trị (logic không đổi) |
+| 3 | Mở `/app/spam-rules`, điền quy tắc, Enter trong ô tên | Chỉ Xem trước, không lưu; bấm Lưu quy tắc mới lưu |
+| 4 | Thu cửa sổ 390px cả hai trang | Không cuộn ngang cả trang; bảng ma trận cuộn ngang trong khung |
 
 ## KT-UIHC — Hộp thư Bình luận khớp HTML Stitch (UI-HTML-COMMENTS, feat-ui-html-comments)
 

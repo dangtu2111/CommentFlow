@@ -127,6 +127,22 @@ export type ExactCacheStoreResult =
 
 const PERSONAL_KINDS: ReadonlySet<GuardClaimKind> = new Set(['phone', 'email']);
 
+export type UncacheableReason = 'not_cacheable' | 'unverifiable_price' | 'personal_data';
+
+/** Luật chung cho cache khớp chính xác và semantic cache: câu nào KHÔNG được ghi (null = được ghi). */
+export function findUncacheableReason(
+  answer: CachedAnswer,
+  productRevs: Readonly<Record<string, number>>,
+): UncacheableReason | null {
+  if (!answer.cacheable) return 'not_cacheable';
+  const claims = [answer.reply, ...answer.variants].flatMap(extractClaims);
+  if (claims.some((claim) => PERSONAL_KINDS.has(claim.kind))) return 'personal_data';
+  if (Object.keys(productRevs).length === 0 && claims.some((claim) => claim.kind === 'money')) {
+    return 'unverifiable_price';
+  }
+  return null;
+}
+
 /**
  * Ghi cache. Hợp đồng với bên gọi:
  *  - `productRevs` = `products.rev` đọc CÙNG LÚC với lần đọc giá để soạn câu (không đọc lại lúc ghi, kẻo gắn giá cũ với rev mới);
@@ -140,14 +156,8 @@ export async function storeExactCache(
   productRevs: Readonly<Record<string, number>>,
 ): Promise<ExactCacheStoreResult> {
   if (!deps.enabled) return { stored: false, reason: 'disabled' };
-  if (!answer.cacheable) return { stored: false, reason: 'not_cacheable' };
-  const claims = [answer.reply, ...answer.variants].flatMap(extractClaims);
-  if (claims.some((claim) => PERSONAL_KINDS.has(claim.kind))) {
-    return { stored: false, reason: 'personal_data' };
-  }
-  if (Object.keys(productRevs).length === 0 && claims.some((claim) => claim.kind === 'money')) {
-    return { stored: false, reason: 'unverifiable_price' };
-  }
+  const rejected = findUncacheableReason(answer, productRevs);
+  if (rejected) return { stored: false, reason: rejected };
   const key = buildExactCacheKey(input);
   await deps.store.set(
     key,

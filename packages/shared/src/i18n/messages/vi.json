@@ -906,7 +906,8 @@
       "body": "Mỗi ô là một mức riêng cho bình luận và tin nhắn của từng kênh.",
       "label": "Nhãn",
       "empty": "Chưa có kênh nào. Hãy kết nối kênh ở trang Kênh trước.",
-      "complaintNote": "Bình luận Khiếu nại và Spam không bao giờ được tự gửi; luôn chuyển cho nhân viên."
+      "complaintNote": "Bình luận Khiếu nại và Spam không bao giờ được tự gửi; luôn chuyển cho nhân viên.",
+      "channel": "Kênh liên kết"
     },
     "target": {
       "comment": "Bình luận",
@@ -951,7 +952,8 @@
       "keywords": "Từ khóa chặn",
       "keywordsHint": "Mỗi dòng một từ hoặc cụm từ (tối đa 50, mỗi từ ≤ 60 ký tự). Câu AI có chứa từ này sẽ không được tự gửi.",
       "signature": "Chữ ký công bố",
-      "signatureHint": "Một dòng ngắn (≤ 120 ký tự) cho biết câu trả lời do AI soạn, ví dụ “— Trợ lý AI của shop”. Để trống nếu không dùng."
+      "signatureHint": "Một dòng ngắn (≤ 120 ký tự) cho biết câu trả lời do AI soạn, ví dụ “— Trợ lý AI của shop”. Để trống nếu không dùng.",
+      "body": "Ngưỡng tin cậy, khoảng trễ, giới hạn, giờ hoạt động và các chốt an toàn khác của AI tự gửi."
     },
     "notice": {
       "saved": "Đã lưu cài đặt."
@@ -1072,7 +1074,10 @@
       "invalid_rule": "Quy tắc chưa hợp lệ: kiểm tra tên, mẫu (regex không được lặp lồng nhau) và hành động.",
       "limit_reached": "Đã đủ 50 quy tắc. Hãy xóa bớt quy tắc cũ trước khi thêm quy tắc mới.",
       "unavailable": "Chưa thực hiện được lúc này. Hãy thử lại sau."
-    }
+    },
+    "builderTitle": "Thiết lập quy tắc",
+    "builderBody": "Chọn điều kiện nhận diện spam và hành động khi khớp. Xem trước trước khi lưu.",
+    "conditionTitle": "Điều kiện nhận diện"
   },
   "kbGaps": {
     "pageTitle": "Câu hỏi AI chưa trả lời được",

@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 import { PrivacyView } from '../../../../../components/settings/privacy-view';
-import { SettingsFrame } from '../../../../../components/settings/settings-frame';
 import { parsePrivacyNotice } from '../../../../../lib/data-privacy';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import { loadSettingsCounts } from '../../../../../server/settings-counts';
@@ -24,13 +23,12 @@ export default async function PrivacyPage({ searchParams }: { searchParams: Sear
   });
   return (
     <main className="app-page app-page-settings">
-      <SettingsFrame viewerRole={workspace.role} active="privacy" counts={counts}>
-        <PrivacyView
-          workspaceName={workspace.name}
-          notice={parsePrivacyNotice(notice)}
-          actions={{ exportData: requestExportAction, requestDeletion: requestDeletionAction }}
-        />
-      </SettingsFrame>
+      <PrivacyView
+        frame={{ viewerRole: workspace.role, counts }}
+        workspaceName={workspace.name}
+        notice={parsePrivacyNotice(notice)}
+        actions={{ exportData: requestExportAction, requestDeletion: requestDeletionAction }}
+      />
     </main>
   );
 }

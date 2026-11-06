@@ -10,8 +10,10 @@ export {
   type ExactCacheLookup,
   type ExactCacheStore,
   type ExactCacheStoreResult,
+  findUncacheableReason,
   lookupExactCache,
   storeExactCache,
+  type UncacheableReason,
 } from './exact-cache';
 export {
   buildSemanticCacheControl,
@@ -21,3 +23,17 @@ export {
   type SemanticCacheControl,
   type SemanticCacheInput,
 } from './semantic-cache';
+export {
+  buildSemanticNamespace,
+  cosineSimilarity,
+  createMemorySemanticStore,
+  lookupSemanticCache,
+  type SemanticCacheDeps,
+  type SemanticEntry,
+  type SemanticLookup,
+  type SemanticLookupInput,
+  type SemanticMissReason,
+  type SemanticStore,
+  type SemanticStoreResult,
+  storeSemanticCache,
+} from './semantic-lookup';

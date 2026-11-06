@@ -35,6 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-HTML-COMMENTS | docs/08 §7.1 (comments.html) | UF-3 | UI-FIDELITY-COMMENTS | — | không | ✅ Dựng lại từ HTML Stitch: kit `Workbench`/`Kbd`, 3 cột 224/384/co giãn khớp bbox (`feat-ui-html-comments`, Q-UIHC1) |
+| UI-HTML-AUTOMATION | docs/08 (automation.html, spam-rules.html) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | ✅ Dựng lại từ HTML Stitch: kit `Inset`, bảng kênh × nhãn, spam điều kiện / hành động; không tràn 390px (`feat-ui-html-automation`, Q-UIHA1) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
 | UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (Q-UIKIT1) · PR2 avatar/pill/Stepper (`feat-ui-kit-migrate`, Q-UIKIT2); còn EmptyState/Table/AppShell + trang nhóm 2 |
 | UI-FIDELITY-SETTINGS-PAGES | docs/08 §7 (settings-billing.png) | UF-4 | UI-FIDELITY-SETTINGS-V2 | — | không | ✅ Xong-mock giao diện (`feat-ui-settings-pages`, Q-USP1; còn `PLANS-SCHEMA`, `QR-PAYMENT`) |
@@ -288,7 +289,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | ADMIN-IMPERSONATE | FR-105 ("Xem như khách": lý do, chỉ đọc, ≤ 30 phút, nhật ký; `admin_impersonations`) | US-082 | ADMIN-SHELL | S+DB | không | ⏳ |
 | ML-SERVICE | FR-027 (bộ phân loại tự host), FR-025 (chuẩn hóa/nhận ngôn ngữ ở `ml`) | — | COST-GATE | — | không | ⏳ |
 | PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | 🟡 Xong-mock (`feat-pgvector-hybrid`, Q-PVH1, không migration; chờ CI; embedder thật → `KB-EMBED-LITELLM`) |
-| SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ⏳ |
+| SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ✅ Xong-mock (`feat-semantic-cache`, không migration; chưa nối Redis/pipeline; KT-SC) |
 | LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | ⛔ |
 | SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ⛔ |
 | SRC-SAPO | FR-122 (Sapo) | — | SRC-HARAVAN | S | **có** | ⛔ |

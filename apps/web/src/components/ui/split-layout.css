@@ -1,34 +1,35 @@
 /* SplitLayout — cột con + nội dung (Cài đặt). Chỉ dùng token từ styles/tokens.css.
-   Lưới 2 cột (Stitch xl:grid-cols-12 gap-16): cột con 3/12 + nội dung 9/12. Phần tử ĐẦU của nội dung (đầu trang)
-   chiếm cả hàng 1; cột con trải dài từ hàng 2 xuống hết các thẻ. `.settings-content` là display: contents để các
-   thẻ tham gia chung lưới (view có thể trả Fragment). Khoảng cách dọc dùng margin (không dùng row-gap) để các
-   hàng ngầm rỗng mà cột con trải qua không cộng thêm khoảng trống. */
+   Bố cục thật: đầu trang (header) phía trên, dưới là lưới [cột con | chồng thẻ] (Stitch xl:grid-cols-12 gap-16:
+   cột con 3/12 + nội dung 9/12). MỘT biến --settings-gap (16px, bội số 4px) cho: đầu trang → lưới, cột ↔ cột,
+   thẻ ↔ thẻ. Không margin lẻ trong từng trang; cột con dính (sticky) khi cuộn. */
 .settings-layout {
+  --settings-gap: var(--space-4);
+
+  display: grid;
+  gap: var(--settings-gap);
+  min-width: 0;
+}
+
+.settings-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  column-gap: var(--space-4);
+  gap: var(--settings-gap);
   align-items: start;
+  min-width: 0;
 }
 
 .settings-content {
-  display: contents;
+  display: grid;
+  gap: var(--settings-gap);
+  min-width: 0;
 }
 
 .settings-content > * {
   min-width: 0;
-  margin-top: var(--space-4);
-}
-
-.settings-content > :first-child {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  margin-top: 0;
+  margin: 0;
 }
 
 .settings-subnav {
-  grid-column: 1;
-  grid-row: 2 / span 40;
-  margin-top: var(--space-4);
   display: grid;
   gap: var(--space-1);
   grid-template-columns: minmax(0, 1fr);
@@ -104,12 +105,13 @@
 }
 
 @media (min-width: 900px) {
-  .settings-layout {
+  .settings-body {
     grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
   }
 
-  .settings-content > :not(:first-child) {
-    grid-column: 2;
+  .settings-subnav {
+    position: sticky;
+    top: var(--space-4);
   }
 
   .settings-subnav ul {

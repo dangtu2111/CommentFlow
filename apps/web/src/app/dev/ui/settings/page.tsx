@@ -9,6 +9,7 @@ import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
 import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { Dialog, DialogTrigger } from '../../../../components/ui/dialog';
+import { PageHeader } from '../../../../components/ui/page-header';
 
 const SAMPLE_OPEN = '[MẪU] Xem hộp thoại bật 2FA (bước 2)';
 const SAMPLE_QR = '[MẪU] Ảnh QR sinh ở máy chủ khi bật thật.';
@@ -55,11 +56,8 @@ export default async function DevSettingsPage({
           viewerRole="owner"
           active="security"
           counts={{ channelsConnected: 3, channelsTotal: 3, members: 5 }}
+          header={<PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />}
         >
-          <header className="stack-tight">
-            <h1 className="page-title">{t('settings.title')}</h1>
-            <p className="page-subtitle">{t('settings.subtitle')}</p>
-          </header>
           <p className="inbox-sample-note" role="note">
             {DEV_SAMPLE_NOTE}
           </p>

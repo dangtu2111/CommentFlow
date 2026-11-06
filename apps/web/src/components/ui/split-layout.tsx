@@ -19,34 +19,40 @@ export function SplitLayout({
   navLabel,
   navTitle,
   items,
+  header,
   children,
 }: {
   navLabel: string;
   navTitle: string;
   items: readonly SubNavItem[];
+  /** Đầu trang (PageHeader), trải hết bề ngang phía trên cả cột con lẫn nội dung. */
+  header?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="settings-layout">
-      <nav className="settings-subnav" aria-label={navLabel}>
-        <p className="settings-subnav-title">{navTitle}</p>
-        <ul>
-          {items.map((item) => (
-            <li key={item.key}>
-              <Link
-                href={item.href}
-                className="settings-subnav-link"
-                aria-current={item.current ? 'page' : undefined}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-                {item.count ? <span className="settings-subnav-count">{item.count}</span> : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="settings-content">{children}</div>
+      {header}
+      <div className="settings-body">
+        <nav className="settings-subnav" aria-label={navLabel}>
+          <p className="settings-subnav-title">{navTitle}</p>
+          <ul>
+            {items.map((item) => (
+              <li key={item.key}>
+                <Link
+                  href={item.href}
+                  className="settings-subnav-link"
+                  aria-current={item.current ? 'page' : undefined}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                  {item.count ? <span className="settings-subnav-count">{item.count}</span> : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="settings-content">{children}</div>
+      </div>
     </div>
   );
 }

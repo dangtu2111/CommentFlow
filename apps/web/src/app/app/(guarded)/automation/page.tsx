@@ -1,5 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { AutomationForm } from '../../../../components/automation/automation-form';
+import { Banner } from '../../../../components/ui/banner';
+import { PageHeader } from '../../../../components/ui/page-header';
 import { automationFormDefaults } from '../../../../lib/automation-form';
 import { automationSettings } from '../../../../server/automation-settings';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -52,15 +54,12 @@ export default async function AutomationPage({ searchParams }: { searchParams: S
 
   return (
     <main className="app-page app-page-wide stack">
-      <header className="card auto-header">
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">{t('subtitle')}</p>
+      <header className="auto-header">
+        <PageHeader title={t('title')} subtitle={t('subtitle')} />
       </header>
-      <p role="note" className="banner banner-warning">
-        {t('notWired')}
-      </p>
-      {params.saved === '1' ? <p role="status">{t('notice.saved')}</p> : null}
-      {error ? <p role="alert">{t(`error.${error}`)}</p> : null}
+      <Banner variant="warning">{t('notWired')}</Banner>
+      {params.saved === '1' ? <Banner variant="success">{t('notice.saved')}</Banner> : null}
+      {error ? <Banner variant="danger">{t(`error.${error}`)}</Banner> : null}
       <AutomationForm channels={view.channels} defaults={automationFormDefaults(view.config)} />
     </main>
   );

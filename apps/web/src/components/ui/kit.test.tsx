@@ -4,6 +4,7 @@ import { Avatar } from './avatar';
 import { Button, buttonClass, IconButton } from './button';
 import { Chip } from './chip';
 import { Icon } from './icon';
+import { Inset } from './inset';
 import { Kbd } from './kbd';
 import { PageHeader } from './page-header';
 import { SectionHead } from './section-head';
@@ -23,6 +24,20 @@ const ITEMS = [
   { key: 'login', href: '/login', label: 'Đăng nhập', current: true },
   { key: 'register', href: '/register', label: 'Đăng ký', current: false },
 ];
+
+describe('UI-KIT Inset', () => {
+  it('có tiêu đề + biểu tượng ẩn với trình đọc màn hình; không tiêu đề thì không dựng phần đầu', () => {
+    const withTitle = renderToStaticMarkup(
+      <Inset title="Ngưỡng" icon={<i />} className="x">
+        nội dung
+      </Inset>,
+    );
+    expect(withTitle).toContain('inset x');
+    expect(withTitle).toContain('Ngưỡng');
+    expect(withTitle).toContain('aria-hidden="true"');
+    expect(renderToStaticMarkup(<Inset>chỉ nội dung</Inset>)).not.toContain('inset-head');
+  });
+});
 
 describe('UI-KIT Tabs', () => {
   it('chỉ tab hiện tại có aria-current="page", mỗi tab là liên kết thật', () => {
@@ -134,6 +149,18 @@ describe('UI-KIT Chip, Avatar, Stat, SplitLayout', () => {
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
     expect(html).toContain('settings-subnav-count');
     expect(html).toContain('nội dung');
+  });
+
+  it('SplitLayout đặt header phía trên lưới hai cột (không còn thủ thuật trải hàng)', () => {
+    const html = renderToStaticMarkup(
+      <SplitLayout navLabel="Cài đặt" navTitle="CẤU HÌNH" items={[]} header={<h1>Đầu trang</h1>}>
+        <section>thẻ</section>
+      </SplitLayout>,
+    );
+    expect(html.indexOf('Đầu trang')).toBeLessThan(html.indexOf('settings-body'));
+    expect(html.indexOf('settings-body')).toBeLessThan(html.indexOf('settings-subnav'));
+    expect(html.indexOf('settings-subnav')).toBeLessThan(html.indexOf('settings-content'));
+    expect(html).toContain('thẻ');
   });
 });
 
