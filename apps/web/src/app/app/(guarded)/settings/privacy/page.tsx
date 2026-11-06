@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { PrivacyView } from '../../../../../components/settings/privacy-view';
 import { SettingsFrame } from '../../../../../components/settings/settings-frame';
+import { parsePrivacyNotice } from '../../../../../lib/data-privacy';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import { loadSettingsCounts } from '../../../../../server/settings-counts';
 import { requestDeletionAction, requestExportAction } from './actions';
@@ -12,9 +13,7 @@ export async function generateMetadata() {
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-const NOTICES = ['unavailable', 'mismatch'] as const;
-
-/** Dữ liệu & Quyền riêng tư (FR-094, US-071): CHỈ Owner. Giao diện + interface, chưa xuất/xóa thật. */
+/** Dữ liệu & Quyền riêng tư (FR-094, US-071): CHỈ Owner. Xuất dữ liệu thật sau cờ DATA_EXPORT_ENABLED (tắt = "chưa mở"); xóa workspace chưa mở. */
 export default async function PrivacyPage({ searchParams }: { searchParams: SearchParams }) {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
   const { notice } = await searchParams;
@@ -28,7 +27,7 @@ export default async function PrivacyPage({ searchParams }: { searchParams: Sear
       <SettingsFrame viewerRole={workspace.role} active="privacy" counts={counts}>
         <PrivacyView
           workspaceName={workspace.name}
-          notice={NOTICES.find((n) => n === notice) ?? null}
+          notice={parsePrivacyNotice(notice)}
           actions={{ exportData: requestExportAction, requestDeletion: requestDeletionAction }}
         />
       </SettingsFrame>

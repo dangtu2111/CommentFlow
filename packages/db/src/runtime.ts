@@ -108,6 +108,24 @@ export {
   type CommentLockResult,
   releaseCommentLock,
 } from './queries/comment-lock';
+export {
+  claimDataExport,
+  completeDataExport,
+  type DataExportRow,
+  type DataExportStatus,
+  type ExpiredExport,
+  expireDataExports,
+  failDataExport,
+  failStaleDataExports,
+  listDataExports,
+  type RequestExportResult,
+  readAutomationSettings,
+  readCommentsPage,
+  readKbChunksPage,
+  readLeadsPage,
+  readRulesPage,
+  requestDataExport,
+} from './queries/data-export';
 // DEV-SEED-DEMO: dữ liệu mẫu dev dùng đúng hàm truy vấn có sẵn (không viết SQL riêng cho bản nháp/liên kết bài).
 export { insertDraft, type NewDraft } from './queries/drafts';
 export {

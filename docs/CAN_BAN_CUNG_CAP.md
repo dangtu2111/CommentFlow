@@ -215,6 +215,14 @@ Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/
 ## 2t. `AUTO-HIDE` (FR-081) — chưa cần ngay, cần khi bật Tự ẩn thật
 Hiện chỉ có logic thuần + interface; cờ `AUTO_HIDE_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi Facebook. Để bật thật bạn cần: (1) kênh Facebook đã kết nối thật có quyền ẩn bình luận (`FB-OAUTH`, `feat/fb-connector` với `setHidden`); (2) bật `LEADS_CAPTURE_ENABLED` + khóa `LEADS_ENC_KEYS`/`LEADS_HASH_KEY` (khách được lưu TRƯỚC khi ẩn); (3) sau khi có migration `AUTO-HIDE-DB`, đặt `AUTO_HIDE_ENABLED=true` và bật quy tắc Tự ẩn có `shadow_until` vài ngày để xem số "sẽ ẩn" trước khi ẩn thật.
 
+## Xuất dữ liệu workspace (`DATA-EXPORT`, FR-094)
+
+Code đã xong-mock (kho tệp là thư mục cục bộ). Để bật đường dùng thật bạn cần:
+1. Đặt `DATA_EXPORT_ENABLED=true` cho **cả web và worker** (mặc định TẮT) và `DATA_EXPORT_DIR=<thư mục ghi được, chỉ chủ tiến trình đọc>` cho **worker**. Chạy lại `pnpm --filter @flow/worker queue:install` để tạo hàng đợi `data-export` (staging/production qua CI có duyệt).
+2. Muốn Owner **tải tệp / nhận link qua email** (`DATA-EXPORT-DELIVERY`): object storage (Cloudflare R2 hoặc S3, khóa truy cập chỉ ghi) + SMTP đã có ở mục email. Chưa có thì tệp chỉ nằm trên máy worker.
+3. Quyết định riêng nếu muốn tệp có SĐT/email đầy đủ (hiện che theo Q-EXP1): cần luật sư xác nhận theo luật 91/2025/QH15.
+Kiểm tay: KT-DEXP.
+
 ## 2v. Connector Instagram — `IG-CONNECTOR` (FR-013, Xong-mock)
 
 Code connector Instagram đã nối vào worker nhưng cờ **tắt mặc định**, chưa từng gọi Meta thật (chỉ fixture theo tài liệu Meta). Để bật thật bạn cần cung cấp (dùng tài khoản thử, không dùng tài khoản khách):

@@ -5,6 +5,7 @@ export const PRECHECK_STEPS = [
   { script: 'typecheck' },
   { script: 'check:migrations' },
   { script: 'check:plans' },
+  { script: 'check:gitleaks-allowlist' },
   { script: 'codemap:check' },
   { script: 'quyet:check' },
   { script: 'cbcc:check' },

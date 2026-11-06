@@ -173,11 +173,14 @@
       "subtitle": "Export data, see retention periods and send a workspace deletion request.",
       "notices": {
         "unavailable": "This feature is not open yet. Your request was not recorded and no data was changed.",
-        "mismatch": "The workspace name does not match. Nothing was sent."
+        "mismatch": "The workspace name does not match. Nothing was sent.",
+        "export_queued": "Your data export request was recorded. The file is being prepared and expires after 7 days.",
+        "already_active": "A data export is already in progress. Please wait for it to finish.",
+        "rate_limited": "You have requested too many exports in the last 24 hours. Please try again later."
       },
       "export": {
         "title": "Export workspace data",
-        "body": "Download all workspace data (comments, messages, knowledge, settings). The download link is sent to the Owner’s email.",
+        "body": "Create a file with workspace data (comments, leads, knowledge, settings) with phone numbers, emails and customer names masked; the file expires after 7 days. Sending the download link to the Owner’s email will come later.",
         "button": "Request data export"
       },
       "retention": {

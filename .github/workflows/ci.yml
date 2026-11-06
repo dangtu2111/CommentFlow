@@ -43,6 +43,8 @@ jobs:
         run: pnpm depcruise
       - name: Cổng kế hoạch (plan đã duyệt hết điểm chưa rõ; nhánh feat/*, chore/* có plan)
         run: pnpm check:plans
+      - name: Cấm nới cấu hình quét bí mật (.gitleaks.toml chỉ có allowlist đã duyệt)
+        run: pnpm check:gitleaks-allowlist
       - name: Bản ghép codemap + QUYET_DINH + CAN_BAN_CUNG_CAP + KIEM_TRA_TAY khớp các file nhỏ (docs/codemap.d, docs/plans/quyet-dinh, docs/can-ban-cung-cap.d, docs/testing/kiem-tra-tay.d)
         run: pnpm codemap:check && pnpm quyet:check && pnpm cbcc:check && pnpm kt:check
       - name: Cổng số migration (liên tục, không trùng, khớp journal)
