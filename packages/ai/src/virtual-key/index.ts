@@ -14,7 +14,7 @@ export {
   isVirtualKeysEnabled,
   KEY_ALIAS_PREFIX,
   KEY_BUDGET_DURATION,
-  type KeyBudget,
+  type VirtualKeyBudget,
 } from './config';
 export {
   createVirtualKeyResolver,

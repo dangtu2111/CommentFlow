@@ -29,7 +29,7 @@ export function buildKeyAlias(workspaceId: string): string {
   return `${KEY_ALIAS_PREFIX}${normalizeWorkspaceId(workspaceId)}`;
 }
 
-export type KeyBudget = { maxBudgetUsd: number; budgetDuration: string };
+export type VirtualKeyBudget = { maxBudgetUsd: number; budgetDuration: string };
 
 /** Số đô hợp lệ: hữu hạn và không âm. */
 export function assertValidUsd(value: number, what: string): void {
@@ -42,7 +42,7 @@ export function assertValidUsd(value: number, what: string): void {
 export function computeKeyBudget(input: {
   capUsd: number | null;
   defaultBudgetUsd: number;
-}): KeyBudget {
+}): VirtualKeyBudget {
   assertValidUsd(input.defaultBudgetUsd, 'Ngân sách mặc định');
   if (input.capUsd !== null) assertValidUsd(input.capUsd, 'Trần chi phí AI');
   return {

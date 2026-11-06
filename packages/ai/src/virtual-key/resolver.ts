@@ -5,8 +5,8 @@ import {
   assertValidUsd,
   buildKeyAlias,
   computeKeyBudget,
-  type KeyBudget,
   normalizeWorkspaceId,
+  type VirtualKeyBudget,
 } from './config';
 import type { VirtualKeyStore } from './store';
 
@@ -39,7 +39,7 @@ export function createVirtualKeyResolver(options: VirtualKeyResolverOptions): Vi
 
   async function ensureKey(workspaceId: string): Promise<string> {
     const snapshot = await options.ledger.read(workspaceId, now());
-    const budget: KeyBudget = computeKeyBudget({
+    const budget: VirtualKeyBudget = computeKeyBudget({
       capUsd: snapshot.capUsd,
       defaultBudgetUsd: options.defaultBudgetUsd,
     });
