@@ -114,6 +114,18 @@ export {
   postNoteStatus,
 } from './post-notes';
 export {
+  BULK_MAX_POSTS,
+  BULK_MAX_PRODUCTS,
+  confirmedProductIds,
+  effectivePrimary,
+  type LinkPostProductsInput,
+  POST_PRODUCT_STATUSES,
+  type PostProductLink,
+  type PostProductStatus,
+  parseLinkPostProducts,
+  summarizePostLinks,
+} from './post-products';
+export {
   buildPriceSnapshot,
   type PriceSnapshot,
   type PriceSnapshotEntry,
@@ -130,18 +142,6 @@ export {
   type ProductAliasSource,
   parseProductAlias,
 } from './product-alias';
-export {
-  BULK_MAX_POSTS,
-  BULK_MAX_PRODUCTS,
-  confirmedProductIds,
-  effectivePrimary,
-  type LinkPostProductsInput,
-  POST_PRODUCT_STATUSES,
-  type PostProductLink,
-  type PostProductStatus,
-  parseLinkPostProducts,
-  summarizePostLinks,
-} from './post-products';
 export { parseCsv } from './product-import/csv';
 export {
   assertImportFileBytes,
