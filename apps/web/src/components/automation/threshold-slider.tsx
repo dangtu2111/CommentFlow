@@ -2,8 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
-import { Chip } from '../ui/chip';
 import { RICH_BOLD } from '../ui/rich';
+import { Badge } from '../ui/tw-parts';
 
 /** Sàn của schema (`automationConfigSchema`): không cho kéo thấp hơn để khỏi lưu giá trị bị từ chối. */
 export const THRESHOLD_MIN = 80;
@@ -41,30 +41,36 @@ export function ThresholdSlider({
   const tier = thresholdTier(value);
   const note = t.rich('thresholdNote', { ...RICH_BOLD, value });
   return (
-    <div className="threshold">
-      <div className="threshold-head">
-        <label htmlFor={id} className="inset-title">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor={id} className="font-title-sm text-title-sm text-on-surface">
           {label}
         </label>
-        <Chip tone="solid">{t('badgeText', { tier: t(`badge.${tier}`), value })}</Chip>
+        <Badge tone="primary" className="font-semibold">
+          {t('badgeText', { tier: t(`badge.${tier}`), value })}
+        </Badge>
       </div>
-      <input
-        id={id}
-        name={name}
-        type="range"
-        className="threshold-range"
-        min={THRESHOLD_MIN}
-        max={THRESHOLD_MAX}
-        step={0.5}
-        value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
-      />
-      <div className="threshold-ticks">
-        <span>{t('tickLow', { value: THRESHOLD_MIN })}</span>
-        <span className="is-mid">{t('tickMid', { value: BALANCED_FROM })}</span>
-        <span>{t('tickHigh', { value: THRESHOLD_MAX })}</span>
+      <div className="space-y-1">
+        <input
+          id={id}
+          name={name}
+          type="range"
+          className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-surface-container-highest accent-primary-container"
+          min={THRESHOLD_MIN}
+          max={THRESHOLD_MAX}
+          step={0.5}
+          value={value}
+          onChange={(e) => setValue(Number(e.target.value))}
+        />
+        <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+          <span>{t('tickLow', { value: THRESHOLD_MIN })}</span>
+          <span className="font-semibold text-primary">
+            {t('tickMid', { value: BALANCED_FROM })}
+          </span>
+          <span>{t('tickHigh', { value: THRESHOLD_MAX })}</span>
+        </div>
       </div>
-      <p className="muted">{note}</p>
+      <p className="font-body-sm text-body-sm text-on-surface-variant">{note}</p>
     </div>
   );
 }

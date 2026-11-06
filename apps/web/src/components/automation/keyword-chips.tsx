@@ -1,9 +1,9 @@
 'use client';
 
-import { Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
-import { Chip } from '../ui/chip';
+import { Icon } from '../ui/icon';
+import { FIELD_CLASS } from '../ui/tw-form';
 
 const MAX_KEYWORDS = 50;
 const MAX_LENGTH = 60;
@@ -23,8 +23,9 @@ export function addKeywords(current: readonly string[], typed: string): string[]
 }
 
 /**
- * Ô "Từ khóa chặn": chip có nút bỏ + ô nhập + nút "Thêm từ khóa". Giá trị gửi qua ô ẩn `name` (mỗi dòng một từ),
- * đúng định dạng `blockedKeywords` mà `parseAutomationForm` đã đọc. Enter trong ô nhập chỉ thêm từ, không gửi form.
+ * Ô "Từ khóa chặn": chip có nút bỏ + ô nhập + nút "Thêm từ khóa" (Stitch automation.html). Giá trị gửi qua ô ẩn
+ * `name` (mỗi dòng một từ), đúng định dạng `blockedKeywords` mà `parseAutomationForm` đã đọc. Enter trong ô nhập chỉ
+ * thêm từ, không gửi form.
  */
 export function KeywordChips({ name, initial }: { name: string; initial: readonly string[] }) {
   const t = useTranslations('automation.guard');
@@ -38,15 +39,15 @@ export function KeywordChips({ name, initial }: { name: string; initial: readonl
   };
 
   return (
-    <div className="keyword-chips">
+    <div className="space-y-2">
       <input type="hidden" name={name} value={words.join('\n')} />
-      <div className="keyword-chips-add">
-        <label htmlFor={inputId} className="visually-hidden">
+      <div className="flex items-center gap-2">
+        <label htmlFor={inputId} className="sr-only">
           {t('keywords')}
         </label>
         <input
           id={inputId}
-          className="input"
+          className={FIELD_CLASS}
           value={typed}
           placeholder={t('keywordsPlaceholder')}
           maxLength={MAX_LENGTH}
@@ -57,28 +58,32 @@ export function KeywordChips({ name, initial }: { name: string; initial: readonl
             commit();
           }}
         />
-        <button type="button" className="link-button" onClick={commit}>
-          <Plus size={14} aria-hidden="true" />
+        <button
+          type="button"
+          className="flex shrink-0 items-center gap-0.5 font-label-sm text-label-sm font-semibold text-primary hover:text-on-primary-fixed-variant"
+          onClick={commit}
+        >
+          <Icon name="add" size={14} />
           {t('keywordsAdd')}
         </button>
       </div>
       {words.length === 0 ? (
-        <p className="muted">{t('keywordsEmpty')}</p>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">{t('keywordsEmpty')}</p>
       ) : (
-        <ul className="keyword-chips-list">
+        <ul className="flex flex-wrap gap-1.5 pt-1">
           {words.map((word) => (
             <li key={word}>
-              <Chip tone="danger" className="keyword-chip">
+              <span className="inline-flex items-center gap-1 rounded-full bg-error-container px-2.5 py-1 font-label-sm text-label-sm text-on-error-container">
                 {word}
                 <button
                   type="button"
-                  className="keyword-chip-remove"
+                  className="hover:opacity-75"
                   aria-label={t('keywordsRemove', { word })}
                   onClick={() => setWords((current) => current.filter((w) => w !== word))}
                 >
-                  <X size={12} aria-hidden="true" />
+                  <Icon name="close" size={12} />
                 </button>
-              </Chip>
+              </span>
             </li>
           ))}
         </ul>

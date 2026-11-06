@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { AutomationView } from '../../../../components/automation/automation-view';
-import { Banner } from '../../../../components/ui/banner';
+import { Notice } from '../../../../components/ui/tw-form';
+import { TwPage } from '../../../../components/ui/tw-parts';
 import { automationFormDefaults } from '../../../../lib/automation-form';
 import { AUTOMATION_SAMPLE_METRICS } from '../../../../lib/automation-sample';
 import { showSampleData } from '../../../../lib/sample-data';
@@ -46,29 +47,30 @@ export default async function AutomationPage({ searchParams }: { searchParams: S
   }
   if (!view) {
     return (
-      <main className="app-page" role="alert">
-        <h1 className="auth-title">{t('loadError.title')}</h1>
-        <p className="muted">{t('loadError.body')}</p>
-      </main>
+      <TwPage>
+        <Notice tone="danger">
+          <strong>{t('loadError.title')}</strong> {t('loadError.body')}
+        </Notice>
+      </TwPage>
     );
   }
 
   const sample = showSampleData();
   return (
-    <main className="app-page app-page-wide stack">
+    <TwPage>
       <AutomationView
         channels={view.channels}
         defaults={automationFormDefaults(view.config)}
         metrics={sample ? AUTOMATION_SAMPLE_METRICS : null}
         notices={
           <>
-            <Banner variant="warning">{t('notWired')}</Banner>
-            {sample ? <Banner variant="info">{t('sampleBanner')}</Banner> : null}
-            {params.saved === '1' ? <Banner variant="success">{t('notice.saved')}</Banner> : null}
-            {error ? <Banner variant="danger">{t(`error.${error}`)}</Banner> : null}
+            <Notice tone="warning">{t('notWired')}</Notice>
+            {sample ? <Notice tone="info">{t('sampleBanner')}</Notice> : null}
+            {params.saved === '1' ? <Notice tone="success">{t('notice.saved')}</Notice> : null}
+            {error ? <Notice tone="danger">{t(`error.${error}`)}</Notice> : null}
           </>
         }
       />
-    </main>
+    </TwPage>
   );
 }
