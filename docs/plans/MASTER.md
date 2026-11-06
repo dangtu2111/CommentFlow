@@ -64,6 +64,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/member-leave`, migration 0028) |
 | LOG-STAFF-SYSTEM-ROWS | FR-092 | — | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/log-on-behalf-of`, migration 0029) |
 | WORKER-DB-ROLE | ADR 007 §2 (token Page), ADR 011 | — | LOG-STAFF-SYSTEM-ROWS | S+DB | verifier-security + verifier-db | 🟡 (`feat/worker-db-role`, migration 0030; chờ duyệt + KT-015) |
+| ACTION-LOGS-ACTOR-INDEX | 05 FR-092, 10 §3.1 | — | LOG-STAFF-SYSTEM-ROWS | DB | verifier-db | 🟡 (`feat-action-logs-actor-index`, migration 0032; chờ verifier-db + KT-016) |
 | SEND-SWEEP + HIDE-SWEEP | ADR 008, ADR 009 §3 (quét yêu cầu gửi/ẩn kẹt `queued`/`sending` hết thuê; điều kiện trước connector thật) | — | FB-REPLY, FB-HIDE, WORKER-DB-ROLE | S+DB | verifier-security + verifier-db | 🟡 Xong-mock (`feat-send-hide-sweep`, migration 0031; chờ CI + KT-016) |
 | CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ✅ |
 | AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ✅ (feat-auth-change-pw-ui) |

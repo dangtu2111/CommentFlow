@@ -362,7 +362,7 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 
 ---
 
-## KT-019 — Đổi mật khẩu (AUTH-CHANGE-PW-UI, feat-auth-change-pw-ui)
+## KT-020 — Đổi mật khẩu (AUTH-CHANGE-PW-UI, feat-auth-change-pw-ui)
 
 Điều kiện: đăng nhập một tài khoản thử; mở `/app/security` ở **hai trình duyệt** (A và B, cùng tài khoản). Có thể đặt `PWNED_CHECK=on` để thử bước 4 (cần mạng).
 
@@ -379,6 +379,21 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 | 9 | Đổi sang **English** + ~390px, mở lại thẻ. | Chữ tiếng Anh đúng, ô nhập không tràn. |
 
 Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (không dán mật khẩu).
+
+---
+
+## KT-019 — Chỉ mục Nhật ký của Staff (ACTION-LOGS-ACTOR-INDEX, migration 0032)
+
+Điều kiện: nhánh `feat-action-logs-actor-index`; máy ảo `cf` bật; đã có `.env`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (cf_dev). | Áp migration 0032, không lỗi; chạy lại lần hai cũng không lỗi. |
+| 2 | Trên máy ảo, `psql` vào `cf_dev`: `\d core.action_logs`. | Thấy hai chỉ mục `action_logs_ws_actor_created_idx` và `action_logs_ws_on_behalf_created_idx` (có `WHERE`). |
+| 3 | `pnpm db:check-rls`. | 0 vi phạm. |
+| 4 | Đăng nhập Staff, mở **Nhật ký**. | Vẫn chỉ thấy dòng của mình + dòng hệ thống do mình yêu cầu (hành vi không đổi). |
+
+Nếu hỏng: ghi số bước và nội dung hiện trên màn hình.
 
 ---
 
