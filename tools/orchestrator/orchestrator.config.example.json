@@ -21,6 +21,8 @@
     "maxMinutes": 120
   },
   "log": { "format": "text" },
+  "janitor": { "lane": "c", "intervalMinutes": 10, "minAgeMinutes": 30, "trackTtlMinutes": 15 },
+  "heartbeat": { "intervalMinutes": 5, "silentMinutes": 15 },
   "lanes": {
     "a": {
       "dir": "../ten-repo-lane-a",

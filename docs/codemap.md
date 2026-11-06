@@ -75,6 +75,7 @@ Cập nhật lần cuối: 2026-11-06 · nhánh `feat-auto-send-gate` · Gói n�
 | `packages/shared/` | `AppError`, `parseEnv`, `brand.ts` (`loadBrandConfig`/`defaultMailFrom`: `APP_NAME`/`APP_LOGO_URL`/`APP_DOMAIN`/`APP_EMAIL_FROM`, FR-125; web: `server/brand.ts` `getBrand()` + `components/brand-logo.tsx`; thư: `renderEmail(..., {brandName})`; không còn khóa i18n `brand`), `maskPii`/`MaskedText`, locale + chuỗi vi/en (gói lá) |
 | `scripts/`, `tools/boundaries/` | Script vận hành (`cf-dev*`, `stack-check`, `e2e`) và test luật depcruise |
 | `services/ml/` | FastAPI chỉ `/health` (chưa nạp model) |
+| `tools/orchestrator/src/{janitor,heartbeat,markers}.mjs`, `tests/janitor.test.mjs` | Janitor (`orchestrator janitor [--once]`): `selectOrphanPrs`, `runJanitorOnce`/`runJanitorLoop` land PR mồ côi; `startHeartbeat`/`findSilentLanes` (nhịp 5′, im > 15′ → `IM LẶNG`); khóa merge `.orchestrator/merge-freeze` (`decidePr({frozen})`); `isSafeToMerge` kiểm CI lại trước merge; quy trình `docs/workflows/orchestrator.md` |
 | `tools/orchestrator/` (`bin/orchestrator.mjs`, `src/*.mjs`, `templates/*.md`, `orchestrator.config.example.json`, `tests/`) | Bộ điều phối làn (ADR 012, không import gói nội bộ, chỉ stdlib): `parseStep` (task/fix/wait), `classifyChecks`/`waitForChecks` (chờ CI thật), `decidePr` (merge/sửa/kẹt), `extractRootCause`/`sameCause`, `assertSafeGit`, `runLane` (deps giả lập được); prompt khung HEAD/conflict/ci-fix/migration + checklist làn; quy trình `docs/workflows/orchestrator.md`; test `pnpm --filter @flow/orchestrator test` |
 
 ## Bản đồ theo miền
