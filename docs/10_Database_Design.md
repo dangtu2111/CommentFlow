@@ -129,7 +129,7 @@ erDiagram
 
 | Bảng | Cột chính |
 |---|---|
-| `rules` | workspace_id, name, type (`keyword`/`regex`/`phone`/`link`/`emoji_only`/`tag_only`), pattern, action (`mark`/`auto_hide`/`skip`), enabled, shadow_until |
+| `rules` (thực tế 0050, Q-SRS1) | id (PK), workspace_id, name (1–80), type (`keyword`/`regex`/`phone`/`link`/`emoji_only`/`tag_only`), pattern (≤ 200; bắt buộc không rỗng với `keyword`/`regex`, rỗng với các loại còn lại), action (hiện CHECK chỉ `mark`/`skip`; `auto_hide` thêm bằng migration riêng ở AUTO-HIDE), enabled (mặc định true), shadow_until, created_by (FK users, set null; Owner = chính người ghi, hệ thống = null), created_at, updated_at. Nội dung bất biến (GRANT UPDATE chỉ `enabled`/`shadow_until`/`updated_at`); trần 50 quy tắc/workspace do truy vấn tạo giữ. RLS: đọc thành viên/không người dùng; ghi Owner hoặc hệ thống |
 | `rule_matches` | workspace_id, rule_id, comment_id, action_taken, reverted |
 | `leads` | workspace_id, channel_id, source_type, source_id, name, phone_enc, phone_last4, note, stage (`new`/`contacted`/`won`/`lost`), assigned_to |
 

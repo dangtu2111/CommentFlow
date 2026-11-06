@@ -832,7 +832,8 @@
     "saved": "Đã lưu quy tắc.",
     "error": {
       "invalid_rule": "Quy tắc chưa hợp lệ: kiểm tra tên, mẫu (regex không được lặp lồng nhau) và hành động.",
-      "unavailable": "Chưa thực hiện được lúc này (lưu quy tắc chưa khả dụng). Hãy thử lại sau."
+      "limit_reached": "Đã đủ 50 quy tắc. Hãy xóa bớt quy tắc cũ trước khi thêm quy tắc mới.",
+      "unavailable": "Chưa thực hiện được lúc này. Hãy thử lại sau."
     }
   },
   "kbGaps": {

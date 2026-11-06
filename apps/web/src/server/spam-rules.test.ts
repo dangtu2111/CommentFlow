@@ -46,13 +46,29 @@ describe('FR-080 createSpamRulesService.save', () => {
 
   it('FR-080 có kho lưu → gọi create trong withActor và trả ok', async () => {
     const db = makeDb();
-    const store: SpamRuleStore = { create: vi.fn(async () => undefined) };
+    const store: SpamRuleStore = { create: vi.fn(async () => 'rule-1') };
     const svc = createSpamRulesService({
       db: db as never,
       ops: { listRecentCommentTexts: vi.fn() } as never,
       store,
     });
     await expect(svc.save(ctx, rule)).resolves.toBe('ok');
-    expect(store.create).toHaveBeenCalledWith(expect.anything(), 'w1', rule);
+    expect(db.withActor).toHaveBeenCalledWith('w1', 'u1', expect.any(Function));
+    expect(store.create).toHaveBeenCalledWith(expect.anything(), 'w1', 'u1', rule);
+  });
+
+  it('FR-080 kho báo lỗi (vd. quá 50 quy tắc) → save ném lỗi lên, không nuốt', async () => {
+    const db = makeDb();
+    const store: SpamRuleStore = {
+      create: vi.fn(async () => {
+        throw new Error('limit');
+      }),
+    };
+    const svc = createSpamRulesService({
+      db: db as never,
+      ops: { listRecentCommentTexts: vi.fn() } as never,
+      store,
+    });
+    await expect(svc.save(ctx, rule)).rejects.toThrow('limit');
   });
 });
