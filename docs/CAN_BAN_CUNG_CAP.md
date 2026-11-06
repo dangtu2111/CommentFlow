@@ -78,14 +78,14 @@ Code đã xong-mock (connector giả/fixture). Để bật đường thật trê
 2. Đặt `POLLING_ENABLED=true` cho **worker** (cần `META_APP_ID`, `META_APP_SECRET`, `TOKEN_ENC_KEYS`). Mặc định TẮT.
 3. Chờ `POLLING-CHANNEL-LIST` (migration của làn b: hàm liệt kê kênh xuyên workspace) — chưa có thì worker chỉ báo lỗi cấu hình và không quét.
 4. Kiểm trên Page thật giả định: `updated_time` của bài tăng khi có bình luận mới (nếu không, đổi cách chọn bài — QP1).
-Không cần khóa mới nào ngoài mục 1. Kiểm tay: KT-021.
+Không cần khóa mới nào ngoài mục 1. Kiểm tay: KT-PBF.
 
 ## 2c. Bật connector Facebook ở worker — `FB-CONNECTOR-REGISTER` (Xong-mock)
 
 Code đã nối `createFacebookConnector` vào worker nhưng cờ **tắt mặc định**. Bạn cần cung cấp (chỉ khi muốn thử với Page thật; dùng Page thử, không dùng Page khách):
 - Một Page thử đã kết nối qua `FB-OAUTH` (mục 1) — token Page nằm mã hóa trong DB.
 - Trên **máy chạy worker** đặt biến: `FB_CONNECTOR_ENABLED=true`, `META_APP_ID`, `META_APP_SECRET` (cùng Meta App ở mục 1), `TOKEN_ENC_KEYS` (cùng khóa với web). Không commit giá trị; chỉ tên biến có trong `env.example`.
-- Điều kiện trước khi bật ở môi trường thật: `SEND-SWEEP`/`HIDE-SWEEP` đã merge (tránh yêu cầu kẹt `sending`). Kiểm tay: KT-016/KT-012.
+- Điều kiện trước khi bật ở môi trường thật: `SEND-SWEEP`/`HIDE-SWEEP` đã merge (tránh yêu cầu kẹt `sending`). Kiểm tay: KT-FCR/KT-012.
 
 ## 2b. Tên sản phẩm, logo, tên miền, email gửi — `CFG-APPNAME` (FR-125, mã KT-018)
 
@@ -188,10 +188,12 @@ Câu mẫu của shop chỉ là mã thuần + kho trong bộ nhớ, không khóa
 
 ## 2r. `DA-HANDOFF-RULES` (FR-143) — không cần tài nguyên ngoài
 Quy tắc chuyển người cho ảnh/video/sticker kèm chữ là mã thuần, không khóa/LLM/dịch vụ ngoài, không biến môi trường mới. Đọc nội dung ảnh thật (`ATTACH-VISION`, GĐ5, cờ `cf.vision`) cần model đọc ảnh — làm sau. Bạn không phải làm gì.
+
 ## 2p. `AUTO-MATRIX-UI` (FR-070/071) — không cần tài nguyên ngoài
 Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, không cần khóa hay dịch vụ ngoài. Cấu hình chưa áp dụng cho việc tự gửi thật (chờ nối pipeline). Bạn **không** phải làm gì.
 
 ## 2q. `AUTO-CONFIG-STORE` (FR-070/071) — không cần tài nguyên ngoài
 Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_rules`, migration 0047). Chỉ cần **chủ dự án duyệt và chạy migration 0047 lên staging/production qua CI có duyệt** (agent không chạy lệnh ghi lên các DB đó). Không cần khóa hay dịch vụ ngoài.
+
 ## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
 Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
