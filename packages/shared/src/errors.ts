@@ -6,6 +6,8 @@ const HTTP_STATUS = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  /** Hạn mức chi phí AI của tháng đã hết (cổng chi phí, FR-071). */
+  COST_CAP_REACHED: 402,
   LLM_UNAVAILABLE: 503,
   INTERNAL: 500,
 } as const;

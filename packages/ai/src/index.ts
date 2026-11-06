@@ -4,6 +4,7 @@ export * from './automation';
 export * from './cache';
 export * from './classify';
 export * from './confidence';
+export * from './cost-gate';
 export * from './decide';
 export * from './draft';
 export * from './embedding';

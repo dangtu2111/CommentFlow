@@ -29,6 +29,7 @@
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
+| KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
@@ -554,6 +555,17 @@ Hàm thuần, chưa nối pipeline/DB → chưa có bước bấm tay; không c�
 | 2 | Bình luận chỉ có nhãn dán (sticker), không chữ | Dòng có `text=''`, `attachments` chứa `{"type":"sticker"}` |
 | 3 | Bình luận chữ thuần | `attachments = []` |
 | 4 | Xóa bình luận có ảnh trên Facebook | `attachments` về `[]` (xóa trắng như FR-048) |
+
+## KT-CG — Cổng chi phí AI (COST-GATE, FR-071, feat-cost-gate)
+
+> Chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Not wired to UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cost-gate` | Mọi test xanh (gồm property-based: cho gọi ⇒ tổng ≤ trần; chi tiêu tăng không bao giờ mở lại cổng). / All green. |
+| 2 | Xem test "sẽ vượt trần → KHÔNG gọi LLM" trong `gated-llm-client.test.ts` | Client thật không được gọi; lỗi `COST_CAP_REACHED`. / Inner client never called. |
+| 3 | Xem test "gọi song song cùng workspace" | 5 lần gọi cùng lúc, trần $0,05, ước tính $0,02 → đúng 2 lần được gọi. / Exactly 2 allowed. |
+| 4 | Trên DB dev có quyền: `pnpm --filter @flow/ai test:db` (chạy `tests/cost-ledger.int.test.ts`) | Tổng chi tính từ 00:00 UTC ngày 1, bỏ tháng trước, không lẫn workspace. / Month-to-date sum per workspace. |
 
 ## KT-DA — Thang xử lý khi AI không chắc (PIPE-DECIDE-ACTION, FR-147/141)
 
