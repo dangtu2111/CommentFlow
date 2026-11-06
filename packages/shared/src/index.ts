@@ -12,6 +12,26 @@ export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } fro
 export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
 export * from './conversation-window';
 export {
+  COUPON_CODE_PATTERN,
+  COUPON_DISCOUNT_TYPES,
+  COUPON_MAX_VND,
+  type CouponContext,
+  type CouponDiscountType,
+  type CouponEvaluation,
+  type CouponInput,
+  type CouponRejection,
+  type CouponRule,
+  type CouponUpdateInput,
+  canManagePlansCoupons,
+  canViewCoupons,
+  evaluateCoupon,
+  normalizeCouponCode,
+  type PlanUpdateInput,
+  parseCouponInput,
+  parseCouponUpdate,
+  parsePlanUpdate,
+} from './coupon';
+export {
   type AutomationSettingsExportSource,
   type CommentExportSource,
   DATA_EXPORT_DAILY_LIMIT,
