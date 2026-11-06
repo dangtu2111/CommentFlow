@@ -205,7 +205,7 @@ describe('FR-163 property-based', () => {
       }),
       { numRuns: 25 },
     );
-  });
+  }, 30_000); // CPU nặng; đo coverage trên CI chậm hơn mức 5 giây mặc định
 });
 
 describe('FR-163 đường hiệu chuẩn', () => {
