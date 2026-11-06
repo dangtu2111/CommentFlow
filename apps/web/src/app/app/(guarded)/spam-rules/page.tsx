@@ -12,9 +12,15 @@ export default async function SpamRulesPage() {
   await requireAppUser({ role: 'owner' });
   const t = await getTranslations('spamRules');
   return (
-    <main className="app-page">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle')}</p>
+    <main className="app-page app-page-wide spam-page">
+      <header className="spam-header">
+        <h1 className="auth-title">{t('title')}</h1>
+        <p className="auth-subtitle">{t('subtitle')}</p>
+      </header>
+      <aside className="spam-principle" role="note">
+        <strong>{t('principle.title')}</strong>
+        <p>{t('principle.body')}</p>
+      </aside>
       <SpamRuleBuilder />
     </main>
   );

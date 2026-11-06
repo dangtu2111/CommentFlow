@@ -1032,6 +1032,7 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 1 | `pnpm --filter @flow/web dev` (cổng riêng), mở `/dev/ui/kb-posts` (bản dev). | Thẻ bài + tab nền tảng + phân trang số + panel cấu hình; mọi nội dung có nhãn [MẪU]; bản production trả 404. |
 | 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
 | 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |
+| 4 | Mở `/dev/ui/automation`, `/dev/ui/spam-rules`, `/dev/ui/leads` (bản dev). | Ô chế độ có màu Tự động/Chạy thử/Tắt; mọi nội dung mẫu có nhãn [MẪU]; production trả 404. Đăng nhập Owner mở `/app/automation`, `/app/spam-rules`: bố cục thẻ, Lưu vẫn hoạt động. |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 
