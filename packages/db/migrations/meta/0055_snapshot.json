@@ -1,5 +1,5 @@
 {
-  "id": "fc35556f-dcb0-4d45-b2d0-11051f18ab40",
+  "id": "b99e78b2-14f6-476a-b1af-f6e43d1e12b8",
   "prevId": "c0f4fbf8-c51d-418b-8580-5be002be05f8",
   "version": "7",
   "dialect": "postgresql",
@@ -831,183 +831,6 @@
         "usage_counters_amounts_check": {
           "name": "usage_counters_amounts_check",
           "value": "\"core\".\"usage_counters\".\"used\" >= 0 and \"core\".\"usage_counters\".\"limit_amount\" >= 0 and \"core\".\"usage_counters\".\"addon\" >= 0"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "core.data_exports": {
-      "name": "data_exports",
-      "schema": "core",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "requested_by": {
-          "name": "requested_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "file_key": {
-          "name": "file_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "size_bytes": {
-          "name": "size_bytes",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "row_counts": {
-          "name": "row_counts",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "error_code": {
-          "name": "error_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "ready_at": {
-          "name": "ready_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "data_exports_active_unique": {
-          "name": "data_exports_active_unique",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"core\".\"data_exports\".\"status\" in ('pending', 'running')",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "data_exports_workspace_created_idx": {
-          "name": "data_exports_workspace_created_idx",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "data_exports_expiry_idx": {
-          "name": "data_exports_expiry_idx",
-          "columns": [
-            {
-              "expression": "expires_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"core\".\"data_exports\".\"status\" = 'ready'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "data_exports_workspace_id_workspaces_id_fk": {
-          "name": "data_exports_workspace_id_workspaces_id_fk",
-          "tableFrom": "data_exports",
-          "tableTo": "workspaces",
-          "schemaTo": "core",
-          "columnsFrom": ["workspace_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "data_exports_requested_by_users_id_fk": {
-          "name": "data_exports_requested_by_users_id_fk",
-          "tableFrom": "data_exports",
-          "tableTo": "users",
-          "schemaTo": "core",
-          "columnsFrom": ["requested_by"],
-          "columnsTo": ["id"],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "data_exports_status_check": {
-          "name": "data_exports_status_check",
-          "value": "\"core\".\"data_exports\".\"status\" in ('pending', 'running', 'ready', 'failed', 'expired')"
-        },
-        "data_exports_ready_check": {
-          "name": "data_exports_ready_check",
-          "value": "(\"core\".\"data_exports\".\"status\" in ('ready', 'expired')) = (\"core\".\"data_exports\".\"ready_at\" is not null)"
-        },
-        "data_exports_size_check": {
-          "name": "data_exports_size_check",
-          "value": "\"core\".\"data_exports\".\"size_bytes\" is null or \"core\".\"data_exports\".\"size_bytes\" >= 0"
         }
       },
       "isRLSEnabled": false
@@ -2088,6 +1911,136 @@
         "workspaces_status_check": {
           "name": "workspaces_status_check",
           "value": "\"core\".\"workspaces\".\"status\" in ('trial', 'active', 'past_due', 'suspended', 'deleted')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "core.workspace_deletion_requests": {
+      "name": "workspace_deletion_requests",
+      "schema": "core",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'awaiting_confirm'"
+        },
+        "confirm_expires_at": {
+          "name": "confirm_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "execute_after": {
+          "name": "execute_after",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelled_at": {
+          "name": "cancelled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelled_by": {
+          "name": "cancelled_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_members": {
+          "name": "deleted_members",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "workspace_deletion_requests_open_unique": {
+          "name": "workspace_deletion_requests_open_unique",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"core\".\"workspace_deletion_requests\".\"status\" in ('awaiting_confirm', 'scheduled')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "workspace_deletion_requests_due_idx": {
+          "name": "workspace_deletion_requests_due_idx",
+          "columns": [
+            {
+              "expression": "execute_after",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"core\".\"workspace_deletion_requests\".\"status\" = 'scheduled'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "workspace_deletion_requests_status_check": {
+          "name": "workspace_deletion_requests_status_check",
+          "value": "\"core\".\"workspace_deletion_requests\".\"status\" in ('awaiting_confirm', 'scheduled', 'cancelled', 'expired', 'completed')"
+        },
+        "workspace_deletion_requests_state_check": {
+          "name": "workspace_deletion_requests_state_check",
+          "value": "(\"core\".\"workspace_deletion_requests\".\"status\" <> 'scheduled' or (\"core\".\"workspace_deletion_requests\".\"confirmed_at\" is not null and \"core\".\"workspace_deletion_requests\".\"execute_after\" is not null))\n        and (\"core\".\"workspace_deletion_requests\".\"status\" <> 'completed' or \"core\".\"workspace_deletion_requests\".\"completed_at\" is not null)\n        and (\"core\".\"workspace_deletion_requests\".\"status\" <> 'cancelled' or \"core\".\"workspace_deletion_requests\".\"cancelled_at\" is not null)"
         }
       },
       "isRLSEnabled": false

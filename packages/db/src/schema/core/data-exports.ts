@@ -8,7 +8,7 @@ import { workspaces } from './tenancy';
 export const DATA_EXPORT_STATUSES = ['pending', 'running', 'ready', 'failed', 'expired'] as const;
 
 /**
- * Yêu cầu xuất dữ liệu workspace (FR-094, migration 0055, Q-EXP1). Owner tạo (INSERT chỉ cột workspace_id,
+ * Yêu cầu xuất dữ liệu workspace (FR-094, migration 0056, Q-EXP1). Owner tạo (INSERT chỉ cột workspace_id,
  * requested_by); mọi chuyển trạng thái chỉ do đường hệ thống (worker `withJob`). cf_app không DELETE.
  * Tối đa một yêu cầu đang hoạt động (pending/running) mỗi workspace. `file_key` chỉ là khóa kho, không chứa dữ liệu khách.
  */

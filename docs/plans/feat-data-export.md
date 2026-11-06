@@ -28,7 +28,7 @@ Không có (mọi điểm mơ hồ đã tự chọn phương án an toàn, ghi �
 ## File sẽ sửa / tạo
 
 - `packages/shared/src/data-export.ts` (+test): hằng số, schema job, hàm che PII/dựng dòng xuất (logic thuần).
-- `packages/db/src/schema/core/data-exports.ts`, `migrations/0055_data_exports.sql` (+meta): bảng + RLS.
+- `packages/db/src/schema/core/data-exports.ts`, `migrations/0056_data_exports.sql` (+meta): bảng + RLS.
 - `packages/db/src/queries/data-export.ts` (+test tích hợp): tạo/liệt kê/claim/hoàn tất/hết hạn + đọc từng phần theo trang.
 - `packages/db/src/check-rls.ts`: khai báo policy/NO_DELETE của bảng mới.
 - `apps/worker/src/jobs/data-export.ts` (+test), `export-store.ts` (+test), `queue/definitions.ts`, `config.ts`, `main.ts`, `jobs/retention.ts`: job, kho tệp, cờ, dọn hết hạn.
@@ -37,7 +37,7 @@ Không có (mọi điểm mơ hồ đã tự chọn phương án an toàn, ghi �
 
 ## Migration
 
-`0055_data_exports.sql`: bảng `core.data_exports` (id, workspace_id, requested_by, status pending|running|ready|failed|expired, file_key, size_bytes, row_counts jsonb, error_code, expires_at, ready_at, created_at, updated_at); chỉ mục duy nhất một yêu cầu đang hoạt động/workspace; RLS: SELECT Owner hoặc hệ thống; INSERT Owner (chỉ cột workspace_id, requested_by; `requested_by` = người dùng hiện tại); UPDATE chỉ hệ thống; không DELETE. Đường lùi: `DROP TABLE core.data_exports` + lùi `check-rls.ts` (mất lịch sử yêu cầu; tệp trong kho tự hết hạn).
+`0056_data_exports.sql`: bảng `core.data_exports` (id, workspace_id, requested_by, status pending|running|ready|failed|expired, file_key, size_bytes, row_counts jsonb, error_code, expires_at, ready_at, created_at, updated_at); chỉ mục duy nhất một yêu cầu đang hoạt động/workspace; RLS: SELECT Owner hoặc hệ thống; INSERT Owner (chỉ cột workspace_id, requested_by; `requested_by` = người dùng hiện tại); UPDATE chỉ hệ thống; không DELETE. Đường lùi: `DROP TABLE core.data_exports` + lùi `check-rls.ts` (mất lịch sử yêu cầu; tệp trong kho tự hết hạn).
 
 ## Test viết trước
 

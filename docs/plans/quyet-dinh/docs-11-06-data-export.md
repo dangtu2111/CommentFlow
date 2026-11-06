@@ -1,1 +1,1 @@
-- 06/11 (DATA-EXPORT, Q-EXP1): `docs/10_Database_Design.md` dòng `data_exports` — thêm `size_bytes`, `row_counts`, `error_code`, `ready_at`; trạng thái `pending/running/ready/failed/expired` (migration 0055).
+- 06/11 (DATA-EXPORT, Q-EXP1): `docs/10_Database_Design.md` dòng `data_exports` — thêm `size_bytes`, `row_counts`, `error_code`, `ready_at`; trạng thái `pending/running/ready/failed/expired` (migration 0056).

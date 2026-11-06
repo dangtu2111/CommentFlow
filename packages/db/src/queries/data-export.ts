@@ -10,7 +10,7 @@ import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
 
 /**
- * Yêu cầu xuất dữ liệu workspace (FR-094, migration 0055, Q-EXP1). Tạo yêu cầu: `withActor` (Owner; RLS chỉ cho INSERT
+ * Yêu cầu xuất dữ liệu workspace (FR-094, migration 0056, Q-EXP1). Tạo yêu cầu: `withActor` (Owner; RLS chỉ cho INSERT
  * hai cột). Chuyển trạng thái + đọc dữ liệu để xuất: `withJob` (hệ thống). Lớp này KHÔNG giải mã liên hệ khách.
  */
 export type DataExportStatus = 'pending' | 'running' | 'ready' | 'failed' | 'expired';

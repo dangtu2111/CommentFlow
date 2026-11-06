@@ -52,6 +52,7 @@
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
+| KT-PRP | Nhắn riêng từ bình luận (chờ nối DB + giao diện) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
@@ -63,6 +64,7 @@
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 | KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
+| KT-WSD | Xóa workspace nhiều bước (chờ nối giao diện) | — | chưa | chưa | — |
 
 ---
 
@@ -650,7 +652,7 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 
 ## KT-DEXP — Xuất dữ liệu workspace (DATA-EXPORT, FR-094, feat-data-export)
 
-Điều kiện: staging có migration 0055, `queue:install` đã chạy lại, `DATA_EXPORT_ENABLED=true` (web + worker), `DATA_EXPORT_DIR` đặt.
+Điều kiện: staging có migration 0056, `queue:install` đã chạy lại, `DATA_EXPORT_ENABLED=true` (web + worker), `DATA_EXPORT_DIR` đặt.
 
 | # | Bước / Step | Kết quả mong đợi / Expected |
 |---|---|---|
@@ -1073,6 +1075,17 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 | 2 | Sau khi migrate `0041`: `SELECT short, full FROM cf.system_abbreviations WHERE lang = 'vi' ORDER BY short;` | Có "ib → inbox", "sz → size", "dc → được", "k → không"… Soát danh sách: từ nào sai/thiếu thì báo để thêm bằng migration mới |
 | 3 | Khi có giao diện (`KB-ABBREV-UI`): Owner thêm "cod" → "thanh toán khi nhận hàng", đăng nhập Staff | Staff thấy mục nhưng không thêm/sửa/xóa được; shop khác không thấy |
 
+## KT-PRP — Nhắn riêng từ bình luận (FR-046, feat-private-reply)
+Điều kiện: CHỜ `PRIVATE-REPLY-WIRE` (nối DB + giao diện) và Page Facebook thử có quyền `pages_messaging`. Hiện chỉ kiểm bằng test tự động: `pnpm --filter @flow/ai test`.
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng tài khoản khác bình luận vào bài của Page thử, nhân viên bấm Nhắn riêng | Người bình luận nhận đúng 1 tin trong Messenger |
+| 2 | Bấm Nhắn riêng lần nữa cho cùng bình luận | Bị chặn, hiện "Đã nhắn riêng cho bình luận này (chỉ được 1 tin)" |
+| 3 | Thử bình luận cũ hơn 7 ngày | Bị chặn, hiện "Đã quá 7 ngày…" |
+| 4 | Xóa bình luận trên Facebook rồi bấm Nhắn riêng | Bị chặn, hiện "Bình luận đã bị xóa" |
+| 5 | Bình luận Instagram/TikTok | Không có nút / bị chặn "chưa hỗ trợ" |
+| 6 | Lặp bước 1–3 ở tiếng Anh | Chuỗi đúng ngôn ngữ |
+
 ## KT-PS — Ảnh chụp giá lúc soạn (PRICE-SNAPSHOT, FR-111, US-045) · Price snapshot
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
@@ -1275,6 +1288,19 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Mở "Thông báo" | Danh sách loại sự kiện, mỗi mục "Sắp có" |
 | 6 | Đăng nhập Staff | Cột trái chỉ có Thông báo + Tài khoản & Bảo mật; mở thẳng /app/settings/billing hoặc /privacy → 404 |
 | 7 | Chuyển English | Mọi chữ ở 3 trang đổi sang tiếng Anh, không còn khóa thô |
+
+## KT-WSD — Xóa workspace nhiều bước (WORKSPACE-DELETE, feat-workspace-delete) — chỉ làm được khi đã nối giao diện
+
+> Hiện chưa có giao diện (nút ở "Dữ liệu & Quyền riêng tư" vẫn "Sắp có"); các bước dưới dành cho lúc đã nối. Kiểm tự động đã phủ phần dữ liệu: `pnpm test:db` (workspace-deletion.int.test.ts).
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner ở workspace THỬ bấm "Xóa workspace" (bước 1) | Hiện ô gõ lại mã workspace; chưa xóa gì |
+| 2 | Gõ sai mã rồi gửi | Báo mã chưa đúng; yêu cầu vẫn chờ xác nhận |
+| 3 | Gõ đúng mã rồi gửi (bước 2) | Báo "sẽ xóa sau 7 ngày", có nút Hủy; workspace vẫn dùng bình thường |
+| 4 | Staff mở cùng trang | Không thấy khối xóa; gọi trực tiếp bị từ chối |
+| 5 | Một Owner khác bấm Hủy | Yêu cầu bị hủy, có thể yêu cầu lại |
+| 6 | (Staging, cờ bật) lùi hạn xóa bằng tay trên DB thử rồi chờ worker | Workspace thử biến mất cùng dữ liệu; dòng nhật ký tối thiểu còn lại |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 

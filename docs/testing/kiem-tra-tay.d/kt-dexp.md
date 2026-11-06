@@ -1,6 +1,6 @@
 ## KT-DEXP — Xuất dữ liệu workspace (DATA-EXPORT, FR-094, feat-data-export)
 
-Điều kiện: staging có migration 0055, `queue:install` đã chạy lại, `DATA_EXPORT_ENABLED=true` (web + worker), `DATA_EXPORT_DIR` đặt.
+Điều kiện: staging có migration 0056, `queue:install` đã chạy lại, `DATA_EXPORT_ENABLED=true` (web + worker), `DATA_EXPORT_DIR` đặt.
 
 | # | Bước / Step | Kết quả mong đợi / Expected |
 |---|---|---|

@@ -1,6 +1,6 @@
 # Bàn giao `feat-data-export` (agent: claude)
 
-**Đã làm:** DATA-EXPORT (FR-094) Xong-mock — migration 0055 `core.data_exports`, job `data-export`, kho tệp cục bộ, dọn hết hạn/kẹt, nút ở trang Quyền riêng tư, cờ `DATA_EXPORT_ENABLED` TẮT. Q-EXP1.
+**Đã làm:** DATA-EXPORT (FR-094) Xong-mock — migration 0056 `core.data_exports`, job `data-export`, kho tệp cục bộ, dọn hết hạn/kẹt, nút ở trang Quyền riêng tư, cờ `DATA_EXPORT_ENABLED` TẮT. Q-EXP1.
 
 **Chưa chạy được trong phiên này:** `pnpm test:db` (gồm `data-export.int.test.ts`) và `pnpm db:check-rls` — lệnh cần DB/phê duyệt. Người điều phối/CI chạy; cần `CF_LANE=b`.
 

@@ -12,6 +12,7 @@ import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
 import { startSweep } from './jobs/sweep';
+import { startWorkspaceDeletion } from './jobs/workspace-deletion';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
 import {
@@ -85,6 +86,12 @@ async function main(): Promise<void> {
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
   // Có kho tệp xuất thì dọn thêm yêu cầu xuất kẹt/hết hạn (xóa tệp).
   const stopRetention = startRetention({ db, logger, exportStore });
+  // WORKSPACE-DELETE (FR-094): xóa vĩnh viễn workspace đã xác nhận 2 bước và hết thời gian chờ; cờ mặc định TẮT.
+  const stopWorkspaceDeletion = startWorkspaceDeletion({
+    db,
+    logger,
+    enabled: config.workspaceDeleteEnabled,
+  });
   // FR-023 quét bù: cờ POLLING_ENABLED mặc định TẮT (đường gọi Meta thật). Lõi job đã sẵn (`jobs/polling.ts`) nhưng chưa
   // có bản DB của `ChannelLister` (cần hàm DEFINER liệt kê kênh xuyên workspace = migration của làn b; gap
   // `POLLING-CHANNEL-LIST`, QP4) → bật cờ mà thiếu thì báo lỗi rõ và KHÔNG chạy, không đoán đường vòng.
@@ -103,6 +110,7 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'worker đang dừng');
     ready = false;
     stopRetention();
+    stopWorkspaceDeletion();
     stopSweep();
     await boss.stop({ graceful: true });
     await db.close();

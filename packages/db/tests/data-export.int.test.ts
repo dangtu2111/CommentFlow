@@ -24,7 +24,7 @@ import {
 } from './helpers';
 
 /**
- * DATA-EXPORT (FR-094, Q-EXP1, migration 0055): chỉ Owner tạo yêu cầu; Staff/người ngoài/workspace khác bị RLS chặn;
+ * DATA-EXPORT (FR-094, Q-EXP1, migration 0056): chỉ Owner tạo yêu cầu; Staff/người ngoài/workspace khác bị RLS chặn;
  * chỉ hệ thống đổi trạng thái; một yêu cầu đang hoạt động/workspace và ≤ 5/24 giờ; cf_app không DELETE.
  */
 const RLS = '42501';

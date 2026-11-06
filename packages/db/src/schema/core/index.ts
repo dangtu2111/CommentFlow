@@ -5,3 +5,4 @@ export * from './data-exports';
 export * from './invoices';
 export * from './platform';
 export * from './tenancy';
+export * from './workspace-deletion';
