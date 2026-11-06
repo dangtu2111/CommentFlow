@@ -58,6 +58,16 @@ function readActiveHours(data: FormSource) {
   };
 }
 
+/**
+ * Form có công tắc chữ ký gửi kèm `signatureToggle` (ô checkbox tắt thì không có trong form, nên cần dấu hiệu
+ * riêng): công tắc tắt → không dùng chữ ký. Form cũ không có dấu hiệu → giữ nguyên chữ nhập.
+ */
+function readSignature(data: FormSource): string {
+  const hasToggle = str(data.get('signatureToggle')) !== '';
+  if (hasToggle && str(data.get('signatureEnabled')) !== 'on') return '';
+  return str(data.get('signature'));
+}
+
 const splitKeywords = (text: string): string[] =>
   text
     .split(/[\r\n,]+/)
@@ -75,7 +85,7 @@ export function parseAutomationForm(
     dailyCap: num(data.get('dailyCap')),
     activeHours: readActiveHours(data),
     blockedKeywords: splitKeywords(str(data.get('blockedKeywords'))),
-    signature: str(data.get('signature')),
+    signature: readSignature(data),
   });
   if (parsed.success) return { ok: true, config: parsed.data };
   const head = parsed.error.issues[0]?.path[0];

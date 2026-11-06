@@ -44,6 +44,7 @@
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
 | KT-DIM | Mạo danh → chuyển người, gợi ý Ẩn (lõi, chờ nối) | — | không | chưa | — |
 | KT-DOC | Chốt đơn trong bình luận → lưu khách, trả lời không lặp PII (lõi, chờ nối) | — | không | chưa | — |
+| KT-DSD2 | Dữ liệu mẫu DEV v2 (--refresh, --into) | — | có | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-IG | Connector Instagram (`IG_CONNECTOR_ENABLED`, **cần tài khoản IG Business thử**; sau `IG-WEBHOOK-ROUTE` + `IG-CHANNEL-CONNECT`) | feat-ig-connector | chưa | chưa | — |
@@ -67,15 +68,18 @@
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-SC | Semantic cache đầy đủ (qua interface, mock) | — | không | chưa | — |
+| KT-SHI | Nhập sản phẩm từ Shopify (chỉ đọc, fixture) | feat-shopify-import | có | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIC | Tự động hóa + Quy tắc spam đủ thành phần | — | chưa | chưa | — |
 | KT-UIHA | Tự động hóa + Quy tắc spam khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHLR | Khách tiềm năng, Báo cáo, Nhật ký dựng từ HTML Stitch | — | có | chưa | — |
 | KT-UIHS | Khung Cài đặt khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
+| KT-UIPL | Khung nội dung trải hết bề ngang | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-UKPH | Giao diện KB + Bài viết từ HTML Stitch | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
@@ -789,6 +793,20 @@ Chưa có giao diện (lõi hàm thuần, chưa nối pipeline). / No UI yet (pu
 | 5 | `pnpm dev:seed-demo --reset` | Tạo lại, mật khẩu mới; mật khẩu cũ không còn đăng nhập được |
 | 6 | Mọi tên kênh/sản phẩm/tác giả | Bắt đầu bằng "[MẪU]"; không SĐT/email thật |
 
+## KT-DSD2 — Dữ liệu mẫu DEV v2 (feat-dev-seed-v2) — chưa thử
+
+> Cần `.env` + máy ảo bật, DB `cf_dev` đã migrate. Chỉ dev. Không in/ghi mật khẩu vào PR. / Dev DB only.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm dev:seed-demo --refresh` (workspace mẫu đã có) | In "Đã làm mới", số lượng từng bảng, **không** có mật khẩu mới; đăng nhập `owner.mau`/`staff.mau` bằng mật khẩu cũ (và 2FA nếu đã bật) vẫn được |
+| 2 | Lần đầu sau v2: có thêm `staff2.mau@example.test` | Mật khẩu của tài khoản MỚI này in một lần (các tài khoản cũ không đổi) |
+| 3 | `pnpm dev:seed-demo --into owner.thu2.<…>@…` (Owner có sẵn) | "Đã nạp"; workspace của Owner đó có dữ liệu mẫu; kênh/sản phẩm thật (nếu có) còn nguyên; mật khẩu Owner không đổi |
+| 4 | Chạy lại `--into …` không `--refresh` | "đã có — không làm gì"; thêm `--refresh` thì làm mới, số lượng không đổi |
+| 5 | Các trang Khách tiềm năng, Báo cáo, Nhật ký, Tự động hóa, Quy tắc spam, Kiến thức, Bài viết, Cài đặt, Tin nhắn | Có dữ liệu: 25 lead / 4 cột; báo cáo 28 ngày + 2 nhân viên; nhật ký 14 ngày; ma trận Tắt/Chạy thử/Tự động; 7 quy tắc spam; 15 FAQ + 2 phiên bản; 12 sản phẩm; 14 hội thoại (còn <2h / còn nhiều / quá 24h); hạn mức AI 71% |
+| 6 | `APP_ENV=staging pnpm dev:seed-demo --refresh` hoặc trỏ sang `cf_test` | Từ chối `[FORBIDDEN]`, không ghi gì |
+| 7 | Mọi tên/ghi chú mẫu | Bắt đầu bằng "[MẪU]"; không SĐT/email thật (số lead là số giả `0900…`, chỉ hiện 4 số cuối) |
+
 ## KT-ES — Dừng khẩn cấp tự gửi (EMERGENCY-STOP, FR-073)
 
 Chỉ phần máy (chưa có nút/giao diện, chưa ghi DB): người thử chạy test.
@@ -1272,6 +1290,18 @@ Nếu hỏng: ghi số bước và ảnh chụp.
 
 ---
 
+## KT-SHI — Nhập sản phẩm từ Shopify (SHOPIFY-IMPORT, FR-052, feat-shopify-import)
+
+> Chưa có giao diện/job; kiểm bằng test + (khi có dev store) một script thử. / No UI yet; verify via tests and, once a dev store exists, a one-off script.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/connectors exec vitest run src/shopify` | Mọi test xanh (fixture 2 trang, throttle, lỗi 401/403/429, chữ ký webhook). |
+| 2 | Mở `.env`/env.example: không đặt `SHOPIFY_ENABLED` | Cờ tắt; không có lệnh gọi mạng nào tới Shopify. |
+| 3 | (Có dev store) Dựng connector với domain `<tên>.myshopify.com` + token chỉ đọc, chạy `fetchCatalog()` | Trả đủ sản phẩm ACTIVE kèm biến thể; giá VND là số nguyên; tồn chỉ có với biến thể theo dõi tồn. |
+| 4 | Đặt tiền tệ cửa hàng khác VND rồi chạy lại | Giá/giá gốc đều trống (không quy đổi). |
+| 5 | Dùng domain không phải `*.myshopify.com` | Bị từ chối ngay, không gọi mạng. |
+
 ## KT-SPF — Thông tin shop, chính sách, FAQ, giọng văn (KB-SHOP-POLICY-FAQ, feat-kb-shop-policy-faq, migration 0036) · Shop info, policy, FAQ, brand voice tables
 
 Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
@@ -1360,6 +1390,21 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
 
+## KT-UIC — Tự động hóa + Quy tắc spam đủ thành phần (UI-COMPLETE-AUTO-SPAM, feat-ui-complete-automation-spam)
+
+> Xem trên bản dev (`APP_ENV=dev`) hoặc `/dev/ui/automation`, `/dev/ui/spam-rules`. Dữ liệu `[MẪU]` không phải số thật.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Mở `/app/automation` với tài khoản Owner (dev) | Có: đầu trang + trạng thái "Đang chạy ở N/M kênh", 5 tab, 4 thẻ số liệu `[MẪU]`, ma trận kênh × nhãn (Khiếu nại/Spam khóa "Không hỗ trợ"), Kiểu trả lời, Ngưỡng an toàn, thanh lưu |
+| 2 | Kéo thanh ngưỡng, thêm/bỏ từ khóa chặn, tắt công tắc chữ ký rồi bấm Lưu cài đặt | Huy hiệu đổi theo giá trị; sau lưu: ngưỡng/từ khóa đúng như đã chọn, chữ ký bị xóa |
+| 3 | Bấm Dừng khẩn cấp, Khôi phục mặc định, các radio Kiểu trả lời | Đều vô hiệu, có "Sắp có" |
+| 4 | Mở `/app/spam-rules` | Có: đường dẫn, nguyên tắc an toàn, 4 thẻ, 2 tab, 4 thẻ quy tắc `[MẪU]` (công tắc vô hiệu), trình thiết lập |
+| 5 | Chọn tab "Bình luận đã bị ẩn" | Thanh công cụ + bảng + phân trang (mẫu), mọi nút vô hiệu |
+| 6 | Tạo quy tắc từ khóa → Xem trước 7 ngày → Lưu quy tắc | Xem trước hiện số khớp thật; lưu như trước đây |
+| 7 | Thu hẹp cửa sổ 390px | Không cuộn ngang cả trang |
+| 8 | Mở trang trên staging/production | Không có `[MẪU]`; số liệu hiện "—", danh sách quy tắc trống |
+
 ## KT-UIHA — Tự động hóa + Quy tắc spam khớp HTML Stitch (UI-HTML-AUTOMATION, feat-ui-html-automation)
 
 | # | Bước / Step | Kết quả mong đợi / Expected |
@@ -1412,6 +1457,15 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 4 | Nút "Tiếp tục với Facebook" ở /login | Có viền xám nhạt quanh nút (trước đây viền trong suốt) |
 | 5 | Thu cửa sổ còn 390px ở /app/settings | Cột trái thành dải cuộn ngang, không cuộn ngang cả trang |
 | 6 | Chạy production build, mở /dev/ui/kit | 404 |
+
+## KT-UIPL — Khung nội dung trải hết bề ngang (feat-ui-fix-posts-layout)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Mở `/app/posts` ở cửa sổ 1920px | Nội dung kéo hết bề ngang sau thanh bên, chỉ còn lề nhỏ 16px hai bên; không còn dải trống lớn |
+| 2 | Lặp lại với Cơ sở kiến thức, Tự động hóa, Spam, Tin nhắn | Cùng lề 16px hai bên, nội dung trải hết |
+| 3 | Mở Khách tiềm năng và Báo cáo ở 2560px | Nội dung dừng ở 1720px và canh giữa; ở 1920px vẫn trải hết |
+| 4 | Mở `/dev/ui/kb-posts` (chỉ dev) | Thẻ cấu hình bên phải chiếm 5/12 bề ngang (không cố định hẹp) |
 
 ## KT-UIS2 — Cài đặt khớp thiết kế (UI-FIDELITY-SETTINGS-V2, feat-ui-settings-v2)
 

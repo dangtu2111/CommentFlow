@@ -19,9 +19,9 @@ describe('DEV-SEED-DEMO bộ dữ liệu mẫu', () => {
     for (const c of DEMO_COMMENTS) expect(c.authorName.startsWith(DEMO_TAG)).toBe(true);
   });
 
-  it('kênh giả: external_id có tiền tố demo, chỉ facebook/instagram', () => {
+  it('kênh giả: external_id có tiền tố demo, chỉ facebook/instagram/tiktok', () => {
     expect(new Set(DEMO_CHANNELS.map((c) => c.platform))).toEqual(
-      new Set(['facebook', 'instagram']),
+      new Set(['facebook', 'instagram', 'tiktok']),
     );
     for (const c of DEMO_CHANNELS) expect(c.externalId.startsWith('demo_')).toBe(true);
   });
@@ -82,7 +82,16 @@ describe('DEV-SEED-DEMO bộ dữ liệu mẫu', () => {
   });
 
   it('sản phẩm có biến thể, giá/tồn hợp lệ', () => {
-    expect(DEMO_PRODUCTS.length).toBeGreaterThanOrEqual(3);
+    expect(DEMO_PRODUCTS.length).toBeGreaterThanOrEqual(10);
+    expect(DEMO_PRODUCTS.length).toBeLessThanOrEqual(12);
+    const skus = DEMO_PRODUCTS.flatMap((p) => p.variants.map((v) => v.sku));
+    expect(new Set(skus).size).toBe(skus.length);
+    for (const post of DEMO_POSTS) {
+      expect(
+        DEMO_PRODUCTS.some((p) => p.key === post.productKey),
+        post.key,
+      ).toBe(true);
+    }
     for (const p of DEMO_PRODUCTS) {
       expect(p.variants.length).toBeGreaterThan(0);
       for (const v of p.variants) {

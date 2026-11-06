@@ -40,7 +40,7 @@ export default async function DevLeadsPage() {
   const t = await getTranslations('leads');
   return (
     <DevShell>
-      <main className="app-page app-page-wide stack">
+      <main className="app-page app-page-wide app-page-cap stack">
         <PageHeader title={t('title')} subtitle={t('subtitle')} />
         <p className="inbox-sample-note" role="note">
           {DEV_SAMPLE_NOTE}

@@ -25,7 +25,7 @@ export default async function LeadsPage() {
     console.error('leads.load_failed', { workspaceId: workspace.id, error });
   }
   return (
-    <main className="app-page app-page-wide stack">
+    <main className="app-page app-page-wide app-page-cap stack">
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
       {data ? (
         <LeadsView leads={data.leads} counts={data.counts} />

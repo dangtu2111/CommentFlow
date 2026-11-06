@@ -6,7 +6,7 @@ export const DEMO_WORKSPACE_NAME = `${DEMO_TAG} Demo Shop`;
 
 export type DemoChannel = {
   key: string;
-  platform: 'facebook' | 'instagram';
+  platform: 'facebook' | 'instagram' | 'tiktok';
   externalId: string;
   name: string;
 };
@@ -23,6 +23,12 @@ export const DEMO_CHANNELS: readonly DemoChannel[] = [
     platform: 'instagram',
     externalId: 'demo_ig_account_1',
     name: `${DEMO_TAG} Instagram Demo Shop`,
+  },
+  {
+    key: 'tt',
+    platform: 'tiktok',
+    externalId: 'demo_tt_account_1',
+    name: `${DEMO_TAG} TikTok Demo Shop`,
   },
 ];
 
@@ -72,6 +78,60 @@ export const DEMO_POSTS: readonly DemoPost[] = [
     isAd: false,
     hoursAgo: 75,
     productKey: 'tui',
+  },
+  {
+    key: 'p5',
+    channelKey: 'fb',
+    externalId: 'demo_post_5',
+    message: `${DEMO_TAG} Quần jean ống suông — form đẹp, tôn dáng, size 28-32`,
+    isAd: false,
+    hoursAgo: 100,
+    productKey: 'quan',
+  },
+  {
+    key: 'p6',
+    channelKey: 'fb',
+    externalId: 'demo_post_6',
+    message: `${DEMO_TAG} Áo sơ mi linen mát nhẹ — ưu đãi tuần này`,
+    isAd: true,
+    hoursAgo: 140,
+    productKey: 'somi',
+  },
+  {
+    key: 'p7',
+    channelKey: 'ig',
+    externalId: 'demo_post_7',
+    message: `${DEMO_TAG} Áo khoác gió chống nắng — nhẹ như không`,
+    isAd: false,
+    hoursAgo: 190,
+    productKey: 'khoac',
+  },
+  {
+    key: 'p8',
+    channelKey: 'tt',
+    externalId: 'demo_post_8',
+    message: `${DEMO_TAG} Review set đồ thể thao co giãn 4 chiều`,
+    isAd: false,
+    hoursAgo: 60,
+    productKey: 'setdo',
+  },
+  {
+    key: 'p9',
+    channelKey: 'tt',
+    externalId: 'demo_post_9',
+    message: `${DEMO_TAG} Unbox sneaker trắng — đi êm cả ngày`,
+    isAd: false,
+    hoursAgo: 90,
+    productKey: 'giay',
+  },
+  {
+    key: 'p10',
+    channelKey: 'fb',
+    externalId: 'demo_post_10',
+    message: `${DEMO_TAG} Combo mũ lưỡi trai + balo laptop đi học, đi làm`,
+    isAd: false,
+    hoursAgo: 240,
+    productKey: 'balo',
   },
 ];
 
@@ -138,6 +198,105 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     name: `${DEMO_TAG} Túi tote canvas`,
     category: 'Phụ kiện',
     variants: [{ sku: 'MAU-TUI-01-KEM', attrs: { color: 'Kem' }, priceVnd: 249000, stock: 20 }],
+  },
+  {
+    key: 'quan',
+    sku: 'MAU-QUAN-01',
+    name: `${DEMO_TAG} Quần jean ống suông`,
+    category: 'Quần',
+    variants: [
+      {
+        sku: 'MAU-QUAN-01-28',
+        attrs: { size: '28', color: 'Xanh nhạt' },
+        priceVnd: 429000,
+        stock: 8,
+      },
+      {
+        sku: 'MAU-QUAN-01-30',
+        attrs: { size: '30', color: 'Xanh nhạt' },
+        priceVnd: 429000,
+        stock: 11,
+      },
+      {
+        sku: 'MAU-QUAN-01-32',
+        attrs: { size: '32', color: 'Xanh đậm' },
+        priceVnd: 449000,
+        stock: 0,
+      },
+    ],
+  },
+  {
+    key: 'somi',
+    sku: 'MAU-SOMI-01',
+    name: `${DEMO_TAG} Áo sơ mi linen`,
+    category: 'Áo',
+    variants: [
+      { sku: 'MAU-SOMI-01-S-BE', attrs: { size: 'S', color: 'Be' }, priceVnd: 329000, stock: 7 },
+      { sku: 'MAU-SOMI-01-M-BE', attrs: { size: 'M', color: 'Be' }, priceVnd: 329000, stock: 12 },
+      {
+        sku: 'MAU-SOMI-01-M-TRANG',
+        attrs: { size: 'M', color: 'Trắng' },
+        priceVnd: 329000,
+        stock: 4,
+      },
+    ],
+  },
+  {
+    key: 'khoac',
+    sku: 'MAU-KHOAC-01',
+    name: `${DEMO_TAG} Áo khoác gió`,
+    category: 'Áo khoác',
+    variants: [
+      { sku: 'MAU-KHOAC-01-M', attrs: { size: 'M', color: 'Xám' }, priceVnd: 459000, stock: 6 },
+      { sku: 'MAU-KHOAC-01-L', attrs: { size: 'L', color: 'Xám' }, priceVnd: 459000, stock: 3 },
+    ],
+  },
+  {
+    key: 'chanvay',
+    sku: 'MAU-CHANVAY-01',
+    name: `${DEMO_TAG} Chân váy xếp ly`,
+    category: 'Váy',
+    variants: [
+      { sku: 'MAU-CHANVAY-01-S', attrs: { size: 'S', color: 'Đen' }, priceVnd: 289000, stock: 9 },
+      { sku: 'MAU-CHANVAY-01-M', attrs: { size: 'M', color: 'Đen' }, priceVnd: 289000, stock: 5 },
+    ],
+  },
+  {
+    key: 'non',
+    sku: 'MAU-NON-01',
+    name: `${DEMO_TAG} Mũ lưỡi trai`,
+    category: 'Phụ kiện',
+    variants: [
+      { sku: 'MAU-NON-01-DEN', attrs: { color: 'Đen' }, priceVnd: 149000, stock: 25 },
+      { sku: 'MAU-NON-01-KEM', attrs: { color: 'Kem' }, priceVnd: 149000, stock: 18 },
+    ],
+  },
+  {
+    key: 'dep',
+    sku: 'MAU-DEP-01',
+    name: `${DEMO_TAG} Dép quai ngang`,
+    category: 'Giày',
+    variants: [
+      { sku: 'MAU-DEP-01-38', attrs: { size: '38', color: 'Be' }, priceVnd: 239000, stock: 10 },
+      { sku: 'MAU-DEP-01-40', attrs: { size: '40', color: 'Be' }, priceVnd: 239000, stock: 7 },
+    ],
+  },
+  {
+    key: 'balo',
+    sku: 'MAU-BALO-01',
+    name: `${DEMO_TAG} Balo laptop`,
+    category: 'Phụ kiện',
+    variants: [{ sku: 'MAU-BALO-01-XAM', attrs: { color: 'Xám' }, priceVnd: 549000, stock: 13 }],
+  },
+  {
+    key: 'setdo',
+    sku: 'MAU-SETDO-01',
+    name: `${DEMO_TAG} Set đồ thể thao`,
+    category: 'Thể thao',
+    variants: [
+      { sku: 'MAU-SETDO-01-M', attrs: { size: 'M', color: 'Đen' }, priceVnd: 399000, stock: 15 },
+      { sku: 'MAU-SETDO-01-L', attrs: { size: 'L', color: 'Đen' }, priceVnd: 399000, stock: 1 },
+    ],
   },
 ];
 

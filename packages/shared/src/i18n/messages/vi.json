@@ -894,20 +894,23 @@
     }
   },
   "automation": {
-    "pageTitle": "Cài đặt tự gửi",
-    "title": "Cài đặt tự gửi",
-    "subtitle": "Chọn AI được làm gì với từng loại bình luận/tin nhắn: Tắt (chỉ gợi ý cho nhân viên), Chạy thử (ghi lại câu sẽ gửi nhưng không gửi) hoặc Tự động (AI tự gửi khi qua mọi cổng kiểm tra). Mặc định mọi ô là Tắt.",
+    "pageTitle": "Tự động hóa AI",
+    "title": "Tự động hóa AI",
+    "subtitle": "Trung tâm điều phối & giám sát luồng phản hồi thông minh thời gian thực",
     "notWired": "Lưu ý: cấu hình được lưu bền nhưng chưa áp dụng cho việc tự gửi thật (sẽ nối khi có đường gửi tự động).",
     "save": "Lưu cài đặt",
     "saveHint": "Chỉ Owner chỉnh được. Thay đổi có hiệu lực sau khi bấm Lưu cài đặt.",
     "matrix": {
       "legend": "Chú thích mức tự gửi",
-      "title": "Mức tự gửi theo kênh và nhãn",
-      "body": "Mỗi ô là một mức riêng cho bình luận và tin nhắn của từng kênh.",
+      "title": "1. Ma trận mức tự động (Auto Mode Matrix)",
+      "body": "Phân cấp kích hoạt AI trả lời tự động cho từng kênh bán và từng phân loại ý định",
       "label": "Nhãn",
       "empty": "Chưa có kênh nào. Hãy kết nối kênh ở trang Kênh trước.",
-      "complaintNote": "Bình luận Khiếu nại và Spam không bao giờ được tự gửi; luôn chuyển cho nhân viên.",
-      "channel": "Kênh liên kết"
+      "complaintNote": "Khiếu nại và Spam luôn chuyển cho nhân viên hoặc theo quy tắc ẩn riêng; AI không tự trả lời để đảm bảo an toàn trải nghiệm khách hàng.",
+      "channel": "Kênh liên kết",
+      "legendOff": "Tắt / Khóa",
+      "unsupported": "Không hỗ trợ",
+      "noteLead": "Lưu ý quan trọng:"
     },
     "target": {
       "comment": "Bình luận",
@@ -916,7 +919,9 @@
     "labels": {
       "price": "Hỏi giá",
       "advice": "Tư vấn",
-      "purchase": "Mua hàng"
+      "purchase": "Mua hàng",
+      "complaint": "Khiếu nại",
+      "spam": "Spam"
     },
     "mode": {
       "off": "Tắt",
@@ -927,14 +932,14 @@
       "title": "Cài đặt chung",
       "threshold": "Ngưỡng tin cậy (%)",
       "thresholdHint": "AI chỉ tự gửi khi độ tin cậy từ ngưỡng này trở lên. Thấp nhất 80%, mặc định 85%.",
-      "delay": "Khoảng trễ trước khi gửi",
+      "delay": "Khoảng trễ trước gửi",
       "delayOption": {
         "0": "Gửi ngay",
         "60": "1 phút",
         "120": "2 phút",
         "300": "5 phút"
       },
-      "dailyCap": "Giới hạn số câu tự gửi mỗi ngày",
+      "dailyCap": "Giới hạn mỗi ngày",
       "hours": "Giờ hoạt động",
       "hoursEnabled": "Chỉ tự gửi trong khung giờ này (theo múi giờ của workspace)",
       "hoursFrom": "Từ",
@@ -949,10 +954,10 @@
         "5": "T6",
         "6": "T7"
       },
-      "keywords": "Từ khóa chặn",
-      "keywordsHint": "Mỗi dòng một từ hoặc cụm từ (tối đa 50, mỗi từ ≤ 60 ký tự). Câu AI có chứa từ này sẽ không được tự gửi.",
-      "signature": "Chữ ký công bố",
-      "signatureHint": "Một dòng ngắn (≤ 120 ký tự) cho biết câu trả lời do AI soạn, ví dụ “— Trợ lý AI của shop”. Để trống nếu không dùng.",
+      "keywords": "Từ khóa chặn (Blacklist)",
+      "keywordsHint": "Tối đa 50 từ hoặc cụm từ, mỗi từ ≤ 60 ký tự. Câu AI có chứa từ này sẽ không được tự gửi.",
+      "signature": "Chữ ký tự động nhận diện AI",
+      "signatureHint": "Một dòng ngắn (≤ 120 ký tự) cho biết câu trả lời do AI soạn. Tắt công tắc nếu không dùng.",
       "body": "Ngưỡng tin cậy, khoảng trễ, giới hạn, giờ hoạt động và các chốt an toàn khác của AI tự gửi."
     },
     "notice": {
@@ -972,6 +977,87 @@
     "loadError": {
       "title": "Không tải được cài đặt",
       "body": "Vui lòng tải lại trang sau ít phút."
+    },
+    "soon": "Sắp có",
+    "soonTitle": "Sắp có: chức năng này chưa dùng được",
+    "sampleBanner": "[MẪU] Số liệu mẫu để xem giao diện (chỉ bản dev) — không phải dữ liệu thật.",
+    "header": {
+      "status": "AI tự động:",
+      "running": "Đang chạy ở {on}/{total} kênh",
+      "filterAll": "Tất cả kênh kết nối ({total})",
+      "stop": "Dừng khẩn cấp",
+      "stopHint": "Dừng khẩn cấp toàn bộ hệ thống bot tự trả lời"
+    },
+    "tabs": {
+      "label": "Mục Tự động hóa",
+      "overview": "Tổng quan",
+      "comment": "Bình luận (Cài đặt)",
+      "selected": "Đang chọn",
+      "message": "Tin nhắn (Cài đặt)",
+      "general": "Cài đặt chung & Ngưỡng",
+      "shadow": "Chạy thử & Xem lại (Shadow Mode)"
+    },
+    "metrics": {
+      "sent": "Đã tự gửi hôm nay",
+      "sentUnit": "câu",
+      "accuracy": "Tỷ lệ chính xác {value}%",
+      "pending": "Đang trong khoảng trễ",
+      "pendingUnit": "câu chờ hủy",
+      "pendingNote": "Đếm ngược trung bình < {seconds} giây",
+      "cancelled": "Bị nhân viên hủy",
+      "cancelledUnit": "lượt",
+      "cancelledNote": "Nhân viên tiếp quản thủ công",
+      "flagged": "Đánh dấu sai",
+      "flaggedUnit": "lỗi",
+      "flaggedNote": "Hệ thống an toàn tuyệt đối",
+      "noData": "Chưa có dữ liệu thật"
+    },
+    "behavior": {
+      "title": "2. Kiểu trả lời & Hành vi",
+      "body": "Quyết định phương thức phối hợp giữa bình luận công khai và tin nhắn riêng tư inbox.",
+      "both": "Trả lời công khai + Nhắn riêng",
+      "recommended": "Gợi ý",
+      "bothBody": "Được khuyên dùng cho shop online giúp tăng tỷ lệ chốt đơn và chuyển đổi tương tác sang hội thoại 1-1 riêng tư.",
+      "publicOnly": "Chỉ trả lời công khai",
+      "publicOnlyBody": "Chỉ phản hồi trực tiếp ngay bên dưới bình luận của khách, không khởi tạo tin nhắn Messenger/DM.",
+      "privateOnly": "Chỉ nhắn riêng",
+      "privateOnlyBody": "Bình luận công khai thông báo tự động:",
+      "privateOnlyQuote": "\"Shop đã gửi tin nhắn riêng cho bạn rồi ạ 💕\"",
+      "price": "Báo giá công khai",
+      "priceBody": "Cho phép AI báo giá trực tiếp trong bình luận khi đã gắn sản phẩm trong cơ sở dữ liệu."
+    },
+    "guard": {
+      "title": "3. Ngưỡng an toàn & Khoảng trễ (Guardrails)",
+      "body": "Quy tắc giám sát bảo vệ thương hiệu và cho phép nhân viên có thời gian can thiệp hủy bỏ.",
+      "threshold": "Ngưỡng độ tin cậy để tự gửi",
+      "badge": {
+        "loose": "Dễ dãi",
+        "balanced": "Cân bằng",
+        "strict": "Nghiêm ngặt"
+      },
+      "badgeText": "{tier} (Độ tin cậy ≥ {value}%)",
+      "tickLow": "{value}% (Dễ dãi)",
+      "tickMid": "{value}% (Chuẩn khuyến nghị)",
+      "tickHigh": "{value}% (Nghiêm ngặt)",
+      "thresholdNote": "Các phản hồi do AI sinh ra có độ tin cậy dưới {value}% sẽ lập tức chuyển sang trạng thái <b>Chờ duyệt</b> để nhân viên xác nhận.",
+      "delay": "Khoảng trễ trước gửi",
+      "delayHint": "Đếm ngược trực tiếp trên thẻ bình luận trước khi bắn API.",
+      "dailyCap": "Giới hạn mỗi ngày",
+      "usage": "{used} / {cap} câu",
+      "remaining": "Còn {left} câu",
+      "usageLabel": "Số câu đã tự gửi so với giới hạn trong ngày",
+      "keywords": "Từ khóa chặn (Blacklist)",
+      "keywordsAdd": "Thêm từ khóa",
+      "keywordsBody": "Khi khách bình luận chứa các từ này, AI lập tức hủy tự động và thông báo chuyển nhân viên:",
+      "keywordsPlaceholder": "Nhập từ khóa rồi bấm Thêm từ khóa",
+      "keywordsRemove": "Bỏ từ khóa {word}",
+      "keywordsEmpty": "Chưa có từ khóa chặn.",
+      "signature": "Chữ ký tự động nhận diện AI",
+      "signatureSample": "\"— Trợ lý tự động của An Nhiên Store\"",
+      "signaturePlaceholder": "— Trợ lý AI của shop"
+    },
+    "savebar": {
+      "reset": "Khôi phục mặc định"
     }
   },
   "productImport": {
@@ -1041,28 +1127,32 @@
     }
   },
   "spamRules": {
-    "title": "Quy tắc spam",
+    "title": "Quy tắc spam & Tự động ẩn",
     "principle": {
       "title": "Nguyên tắc an toàn cốt lõi: AI không bao giờ tự ý ẩn bình luận",
-      "body": "Quy tắc chỉ đánh dấu hoặc bỏ qua bình luận. Ẩn bình luận luôn là hành động của người, có bước xác nhận."
+      "body": "Quy tắc chỉ đánh dấu hoặc bỏ qua bình luận. Ẩn bình luận luôn là hành động của người, có bước xác nhận.",
+      "zero": "Zero Silent Loss",
+      "learn": "Tìm hiểu bộ quy tắc bảo mật",
+      "autoHideSoon": "Khi Tự ẩn ra mắt (Sắp có), chỉ các quy tắc do bạn thiết lập chứa <b>Số điện thoại</b> hoặc <b>Đường link lạ (URL)</b> mới được kích hoạt Tự ẩn. Mọi hành động ẩn đều được ghi nhật ký và có thể <b>Bỏ ẩn hoặc Khôi phục</b> chỉ với một lần nhấp."
     },
-    "subtitle": "Tạo quy tắc để đánh dấu hoặc bỏ qua bình luận spam. Bấm Xem trước để biết quy tắc khớp bao nhiêu bình luận trong 7 ngày qua; xem trước chỉ đọc, không đổi bình luận nào. AI không bao giờ tự ẩn bình luận.",
-    "nameLabel": "Tên quy tắc",
+    "subtitle": "Ngăn chặn cướp đơn, link độc hại, từ khoá bẩn xuyên suốt Facebook, Instagram và TikTok theo chính sách minh bạch.",
+    "nameLabel": "Tên quy tắc nhận diện *",
     "typeLabel": "Loại quy tắc",
     "type": {
-      "keyword": "Từ khóa",
-      "regex": "Mẫu regex",
-      "phone": "Số điện thoại",
-      "link": "Đường link",
+      "keyword": "Chứa từ khóa trong danh sách cấm",
+      "regex": "Khớp mẫu regex",
+      "phone": "Chứa định dạng Số điện thoại (Phone regex & Text)",
+      "link": "Chứa liên kết URL / Tên miền lạ",
       "emoji_only": "Chỉ có emoji",
       "tag_only": "Chỉ gắn thẻ người khác"
     },
     "patternLabel": "Mẫu",
     "patternHint": "Từ khóa: nhiều từ ngăn bằng dấu phẩy. Regex: tối đa 200 ký tự, không lặp nhóm, tối đa 2 dấu * hoặc +. Số điện thoại, link, emoji, thẻ tag: bỏ trống.",
-    "actionLabel": "Hành động",
+    "actionLabel": "Hành động khi khớp quy tắc *",
     "action": {
-      "mark": "Chỉ đánh dấu nghi spam",
-      "skip": "Bỏ qua (không soạn trả lời)"
+      "mark": "Chỉ đánh dấu Nghi spam",
+      "skip": "Bỏ qua (không soạn trả lời)",
+      "autoHide": "Tự động ẩn bình luận ngay"
     },
     "noAutoHide": "Tự ẩn là tính năng riêng, chỉ bật sau thời gian chạy thử; quy tắc ở đây không tự ẩn bình luận.",
     "preview": "Xem trước 7 ngày",
@@ -1075,9 +1165,131 @@
       "limit_reached": "Đã đủ 50 quy tắc. Hãy xóa bớt quy tắc cũ trước khi thêm quy tắc mới.",
       "unavailable": "Chưa thực hiện được lúc này. Hãy thử lại sau."
     },
-    "builderTitle": "Thiết lập quy tắc",
-    "builderBody": "Chọn điều kiện nhận diện spam và hành động khi khớp. Xem trước trước khi lưu.",
-    "conditionTitle": "Điều kiện nhận diện"
+    "builderTitle": "Thiết lập điều kiện (Rule Condition Builder)",
+    "builderBody": "Tạo quy tắc tùy biến với cơ chế phòng ngừa lỗi tự động và kiểm thử an toàn.",
+    "conditionTitle": "Bộ điều kiện kết hợp (AND / OR)",
+    "soon": "Sắp có",
+    "soonTitle": "Sắp có: chức năng này chưa dùng được",
+    "sampleBanner": "[MẪU] Dữ liệu mẫu để xem giao diện (chỉ bản dev) — không phải dữ liệu thật.",
+    "header": {
+      "crumbLabel": "Đường dẫn",
+      "crumbRoot": "Hệ thống & Trí tuệ",
+      "crumbCurrent": "Quy tắc spam & Tự ẩn",
+      "pillActive": "{count} quy tắc đang hoạt động",
+      "pillFiltered": "Đã lọc {count} bình luận (7 ngày)",
+      "badge": "Cơ chế bảo vệ thương hiệu",
+      "dryRun": "Kiểm tra với bình luận 7 ngày qua",
+      "create": "+ Tạo quy tắc mới"
+    },
+    "metrics": {
+      "hidden": "Tổng bình luận đã ẩn (30 ngày)",
+      "hiddenUnit": "lần",
+      "hiddenNote": "+{value}% so với tháng trước",
+      "leads": "Lead cướp đơn giải cứu (CRM)",
+      "leadsUnit": "SĐT",
+      "leadsNote": "Trích xuất vào Khách tiềm năng",
+      "falsePositive": "Tỷ lệ đánh dấu sai (False-Positive)",
+      "falsePositiveNote": "Ngưỡng chuẩn an toàn (< {value}%)",
+      "reaction": "Thời gian phản ứng tự ẩn TB",
+      "reactionUnit": "giây",
+      "reactionNote": "Realtime Webhook sync",
+      "noData": "Chưa có dữ liệu thật"
+    },
+    "tabs": {
+      "label": "Khung nhìn quy tắc spam",
+      "rules": "Quy tắc đang chạy",
+      "logs": "Bình luận đã bị ẩn",
+      "filter": "Lọc kênh: Tất cả kênh",
+      "export": "Xuất báo cáo"
+    },
+    "rules": {
+      "label": "Danh sách quy tắc",
+      "condition": "Điều kiện:",
+      "scope": "Phạm vi:",
+      "matches": "Khớp {days} ngày:",
+      "matchesSimulated": "Khớp mô phỏng:",
+      "matchCount": "{count} lần",
+      "falseRate": "Tỷ lệ sai:",
+      "on": "Đang bật",
+      "off": "Đang tắt",
+      "edit": "Chỉnh sửa quy tắc",
+      "history": "Nhật ký chi tiết",
+      "simulation": "Xem kết quả mô phỏng",
+      "empty": "Chưa có quy tắc nào.",
+      "emptyBody": "Tạo quy tắc đầu tiên bằng trình thiết lập bên dưới. Danh sách quy tắc đã lưu sẽ hiện ở đây (Sắp có)."
+    },
+    "namePlaceholder": "Nhập tên quy tắc gợi nhớ...",
+    "descLabel": "Mô tả tác vụ nội bộ",
+    "descPlaceholder": "Ghi chú mục đích áp dụng...",
+    "addBranch": "Thêm nhánh điều kiện",
+    "ifLabel": "NẾU (IF)",
+    "notLabel": "VÀ KHÔNG (NOT)",
+    "matchPattern": "Khớp mẫu:",
+    "removeCondition": "Xóa điều kiện",
+    "notOption": {
+      "whitelist": "Từ khóa loại trừ / Whitelist",
+      "admin": "Là bình luận từ quản trị viên / Page",
+      "vip": "Khách hàng VIP đã có nhãn"
+    },
+    "notPlaceholder": "Nhập từ khoá ngoại lệ ngăn chặn ẩn nhầm...",
+    "aiOption": "AI phân loại: Nghi vấn Spam nặng (>85%)",
+    "scopeLabel": "Phạm vi áp dụng kênh bán hàng *",
+    "scopeAll": "Tất cả kênh kết nối",
+    "scopeAllNote": "Quy tắc hiện áp dụng cho mọi kênh; chọn theo kênh Sắp có",
+    "actionTitle": "Hành động khi khớp quy tắc *",
+    "actionBody": {
+      "mark": "Hiện ở tab \"Nghi spam\" tại mục Bình luận. Nhân viên CSKH bấm duyệt trước khi hiển thị.",
+      "skip": "Bình luận khớp quy tắc không được soạn câu trả lời.",
+      "autoHide": "Ẩn ngay lập tức trên Facebook/Instagram qua API. Người bình luận vẫn thấy nội dung của họ."
+    },
+    "actionNote": {
+      "mark": "Khuyên dùng cho quy tắc từ khóa",
+      "skip": "Dùng cho bình luận chắc chắn không cần trả lời",
+      "autoHide": "Cần chạy thử (Dry-run) đạt chuẩn trước khi bật"
+    },
+    "recommended": "Khuyên dùng",
+    "leadCapture": "Tự động trích xuất họ tên & SĐT lưu vào mục <b>Khách tiềm năng (CRM)</b> trước khi ẩn",
+    "leadCaptureBadge": "Tránh mất đơn cướp khách",
+    "dryRun": {
+      "title": "Hộp xem trước tương tác (Dry-run)",
+      "badge": "Dữ liệu thật 7 ngày",
+      "estimated": "Khớp ước tính:",
+      "estimatedValue": "{count} bình luận",
+      "real": "{count} Spam thật ({percent}%)",
+      "check": "{count} Cần kiểm tra",
+      "breakdownLabel": "Tỷ lệ spam thật so với cần kiểm tra",
+      "summary": "Mô phỏng 7 ngày qua: Quy tắc này sẽ khớp <b>{count} bình luận thực tế</b> trên Fanpage. Hệ thống kiểm định tỷ lệ an toàn đạt chuẩn để cấp quyền Tự ẩn.",
+      "idle": "Bấm Xem trước 7 ngày để biết quy tắc khớp bao nhiêu bình luận thật. Xem trước chỉ đọc, không đổi bình luận nào.",
+      "list": "Xem danh sách {count} bình luận mẫu",
+      "standards": "Tiêu chuẩn an toàn CommentFlow",
+      "standard1": "Đã thiết lập từ khóa loại trừ hợp lệ",
+      "standard2": "Khả năng khôi phục (Undo) trong 30 ngày",
+      "standard3": "Webhook đồng bộ realtime 2 chiều Meta API",
+      "saveDry": "Lưu chế độ Thử nghiệm"
+    },
+    "logs": {
+      "selectAll": "Chọn tất cả {count} bình luận",
+      "restoreBulk": "Bỏ ẩn hàng loạt (Undo)",
+      "notSpam": "Đánh dấu: Không phải spam",
+      "search": "Tìm theo tên khách, từ khóa vi phạm...",
+      "advancedFilter": "Bộ lọc nâng cao",
+      "select": "Chọn",
+      "colCustomer": "Khách hàng & Nguồn",
+      "colContent": "Nội dung bình luận bị ẩn (Đã đối soát)",
+      "colRule": "Quy tắc kích hoạt",
+      "colTime": "Thời gian ẩn",
+      "colActions": "Thao tác an toàn",
+      "restore": "Bỏ ẩn",
+      "restoreTitle": "Khôi phục lại bình luận trên Fanpage",
+      "openOriginal": "Xem bài viết gốc trên Facebook",
+      "reportWrong": "Báo cáo đánh dấu sai để cải thiện AI",
+      "blockUser": "Chặn người dùng này",
+      "showing": "Hiển thị <b>{from} - {to}</b> của <b>{total}</b> bình luận đã bị ẩn an toàn",
+      "prev": "Trang trước",
+      "next": "Trang sau",
+      "empty": "Chưa có bình luận nào bị ẩn.",
+      "emptyBody": "Tự động ẩn chưa bật (Sắp có), nên chưa có bình luận nào bị ẩn bởi quy tắc."
+    }
   },
   "kbGaps": {
     "pageTitle": "Câu hỏi AI chưa trả lời được",

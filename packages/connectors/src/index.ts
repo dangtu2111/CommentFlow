@@ -75,6 +75,18 @@ export {
 export { type MessengerSendMode, messengerSendMode } from './messenger/window';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
 export {
+  createShopifyConnector,
+  DEFAULT_SHOPIFY_API_VERSION,
+  type ShopifyCatalog,
+  type ShopifyConnector,
+  type ShopifyConnectorOptions,
+  type ShopifyPolicy,
+  type ShopifyProduct,
+  type ShopifyVariant,
+} from './shopify/connector';
+export { buildShopifyImportPlan, parseShopifyMoney } from './shopify/normalize';
+export { signShopifyBody, verifyShopifyWebhook } from './shopify/webhook';
+export {
   createTikTokConnector,
   type TikTokConnector,
   type TikTokConnectorOptions,

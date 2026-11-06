@@ -20,4 +20,8 @@
 @import "./kbd.css";
 @import "./icon.css";
 @import "./inset.css";
+@import "./switch.css";
+@import "./progress.css";
+@import "./metric-card.css";
+@import "./platform-badge.css";
 @import "./data-table.css";

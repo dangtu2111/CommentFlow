@@ -1,0 +1,31 @@
+// API công khai của module admin (ADMIN-IMPERSONATE, FR-105). Thêm export mới ở ĐÂY.
+export {
+  type Authorization,
+  authorizeImpersonatedRequest,
+  canImpersonate,
+  type DenyCode,
+  IMPERSONATION_MAX_MS,
+  IMPERSONATION_REASON_MAX,
+  IMPERSONATION_REASON_MIN,
+  IMPERSONATION_ROLES,
+  type ImpersonationActor,
+  type ImpersonationSession,
+  parseStartImpersonation,
+  type SessionState,
+  type StartErrorCode,
+  type StartResult,
+  sessionState,
+} from './impersonation';
+export {
+  type AccessDenyCode,
+  createImpersonationService,
+  createInMemoryImpersonation,
+  type ImpersonationAccessResult,
+  type ImpersonationAudit,
+  type ImpersonationAuditEntry,
+  type ImpersonationEndResult,
+  type ImpersonationService,
+  type ImpersonationStartResult,
+  type ImpersonationStore,
+  sanitizePath,
+} from './impersonation-service';

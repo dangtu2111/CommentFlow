@@ -297,8 +297,20 @@ a {
 }
 
 /* ---------- Trang Thành viên ---------- */
+/*
+ * Khung nội dung chung của trang nghiệp vụ: trải hết phần còn lại sau thanh bên, lề 16px mỗi bên
+ * (HTML Stitch: `w-full` + `px-gutter`, không max-width). Q-UIPL1.
+ */
 .app-page-wide {
-  max-width: 880px;
+  max-width: none;
+  margin: 0;
+  padding: var(--space-4);
+}
+
+/* Trang rất rộng (Khách tiềm năng, Báo cáo): Stitch `max-w-[1720px] mx-auto` (border-box, gồm lề 16px). */
+.app-page-cap {
+  max-width: 1720px;
+  margin-inline: auto;
 }
 .member-list {
   list-style: none;

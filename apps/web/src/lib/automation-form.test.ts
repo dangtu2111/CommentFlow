@@ -122,6 +122,14 @@ describe('FR-070 FR-071 đọc form cài đặt tự gửi', () => {
     expect(r.ok && r.config.signature).toBeNull();
   });
 
+  it('FR-071 công tắc chữ ký: form có công tắc mà tắt → chữ ký null; bật → giữ chữ', () => {
+    const base = { ...general, signature: '— Trợ lý AI', signatureToggle: '1' };
+    const off = parseAutomationForm(form(base), []);
+    expect(off.ok && off.config.signature).toBeNull();
+    const on = parseAutomationForm(form({ ...base, signatureEnabled: 'on' }), []);
+    expect(on.ok && on.config.signature).toBe('— Trợ lý AI');
+  });
+
   it('FR-071 quá nhiều từ khóa → lỗi trường blockedKeywords', () => {
     const many = Array.from({ length: 51 }, (_, i) => `k${i}`).join('\n');
     expect(parseAutomationForm(form({ ...general, blockedKeywords: many }), [])).toEqual({

@@ -406,6 +406,12 @@ export {
   reciprocalRankFusion,
 } from './search';
 export {
+  DEFAULT_SHOPIFY_API_VERSION,
+  isShopifyApiVersion,
+  readShopifyConfig,
+  type ShopifyConfig,
+} from './shopify-config';
+export {
   decideSize,
   parseSizeChartRow,
   SIZE_CATEGORY_MAX,
