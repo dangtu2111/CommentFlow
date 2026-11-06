@@ -20,6 +20,7 @@ export function buildNotifications(
     names: b.names,
     moreCount: b.moreCount,
   }));
-  if (silent) items.push({ kind: 'webhookSilent', names: silent.names, moreCount: silent.moreCount });
+  if (silent)
+    items.push({ kind: 'webhookSilent', names: silent.names, moreCount: silent.moreCount });
   return { items, hasUrgent: banners.some((b) => b.urgent) };
 }

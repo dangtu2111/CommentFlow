@@ -1079,7 +1079,67 @@
       "settings": "Cài đặt"
     },
     "logout": "Đăng xuất",
-    "navLabel": "Điều hướng chính"
+    "navLabel": "Điều hướng chính",
+    "notifications": {
+      "label": "Thông báo ({count})",
+      "title": "Thông báo",
+      "empty": "Không có thông báo mới.",
+      "openChannels": "Mở trang Kênh"
+    }
+  },
+  "onboarding": {
+    "eyebrow": "Thiết lập ban đầu",
+    "stepLabel": "Bước {n}",
+    "stepsLabel": "Các bước thiết lập",
+    "state": { "done": "Đã xong", "current": "Đang làm", "todo": "Chưa bắt đầu" },
+    "skippable": "Có thể bỏ qua",
+    "steps": {
+      "workspace": { "title": "Tạo workspace" },
+      "channels": { "title": "Kết nối nền tảng" },
+      "pages": { "title": "Chọn Page kích hoạt" },
+      "knowledge": { "title": "Nhập kiến thức cho AI" },
+      "invite": { "title": "Mời nhân viên" }
+    },
+    "next": {
+      "title": "Sau khi tạo workspace",
+      "list": {
+        "channels": "Kết nối Facebook Page ở trang Kênh (Owner).",
+        "knowledge": "Nhập sản phẩm bằng file Excel/CSV để AI trả lời đúng giá và tồn kho.",
+        "invite": "Mời nhân viên ở trang Thành viên (có thể làm sau)."
+      }
+    },
+    "promise": {
+      "title": "Cam kết của hệ thống",
+      "body": "Chỉ dùng API chính thức của nền tảng. AI chỉ soạn câu trả lời; AI không bao giờ tự ẩn bình luận và không tự đăng bài."
+    }
+  },
+  "errorPages": {
+    "notFound": {
+      "code": "Lỗi 404",
+      "title": "Không tìm thấy trang bạn yêu cầu",
+      "body": "Đường dẫn có thể đã đổi, đã bị xóa hoặc bạn không có quyền xem trang này. Dữ liệu bình luận của bạn không bị ảnh hưởng.",
+      "back": "Quay lại trang trước",
+      "inbox": "Về Hộp thư bình luận",
+      "quickTitle": "Lối tắt",
+      "links": {
+        "comments": { "title": "Bình luận", "hint": "Xem và duyệt bình luận đang chờ." },
+        "posts": { "title": "Bài viết", "hint": "Danh sách bài viết của các Page đã kết nối." },
+        "settings": { "title": "Cài đặt", "hint": "Bảo mật tài khoản và ngôn ngữ." }
+      },
+      "open": "Mở"
+    },
+    "forbidden": {
+      "code": "Mã truy cập: 403",
+      "title": "Bạn không có quyền truy cập khu vực này",
+      "body": "Trang này chỉ dành cho Owner (chủ sở hữu) của workspace. Vai trò hiện tại của bạn là {role}.",
+      "workspace": "Workspace",
+      "signedInAs": "Đang đăng nhập",
+      "roleBadge": "Quyền hạn: {role}",
+      "allowedTitle": "Bạn dùng được",
+      "ownerOnlyTitle": "Chỉ dành cho Owner",
+      "ownerOnlyHint": "Nhờ Owner của workspace thực hiện hoặc nâng quyền cho bạn ở trang Thành viên.",
+      "back": "Quay về Hộp thư bình luận"
+    }
   },
   "banners": {
     "channel": {
@@ -1117,6 +1177,18 @@
     "subtitle": "Các trang Facebook của workspace {workspace}. Chỉ chủ workspace (Owner) kết nối được.",
     "connect": "Kết nối Facebook",
     "reconnect": "Kết nối lại",
+    "recovery": {
+      "title": "Khôi phục kết nối",
+      "cause": {
+        "expired": "Mã truy cập của Page đã hết hạn hoặc người quản trị Page vừa đổi mật khẩu Facebook. Hệ thống tạm không đọc và không trả lời được bình luận của Page này.",
+        "revoked": "Quyền của ứng dụng với Page này đã bị thu hồi hoặc ngắt kết nối. Page không dùng được cho tới khi bạn cấp lại quyền.",
+        "error": "Kênh đang gặp lỗi. Hệ thống đang tự thử lại; nếu lỗi kéo dài, hãy kết nối lại."
+      },
+      "stepsTitle": "Cách khắc phục",
+      "step1": "Đăng nhập Facebook bằng tài khoản có quyền quản lý Page này.",
+      "step2": "Bấm Kết nối lại và cấp quyền cho ứng dụng. Bài đăng và cài đặt Page của bạn không bị thay đổi.",
+      "ownerOnly": "Chỉ Owner kết nối lại được. Nếu bạn là Owner mà không thấy nút, tính năng kết nối Facebook chưa được bật ở môi trường này."
+    },
     "disabled": "Tính năng kết nối Facebook chưa được bật cho môi trường này.",
     "list": {
       "title": "Kênh đã kết nối",

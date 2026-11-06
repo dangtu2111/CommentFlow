@@ -1084,7 +1084,67 @@
       "settings": "Settings"
     },
     "logout": "Sign out",
-    "navLabel": "Main navigation"
+    "navLabel": "Main navigation",
+    "notifications": {
+      "label": "Notifications ({count})",
+      "title": "Notifications",
+      "empty": "No new notifications.",
+      "openChannels": "Open Channels"
+    }
+  },
+  "onboarding": {
+    "eyebrow": "Initial setup",
+    "stepLabel": "Step {n}",
+    "stepsLabel": "Setup steps",
+    "state": { "done": "Done", "current": "In progress", "todo": "Not started" },
+    "skippable": "Can be skipped",
+    "steps": {
+      "workspace": { "title": "Create workspace" },
+      "channels": { "title": "Connect platforms" },
+      "pages": { "title": "Choose Pages to activate" },
+      "knowledge": { "title": "Add knowledge for AI" },
+      "invite": { "title": "Invite staff" }
+    },
+    "next": {
+      "title": "After you create the workspace",
+      "list": {
+        "channels": "Connect Facebook Pages on the Channels page (Owner).",
+        "knowledge": "Import products from an Excel/CSV file so the AI answers with the right price and stock.",
+        "invite": "Invite staff on the Members page (you can do this later)."
+      }
+    },
+    "promise": {
+      "title": "Our commitment",
+      "body": "Official platform APIs only. The AI only drafts replies; it never hides comments by itself and never posts on its own."
+    }
+  },
+  "errorPages": {
+    "notFound": {
+      "code": "Error 404",
+      "title": "We could not find the page you asked for",
+      "body": "The link may have changed, been removed, or you may not have access to this page. Your comment data is not affected.",
+      "back": "Go back",
+      "inbox": "Go to the comment inbox",
+      "quickTitle": "Shortcuts",
+      "links": {
+        "comments": { "title": "Comments", "hint": "Review the comments waiting for you." },
+        "posts": { "title": "Posts", "hint": "Posts of your connected Pages." },
+        "settings": { "title": "Settings", "hint": "Account security and language." }
+      },
+      "open": "Open"
+    },
+    "forbidden": {
+      "code": "Access code: 403",
+      "title": "You do not have access to this area",
+      "body": "This page is for the workspace Owner only. Your current role is {role}.",
+      "workspace": "Workspace",
+      "signedInAs": "Signed in as",
+      "roleBadge": "Permission: {role}",
+      "allowedTitle": "What you can use",
+      "ownerOnlyTitle": "Owner only",
+      "ownerOnlyHint": "Ask the workspace Owner to do this, or to change your role on the Members page.",
+      "back": "Back to the comment inbox"
+    }
   },
   "banners": {
     "channel": {
@@ -1122,6 +1182,18 @@
     "subtitle": "Facebook Pages of workspace {workspace}. Only the workspace Owner can connect them.",
     "connect": "Connect Facebook",
     "reconnect": "Reconnect",
+    "recovery": {
+      "title": "Restore connection",
+      "cause": {
+        "expired": "The Page access token has expired or a Page admin recently changed their Facebook password. The system cannot read or reply to comments on this Page for now.",
+        "revoked": "The app's access to this Page was revoked or disconnected. The Page stays unusable until you grant access again.",
+        "error": "The channel has an error. The system is retrying; if it keeps failing, reconnect it."
+      },
+      "stepsTitle": "How to fix it",
+      "step1": "Sign in to Facebook with an account that manages this Page.",
+      "step2": "Click Reconnect and grant access to the app. Your posts and Page settings are not changed.",
+      "ownerOnly": "Only the Owner can reconnect. If you are the Owner and do not see the button, Facebook connection is not enabled in this environment."
+    },
     "disabled": "Facebook connection is not enabled for this environment.",
     "list": {
       "title": "Connected channels",
