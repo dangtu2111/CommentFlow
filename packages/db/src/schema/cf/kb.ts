@@ -30,7 +30,7 @@ export const halfvec1024 = customType<{ data: number[]; driverData: string }>({
   },
 });
 
-/** `tsvector` cho tìm kiếm toàn văn; worker lập chỉ mục điền theo `lang` (docs/10 §3.4). */
+/** `tsvector` cho tìm kiếm toàn văn; trigger `kb_chunks_fill_search` điền theo `lang` (0037, docs/10 §3.4). */
 export const tsvector = customType<{ data: string }>({
   dataType() {
     return 'tsvector';
@@ -115,6 +115,8 @@ export const kbChunks = cf.table(
     contentHash: text('content_hash').notNull(),
     embedding: halfvec1024('embedding'),
     tsv: tsvector('tsv'),
+    /** Chữ thường + bỏ dấu của `context_header` + `content`; do trigger `kb_chunks_fill_search` điền (0037). */
+    searchNorm: text('search_norm').notNull().default(''),
     metadata: jsonb('metadata').notNull().default(sql`'{}'::jsonb`),
     isDraft: boolean('is_draft').notNull().default(true),
     contextHeader: text('context_header'),
@@ -141,6 +143,7 @@ export const kbChunks = cf.table(
       .nullsNotDistinct(),
     index('kb_chunks_workspace_version_idx').on(t.workspaceId, t.versionId),
     index('kb_chunks_tsv_idx').using('gin', t.tsv),
+    index('kb_chunks_search_norm_trgm_idx').using('gin', t.searchNorm.op('gin_trgm_ops')),
     index('kb_chunks_workspace_product_idx')
       .on(t.workspaceId, t.productId)
       .where(sql`${t.productId} is not null`),

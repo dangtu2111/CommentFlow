@@ -260,6 +260,13 @@
       "when": 1793934346095,
       "tag": "0036_kb_shop_policy_faq",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793937658826,
+      "tag": "0037_kb_search_fts",
+      "breakpoints": true
     }
   ]
 }

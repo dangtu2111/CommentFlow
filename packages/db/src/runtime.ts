@@ -84,6 +84,19 @@ export {
   upsertShopProfile,
 } from './queries/kb-content';
 export {
+  DEFAULT_KB_SEARCH_LIMIT,
+  findProductMatch,
+  getProductRevs,
+  type KbSearchHit,
+  type KbSearchInput,
+  type KbSearchLang,
+  type ProductHit,
+  type ProductSearchQuery,
+  searchKbChunks,
+  searchProducts,
+  setProductNameEmbedding,
+} from './queries/kb-search';
+export {
   DEFAULT_POSTS_LIMIT,
   listPosts,
   MAX_POSTS_LIMIT,
