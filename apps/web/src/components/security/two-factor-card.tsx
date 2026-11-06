@@ -1,37 +1,38 @@
 'use client';
 
-import {
-  Download,
-  KeyRound,
-  LockKeyhole,
-  Power,
-  RefreshCw,
-  ShieldCheck,
-  Smartphone,
-  X,
-} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useActionState, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useActionState, useCallback, useEffect, useState } from 'react';
 import {
   beginTwoFactorAction,
   confirmTwoFactorAction,
   disableTwoFactorAction,
   regenerateBackupCodesAction,
 } from '../../app/app/security/actions';
+import { cn } from '../../lib/cn';
 import { SECURITY_IDLE, type SecurityState } from '../../lib/security-form';
 import { enrollStep } from '../../lib/settings-visual';
 import { showEnableFlow } from '../../lib/two-factor-view';
-import { Banner } from '../ui/banner';
-import { Dialog, DialogTrigger } from '../ui/dialog';
-import { CodeField, PasswordField } from '../ui/fields';
-import { SectionHead } from '../ui/section-head';
-import { Stepper } from '../ui/stepper';
-import { SubmitButton } from '../ui/submit-button';
+import { TwDialog, TwDialogTrigger, TwSubmit } from '../settings/tw/dialog';
+import { TwBanner, TwCodeField, TwPasswordField } from '../settings/tw/fields';
+import { TwCard, TwCardHead, TwChip, TwSoonButton, twBtn } from '../settings/tw/ui';
+import { Icon } from '../ui/icon';
 
 const SETUP_ID = 'two-factor-setup-dialog';
 const REGEN_ID = 'two-factor-regen-dialog';
 const DISABLE_ID = 'two-factor-disable-dialog';
+const MASKED_SLOTS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8'] as const;
+
+const TITLE_ID = 'two-factor-title';
+const MASKED_CODE = '••••-••••';
+const TONE_PRIMARY = 'text-primary';
+const TONE_SECONDARY = 'text-secondary';
+
+type StepState = 'done' | 'current' | 'todo';
+const stepState = (n: number, current: number): StepState => {
+  if (n < current) return 'done';
+  return n === current ? 'current' : 'todo';
+};
 
 function useError(state: SecurityState): string | undefined {
   const t = useTranslations('auth.errors');
@@ -40,16 +41,60 @@ function useError(state: SecurityState): string | undefined {
     : undefined;
 }
 
-/** Thanh ba bước của trình hướng dẫn bật 2FA (bước đã qua có dấu tích, bước hiện tại nổi bật). */
+/** Thanh ba bước của trình hướng dẫn bật 2FA (bước đã qua có dấu tích, bước hiện tại nổi bật) — `settings-2fa-setup-modal`. */
 export function EnrollStepper({ step }: { step: 1 | 2 | 3 }) {
   const t = useTranslations('auth.security.twoFactor.steps');
-  const steps = ([1, 2, 3] as const).map((n) => ({
-    key: String(n),
-    state: n < step ? ('done' as const) : n === step ? ('current' as const) : ('todo' as const),
-    eyebrow: t('step', { n }),
-    title: t(`name.${n}`),
-  }));
-  return <Stepper label={t('label')} steps={steps} />;
+  return (
+    <ol
+      aria-label={t('label')}
+      className="grid grid-cols-3 gap-2 p-space-sm rounded-xl bg-surface-container-low"
+    >
+      {([1, 2, 3] as const).map((n) => {
+        const state = stepState(n, step);
+        return (
+          <li
+            key={n}
+            aria-current={state === 'current' ? 'step' : undefined}
+            className={cn(
+              'flex items-center gap-2 p-2 rounded-lg',
+              state === 'done' && 'bg-surface-container-lowest shadow-sm',
+              state === 'current' && 'bg-primary-container/10',
+            )}
+          >
+            <span
+              aria-hidden="true"
+              className={cn(
+                'w-6 h-6 rounded-full flex items-center justify-center font-code-sm text-code-sm font-bold shrink-0',
+                state === 'done' && 'bg-primary-container text-on-primary',
+                state === 'current' && 'bg-primary text-on-primary',
+                state === 'todo' && 'bg-surface-container-highest text-on-surface-variant',
+              )}
+            >
+              {state === 'done' ? <Icon name="check" size={14} /> : n}
+            </span>
+            <span className="min-w-0">
+              <span
+                className={cn(
+                  'block font-label-sm text-label-sm uppercase tracking-wider truncate',
+                  state === 'todo' ? 'text-on-surface-variant' : 'text-primary font-bold',
+                )}
+              >
+                {t('step', { n })}
+              </span>
+              <span
+                className={cn(
+                  'block font-title-sm text-title-sm truncate',
+                  state === 'todo' ? 'text-on-surface-variant' : 'text-on-surface',
+                )}
+              >
+                {t(`name.${n}`)}
+              </span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
 /** Tải mã dự phòng thành file .txt ngay trong trình duyệt (không gửi đi đâu; Blob chỉ tồn tại ở máy người dùng). */
@@ -81,28 +126,39 @@ function BackupCodes({ codes, onSaved }: { codes: string[]; onSaved?: () => void
     }
   };
   return (
-    <section className="stack backup-box" aria-labelledby="backup-title">
-      <h3 id="backup-title" className="section-subtitle">
-        {t('backupTitle')}
-      </h3>
-      <p className="muted">{t('backupBody')}</p>
-      <ul className="code-grid">
+    <section aria-labelledby="backup-title" className="space-y-space-md">
+      <TwBanner tone="warning">
+        <h3 id="backup-title" className="font-title-sm text-title-sm">
+          {t('backupTitle')}
+        </h3>
+        <p>{t('backupBody')}</p>
+      </TwBanner>
+      <ul className="bg-surface-container-low p-space-lg rounded-xl grid grid-cols-2 gap-3 text-center font-mono font-bold text-on-surface">
         {codes.map((code) => (
-          <li key={code}>
+          <li key={code} className="bg-surface-container-lowest p-2 rounded shadow-sm">
             <code>{code}</code>
           </li>
         ))}
       </ul>
-      <div className="row">
-        <button type="button" className="btn btn-secondary" onClick={copy}>
+      <div className="flex items-center justify-end gap-space-sm flex-wrap">
+        <button type="button" className={twBtn({ tone: 'soft', size: 'lg' })} onClick={copy}>
+          <Icon name="content_copy" size={16} />
           {copied ? t('copied') : t('copy')}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={() => downloadCodes(codes)}>
-          <Download size={16} aria-hidden="true" />
+        <button
+          type="button"
+          className={twBtn({ tone: 'soft', size: 'lg' })}
+          onClick={() => downloadCodes(codes)}
+        >
+          <Icon name="download" size={16} />
           {t('downloadTxt')}
         </button>
         {onSaved ? (
-          <button type="button" className="btn btn-primary" onClick={onSaved}>
+          <button
+            type="button"
+            className={twBtn({ tone: 'primary', size: 'lg' })}
+            onClick={onSaved}
+          >
             {t('saved')}
           </button>
         ) : null}
@@ -134,7 +190,7 @@ function EnableFlow({
 
   if (begin.status === 'enroll' && confirm.status === 'done') {
     return (
-      <div className="stack">
+      <div className="space-y-space-md">
         <EnrollStepper step={step} />
         <BackupCodes
           codes={begin.backupCodes}
@@ -148,24 +204,51 @@ function EnableFlow({
   }
   if (begin.status === 'enroll') {
     return (
-      <div className="stack">
+      <div className="space-y-space-md">
         <EnrollStepper step={step} />
-        <form action={confirmAction} className="form" noValidate>
-          <div className="setup-grid">
-            <div className="setup-qr">
-              <h3 className="section-subtitle">{t('scanTitle')}</h3>
-              <p className="muted">{t('scanBody')}</p>
-              {/* Ảnh QR do server tạo (data URL); khóa bí mật không đi qua dịch vụ nào bên ngoài. */}
-              {/* biome-ignore lint/performance/noImgElement: data URL nhúng sẵn, không cần tối ưu ảnh của Next */}
-              <img className="qr" src={begin.qrDataUrl} width={224} height={224} alt={t('qrAlt')} />
-              <p className="muted">
-                {t('manualKey')} <code className="manual-key">{begin.manualKey}</code>
+        <form
+          action={confirmAction}
+          noValidate
+          className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg"
+        >
+          <div className="lg:col-span-5 bg-surface-container-low p-space-lg rounded-xl space-y-space-md">
+            <div>
+              <h3 className="font-title-sm text-title-sm text-on-surface flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-primary-container" aria-hidden="true" />
+                {t('scanTitle')}
+              </h3>
+              <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                {t('scanBody')}
               </p>
             </div>
-            <div className="setup-code">
-              {confirmError ? <Banner variant="danger">{confirmError}</Banner> : null}
-              <CodeField name="code" label={t('confirmLabel')} />
-              <SubmitButton>{t('confirm')}</SubmitButton>
+            <div className="flex justify-center p-space-md bg-surface-container-lowest rounded-xl shadow-sm">
+              {/* Ảnh QR do server tạo (data URL); khóa bí mật không đi qua dịch vụ nào bên ngoài. */}
+              {/* biome-ignore lint/performance/noImgElement: data URL nhúng sẵn, không cần tối ưu ảnh của Next */}
+              <img
+                src={begin.qrDataUrl}
+                width={176}
+                height={176}
+                alt={t('qrAlt')}
+                className="w-44 h-44"
+              />
+            </div>
+            <div className="bg-surface-container-lowest p-space-sm rounded-lg space-y-1.5">
+              <p className="font-label-sm text-label-sm text-on-surface-variant space-y-1.5">
+                {t('manualKey')}
+                <code
+                  data-testid="two-factor-manual-key"
+                  className="block bg-surface-container-low px-2.5 py-1.5 rounded-lg font-code-sm text-code-sm font-bold text-primary-container tracking-wider break-all"
+                >
+                  {begin.manualKey}
+                </code>
+              </p>
+            </div>
+          </div>
+          <div className="lg:col-span-7 bg-surface-container-lowest p-space-md rounded-xl space-y-space-md self-start">
+            {confirmError ? <TwBanner tone="danger">{confirmError}</TwBanner> : null}
+            <TwCodeField name="code" label={t('confirmLabel')} />
+            <div className="flex justify-end">
+              <TwSubmit>{t('confirm')}</TwSubmit>
             </div>
           </div>
         </form>
@@ -173,17 +256,19 @@ function EnableFlow({
     );
   }
   return (
-    <div className="stack">
+    <div className="space-y-space-md">
       <EnrollStepper step={step} />
-      <form action={beginAction} className="form" noValidate>
-        {beginError ? <Banner variant="danger">{beginError}</Banner> : null}
-        <PasswordField
+      <form action={beginAction} noValidate className="space-y-space-md">
+        {beginError ? <TwBanner tone="danger">{beginError}</TwBanner> : null}
+        <TwPasswordField
           name="password"
           label={t('passwordLabel')}
           hint={t('passwordHint')}
           autoComplete="current-password"
         />
-        <SubmitButton block={false}>{t('start')}</SubmitButton>
+        <div className="flex justify-end">
+          <TwSubmit>{t('start')}</TwSubmit>
+        </div>
       </form>
     </div>
   );
@@ -195,15 +280,19 @@ function RegenFlow() {
   const [regen, regenAction] = useActionState(regenerateBackupCodesAction, SECURITY_IDLE);
   const regenError = useError(regen);
   return (
-    <div className="stack">
+    <div className="space-y-space-md">
       {regen.status === 'codes' ? <BackupCodes codes={regen.backupCodes} /> : null}
-      <form action={regenAction} className="form" noValidate>
-        <p className="muted">{t('regenBody')}</p>
-        {regenError ? <Banner variant="danger">{regenError}</Banner> : null}
-        <PasswordField name="password" label={t('passwordLabel')} autoComplete="current-password" />
-        <SubmitButton variant="secondary" block={false}>
-          {t('regen')}
-        </SubmitButton>
+      <form action={regenAction} noValidate className="space-y-space-md">
+        <p className="font-body-md text-body-md text-on-surface-variant">{t('regenBody')}</p>
+        {regenError ? <TwBanner tone="danger">{regenError}</TwBanner> : null}
+        <TwPasswordField
+          name="password"
+          label={t('passwordLabel')}
+          autoComplete="current-password"
+        />
+        <div className="flex justify-end">
+          <TwSubmit tone="soft">{t('regen')}</TwSubmit>
+        </div>
       </form>
     </div>
   );
@@ -215,14 +304,61 @@ function DisableFlow() {
   const [disable, disableAction] = useActionState(disableTwoFactorAction, SECURITY_IDLE);
   const disableError = useError(disable);
   return (
-    <form action={disableAction} className="form" noValidate>
-      <Banner variant="warning">{t('disableBody')}</Banner>
-      {disableError ? <Banner variant="danger">{disableError}</Banner> : null}
-      <PasswordField name="password" label={t('passwordLabel')} autoComplete="current-password" />
-      <SubmitButton variant="secondary" block={false}>
-        {t('disable')}
-      </SubmitButton>
+    <form action={disableAction} noValidate className="space-y-space-md">
+      <TwBanner tone="warning" icon="gpp_maybe">
+        {t('disableBody')}
+      </TwBanner>
+      {disableError ? <TwBanner tone="danger">{disableError}</TwBanner> : null}
+      <TwPasswordField name="password" label={t('passwordLabel')} autoComplete="current-password" />
+      <div className="flex justify-end">
+        <TwSubmit tone="danger">{t('disable')}</TwSubmit>
+      </div>
     </form>
+  );
+}
+
+function InfoTile({
+  title,
+  icon,
+  tone,
+  value,
+  hint,
+  note,
+  noteIcon,
+  noteOk = false,
+}: {
+  title: string;
+  icon: ReactNode;
+  /** Màu biểu tượng góc phải thẻ (class chữ Tailwind). */
+  tone: string;
+  value: string;
+  hint: string;
+  note?: string;
+  noteIcon: ReactNode;
+  noteOk?: boolean;
+}) {
+  return (
+    <div className="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between text-on-surface-variant mb-2">
+          <span className="font-label-sm text-label-sm uppercase tracking-wide">{title}</span>
+          <span className={tone}>{icon}</span>
+        </div>
+        <div className="font-title-md text-title-md text-on-surface">{value}</div>
+        <div className="font-body-sm text-body-sm text-on-surface-variant mt-1">{hint}</div>
+      </div>
+      {note ? (
+        <div
+          className={cn(
+            'pt-3 flex items-center gap-1 font-label-sm text-label-sm',
+            noteOk ? 'text-[#237A36]' : 'text-on-surface-variant',
+          )}
+        >
+          {noteIcon}
+          <span>{note}</span>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -240,102 +376,182 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
   return (
     <>
       {justEnabled && enabled ? (
-        <div className="banner banner-success two-factor-just-enabled" role="status">
-          <ShieldCheck size={22} aria-hidden="true" />
-          <div className="stack-tight">
-            <p className="section-subtitle">{t('justEnabledTitle')}</p>
-            <p>{t('justEnabledBody')}</p>
+        <div
+          role="status"
+          className="bg-surface-container-lowest shadow-md rounded-xl p-space-lg flex items-start justify-between gap-space-md"
+        >
+          <div className="flex items-start gap-space-md">
+            <div className="w-10 h-10 rounded-full bg-[#EBF7ED] text-[#237A36] flex items-center justify-center shrink-0">
+              <Icon name="verified_user" size={24} />
+            </div>
+            <div className="space-y-1">
+              <p className="font-title-md text-title-md text-[#237A36]">{t('justEnabledTitle')}</p>
+              <p className="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+                {t('justEnabledBody')}
+              </p>
+            </div>
           </div>
           <button
             type="button"
-            className="btn btn-ghost"
             aria-label={t('dismiss')}
             onClick={() => setJustEnabled(false)}
+            className="w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container flex items-center justify-center transition-colors shrink-0"
           >
-            <X size={18} aria-hidden="true" />
+            <Icon name="close" size={18} />
           </button>
         </div>
       ) : null}
-      <section className="card stack" aria-labelledby="two-factor-title">
-        <SectionHead
-          id="two-factor-title"
+      <TwCard labelledBy={TITLE_ID}>
+        <TwCardHead
+          id={TITLE_ID}
           hero
-          icon={<LockKeyhole size={22} />}
+          icon={<Icon name="lock_person" size={24} />}
           title={
             <>
-              {t('title')}{' '}
-              <span className={`chip ${enabled ? 'chip-success' : 'chip-muted'}`}>
+              {t('title')}
+              <TwChip tone={enabled ? 'ok' : 'muted'} dot className="px-3 py-1 font-semibold">
                 {enabled ? t('statusOn') : t('statusOff')}
-              </span>
+              </TwChip>
             </>
           }
           description={enabled ? t('onBody') : t('offBody')}
           end={
-            <div className="row">
+            <>
               {enableFlow ? (
                 // Cả khi 2FA vừa bật nhưng còn đang hiện mã dự phòng: nút phải mở lại đúng hộp thoại này.
-                <DialogTrigger dialogId={SETUP_ID} className="btn btn-primary">
+                <TwDialogTrigger dialogId={SETUP_ID} className={twBtn({ tone: 'primary' })}>
                   {t('start')}
-                </DialogTrigger>
-              ) : null}
+                </TwDialogTrigger>
+              ) : (
+                <TwSoonButton tone="soft" soon={t('soon')}>
+                  <Icon name="phonelink_setup" size={16} />
+                  {t('switchDevice')}
+                </TwSoonButton>
+              )}
               {!enableFlow && !required ? (
-                <DialogTrigger dialogId={DISABLE_ID} className="btn btn-danger-ghost">
-                  <Power size={16} aria-hidden="true" />
+                <TwDialogTrigger dialogId={DISABLE_ID} className={twBtn({ tone: 'danger-ghost' })}>
+                  <Icon name="power_settings_new" size={16} />
                   {t('disableTitle')}
-                </DialogTrigger>
+                </TwDialogTrigger>
               ) : null}
-            </div>
+            </>
           }
         />
-        <dl className="info-tiles">
-          <div className="info-tile">
-            <dt>
-              {t('tiles.method')}
-              <Smartphone size={16} aria-hidden="true" />
-            </dt>
-            <dd>{t('tiles.methodValue')}</dd>
-            <dd className="muted">{t('tiles.methodHint')}</dd>
-            {enabled ? <dd className="info-tile-note is-ok">{t('tiles.rotation')}</dd> : null}
-          </div>
-        </dl>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+          <InfoTile
+            title={t('tiles.method')}
+            icon={<Icon name="smartphone" size={16} />}
+            tone={TONE_PRIMARY}
+            value={t('tiles.methodValue')}
+            hint={t('tiles.methodHint')}
+            note={enabled ? t('tiles.rotation') : undefined}
+            noteIcon={<Icon name="security_update_good" size={14} />}
+            noteOk
+          />
+          <InfoTile
+            title={t('tiles.deviceTitle')}
+            icon={<Icon name="devices" size={16} />}
+            tone={TONE_SECONDARY}
+            value={t('tiles.deviceValue')}
+            hint={t('tiles.deviceHint')}
+            note={t('soon')}
+            noteIcon={<Icon name="schedule" size={14} />}
+          />
+          <InfoTile
+            title={t('tiles.policyTitle')}
+            icon={<Icon name="shield" size={16} />}
+            tone={TONE_PRIMARY}
+            value={required ? t('tiles.policyRequired') : t('tiles.policyOptional')}
+            hint={t('tiles.policyHint')}
+            note={enabled ? t('tiles.policyMet') : undefined}
+            noteIcon={<Icon name="check" size={14} />}
+            noteOk
+          />
+        </div>
         {enabled && !enableFlow ? (
-          <div className="backup-block">
-            <span className="section-head-icon" aria-hidden="true">
-              <KeyRound size={22} />
-            </span>
-            <div className="backup-block-text">
-              <h3 className="section-subtitle">{t('backupBlockTitle')}</h3>
-              <p className="muted">{t('backupBlockBody')}</p>
+          <div className="bg-surface-container rounded-xl p-space-lg space-y-space-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+              <div className="flex items-start gap-space-sm">
+                <span className="text-tertiary shrink-0 mt-0.5">
+                  <Icon name="key_visualizer" size={24} />
+                </span>
+                <div>
+                  <h3 className="font-title-md text-title-md text-on-surface">
+                    {t('backupBlockTitle')}
+                  </h3>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 max-w-2xl">
+                    {t('backupBlockBody')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <TwSoonButton tone="primary" size="sm" soon={t('soon')}>
+                  <Icon name="visibility" size={16} />
+                  {t('viewCodes')}
+                </TwSoonButton>
+                <TwSoonButton tone="plain" size="sm" soon={t('soon')}>
+                  <Icon name="download" size={16} />
+                  {t('downloadTxt')}
+                </TwSoonButton>
+                <TwDialogTrigger
+                  dialogId={REGEN_ID}
+                  className={twBtn({ tone: 'plain', size: 'sm' })}
+                >
+                  <Icon name="refresh" size={16} />
+                  {t('regenTitle')}
+                </TwDialogTrigger>
+              </div>
             </div>
-            <DialogTrigger dialogId={REGEN_ID} className="btn btn-secondary">
-              <RefreshCw size={16} aria-hidden="true" />
-              {t('regenTitle')}
-            </DialogTrigger>
+            <ul
+              aria-label={t('maskedLabel')}
+              className="bg-surface-container-lowest rounded-lg p-space-md grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-center"
+            >
+              {MASKED_SLOTS.map((slot) => (
+                <li
+                  key={slot}
+                  className="py-1 px-2 rounded bg-surface-container-low text-on-surface-variant font-label-md text-label-md tracking-wider"
+                >
+                  {MASKED_CODE}
+                </li>
+              ))}
+            </ul>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">{t('maskedNote')}</p>
           </div>
         ) : null}
         {enableFlow ? (
-          <Dialog
+          <TwDialog
             dialogId={SETUP_ID}
             title={t('setupTitle')}
             description={t('setupBody')}
-            icon={<LockKeyhole size={22} />}
+            icon={<Icon name="lock_person" size={20} />}
+            size="xl"
             defaultOpen={required && !enabled}
           >
             <EnableFlow onEnrolling={startEnrolling} onFinished={finishEnrolling} />
-          </Dialog>
+          </TwDialog>
         ) : (
           <>
-            <Dialog dialogId={REGEN_ID} title={t('regenTitle')} icon={<RefreshCw size={22} />}>
+            <TwDialog
+              dialogId={REGEN_ID}
+              title={t('regenTitle')}
+              icon={<Icon name="refresh" size={20} />}
+              size="lg"
+            >
               <RegenFlow />
-            </Dialog>
+            </TwDialog>
             {required ? null : (
-              <Dialog dialogId={DISABLE_ID} title={t('disableTitle')} icon={<Power size={22} />}>
+              <TwDialog
+                dialogId={DISABLE_ID}
+                title={t('disableTitle')}
+                icon={<Icon name="gpp_maybe" size={24} />}
+                tone="danger"
+              >
                 <DisableFlow />
-              </Dialog>
+              </TwDialog>
             )}
           </>
         )}
-      </section>
+      </TwCard>
     </>
   );
 }

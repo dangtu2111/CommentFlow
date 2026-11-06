@@ -83,7 +83,7 @@ export async function enableTwoFactor(page: Page, t: Translate, user: TestUser):
   await dialog.getByLabel(tf('passwordLabel'), exact).fill(user.password);
   await dialog.getByRole('button', { name: tf('start'), ...exact }).click();
 
-  const keyLine = dialog.locator('p', { hasText: tf('manualKey') }).locator('code');
+  const keyLine = dialog.getByTestId('two-factor-manual-key');
   await expect(keyLine).toBeVisible();
   const shown = ((await keyLine.textContent()) ?? '').trim();
   const secret = shown.startsWith('otpauth://') ? secretFromUri(shown) : shown.replace(/\s+/g, '');

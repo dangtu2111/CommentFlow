@@ -7,9 +7,10 @@ import { TwoFactorCard } from '../../../../components/security/two-factor-card';
 import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
 import { ReplyLanguageCard } from '../../../../components/settings/reply-language-card';
-import { SettingsFrame } from '../../../../components/settings/settings-frame';
+import { SettingsFrame, TwPageHeader } from '../../../../components/settings/settings-frame';
+import { TwChip } from '../../../../components/settings/tw/ui';
 import { UsageMeterCard } from '../../../../components/settings/usage-meter-card';
-import { PageHeader } from '../../../../components/ui/page-header';
+import { Icon } from '../../../../components/ui/icon';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getDb } from '../../../../server/db';
 import { requestContext } from '../../../../server/request-context';
@@ -57,7 +58,28 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
         viewerRole={workspace.role}
         active="security"
         counts={counts}
-        header={<PageHeader title={t('title')} subtitle={t('subtitle')} />}
+        header={
+          <TwPageHeader
+            title={t('title')}
+            subtitle={t('subtitle')}
+            end={
+              <TwChip tone={overview.twoFactorEnabled ? 'ok' : 'warn'} dot className="px-3 py-1.5">
+                {t(overview.twoFactorEnabled ? 'securityStatus.on' : 'securityStatus.off')}
+              </TwChip>
+            }
+          />
+        }
+        sideNote={
+          <div className="bg-surface-container-low rounded-xl p-space-md shadow-sm space-y-2">
+            <div className="flex items-center gap-2 text-primary">
+              <Icon name="verified" size={16} />
+              <span className="font-title-sm text-title-sm">{t('securityNote.title')}</span>
+            </div>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {t('securityNote.body')}
+            </p>
+          </div>
+        }
       >
         <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
         <AccountCard
@@ -65,8 +87,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
           email={user.email}
           emailVerified={user.emailVerified}
           memberRole={workspace.role}
-        />
-        <ChangePasswordCard />
+        >
+          <ChangePasswordCard />
+        </AccountCard>
         <SessionsCard sessions={overview.sessions} />
         {usage ? <UsageMeterCard view={usage} /> : null}
         <LanguageCard />

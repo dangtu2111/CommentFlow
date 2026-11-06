@@ -77,7 +77,11 @@
       "title": "Sign-in & account details",
       "body": "Your identity details in this workspace.",
       "email": "Sign-in email address",
-      "verified": "Verified"
+      "verified": "Verified",
+      "edit": "Edit profile",
+      "phone": "Contact phone number",
+      "phoneEmpty": "Not set",
+      "soon": "Coming soon"
     },
     "soon": "Coming soon",
     "billing": {
@@ -159,6 +163,14 @@
         "export": "Export statement",
         "vatTitle": "VAT e-invoice",
         "vatBody": "VAT invoicing details will be editable in a later release."
+      },
+      "bento": {
+        "turns": "AI turns used this month",
+        "turnsOf": "/ {capacity} turns",
+        "channels": "Connected sales channels",
+        "channelsOf": "/ {total} channels added",
+        "members": "Team members",
+        "membersUnit": "accounts"
       }
     },
     "notifications": {
@@ -216,6 +228,14 @@
         "button": "Send workspace deletion request",
         "soon": "Not open yet — no real data is deleted"
       }
+    },
+    "securityStatus": {
+      "on": "2FA: On",
+      "off": "2FA: Off"
+    },
+    "securityNote": {
+      "title": "Account security",
+      "body": "Workspace owners and admins must turn on two-factor authentication (2FA) to protect access to connected channels."
     }
   },
   "auth": {
@@ -421,8 +441,21 @@
           "method": "Primary method",
           "methodValue": "Authenticator app (TOTP)",
           "methodHint": "Google / Microsoft / 1Password",
-          "rotation": "Code changes every 30 seconds"
-        }
+          "rotation": "Code changes every 30 seconds",
+          "deviceTitle": "Linked device",
+          "deviceValue": "Not recorded",
+          "deviceHint": "Authenticator app/device name",
+          "policyTitle": "Security policy",
+          "policyRequired": "Required for your role",
+          "policyOptional": "Optional for your role",
+          "policyHint": "Applies by role in the workspace",
+          "policyMet": "Met"
+        },
+        "switchDevice": "Change device",
+        "viewCodes": "View codes",
+        "maskedLabel": "Hidden backup codes",
+        "maskedNote": "Backup codes are shown only once when created and cannot be viewed again. To get new ones, regenerate the set.",
+        "soon": "Coming soon"
       },
       "sessions": {
         "title": "Signed-in devices",
@@ -523,7 +556,10 @@
       "selfNote": "You cannot change your own role or remove yourself.",
       "unknownName": "(no name yet)",
       "emailHidden": "(email hidden while suspended)",
-      "count": "{count} members"
+      "count": "{count} members",
+      "body": "Manage accounts allowed to reply, view leads and configure the bot.",
+      "invite": "Invite a member",
+      "locked": "Cannot be changed"
     },
     "actions": {
       "makeOwner": "Make Owner",
@@ -543,7 +579,11 @@
       "role": "Role",
       "roleHint": "Owners have full access and must turn on two-step verification. Staff handle comments and messages.",
       "submit": "Send invitation",
-      "sent": "If the email is valid, the invitation has been sent. You can follow it under “Pending invitations”."
+      "sent": "If the email is valid, the invitation has been sent. You can follow it under “Pending invitations”.",
+      "soon": "Coming soon",
+      "cancel": "Cancel",
+      "maskTitle": "Mask customer phone numbers",
+      "maskBody": "This member only sees 0987***321 to avoid copying customer data."
     },
     "pending": {
       "title": "Pending invitations",
@@ -562,6 +602,56 @@
       "leaveLastOwner": "You are the last active Owner. Promote another member to Owner (or delete the workspace) before leaving.",
       "invalid": "The information is not valid. Please reload the page and try again.",
       "generic": "Could not complete that. Please try again in a few minutes."
+    },
+    "soon": "Coming soon",
+    "headerTitle": "Workspace settings & administration",
+    "docs": "View documentation",
+    "saveChanges": "Save changes",
+    "permissions": {
+      "owner": "Full system access",
+      "staff": "Handles comments, messages, views leads"
+    },
+    "table": {
+      "person": "Member",
+      "role": "Role",
+      "permissions": "Permissions",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "matrix": {
+      "title": "Permission matrix (Owner vs Staff)",
+      "version": "Permission details",
+      "task": "Operation",
+      "rule": "Security rule",
+      "mask": "Mask phone",
+      "allowed": "Allowed",
+      "denied": "Not allowed",
+      "rows": {
+        "connect": {
+          "task": "Connect / disconnect Facebook Page, Instagram",
+          "rule": "Only the Owner can authorize Meta OAuth"
+        },
+        "kb": {
+          "task": "Write and edit the AI knowledge base (FAQ, price list)",
+          "rule": "Prevents staff from editing the source price list"
+        },
+        "rules": {
+          "task": "Configure AI auto-reply rules and tone",
+          "rule": "Only the Owner turns automation on or off"
+        },
+        "stop": {
+          "task": "Emergency Stop button",
+          "rule": "Anyone can stop it immediately if the AI replies wrongly"
+        },
+        "leads": {
+          "task": "View the Leads list",
+          "rule": "Phone numbers are masked to prevent customer data leaks"
+        },
+        "billing": {
+          "task": "Manage plan, buy extra AI turns and invoices",
+          "rule": "Full billing access belongs to the Owner"
+        }
+      }
     }
   },
   "leave": {

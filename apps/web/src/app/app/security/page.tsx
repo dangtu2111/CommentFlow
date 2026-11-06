@@ -5,6 +5,7 @@ import { LocaleSwitcher } from '../../../components/locale-switcher';
 import { ChangePasswordCard } from '../../../components/security/change-password-card';
 import { SessionsCard } from '../../../components/security/sessions-card';
 import { TwoFactorCard } from '../../../components/security/two-factor-card';
+import { TwCard } from '../../../components/settings/tw/ui';
 import { Banner } from '../../../components/ui/banner';
 import { getAuthRuntime } from '../../../server/auth';
 import { getBrand } from '../../../server/brand';
@@ -27,13 +28,15 @@ export default async function SecurityPage() {
   const t = await getTranslations('auth.security');
   const mustEnable = overview.required && !overview.twoFactorEnabled;
   return (
-    <main className="app-page">
+    <main className="app-page tw">
       <h1 className="auth-title">{t('title')}</h1>
       <p className="auth-subtitle">{t('subtitle')}</p>
       {mustEnable ? <Banner variant="warning">{t('requiredBanner')}</Banner> : null}
       {/* Giữ nguyên vị trí TwoFactorCard trong cây: đổi vị trí/key làm nó mount lại và mất state `enrolling` (mã dự phòng biến mất). */}
       <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
-      <ChangePasswordCard />
+      <TwCard className="p-space-md">
+        <ChangePasswordCard />
+      </TwCard>
       <section className="card stack" aria-labelledby="language-title">
         <h2 id="language-title" className="section-title">
           {t('language.title')}

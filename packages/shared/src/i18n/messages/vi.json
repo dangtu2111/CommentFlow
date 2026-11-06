@@ -77,7 +77,11 @@
       "title": "Thông tin đăng nhập & Tài khoản",
       "body": "Thông tin xác thực danh tính của bạn trong workspace này.",
       "email": "Địa chỉ email đăng nhập",
-      "verified": "Đã xác thực"
+      "verified": "Đã xác thực",
+      "edit": "Chỉnh sửa thông tin",
+      "phone": "Số điện thoại liên hệ",
+      "phoneEmpty": "Chưa cập nhật",
+      "soon": "Sắp có"
     },
     "soon": "Sắp có",
     "billing": {
@@ -159,6 +163,14 @@
         "export": "Xuất bảng kê",
         "vatTitle": "Hóa đơn điện tử VAT",
         "vatBody": "Thông tin xuất hóa đơn VAT sẽ chỉnh sửa được ở bản sau."
+      },
+      "bento": {
+        "turns": "Lượt AI xử lý trong tháng",
+        "turnsOf": "/ {capacity} lượt",
+        "channels": "Kênh bán hàng kết nối",
+        "channelsOf": "/ {total} kênh đã thêm",
+        "members": "Thành viên nhân sự",
+        "membersUnit": "tài khoản"
       }
     },
     "notifications": {
@@ -216,6 +228,14 @@
         "button": "Gửi yêu cầu xóa workspace",
         "soon": "Chưa mở — chưa xóa dữ liệu thật"
       }
+    },
+    "securityStatus": {
+      "on": "2FA: Đang bật",
+      "off": "2FA: Chưa bật"
+    },
+    "securityNote": {
+      "title": "Bảo mật tài khoản",
+      "body": "Chủ sở hữu và quản trị viên workspace bắt buộc bật xác thực 2 bước (2FA) để bảo vệ quyền truy cập các kênh đã kết nối."
     }
   },
   "auth": {
@@ -421,8 +441,21 @@
           "method": "Phương thức chính",
           "methodValue": "Ứng dụng xác thực (TOTP)",
           "methodHint": "Google / Microsoft / 1Password",
-          "rotation": "Mã thay đổi mỗi 30 giây"
-        }
+          "rotation": "Mã thay đổi mỗi 30 giây",
+          "deviceTitle": "Thiết bị đã đồng bộ",
+          "deviceValue": "Chưa ghi nhận",
+          "deviceHint": "Tên ứng dụng/thiết bị Authenticator",
+          "policyTitle": "Chính sách bảo mật",
+          "policyRequired": "Bắt buộc với vai trò của bạn",
+          "policyOptional": "Tùy chọn với vai trò của bạn",
+          "policyHint": "Áp dụng theo vai trò trong workspace",
+          "policyMet": "Đã đáp ứng"
+        },
+        "switchDevice": "Đổi thiết bị",
+        "viewCodes": "Xem lại mã",
+        "maskedLabel": "Mã dự phòng đã ẩn",
+        "maskedNote": "Mã dự phòng chỉ hiện một lần khi tạo; mã đã tạo không xem lại được. Muốn có mã mới, hãy tạo lại bộ mã.",
+        "soon": "Sắp có"
       },
       "sessions": {
         "title": "Thiết bị đang đăng nhập",
@@ -523,7 +556,10 @@
       "selfNote": "Bạn không thể tự đổi vai trò hay tự gỡ chính mình.",
       "unknownName": "(chưa có tên)",
       "emailHidden": "(email ẩn khi tạm khóa)",
-      "count": "{count} thành viên"
+      "count": "{count} thành viên",
+      "body": "Quản lý các tài khoản được cấp quyền trả lời, xem khách hàng tiềm năng và cấu hình bot.",
+      "invite": "Mời thành viên mới",
+      "locked": "Không thể thay đổi"
     },
     "actions": {
       "makeOwner": "Nâng lên Owner",
@@ -543,7 +579,11 @@
       "role": "Vai trò",
       "roleHint": "Owner có toàn quyền và bắt buộc bật xác thực 2 bước. Staff xử lý bình luận, tin nhắn.",
       "submit": "Gửi lời mời",
-      "sent": "Nếu email hợp lệ, lời mời đã được gửi. Bạn có thể theo dõi trong mục “Lời mời đang chờ”."
+      "sent": "Nếu email hợp lệ, lời mời đã được gửi. Bạn có thể theo dõi trong mục “Lời mời đang chờ”.",
+      "soon": "Sắp có",
+      "cancel": "Hủy bỏ",
+      "maskTitle": "Che bớt số điện thoại của khách hàng",
+      "maskBody": "Nhân sự này chỉ thấy dạng 0987***321 để tránh sao chép dữ liệu khách."
     },
     "pending": {
       "title": "Lời mời đang chờ",
@@ -562,6 +602,56 @@
       "leaveLastOwner": "Bạn là Owner đang hoạt động cuối cùng. Hãy nâng một thành viên khác lên Owner (hoặc xóa workspace) trước khi rời.",
       "invalid": "Thông tin chưa hợp lệ. Vui lòng tải lại trang rồi thử lại.",
       "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
+    },
+    "soon": "Sắp có",
+    "headerTitle": "Cài đặt & Quản trị Workspace",
+    "docs": "Xem tài liệu hướng dẫn",
+    "saveChanges": "Lưu thay đổi",
+    "permissions": {
+      "owner": "Toàn quyền hệ thống",
+      "staff": "Xử lý bình luận, tin nhắn, xem khách tiềm năng"
+    },
+    "table": {
+      "person": "Nhân sự",
+      "role": "Vai trò",
+      "permissions": "Quyền thao tác",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "matrix": {
+      "title": "Ma trận đối chiếu quyền hạn (Owner vs Staff)",
+      "version": "Chi tiết phân quyền",
+      "task": "Tác vụ vận hành",
+      "rule": "Quy tắc bảo mật",
+      "mask": "Che SĐT",
+      "allowed": "Có quyền",
+      "denied": "Không có quyền",
+      "rows": {
+        "connect": {
+          "task": "Kết nối / ngắt kết nối Fanpage, Instagram",
+          "rule": "Chỉ Owner được ủy quyền OAuth Meta"
+        },
+        "kb": {
+          "task": "Soạn và sửa Cơ sở kiến thức AI (FAQ, bảng giá)",
+          "rule": "Tránh nhân viên sửa thông tin bảng giá gốc"
+        },
+        "rules": {
+          "task": "Cấu hình quy tắc AI tự trả lời và giọng văn",
+          "rule": "Chỉ Owner bật/tắt luồng tự động"
+        },
+        "stop": {
+          "task": "Nút Dừng khẩn cấp (Emergency Stop)",
+          "rule": "Bất kỳ ai cũng có thể ngắt ngay khi AI trả lời sai"
+        },
+        "leads": {
+          "task": "Xem danh sách Khách tiềm năng",
+          "rule": "Che số điện thoại để chống rò rỉ dữ liệu khách"
+        },
+        "billing": {
+          "task": "Quản lý gói cước, mua thêm lượt AI và hóa đơn",
+          "rule": "Toàn quyền thanh toán thuộc Owner"
+        }
+      }
     }
   },
   "leave": {
