@@ -296,7 +296,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | ML-SERVICE | FR-027 (bộ phân loại tự host), FR-025 (chuẩn hóa/nhận ngôn ngữ ở `ml`) | — | COST-GATE | — | không | ⏳ |
 | PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | 🟡 Xong-mock (`feat-pgvector-hybrid`, Q-PVH1, không migration; chờ CI; embedder thật → `KB-EMBED-LITELLM`) |
 | SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ✅ Xong-mock (`feat-semantic-cache`, không migration; chưa nối Redis/pipeline; KT-SC) |
-| LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | ⛔ |
+| LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | 🟡 Xong-mock (`feat-litellm-langfuse`, Q-LLF1, không migration; cờ TẮT; chưa nối `llm-client`; KT-LLF) |
 | SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ✅ Xong-mock (`feat-src-haravan`, Q-HRV1; không migration; còn `HARAVAN-CONNECT-STORE` (OAuth + bảng token, làn b); KT-HRV) |
 | SRC-SAPO | FR-122 (Sapo) | — | SRC-HARAVAN | S | **có** — shop dev Sapo | ✅ Xong-mock (`feat-src-sapo`, Q-SAP1; không migration; còn `SAPO-CONNECT-STORE` (OAuth + bảng token, làn b); KT-SAP) |
 | SRC-KIOTVIET | FR-122 (KiotViet) | — | SRC-SAPO | S | **có** | ✅ Xong-mock (`feat-src-kiotviet`, Q-KIO1; không migration; còn `KIOTVIET-CONNECT-STORE` (bảng Client ID/Secret, làn b); KT-KIO) |
