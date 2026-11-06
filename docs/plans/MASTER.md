@@ -264,7 +264,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | LEADS-KANBAN | FR-082 (Khách tiềm năng: trích SĐT/địa chỉ/sản phẩm, Kanban, giao người) — phần dữ liệu `LEADS-STORE` ✅ Xong-mock (feat-leads-store, migration 0051); còn giao diện Kanban + nối pipeline | US-051 | PII-MASK-PIPE | S (PII) | không | ⏳ (một phần) |
 | LEADS-EXPORT | FR-082 (xuất Excel/CSV) | US-051 | LEADS-KANBAN | S (PII) | không | ✅ Xong-mock lõi thuần (`feat-leads-export`, Q-LEX1; nguồn DB/route/UI/nhật ký xuất → `LEADS-EXPORT-WIRE`; KT-LEX) |
 | IG-CONNECTOR | FR-013 (bình luận Instagram: đọc, trả lời, ẩn; cùng Meta App) | UF-2 | CONNECTOR-IFACE, FB-OAUTH | S | **có** — IG Business thử | ✅ Xong-mock (`feat-ig-connector`, Q-IG1; còn `IG-WEBHOOK-ROUTE`, `IG-CHANNEL-CONNECT`) |
-| SHOPIFY-IMPORT | FR-052 (chỉ đọc sản phẩm/biến thể/giá/tồn/chính sách), FR-122 (nguồn Shopify) | US-030 | PRODUCTS-VARIANTS | S (OAuth) | **có** — Shopify dev store | ⛔ |
+| SHOPIFY-IMPORT | FR-052 (chỉ đọc sản phẩm/biến thể/giá/tồn/chính sách), FR-122 (nguồn Shopify) | US-030 | PRODUCTS-VARIANTS | S (OAuth) | **có** — Shopify dev store | ✅ Xong-mock (`feat-shopify-import`, Q-SHI1; không migration; còn `SHOPIFY-CONNECT-STORE` (OAuth + bảng token cửa hàng, làn b); KT-SHI) |
 | SHOPIFY-RECONCILE | FR-112 (đối soát hằng đêm + Đối soát ngay), FR-113 (kiểm/đăng ký lại webhook) | US-046 | SHOPIFY-IMPORT | S | **có** — Shopify dev store | ⛔ |
 | POLICY-URL-IMPORT | FR-053 (nhập link website, tôn trọng robots.txt), FR-055 (đồng bộ nguồn, `content_hash`) | US-031 | KB-CHUNKING | S (chống SSRF) | không | 🟡 Xong-mock (`feat-policy-url-import`, QPUI1, không migration; chờ CI; còn `POLICY-URL-SOURCES`) |
 | ADMIN-INTEGRATION-HEALTH | FR-104 (sức khỏe tích hợp, hàng đợi & dead letter) | US-083 | ADMIN-SHELL | — | không | 🟡 Xong-mock lõi + DB (`feat-integration-health`, Q-AIH1, migration 0059; còn `INTEGRATION-HEALTH-WIRE`/`-QUEUE-WIRE`/`-UI`/`-RETENTION`; KT-AIH) |
@@ -289,7 +289,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ (logic chỉ số + CSV: Xong-mock `feat-reports-metrics`; còn `REPORTS-UI`, `REPORTS-WEEKLY-EMAIL`) |
 | PUSH-EMAIL | FR-084 (thông báo đẩy PWA + email, giờ yên lặng) | — | REPORTS | — | **có** — nhà cung cấp email (SMTP thật) | ⛔ |
 | ADMIN-REST | FR-104 (gói & mã giảm giá, nội dung hệ thống, quản trị viên), Admin Console tiếng Anh | — | ADMIN-SHELL | S | không | ⏳ |
-| ADMIN-IMPERSONATE | FR-105 ("Xem như khách": lý do, chỉ đọc, ≤ 30 phút, nhật ký; `admin_impersonations`) | US-082 | ADMIN-SHELL | S+DB | không | ⏳ |
+| ADMIN-IMPERSONATE | FR-105 ("Xem như khách": lý do, chỉ đọc, ≤ 30 phút, nhật ký; `admin_impersonations`) | US-082 | ADMIN-SHELL | S+DB | không | ✅ Xong-mock (`feat-admin-impersonate`, Q-AIMP1: logic thuần + guard chỉ-đọc + store/audit interface; bảng `admin_impersonations`/middleware/giao diện → `ADMIN-IMPERSONATE-WIRE`) |
 | ML-SERVICE | FR-027 (bộ phân loại tự host), FR-025 (chuẩn hóa/nhận ngôn ngữ ở `ml`) | — | COST-GATE | — | không | ⏳ |
 | PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | 🟡 Xong-mock (`feat-pgvector-hybrid`, Q-PVH1, không migration; chờ CI; embedder thật → `KB-EMBED-LITELLM`) |
 | SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ✅ Xong-mock (`feat-semantic-cache`, không migration; chưa nối Redis/pipeline; KT-SC) |

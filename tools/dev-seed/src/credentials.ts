@@ -4,6 +4,8 @@ import { randomInt } from 'node:crypto';
 export const DEMO_EMAILS = {
   owner: 'owner.mau@example.test',
   staff: 'staff.mau@example.test',
+  /** Nhân viên thứ hai: để trang Báo cáo có số liệu "theo nhân viên" (so sánh hai người). */
+  staff2: 'staff2.mau@example.test',
 } as const;
 
 const LOWER = 'abcdefghijkmnopqrstuvwxyz';
