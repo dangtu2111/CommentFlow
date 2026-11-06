@@ -1,5 +1,9 @@
-import { Sparkles } from 'lucide-react';
 import type { SuggestionUi } from '../../lib/suggestion';
+import { Icon } from '../ui/icon';
+
+/** Chip "Nguồn kiến thức" nền tím Spark (chỉ dành cho AI) — chép từ HTML Stitch. */
+const SOURCE_CHIP =
+  'inline-flex items-center gap-1 rounded bg-secondary px-2 py-1 font-label-sm text-label-sm text-on-secondary shadow-sm';
 
 export type SuggestionLabels = {
   title: string;
@@ -30,14 +34,23 @@ export function SuggestionPanel({
 }) {
   if (!ui.needsHuman && !ui.canUse && !ui.edited) return null;
   return (
-    <section className="suggestion" aria-label={labels.title}>
-      {ui.needsHuman ? <p className="suggestion-warn">{labels.needsHuman}</p> : null}
-      <div className="suggestion-actions">
-        <button type="button" className="btn" onClick={onUse} disabled={!ui.canUse}>
+    <section className="flex flex-col gap-2" aria-label={labels.title}>
+      {ui.needsHuman ? (
+        <p className="rounded bg-tertiary-fixed px-2.5 py-1.5 font-body-sm text-body-sm text-on-tertiary-fixed-variant">
+          {labels.needsHuman}
+        </p>
+      ) : null}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="rounded bg-secondary-fixed px-2 py-1 font-label-sm text-label-sm text-on-secondary-fixed transition-colors enabled:hover:bg-secondary-fixed-dim [&:not(:enabled)]:cursor-not-allowed [&:not(:enabled)]:opacity-60"
+          onClick={onUse}
+          disabled={!ui.canUse}
+        >
           {labels.use}
         </button>
         {ui.edited ? (
-          <span className="suggestion-edited" role="status">
+          <span className="font-label-sm text-label-sm text-on-surface-variant" role="status">
             {labels.edited}
           </span>
         ) : null}
@@ -59,15 +72,15 @@ export function SuggestionSources({
   if (ui.sources.chips.length === 0) return null;
   const moreText = labels.more.replace('{count}', String(ui.sources.more));
   return (
-    <ul className="reply-sources" aria-label={labels.sources}>
-      <li className="reply-sources-caption">{caption}</li>
+    <ul className="flex flex-wrap items-center gap-1.5" aria-label={labels.sources}>
+      <li className="mr-1 font-label-sm text-label-sm text-on-surface-variant">{caption}</li>
       {ui.sources.chips.map((chip) => (
-        <li key={chip.id} className="reply-source">
-          <Sparkles size={11} aria-hidden="true" />
+        <li key={chip.id} className={SOURCE_CHIP}>
+          <Icon name="auto_awesome" size={12} />
           {chip.label ?? labels.sourceFallback}
         </li>
       ))}
-      {ui.sources.more > 0 ? <li className="reply-source">{moreText}</li> : null}
+      {ui.sources.more > 0 ? <li className={SOURCE_CHIP}>{moreText}</li> : null}
     </ul>
   );
 }

@@ -36,7 +36,9 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-HTML-COMMENTS | docs/08 §7.1 (comments.html) | UF-3 | UI-FIDELITY-COMMENTS | — | không | ✅ Dựng lại từ HTML Stitch: kit `Workbench`/`Kbd`, 3 cột 224/384/co giãn khớp bbox (`feat-ui-html-comments`, Q-UIHC1) |
 | UI-GATE-COMMENTS | docs/08 §7.1 (comments.html) | UF-3 | UI-HTML-COMMENTS | — | không | ✅ Xong-mock: cổng đủ thành phần 100% (105/105) — thêm thành phần còn thiếu của Stitch, chưa có chức năng thì vô hiệu "Sắp có" (`feat-ui-gate-comments`, Q-UIGC1) |
+| UI-TW-COMMENTS | docs/08 §7.1 (comments.html), ADR 013 | UF-3 | UI-GATE-COMMENTS | — | không | 🟡 Dựng bằng Tailwind từ HTML Stitch, xóa CSS riêng trang (`feat-tw-comments`, Q-TWC1); còn đo `ui:fidelity` khi máy xem trước chạy |
 | UI-HTML-LEADS-REPORTS | docs/08 (leads.html, reports.html, activity-log.html) | UF-4 | LEADS-KANBAN, REPORTS, LOG-PAGE | — | không | ✅ Xong-UI: `/app/leads` + `/app/reports` chỉ đọc (dùng hàm đã có), Nhật ký thành bảng, kit `DataTable` (`feat-ui-html-leads-reports`, Q-UIHLR1) |
+| UI-TW-LEADS-REPORTS | docs/08 + ADR 013 (leads.html, reports.html, activity-log.html) | UF-4 | UI-HTML-LEADS-REPORTS | — | không | ✅ Xong-UI (Tailwind, đủ thành phần): 3 màn dựng lại bằng class Tailwind của HTML, khối thiếu nguồn `[MẪU]`/"Sắp có" (`feat-tw-leads-reports`, QTWLR1) |
 | UI-HTML-AUTOMATION | docs/08 (automation.html, spam-rules.html) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | ✅ Dựng lại từ HTML Stitch: kit `Inset`, bảng kênh × nhãn, spam điều kiện / hành động; không tràn 390px (`feat-ui-html-automation`, Q-UIHA1) |
 | UI-COMPLETE-AUTO-SPAM | docs/08 (automation.html, spam-rules.html) | UF-4 | UI-HTML-AUTOMATION | — | không | ✅ Công cụ đối chiếu chữ + đủ thành phần: automation 96,5%, spam-rules 98,3%; kit +Switch/Progress/MetricCard/PlatformBadge; kiểm kê trang khác ở `docs/plans/ui-thieu-thanh-phan.md` (`feat-ui-complete-automation-spam`, Q-UIC1) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
@@ -296,7 +298,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | ⛔ |
 | SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ✅ Xong-mock (`feat-src-haravan`, Q-HRV1; không migration; còn `HARAVAN-CONNECT-STORE` (OAuth + bảng token, làn b); KT-HRV) |
 | SRC-SAPO | FR-122 (Sapo) | — | SRC-HARAVAN | S | **có** — shop dev Sapo | ✅ Xong-mock (`feat-src-sapo`, Q-SAP1; không migration; còn `SAPO-CONNECT-STORE` (OAuth + bảng token, làn b); KT-SAP) |
-| SRC-KIOTVIET | FR-122 (KiotViet) | — | SRC-SAPO | S | **có** | ⛔ |
+| SRC-KIOTVIET | FR-122 (KiotViet) | — | SRC-SAPO | S | **có** | ✅ Xong-mock (`feat-src-kiotviet`, Q-KIO1; không migration; còn `KIOTVIET-CONNECT-STORE` (bảng Client ID/Secret, làn b); KT-KIO) |
 | SRC-PANCAKE | FR-122 (Pancake POS) | — | SRC-KIOTVIET | S | **có** | ⛔ |
 | AUTO-PAYMENT-CONFIRM | FR-124 (xác nhận thanh toán tự động: SePay/Casso…) | — | QR-PAYMENT | S+DB | **có** — nhà cung cấp | ✅ Xong-mock phần code (`feat-auto-payment-confirm`, Q-APC1, không migration; cờ TẮT; chưa nối DB: gap `AUTO-PAYMENT-CONFIRM-DB` làn b; KT-APC) |
 | ATTACH-VISION | FR-143 (đọc ảnh, tùy chọn) | — | ATTACHMENTS-STORE | S (PII) | **có** — khóa LLM đa phương thức | ⛔ |

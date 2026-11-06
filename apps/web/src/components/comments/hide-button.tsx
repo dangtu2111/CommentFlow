@@ -5,6 +5,8 @@ import { useState, useTransition } from 'react';
 import { hideCommentAction } from '../../app/app/(guarded)/comments/actions';
 import type { HideAction } from '../../lib/hide-state';
 import type { HideFailure } from '../../server/hide-action';
+import { DOCK_BUTTON } from './dock-styles';
+import { InlineError } from './state-note';
 
 type Labels = {
   hide: string;
@@ -52,10 +54,10 @@ export function HideButton({
   }
 
   return (
-    <div className="hide-action">
+    <div className="flex flex-col items-start gap-1">
       <button
         type="button"
-        className="btn btn-secondary"
+        className={DOCK_BUTTON}
         onClick={submit}
         disabled={pending}
         aria-busy={pending}
@@ -64,9 +66,7 @@ export function HideButton({
         {text}
       </button>
       {error ? (
-        <p className="reply-error" role="alert" id={`hide-error-${commentId}`}>
-          {labels.failures[error]}
-        </p>
+        <InlineError id={`hide-error-${commentId}`}>{labels.failures[error]}</InlineError>
       ) : null}
     </div>
   );

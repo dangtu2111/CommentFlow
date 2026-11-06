@@ -1,21 +1,16 @@
-import { Lock } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
-import { ActivityDetailPanel } from '../../../../components/activity/activity-detail';
-import { ActivityList, type ActivityListItem } from '../../../../components/activity/activity-list';
-import { ActivityToolbar } from '../../../../components/activity/activity-toolbar';
+import type { ActivityListItem } from '../../../../components/activity/activity-list';
+import { ActivityPageView } from '../../../../components/activity/activity-view';
 import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
-import { Chip } from '../../../../components/ui/chip';
-import { PageHeader } from '../../../../components/ui/page-header';
 import { parseActivitySearchParams } from '../../../../lib/action-log-filters';
 
 const TZ = 'Asia/Ho_Chi_Minh';
 const VIEWER = 'u1';
 const SAMPLE_TARGET = 'sample-comment-1';
-const SAMPLE_BEFORE = { is_hidden: false };
-const SAMPLE_AFTER = { is_hidden: true };
 const NOW = new Date('2026-11-06T10:30:00Z');
 const at = (m: number) => new Date(NOW.getTime() - m * 60_000);
+
+const none = { onBehalfOfId: null, onBehalfOfName: null } as const;
 
 const ITEMS: ActivityListItem[] = [
   {
@@ -23,20 +18,34 @@ const ITEMS: ActivityListItem[] = [
     createdAt: at(2),
     actorType: 'ai',
     actorName: null,
-    onBehalfOfId: null,
-    onBehalfOfName: null,
+    ...none,
     action: 'comment.hidden',
     targetType: 'comment',
+    sample: {
+      channel: 'FB: An Nhiên Store',
+      channelDot: 'primary',
+      post: 'Post: BST Nắng Hè 2025',
+      payload: 'Bảo vệ SĐT: `0912.839.442`',
+      payloadSub: 'Chuyển thành Lead #L-8942',
+      result: 'Thành công',
+    },
   },
   {
     id: 'a2',
     createdAt: at(9),
     actorType: 'user',
     actorName: '[MẪU] Nguyễn Mai Linh',
-    onBehalfOfId: null,
-    onBehalfOfName: null,
+    ...none,
     action: 'comment.reply_requested',
     targetType: 'comment',
+    sample: {
+      channel: 'IG: @annhien.official',
+      channelDot: 'secondary',
+      post: 'Direct: @hoangle_94',
+      payload: 'Đổi giá KM đầm lụa: 389.000đ',
+      payloadSub: 'Sửa gợi ý AI: Thêm freeship',
+      result: 'Thành công',
+    },
   },
   {
     id: 'a3',
@@ -47,14 +56,22 @@ const ITEMS: ActivityListItem[] = [
     onBehalfOfName: '[MẪU] Nguyễn Mai Linh',
     action: 'comment.hide_requested',
     targetType: 'comment',
+    sample: {
+      channel: 'FB: An Nhiên Store',
+      channelDot: 'primary',
+      post: 'Comment ID: 492049281...',
+      payload: 'GraphAPI Error #190: OAuth Token',
+      payloadSub: 'Hệ thống đã xếp hàng chờ gửi lại',
+      failed: true,
+      result: 'Thất bại (500)',
+    },
   },
   {
     id: 'a4',
     createdAt: at(75),
     actorType: 'user',
     actorName: '[MẪU] Trần Quốc Huy',
-    onBehalfOfId: null,
-    onBehalfOfName: null,
+    ...none,
     action: 'member.role_changed',
     targetType: 'member',
   },
@@ -63,54 +80,46 @@ const ITEMS: ActivityListItem[] = [
     createdAt: at(140),
     actorType: 'admin',
     actorName: null,
-    onBehalfOfId: null,
-    onBehalfOfName: null,
+    ...none,
     action: 'channel.reconnected',
     targetType: 'channel',
   },
 ];
 
-/** Trang xem giao diện Nhật ký với DỮ LIỆU MẪU — chỉ khi `NODE_ENV !== 'production'`. */
-export default async function DevActivityPage() {
+/** Trang xem giao diện Nhật ký với DỮ LIỆU MẪU — chỉ khi `NODE_ENV !== 'production'`; dùng đúng `ActivityPageView` của trang thật. */
+export default function DevActivityPage() {
   if (process.env.NODE_ENV === 'production') notFound();
-  const t = await getTranslations('activity');
   const view = parseActivitySearchParams({});
   const first = ITEMS[0];
   if (!first) notFound();
   return (
     <DevShell>
-      <main className="log-page">
-        <div className="log-header">
-          <PageHeader title={t('title')} subtitle={t('subtitle.owner')} />
-          <Chip>
-            <Lock size={12} aria-hidden="true" /> {t('readOnly')}
-          </Chip>
-          <p className="inbox-sample-note" role="note">
+      <main className="tw w-full">
+        <div className="flex w-full flex-col">
+          <p
+            className="px-space-xl pt-space-sm font-label-md text-label-md text-on-surface-variant"
+            role="note"
+          >
             {DEV_SAMPLE_NOTE}
           </p>
-        </div>
-        <section className="log-list" aria-label={t('list.label')}>
-          <ActivityToolbar view={view} actions={[]} showActor />
-          <ActivityList
+          <ActivityPageView
             view={view}
             items={ITEMS}
             nextCursor={null}
+            actions={[]}
             timeZone={TZ}
             viewerId={VIEWER}
-          />
-        </section>
-        <aside className="log-detail" aria-label={t('detail.title')}>
-          <ActivityDetailPanel
-            entry={{
+            isOwner
+            detail={{
               ...first,
               targetId: SAMPLE_TARGET,
-              before: SAMPLE_BEFORE,
-              after: SAMPLE_AFTER,
+              before: { is_hidden: false },
+              after: { is_hidden: true },
             }}
-            timeZone={TZ}
-            viewerId={VIEWER}
+            selectedMissing={false}
+            sample
           />
-        </aside>
+        </div>
       </main>
     </DevShell>
   );

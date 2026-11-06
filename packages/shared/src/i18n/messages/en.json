@@ -2078,6 +2078,83 @@
     "error": {
       "title": "Could not load leads.",
       "body": "Please try again later."
+    },
+    "ui": {
+      "soon": "Coming soon",
+      "sampleTag": "[SAMPLE]",
+      "badge": "Anti-poaching CRM",
+      "syncNote": "View only · updates on page reload",
+      "subtitle": "Automatically extract phone numbers, addresses and products from comments/messages to prevent customer poaching and close multichannel orders.",
+      "export": "Export Excel / CSV",
+      "bulk": "Bulk change status",
+      "addManual": "Add lead manually",
+      "search": "Search by name, phone, order ID, product...",
+      "viewKanban": "Kanban board",
+      "viewList": "List view",
+      "filter": {
+        "platform": "Platform",
+        "owner": "Owner",
+        "source": "Source",
+        "all": "All",
+        "sourceHidden": "Auto-hidden comments",
+        "days30": "Last 30 days",
+        "reset": "Reset filters"
+      },
+      "kpi": {
+        "total": "Total leads",
+        "vsLast": "Vs last month ({n} leads)",
+        "quota": "{pct} of target",
+        "extracted": "Auto-extracted",
+        "aiScan": "AI Scan",
+        "hiddenPhones": "{pct} phone numbers auto-hidden",
+        "savedHours": "Saves {h} of support time",
+        "won": "Orders won",
+        "rate": "CR: {pct}",
+        "closeTime": "Avg. time to close:",
+        "vsWeek": "{pct} vs last week",
+        "revenue": "Estimated revenue",
+        "aov": "AOV: {v}/order",
+        "pendingPay": "{n} orders awaiting payment"
+      },
+      "card": {
+        "verified": "Customer engaged multiple times",
+        "copy": "Copy phone",
+        "call": "Call",
+        "csNote": "Support note:",
+        "callback": "Call back:",
+        "claim": "Take ownership"
+      },
+      "drawer": {
+        "label": "Lead details",
+        "lead": "Lead #{code}",
+        "created": "Created at {time}",
+        "expand": "Expand",
+        "close": "Close details",
+        "status": "Status:",
+        "callNow": "Call now",
+        "message": "Zalo/SMS",
+        "copyAll": "Copy all",
+        "extracted": "Automatically extracted info",
+        "confidence": "Confidence {pct}",
+        "fullName": "Full name:",
+        "phone": "Phone:",
+        "secured": "Protected",
+        "address": "Delivery address:",
+        "product": "Product:",
+        "sku": "SKU:",
+        "value": "Expected value:",
+        "context": "Original comment context",
+        "hiddenAt": "Auto-hidden at {time}",
+        "post": "Post: {post}",
+        "protect": "Protection against competitors poaching customers",
+        "viewPost": "View on post",
+        "history": "History & internal notes",
+        "notePlaceholder": "Add an internal support note (not sent to the customer)...",
+        "save": "Save",
+        "noHistory": "No history yet.",
+        "cancel": "Cancel lead",
+        "markWon": "Move to Won"
+      }
     }
   },
   "reports": {
@@ -2124,6 +2201,94 @@
     "error": {
       "title": "Could not load the report.",
       "body": "Please try again later."
+    },
+    "ui": {
+      "soon": "Coming soon",
+      "sampleTag": "[SAMPLE]",
+      "badge": "AI measurement",
+      "today": "Today",
+      "customRange": "Pick a date range",
+      "allChannels": "All channels (FB, IG, TikTok)",
+      "weeklyEmail": "Weekly email digest",
+      "exportExcel": "Export Excel",
+      "refresh": "Refresh data",
+      "kpi": {
+        "total": "Total interactions handled",
+        "comments": "Comments",
+        "messages": "Messages",
+        "vsLast": "vs previous period",
+        "aiRate": "AI auto-handled rate",
+        "aiRateNote": "Sent accurately without review",
+        "safe": "Meets safety bar",
+        "beforeAi": "Before AI: {time}",
+        "waitCut": "{pct} shorter wait",
+        "hoursSaved": "Staff hours saved",
+        "hours": "{hours} h",
+        "fte": "About {fte} full-time staff",
+        "savedMoney": "Estimated savings",
+        "leads": "Leads & phone numbers",
+        "leadsNote": "From chat & comments, automatically",
+        "conversion": "Conversion: {pct}",
+        "leadsWeek": "{n} this week"
+      },
+      "trend": {
+        "title": "Interaction handling trend by day",
+        "range": "Last 30 days",
+        "subtitle": "Workload automatically freed up for the support team",
+        "legend": {
+          "ai": "AI auto",
+          "review": "Reviewed & sent",
+          "skip": "Skipped / spam"
+        },
+        "chartLabel": "Stacked bar chart by day (sample data)",
+        "today": "{date} (Today)",
+        "empty": "No daily data yet.",
+        "note": "Automation speed is up {pct} since adding to the knowledge base.",
+        "shifts": "View shift details"
+      },
+      "intent": {
+        "title": "Intent label distribution (AI Intent)",
+        "subtitle": "Classification model that detects customer intent automatically",
+        "chartLabel": "Donut chart of intent distribution (sample data)",
+        "groups": "Groups",
+        "empty": "No intent data yet.",
+        "accuracy": "Intent recognition accuracy {pct} (F1-score)",
+        "train": "Train further"
+      },
+      "posts": {
+        "title": "Top posts with the most price questions",
+        "subtitle": "Where interactions come from, to optimise product links for auto-closing",
+        "all": "View all posts",
+        "colPost": "Post & channel",
+        "colProduct": "Linked product",
+        "colQuestions": "Price questions",
+        "colAuto": "AI automation",
+        "colAction": "Action",
+        "unlinked": "No product linked",
+        "allHuman": "100% answered by people",
+        "linkNow": "Link now",
+        "viewPage": "View Page",
+        "empty": "No per-post data yet.",
+        "footer": "Linking products lets AI extract prices, size charts and stock accurately.",
+        "bulkLink": "Auto-link in bulk →"
+      },
+      "staff": {
+        "subtitle": "Response speed and trust in AI suggestions",
+        "count": "{n} staff",
+        "summary": "{answered} answered • median {median}",
+        "agreement": "Team agreement with AI:",
+        "permissions": "Permission settings"
+      },
+      "insight": {
+        "title": "Knowledge base optimisation (AI Smart Insight)",
+        "urgent": "Urgent recommendation",
+        "struggle": "AI struggles most with the question:",
+        "asked": "Customers asked {n} times in the last 7 days but there is no sample script or FAQ document.",
+        "gain": "Adding this should raise the auto-handled rate by {pct} and save {hours} more staff hours.",
+        "empty": "No suggestions yet. They appear when AI meets many questions missing from the knowledge base.",
+        "add": "Add this question to the knowledge base now",
+        "dismiss": "Dismiss warning"
+      }
     }
   },
   "activity": {
@@ -2138,7 +2303,11 @@
       "actor": "Actor",
       "action": "Action",
       "target": "Target",
-      "noTarget": "—"
+      "noTarget": "—",
+      "payload": "Payload summary",
+      "result": "Result",
+      "detail": "Details",
+      "viewLog": "View log"
     },
     "list": {
       "label": "Log entries",
@@ -2211,6 +2380,39 @@
     "error": {
       "title": "Could not load the log",
       "body": "Something went wrong while loading. Please try again later."
+    },
+    "ui": {
+      "soon": "Coming soon",
+      "sampleTag": "[SAMPLE]",
+      "readOnly": "Read-only · cannot be edited or deleted",
+      "refreshNote": "Updates on page reload",
+      "exportAudit": "Export audit file",
+      "archive": "Archive (30 days)",
+      "autoRefresh": "Auto refresh (15s)",
+      "search": "Search by ID, keyword, customer name, staff ID...",
+      "channel": "Channel",
+      "allChannels": "All channels",
+      "applied": "Applied:",
+      "noFilter": "no filter",
+      "clearAll": "Clear all",
+      "found": "Showing {n} events",
+      "kpi": {
+        "total": "Total actions today",
+        "ai": "Done automatically by AI",
+        "human": "Done by staff",
+        "reliability": "Action reliability"
+      },
+      "inspector": {
+        "close": "Close inspector",
+        "channel": "Channel:",
+        "commentId": "Comment ID:",
+        "rule": "Triggered rule: {rule}",
+        "trace": "Meta Graph trace",
+        "copyJson": "Copy JSON",
+        "noTrace": "No platform call trace recorded for this entry.",
+        "openComment": "Open comment on the Page",
+        "viewLead": "View lead {code}"
+      }
     }
   },
   "dialog": {

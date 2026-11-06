@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { StateNote } from './state-note';
 
 /** Làm tươi trang mỗi 3 giây khi yêu cầu ẩn còn `queued`/`sending`; quá 2 phút thì dừng và nhắc tải lại. */
 const REFRESH_MS = 3000;
@@ -24,9 +25,5 @@ export function HideProgress({ labels }: { labels: { working: string; slow: stri
     return () => clearInterval(timer);
   }, [router]);
 
-  return (
-    <div className="reply-state reply-sending" role="status">
-      <p className="reply-state-title">{slow ? labels.slow : labels.working}</p>
-    </div>
-  );
+  return <StateNote tone="progress" role="status" title={slow ? labels.slow : labels.working} />;
 }

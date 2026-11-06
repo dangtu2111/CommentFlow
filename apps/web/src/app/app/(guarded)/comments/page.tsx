@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { CommentDetailPanel } from '../../../../components/comments/comment-detail';
+import { BackLink, EmptyNote } from '../../../../components/comments/empty-note';
 import { InboxList } from '../../../../components/comments/inbox-list';
 import { InboxStrip } from '../../../../components/comments/inbox-strip';
 import { InboxTabs } from '../../../../components/comments/inbox-tabs';
@@ -43,10 +43,14 @@ export default async function CommentsPage({
   }
   if (!data) {
     return (
-      <main className="inbox inbox-error" role="alert">
-        <h1>{t('error.title')}</h1>
-        <p>{t('error.body')}</p>
-      </main>
+      <div className="tw">
+        <main className="mx-auto max-w-xl p-margin text-center" role="alert">
+          <h1 className="font-headline-sm text-headline-sm text-on-surface">{t('error.title')}</h1>
+          <p className="mt-space-sm font-body-md text-body-md text-on-surface-variant">
+            {t('error.body')}
+          </p>
+        </main>
+      </div>
     );
   }
 
@@ -61,10 +65,10 @@ export default async function CommentsPage({
       <WorkbenchList label={t('list.label')}>
         <InboxToolbar view={view} channels={channels} />
         {page.items.length === 0 ? (
-          <div className="inbox-empty">
-            <h2>{filtered || counts.all > 0 ? t('empty.filteredTitle') : t('empty.title')}</h2>
-            <p>{filtered || counts.all > 0 ? t('empty.filteredBody') : t('empty.body')}</p>
-          </div>
+          <EmptyNote
+            title={filtered || counts.all > 0 ? t('empty.filteredTitle') : t('empty.title')}
+            body={filtered || counts.all > 0 ? t('empty.filteredBody') : t('empty.body')}
+          />
         ) : (
           <InboxList
             view={view}
@@ -78,20 +82,21 @@ export default async function CommentsPage({
       </WorkbenchList>
       <WorkbenchDetail label={t('detail.title')}>
         {view.selected ? (
-          <Link href={buildInboxBackHref(view)} className="inbox-back">
-            {t('detail.back')}
-          </Link>
+          <BackLink href={buildInboxBackHref(view)}>{t('detail.back')}</BackLink>
         ) : null}
         {detail ? (
           // key = id: đổi bình luận → gắn lại panel (mở khóa cái cũ, lấy khóa cái mới).
           <CommentDetailPanel key={detail.id} comment={detail} timeZone={timeZone} now={now} />
         ) : view.selected ? (
-          <div className="inbox-empty" role="alert">
-            <h2>{t('detail.notFoundTitle')}</h2>
-            <p>{t('detail.notFoundBody')}</p>
-          </div>
+          <EmptyNote
+            role="alert"
+            title={t('detail.notFoundTitle')}
+            body={t('detail.notFoundBody')}
+          />
         ) : (
-          <p className="inbox-detail-empty">{t('detail.empty')}</p>
+          <p className="p-6 text-center font-body-md text-body-md text-on-surface-variant">
+            {t('detail.empty')}
+          </p>
         )}
       </WorkbenchDetail>
     </Workbench>
