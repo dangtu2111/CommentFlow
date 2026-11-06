@@ -1,0 +1,1 @@
+- 06/11 (ADMIN-INTEGRATION-HEALTH, Q-AIH1): `docs/10_Database_Design.md` — thêm dòng bảng `integration_incidents` (vòng ghi lỗi tích hợp, migration 0059; Admin chỉ đọc tổng hợp qua hàm DEFINER).

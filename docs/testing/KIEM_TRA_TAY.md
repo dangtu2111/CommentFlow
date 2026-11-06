@@ -32,6 +32,7 @@
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
+| KT-AIH | Sức khỏe tích hợp & dead letter (chỉ logic + DB + test, chưa có giao diện; không cần khóa/dịch vụ ngoài) | feat-integration-health | chưa | chưa | — |
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
@@ -557,6 +558,12 @@ Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy te
 | 2 | Mở `env.example` | Có tên biến `AUTO_HIDE_ENABLED=` để trống (cờ tắt mặc định). |
 | 3 | Khi có `AUTO-HIDE-DB` + `AUTO-HIDE-WIRE`: bật cờ + quy tắc Tự ẩn có `shadow_until`, gửi bình luận mẫu chứa SĐT từ Page thử | Trong thời gian shadow: chỉ có dòng "sẽ ẩn", bình luận chưa bị ẩn; sau đó bình luận bị ẩn và khách xuất hiện trong Khách tiềm năng TRƯỚC khi ẩn. |
 | 4 | Gửi bình luận không SĐT/link nhưng bị AI gán nhãn spam | KHÔNG bị ẩn (AI không tự ẩn). |
+
+## KT-AIH — Sức khỏe tích hợp & dead letter (ADMIN-INTEGRATION-HEALTH, FR-104)
+
+Chỉ phần máy (chưa có giao diện, chưa nối connector): người thử chạy test.
+1. `pnpm --filter @flow/shared exec vitest run src/integration-health.test.ts` → xanh. Mong đợi: chỉ Super Admin xem được; ngưỡng ok/suy giảm/sập đúng; thông báo lỗi bị che email/SĐT/chuỗi giống token.
+2. `pnpm test:db` (cần `.env` + máy phụ bật), file `integration-health.int.test.ts` → xanh. Mong đợi: chỉ worker ghi được sự cố; support/finance/Owner đọc tổng hợp và dead letter bị từ chối; payload webhook không lộ.
 
 ## KT-ALP1 — Tự gửi theo ngôn ngữ (AUTOSEND-LANG-PARTIAL, feat-autosend-lang-partial)
 

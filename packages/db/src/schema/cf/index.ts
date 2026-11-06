@@ -8,6 +8,7 @@ export * from './comment-tombstones';
 export * from './comments';
 export * from './conversations';
 export * from './drafts';
+export * from './integration-incidents';
 export * from './kb';
 export * from './kb-content';
 export * from './leads';

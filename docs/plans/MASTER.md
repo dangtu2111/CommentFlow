@@ -263,7 +263,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | SHOPIFY-IMPORT | FR-052 (chỉ đọc sản phẩm/biến thể/giá/tồn/chính sách), FR-122 (nguồn Shopify) | US-030 | PRODUCTS-VARIANTS | S (OAuth) | **có** — Shopify dev store | ⛔ |
 | SHOPIFY-RECONCILE | FR-112 (đối soát hằng đêm + Đối soát ngay), FR-113 (kiểm/đăng ký lại webhook) | US-046 | SHOPIFY-IMPORT | S | **có** — Shopify dev store | ⛔ |
 | POLICY-URL-IMPORT | FR-053 (nhập link website, tôn trọng robots.txt), FR-055 (đồng bộ nguồn, `content_hash`) | US-031 | KB-CHUNKING | S (chống SSRF) | không | 🟡 Xong-mock (`feat-policy-url-import`, QPUI1, không migration; chờ CI; còn `POLICY-URL-SOURCES`) |
-| ADMIN-INTEGRATION-HEALTH | FR-104 (sức khỏe tích hợp, hàng đợi & dead letter) | US-083 | ADMIN-SHELL | — | không | ⏳ |
+| ADMIN-INTEGRATION-HEALTH | FR-104 (sức khỏe tích hợp, hàng đợi & dead letter) | US-083 | ADMIN-SHELL | — | không | 🟡 Xong-mock lõi + DB (`feat-integration-health`, Q-AIH1, migration 0059; còn `INTEGRATION-HEALTH-WIRE`/`-QUEUE-WIRE`/`-UI`/`-RETENTION`; KT-AIH) |
 | OAUTH-TOKEN-ENC | — (mã hóa `accounts.*token` khi bật OAuth, 13 §5) | — | TOKEN-ENC | S+DB | không | 🟡 Xong-mock (`feat-oauth-token-enc`, Q-OTE1, không migration; chờ CI; còn `-ROTATE`/`-UPDATE`) |
 | APP-REVIEW-DOSSIER | — (hồ sơ App Review Facebook + Instagram) | — | IG-CONNECTOR, PUBLIC-PAGES | — | **có** — Meta | ⛔ |
 | **CỔNG 4** | xem đầu mục GĐ4 | | tất cả GĐ4 | | chủ dự án xác nhận | ⏳ |
