@@ -4,6 +4,8 @@ import { Avatar } from './avatar';
 import { Button, buttonClass, IconButton } from './button';
 import { Chip } from './chip';
 import { Kbd } from './kbd';
+import { PageHeader } from './page-header';
+import { SectionHead } from './section-head';
 import { SplitLayout } from './split-layout';
 import { Stat } from './stat';
 import { Stepper } from './stepper';
@@ -152,5 +154,20 @@ describe('UI-KIT Workbench + Kbd', () => {
 
   it('Kbd vẽ thẻ kbd', () => {
     expect(renderToStaticMarkup(<Kbd>H</Kbd>)).toBe('<kbd class="kbd">H</kbd>');
+  });
+});
+
+describe('UI-KIT SectionHead + PageHeader (Cài đặt, HTML-first)', () => {
+  it('SectionHead: biểu tượng trần mặc định, ô nền chính khi hero', () => {
+    const plain = renderToStaticMarkup(<SectionHead id="a" icon="i" title="T" />);
+    expect(plain).toContain('class="section-head-icon"');
+    const hero = renderToStaticMarkup(<SectionHead id="a" hero icon="i" title="T" />);
+    expect(hero).toContain('section-head-icon is-hero');
+  });
+
+  it('PageHeader là MỘT phần tử đầu trang (mô tả không rơi sang cột phải của lưới)', () => {
+    const html = renderToStaticMarkup(<PageHeader title="T" subtitle="S" />);
+    expect(html.startsWith('<header')).toBe(true);
+    expect(html).toContain('<h1 class="page-title">T</h1>');
   });
 });

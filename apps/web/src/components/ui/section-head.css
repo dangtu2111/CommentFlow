@@ -1,10 +1,10 @@
-/* SectionHead — đầu mục có biểu tượng. Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
+/* SectionHead — đầu mục có biểu tượng (Stitch settings-*: tiêu đề 18px, mô tả 12px). Chỉ dùng token từ styles/tokens.css. */
 
 .section-head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 .section-head-icon {
@@ -12,6 +12,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--link);
+}
+
+/* Biến thể "hero" (thẻ chính của trang, ví dụ 2FA): ô 48px nền nút chính. */
+.section-head-icon.is-hero {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-lg);
@@ -19,11 +26,25 @@
   color: var(--action-fg);
 }
 
+.section-head:has(.is-hero) {
+  gap: var(--space-4);
+}
+
 .section-head-text {
   flex: 1 1 260px;
   min-width: 0;
   display: grid;
-  gap: var(--space-1);
+  gap: 2px;
+}
+
+.section-head .section-title {
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.section-head-text > .muted {
+  font-size: 12px;
+  line-height: 16px;
 }
 
 .section-head-end {

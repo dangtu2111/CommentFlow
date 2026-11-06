@@ -259,8 +259,16 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
       <section className="card stack" aria-labelledby="two-factor-title">
         <SectionHead
           id="two-factor-title"
+          hero
           icon={<LockKeyhole size={22} />}
-          title={t('title')}
+          title={
+            <>
+              {t('title')}{' '}
+              <span className={`chip ${enabled ? 'chip-success' : 'chip-muted'}`}>
+                {enabled ? t('statusOn') : t('statusOff')}
+              </span>
+            </>
+          }
           description={enabled ? t('onBody') : t('offBody')}
           end={
             <div className="row">
@@ -279,11 +287,6 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
             </div>
           }
         />
-        <p>
-          <span className={`chip ${enabled ? 'chip-success' : 'chip-muted'}`}>
-            {enabled ? t('statusOn') : t('statusOff')}
-          </span>
-        </p>
         <dl className="info-tiles">
           <div className="info-tile">
             <dt>

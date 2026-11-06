@@ -22,9 +22,9 @@ export function Breadcrumb({
 /** Đầu trang: tiêu đề h1 + mô tả ngắn (tùy chọn). */
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: ReactNode }) {
   return (
-    <>
+    <header className="stack-tight">
       <h1 className="page-title">{title}</h1>
       {subtitle ? <p className="page-subtitle">{subtitle}</p> : null}
-    </>
+    </header>
   );
 }
