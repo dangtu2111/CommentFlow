@@ -36,8 +36,16 @@ export type KbPublishOps = {
   isActiveOwner: (tx: Database, workspaceId: string, userId: string) => Promise<boolean>;
   lock: (tx: Database, workspaceId: string) => Promise<void>;
   getCurrentVersion: (tx: Database, workspaceId: string) => Promise<KbVersionRef | null>;
-  getVersionByNumber: (tx: Database, workspaceId: string, n: number) => Promise<KbVersionRef | null>;
-  listChunkSummaries: (tx: Database, workspaceId: string, scope: ChunkScope) => Promise<PlanChunk[]>;
+  getVersionByNumber: (
+    tx: Database,
+    workspaceId: string,
+    n: number,
+  ) => Promise<KbVersionRef | null>;
+  listChunkSummaries: (
+    tx: Database,
+    workspaceId: string,
+    scope: ChunkScope,
+  ) => Promise<PlanChunk[]>;
   createVersion: (
     tx: Database,
     workspaceId: string,

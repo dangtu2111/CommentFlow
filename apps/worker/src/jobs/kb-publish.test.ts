@@ -16,7 +16,9 @@ const chunk = (key: string, hash = 'h', over: Partial<PlanChunk> = {}): PlanChun
   ...over,
 });
 
-function ops(over: Partial<KbPublishOps> & { drafts?: PlanChunk[]; versions?: Record<string, PlanChunk[]> }) {
+function ops(
+  over: Partial<KbPublishOps> & { drafts?: PlanChunk[]; versions?: Record<string, PlanChunk[]> },
+) {
   const { drafts = [], versions = {}, ...rest } = over;
   const calls: string[] = [];
   const o: KbPublishOps = {
@@ -96,16 +98,25 @@ describe('FR-054 runKbPublish — xuất bản', () => {
     });
     const out = await runKbPublish(tx, publish, o);
     expect(out).toMatchObject({ outcome: 'created', blockedInjection: 1 });
-    expect(vi.mocked(o.createVersion).mock.calls[0]?.[2].keys).toEqual([{ sourceId: 's1', chunkKey: 'a' }]);
+    expect(vi.mocked(o.createVersion).mock.calls[0]?.[2].keys).toEqual([
+      { sourceId: 's1', chunkKey: 'a' },
+    ]);
   });
 });
 
 describe('FR-054 UF-8 runKbPublish — khôi phục', () => {
-  const restore: KbPublishJob = { kind: 'restore', workspaceId: WS, requestedBy: USER, versionNumber: 1 };
+  const restore: KbPublishJob = {
+    kind: 'restore',
+    workspaceId: WS,
+    requestedBy: USER,
+    versionNumber: 1,
+  };
 
   it('phiên bản không tồn tại → version_not_found', async () => {
     const { o } = ops({});
-    expect(await runKbPublish(tx, { ...restore, versionNumber: 9 }, o)).toEqual({ outcome: 'version_not_found' });
+    expect(await runKbPublish(tx, { ...restore, versionNumber: 9 }, o)).toEqual({
+      outcome: 'version_not_found',
+    });
   });
 
   it('tạo phiên bản MỚI từ đoạn của bản cũ (không đụng bản cũ)', async () => {
@@ -124,7 +135,9 @@ describe('FR-054 UF-8 runKbPublish — khôi phục', () => {
       getVersionByNumber: vi.fn(async () => ({ id: 'v2', number: 2 })),
       versions: { v2: [chunk('a')] },
     });
-    expect(await runKbPublish(tx, { ...restore, versionNumber: 2 }, o)).toEqual({ outcome: 'no_changes' });
+    expect(await runKbPublish(tx, { ...restore, versionNumber: 2 }, o)).toEqual({
+      outcome: 'no_changes',
+    });
   });
 
   it('không phải Owner → forbidden', async () => {

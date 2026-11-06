@@ -2,6 +2,7 @@
 export const QUEUE_SCHEMA = 'pgboss';
 
 export const SYSTEM_PING_QUEUE = 'system.ping';
+
 import { KB_PUBLISH_QUEUE } from '@flow/shared';
 
 export { HIDE_QUEUE, INGEST_QUEUE, KB_PUBLISH_QUEUE, SEND_QUEUE } from '@flow/shared';

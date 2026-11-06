@@ -122,7 +122,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ✅ Xong-mock (feat-abbrev-dict, migration 0041; chưa nối pipeline/giao diện) |
 | KB-IMPORT-EXCEL | FR-051 (Excel/CSV: tải → khớp cột → xem lỗi → xác nhận) | US-003 | PRODUCTS-VARIANTS | — | không | ⏳ |
-| KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
+| KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ✅ Xong-mock (feat-kb-publish-version, Q-KPV1; con trỏ phiên bản/snapshot nguồn/hạ nhãn → gap matrix) |
 | KB-TESTSET | FR-054 (bộ câu kiểm thử trước khi xuất bản) | US-034 | KB-PUBLISH-VERSION | — | không | ⏳ |
 | KB-CHUNKING | FR-055, 130 (cắt đoạn, `context_header`, `content_hash`), FR-131 (hạn hiệu lực) | — | KB-SCHEMA | DB | không | ✅ Xong-mock (feat-kb-chunking; embedding thật → KB-EMBED-LITELLM) |
 | KB-SEARCH-FTS | FR-057 (toàn văn `simple`+`unaccent`/`english`, `pg_trgm`), FR-127 (gần đúng), FR-135 (cache không trả giá cũ: `product_revs`) | US-100 | KB-CHUNKING, PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-kb-search-fts, migration 0037; embedding bản fixture, còn bí danh/rerank/ngưỡng/trần token → PIPE-RETRIEVE) |

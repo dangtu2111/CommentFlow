@@ -81,7 +81,10 @@ const keyOf = (c: Pick<PlanChunk, 'sourceId' | 'chunkKey'>) => `${c.sourceId}\u0
  * đang chạy (`current`). Đoạn nghi cài lệnh bị loại khỏi `next` trước khi so. Không khác gì → `no_changes`
  * (idempotent: bấm đúp / job chạy lại không tạo phiên bản thừa).
  */
-export function planKbVersion(next: readonly PlanChunk[], current: readonly PlanChunk[]): KbVersionPlan {
+export function planKbVersion(
+  next: readonly PlanChunk[],
+  current: readonly PlanChunk[],
+): KbVersionPlan {
   const safe = next.filter((c) => !c.injectionSuspected);
   const blockedInjection = next.length - safe.length;
   const before = new Map(current.map((c) => [keyOf(c), c]));

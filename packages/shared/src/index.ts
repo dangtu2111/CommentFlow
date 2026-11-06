@@ -40,19 +40,6 @@ export {
   type Validity,
 } from './kb-chunking';
 export {
-  categoryOfSource,
-  KB_PUBLISH_NOTE_MAX,
-  KB_PUBLISH_QUEUE,
-  type KbChangeCategory,
-  type KbPublishJob,
-  type KbVersionPlan,
-  kbPublishJobSchema,
-  nextVersionNumber,
-  type PlanChunk,
-  parsePublishNote,
-  planKbVersion,
-} from './kb-publish';
-export {
   BRAND_VOICE_LIST_MAX,
   type BrandVoiceInput,
   brandVoiceSchema,
@@ -73,6 +60,19 @@ export {
   shopProfileSchema,
   VOICE_LANGS,
 } from './kb-content';
+export {
+  categoryOfSource,
+  KB_PUBLISH_NOTE_MAX,
+  KB_PUBLISH_QUEUE,
+  type KbChangeCategory,
+  type KbPublishJob,
+  type KbVersionPlan,
+  kbPublishJobSchema,
+  nextVersionNumber,
+  type PlanChunk,
+  parsePublishNote,
+  planKbVersion,
+} from './kb-publish';
 export {
   type BurstComment,
   type BurstGroup,

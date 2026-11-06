@@ -25,7 +25,13 @@ let faqOther: string;
 
 const vec = `[${Array.from({ length: 1024 }, () => 0.1).join(',')}]`;
 
-async function addDraft(workspaceId: string, sourceId: string, key: string, hash: string, bad = false) {
+async function addDraft(
+  workspaceId: string,
+  sourceId: string,
+  key: string,
+  hash: string,
+  bad = false,
+) {
   await admin.query(
     `INSERT INTO cf.kb_chunks (workspace_id, source_id, version_id, chunk_key, content, lang, content_hash,
        embedding, is_draft, injection_suspected, embedding_model)
@@ -105,7 +111,11 @@ describe('FR-054 xuất bản nháp', () => {
       [2, 1],
       [1, 2],
     ]);
-    expect(list[0]).toMatchObject({ note: 'ghi chú', changedCategories: ['faq'], publishedBy: user });
+    expect(list[0]).toMatchObject({
+      note: 'ghi chú',
+      changedCategories: ['faq'],
+      publishedBy: user,
+    });
   });
 
   it('khôi phục: sao đoạn của phiên bản cũ thành phiên bản mới, bản cũ không đổi', async () => {
@@ -150,7 +160,9 @@ describe('FR-054 xuất bản nháp', () => {
 describe('FR-054 cách ly workspace và quyền', () => {
   it('workspace khác không thấy phiên bản/đoạn của ws', async () => {
     expect(await db.withWorkspace(other, (tx) => listKbVersions(tx, other))).toEqual([]);
-    const s = await db.withWorkspace(other, (tx) => listChunkSummaries(tx, other, { kind: 'draft' }));
+    const s = await db.withWorkspace(other, (tx) =>
+      listChunkSummaries(tx, other, { kind: 'draft' }),
+    );
     expect(s.map((x) => x.chunkKey)).toEqual(['z#0']);
   });
 
