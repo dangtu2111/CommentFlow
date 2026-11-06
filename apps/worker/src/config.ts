@@ -83,6 +83,27 @@ function loadMessengerConfig(source: Record<string, string | undefined>): Messen
   return loadMetaConnectorConfig(source, 'MESSENGER_CONNECTOR_ENABLED');
 }
 
+/**
+ * Connector TikTok (TIKTOK-CONNECTOR, FR-015): cờ `TIKTOK_CONNECTOR_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật).
+ * Bật thì cần `TIKTOK_CLIENT_SECRET` (xác minh chữ ký webhook) và `TOKEN_ENC_KEYS` (giải mã token kênh).
+ */
+const tiktokSchema = z.object({
+  TIKTOK_CLIENT_SECRET: z.string().trim().min(16),
+  TOKEN_ENC_KEYS: z.string().trim().min(1),
+});
+
+export type TikTokConnectorConfig = { enabled: false } | { enabled: true; clientSecret: string };
+
+function loadTikTokConfig(source: Record<string, string | undefined>): TikTokConnectorConfig {
+  if (source.TIKTOK_CONNECTOR_ENABLED?.trim() !== 'true') return { enabled: false };
+  const blank = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);
+  const env = parseEnv(tiktokSchema, {
+    TIKTOK_CLIENT_SECRET: blank(source.TIKTOK_CLIENT_SECRET),
+    TOKEN_ENC_KEYS: blank(source.TOKEN_ENC_KEYS),
+  });
+  return { enabled: true, clientSecret: env.TIKTOK_CLIENT_SECRET };
+}
+
 function loadMetaConnectorConfig(
   source: Record<string, string | undefined>,
   flag: 'FB_CONNECTOR_ENABLED' | 'IG_CONNECTOR_ENABLED' | 'MESSENGER_CONNECTOR_ENABLED',
@@ -108,6 +129,7 @@ export type WorkerConfig = {
   facebook: FacebookConnectorConfig;
   instagram: InstagramConnectorConfig;
   messenger: MessengerConnectorConfig;
+  tiktok: TikTokConnectorConfig;
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -123,5 +145,6 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     facebook: loadFacebookConfig(source),
     instagram: loadInstagramConfig(source),
     messenger: loadMessengerConfig(source),
+    tiktok: loadTikTokConfig(source),
   };
 }

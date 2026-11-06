@@ -57,6 +57,7 @@
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
+| KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
@@ -1192,6 +1193,19 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/shared test` và `pnpm --filter @flow/web exec vitest run src/lib/suggestion.test.ts`. | Xanh: gửi nguyên văn → `sent_as_is`; sửa → `edited` + khoảng cách; chip nguồn ≤ 5 (+N); ô gợi ý ẩn khi không có gợi ý. |
 | 2 | Mở một bình luận → ô "Đổi nhãn" → chọn nhãn khác → "Lưu nhãn". | Trang làm tươi, chip nhãn đổi; bình luận đã xóa không có ô đổi nhãn; đổi sang en vẫn đủ chữ. |
+
+## KT-TT — Connector TikTok với tài khoản thật (TIKTOK-CONNECTOR, FR-015)
+
+Điều kiện: có quyền TikTok API for Business và tài khoản Business thử; kênh TikTok đã lưu (sau `TIKTOK-CHANNEL-CONNECT`); worker chạy với `TIKTOK_CONNECTOR_ENABLED=true` trên môi trường thử. **Chưa chạy được ở thời điểm Xong-mock.**
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng tài khoản khác bình luận vào một video của tài khoản thử, chờ chu kỳ polling | Bình luận hiện ở hộp thư đúng video, tác giả, nội dung |
+| 2 | Trả lời bình luận đó từ ứng dụng (≤ 150 ký tự) | Câu trả lời hiện dưới bình luận trên TikTok; hệ thống ghi đã gửi |
+| 3 | Trả lời bình luận quá 48 giờ / dài hơn 150 ký tự | Bị chặn trước khi gọi TikTok (ghi lại nếu TikTok cho phép khác khai báo) |
+| 4 | Xem một bình luận TikTok ở hộp thư | Không có nút Ẩn (chưa hỗ trợ) |
+| 5 | Bình luận do chính tài khoản thử viết | Không vào pipeline (chống vòng lặp) |
+| 6 | Thử token hết hạn/thu hồi quyền | Kênh báo hết hạn, banner Kết nối lại |
 
 ## KT-UC — Bộ đếm lượt AI (USAGE-COUNTERS, FR-090)
 
