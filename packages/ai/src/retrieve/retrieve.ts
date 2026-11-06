@@ -4,6 +4,7 @@ import { EMBEDDING_DIMENSIONS, type Embedder } from '../embedding/embedder';
 import { executeRoute } from '../route/execute-route';
 import { type RouteExtract, type RouteKind, type RouteReason, routeQuery } from '../route/route';
 import { lookupVariantsForRoute, type RouteVariant, type VariantLookup } from '../route/sql-lookup';
+import { orderByPriority, type PostNoteSourceInput, postNotesToSources } from './data-priority';
 import type { KbSearcher } from './kb-searcher';
 import { type KbHit, kbHitsToSources, variantsToSources } from './sources';
 
@@ -29,6 +30,10 @@ export type RetrieveInput = {
   maxTokens?: number;
   /** Miền của shop: link tới đó không bị cách ly khi quét cài lệnh (FR-164). */
   allowedDomains?: readonly string[];
+  /** Ghi chú của bài đang trả lời (FR-062/063); hết hạn thì tự bị loại theo `now`. */
+  postNotes?: readonly PostNoteSourceInput[];
+  /** Thời điểm xét hiệu lực ghi chú (mặc định: bây giờ; tiêm vào khi test). */
+  now?: Date;
 };
 
 export type SkipReason = 'complaint' | 'spam';
@@ -40,7 +45,7 @@ export type RetrieveResult =
       route: RouteKind;
       reason: RouteReason;
       variants: RouteVariant[];
-      /** Biến thể (giá/tồn từ DB) trước, kiến thức sau. */
+      /** Theo FR-063: ghi chú bài, biến thể (giá/tồn từ DB), rồi kiến thức. */
       sources: DraftSource[];
       /** Có đoạn kiến thức bị bỏ vì trần token. */
       truncated: boolean;
@@ -104,13 +109,17 @@ export async function retrieveKnowledge(
     maxTokens: input.maxTokens,
     allowedDomains: input.allowedDomains,
   });
+  const notes = postNotesToSources(input.postNotes ?? [], input.now ?? new Date(), {
+    allowedDomains: input.allowedDomains,
+  });
   return {
     status: 'retrieved',
     route: decision.route,
     reason: decision.reason,
     variants,
-    sources: [...variantsToSources(variants), ...kb.sources],
-    truncated: kb.truncated,
-    quarantined: kb.quarantined,
+    // FR-063: ghi chú bài → sản phẩm (giá/tồn từ DB) → kiến thức.
+    sources: orderByPriority([...notes.sources, ...variantsToSources(variants), ...kb.sources]),
+    truncated: kb.truncated || notes.truncated,
+    quarantined: [...kb.quarantined, ...notes.quarantined],
   };
 }

@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { assemble, diffAgainst } from './fragments.mjs';
 
 /**
- * @param {{ label: string, command: string, dir: URL, out: URL, outName: string, sections: { head: string, prefix?: string }[] }} target
+ * @param {{ label: string, command: string, dir: URL, out: URL, outName: string, sections: { head: string, prefix?: string, separator?: string }[] }} target
  * @param {string[]} args  `--check` = chỉ kiểm, thoát 1 nếu lệch
  */
 export function runFragments(target, args) {

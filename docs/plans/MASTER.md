@@ -34,6 +34,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | GĐ0-AUTH-CORE | FR-001–005 (lõi) | US-001, 005 | DB | S | không | ✅ |
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
+| UI-FIDELITY-AUTO-LEADS | docs/08 §2, §7 (automation.png, spam-rules.png, leads.png) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | 🟡 Giao diện khớp một phần (`feat-ui-automation-leads`, QAL1; Leads thật chờ `LEADS-KANBAN`) |
 | UI-AUTH-FIDELITY | FR-001, 119 | US-001, UF-1 | UI-AUTH | — | không | 🟡 giao diện đăng nhập/đăng ký khớp Stitch; phần còn lại xem gap matrix |
 | AUTH-2FA | FR-001 (TOTP + mã dự phòng) | US-005 | AUTH-CORE | S | không | ✅ |
 | AUTH-SESSIONS-UI | FR-001 (thiết bị) | US-005 | AUTH-2FA | — | không | ✅ (trang tạm) |
@@ -143,7 +144,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | POSTS-LIST | FR-060 (danh sách bài, lọc, gắn/chưa gắn) | US-032, UF-7 | CH-SCHEMA | — | không | ✅ (danh sách + lọc nền tảng/kênh/loại + tìm + sắp xếp + phân trang; còn lọc gắn/chưa gắn — cần `post_products`, xem gap `POSTS-LIST-LINK-FILTER`) |
 | POSTS-LINK-PRODUCT | FR-061 (gắn nhiều sản phẩm, sản phẩm chính, gắn hàng loạt; AI gợi ý cần xác nhận) | US-032 | POSTS-LIST, PRODUCTS-VARIANTS | — | có (0049) | ✅ Xong phần dữ liệu (UI: `POSTS-LINK-PRODUCT-UI`) |
 | POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | DB | không | Xong-mock (feat-post-notes, migration 0045, Q-PN1; còn API/UI, nối `DATA-PRIORITY` và cổng tự gửi) |
-| DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | ⏳ |
+| DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | Xong-mock (feat-data-priority, QDP1; phần thuần; còn nối truy vấn ghi chú từ DB + quy tắc prompt khi nối pipeline) |
 | SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | 🟡 Xong-mock phần không cần cột mới (`feat-suggest-ui`; còn `SUGGEST-UI-PERSIST` cần bảng `drafts` — làn b; KT-SUI) |
 | BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ✅ (feat/bulk-actions) |
 | INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ✅ (feat-inbox-mobile; còn Playwright 390px, KT-016) |

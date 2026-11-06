@@ -83,7 +83,7 @@ Công cụ: `fast-check` (TS, MIT), `hypothesis` (Python, MPL-2.0). **Chưa cài
 
 ## 9. Kiểm tra tay
 
-Sau mỗi tính năng agent thêm mục vào đầu `docs/testing/KIEM_TRA_TAY.md` (≤ 10 bước, vi + en, kết quả mong đợi từng bước); chủ dự án thử rồi ghi kết quả. Mục chưa thử ở trạng thái "chưa" là **kiểm tra tay dồn**; việc này không thay thế test tự động, chỉ bổ sung phần máy khó kiểm (giao diện, thư thật, nền tảng thật).
+Sau mỗi tính năng agent thêm mục bằng **hai file riêng** `docs/testing/kiem-tra-tay.d/kt-<mã>.md` (cả mục) + `tt-<mã>.md` (một hàng bảng "Trạng thái"), rồi chạy `pnpm kt:build` — không sửa tay `docs/testing/KIEM_TRA_TAY.md` (file sinh ra; mã KT duy nhất; mục ≤ 10 bước, vi + en, kết quả mong đợi từng bước); chủ dự án thử rồi ghi kết quả. Mục chưa thử ở trạng thái "chưa" là **kiểm tra tay dồn**; việc này không thay thế test tự động, chỉ bổ sung phần máy khó kiểm (giao diện, thư thật, nền tảng thật).
 
 ## 10. Trước khi báo xong một tính năng
 
