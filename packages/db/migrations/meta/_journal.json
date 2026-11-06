@@ -337,6 +337,13 @@
       "when": 1793950854931,
       "tag": "0047_auto_config_store",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793952386506,
+      "tag": "0048_automation_settings_rls_fix",
+      "breakpoints": true
     }
   ]
 }
