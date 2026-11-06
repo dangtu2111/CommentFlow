@@ -5,6 +5,7 @@ export * from './comment-replies';
 export * from './comment-tombstones';
 export * from './comments';
 export * from './kb';
+export * from './kb-content';
 export * from './posts';
 export * from './products';
 export * from './webhook-events';

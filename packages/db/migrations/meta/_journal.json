@@ -253,6 +253,13 @@
       "when": 1793933439726,
       "tag": "0035_two_factors_user_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793934346095,
+      "tag": "0036_kb_shop_policy_faq",
+      "breakpoints": true
     }
   ]
 }

@@ -74,6 +74,16 @@ export {
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
 export {
+  createFaqItem,
+  createPolicyItem,
+  deleteFaqItem,
+  deletePolicyItem,
+  updateFaqItem,
+  updatePolicyItem,
+  upsertBrandVoice,
+  upsertShopProfile,
+} from './queries/kb-content';
+export {
   DEFAULT_POSTS_LIMIT,
   listPosts,
   MAX_POSTS_LIMIT,

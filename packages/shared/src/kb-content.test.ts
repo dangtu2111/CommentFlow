@@ -64,6 +64,9 @@ describe('FR-050 FAQ', () => {
     });
     expect(r.success).toBe(true);
     if (r.success) expect(r.data.tags).toEqual(['ship']);
+    expect(
+      parseFaqItem({ question: 'q', answer: 'a', lang: 'vi', tags: ['x'.repeat(51)] }).success,
+    ).toBe(false);
     expect(parseFaqItem({ question: '', answer: 'a', lang: 'vi' }).success).toBe(false);
     expect(parseFaqItem({ question: 'q', answer: ' ', lang: 'vi' }).success).toBe(false);
   });

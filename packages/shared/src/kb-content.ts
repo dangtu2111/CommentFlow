@@ -78,7 +78,7 @@ export type PolicyItemInput = z.infer<typeof policyItemSchema>;
 export const parsePolicyItem = (v: unknown) => policyItemSchema.safeParse(v);
 
 const tags = z
-  .array(z.string())
+  .array(z.string().max(50))
   .max(FAQ_TAGS_MAX)
   .default([])
   .transform((list) => [...new Set(list.map((t) => t.trim().toLowerCase()).filter(Boolean))]);
@@ -93,7 +93,8 @@ export type FaqItemInput = z.infer<typeof faqItemSchema>;
 export const parseFaqItem = (v: unknown) => faqItemSchema.safeParse(v);
 
 const ruleList = z
-  .array(z.string())
+  .array(z.string().max(500))
+  .max(BRAND_VOICE_LIST_MAX * 2)
   .default([])
   .transform((list) => list.map((r) => r.trim()).filter(Boolean))
   .pipe(z.array(z.string().max(500)).max(BRAND_VOICE_LIST_MAX));
