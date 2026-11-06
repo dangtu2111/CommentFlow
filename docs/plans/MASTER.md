@@ -294,7 +294,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | 🟡 Xong-mock (`feat-pgvector-hybrid`, Q-PVH1, không migration; chờ CI; embedder thật → `KB-EMBED-LITELLM`) |
 | SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ✅ Xong-mock (`feat-semantic-cache`, không migration; chưa nối Redis/pipeline; KT-SC) |
 | LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | ⛔ |
-| SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ⛔ |
+| SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ✅ Xong-mock (`feat-src-haravan`, Q-HRV1; không migration; còn `HARAVAN-CONNECT-STORE` (OAuth + bảng token, làn b); KT-HRV) |
 | SRC-SAPO | FR-122 (Sapo) | — | SRC-HARAVAN | S | **có** | ⛔ |
 | SRC-KIOTVIET | FR-122 (KiotViet) | — | SRC-SAPO | S | **có** | ⛔ |
 | SRC-PANCAKE | FR-122 (Pancake POS) | — | SRC-KIOTVIET | S | **có** | ⛔ |
