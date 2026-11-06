@@ -51,6 +51,7 @@
 | KT-MSG1 | Tin chào / ngoài giờ / báo chuyển người (logic; Page thử khi nối thật) | — | không | chưa | — |
 | KT-MSW | Messenger (`MESSENGER_CONNECTOR_ENABLED`, **cần Page thử + `pages_messaging`**; sau `MESSENGER-INGEST`) | feat-messenger-webhook | chưa | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
+| KT-OTE | Mã hóa token OAuth ở `accounts` (logic thuần, chưa có giao diện; chạy test) | feat-oauth-token-enc | chưa | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
@@ -971,6 +972,17 @@ Không cần khóa ngoài. Đăng nhập Owner; Facebook để TẮT (mặc đ�
 3. Bấm Tiếp tục → "Chọn Page", rồi → "Nhập kiến thức": thanh Độ sẵn sàng khớp `/app/readiness`; nút Nhập sản phẩm mở `/app/products/import`.
 4. Bước cuối "Mời nhân viên" mở trang Thành viên; "Hoàn tất" về `/app`. "Quay lại" ở bước đầu về trang tạo workspace.
 5. Đăng nhập Staff, mở `/app/onboarding/setup`. Kết quả: 404.
+
+## KT-OTE — Mã hóa token OAuth ở `accounts` (feat-oauth-token-enc)
+
+Điều kiện: chưa có nhà cung cấp OAuth đăng nhập nào bật nên chưa có thao tác giao diện; kiểm bằng lệnh trên máy code.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/saas-core exec vitest run src/auth/oauth-token-vault.test.ts` | Tất cả test xanh (khứ hồi, sửa 1 ký tự bị từ chối, sai user/trường bị từ chối, xoay khóa v1→v2, thiếu khóa v1 báo lỗi cấu hình) |
+| 2 | Đăng ký/đăng nhập email + mật khẩu như thường (không truyền cipher) | Hoạt động y như trước; bảng `accounts` không đổi hành vi |
+
+Nếu hỏng: ghi tên test đỏ và dán thông báo lỗi (không dán khóa/token).
 
 ## KT-PBF — Quét bù bình luận + banner webhook im lặng (POLLING-BACKFILL, FR-023)
 

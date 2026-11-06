@@ -146,6 +146,10 @@ describe('giá trị đặc biệt', () => {
     expect(v1.needsReseal('tt-plain-legacy')).toBe(true);
   });
 
+  it('chuỗi có tiền tố enc:v nhưng sai định dạng → từ chối, không lưu như bản rõ', () => {
+    expect(() => v1.seal('enc:v1:@@@', scope)).toThrow(OAuthTokenOpenError);
+  });
+
   it('không niêm phong hai lần', () => {
     const once = v1.seal('tt-secret-value', scope);
     expect(v1.seal(once, scope)).toBe(once);

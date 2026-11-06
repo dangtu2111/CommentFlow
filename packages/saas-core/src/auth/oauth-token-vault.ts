@@ -60,7 +60,8 @@ export function createOAuthTokenVault(cipher: OAuthTokenCipher) {
   }
 
   function seal(plaintext: string, scope: OAuthTokenScope): string {
-    if (isSealed(plaintext)) return plaintext; // không niêm phong hai lần
+    if (SEALED.test(plaintext)) return plaintext; // không niêm phong hai lần
+    if (isSealed(plaintext)) throw new OAuthTokenOpenError(); // có tiền tố nhưng sai định dạng: không lưu bản rõ
     const { ciphertext, keyVersion } = cipher.encrypt(plaintext, ctxOf(scope));
     return `${PREFIX}${keyVersion}:${ciphertext.toString('base64url')}`;
   }
