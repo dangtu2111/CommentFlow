@@ -49,11 +49,35 @@ export {
   unreadableConfidence,
 } from './confidence/confidence';
 export {
+  type ActionDecision,
+  AUTO_SEND_POLICIES,
+  type AutoSendPolicy,
+  CLARIFY_ASKS,
+  type ClarifyAsk,
+  type ClarifyAskKind,
+  DECISION_REASONS,
+  type DecideActionInput,
+  type DecisionReason,
+  decideAction,
+  decideActionInputSchema,
+  HANDOFF_TEMPLATE_KEYS,
+  type HandoffTemplateKey,
+  KB_GAP_TOPICS,
+  type KbGapTopic,
+  MAX_CLARIFY_OPTIONS,
+  MAX_CLARIFY_PER_THREAD,
+  REPEAT_HANDOFF_THRESHOLD,
+  readDecideActionInput,
+  VARIANT_AXES,
+  type VariantAxis,
+} from './decide/decide-action';
+export {
   DEFAULT_DRAFT_MODEL,
   type DraftConfig,
   loadDraftConfig,
 } from './draft/draft-config';
 export {
+  type ActionBrief,
   buildDraftMessages,
   type DraftSource,
   type DraftVoice,

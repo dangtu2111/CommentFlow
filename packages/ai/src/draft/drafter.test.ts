@@ -1,7 +1,8 @@
 import { isAppError, maskPii, unsafeMarkMasked } from '@flow/shared';
 import { describe, expect, it } from 'vitest';
+import { REASON_HANDOFF_ACTION } from '../confidence/confidence';
 import type { LlmCallInput, LlmCallResult, LlmClient } from '../llm-client';
-import type { DraftInput } from './draft-prompt';
+import type { ActionBrief, DraftInput } from './draft-prompt';
 import { createLlmDrafter, DRAFT_PROMPT_VERSION, DRAFT_STEP } from './drafter';
 
 const WS = '11111111-1111-4111-8111-111111111111';
@@ -113,5 +114,90 @@ describe('FR-029/FR-138 drafter LLM', () => {
   it('lỗi llm.call được ném nguyên', async () => {
     const { llm } = fakeLlm(new Error('mạng'));
     await expect(createLlmDrafter({ llm, model: 'm' }).draft(input())).rejects.toThrow('mạng');
+  });
+});
+
+describe('FR-147 FR-141 drafter theo hành động đã chọn', () => {
+  const brief = (over: Partial<ActionBrief>): ActionBrief => ({
+    action: 'answer',
+    clarify: null,
+    unansweredTopics: [],
+    redirectTemplates: [],
+    ...over,
+  });
+  const clarifyOut = {
+    reply: 'Dạ chị lấy size S, M hay L ạ?',
+    lang: 'vi',
+    sources: [],
+    claims: [{ text: 'Chị lấy size nào?', source_ids: [], kind: 'question_back' }],
+    unanswered_topics: [],
+    needs_human: false,
+    reason: '',
+  };
+
+  it('handoff → không gọi LLM, trả needs_human với lý do cố định', async () => {
+    const { llm, calls } = fakeLlm(JSON.stringify(good));
+    const r = await createLlmDrafter({ llm, model: 'm' }).draft(
+      input({ decision: brief({ action: 'handoff' }), lang: 'en' }),
+    );
+    expect(r).toMatchObject({
+      needs_human: true,
+      reply: '',
+      lang: 'en',
+      reason: REASON_HANDOFF_ACTION,
+    });
+    expect(calls).toHaveLength(0);
+  });
+
+  it('clarify không cần nguồn đạt ngưỡng: vẫn gọi LLM đúng một lần, prompt có dòng hành động', async () => {
+    const { llm, calls } = fakeLlm(JSON.stringify(clarifyOut));
+    const r = await createLlmDrafter({ llm, model: 'm' }).draft(
+      input({
+        sources: [],
+        decision: brief({
+          action: 'clarify',
+          clarify: { ask: 'variant', axes: ['size'], options: [] },
+        }),
+      }),
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.messages[2]?.content).toContain('Hành động: clarify');
+    expect(r.needs_human).toBe(false);
+    expect(r.reply).toContain('size');
+  });
+
+  it('redirect chỉ câu mời (không nguồn) vẫn gọi LLM; ý fact bịa nguồn vẫn bị chặn (FR-140)', async () => {
+    const decision = brief({
+      action: 'redirect',
+      unansweredTopics: ['shipping'],
+      redirectTemplates: ['shipping'],
+    });
+    const okOut = { ...clarifyOut, claims: [{ text: 'ib shop', source_ids: [], kind: 'handoff' }] };
+    const { llm: okLlm, calls } = fakeLlm(JSON.stringify(okOut));
+    const r = await createLlmDrafter({ llm: okLlm, model: 'm' }).draft(
+      input({ sources: [], decision }),
+    );
+    expect(calls).toHaveLength(1);
+    expect(r.needs_human).toBe(false);
+
+    const fake = { ...okOut, claims: [{ text: 'Ship 20k', source_ids: ['sp-1'], kind: 'fact' }] };
+    const { llm: badLlm } = fakeLlm(JSON.stringify(fake));
+    const blocked = await createLlmDrafter({ llm: badLlm, model: 'm' }).draft(
+      input({ sources: [], decision }),
+    );
+    expect(blocked).toMatchObject({ needs_human: true, reason: 'Thiếu nguồn' });
+  });
+
+  it('answer vẫn đòi nguồn đạt ngưỡng như trước', async () => {
+    const { llm, calls } = fakeLlm(JSON.stringify(good));
+    const r = await createLlmDrafter({ llm, model: 'm' }).draft(
+      input({ sources: [], decision: brief({ action: 'answer' }) }),
+    );
+    expect(r.needs_human).toBe(true);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('prompt_version đổi khi thêm khối hành động', () => {
+    expect(DRAFT_PROMPT_VERSION).toBe('draft@2');
   });
 });
