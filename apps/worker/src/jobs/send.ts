@@ -1,3 +1,4 @@
+import { type SendRecheckInput, type SendRecheckResult, sendRecheck } from '@flow/ai';
 import {
   type ChannelRef,
   type ConnectorRegistry,
@@ -63,10 +64,78 @@ type Outcome =
   | { kind: 'done' }
   | { kind: 'send'; row: Row; connector: PlatformConnector; channel: ChannelRef; resumed: boolean };
 
+/** Cột của dòng khóa cần cho `sendRecheck` (FR-110). */
+export type RecheckRow = Pick<
+  Row,
+  | 'comment_status'
+  | 'comment_external_reply_id'
+  | 'is_hidden'
+  | 'merged_into_id'
+  | 'deleted_at'
+  | 'channel_status'
+  | 'channel_suspended'
+>;
+
 /**
- * `sendRecheck` (docs/09 §6.1) + đánh dấu `sending`: trong MỘT giao dịch khóa dòng yêu cầu. Qua hết → trả việc cần
- * làm; trượt → ghi kết quả (hủy/thất bại) và trả `done`. R4–R8 (tự gửi/giá/KB/lượt/cửa sổ tin nhắn) thuộc GĐ2+;
- * R9 (hạn mức tốc độ theo Page) là gap `SEND-RATE-LIMIT`.
+ * Dựng đầu vào `sendRecheck` cho đường NGƯỜI GỬI (outbox `comment_replies`, FR-042): chế độ `human`, bình luận.
+ * R4/R6/R7 không áp dụng cho người gửi; R5 chưa có ảnh chụp giá (bản nháp AI chưa nối — `SEND-RECHECK-WIRE`);
+ * R9 nhận bộ đếm tốc độ khi có (`SEND-RATE-LIMIT`), chưa có → `null` (qua).
+ */
+export function recheckInputFromRow(
+  row: RecheckRow,
+  now: Date,
+  rate: { remaining: number } | null = null,
+): SendRecheckInput {
+  return {
+    mode: 'human',
+    target: 'comment',
+    now,
+    comment: {
+      status: row.comment_status,
+      externalReplyId: row.comment_external_reply_id,
+      isHidden: row.is_hidden,
+      mergedIntoId: row.merged_into_id,
+      deletedAt: row.deleted_at,
+    },
+    channel: { status: row.channel_status, sendSuspended: row.channel_suspended },
+    automation: null,
+    price: null,
+    kb: null,
+    quota: null,
+    message: null,
+    rate,
+  };
+}
+
+export type RecheckSettlement = {
+  status: 'cancelled' | 'failed';
+  /** Trạng thái bình luận cần đặt (chỉ khi còn `sending`); `null` = không đụng (R1: đã có người khác đổi). */
+  commentStatus: string | null;
+};
+
+/**
+ * Trượt `sendRecheck` → cách ghi kết quả vào outbox (ADR 008): R1 hủy, giữ nguyên bình luận (người khác đã xử lý);
+ * R2 hủy, trả bình luận về trạng thái trước; mọi điều kiện khác (kênh lỗi, giá đổi cần xác nhận, cửa sổ đóng, đầu
+ * vào hỏng) → `failed` + bình luận `send_failed` để nhân viên thấy lý do `recheck:R#` và gửi lại. `defer` (R9) KHÔNG
+ * phải kết quả: nơi gọi ném lỗi thử lại — hàm này không được gọi cho nó.
+ */
+export function settlementForRecheck(
+  check: Extract<SendRecheckResult, { ok: false }>,
+  previousStatus: string,
+): RecheckSettlement {
+  if (check.action === 'cancel') {
+    return {
+      status: 'cancelled',
+      commentStatus: check.rule === 'recheck:R1' ? null : previousStatus,
+    };
+  }
+  return { status: 'failed', commentStatus: 'send_failed' };
+}
+
+/**
+ * `sendRecheck` (docs/09 §6.1, FR-110) + đánh dấu `sending`: trong MỘT giao dịch khóa dòng yêu cầu. Qua hết → trả việc
+ * cần làm; trượt → ghi kết quả (hủy/thất bại) và trả `done`; R9 → ném lỗi thử lại (hoãn, không tính là lỗi).
+ * Đường người gửi chỉ có dữ liệu R1–R3 (xem `recheckInputFromRow`).
  */
 async function prepare(
   tx: Database,
@@ -104,19 +173,12 @@ async function prepare(
   const finish = (status: 'cancelled' | 'failed', code: string, commentStatus: string | null) =>
     settle(tx, row, status, code, commentStatus);
 
-  // R1: chưa được trả lời và bình luận vẫn đang `sending`.
-  if (row.comment_external_reply_id !== null || row.comment_status !== 'sending') {
-    await finish('cancelled', 'recheck:R1', null);
-    return { kind: 'done' };
-  }
-  // R2: chưa ẩn/gộp/xóa trên nền tảng.
-  if (row.is_hidden || row.merged_into_id !== null || row.deleted_at !== null) {
-    await finish('cancelled', 'recheck:R2', row.previous_status);
-    return { kind: 'done' };
-  }
-  // R3: kênh còn `connected` và không bị tạm khóa gửi.
-  if (row.channel_status !== 'connected' || row.channel_suspended) {
-    await finish('failed', 'recheck:R3', 'send_failed');
+  // R1–R9 (chỉ R1–R3 có dữ liệu ở đường người gửi): trượt → ghi kết quả, KHÔNG gọi nền tảng.
+  const check = sendRecheck(recheckInputFromRow(row, now));
+  if (!check.ok) {
+    if (check.action === 'defer') throw new SendRetryableError(check.rule);
+    const settlement = settlementForRecheck(check, row.previous_status);
+    await finish(settlement.status, check.rule, settlement.commentStatus);
     return { kind: 'done' };
   }
   if (!registry.has(row.channel_platform)) {

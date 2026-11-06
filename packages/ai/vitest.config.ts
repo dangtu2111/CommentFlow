@@ -22,6 +22,7 @@ export default defineConfig({
         'src/route/*.ts': { branches: 95 },
         'src/decide/*.ts': { branches: 95 },
         'src/gate/*.ts': { branches: 95 },
+        'src/recheck/*.ts': { branches: 95 },
       },
     },
   },
