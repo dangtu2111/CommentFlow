@@ -47,8 +47,8 @@ describe('FR-162 đọc đầu ra extract', () => {
   });
 
   it('bỏ hàng rào ```json và chữ thừa quanh object', () => {
-    expect(parseExtractOutput('```json\n' + json() + '\n```').labels[0]?.label).toBe('price');
-    expect(parseExtractOutput('Kết quả: ' + json() + ' xong.').labels[0]?.label).toBe('price');
+    expect(parseExtractOutput(`\`\`\`json\n${json()}\n\`\`\``).labels[0]?.label).toBe('price');
+    expect(parseExtractOutput(`Kết quả: ${json()} xong.`).labels[0]?.label).toBe('price');
   });
 
   it('thiếu trường bắt buộc, sai kiểu, số âm hoặc số lẻ ở qty → LLM_UNAVAILABLE', () => {
