@@ -10,6 +10,8 @@
   "scripts": {
     "lint": "biome check .",
     "format": "biome format --write .",
+    "format:check": "biome format .",
+    "precheck": "node scripts/precheck.mjs",
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
     "build": "pnpm -r --if-present run build",
