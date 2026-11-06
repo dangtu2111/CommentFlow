@@ -36,6 +36,14 @@ export {
   storeExactCache,
 } from './cache/exact-cache';
 export {
+  buildSemanticCacheControl,
+  DEFAULT_SEMANTIC_SIMILARITY_THRESHOLD,
+  isSemanticCacheEnabled,
+  SEMANTIC_CACHE_TTL_SECONDS,
+  type SemanticCacheControl,
+  type SemanticCacheInput,
+} from './cache/semantic-cache';
+export {
   type ClassifyConfig,
   DEFAULT_CLASSIFY_MODEL,
   loadClassifyConfig,
