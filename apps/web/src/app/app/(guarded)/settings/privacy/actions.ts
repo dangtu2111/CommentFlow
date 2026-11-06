@@ -1,16 +1,31 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { isDeletionConfirmed, unavailableDataLifecycle } from '../../../../../lib/data-privacy';
+import {
+  exportNoticeOf,
+  isDeletionConfirmed,
+  unavailableDataLifecycle,
+} from '../../../../../lib/data-privacy';
+import { dataExports } from '../../../../../server/data-export';
 import { requireAppUser } from '../../../../../server/require-app-user';
 
 const BACK = '/app/settings/privacy';
 
-/** Owner yêu cầu xuất dữ liệu (FR-094). Dịch vụ thật chưa mở → báo "chưa mở", không ghi gì. */
+/**
+ * Owner yêu cầu xuất dữ liệu (FR-094). Workspace/người dùng lấy từ phiên (không từ form). Cờ DATA_EXPORT_ENABLED tắt
+ * (mặc định) → "chưa mở", không ghi gì; lỗi bất ngờ cũng chỉ báo "chưa mở" (không lộ chi tiết).
+ */
 export async function requestExportAction(): Promise<void> {
-  const { workspace } = await requireAppUser({ role: 'owner' });
-  const result = await unavailableDataLifecycle.requestExport(workspace.id);
-  redirect(`${BACK}?notice=${result.ok ? 'ok' : result.reason}`);
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  let notice: ReturnType<typeof exportNoticeOf>;
+  try {
+    notice = exportNoticeOf(
+      await dataExports().request({ workspaceId: workspace.id, userId: user.id }),
+    );
+  } catch {
+    notice = 'unavailable';
+  }
+  redirect(`${BACK}?notice=${notice}`);
 }
 
 /**

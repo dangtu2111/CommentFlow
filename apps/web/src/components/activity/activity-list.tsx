@@ -12,6 +12,7 @@ import { actionLabelKey, onBehalfOfDisplay } from '../../lib/action-log-format';
 import { formatAbsoluteTime } from '../../lib/inbox-format';
 import { activityTone } from '../../lib/settings-visual';
 import { userInitials } from '../../lib/user-initials';
+import { Avatar } from '../ui/avatar';
 
 export type ActivityListItem = {
   id: string;
@@ -49,17 +50,13 @@ export function actorDisplay(
 /** Ảnh đại diện của tác nhân: người dùng → chữ viết tắt; AI/hệ thống/quản trị → biểu tượng (không logo, không ảnh thật). */
 function ActorAvatar({ item, name }: { item: ActivityListItem; name: string }) {
   if (item.actorType === 'user') {
-    return (
-      <span className="avatar avatar-sm" aria-hidden="true">
-        {userInitials(name)}
-      </span>
-    );
+    return <Avatar size="sm">{userInitials(name)}</Avatar>;
   }
   const Icon = item.actorType === 'ai' ? Sparkles : item.actorType === 'admin' ? ShieldCheck : Cog;
   return (
-    <span className={`avatar avatar-sm avatar-${item.actorType}`} aria-hidden="true">
+    <Avatar size="sm" ai={item.actorType === 'ai'}>
       <Icon size={16} />
-    </span>
+    </Avatar>
   );
 }
 

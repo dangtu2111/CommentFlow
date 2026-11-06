@@ -331,7 +331,7 @@ describe('RLS và quyền ghi', () => {
   });
 });
 
-describe('FR-091 báo chuyển khoản → chờ xác nhận (QR-PAYMENT, migration 0056)', () => {
+describe('FR-091 báo chuyển khoản → chờ xác nhận (QR-PAYMENT, migration 0057)', () => {
   const report = (ws: string, user: string, invoiceId: string) =>
     web.withActor(ws, user, (tx) => reportInvoiceTransfer(tx, ws, invoiceId));
   const reportedAt = async (id: string) =>

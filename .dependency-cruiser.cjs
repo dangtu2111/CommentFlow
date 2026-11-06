@@ -62,6 +62,14 @@ module.exports = {
       to: { path: '^packages/db/src/auth-db' },
     },
     {
+      name: 'kit-giao-dien-khong-import-trang',
+      comment:
+        'Kit giao diện dùng chung (components/ui, components/patterns) không được import ngược từ app/ (trang) — trang ghép kit, không phải ngược lại.',
+      severity: 'error',
+      from: { path: '^apps/web/src/components/(ui|patterns)/' },
+      to: { path: '^apps/web/src/app/' },
+    },
+    {
       name: 'apps-khong-import-nhau',
       comment: 'Các ứng dụng độc lập: web không import worker và ngược lại.',
       severity: 'error',

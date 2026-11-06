@@ -1,0 +1,130 @@
+/* Chip / Badge / StatusPill. Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
+
+.badge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.badge-on {
+  background: var(--selected-bg);
+  color: var(--color-success);
+}
+
+.badge-off {
+  background: var(--field-bg);
+  color: var(--color-text-muted);
+}
+
+.chip {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: var(--text-xs);
+}
+
+.chip-status.chip-pending_review,
+.chip-status.chip-scheduled_auto,
+.chip-status.chip-sending {
+  border-color: var(--color-primary-300);
+}
+
+.chip-status.chip-needs_human,
+.chip-status.chip-spam_suspected {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.chip-status.chip-send_failed {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.chip-status.chip-replied,
+.chip-status.chip-auto_replied {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.chip-label {
+  font-weight: var(--weight-semibold);
+}
+
+.chip-tone-price {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.chip-tone-purchase {
+  background: var(--color-ai-50);
+  border-color: var(--color-ai-300);
+  color: var(--color-ai-600);
+}
+
+.chip-tone-complaint {
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-surface));
+  color: var(--color-danger);
+}
+
+.chip-tone-spam {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.chip-lock {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.chip-success,
+.chip-info,
+.chip-muted,
+.chip-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: var(--space-2);
+  font-weight: var(--weight-semibold);
+}
+
+.chip-success {
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-surface));
+  color: var(--color-success);
+}
+
+.chip-info {
+  background: var(--selected-bg);
+  border-color: var(--selected-border);
+  color: var(--color-primary-700);
+}
+
+.chip-muted {
+  color: var(--color-text-muted);
+}
+
+.chip-warning,
+.chip-tone-moderation {
+  background: color-mix(in srgb, var(--color-warning) 12%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-warning) 40%, var(--color-surface));
+  color: var(--color-warning);
+}
+
+.chip-tone-reply {
+  background: var(--color-ai-50);
+  border-color: var(--color-ai-300);
+  color: var(--color-ai-600);
+}
+
+.chip-tone-team,
+.chip-tone-channel {
+  background: var(--selected-bg);
+  border-color: var(--selected-border);
+  color: var(--color-primary-700);
+}

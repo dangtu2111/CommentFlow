@@ -2,6 +2,9 @@ import { MailPlus, Users } from 'lucide-react';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { roleTone } from '../../lib/settings-visual';
 import { userInitials } from '../../lib/user-initials';
+import { Avatar } from '../ui/avatar';
+import { Chip } from '../ui/chip';
+import { PageHeader } from '../ui/page-header';
 import { SectionHead } from '../ui/section-head';
 import { InvitationActions } from './invitation-actions';
 import { InviteForm } from './invite-form';
@@ -40,42 +43,35 @@ export async function MembersView({
   const activeOwners = members.filter((m) => m.role === 'owner' && m.status === 'active').length;
   return (
     <>
-      <h1 className="page-title">{t('title')}</h1>
-      <p className="page-subtitle">{t('subtitle', { workspace: workspaceName })}</p>
+      <PageHeader title={t('title')} subtitle={t('subtitle', { workspace: workspaceName })} />
 
       <section className="card stack" aria-labelledby="members-title">
         <SectionHead
           id="members-title"
           icon={<Users size={22} />}
           title={t('list.title')}
-          end={<span className="chip chip-info">{t('list.count', { count: members.length })}</span>}
+          end={<Chip tone="info">{t('list.count', { count: members.length })}</Chip>}
         />
         <ul className="member-list">
           {members.map((member) => {
             const isSelf = member.userId === currentUserId;
             return (
               <li key={member.memberId} className="member-item">
-                <span className="avatar" aria-hidden="true">
-                  {userInitials(member.name || member.email)}
-                </span>
+                <Avatar>{userInitials(member.name || member.email)}</Avatar>
                 <div className="member-info">
                   <p className="member-name">
                     {member.name || t('list.unknownName')}
-                    {isSelf ? <span className="chip chip-muted">{t('list.you')}</span> : null}
+                    {isSelf ? <Chip>{t('list.you')}</Chip> : null}
                   </p>
                   <p className="muted">{member.email || t('list.emailHidden')}</p>
                 </div>
                 <div className="member-chips">
-                  <span
-                    className={`chip ${roleTone(member.role) === 'owner' ? 'chip-info' : 'chip-muted'}`}
-                  >
+                  <Chip tone={roleTone(member.role) === 'owner' ? 'info' : 'muted'}>
                     {t(`roles.${member.role}`)}
-                  </span>
-                  <span
-                    className={`chip ${member.status === 'active' ? 'chip-success' : 'chip-warning'}`}
-                  >
+                  </Chip>
+                  <Chip tone={member.status === 'active' ? 'success' : 'warning'}>
                     {t(`status.${member.status}`)}
-                  </span>
+                  </Chip>
                 </div>
                 {isSelf ? (
                   <p className="muted member-self">{t('list.selfNote')}</p>
@@ -111,9 +107,7 @@ export async function MembersView({
         <ul className="member-list">
           {invitations.map((invitation) => (
             <li key={invitation.id} className="member-item">
-              <span className="avatar" aria-hidden="true">
-                {userInitials(invitation.email)}
-              </span>
+              <Avatar>{userInitials(invitation.email)}</Avatar>
               <div className="member-info">
                 <p className="member-name">{invitation.email}</p>
                 <p className="muted">
@@ -126,10 +120,10 @@ export async function MembersView({
                 </p>
               </div>
               <div className="member-chips">
-                <span className="chip chip-muted">{t(`roles.${invitation.role}`)}</span>
-                <span className={`chip ${invitation.expired ? 'chip-warning' : 'chip-success'}`}>
+                <Chip>{t(`roles.${invitation.role}`)}</Chip>
+                <Chip tone={invitation.expired ? 'warning' : 'success'}>
                   {invitation.expired ? t('pending.expired') : t('pending.waiting')}
-                </span>
+                </Chip>
               </div>
               <InvitationActions invitationId={invitation.id} />
             </li>

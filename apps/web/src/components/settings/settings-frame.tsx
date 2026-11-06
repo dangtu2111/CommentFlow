@@ -1,5 +1,4 @@
 import { Bell, CreditCard, Database, Link2, ShieldCheck, Users } from 'lucide-react';
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import {
@@ -8,6 +7,8 @@ import {
   type SettingsRole,
   settingsNavFor,
 } from '../../lib/settings-nav';
+import { Breadcrumb } from '../ui/page-header';
+import { SplitLayout } from '../ui/split-layout';
 
 const ICONS = {
   channels: Link2,
@@ -46,36 +47,28 @@ export async function SettingsFrame({
   };
   return (
     <div className="settings-frame">
-      <nav className="breadcrumb" aria-label={t('breadcrumb.label')}>
-        <span>{t('breadcrumb.root')}</span>
-        <span aria-hidden="true">›</span>
-        <span aria-current="page">{t(`nav.${active}`)}</span>
-      </nav>
-      <div className="settings-layout">
-        <nav className="settings-subnav" aria-label={t('nav.label')}>
-          <p className="settings-subnav-title">{t('nav.title')}</p>
-          <ul>
-            {settingsNavFor(viewerRole).map((item) => {
-              const Icon = ICONS[item.key];
-              const count = note(item.key);
-              return (
-                <li key={item.key}>
-                  <Link
-                    href={item.href}
-                    className="settings-subnav-link"
-                    aria-current={item.key === active ? 'page' : undefined}
-                  >
-                    <Icon size={18} aria-hidden="true" />
-                    <span>{t(`nav.${item.key}`)}</span>
-                    {count ? <span className="settings-subnav-count">{count}</span> : null}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-        <div className="settings-content">{children}</div>
-      </div>
+      <Breadcrumb
+        label={t('breadcrumb.label')}
+        root={t('breadcrumb.root')}
+        current={t(`nav.${active}`)}
+      />
+      <SplitLayout
+        navLabel={t('nav.label')}
+        navTitle={t('nav.title')}
+        items={settingsNavFor(viewerRole).map((item) => {
+          const Icon = ICONS[item.key];
+          return {
+            key: item.key,
+            href: item.href,
+            label: t(`nav.${item.key}`),
+            icon: <Icon size={18} aria-hidden="true" />,
+            count: note(item.key),
+            current: item.key === active,
+          };
+        })}
+      >
+        {children}
+      </SplitLayout>
     </div>
   );
 }

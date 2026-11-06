@@ -27,7 +27,7 @@ Không có (mọi chỗ mơ hồ đã tự chọn phương án an toàn, ghi ở
 ## File sẽ sửa / tạo
 
 - `packages/shared/src/vietqr.ts` (+test) — dựng payload VietQR, CRC, kiểm cấu hình tài khoản nhận; export ở `index.ts`.
-- `packages/db/migrations/0056_qr_payment.sql` (+ snapshot/journal) · `schema/core/invoices.ts` — cột `transfer_reported_at` + hàm `core.report_invoice_transfer`.
+- `packages/db/migrations/0057_qr_payment.sql` (+ snapshot/journal) · `schema/core/invoices.ts` — cột `transfer_reported_at` + hàm `core.report_invoice_transfer`.
 - `packages/db/src/{invoices,runtime,check-rls}.ts`, `tests/invoices.int.test.ts` — `reportInvoiceTransfer`, kiểm quyền hàm.
 - `packages/saas-core/src/billing/payment-qr.ts` (+test) — vẽ chuỗi payload thành SVG bằng `qrcode` sẵn có (không gọi dịch vụ ngoài).
 - `apps/web/src/server/invoice-payment.ts` (+test) — nhà cung cấp tài khoản nhận (interface + env + fixture), nạp hướng dẫn thanh toán, báo chuyển khoản.
@@ -37,7 +37,7 @@ Không có (mọi chỗ mơ hồ đã tự chọn phương án an toàn, ghi ở
 
 ## Migration
 
-`0056_qr_payment.sql` (làn b): `ALTER TABLE core.invoices ADD COLUMN transfer_reported_at timestamptz` + hàm `core.report_invoice_transfer(workspace, invoice)` SECURITY DEFINER đường Owner (mẫu 0055): người dùng từ `current_user_id()`, workspace khớp, không phải hệ thống, `is_workspace_owner()`; khóa dòng; idempotent; ghi `action_logs`. EXECUTE chỉ `cf_app`. Đường lùi: DROP FUNCTION + DROP COLUMN (xem đầu file migration). Không bảng mới.
+`0057_qr_payment.sql` (làn b): `ALTER TABLE core.invoices ADD COLUMN transfer_reported_at timestamptz` + hàm `core.report_invoice_transfer(workspace, invoice)` SECURITY DEFINER đường Owner (mẫu 0055): người dùng từ `current_user_id()`, workspace khớp, không phải hệ thống, `is_workspace_owner()`; khóa dòng; idempotent; ghi `action_logs`. EXECUTE chỉ `cf_app`. Đường lùi: DROP FUNCTION + DROP COLUMN (xem đầu file migration). Không bảng mới.
 
 ## Test viết trước
 

@@ -1,0 +1,16 @@
+/*
+ * Kit giao diện dùng chung — nạp MỘT lần ở app/layout.tsx, ngay sau styles/globals.css.
+ * Mỗi thành phần một file riêng; trang không import CSS của kit hay của trang khác.
+ */
+@import "./button.css";
+@import "./form-field.css";
+@import "./tabs.css";
+@import "./card.css";
+@import "./section-head.css";
+@import "./chip.css";
+@import "./avatar.css";
+@import "./dialog.css";
+@import "./banner.css";
+@import "./page-header.css";
+@import "./split-layout.css";
+@import "./stat.css";

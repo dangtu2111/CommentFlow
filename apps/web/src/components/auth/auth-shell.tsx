@@ -1,10 +1,10 @@
 import { Bot, Languages, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { getBrand } from '../../server/brand';
 import { BrandLogo } from '../brand-logo';
 import { LocaleSwitcher } from '../locale-switcher';
+import { Tabs } from '../ui/tabs';
 import { AuthDemoCard } from './auth-demo-card';
 
 /** Khung chung của mọi trang xác thực: đầu trang (logo + ngôn ngữ), panel giới thiệu, thẻ nội dung, chân trang. */
@@ -48,21 +48,22 @@ export async function AuthShell({ children }: { children: ReactNode }) {
   );
 }
 
+const AUTH_TABS = [
+  { key: 'login', href: '/login' },
+  { key: 'register', href: '/register' },
+] as const;
+
 /** Tab "Đăng nhập | Đăng ký": hai liên kết thật (không phải JS), trang hiện tại có aria-current. */
 export async function AuthTabs({ active }: { active: 'login' | 'register' }) {
   const t = await getTranslations('auth.tabs');
   return (
-    <nav className="tabs" aria-label={t('label')}>
-      <Link href="/login" className="tab" aria-current={active === 'login' ? 'page' : undefined}>
-        {t('login')}
-      </Link>
-      <Link
-        href="/register"
-        className="tab"
-        aria-current={active === 'register' ? 'page' : undefined}
-      >
-        {t('register')}
-      </Link>
-    </nav>
+    <Tabs
+      label={t('label')}
+      items={AUTH_TABS.map((tab) => ({
+        ...tab,
+        label: t(tab.key),
+        current: tab.key === active,
+      }))}
+    />
   );
 }

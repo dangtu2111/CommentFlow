@@ -1,5 +1,5 @@
 {
-  "id": "6a1fcf89-e554-429f-ba58-e18c4f5b95a0",
+  "id": "3a31b936-8504-4373-bad8-aafe47612bc1",
   "prevId": "b99e78b2-14f6-476a-b1af-f6e43d1e12b8",
   "version": "7",
   "dialect": "postgresql",
@@ -894,12 +894,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
-        },
-        "transfer_reported_at": {
-          "name": "transfer_reported_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         },
         "paid_at": {
           "name": "paid_at",
@@ -7446,6 +7440,183 @@
         "webhook_events_status_check": {
           "name": "webhook_events_status_check",
           "value": "\"cf\".\"webhook_events\".\"status\" in ('received', 'processing', 'done', 'failed', 'dead')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "core.data_exports": {
+      "name": "data_exports",
+      "schema": "core",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "file_key": {
+          "name": "file_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "size_bytes": {
+          "name": "size_bytes",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "row_counts": {
+          "name": "row_counts",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ready_at": {
+          "name": "ready_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "data_exports_active_unique": {
+          "name": "data_exports_active_unique",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"core\".\"data_exports\".\"status\" in ('pending', 'running')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "data_exports_workspace_created_idx": {
+          "name": "data_exports_workspace_created_idx",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "data_exports_expiry_idx": {
+          "name": "data_exports_expiry_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"core\".\"data_exports\".\"status\" = 'ready'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "data_exports_workspace_id_workspaces_id_fk": {
+          "name": "data_exports_workspace_id_workspaces_id_fk",
+          "tableFrom": "data_exports",
+          "tableTo": "workspaces",
+          "schemaTo": "core",
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "data_exports_requested_by_users_id_fk": {
+          "name": "data_exports_requested_by_users_id_fk",
+          "tableFrom": "data_exports",
+          "tableTo": "users",
+          "schemaTo": "core",
+          "columnsFrom": ["requested_by"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "data_exports_status_check": {
+          "name": "data_exports_status_check",
+          "value": "\"core\".\"data_exports\".\"status\" in ('pending', 'running', 'ready', 'failed', 'expired')"
+        },
+        "data_exports_ready_check": {
+          "name": "data_exports_ready_check",
+          "value": "(\"core\".\"data_exports\".\"status\" in ('ready', 'expired')) = (\"core\".\"data_exports\".\"ready_at\" is not null)"
+        },
+        "data_exports_size_check": {
+          "name": "data_exports_size_check",
+          "value": "\"core\".\"data_exports\".\"size_bytes\" is null or \"core\".\"data_exports\".\"size_bytes\" >= 0"
         }
       },
       "isRLSEnabled": false

@@ -35,6 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
+| UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (`feat-ui-kit-foundation`, Q-UIKIT1); chuyển trang còn lại |
 | UI-FIDELITY-SETTINGS-PAGES | docs/08 §7 (settings-billing.png) | UF-4 | UI-FIDELITY-SETTINGS-V2 | — | không | ✅ Xong-mock giao diện (`feat-ui-settings-pages`, Q-USP1; còn `PLANS-SCHEMA`, `QR-PAYMENT`) |
 | UI-FIDELITY-SETTINGS-V2 | docs/08 §7 (settings-security.png) | UF-4 | UI-FIDELITY-SETTINGS | — | verifier-security (xóa phiên) | ✅ Giao diện khớp (`feat-ui-settings-v2`, Q-UISET2; còn `SETTINGS-SECURITY-DATA`) |
 | UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
@@ -207,7 +208,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 |---|---|---|---|---|---|---|
 | PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ✅ Xong-mock (feat-plans-schema, Q-PLN1, migration 0054; giá seed chờ chủ dự án xác nhận) |
 | TRIAL-UPGRADE-UI | FR-090 (dùng thử, nâng gói, mua thêm) | US-060 | PLANS-SCHEMA | S | không | ⏳ |
-| QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ✅ Xong-mock (`feat-qr-payment`, Q-QRP1, migration 0056; cờ `QR_PAYMENT_ENABLED` TẮT; chờ tài khoản nhận tiền thật) |
+| QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ✅ Xong-mock (`feat-qr-payment`, Q-QRP1, migration 0057; cờ `QR_PAYMENT_ENABLED` TẮT; chờ tài khoản nhận tiền thật) |
 | INVOICES | FR-091 (lịch sử hóa đơn, thông tin xuất hóa đơn) — nền dữ liệu ✅ Xong-mock (feat-invoices, Q-INV1, migration 0052: `core.invoices`/`core.payments`, hàm DEFINER chỉ hệ thống); còn giao diện lịch sử + thông tin xuất hóa đơn, QR, đường Admin | US-061 | QR-PAYMENT | S | không | 🔧 (nền dữ liệu xong; UI chờ `QR-PAYMENT`) |
 | ADMIN-SHELL | FR-100 khung, FR-118; `AUTH-ADMIN-SESSION` (phiên 8 giờ, role DB Admin) | US-081 | AUTH-2FA | S+DB | không | ⏳ |
 | ADMIN-OVERVIEW | FR-100 (MRR, workspace theo trạng thái, chi phí AI, lãi gộp) | US-081 | ADMIN-SHELL | — | không | ⏳ |
@@ -216,7 +217,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 | ADMIN-AI-COST | FR-103 (chi phí AI phân rã; cấu hình model, phiên bản prompt) | US-081 | ADMIN-SHELL | — | không | ⏳ |
 | ADMIN-FLAGS | FR-117 (trang Feature flags: override, kill switch, theo gói, rollout %; nhật ký) | US-085 | ADMIN-SHELL, FLAGS | S | không | ⏳ |
 | META-DATA-DELETE | FR-093 (callback xóa dữ liệu Meta: signed request → mã xác nhận) + trang tra cứu | US-070, UF-10 | CH-SCHEMA | S | **có** — Meta App | ⛔ |
-| DATA-EXPORT | FR-094 (xuất dữ liệu workspace) | US-071 | GĐ0-DB | S+DB | không | ⏳ |
+| DATA-EXPORT | FR-094 (xuất dữ liệu workspace) | US-071 | GĐ0-DB | S+DB | không | 🧪 Xong-mock (feat-data-export; còn `DATA-EXPORT-DELIVERY`: tải tệp/email) |
 | WORKSPACE-DELETE | FR-094 (xóa workspace nhiều bước), `DB-MAINTENANCE-ROLE` | US-071 | DATA-EXPORT | S+DB | không | ✅ Xong-mock dữ liệu + job (`feat-workspace-delete`, migration 0055, Q-WSD1; cờ `WORKSPACE_DELETE_ENABLED` TẮT; còn nối giao diện, thu hồi Meta, email báo) |
 | RETENTION-JOB | FR-126 (12 tháng; `ai_usage` gộp 90 ngày) | — | DB-MAINTENANCE-ROLE | S+DB | không | ✅ Xong (feat-retention-job) |
 | PUBLIC-PAGES | FR-125 (landing, chính sách quyền riêng tư, điều khoản, DPA) | — | CFG-APPNAME | — | **có** — tên miền (Q6), pháp lý | ⛔ |

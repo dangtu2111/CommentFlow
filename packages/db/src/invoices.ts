@@ -31,7 +31,7 @@ export type InvoiceRow = {
   status: InvoiceStatus;
   transferCode: string;
   dueAt: Date;
-  /** Owner đã báo chuyển khoản (QR-PAYMENT, 0056); chỉ có ý nghĩa khi `status = 'pending'` ("chờ xác nhận"). */
+  /** Owner đã báo chuyển khoản (QR-PAYMENT, 0057); chỉ có ý nghĩa khi `status = 'pending'` ("chờ xác nhận"). */
   transferReportedAt: Date | null;
   paidAt: Date | null;
   voidedAt: Date | null;
@@ -136,7 +136,7 @@ export async function voidInvoice(
 }
 
 /**
- * Owner báo "đã chuyển khoản" (QR-PAYMENT, FR-091, migration 0056) qua `core.report_invoice_transfer`. CHỈ gọi trong
+ * Owner báo "đã chuyển khoản" (QR-PAYMENT, FR-091, migration 0057) qua `core.report_invoice_transfer`. CHỈ gọi trong
  * `db.withActor(workspaceId, userId, ...)` trên kết nối `cf_app`: hàm tự kiểm Owner của đúng workspace (Staff/đường
  * hệ thống → 42501; hóa đơn workspace khác → P0002). KHÔNG đổi trạng thái `paid` — chỉ đánh dấu "chờ xác nhận".
  */

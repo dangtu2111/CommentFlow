@@ -2,7 +2,10 @@ import { BadgeCheck, IdCard } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { roleTone } from '../../lib/settings-visual';
 import { userInitials } from '../../lib/user-initials';
+import { Avatar } from '../ui/avatar';
+import { Chip } from '../ui/chip';
 import { SectionHead } from '../ui/section-head';
+import { Stat } from '../ui/stat';
 
 /** Thông tin đăng nhập & tài khoản của CHÍNH người dùng (chỉ dữ liệu thật: tên, email, đã xác thực, vai trò). */
 export async function AccountCard({
@@ -31,27 +34,24 @@ export async function AccountCard({
       />
       <div className="account-grid">
         <div className="account-person">
-          <span className="avatar avatar-lg" aria-hidden="true">
-            {userInitials(name)}
-          </span>
+          <Avatar size="lg">{userInitials(name)}</Avatar>
           <div>
             <p className="account-name">{name}</p>
-            <span
-              className={`chip ${roleTone(memberRole) === 'owner' ? 'chip-info' : 'chip-muted'}`}
-            >
-              {roleLabel}
-            </span>
+            <Chip tone={roleTone(memberRole) === 'owner' ? 'info' : 'muted'}>{roleLabel}</Chip>
           </div>
         </div>
-        <div className="info-tile">
-          <p className="info-tile-label">{t('email')}</p>
-          <p className="info-tile-value">{email}</p>
-          {emailVerified ? (
-            <p className="info-tile-note is-ok">
-              <BadgeCheck size={14} aria-hidden="true" /> {t('verified')}
-            </p>
-          ) : null}
-        </div>
+        <Stat
+          label={t('email')}
+          value={email}
+          noteOk
+          note={
+            emailVerified ? (
+              <>
+                <BadgeCheck size={14} aria-hidden="true" /> {t('verified')}
+              </>
+            ) : null
+          }
+        />
       </div>
     </section>
   );
