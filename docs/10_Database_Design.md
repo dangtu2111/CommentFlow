@@ -300,4 +300,4 @@ Giá trị cache lưu kèm `product_revs = {product_id: rev}` của các sản p
 
 - Công cụ migration chốt trong `docs/decisions/001-stack.md` khi dựng khung (GĐ0); RLS và index vector viết SQL thuần.
 - Thời gian lưu: bình luận/tin nhắn 12 tháng (đề xuất, cần chốt); `ai_usage` gộp theo ngày sau 90 ngày; `webhook_events` 30 ngày.
-- Seed: chỉ `plans` và `abbreviations` hệ thống. **Không seed dữ liệu khách giả.**
+- Seed: chỉ `plans` và `system_abbreviations` (từ điển viết tắt hệ thống). **Không seed dữ liệu khách giả.**

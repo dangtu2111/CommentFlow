@@ -81,15 +81,15 @@ describe('FR-025 từ điển hệ thống', () => {
       expectRejectCode(db.withActor(ws, owner, (tx) => tx.execute(q)));
     expect(
       await run(
-        sql`INSERT INTO cf.system_abbreviations (short, full, lang) VALUES ('zz', 'zzz', 'vi')`,
+        sql`INSERT INTO cf.system_abbreviations (short, "full", lang) VALUES ('zz', 'zzz', 'vi')`,
       ),
     ).toBe(RLS);
-    expect(await run(sql`UPDATE cf.system_abbreviations SET full = 'x' WHERE short = 'ib'`)).toBe(
+    expect(await run(sql`UPDATE cf.system_abbreviations SET "full" = 'x' WHERE short = 'ib'`)).toBe(
       RLS,
     );
     expect(await run(sql`DELETE FROM cf.system_abbreviations WHERE short = 'ib'`)).toBe(RLS);
     const still = await admin.query(
-      "SELECT full FROM cf.system_abbreviations WHERE short = 'ib' AND lang = 'vi'",
+      `SELECT "full" FROM cf.system_abbreviations WHERE short = 'ib' AND lang = 'vi'`,
     );
     expect(still.rows[0].full).toBe('inbox');
   });
@@ -97,7 +97,7 @@ describe('FR-025 từ điển hệ thống', () => {
   it('seed hợp lệ: short đã chuẩn hóa, không trùng, không mục nào tự ánh xạ chính nó', async () => {
     const r = await admin.query(
       `SELECT count(*)::int AS n,
-              count(*) FILTER (WHERE short <> lower(short) OR short ~ '\\s' OR short = lower(full))::int AS bad
+              count(*) FILTER (WHERE short <> lower(short) OR short ~ '\\s' OR short = lower("full"))::int AS bad
        FROM cf.system_abbreviations`,
     );
     expect(r.rows[0].n).toBeGreaterThan(30);
@@ -141,7 +141,7 @@ describe('FR-050 Owner ghi từ điển workspace', () => {
       expectRejectCode(
         db.withActor(ws, owner, (tx) =>
           tx.execute(
-            sql`INSERT INTO cf.abbreviations (workspace_id, short, full, lang) VALUES (${ws}::uuid, ${short}, ${full}, 'vi')`,
+            sql`INSERT INTO cf.abbreviations (workspace_id, short, "full", lang) VALUES (${ws}::uuid, ${short}, ${full}, 'vi')`,
           ),
         ),
       );
@@ -225,7 +225,7 @@ describe('FR-050 RLS: vai trò và chéo workspace', () => {
         ),
       ),
     ).toBe(RLS);
-    const still = await admin.query('SELECT full FROM cf.abbreviations WHERE id = $1', [id]);
+    const still = await admin.query('SELECT "full" FROM cf.abbreviations WHERE id = $1', [id]);
     expect(still.rows[0].full).toBe('riêng của A');
   });
 });

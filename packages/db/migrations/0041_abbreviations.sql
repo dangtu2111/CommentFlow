@@ -1,3 +1,5 @@
+SET LOCAL lock_timeout = '5s';
+--> statement-breakpoint
 CREATE TABLE "cf"."abbreviations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"workspace_id" uuid NOT NULL,
@@ -46,9 +48,9 @@ GRANT SELECT ON cf.system_abbreviations TO cf_app;
 --> statement-breakpoint
 GRANT SELECT, DELETE ON cf.abbreviations TO cf_app;
 --> statement-breakpoint
-GRANT INSERT (id, workspace_id, short, full, lang) ON cf.abbreviations TO cf_app;
+GRANT INSERT (id, workspace_id, short, "full", lang) ON cf.abbreviations TO cf_app;
 --> statement-breakpoint
-GRANT UPDATE (short, full, updated_at) ON cf.abbreviations TO cf_app;
+GRANT UPDATE (short, "full", updated_at) ON cf.abbreviations TO cf_app;
 --> statement-breakpoint
 CREATE POLICY abbreviations_select ON cf.abbreviations FOR SELECT
   USING (
@@ -78,9 +80,9 @@ CREATE POLICY abbreviations_delete ON cf.abbreviations FOR DELETE
     AND ((SELECT core.is_workspace_owner()) OR (SELECT core.is_system_context()))
   );
 --> statement-breakpoint
--- Seed hệ thống: teencode/viết tắt phổ biến trong bình luận bán hàng. Chỉ mục KHÔNG mơ hồ; chữ "ship" không có ở đây
--- (không phải viết tắt). Danh sách để chủ dự án duyệt/bổ sung bằng migration mới.
-INSERT INTO cf.system_abbreviations (short, full, lang) VALUES
+-- Seed hệ thống: teencode/viết tắt phổ biến trong bình luận bán hàng; chữ "ship" không có ở đây (không phải viết tắt).
+-- Một số mục có thể mơ hồ theo ngữ cảnh (kh, mk, tk, bn, k…): chủ dự án duyệt/bổ sung bằng migration mới.
+INSERT INTO cf.system_abbreviations (short, "full", lang) VALUES
   ('ib', 'inbox', 'vi'), ('sz', 'size', 'vi'), ('dc', 'được', 'vi'), ('đc', 'được', 'vi'),
   ('k', 'không', 'vi'), ('ko', 'không', 'vi'), ('hok', 'không', 'vi'), ('khum', 'không', 'vi'),
   ('kh', 'khách hàng', 'vi'), ('bn', 'bao nhiêu', 'vi'), ('bnh', 'bao nhiêu', 'vi'), ('bh', 'bao giờ', 'vi'),
@@ -96,3 +98,5 @@ INSERT INTO cf.system_abbreviations (short, full, lang) VALUES
   ('u', 'you', 'en'), ('ur', 'your', 'en'), ('msg', 'message', 'en'), ('dm', 'direct message', 'en'),
   ('sz', 'size', 'en'), ('qty', 'quantity', 'en'), ('btw', 'by the way', 'en'),
   ('asap', 'as soon as possible', 'en'), ('idk', 'I don''t know', 'en'), ('tmrw', 'tomorrow', 'en');
+--> statement-breakpoint
+SET LOCAL lock_timeout = DEFAULT;

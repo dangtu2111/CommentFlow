@@ -21,7 +21,7 @@ export async function createAbbreviation(
   input: AbbreviationInput,
 ): Promise<string> {
   const r = await tx.execute<{ id: string }>(sql`
-    INSERT INTO cf.abbreviations (workspace_id, short, full, lang)
+    INSERT INTO cf.abbreviations (workspace_id, short, "full", lang)
     VALUES (${workspaceId}::uuid, ${input.short}, ${input.full}, ${input.lang})
     RETURNING id`);
   const row = r.rows[0];
@@ -37,7 +37,7 @@ export async function updateAbbreviation(
   input: Pick<AbbreviationInput, 'short' | 'full'>,
 ): Promise<boolean> {
   const r = await tx.execute(sql`
-    UPDATE cf.abbreviations SET short = ${input.short}, full = ${input.full}, updated_at = now()
+    UPDATE cf.abbreviations SET short = ${input.short}, "full" =${input.full}, updated_at = now()
     WHERE id = ${id}::uuid AND workspace_id = ${workspaceId}::uuid`);
   return (r.rowCount ?? 0) > 0;
 }
@@ -60,7 +60,7 @@ export async function listAbbreviations(
   lang?: AbbreviationLang,
 ): Promise<WorkspaceAbbreviation[]> {
   const r = await tx.execute<WorkspaceAbbreviation>(sql`
-    SELECT id, short, full, lang FROM cf.abbreviations
+    SELECT id, short, "full", lang FROM cf.abbreviations
     WHERE workspace_id = ${workspaceId}::uuid ${lang ? sql`AND lang = ${lang}` : sql``}
     ORDER BY lang, short`);
   return r.rows;
@@ -72,7 +72,7 @@ export async function listSystemAbbreviations(
   lang: AbbreviationLang,
 ): Promise<AbbreviationEntry[]> {
   const r = await tx.execute<AbbreviationEntry>(
-    sql`SELECT short, full FROM cf.system_abbreviations WHERE lang = ${lang} ORDER BY short`,
+    sql`SELECT short, "full" FROM cf.system_abbreviations WHERE lang = ${lang} ORDER BY short`,
   );
   return r.rows;
 }
