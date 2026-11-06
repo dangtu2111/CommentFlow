@@ -687,6 +687,37 @@
       "UNAVAILABLE": "Chưa nhập được lúc này. Hãy thử lại sau."
     }
   },
+  "spamRules": {
+    "title": "Quy tắc spam",
+    "subtitle": "Tạo quy tắc để đánh dấu hoặc bỏ qua bình luận spam. Bấm Xem trước để biết quy tắc khớp bao nhiêu bình luận trong 7 ngày qua; xem trước chỉ đọc, không đổi bình luận nào. AI không bao giờ tự ẩn bình luận.",
+    "nameLabel": "Tên quy tắc",
+    "typeLabel": "Loại quy tắc",
+    "type": {
+      "keyword": "Từ khóa",
+      "regex": "Mẫu regex",
+      "phone": "Số điện thoại",
+      "link": "Đường link",
+      "emoji_only": "Chỉ có emoji",
+      "tag_only": "Chỉ gắn thẻ người khác"
+    },
+    "patternLabel": "Mẫu",
+    "patternHint": "Từ khóa: nhiều từ ngăn bằng dấu phẩy. Regex: tối đa 200 ký tự, không lặp nhóm, tối đa 2 dấu * hoặc +. Số điện thoại, link, emoji, thẻ tag: bỏ trống.",
+    "actionLabel": "Hành động",
+    "action": {
+      "mark": "Chỉ đánh dấu nghi spam",
+      "skip": "Bỏ qua (không soạn trả lời)"
+    },
+    "noAutoHide": "Tự ẩn là tính năng riêng, chỉ bật sau thời gian chạy thử; quy tắc ở đây không tự ẩn bình luận.",
+    "preview": "Xem trước 7 ngày",
+    "save": "Lưu quy tắc",
+    "previewResult": "Khớp {matched} trên {total} bình luận trong 7 ngày qua",
+    "previewEmpty": "Không có bình luận nào khớp.",
+    "saved": "Đã lưu quy tắc.",
+    "error": {
+      "invalid_rule": "Quy tắc chưa hợp lệ: kiểm tra tên, mẫu (regex không được lặp lồng nhau) và hành động.",
+      "unavailable": "Chưa thực hiện được lúc này (lưu quy tắc chưa khả dụng). Hãy thử lại sau."
+    }
+  },
   "kbGaps": {
     "pageTitle": "Câu hỏi AI chưa trả lời được",
     "title": "Câu hỏi AI chưa trả lời được",
@@ -922,6 +953,7 @@
       "productImport": "Nhập sản phẩm",
       "kbGaps": "Câu hỏi chưa trả lời",
       "kbPublish": "Phiên bản kiến thức",
+      "spamRules": "Quy tắc spam",
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
