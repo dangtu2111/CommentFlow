@@ -53,6 +53,16 @@ export {
   parseLeadKeys,
 } from './lead-vault';
 export {
+  activatePlan,
+  getPlanState,
+  getSubscription,
+  grantUsageAddon,
+  listPlans,
+  type PlanRow,
+  type SubscriptionRow,
+  startTrial,
+} from './plans';
+export {
   createAbbreviation,
   deleteAbbreviation,
   listAbbreviations,

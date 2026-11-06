@@ -12,7 +12,7 @@ const AUTH_ROLE = 'cf_auth';
 const WORKER_ROLE = 'cf_worker';
 
 /** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
-const SYSTEM_TABLES = ['core.feature_flags', 'cf.system_abbreviations'];
+const SYSTEM_TABLES = ['core.feature_flags', 'cf.system_abbreviations', 'core.plans'];
 /** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace. */
 const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
 /** Bảng "của chính mình" với cf_app: policy chỉ cho dòng có user_id/id = current_user_id() (không workspace). */
@@ -895,6 +895,7 @@ const NO_DELETE_TABLES = [
   'core.usage_counters',
   'core.invoices',
   'core.payments',
+  'core.subscriptions',
 ];
 
 async function checkNoDelete(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -962,7 +963,7 @@ async function checkWorkerDirectPrivileges(
          LATERAL aclexplode(t.attacl) a, w
     WHERE t.attacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
     UNION ALL
-    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox, core.consume_usage)'
+    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox, core.consume_usage, hàm hóa đơn, hàm gói cước, hàm dọn dữ liệu)'
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
@@ -970,6 +971,8 @@ async function checkWorkerDirectPrivileges(
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('create_invoice', 'confirm_invoice_payment', 'void_invoice')
+               AND a.privilege_type = 'EXECUTE')
+      AND NOT (n.nspname = 'core' AND p.proname IN ('start_trial', 'activate_plan', 'grant_usage_addon')
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage')
                AND a.privilege_type = 'EXECUTE')`);
@@ -1178,6 +1181,62 @@ async function checkInvoiceTablesAndFunctions(
       OR p.prosrc NOT LIKE '%session_user <> ''${WORKER_ROLE}''%'`);
   for (const row of found.rows) {
     violations.push({ subject: String(row.name), message: `hàm hóa đơn: ${String(row.problem)}` });
+  }
+}
+
+/**
+ * Gói cước (0054, PLANS-SCHEMA, FR-090): `core.subscriptions` RLS bật và `cf_app` KHÔNG có quyền ghi; `core.plans` (bảng
+ * hệ thống, không RLS) `cf_app` không có quyền ghi (đã kiểm ở SYSTEM_TABLES, đây kiểm thêm cột/TRUNCATE). Ba hàm ghi
+ * (start_trial, activate_plan, grant_usage_addon): SECURITY DEFINER, PUBLIC/cf_app/cf_auth KHÔNG có EXECUTE, cf_worker có,
+ * thân hàm đòi ngữ cảnh job HỆ THỐNG không người dùng, workspace khớp tham số, session_user = cf_worker (nếu không, web
+ * tự nâng gói/cộng lượt cho workspace bất kỳ). Logic kiểm bằng test tích hợp plans.int.test.ts.
+ */
+const PLAN_FUNCTIONS = ['start_trial', 'activate_plan', 'grant_usage_addon'];
+
+async function checkPlanTablesAndFunctions(
+  db: Queryable,
+  violations: RlsViolation[],
+): Promise<void> {
+  const tables = await db.query(`/* plan-tables */
+    SELECT v.t AS name,
+      CASE WHEN v.t = 'core.subscriptions' AND NOT c.relrowsecurity THEN 'RLS chưa bật'
+           ELSE '${APP_ROLE} không được có quyền ghi (INSERT/UPDATE/DELETE/TRUNCATE)' END AS problem
+    FROM (VALUES ('core.plans'), ('core.subscriptions')) AS v(t)
+    JOIN pg_class c ON c.oid = v.t::regclass
+    WHERE (v.t = 'core.subscriptions' AND NOT c.relrowsecurity)
+      OR has_any_column_privilege('${APP_ROLE}', v.t::regclass, 'INSERT')
+      OR has_any_column_privilege('${APP_ROLE}', v.t::regclass, 'UPDATE')
+      OR has_table_privilege('${APP_ROLE}', v.t::regclass, 'DELETE')
+      OR has_table_privilege('${APP_ROLE}', v.t::regclass, 'TRUNCATE')`);
+  for (const row of tables.rows) {
+    violations.push({ subject: String(row.name), message: `gói cước: ${String(row.problem)}` });
+  }
+  const names = PLAN_FUNCTIONS.map((f) => `('${f}')`).join(', ');
+  const found = await db.query(`/* plan-functions */
+    SELECT 'core.' || v.f AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} (web) không được có quyền EXECUTE (chỉ ${WORKER_ROLE})'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE') THEN '${WORKER_ROLE} thiếu quyền EXECUTE'
+        ELSE 'thân hàm phải đòi ngữ cảnh job hệ thống, không người dùng, workspace khớp tham số và session_user = ${WORKER_ROLE}'
+      END AS problem
+    FROM (VALUES ${names}) AS v(f)
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = v.f
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%is_system_context() IS NOT TRUE%'
+      OR p.prosrc NOT LIKE '%current_user_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%current_workspace_id() IS DISTINCT FROM p_workspace_id%'
+      OR p.prosrc NOT LIKE '%session_user <> ''${WORKER_ROLE}''%'`);
+  for (const row of found.rows) {
+    violations.push({ subject: String(row.name), message: `hàm gói cước: ${String(row.problem)}` });
   }
 }
 
@@ -1423,6 +1482,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkStuckOutboxFunction(db, violations);
   await checkUsageFunction(db, violations);
   await checkInvoiceTablesAndFunctions(db, violations);
+  await checkPlanTablesAndFunctions(db, violations);
   await checkLeaveFunction(db, violations);
   await checkActionLogsOnBehalfCheck(db, violations);
 
