@@ -1,4 +1,5 @@
-// pnpm dev:seed-demo [--reset] — dữ liệu mẫu [MẪU] CHỈ cho DB dev `cf_dev` (Q-UIF1). Mật khẩu in một lần, không lưu file.
+// pnpm dev:seed-demo [--reset | --refresh] [--into <email-owner>] — dữ liệu mẫu [MẪU] CHỈ cho DB dev `cf_dev` (Q-UIF1).
+// Mật khẩu (chỉ của tài khoản MỚI tạo) in một lần, không lưu file.
 import { createDb } from '@flow/db/runtime';
 import { hashPassword } from '@flow/saas-core';
 import { parseEnv } from '@flow/shared';
@@ -6,6 +7,7 @@ import pg from 'pg';
 import { z } from 'zod';
 import { describeSeedError } from './describe-error';
 import { assertDevSeedAllowed } from './guard';
+import { parseSeedArgs } from './parse-args';
 import { seedDemo } from './seed';
 
 const optional = z.string().optional();
@@ -16,12 +18,12 @@ const envSchema = z.object({
   DATABASE_WORKER_URL: optional,
 });
 
-const ARGS = new Set(process.argv.slice(2));
-const unknown = [...ARGS].filter((a) => a !== '--reset');
-if (unknown.length > 0) {
-  console.error(`Tham số lạ: ${unknown.join(' ')} (chỉ có --reset).`);
+const parsed = parseSeedArgs(process.argv.slice(2));
+if (!parsed.ok) {
+  console.error(parsed.error);
   process.exit(2);
 }
+const { options } = parsed;
 
 try {
   const env = parseEnv(envSchema, process.env);
@@ -41,16 +43,23 @@ try {
   try {
     const result = await seedDemo(
       { admin, appDb, workerDb, hashPassword, now: new Date() },
-      { reset: ARGS.has('--reset') },
+      options,
     );
     if (result.status === 'exists') {
-      console.log('Workspace mẫu đã có — không làm gì. Chạy lại với --reset để tạo lại.');
+      console.log(
+        'Dữ liệu mẫu đã có — không làm gì. Dùng --refresh để làm mới (giữ tài khoản) hoặc --reset để tạo lại (đổi mật khẩu).',
+      );
     } else {
-      console.log(`Đã tạo workspace "[MẪU] Demo Shop" (${result.workspaceId}).`);
+      const verb = { created: 'Đã tạo', refreshed: 'Đã làm mới', loaded: 'Đã nạp' }[result.status];
+      console.log(`${verb} dữ liệu mẫu cho workspace ${result.workspaceId}.`);
       console.log(JSON.stringify(result.counts));
-      console.log('Tài khoản thử (mật khẩu chỉ hiện MỘT LẦN, không lưu ở đâu):');
-      for (const c of result.credentials)
-        console.log(`  ${c.role.padEnd(5)} ${c.email}  ${c.password}`);
+      if (result.credentials.length > 0) {
+        console.log('Tài khoản thử MỚI tạo (mật khẩu chỉ hiện MỘT LẦN, không lưu ở đâu):');
+        for (const c of result.credentials)
+          console.log(`  ${c.role.padEnd(6)} ${c.email}  ${c.password}`);
+      } else {
+        console.log('Không tạo tài khoản mới — mật khẩu/2FA của tài khoản đang có giữ nguyên.');
+      }
     }
   } finally {
     await Promise.all([admin.end(), appDb.close(), workerDb.close()]);
