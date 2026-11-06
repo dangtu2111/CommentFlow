@@ -337,6 +337,12 @@ describe('FR-082 Kanban: đổi giai đoạn, ghi chú, giao người', () => {
     );
   });
 
+  it('getLeadCipher: người ngoài workspace và withWorkspace trần không lấy được bản mã', async () => {
+    expect(await db.withActor(ws, stranger, (tx) => getLeadCipher(tx, ws, leadId))).toBeNull();
+    expect(await db.withWorkspace(ws, (tx) => getLeadCipher(tx, ws, leadId))).toBeNull();
+    expect(await db.withActor(ws, staff, (tx) => getLeadCipher(tx, ws, leadId))).not.toBeNull();
+  });
+
   it('workspace khác không thấy, không sửa, không xóa', async () => {
     expect(await db.withActor(other, otherOwner, (tx) => listLeads(tx, other))).not.toContainEqual(
       expect.objectContaining({ id: leadId }),

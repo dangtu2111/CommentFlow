@@ -167,7 +167,8 @@ export async function getLeadCipher(
     key_version: number;
   }>(sql`
     SELECT phone_enc, email_enc, key_version FROM cf.leads
-    WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid`);
+    WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid
+      AND ((SELECT core.is_workspace_member()) OR (SELECT core.is_system_context()))`);
   const row = r.rows[0];
   if (!row) return null;
   return {

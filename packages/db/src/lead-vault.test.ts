@@ -45,6 +45,17 @@ describe('FR-082 kho khóa lead: đọc cấu hình', () => {
   });
 });
 
+describe('FR-082 khóa băm tách khỏi khóa mã hóa', () => {
+  it('khóa băm trùng một khóa mã hóa (kể cả khóa cũ) → LeadKeyConfigError', () => {
+    expect(() =>
+      createLeadVault({
+        encKeys: parseLeadKeys(`v1:${HEX_A},v2:${HEX_B}`),
+        hashKey: parseLeadHashKey(HEX_A),
+      }),
+    ).toThrow(LeadKeyConfigError);
+  });
+});
+
 describe('FR-082 mã hóa SĐT/email lead (AES-256-GCM)', () => {
   it('khứ hồi và bản mã không chứa bản rõ', () => {
     const v = vault();

@@ -82,6 +82,12 @@ const aadOf = (ctx: LeadCipherContext, keyVersion: number): Buffer =>
 
 export function createLeadVault(config: { encKeys: ParsedLeadKeys; hashKey: Buffer }) {
   const { keys, currentVersion } = config.encKeys;
+  // Khóa băm không xoay được nên không được trùng bất kỳ khóa mã hóa nào (lộ khóa cũ đã xoay sẽ lộ luôn khóa băm).
+  for (const key of keys.values()) {
+    if (key.equals(config.hashKey)) {
+      throw new LeadKeyConfigError('LEADS_HASH_KEY không được trùng khóa trong LEADS_ENC_KEYS.');
+    }
+  }
 
   function encrypt(plaintext: string, ctx: LeadCipherContext): EncryptedLeadField {
     const key = keys.get(currentVersion);
