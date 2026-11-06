@@ -11,7 +11,14 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       exclude: ['**/*.test.ts', '**/*.d.ts'],
       reporter: ['text-summary'],
-      thresholds: { lines: 100, statements: 97, functions: 100, branches: 90 },
+      thresholds: {
+        lines: 100,
+        statements: 97,
+        functions: 100,
+        branches: 90,
+        // Module logic quy tắc (STANDARD §8): ≥95% nhánh theo file.
+        'src/guard-money.ts': { branches: 95 },
+      },
     },
   },
 });
