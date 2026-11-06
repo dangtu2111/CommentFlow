@@ -1,0 +1,320 @@
+import { describe, expect, it, vi } from 'vitest';
+import { PlatformError } from '../errors';
+import { createSapoConnector, type SapoConnectorOptions } from './connector';
+import {
+  FAKE_SHOP,
+  FAKE_TOKEN,
+  jsonResponse,
+  productNode,
+  productsPage,
+  variantNode,
+} from './fixtures';
+
+type Call = { url: URL; init: RequestInit };
+
+const BASE = { shopDomain: FAKE_SHOP, getAccessToken: async () => FAKE_TOKEN };
+
+function harness(responses: Array<Response | Error>, over: Partial<SapoConnectorOptions> = {}) {
+  const calls: Call[] = [];
+  const queue = [...responses];
+  const fetchImpl = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+    calls.push({ url: new URL(String(url)), init: init ?? {} });
+    const next = queue.shift();
+    if (next === undefined) throw new Error('hết phản hồi giả');
+    if (next instanceof Error) throw next;
+    return next;
+  });
+  const sleep = vi.fn(async (_ms: number) => undefined);
+  const connector = createSapoConnector({
+    ...BASE,
+    fetch: fetchImpl as unknown as typeof fetch,
+    sleep,
+    ...over,
+  });
+  return { connector, calls, sleep };
+}
+
+const failureOf = async (promise: Promise<unknown>): Promise<PlatformError> => {
+  try {
+    await promise;
+  } catch (error) {
+    expect(error).toBeInstanceOf(PlatformError);
+    return error as PlatformError;
+  }
+  throw new Error('không ném lỗi');
+};
+
+const page = (nodes: unknown[], limitHeader?: string) =>
+  jsonResponse(
+    productsPage(nodes),
+    limitHeader === undefined ? {} : { headers: { 'X-Sapo-Api-Call-Limit': limitHeader } },
+  );
+
+describe('FR-122 createSapoConnector — cấu hình', () => {
+  it.each([0, 251, 1.5])('pageSize không hợp lệ (%s) bị từ chối', (pageSize) => {
+    expect(() => createSapoConnector({ ...BASE, pageSize })).toThrow();
+  });
+  it('maxPages/timeoutMs không hợp lệ bị từ chối', () => {
+    expect(() => createSapoConnector({ ...BASE, maxPages: 0 })).toThrow();
+    expect(() => createSapoConnector({ ...BASE, timeoutMs: 0 })).toThrow();
+  });
+  it.each([
+    'evil.example.com',
+    'shop.mysapo.net.evil.com',
+    'shop@evil.com#.mysapo.net',
+    '-x.mysapo.net',
+    'a.b.mysapo.net',
+    'SHOP.mysapo.net',
+    '',
+    'localhost',
+  ])('shopDomain không hợp lệ (%s) bị từ chối — chặn SSRF', (shopDomain) => {
+    expect(() => createSapoConnector({ ...BASE, shopDomain })).toThrow(/mysapo\.net/);
+  });
+});
+
+describe('FR-122 Sapo fetchCatalog', () => {
+  it('GET đúng máy chủ cửa hàng, token chỉ ở header, không theo redirect', async () => {
+    const { connector, calls } = harness([page([productNode(1)])]);
+    const catalog = await connector.fetchCatalog();
+    expect(catalog.products).toHaveLength(1);
+    expect(calls).toHaveLength(1);
+    const call = calls[0] as Call;
+    expect(`${call.url.origin}${call.url.pathname}`).toBe(
+      `https://${FAKE_SHOP}/admin/products.json`,
+    );
+    expect(call.url.searchParams.get('page')).toBe('1');
+    expect(call.init.method).toBe('GET');
+    expect(call.init.redirect).toBe('error');
+    const headers = (call.init.headers ?? {}) as Record<string, string>;
+    expect(headers['X-Sapo-Access-Token']).toBe(FAKE_TOKEN);
+    expect(call.url.href).not.toContain(FAKE_TOKEN);
+  });
+
+  it('phân trang đến khi trang ngắn hơn limit và loại trùng theo id', async () => {
+    const { connector, calls } = harness(
+      [page([productNode(1), productNode(2)]), page([productNode(2), productNode(3)]), page([])],
+      { pageSize: 2 },
+    );
+    const catalog = await connector.fetchCatalog();
+    expect(catalog.products.map((p) => p.id)).toEqual(['1', '2', '3']);
+    expect(calls.map((c) => c.url.searchParams.get('page'))).toEqual(['1', '2', '3']);
+    expect(calls[0]?.url.searchParams.get('limit')).toBe('2');
+  });
+
+  it('chuẩn hóa trường vắng/null: loại sản phẩm, xuất bản, vị trí tùy chọn, tồn kho không quản lý', async () => {
+    const node = productNode(8, {
+      product_type: null,
+      published_on: null,
+      options: [{ name: 'Size' }, { name: 'Màu', position: 1 }, { name: 'Chất liệu' }],
+      variants: [
+        variantNode(81, {
+          inventory_management: null,
+          inventory_quantity: null,
+          compare_at_price: null,
+        }),
+      ],
+    });
+    const { connector } = harness([page([node])]);
+    const product = (await connector.fetchCatalog()).products[0];
+    expect(product?.productType).toBe('');
+    expect(product?.published).toBe(false);
+    expect(product?.optionNames).toEqual(['Size', 'Chất liệu', 'Màu']);
+    expect(product?.variants[0]?.quantity).toBeNull();
+    expect(product?.variants[0]?.managed).toBe(false);
+  });
+
+  it('chuẩn hóa hình dạng sản phẩm/biến thể (giá số hoặc chuỗi, tùy chọn)', async () => {
+    const node = productNode(7, {
+      variants: [
+        variantNode(71, { price: '99000.00', compare_at_price: '120000', option2: 'M' }),
+        variantNode(72, { inventory_management: null, inventory_quantity: 5, sku: '' }),
+      ],
+      options: [
+        { name: 'Màu', position: 1 },
+        { name: 'Size', position: 2 },
+      ],
+    });
+    const { connector } = harness([page([node])]);
+    const [product] = (await connector.fetchCatalog()).products;
+    expect(product).toMatchObject({
+      id: '7',
+      title: 'Áo thun 7',
+      handle: 'ao-thun-7',
+      productType: 'Áo',
+      published: true,
+      optionNames: ['Màu', 'Size'],
+    });
+    expect(product?.url).toBeNull();
+    expect(product?.variants[0]).toMatchObject({
+      id: '71',
+      price: '99000.00',
+      compareAtPrice: '120000',
+      managed: true,
+      optionValues: ['Mau 71', 'M', null],
+    });
+    expect(product?.variants[1]).toMatchObject({ managed: false, sku: null });
+  });
+
+  it('nhận mốc xuất bản kiểu `published_at` và tên trong `name`', async () => {
+    const node = productNode(5, { title: undefined, name: 'Quần', published_on: undefined });
+    const { connector } = harness([
+      page([node, productNode(6, { published_on: undefined, published_at: '2026-02-02' })]),
+    ]);
+    const [a, b] = (await connector.fetchCatalog()).products;
+    expect(a).toMatchObject({ title: 'Quần', published: false });
+    expect(b?.published).toBe(true);
+  });
+
+  it('sản phẩm không có tên → UNKNOWN sapo_bad_response', async () => {
+    const { connector } = harness([page([productNode(5, { title: undefined })])]);
+    expect((await failureOf(connector.fetchCatalog())).message).toBe('sapo_bad_response');
+    const { connector: other } = harness([page([productNode(5, { title: '' })])]);
+    expect((await failureOf(other.fetchCatalog())).message).toBe('sapo_bad_response');
+  });
+
+  it('trang đầy toàn id đã thấy (API bỏ qua page) → lỗi sớm', async () => {
+    const { connector, calls } = harness([page([productNode(1)]), page([productNode(1)])], {
+      pageSize: 1,
+    });
+    expect((await failureOf(connector.fetchCatalog())).message).toBe('sapo_bad_response');
+    expect(calls).toHaveLength(2);
+  });
+
+  it('vượt maxPages → lỗi, không trả danh mục dang dở', async () => {
+    const { connector } = harness([page([productNode(1)]), page([productNode(2)])], {
+      pageSize: 1,
+      maxPages: 2,
+    });
+    const error = await failureOf(connector.fetchCatalog());
+    expect(error.code).toBe('UNKNOWN');
+    expect(error.message).toBe('sapo_too_many_pages');
+  });
+
+  it('phản hồi sai hình dạng / JSON hỏng → UNKNOWN sapo_bad_response', async () => {
+    for (const bad of [jsonResponse({ products: [{ id: 1 }] }), new Response('<html>')]) {
+      const { connector } = harness([bad]);
+      expect((await failureOf(connector.fetchCatalog())).message).toBe('sapo_bad_response');
+    }
+  });
+
+  it('lỗi mạng → UNKNOWN, không lộ token', async () => {
+    const { connector } = harness([new Error(`boom ${FAKE_TOKEN}`)]);
+    const error = await failureOf(connector.fetchCatalog());
+    expect(error.code).toBe('UNKNOWN');
+    expect(error.message).toBe('sapo_network_error');
+    expect(JSON.stringify(error)).not.toContain(FAKE_TOKEN);
+  });
+
+  it.each([
+    [401, 'TOKEN_EXPIRED'],
+    [403, 'PERMISSION'],
+    [429, 'RATE_LIMIT'],
+    [500, 'UNKNOWN'],
+  ])('HTTP %s → %s', async (status, code) => {
+    const { connector } = harness([new Response('x', { status })]);
+    expect((await failureOf(connector.fetchCatalog())).code).toBe(code);
+  });
+
+  it('429 mang Retry-After (có chặn trần)', async () => {
+    const { connector } = harness([
+      new Response('x', { status: 429, headers: { 'retry-after': '2.5' } }),
+    ]);
+    expect((await failureOf(connector.fetchCatalog())).retryAfterSeconds).toBe(3);
+  });
+
+  it('token không lấy được → TOKEN_EXPIRED, chưa gọi mạng', async () => {
+    const { connector, calls } = harness([], {
+      getAccessToken: async () => {
+        throw new Error('kho token hỏng');
+      },
+    });
+    expect((await failureOf(connector.fetchCatalog())).code).toBe('TOKEN_EXPIRED');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('bucket gần đầy (X-Sapo-Api-Call-Limit) → chờ trước lần gọi sau', async () => {
+    const { connector, sleep } = harness(
+      [page([productNode(1), productNode(2)], '80/80'), page([])],
+      { pageSize: 2 },
+    );
+    await connector.fetchCatalog();
+    expect(sleep).toHaveBeenCalledTimes(1);
+    const waited = sleep.mock.calls[0]?.[0] as number;
+    expect(waited).toBeGreaterThan(0);
+    expect(waited).toBeLessThanOrEqual(60_000);
+  });
+
+  it('thân phản hồi quá lớn (khai báo hoặc thực tế) → sapo_bad_response', async () => {
+    const declared = new Response('{}', {
+      headers: { 'content-length': String(64 * 1024 * 1024) },
+    });
+    const streamed = new Response(new Uint8Array(17 * 1024 * 1024));
+    for (const response of [declared, streamed]) {
+      const { connector } = harness([response]);
+      expect((await failureOf(connector.fetchCatalog())).message).toBe('sapo_bad_response');
+    }
+  });
+
+  it('thân rỗng (không body) → sapo_bad_response', async () => {
+    const { connector } = harness([new Response(null, { status: 200 })]);
+    expect((await failureOf(connector.fetchCatalog())).message).toBe('sapo_bad_response');
+  });
+
+  it('bucket báo kẹt quá lâu → RATE_LIMIT kèm retryAfterSeconds, không ngủ giữ job', async () => {
+    const { connector, sleep } = harness([page([productNode(1)], '999999/80')], { pageSize: 1 });
+    const error = await failureOf(connector.fetchCatalog());
+    expect(error.code).toBe('RATE_LIMIT');
+    expect(error.message).toBe('sapo_throttled');
+    expect(error.retryAfterSeconds).toBeGreaterThan(60);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it('Retry-After hỏng/âm → không có gợi ý', async () => {
+    for (const value of ['abc', '-3']) {
+      const { connector } = harness([
+        new Response('x', { status: 429, headers: { 'retry-after': value } }),
+      ]);
+      expect((await failureOf(connector.fetchCatalog())).retryAfterSeconds).toBeUndefined();
+    }
+  });
+
+  it('getAccessToken ném PlatformError → giữ nguyên mã', async () => {
+    const { connector } = harness([], {
+      getAccessToken: async () => {
+        throw new PlatformError('PERMISSION', { message: 'kho_token_cam' });
+      },
+    });
+    expect((await failureOf(connector.fetchCatalog())).code).toBe('PERMISSION');
+  });
+
+  it('không tiêm sleep → dùng setTimeout thật (giả lập đồng hồ) khi bucket đầy', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchImpl = vi
+        .fn()
+        .mockResolvedValueOnce(page([productNode(1)], '42/40'))
+        .mockResolvedValueOnce(page([]));
+      const connector = createSapoConnector({
+        ...BASE,
+        fetch: fetchImpl as unknown as typeof fetch,
+        pageSize: 1,
+      });
+      const promise = connector.fetchCatalog();
+      await vi.advanceTimersByTimeAsync(2_000);
+      expect((await promise).products).toHaveLength(1);
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('bucket còn nhiều chỗ hoặc header hỏng → không chờ', async () => {
+    for (const header of ['3/40', 'rác', undefined]) {
+      const { connector, sleep } = harness([page([productNode(1)], header), page([])], {
+        pageSize: 1,
+      });
+      await connector.fetchCatalog();
+      expect(sleep).not.toHaveBeenCalled();
+    }
+  });
+});

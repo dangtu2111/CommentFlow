@@ -71,6 +71,7 @@
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
+| KT-SAP | Nhập sản phẩm từ Sapo (chỉ đọc, fixture) | feat-src-sapo | có | chưa | — |
 | KT-SC | Semantic cache đầy đủ (qua interface, mock) | — | không | chưa | — |
 | KT-SHI | Nhập sản phẩm từ Shopify (chỉ đọc, fixture) | feat-shopify-import | có | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
@@ -1313,6 +1314,19 @@ Hàm thuần + cổng (embedder là bản mock), chưa có giao diện/đường
 | 2 | Khi nối pipeline: bình luận khiếu nại ("hàng lỗi, đòi hoàn tiền") | Không tìm kiến thức, không có bản nháp AI; chuyển người |
 | 3 | Bình luận "giá sao shop" dưới bài gắn sản phẩm | Nguồn chỉ là biến thể từ `product_variants` (giá/tồn đúng kho), không có đoạn kiến thức |
 | 4 | Bình luận "đổi trả thế nào" | Nguồn là đoạn FAQ/chính sách liên quan nhất, tổng ≤ ~3.000 token |
+
+## KT-SAP — Nhập sản phẩm từ Sapo (SRC-SAPO, FR-122, feat-src-sapo)
+
+> Chưa có giao diện/job; kiểm bằng test + (khi có shop dev Sapo) một script thử. / No UI yet; verify via tests and, once a Sapo dev store exists, a one-off script.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/connectors exec vitest run src/sapo` | Mọi test xanh (phân trang, bucket, lỗi 401/403/429, chuẩn hóa, chữ ký webhook, từ chối tên miền lạ). |
+| 2 | Không đặt `SAPO_ENABLED` trong `.env` | Cờ tắt; không có lệnh gọi mạng nào tới Sapo. |
+| 3 | (Có shop dev) Dựng connector với `shopDomain` + token chỉ đọc, chạy `fetchCatalog()` | Trả đủ sản phẩm kèm biến thể; chuẩn hóa chỉ giữ sản phẩm đã xuất bản; giá là số nguyên đồng; tồn chỉ có với biến thể có quản lý tồn. |
+| 4 | Đặt giá lẻ (ví dụ 12.5) cho một biến thể rồi chạy lại | Giá biến thể đó trống (không làm tròn). |
+| 5 | Dùng token sai/hết hạn | Lỗi `TOKEN_EXPIRED`, thông báo không chứa token. |
+| 6 | Truyền `shopDomain` không phải `*.mysapo.net` | Dựng connector bị từ chối. |
 
 ## KT-SC — Semantic cache đầy đủ (SEMANTIC-CACHE, FR-026) · Semantic cache
 

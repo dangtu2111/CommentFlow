@@ -93,6 +93,16 @@ export {
 export { type MessengerSendMode, messengerSendMode } from './messenger/window';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
 export {
+  createSapoConnector,
+  type SapoCatalog,
+  type SapoConnector,
+  type SapoConnectorOptions,
+  type SapoProduct,
+  type SapoVariant,
+} from './sapo/connector';
+export { buildSapoImportPlan, parseSapoMoney } from './sapo/normalize';
+export { signSapoBody, verifySapoWebhook } from './sapo/webhook';
+export {
   createShopifyConnector,
   DEFAULT_SHOPIFY_API_VERSION,
   type ShopifyCatalog,

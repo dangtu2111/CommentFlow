@@ -396,6 +396,7 @@ export {
   type RuleFilterResult,
   ruleFilter,
 } from './rule-filter';
+export { readSapoConfig, type SapoConfig } from './sapo-config';
 export {
   isProductCacheStale,
   normalizeSearchText,
