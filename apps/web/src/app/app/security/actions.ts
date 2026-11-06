@@ -121,6 +121,15 @@ export async function changePasswordAction(
   return changePasswordToState(result);
 }
 
+/** "Đăng xuất tất cả thiết bị khác": người dùng + phiên hiện tại lấy từ cookie (không nhận gì từ form). */
+export async function revokeOtherSessionsAction(): Promise<void> {
+  await requireAppUser(SECURITY_ACCESS);
+  const removed = await flows().revokeOtherSessions((await requestContext()).headers);
+  if (removed === null) redirect('/login');
+  revalidatePath('/app/security');
+  revalidatePath('/app/settings');
+}
+
 /** Đăng xuất MỘT phiên khác của chính mình (id từ form chỉ là gợi ý; saas-core kiểm phiên thuộc về người dùng). */
 export async function revokeSessionAction(data: FormData): Promise<void> {
   await requireAppUser(SECURITY_ACCESS);

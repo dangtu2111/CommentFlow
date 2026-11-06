@@ -7,6 +7,7 @@ import { type SessionRow, SessionsCard } from '../../../../components/security/s
 import { Stepper, TwoFactorCard } from '../../../../components/security/two-factor-card';
 import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
+import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { Dialog, DialogTrigger } from '../../../../components/ui/dialog';
 
 const SAMPLE_OPEN = '[MẪU] Xem hộp thoại bật 2FA (bước 2)';
@@ -42,54 +43,57 @@ export default async function DevSettingsPage({
   return (
     <DevShell>
       <main className="app-page app-page-settings">
-        <nav className="breadcrumb" aria-label={t('settings.breadcrumb.label')}>
-          <span>{t('settings.pageTitle')}</span>
-          <span aria-hidden="true">›</span>
-          <span aria-current="page">{t('settings.title')}</span>
-        </nav>
-        <h1 className="page-title">{t('settings.title')}</h1>
-        <p className="page-subtitle">{t('settings.subtitle')}</p>
-        <p className="inbox-sample-note" role="note">
-          {DEV_SAMPLE_NOTE}
-        </p>
-        <TwoFactorCard enabled={enabled} required={false} />
-        <p>
-          <DialogTrigger dialogId={SETUP_DIALOG} className="btn btn-secondary">
-            {SAMPLE_OPEN}
-          </DialogTrigger>
-        </p>
-        <Dialog
-          dialogId={SETUP_DIALOG}
-          title={t('auth.security.twoFactor.setupTitle')}
-          description={t('auth.security.twoFactor.setupBody')}
-          icon={<LockKeyhole size={22} />}
+        <SettingsFrame
+          viewerRole="owner"
+          active="security"
+          counts={{ channelsConnected: 3, channelsTotal: 3, members: 5 }}
         >
-          <div className="stack">
-            <Stepper step={2} />
-            <div className="setup-grid">
-              <div className="setup-qr">
-                <h3 className="section-subtitle">{t('auth.security.twoFactor.scanTitle')}</h3>
-                <p className="muted">{t('auth.security.twoFactor.scanBody')}</p>
-                <p className="muted">{SAMPLE_QR}</p>
-              </div>
-              <div className="setup-code">
-                <p className="muted">{t('auth.security.twoFactor.confirmLabel')}</p>
-                <button type="button" className="btn btn-primary">
-                  {t('auth.security.twoFactor.confirm')}
-                </button>
+          <header className="stack-tight">
+            <h1 className="page-title">{t('settings.title')}</h1>
+            <p className="page-subtitle">{t('settings.subtitle')}</p>
+          </header>
+          <p className="inbox-sample-note" role="note">
+            {DEV_SAMPLE_NOTE}
+          </p>
+          <TwoFactorCard enabled={enabled} required={false} />
+          <p>
+            <DialogTrigger dialogId={SETUP_DIALOG} className="btn btn-secondary">
+              {SAMPLE_OPEN}
+            </DialogTrigger>
+          </p>
+          <Dialog
+            dialogId={SETUP_DIALOG}
+            title={t('auth.security.twoFactor.setupTitle')}
+            description={t('auth.security.twoFactor.setupBody')}
+            icon={<LockKeyhole size={22} />}
+          >
+            <div className="stack">
+              <Stepper step={2} />
+              <div className="setup-grid">
+                <div className="setup-qr">
+                  <h3 className="section-subtitle">{t('auth.security.twoFactor.scanTitle')}</h3>
+                  <p className="muted">{t('auth.security.twoFactor.scanBody')}</p>
+                  <p className="muted">{SAMPLE_QR}</p>
+                </div>
+                <div className="setup-code">
+                  <p className="muted">{t('auth.security.twoFactor.confirmLabel')}</p>
+                  <button type="button" className="btn btn-primary">
+                    {t('auth.security.twoFactor.confirm')}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </Dialog>
-        <AccountCard
-          name={SAMPLE_USER}
-          email={SAMPLE_EMAIL}
-          emailVerified
-          memberRole={SAMPLE_ROLE}
-        />
-        <ChangePasswordCard />
-        <SessionsCard sessions={SESSIONS} />
-        <LanguageCard />
+          </Dialog>
+          <AccountCard
+            name={SAMPLE_USER}
+            email={SAMPLE_EMAIL}
+            emailVerified
+            memberRole={SAMPLE_ROLE}
+          />
+          <ChangePasswordCard />
+          <SessionsCard sessions={SESSIONS} />
+          <LanguageCard />
+        </SettingsFrame>
       </main>
     </DevShell>
   );

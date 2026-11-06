@@ -4,7 +4,9 @@ import { KB_SUBNAV_GROUPS, kbSubnavFor } from './kb-structure';
 
 describe('FR-146 menu cấu trúc kiến thức (design/stitch/knowledge-base.png)', () => {
   it('FR-146 mọi mục trỏ tới trang có trong điều hướng Owner (không liên kết chết)', () => {
-    const ownerHrefs = new Set(navGroupsFor('owner').flatMap((g) => g.items.map((i) => i.href)));
+    const ownerHrefs = new Set(
+      navGroupsFor('owner').flatMap((g) => g.items.flatMap((i) => i.matchHrefs)),
+    );
     for (const item of kbSubnavFor()) {
       expect(ownerHrefs.has(item.href), item.href).toBe(true);
     }

@@ -27,6 +27,9 @@ function fakeDb(parts: {
   webhookFn?: Row[];
   stuckOutboxFn?: Row[];
   usageFn?: Row[];
+  invoiceTables?: Row[];
+  paymentsPii?: Row[];
+  invoiceFn?: Row[];
   leaveFn?: Row[];
   actionLogsCheck?: Row[];
   guards?: Row[];
@@ -98,6 +101,9 @@ function fakeDb(parts: {
       if (text.includes('/* webhook-function */')) return { rows: parts.webhookFn ?? [] };
       if (text.includes('/* stuck-outbox-function */')) return { rows: parts.stuckOutboxFn ?? [] };
       if (text.includes('/* usage-function */')) return { rows: parts.usageFn ?? [] };
+      if (text.includes('/* invoice-tables */')) return { rows: parts.invoiceTables ?? [] };
+      if (text.includes('/* payments-pii-columns */')) return { rows: parts.paymentsPii ?? [] };
+      if (text.includes('/* invoice-functions */')) return { rows: parts.invoiceFn ?? [] };
       if (text.includes('/* action-logs-check */')) return { rows: parts.actionLogsCheck ?? [] };
       if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
@@ -1022,6 +1028,30 @@ describe('checkRls: hàm trừ lượt AI (USAGE-COUNTERS, FR-090)', () => {
     expect(sqlText).toContain("session_user <> ''cf_worker''");
     const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
     expect(direct).toContain("p.proname = 'consume_usage'");
+  });
+});
+
+describe('checkRls: hóa đơn/thanh toán (INVOICES, FR-091)', () => {
+  it('báo bảng cf_app ghi được, cột PII đọc được và hàm hóa đơn mở quyền', async () => {
+    const v = await checkRls(
+      fakeDb({
+        invoiceTables: [{ name: 'core.invoices', problem: 'cf_app không được có quyền ghi' }],
+        paymentsPii: [{ name: 'raw_statement' }],
+        invoiceFn: [{ name: 'core.create_invoice', problem: 'PUBLIC có quyền EXECUTE' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.invoices',
+      message: expect.stringContaining('cf_app không được có quyền ghi'),
+    });
+    expect(v).toContainEqual({
+      subject: 'core.payments.raw_statement',
+      message: expect.stringContaining('PII'),
+    });
+    expect(v).toContainEqual({
+      subject: 'core.create_invoice',
+      message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
+    });
   });
 });
 

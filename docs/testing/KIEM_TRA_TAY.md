@@ -33,9 +33,12 @@
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
+| KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
+| KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
+| KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
@@ -44,6 +47,7 @@
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 
 ---
@@ -656,6 +660,23 @@ Chưa có giao diện (lõi hàm thuần, chưa nối pipeline). / No UI yet (pu
 | 5 | `pnpm dev:seed-demo --reset` | Tạo lại, mật khẩu mới; mật khẩu cũ không còn đăng nhập được |
 | 6 | Mọi tên kênh/sản phẩm/tác giả | Bắt đầu bằng "[MẪU]"; không SĐT/email thật |
 
+## KT-ES — Dừng khẩn cấp tự gửi (EMERGENCY-STOP, FR-073)
+
+Chỉ phần máy (chưa có nút/giao diện, chưa ghi DB): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/emergency` → 2 file xanh. Kết quả mong đợi: không test đỏ (Owner+Staff Dừng được, Staff không Bật lại được, Dừng hủy hẹn giờ của đúng workspace).
+
+---
+
+## KT-INV — Hóa đơn + xác nhận thanh toán thủ công (INVOICES, FR-091/FR-102, Q-INV1) · Invoices store
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/invoice.test.ts`. | Xanh: tổng tiền = Σ số lượng × đơn giá; mã chuyển khoản đúng định dạng và nhận ra được trong sao kê đổi hoa/thường/chèn khoảng trắng; chỉ hóa đơn chờ + đúng số tiền mới được coi là khớp. |
+| 2 | CI job `database` chạy `tests/invoices.int.test.ts` và `pnpm db:check-rls`. | Web không ghi được hóa đơn/thanh toán; chỉ job hệ thống đúng workspace ghi; Owner thấy hóa đơn của mình, Staff và workspace khác không thấy; lệch tiền không đổi trạng thái; một mã giao dịch ngân hàng không dùng hai lần. |
+| 3 | (Sau khi có `QR-PAYMENT`/`ADMIN-PAYMENTS`) tạo hóa đơn, chuyển khoản thử, Admin xác nhận. | Chưa áp dụng — giao diện và đường Admin là việc sau. |
+
 ## KT-KB-EMBED-COL — Chỉ mục embedding của `kb_chunks` (KB-EMBED-COL, FR-133/139, migration 0042) · Embedding indexes
 
 Chưa có giao diện; kiểm trên DB thử (`cf_dev`/`cf_test`). / No UI; verify on a test DB.
@@ -799,6 +820,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/shared exec vitest run src/lead-contact.test.ts` và `pnpm --filter @flow/db exec vitest run src/lead-vault.test.ts src/lead-sink.test.ts`. | Xanh: chuẩn hóa SĐT/email, tối đa 3 lead/lần, mã hóa khứ hồi (sai workspace/lead/trường/khóa thì không giải mã), băm ổn định, khóa băm không trùng khóa mã hóa, cờ tắt mặc định, bật mà thiếu khóa thì báo lỗi cấu hình. |
 | 2 | CI job `database` chạy `tests/leads.int.test.ts` và `pnpm db:check-rls`. | Chỉ hệ thống ghi lead; DB không chứa SĐT/email thô; trùng số không tạo lead mới; Staff đổi giai đoạn/giao người (chỉ cho thành viên đang hoạt động); Staff không xóa; workspace khác không thấy bản mã. |
 | 3 | (Khi có khóa trên staging) đặt `LEADS_CAPTURE_ENABLED=true`, `LEADS_ENC_KEYS`, `LEADS_HASH_KEY` rồi chờ việc nối pipeline. | Chưa áp dụng — việc nối pipeline và giao diện Kanban là việc sau (`LEADS-KANBAN`). |
+
+## KT-OBW — Trình hướng dẫn thiết lập (ONBOARDING-WIZARD, FR-146)
+
+Không cần khóa ngoài. Đăng nhập Owner; Facebook để TẮT (mặc định) thì nút Kết nối bị khóa.
+1. Tạo workspace mới ở `/app/onboarding/workspace`. Kết quả: chuyển tới `/app/onboarding/setup` (bước "Kết nối nền tảng"), thanh 5 bước tô bước 2.
+2. Bước Kênh: nút "Kết nối Facebook" xám + dòng giải thích khi chưa bật cờ; có kênh thì hiện trong danh sách.
+3. Bấm Tiếp tục → "Chọn Page", rồi → "Nhập kiến thức": thanh Độ sẵn sàng khớp `/app/readiness`; nút Nhập sản phẩm mở `/app/products/import`.
+4. Bước cuối "Mời nhân viên" mở trang Thành viên; "Hoàn tất" về `/app`. "Quay lại" ở bước đầu về trang tạo workspace.
+5. Đăng nhập Staff, mở `/app/onboarding/setup`. Kết quả: 404.
 
 ## KT-PBF — Quét bù bình luận + banner webhook im lặng (POLLING-BACKFILL, FR-023)
 
@@ -1054,6 +1084,19 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIS2 — Cài đặt khớp thiết kế (UI-FIDELITY-SETTINGS-V2, feat-ui-settings-v2)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); không có mục Gói/Thông báo/Quyền riêng tư |
+| 2 | Bấm Kênh rồi Thành viên ở cột trái | Cùng khung, mục tương ứng được tô; không còn thanh tab phía trên |
+| 3 | Đăng nhập Staff, mở /app/settings | Cột trái chỉ có Tài khoản & Bảo mật |
+| 4 | Bật 2FA xong, bấm "Tôi đã lưu các mã này" | Hiện banner xanh "Kích hoạt xác thực 2 bước thành công"; tải lại trang → banner biến mất |
+| 5 | Ở hộp thoại mã dự phòng bấm "Tải file .txt" | Tải được file commentflow-backup-codes.txt chứa các mã |
+| 6 | Đăng nhập trên 2 trình duyệt, ở trình duyệt A bấm "Đăng xuất tất cả thiết bị khác" | Trình duyệt B bị đăng xuất, A vẫn đăng nhập; danh sách phiên chỉ còn 1 |
+| 7 | Mục "Tùy chọn hiển thị & Ngôn ngữ" | Đổi vi/en được; nút Giao diện Tối bị khóa kèm "Sắp ra mắt" |
+| 8 | Thu cửa sổ còn 390px | Cột trái thành dải cuộn ngang; không cuộn ngang cả trang |
 
 ## KT-UKP — Giao diện Cơ sở kiến thức + Bài viết (UI-FIDELITY-KB-POSTS, QUKP1)
 

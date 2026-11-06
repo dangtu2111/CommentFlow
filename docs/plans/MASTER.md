@@ -34,6 +34,8 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | GĐ0-AUTH-CORE | FR-001–005 (lõi) | US-001, 005 | DB | S | không | ✅ |
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
+| UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
+| UI-FIDELITY-SETTINGS-V2 | docs/08 §7 (settings-security.png) | UF-4 | UI-FIDELITY-SETTINGS | — | verifier-security (xóa phiên) | ✅ Giao diện khớp (`feat-ui-settings-v2`, Q-UISET2; còn `SETTINGS-SECURITY-DATA`) |
 | UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
 | UI-FIDELITY-AUTO-LEADS | docs/08 §2, §7 (automation.png, spam-rules.png, leads.png) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | 🟡 Giao diện khớp một phần (`feat-ui-automation-leads`, QAL1; Leads thật chờ `LEADS-KANBAN`) |
 | UI-FIDELITY-POLISH | docs/08 §2 (rà lại mọi màn đã làm) | UF-1..4 | UI-FIDELITY-* | — | không | 🟡 Vòng 2 sửa lỗi bố cục (`feat-ui-polish-pass`, QPOL1); điểm cần dữ liệu thật giữ ở các dòng UI-FIDELITY-* |
@@ -205,7 +207,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 | PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ⛔ |
 | TRIAL-UPGRADE-UI | FR-090 (dùng thử, nâng gói, mua thêm) | US-060 | PLANS-SCHEMA | S | không | ⏳ |
 | QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ⛔ |
-| INVOICES | FR-091 (lịch sử hóa đơn, thông tin xuất hóa đơn) | US-061 | QR-PAYMENT | S | không | ⏳ |
+| INVOICES | FR-091 (lịch sử hóa đơn, thông tin xuất hóa đơn) — nền dữ liệu ✅ Xong-mock (feat-invoices, Q-INV1, migration 0052: `core.invoices`/`core.payments`, hàm DEFINER chỉ hệ thống); còn giao diện lịch sử + thông tin xuất hóa đơn, QR, đường Admin | US-061 | QR-PAYMENT | S | không | 🔧 (nền dữ liệu xong; UI chờ `QR-PAYMENT`) |
 | ADMIN-SHELL | FR-100 khung, FR-118; `AUTH-ADMIN-SESSION` (phiên 8 giờ, role DB Admin) | US-081 | AUTH-2FA | S+DB | không | ⏳ |
 | ADMIN-OVERVIEW | FR-100 (MRR, workspace theo trạng thái, chi phí AI, lãi gộp) | US-081 | ADMIN-SHELL | — | không | ⏳ |
 | ADMIN-WORKSPACES | FR-101 (bảng + chi tiết, gia hạn dùng thử, cộng lượt, đổi gói, tạm khóa, trần chi phí) | US-081 | ADMIN-SHELL | S | không | ⏳ |
@@ -217,7 +219,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 | WORKSPACE-DELETE | FR-094 (xóa workspace nhiều bước), `DB-MAINTENANCE-ROLE` | US-071 | DATA-EXPORT | S+DB | không | ⏳ |
 | RETENTION-JOB | FR-126 (12 tháng; `ai_usage` gộp 90 ngày) | — | DB-MAINTENANCE-ROLE | S+DB | không | ⏳ |
 | PUBLIC-PAGES | FR-125 (landing, chính sách quyền riêng tư, điều khoản, DPA) | — | CFG-APPNAME | — | **có** — tên miền (Q6), pháp lý | ⛔ |
-| ONBOARDING-WIZARD | FR-146 (wizard 5 bước, điều kiện sẵn sàng AI) | UF-1 | AI-READINESS, FB-OAUTH | — | không | ⏳ |
+| ONBOARDING-WIZARD | FR-146 (wizard 5 bước, điều kiện sẵn sàng AI) | UF-1 | AI-READINESS, FB-OAUTH | — | không | Xong-mock UI (feat-onboarding-wizard, Q-OBW1; KT-OBW) |
 | PRICE-QUOTE-MENTION | FR-150 (khách nhắc giá khác giá kho) | US-108 | DA-RULES-PRICE | S | không | ⏳ |
 | DB-BOOTSTRAP | — (extension/role cho staging) | — | — | DB | không | ⏳ |
 | QUEUE-PROD-INSTALL | — (cài pg-boss cho staging/production, CI có duyệt tay) | — | STAGING-DEPLOY | S+DB | không | ⏳ |
@@ -240,7 +242,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | AUTO-MATRIX-UI | FR-070 (Tắt/Chạy thử/Tự động theo kênh × nhãn), FR-071 (ngưỡng, khoảng trễ, giới hạn/ngày, giờ hoạt động, từ khóa chặn, chữ ký) | US-040, UF-5 | AUTO-SEND-GATE | S | không | ✅ Xong-mock (`feat-auto-matrix-ui`, Q-AMU1: schema Zod + store bộ nhớ + trang `/app/automation` chỉ Owner; bảng DB → `AUTO-MATRIX-DB` làn b — phần lưu ✅ ở `feat-auto-config-store` (Q-ACS1, migration 0047, KT-ACS), còn `AUTO-CONFIG-WIRE`; hạn mức tháng/tự tạm dừng → `AUTO-SETTINGS-COST`; KT-AMU) |
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-delay-cancel`, Q-ADC1: `packages/ai/src/delay/` máy trạng thái thuần + `AutoSendDelayScheduler` bộ nhớ; bản bền/nối pipeline/nút Hủy UI → `AUTO-DELAY-WIRE` làn b; KT-ADC) |
 | AUTO-CALIBRATION | FR-072 (50/10%/15/0,80; đề xuất kèm lý do), FR-163 (hiệu chuẩn độ tin cậy) | US-041 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-calibration`, Q-AC1: `packages/ai/src/calibration/` hàm thuần đề xuất ngưỡng + hồi quy logistic/ECE; nối DB/UI/job hằng tuần → `AUTO-CALIBRATION-WIRE` làn b; KT-AC) |
-| EMERGENCY-STOP | FR-073 (dừng khẩn cấp toàn workspace) | US-043 | AUTO-MATRIX-UI | S | không | ⏳ |
+| EMERGENCY-STOP | FR-073 (dừng khẩn cấp toàn workspace) | US-043 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-emergency-stop`, Q-ES1: `packages/ai/src/emergency/` quy tắc vai trò + store + dịch vụ hủy hẹn giờ; DB/UI → `EMERGENCY-STOP-WIRE`) |
 | AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ⏳ |
 | AI-SENT-HISTORY | FR-075 (lịch sử AI đã gửi + Đánh dấu sai) | US-040 | AUTO-SEND-GATE | — | không | ✅ Xong-mock (feat-ai-sent-history; phần DB ở AI-SENT-HISTORY-DB) |
 | AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ⏳ |

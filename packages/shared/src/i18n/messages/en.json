@@ -48,7 +48,27 @@
       "addressSoon": "How the shop refers to itself and addresses customers will be set in Brand voice (coming soon)."
     },
     "breadcrumb": {
-      "label": "Breadcrumb"
+      "label": "Breadcrumb",
+      "root": "System settings"
+    },
+    "nav": {
+      "label": "Settings sections",
+      "title": "Workspace configuration",
+      "channels": "Connected channels",
+      "members": "Members & Permissions",
+      "security": "Account & Security",
+      "channelsCount": "{connected}/{total} channels",
+      "membersCount": "{count, plural, one {# person} other {# people}}"
+    },
+    "display": {
+      "title": "Display & Language",
+      "body": "Customize your own CommentFlow AI workspace.",
+      "languageLabel": "Interface language",
+      "languageHint": "Your choice is saved to your account.",
+      "themeLabel": "Appearance",
+      "light": "Light theme",
+      "dark": "Dark theme",
+      "soon": "Coming soon"
     },
     "account": {
       "title": "Sign-in & account details",
@@ -232,6 +252,12 @@
         "backupBody": "Use them if you lose your phone. Each code works once and is shown only now. Keep them somewhere safe. If you lose them, you can generate new ones under “Regenerate backup codes”.",
         "copy": "Copy all",
         "copied": "Copied",
+        "downloadTxt": "Download .txt",
+        "backupBlockTitle": "Backup recovery codes",
+        "backupBlockBody": "One-time backup codes let you sign in when you don't have your phone or lose access to your authenticator app. For security, codes are shown only once when created — regenerate them if you no longer have a saved copy.",
+        "justEnabledTitle": "Two-factor authentication enabled",
+        "justEnabledBody": "Your account is now protected by a code from your authenticator app (TOTP). Every new sign-in needs a 6-digit code.",
+        "dismiss": "Dismiss",
         "saved": "I saved these codes",
         "regenTitle": "Regenerate backup codes",
         "regenBody": "Old codes stop working immediately.",
@@ -253,7 +279,8 @@
         "tiles": {
           "method": "Primary method",
           "methodValue": "Authenticator app (TOTP)",
-          "methodHint": "Google / Microsoft / 1Password"
+          "methodHint": "Google / Microsoft / 1Password",
+          "rotation": "Code changes every 30 seconds"
         }
       },
       "sessions": {
@@ -262,6 +289,8 @@
         "current": "This device",
         "lastUsed": "Last active: {date}",
         "signOut": "Sign out this device",
+        "revoke": "Revoke",
+        "signOutOthers": "Sign out all other devices",
         "empty": "No sessions.",
         "device": "{browser} on {os}",
         "browser": {
@@ -975,6 +1004,7 @@
     }
   },
   "readiness": {
+    "details": "See readiness details",
     "pageTitle": "AI readiness",
     "title": "AI readiness",
     "subtitle": "The AI needs enough shop information to answer correctly. Below {min}% or with a required item missing, Auto mode cannot be turned on.",
@@ -1214,7 +1244,15 @@
   "shell": {
     "groups": {
       "operations": "Operations",
-      "settings": "Settings"
+      "system": "System & intelligence"
+    },
+    "tabsLabel": "Page sections",
+    "tabs": {
+      "general": "General"
+    },
+    "quota": {
+      "title": "AI quota",
+      "summary": "{used} / {capacity} turns"
     },
     "nav": {
       "comments": "Comments",
@@ -1281,6 +1319,35 @@
     "promise": {
       "title": "Our commitment",
       "body": "Official platform APIs only. The AI only drafts replies; it never hides comments by itself and never posts on its own."
+    },
+    "setup": {
+      "title": "Initial setup",
+      "subtitle": "Connect channels, add knowledge for the AI and invite staff. You can come back at any time.",
+      "channels": {
+        "title": "Connect a platform",
+        "body": "Connect a Facebook Page so the AI can watch comments and suggest replies. Read and suggest only; it never posts on its own."
+      },
+      "pages": {
+        "title": "Choose the Pages to activate",
+        "body": "Channels already connected to this workspace. Add or pick Pages on the Channels page."
+      },
+      "noChannels": "No channel is connected yet.",
+      "manageChannels": "Manage channels",
+      "knowledge": {
+        "title": "Add knowledge for the AI",
+        "body": "Provide prices, sizes and policies so the AI answers correctly. Prices and stock always come from the product list.",
+        "importProducts": "Import products from Excel/CSV",
+        "openKb": "Open knowledge base"
+      },
+      "invite": {
+        "title": "Invite staff",
+        "body": "Invite staff to review replies together. You can skip this step and do it later.",
+        "open": "Open Members page"
+      },
+      "back": "Back",
+      "next": "Continue",
+      "finish": "Finish",
+      "skipHint": "You can skip this and set it up later in Settings."
     }
   },
   "errorPages": {

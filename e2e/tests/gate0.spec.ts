@@ -135,6 +135,9 @@ function runScenarios(locale: Locale) {
     try {
       const page = await ownerContext.newPage();
       await createWorkspace(page, t, secondWorkspaceName);
+      // Tạo xong, người dùng vào wizard thiết lập (FR-146); bài này tiếp tục từ trang chủ /app.
+      await expect(page).toHaveURL(/\/app\/onboarding\/setup/);
+      await page.goto('/app');
       await expectInWorkspace(page, t, owner, secondWorkspaceName);
 
       await switchTo(page, t, workspaceName);

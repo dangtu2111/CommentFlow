@@ -8,6 +8,7 @@ import { MAX_PASSWORD_LENGTH } from './auth';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
 import { type CookieSpec, cookiesFromResponse } from './cookies';
 import { bindingOf, signPending, verifyPending } from './pending';
+import { revokeOtherSessionsOfUser } from './revoke';
 import { type BrowserKind, type OsKind, parseUserAgent } from './ua';
 
 /**
@@ -328,6 +329,13 @@ export function createTwoFactorFlows(options: {
           .returning({ id: sessions.id }),
       );
       return removed.length > 0;
+    },
+
+    /** "Đăng xuất tất cả thiết bị khác": xóa mọi phiên của chính mình trừ phiên hiện tại. Trả số phiên đã xóa, null nếu chưa đăng nhập. */
+    async revokeOtherSessions(headers: Headers): Promise<number | null> {
+      const user = await currentUser(headers);
+      if (!user) return null;
+      return revokeOtherSessionsOfUser(authDb, user.id, (user.session as { id: string }).id);
     },
 
     /** Bước 1 bật 2FA: cần mật khẩu. Trả QR (server tạo), khóa nhập tay và 10 mã dự phòng — hiện cho người dùng một lần. */

@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { getMessages } from '../i18n/messages';
-import { isNavActive, navGroupsFor, splitNavByRole } from './app-nav';
+import { isNavActive, navGroupsFor, sectionTabsFor, splitNavByRole } from './app-nav';
 
 describe('FR-040 trang 403: chia mục điều hướng theo vai trò (docs/08 §7.8)', () => {
   it('FR-040 Staff: "dùng được" khớp điều hướng của Staff; "chỉ Owner" là phần còn lại', () => {
     const split = splitNavByRole('staff');
-    expect(split.allowed.map((i) => i.key)).toEqual(
-      navGroupsFor('staff').flatMap((g) => g.items.map((i) => i.key)),
+    // "Dùng được" gồm cả trang con (AI đã gửi), nên so theo đường dẫn của mục chính + trang con.
+    expect(split.allowed.map((i) => i.href).sort()).toEqual(
+      navGroupsFor('staff')
+        .flatMap((g) => g.items.flatMap((i) => i.matchHrefs))
+        .sort(),
     );
     expect(split.ownerOnly.map((i) => i.key)).toContain('members');
     expect(split.ownerOnly.map((i) => i.key)).toContain('channels');
@@ -26,22 +29,20 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
     expect(keys('owner')).toEqual([
       'comments',
       'posts',
-      'aiSent',
       'kb',
-      'tryAi',
-      'readiness',
       'automation',
-      'productImport',
-      'kbGaps',
-      'kbPublish',
-      'kbTestset',
       'spamRules',
-      'channels',
-      'members',
       'activity',
       'settings',
     ]);
-    expect(keys('staff')).toEqual(['comments', 'posts', 'aiSent', 'activity', 'settings']);
+    expect(keys('staff')).toEqual(['comments', 'posts', 'activity', 'settings']);
+  });
+
+  it('FR-040 không hiện mục chưa có trang thật (Tin nhắn, Khách tiềm năng, Báo cáo) và không hiện trang con ở thanh bên', () => {
+    const hidden = ['messages', 'leads', 'reports', 'aiSent', 'tryAi', 'channels', 'members'];
+    for (const role of ['owner', 'staff'] as const) {
+      for (const key of hidden) expect(keys(role)).not.toContain(key);
+    }
   });
 
   it('FR-001 FR-119 mục Cài đặt (bảo mật + ngôn ngữ) có cho mọi vai trò, trỏ /app/settings; không còn mục Bảo mật riêng', () => {
@@ -72,12 +73,41 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
   it('FR-040 chia nhóm: vận hành (Bình luận) và cài đặt; không nhóm rỗng; href thuộc /app/ và không trùng', () => {
     for (const role of ['owner', 'staff'] as const) {
       const groups = navGroupsFor(role);
-      expect(groups.map((g) => g.key)).toEqual(['operations', 'settings']);
+      expect(groups.map((g) => g.key)).toEqual(['operations', 'system']);
       for (const group of groups) expect(group.items.length).toBeGreaterThan(0);
       const hrefs = groups.flatMap((g) => g.items.map((i) => i.href));
       expect(new Set(hrefs).size).toBe(hrefs.length);
       for (const href of hrefs) expect(href.startsWith('/app/')).toBe(true);
     }
+  });
+});
+
+describe('FR-040 trang con gom vào trang cha', () => {
+  const item = (role: 'owner' | 'staff', key: string) =>
+    navGroupsFor(role)
+      .flatMap((g) => g.items)
+      .find((i) => i.key === key);
+
+  it('FR-040 mục cha có đường dẫn của mọi trang con (đánh dấu "đang mở", URL giữ nguyên)', () => {
+    const subs = ['/app/try-ai', '/app/readiness', '/app/kb-gaps', '/app/kb-publish'];
+    subs.push('/app/kb-testset', '/app/products/import');
+    for (const sub of subs) expect(item('owner', 'kb')?.matchHrefs, sub).toContain(sub);
+    expect(item('owner', 'settings')?.matchHrefs).toEqual(
+      expect.arrayContaining(['/app/settings', '/app/channels', '/app/members']),
+    );
+    expect(item('owner', 'comments')?.matchHrefs).toContain('/app/ai-sent');
+    expect(item('owner', 'posts')?.matchHrefs).toEqual(['/app/posts']);
+  });
+
+  it('FR-040 thanh tab: Bình luận ⟵ AI đã gửi; Cài đặt dùng cột trái (SettingsFrame) nên không có tab; trang khác không có tab', () => {
+    const tabKeys = (role: 'owner' | 'staff', path: string) =>
+      sectionTabsFor(role, path)?.map((t) => t.key);
+    expect(tabKeys('owner', '/app/ai-sent')).toEqual(['comments', 'aiSent']);
+    expect(tabKeys('owner', '/app/channels')).toBeUndefined();
+    expect(tabKeys('staff', '/app/ai-sent')).toEqual(['comments', 'aiSent']);
+    expect(sectionTabsFor('staff', '/app/settings')).toBeNull();
+    expect(sectionTabsFor('owner', '/app/posts')).toBeNull();
+    expect(sectionTabsFor('owner', '/app/kb-gaps')).toBeNull(); // KB có khung riêng (KbFrame)
   });
 });
 

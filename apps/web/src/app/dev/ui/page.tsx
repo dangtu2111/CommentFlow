@@ -3,12 +3,14 @@ import { getTranslations } from 'next-intl/server';
 import { NotificationBell } from '../../../components/app/notification-bell';
 import { OnboardingStepper } from '../../../components/app/onboarding-stepper';
 import { ShellNav } from '../../../components/app/shell-nav';
+import { ShellQuotaCard } from '../../../components/app/shell-quota-card';
 import { SystemBanners } from '../../../components/app/system-banners';
 import { UserCard } from '../../../components/app/user-card';
 import { BrandLogo } from '../../../components/brand-logo';
 import { LocaleSwitcher } from '../../../components/locale-switcher';
 import { navGroupsFor } from '../../../lib/app-nav';
 import { buildNotifications } from '../../../lib/notification-model';
+import { buildUsageMeterView } from '../../../lib/usage-meter-view';
 
 const SAMPLE_WORKSPACE = '[MẪU] Cửa hàng mẫu';
 
@@ -54,6 +56,7 @@ export default async function DevUiPage() {
         <ShellNav
           groups={groups}
           label={t('shell.navLabel')}
+          quota={<ShellQuotaCard view={buildUsageMeterView({ used: 2140, limit: 3000 })} />}
           footer={
             <UserCard name="[MẪU] Nguyễn Mai Linh" roleLabel={t('workspace.switcher.role.owner')} />
           }

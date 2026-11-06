@@ -11,7 +11,7 @@ export function SubmitButton({
   block = true,
 }: {
   children: ReactNode;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'danger-ghost';
   block?: boolean;
 }) {
   const { pending } = useFormStatus();
