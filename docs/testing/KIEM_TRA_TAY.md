@@ -28,6 +28,7 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-ABJ | Job phát hiện lạm dụng (chỉ logic + test, chưa đăng ký job/DB; không cần khóa/dịch vụ ngoài) | feat-abuse-job | chưa | chưa | — |
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
@@ -36,6 +37,7 @@
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
+| KT-DIM | Mạo danh → chuyển người, gợi ý Ẩn (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
@@ -502,6 +504,13 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 
 ---
 
+## KT-ABJ — Job phát hiện lạm dụng (ABUSE-JOB, FR-115)
+
+Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/abuse` và `pnpm --filter @flow/worker exec vitest run src/jobs/abuse.test.ts` → xanh. Kết quả mong đợi: không test đỏ (câu bị xóa >20% chỉ cảnh báo, từ khóa cấm chặn tự gửi + xem xét, lỗi gửi liên tiếp dừng workspace và thông báo đúng một lần, quyết định không bao giờ có hành động ẩn bình luận).
+
+---
+
 ## KT-AC — Hiệu chuẩn ngưỡng tự gửi + độ tin cậy (AUTO-CALIBRATION, FR-072, FR-163, feat-auto-calibration)
 
 > Chưa nối DB/giao diện nên kiểm bằng lệnh. / Not wired to DB/UI yet — verify by command.
@@ -642,6 +651,16 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 | 2 | (Sau khi nối) Khách bình luận ảnh + "mẫu này giá sao" trên bài chưa gắn sản phẩm | Bình luận vào "Cần người", lý do "Có ảnh, chưa nhận ra sản phẩm", không tự gửi |
 | 3 | (Sau khi nối) Cùng bình luận trên bài đã gắn đúng 1 sản phẩm | AI trả lời bình thường |
 | 4 | (Sau khi nối) Chỉ gửi sticker kèm chữ | Không bị coi là hỏi về ảnh |
+
+## KT-DIM — Bình luận mạo danh chuyển người, không tự gửi/ẩn (DA-IMPERSONATION, FR-155, feat-da-impersonation)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-IMPERSONATION-WIRE`. / Core + automated tests only; manual checks deferred to `DA-IMPERSONATION-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/impersonation-rules.test.ts` | Mọi test xanh |
+| 2 | (Sau khi nối) Tài khoản tên giống Page bình luận kèm link/"nhận quà" | Nhãn đỏ "Nghi mạo danh", báo ngay, AI không tự gửi; nút Ẩn chỉ hiện để người bấm |
+| 3 | (Sau khi nối) Khách trùng tên Page hỏi giá bình thường | Không bị gắn nhãn mạo danh |
 
 ## KT-DRL — Cam kết pháp lý/uy tín (DA-RULES-LEGAL, FR-160) · Legal/trust commitments
 

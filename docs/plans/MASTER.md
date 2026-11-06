@@ -248,10 +248,10 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | AI-SENT-HISTORY | FR-075 (lịch sử AI đã gửi + Đánh dấu sai) | US-040 | AUTO-SEND-GATE | — | không | ✅ Xong-mock (feat-ai-sent-history; phần DB ở AI-SENT-HISTORY-DB) |
 | AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ⏳ |
 | RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | ⏳ |
-| ABUSE-JOB | FR-115 (phát hiện lạm dụng: Đánh dấu sai, câu bị xóa, lỗi 368, tăng đột biến) | — | AI-SENT-HISTORY | S | không | ⏳ |
+| ABUSE-JOB | FR-115 (phát hiện lạm dụng: Đánh dấu sai, câu bị xóa, lỗi 368, tăng đột biến) | — | AI-SENT-HISTORY | S | không | ✅ Xong-mock (`feat-abuse-job`, Q-ABJ1: `evaluateAbuse` thuần + handler `withJob` + `AbuseSink`; DB/đăng ký/lịch → `ABUSE-JOB-WIRE`; KT-ABJ) |
 | ADMIN-SEND-LOCK | FR-116 (Admin tạm khóa gửi; trang Sức khỏe Meta App) | US-084 | ADMIN-SHELL, ABUSE-JOB | S | không | ⏳ |
 | DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ✅ lõi thuần (`feat-da-holder`, Q-DH1; nối pipeline → `DA-HOLDER-WIRE`; KT-DH) |
-| DA-IMPERSONATION | FR-155 (chống mạo danh Page/shop) | US-111 | AUTO-SEND-GATE | S | không | ⏳ |
+| DA-IMPERSONATION | FR-155 (chống mạo danh Page/shop) | US-111 | AUTO-SEND-GATE | S | không | ✅ lõi thuần (`feat-da-impersonation`, Q-DIM1; nối pipeline → `DA-IMPERSONATION-WIRE`; KT-DIM) |
 | DA-ORDER-IN-COMMENT | FR-156 (đặt hàng trong bình luận → Khách tiềm năng), FR-157 (mẫu ngưng/hết hàng khi tự gửi) | US-112 | LEADS-KANBAN | S (PII) | không | ⏳ |
 | SPAM-RULES | FR-080 (quy tắc spam, xem trước số bình luận khớp 7 ngày) | US-050 | INBOX-LIST | — | không | ✅ Xong-mock (feat-spam-rules, Q-SPR1: xem trước thật; Lưu: bảng `cf.rules` 0050, feat-spam-rules-store, Q-SRS1 — còn UI danh sách/bật-tắt `SPAM-RULES-LIST-UI`) |
 | AUTO-HIDE | FR-081 (Tự ẩn SĐT/link sau khi chạy đánh dấu; lưu khách trước khi ẩn); **AI không tự ẩn** | US-050, UF-4 | SPAM-RULES, FB-HIDE | S | không | 🟡 Xong-mock phần thuần (`feat-auto-hide`, Q-AH1; còn `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE`, KT-AH) |
