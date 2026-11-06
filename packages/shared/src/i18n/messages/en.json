@@ -144,7 +144,8 @@
       "subtitle": "The AI assistant drafts replies from your shop's knowledge base; staff review them before sending.",
       "officialApi": "Official Meta APIs only.",
       "humanInControl": "AI only drafts; it sends on its own only when the shop owner turns that on.",
-      "bilingual": "Vietnamese and English interface."
+      "bilingual": "Vietnamese and English interface.",
+      "securityNote": "Security: we only read comments/messages through the official Meta API. We never post on your behalf; AI never hides comments on its own."
     },
     "footer": {
       "rights": "© {year} {appName}. All rights reserved."
@@ -233,6 +234,23 @@
           "other": "another system"
         }
       }
+    },
+    "demo": {
+      "sample": "[SAMPLE]",
+      "title": "Example reply flow (illustration)",
+      "aria": "Illustrative example, not real data",
+      "customerName": "Customer A • sample comment",
+      "customerComment": "Is the blue silk dress in size M in stock? My phone is 09xx***xxx",
+      "tagIntent": "Classified: Price & stock question",
+      "tagPii": "Phone number masked before AI",
+      "aiName": "AI suggestion",
+      "aiDraft": "Hello! Size M of this dress is in stock. Price and stock come from the shop catalog.",
+      "needsReview": "A staff member reviews before sending"
+    },
+    "social": {
+      "facebook": "Continue with Facebook",
+      "unavailable": "Facebook sign-in is not available yet. Please use email.",
+      "orEmail": "Or continue with email"
     }
   },
   "workspace": {
@@ -614,8 +632,15 @@
     "title": "Replies the AI sent automatically",
     "subtitle": "Replies the AI sent to customers on its own. If one is wrong, press Mark as wrong (with a reason if you like): the system uses this signal to pause auto-send when the AI is wrong too often.",
     "filterLabel": "Filter history",
-    "filter": { "all": "All", "sent": "Sent", "marked_wrong": "Marked wrong" },
-    "status": { "sent": "Sent", "marked_wrong": "Marked wrong" },
+    "filter": {
+      "all": "All",
+      "sent": "Sent",
+      "marked_wrong": "Marked wrong"
+    },
+    "status": {
+      "sent": "Sent",
+      "marked_wrong": "Marked wrong"
+    },
     "empty": "The AI has not auto-sent anything yet. This list fills in once you turn on Automatic mode and the AI starts replying.",
     "meta": "Label: {label} · confidence {confidence}% · sent {date}",
     "reason": "Reason: {reason}",
@@ -649,9 +674,20 @@
       "empty": "No channel yet. Connect a channel on the Channels page first.",
       "complaintNote": "Complaint and Spam comments are never auto-sent; they always go to staff."
     },
-    "target": { "comment": "Comments", "message": "Messages" },
-    "labels": { "price": "Price question", "advice": "Advice", "purchase": "Purchase" },
-    "mode": { "off": "Off", "shadow": "Trial run", "auto": "Auto" },
+    "target": {
+      "comment": "Comments",
+      "message": "Messages"
+    },
+    "labels": {
+      "price": "Price question",
+      "advice": "Advice",
+      "purchase": "Purchase"
+    },
+    "mode": {
+      "off": "Off",
+      "shadow": "Trial run",
+      "auto": "Auto"
+    },
     "general": {
       "title": "General settings",
       "threshold": "Confidence threshold (%)",
@@ -669,13 +705,23 @@
       "hoursFrom": "From",
       "hoursTo": "To",
       "hoursHint": "Untick to auto-send all day. Pick at least one day when enabled.",
-      "day": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+      "day": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      },
       "keywords": "Blocked keywords",
       "keywordsHint": "One word or phrase per line (up to 50, each ≤ 60 characters). AI replies containing any of them are not auto-sent.",
       "signature": "Disclosure signature",
       "signatureHint": "A short single line (≤ 120 characters) saying the reply was written by AI, e.g. “— The shop's AI assistant”. Leave empty to skip."
     },
-    "notice": { "saved": "Settings saved." },
+    "notice": {
+      "saved": "Settings saved."
+    },
     "error": {
       "rules": "A level selection is invalid. Please choose again.",
       "threshold": "The confidence threshold must be between 80 and 100.",
@@ -805,8 +851,16 @@
     "add": "Add knowledge",
     "ignore": "Ignore",
     "reopen": "Reopen",
-    "lang": { "vi": "Vietnamese", "en": "English", "all": "Both" },
-    "status": { "open": "Open", "resolved": "Added", "ignored": "Ignored" },
+    "lang": {
+      "vi": "Vietnamese",
+      "en": "English",
+      "all": "Both"
+    },
+    "status": {
+      "open": "Open",
+      "resolved": "Added",
+      "ignored": "Ignored"
+    },
     "topic": {
       "shipping": "Shipping & delivery",
       "discount": "Discounts & promotions",
@@ -1200,7 +1254,11 @@
       "empty": "No channels yet.",
       "noWebhook": "Not receiving new comments (webhook not registered)"
     },
-    "platform": { "facebook": "Facebook", "instagram": "Instagram", "tiktok": "TikTok" },
+    "platform": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
     "status": {
       "connected": "Connected",
       "expired": "Expired",
@@ -1323,22 +1381,22 @@
       }
     },
     "actions": {
-      "workspace.created": "Workspace created",
-      "member.role_changed": "Member role changed",
-      "member.left": "Member left the workspace",
-      "invitation.created": "Invitation sent",
-      "invitation.accepted": "Invitation accepted",
-      "invitation.revoked": "Invitation revoked",
-      "channel.connected": "Channel connected",
-      "channel.reconnected": "Channel reconnected",
-      "channel.token_set": "Channel access token updated",
-      "channel.token_cleared": "Channel access token removed",
-      "comment.reply_requested": "Comment reply requested",
-      "comment.hide_requested": "Comment hide requested",
-      "comment.hide_cancelled": "Comment hide request cancelled",
-      "comment.unhide_requested": "Comment unhide requested",
-      "comment.hidden": "Comment hidden on the platform",
-      "comment.unhidden": "Comment unhidden on the platform"
+      "workspace_created": "Workspace created",
+      "member_role_changed": "Member role changed",
+      "member_left": "Member left the workspace",
+      "invitation_created": "Invitation sent",
+      "invitation_accepted": "Invitation accepted",
+      "invitation_revoked": "Invitation revoked",
+      "channel_connected": "Channel connected",
+      "channel_reconnected": "Channel reconnected",
+      "channel_token_set": "Channel access token updated",
+      "channel_token_cleared": "Channel access token removed",
+      "comment_reply_requested": "Comment reply requested",
+      "comment_hide_requested": "Comment hide requested",
+      "comment_hide_cancelled": "Comment hide request cancelled",
+      "comment_unhide_requested": "Comment unhide requested",
+      "comment_hidden": "Comment hidden on the platform",
+      "comment_unhidden": "Comment unhidden on the platform"
     },
     "empty": {
       "title": "No log entries yet",

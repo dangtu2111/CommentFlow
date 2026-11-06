@@ -26,7 +26,7 @@ export async function ActivityDetailPanel({
   const rows = diffRows(entry.before, entry.after);
   return (
     <article className="log-detail-body">
-      <h2>{key ? t(`actions.${key as 'workspace.created'}`) : entry.action}</h2>
+      <h2>{key ? t(`actions.${key as 'workspace_created'}`) : entry.action}</h2>
       <p className="muted">{entry.action}</p>
       <dl className="log-meta">
         <dt>{t('detail.time')}</dt>
