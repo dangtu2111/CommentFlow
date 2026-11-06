@@ -562,6 +562,10 @@ Nếu hỏng: ghi số bước và ảnh chụp.
 | 5 | Đổi ngôn ngữ sang English | Mọi chữ trên trang đổi sang tiếng Anh |
 | 6 | Đăng nhập tài khoản thuộc workspace khác | Không thấy bài của workspace này |
 
+## KT-PGM — Guard số tiền (PIPE-GUARD-MONEY, FR-030, feat-pipe-guard-money)
+
+Hàm thuần, chưa có giao diện/đường chạy → chưa có bước bấm tay. Kiểm tay khi `PIPE-DRAFT` nối guard: soạn câu có giá/ngày/SĐT/link không có trong kiến thức → bản nháp bị ép "Cần người", không tự gửi.
+
 ## KT-023 — Thông tin shop, chính sách, FAQ, giọng văn (KB-SHOP-POLICY-FAQ, feat-kb-shop-policy-faq, migration 0036) · Shop info, policy, FAQ, brand voice tables
 
 Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
