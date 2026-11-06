@@ -109,4 +109,11 @@ describe('FR-124 parse payload Casso', () => {
     expect(parseCassoPayload(null)).toEqual([]);
     expect(parseCassoPayload({ data: 'x' })).toEqual([]);
   });
+  it('mô tả và tài khoản phụ thiếu → content rỗng, accountNumber null', () => {
+    const [tx] = parseCassoPayload({
+      data: [row({ description: undefined, bank_sub_acc_id: undefined })],
+    });
+    expect(tx?.content).toBe('');
+    expect(tx?.accountNumber).toBeNull();
+  });
 });
