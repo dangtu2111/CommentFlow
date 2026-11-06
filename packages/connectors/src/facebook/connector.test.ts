@@ -828,3 +828,40 @@ describe('không đối tượng lỗi nào chứa token / proof / URL (kể c�
     expect((post.calls[0] as Call).url.search).toBe('');
   });
 });
+
+describe('FR-143 tệp đính kèm của bình luận qua Graph', () => {
+  it('FR-143 yêu cầu trường attachment và chuẩn hóa photo/sticker; loại share bị bỏ', async () => {
+    const parent = '3000000000003_4000000000001';
+    const base = { created_time: '2026-11-05T03:00:00+0000', from: { id: '5000000000005' } };
+    const { connector, calls } = harness([
+      json({
+        data: [
+          {
+            ...base,
+            id: '3000000000003_4000000000020',
+            message: 'mẫu này',
+            attachment: {
+              type: 'photo',
+              url: 'https://l.invalid/p',
+              media: { image: { src: 'https://scontent.example.invalid/a.jpg' } },
+              target: { id: '77' },
+            },
+          },
+          { ...base, id: '3000000000003_4000000000021', attachment: { type: 'sticker' } },
+          {
+            ...base,
+            id: '3000000000003_4000000000022',
+            attachment: { type: 'share', url: 'https://l.invalid/x' },
+          },
+        ],
+      }),
+    ]);
+    const comments = await connector.fetchReplies(channel, parent);
+    expect(comments[0]?.attachments).toEqual([
+      { type: 'photo', url: 'https://scontent.example.invalid/a.jpg', externalId: '77' },
+    ]);
+    expect(comments[1]?.attachments).toEqual([{ type: 'sticker' }]);
+    expect(comments[2]?.attachments).toBeUndefined();
+    expect(calls[0]?.url.searchParams.get('fields')).toContain('attachment');
+  });
+});

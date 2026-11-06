@@ -31,8 +31,16 @@
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
+| KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 
 ---
+
+## KT-PC — Độ tin cậy do code tính (PIPE-CONFIDENCE, FR-163/032)
+
+Hàm thuần, chưa nối cổng tự gửi (AUTO-SEND-GATE) → chưa có bước bấm tay; không cần khóa LLM, không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/confidence`. — Mong đợi: tất cả test xanh (có test property-based `fast-check`, seed cố định).
+2. Mở `packages/ai/src/confidence/confidence.ts`, xem `DEFAULT_CONFIDENCE_WEIGHTS`. — Mong đợi: trọng số `default@1`; không có chỗ nào đọc trường `confidence`/`self_score` của JSON LLM.
+3. Kiểm tay khi nối pipeline: bản nháp có JSON hỏng hoặc hành động lạ → độ tin cậy 0, bình luận vào "Cần người", không tự gửi.
 
 ## KT-KB-SEARCH — Tìm kiếm kiến thức/sản phẩm (KB-SEARCH-FTS, FR-057/127/135) · Knowledge/product search
 
@@ -40,7 +48,7 @@ Chưa có giao diện (ô Thử AI là `KB-TRYAI`; nối pipeline là `PIPE-RETR
 
 | # | Bước | Kết quả mong đợi |
 |---|---|---|
-| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0037 áp được (cần extension `vector`, `unaccent`, `pg_trgm`); check-rls "đạt". |
+| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0038 áp được (cần extension `vector`, `unaccent`, `pg_trgm`); check-rls "đạt". |
 | 2 | `pnpm --filter @flow/db test:db` (hoặc `CF_LANE=<làn> pnpm test:db`). | Mọi test xanh, gồm `kb-search.int.test.ts` (toàn văn không dấu, lỗi gõ, RRF, lọc hiệu lực/phiên bản/ngôn ngữ, chéo workspace, sản phẩm gần đúng, cache theo rev). |
 | 3 | `pnpm --filter @flow/shared exec vitest run src/search.test.ts` và `pnpm --filter @flow/ai exec vitest run src/embedding`. | Xanh (chuẩn hóa, RRF, ngưỡng chọn sản phẩm, kiểm cache, embedding mock). |
 | 4 | (Tùy chọn, `psql` trên `cf_dev`) `SELECT search_norm, tsv FROM cf.kb_chunks LIMIT 1;` sau khi có đoạn. | `search_norm` thường + không dấu; `tsv` có từ không dấu (vi). |
@@ -567,6 +575,15 @@ Nếu hỏng: ghi số bước và ảnh chụp.
 | 3 | Đổi một flag ở DB | Tiến trình thấy giá trị mới ngay, không phải đợi 30 giây |
 | 4 | Tạm chặn cổng DB 70 giây rồi mở lại | Khoảng cách các lần thử tăng dần tới 60 giây; sau khi mở lại tự nối lại |
 
+## KT-023 — Lưu tệp đính kèm của bình luận (ATTACHMENTS-STORE, feat-attachments-store, FR-143)
+Điều kiện: staging có webhook Page thử (cờ kết nối FB bật), worker chạy. Chỉ dùng Page thử của bạn.
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Trên bài của Page thử, dùng tài khoản thử bình luận kèm một ảnh (có chữ) | Bình luận xuất hiện; `SELECT text, attachments FROM cf.comments` (máy phụ) có `[{"type":"photo","url":"https://…"}]` và chữ đúng |
+| 2 | Bình luận chỉ có nhãn dán (sticker), không chữ | Dòng có `text=''`, `attachments` chứa `{"type":"sticker"}` |
+| 3 | Bình luận chữ thuần | `attachments = []` |
+| 4 | Xóa bình luận có ảnh trên Facebook | `attachments` về `[]` (xóa trắng như FR-048) |
+
 ## KT-POSTS-LIST — Danh sách bài viết (POSTS-LIST, feat-posts-list)
 Điều kiện: staging có ít nhất 1 kênh với vài bài (sau khi webhook/polling nhận bình luận); đăng nhập Owner và Staff.
 | # | Bước | Kết quả mong đợi |
@@ -591,3 +608,10 @@ Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB 
 | 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-content.int.test.ts` xanh |
 | 2 | Chạy `CF_LANE=b pnpm db:check-rls` | Không vi phạm |
 | 3 | Dùng tài khoản Staff ghi thử FAQ (qua test) | Bị chặn (42501); Staff đọc được |
+
+### KB-CHUNKING (FR-055/130/131; chưa có giao diện)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-chunks.int.test.ts` xanh (ghi nháp qua worker, tsv bỏ dấu, lọc hạn hiệu lực) |
+| 2 | `pnpm --filter @flow/shared exec vitest run src/kb-chunking.test.ts` và `pnpm --filter @flow/ai exec vitest run src/kb-indexing.test.ts` | Xanh; embedding chỉ là mock, không gọi mạng |

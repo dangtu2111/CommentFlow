@@ -74,6 +74,15 @@ export {
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
 export {
+  type DraftChunkState,
+  type DraftChunkWrite,
+  deleteDraftChunks,
+  listDraftChunkState,
+  refreshDraftChunkMeta,
+  upsertDraftChunks,
+  validChunkFilter,
+} from './queries/kb-chunks';
+export {
   createFaqItem,
   createPolicyItem,
   deleteFaqItem,

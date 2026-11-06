@@ -408,11 +408,8 @@ describe('FR-055 kb_chunks', () => {
     expect(res.rows[0]?.id).toBe(chunk);
   });
 
-  it('tsv full-text: GIN dùng được trên cột tsv do worker điền', async () => {
-    await run(
-      'system',
-      `UPDATE cf.kb_chunks SET tsv = to_tsvector('simple', 'ship hai ngay') WHERE id = '${chunk}'`,
-    );
+  it('tsv full-text: trigger kb_chunks_fill_search tự điền tsv từ content (QKS1)', async () => {
+    await run('system', `UPDATE cf.kb_chunks SET content = 'ship hai ngay' WHERE id = '${chunk}'`);
     const res = await db.withWorkspace(ws, (tx) =>
       tx.execute(
         sql.raw(`SELECT id FROM cf.kb_chunks WHERE tsv @@ websearch_to_tsquery('simple', 'ship')`),

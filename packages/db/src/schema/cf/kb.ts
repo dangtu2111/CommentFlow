@@ -30,7 +30,7 @@ export const halfvec1024 = customType<{ data: number[]; driverData: string }>({
   },
 });
 
-/** `tsvector` cho tìm kiếm toàn văn; trigger `kb_chunks_fill_search` điền theo `lang` (0037, docs/10 §3.4). */
+/** `tsvector` cho tìm kiếm toàn văn; trigger `kb_chunks_fill_search` điền theo `lang` (0038, docs/10 §3.4). */
 export const tsvector = customType<{ data: string }>({
   dataType() {
     return 'tsvector';

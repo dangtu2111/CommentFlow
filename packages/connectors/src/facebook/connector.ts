@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { z } from 'zod';
+import { facebookGraphAttachment, withAttachments } from '../attachments';
 import type { ConnectorCapabilities } from '../capabilities';
 import { DECLARED_CAPABILITIES } from '../declarations';
 import { isPlatformError, PlatformError, type PlatformErrorCode } from '../errors';
@@ -41,7 +42,8 @@ const DEFAULT_MAX_FEED_POSTS = 25;
 const GRAPH_ID = /^[0-9]{1,30}(_[0-9]{1,30}){0,2}$/;
 const PAGE_SIZE = 100;
 const MAX_RETRY_AFTER_SECONDS = 86_400;
-const COMMENT_FIELDS = 'id,message,created_time,from{id,name},parent{id}';
+const COMMENT_FIELDS =
+  'id,message,created_time,from{id,name},parent{id},attachment{type,url,media,target}';
 
 export type FacebookConnectorOptions = {
   tokenProvider: TokenProvider;
@@ -185,12 +187,20 @@ export function graphFailure(status: number, body: unknown, headers: Headers): P
   return fail('UNKNOWN', `facebook_http_${status}`);
 }
 
+const graphAttachmentSchema = z.object({
+  type: z.string().optional(),
+  url: z.string().optional(),
+  media: z.object({ image: z.object({ src: z.string().optional() }).optional() }).optional(),
+  target: z.object({ id: z.string().optional() }).optional(),
+});
+
 const commentNodeSchema = z.object({
   id: z.string().min(1),
   message: z.string().optional(),
   created_time: z.string(),
   from: z.object({ id: z.string().min(1), name: z.string().optional() }).optional(),
   parent: z.object({ id: z.string().min(1) }).optional(),
+  attachment: graphAttachmentSchema.optional(),
 });
 
 const pageSchema = z.object({
@@ -232,6 +242,7 @@ function toNormalized(
     authorExternalId: node.from?.id ?? '',
     ...(node.from?.name === undefined ? {} : { authorName: cleanText(node.from.name) }),
     text: cleanText(node.message ?? ''),
+    ...withAttachments(facebookGraphAttachment(node.attachment)),
     createdAt,
     // Chống vòng lặp (nguyên tắc #5): do chính Page viết. Thiếu `from` → không khẳng định được là của Page.
     isFromPage: node.from?.id === channel.externalId,

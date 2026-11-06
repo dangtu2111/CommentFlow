@@ -415,3 +415,36 @@ describe('FR-048 entry.time ngoài khoảng', () => {
     }
   });
 });
+
+describe('FR-143 tệp đính kèm của bình luận qua webhook', () => {
+  const IMG = 'https://scontent.example.invalid/a.jpg';
+  const parseOne = (overrides: Record<string, unknown>) => {
+    const [event] = parseMetaWebhook(webhookBody([commentChange(overrides)]));
+    if (!event || event.kind === 'comment_deleted') throw new Error('cần sự kiện bình luận');
+    return event;
+  };
+
+  it('FR-143 photo/video → attachments; chữ vẫn nguyên', () => {
+    const event = parseOne({ photo: IMG, video: 'https://v.invalid/v.mp4' });
+    expect(event.comment.attachments).toEqual([
+      { type: 'photo', url: IMG },
+      { type: 'video', url: 'https://v.invalid/v.mp4' },
+    ]);
+    expect(event.comment.text).toBe('Áo này còn size M không shop?');
+  });
+
+  it('FR-143 không có tệp → không có trường attachments; link http bị bỏ link nhưng giữ loại', () => {
+    expect(parseOne({}).comment.attachments).toBeUndefined();
+    expect(parseOne({ photo: 'http://e.invalid/a.jpg' }).comment.attachments).toEqual([
+      { type: 'photo' },
+    ]);
+  });
+
+  it('FR-143 khứ hồi serialize/deserialize giữ attachments; dữ liệu cũ không có trường vẫn đọc được', () => {
+    const event = parseOne({ photo: IMG });
+    const back = deserializeEvent(JSON.parse(JSON.stringify(serializeEvent(event))));
+    expect(back).toEqual(event);
+    const legacy = parseOne({});
+    expect(deserializeEvent(JSON.parse(JSON.stringify(serializeEvent(legacy))))).toEqual(legacy);
+  });
+});

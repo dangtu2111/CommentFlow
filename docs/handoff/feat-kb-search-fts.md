@@ -1,7 +1,7 @@
 # Bàn giao `feat-kb-search-fts` (KB-SEARCH-FTS) — claude
 
 ## Đã làm
-- Migration 0037: `kb_chunks.search_norm` + trigger `kb_chunks_fill_search` (điền `search_norm`, `tsv` theo `lang`), GIN trigram, `products.name_embedding` + GIN `search_text` (không HNSW — verifier-db), GRANT UPDATE (name_embedding).
+- Migration 0038: `kb_chunks.search_norm` + trigger `kb_chunks_fill_search` (điền `search_norm`, `tsv` theo `lang`), GIN trigram, `products.name_embedding` + GIN `search_text` (không HNSW — verifier-db), GRANT UPDATE (name_embedding).
 - `packages/db/src/queries/kb-search.ts`: `searchKbChunks`, `searchProducts`, `findProductMatch`, `getProductRevs`, `setProductNameEmbedding` (xuất ở `runtime.ts`).
 - `packages/shared/src/search.ts`: chuẩn hóa, `productSearchText`, RRF, `pickProductMatch`, `isProductCacheStale`.
 - `packages/ai/src/embedding/`: interface `Embedder` + bản fixture (chưa có bản LiteLLM).

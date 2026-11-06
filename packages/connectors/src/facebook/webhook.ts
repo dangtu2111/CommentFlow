@@ -1,5 +1,11 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
+import {
+  ATTACHMENT_TYPES,
+  normalizeAttachments,
+  webhookAttachments,
+  withAttachments,
+} from '../attachments';
 import type { NormalizedEvent, Platform } from '../types';
 
 /**
@@ -48,6 +54,8 @@ const changeValueSchema = z.object({
   parent_id: text().pipe(z.string().min(1)).optional(),
   from: z.object({ id: text().pipe(z.string().min(1)), name: text().optional() }),
   message: text().optional(),
+  photo: z.string().optional(),
+  video: z.string().optional(),
   created_time: z.number().int().nonnegative().max(MAX_UNIX_SECONDS),
 });
 
@@ -111,6 +119,7 @@ export function parseMetaWebhook(body: unknown): NormalizedEvent[] {
           authorExternalId: v.from.id,
           ...(v.from.name === undefined ? {} : { authorName: v.from.name }),
           text: v.message ?? '',
+          ...withAttachments(webhookAttachments(v)),
           createdAt: new Date(v.created_time * 1000),
           // Chống vòng lặp (docs/12 §1, nguyên tắc #5): do chính Page viết.
           isFromPage: v.from.id === entry.id,
@@ -147,6 +156,12 @@ export function eventHashOf(platform: Platform, event: NormalizedEvent): string 
   return createHash('sha256').update(parts.join('|')).digest('hex');
 }
 
+const storedAttachmentSchema = z.object({
+  type: z.enum(ATTACHMENT_TYPES),
+  url: z.string().optional(),
+  externalId: z.string().optional(),
+});
+
 const storedCommentSchema = z.object({
   externalId: z.string().min(1),
   postExternalId: z.string().min(1),
@@ -154,6 +169,7 @@ const storedCommentSchema = z.object({
   authorExternalId: z.string().min(1),
   authorName: z.string().optional(),
   text: z.string(),
+  attachments: z.array(storedAttachmentSchema).optional(),
   createdAt: z.iso.datetime(),
   isFromPage: z.boolean(),
 });
@@ -210,6 +226,7 @@ export function deserializeEvent(value: unknown): NormalizedEvent | null {
       authorExternalId: comment.authorExternalId,
       ...(comment.authorName === undefined ? {} : { authorName: comment.authorName }),
       text: comment.text,
+      ...withAttachments(normalizeAttachments(comment.attachments ?? [])),
       createdAt: new Date(comment.createdAt),
       isFromPage: comment.isFromPage,
     },

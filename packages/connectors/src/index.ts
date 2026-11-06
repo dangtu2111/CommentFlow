@@ -1,4 +1,11 @@
 export {
+  ATTACHMENT_TYPES,
+  type AttachmentType,
+  type CommentAttachment,
+  MAX_ATTACHMENTS,
+  normalizeAttachments,
+} from './attachments';
+export {
   ACTIONS,
   type ActionCapability,
   type ActionContext,

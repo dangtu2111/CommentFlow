@@ -4,7 +4,7 @@
 
 Mã gap matrix: `KB-SEARCH-FTS` (+ `PRODUCTS-SEARCH-COLUMNS`) · Spec: FR-057, FR-127, FR-135; `docs/10` §5, §5.1, §5.3.
 
-**Tóm tắt:** Làm lớp tìm kiếm: (1) đoạn kiến thức tự có chỉ mục toàn văn theo ngôn ngữ (`simple`+`unaccent` cho vi, `english` cho en) và chỉ mục `pg_trgm` chịu gõ sai, truy vấn trộn vector + toàn văn + trigram bằng RRF (k=60) có lọc workspace/phiên bản/ngày hiệu lực/ngôn ngữ/sản phẩm; (2) tìm sản phẩm gần đúng (không dấu, gõ sai, vector tên) với ngưỡng — dưới ngưỡng thì không chọn; (3) cache không trả giá cũ: so `product_revs` đã lưu với `products.rev` hiện tại. Embedding đi qua interface `Embedder` + bản fixture (chưa gọi dịch vụ thật). Rủi ro: migration 0037 (làn b), trigger điền `tsv`.
+**Tóm tắt:** Làm lớp tìm kiếm: (1) đoạn kiến thức tự có chỉ mục toàn văn theo ngôn ngữ (`simple`+`unaccent` cho vi, `english` cho en) và chỉ mục `pg_trgm` chịu gõ sai, truy vấn trộn vector + toàn văn + trigram bằng RRF (k=60) có lọc workspace/phiên bản/ngày hiệu lực/ngôn ngữ/sản phẩm; (2) tìm sản phẩm gần đúng (không dấu, gõ sai, vector tên) với ngưỡng — dưới ngưỡng thì không chọn; (3) cache không trả giá cũ: so `product_revs` đã lưu với `products.rev` hiện tại. Embedding đi qua interface `Embedder` + bản fixture (chưa gọi dịch vụ thật). Rủi ro: migration 0038 (làn b), trigger điền `tsv`.
 
 ## Điểm chưa rõ
 
@@ -31,14 +31,14 @@ Không có (quyết định tự chọn ghi ở `QUYET_DINH_CHO_DUYET.md` mã QK
 
 - `packages/shared/src/search.ts` (+ `search.test.ts`), `index.ts` — chuẩn hóa tìm kiếm, RRF, chọn sản phẩm theo ngưỡng, kiểm cache theo `product_revs`.
 - `packages/ai/src/embedding/{embedder,fixture-embedder}.ts` (+ test), `index.ts` — interface + bản fixture.
-- `packages/db/migrations/0037_kb_search_fts.sql`, `meta/` — cột `products.name_embedding`, `kb_chunks.search_norm`, trigger điền `tsv`, chỉ mục GIN/HNSW.
+- `packages/db/migrations/0038_kb_search_fts.sql`, `meta/` — cột `products.name_embedding`, `kb_chunks.search_norm`, trigger điền `tsv`, chỉ mục GIN/HNSW.
 - `packages/db/src/schema/cf/{products,kb}.ts` — cột/chỉ mục Drizzle.
 - `packages/db/src/queries/kb-search.ts`, `runtime.ts` — `searchKbChunks`, `searchProducts`, `getProductRevs`, `setProductNameEmbedding`.
 - `packages/db/tests/kb-search.int.test.ts`; docs: codemap, gap-matrix, MASTER, KIEM_TRA_TAY, QUYET_DINH, CAN_BAN_CUNG_CAP, docs/10, handoff.
 
 ## Migration
 
-`0037_kb_search_fts.sql` (làn b). Đường lùi: `DROP TRIGGER kb_chunks_fill_search ON cf.kb_chunks; DROP FUNCTION cf.kb_chunks_fill_search(); ALTER TABLE cf.kb_chunks DROP COLUMN search_norm; ALTER TABLE cf.products DROP COLUMN name_embedding;` (chỉ mất dữ liệu dẫn xuất, tính lại được).
+`0038_kb_search_fts.sql` (làn b). Đường lùi: `DROP TRIGGER kb_chunks_fill_search ON cf.kb_chunks; DROP FUNCTION cf.kb_chunks_fill_search(); ALTER TABLE cf.kb_chunks DROP COLUMN search_norm; ALTER TABLE cf.products DROP COLUMN name_embedding;` (chỉ mất dữ liệu dẫn xuất, tính lại được).
 
 ## Test viết trước
 
