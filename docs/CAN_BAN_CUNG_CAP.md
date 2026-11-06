@@ -245,3 +245,6 @@ Bạn cần cung cấp để thay các khối `[MẪU]` ở `/dev/ui/{landing,pr
 2. Văn bản Chính sách quyền riêng tư, Điều khoản dịch vụ, DPA đã được luật sư duyệt.
 3. Giá và hạn mức gói công khai (lấy từ bảng `plans`) + nội dung FAQ.
 4. URL Data Deletion Callback đăng ký với Meta (sau khi có tên miền, Q6).
+
+## 2x. `WORKSPACE-DELETE` (FR-094, US-071) — chỉ cần quyết định chính sách, chưa cần tài nguyên ngoài
+Phần dữ liệu + job xóa workspace (migration 0055) đã xong, chưa nối giao diện nên chưa ảnh hưởng người dùng; cờ `WORKSPACE_DELETE_ENABLED` (worker) mặc định TẮT. Bạn cần: (1) xác nhận thời gian chờ 7 ngày và cửa sổ xác nhận 15 phút (Q-WSD1; muốn đổi thì báo, sửa bằng migration mới); (2) quyết định có bắt buộc xuất dữ liệu trước khi xóa không (`DATA-EXPORT` chưa làm); (3) chỉ bật cờ ở staging/production khi giao diện đã nối và đã thử trên workspace thử — bật cờ = xóa HẾT dữ liệu workspace đã quá hạn chờ, không hoàn tác. Thu hồi webhook/token Meta khi xóa là việc sau (cần Page thử). Kiểm tay mã KT-WSD.

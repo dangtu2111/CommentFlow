@@ -4,3 +4,4 @@ export * from './common';
 export * from './invoices';
 export * from './platform';
 export * from './tenancy';
+export * from './workspace-deletion';
