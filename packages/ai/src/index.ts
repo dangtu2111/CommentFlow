@@ -108,6 +108,31 @@ export {
 } from './draft/fixture-drafter';
 export { createFixtureEmbedder, FIXTURE_EMBEDDING_MODEL } from './embedding/fixture-embedder';
 export {
+  type ActiveHours,
+  ALWAYS_BLOCKED_LABELS,
+  AUTO_SEND_OUTCOMES,
+  AUTOMATION_MODES,
+  type AutomationMode,
+  type AutoSendDecision,
+  type AutoSendInput,
+  type AutoSendOutcome,
+  activeHoursSchema,
+  autoSendInputSchema,
+  DEFAULT_THRESHOLD,
+  decideAutoSend,
+  GATE_COUNT,
+  GATE_LABELS,
+  GATE_REASONS,
+  type GateReason,
+  isWithinActiveHours,
+  localDayMinute,
+  MESSAGE_WINDOW_HOURS,
+  READINESS_MIN_PERCENT,
+  REPEAT_HUMAN_THRESHOLD,
+  readAutoSendInput,
+  THRESHOLD_FLOOR,
+} from './gate/auto-send-gate';
+export {
   checkGuardMoney,
   extractClaims,
   type GuardClaim,

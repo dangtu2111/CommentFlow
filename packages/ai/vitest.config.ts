@@ -20,6 +20,7 @@ export default defineConfig({
         'src/guard-money.ts': { branches: 95 },
         'src/confidence/*.ts': { branches: 95 },
         'src/decide/*.ts': { branches: 95 },
+        'src/gate/*.ts': { branches: 95 },
       },
     },
   },
