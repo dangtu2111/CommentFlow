@@ -1,0 +1,1 @@
+- 06/11 (KB-SHOP-POLICY-FAQ, QKB2): `docs/10_Database_Design.md` §3.3 (`brand_voice` ràng buộc), §3.4 (`faq_items` + thêm `shop_profiles`, `policy_items`) và §4 (quyền bốn bảng, migration 0036).

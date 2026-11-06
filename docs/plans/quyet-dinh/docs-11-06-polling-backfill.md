@@ -1,0 +1,1 @@
+- 06/11 (POLLING-BACKFILL, QP1–QP3): `docs/05` FR-023 — ghi trần bài mỗi lần, cửa sổ 7 ngày + chồng 15 phút, chờ webhook 5 phút.

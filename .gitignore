@@ -29,6 +29,9 @@ volumes/
 # Cấu hình cá nhân của Claude Code (mỗi máy một bản)
 .claude/settings.local.json
 
+# Trạng thái chạy của bộ điều phối (log, cảnh báo, dấu .done/.stuck)
+.orchestrator/
+
 # Hệ điều hành / editor
 .DS_Store
 Thumbs.db

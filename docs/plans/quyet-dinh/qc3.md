@@ -1,0 +1,1 @@
+| QC3 | 06/11 | BLOCKED 368 | Chỉ ghi log cảnh báo (mã + id kênh) qua hook `onBlocked`; KHÔNG ghi `send_suspended_until` (cột chỉ Admin/DEFINER ghi, cần migration — làn b/`SEND-SUSPEND-ADMIN`) | Làn c không có quyền migration | Thêm hàm DEFINER ở `SEND-SUSPEND-ADMIN` rồi gọi trong hook |

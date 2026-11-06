@@ -186,6 +186,8 @@ Bộ câu kiểm thử chạy qua pipeline Thử AI bằng mô phỏng (không L
 ## 2o. `KB-SAMPLES` (FR-132) — không cần tài nguyên ngoài
 Câu mẫu của shop chỉ là mã thuần + kho trong bộ nhớ, không khóa/LLM/dịch vụ ngoài. Lưu thật cần bảng `kb_answer_examples` (migration làn b, `KB-SAMPLES-PERSIST`) và embedding ở 2g. Bạn không phải làm gì.
 
+## 2r. `DA-HANDOFF-RULES` (FR-143) — không cần tài nguyên ngoài
+Quy tắc chuyển người cho ảnh/video/sticker kèm chữ là mã thuần, không khóa/LLM/dịch vụ ngoài, không biến môi trường mới. Đọc nội dung ảnh thật (`ATTACH-VISION`, GĐ5, cờ `cf.vision`) cần model đọc ảnh — làm sau. Bạn không phải làm gì.
 ## 2p. `AUTO-MATRIX-UI` (FR-070/071) — không cần tài nguyên ngoài
 Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, không cần khóa hay dịch vụ ngoài. Cấu hình chưa áp dụng cho việc tự gửi thật (chờ nối pipeline). Bạn **không** phải làm gì.
 
@@ -197,3 +199,6 @@ Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" �
 
 ## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
 Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
+
+## 2s. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
+Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm dựng `cache` theo workspace; cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi dịch vụ thật. Để bật thật (`SEMANTIC-CACHE`, GĐ5) bạn cần: (1) một model embedding đăng ký trong LiteLLM, tên đặt ở `SEMANTIC_CACHE_EMBEDDING_MODEL` (đặt trong `config.yaml` trên máy ảo); (2) Redis có module RediSearch (Redis Stack) cho `redis-semantic`; (3) tự gộp khối `litellm_settings` của file mẫu vào cấu hình LiteLLM trên máy ảo.
