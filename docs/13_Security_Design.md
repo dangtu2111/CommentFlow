@@ -102,7 +102,7 @@ Xoay khóa: hỗ trợ nhiều `key_version`; job mã hóa lại dần.
 - Chống XSS: React escape mặc định; không `dangerouslySetInnerHTML` với nội dung khách; CSP chặt.
 - CSRF token cho phương thức ghi; kiểm `Origin`.
 - Header: CSP, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`.
-- Upload Excel/CSV: giới hạn kích thước (10 MB), kiểm MIME, parse ở worker, không thực thi công thức/macro.
+- Upload Excel/CSV: giới hạn kích thước (10 MB), kiểm MIME, parse ở worker, không thực thi công thức/macro. (Tạm thời parse đồng bộ trong web với giới hạn cứng 10 MB/5.000 dòng/50 cột, giải nén ≤ 50 MB, kiểm đuôi + chữ ký file, ô công thức bị từ chối — Q-KBIX1; chuyển sang worker ở `KB-IMPORT-EXCEL-WORKER`.)
 - Crawl URL: chặn SSRF — chỉ http/https, phân giải DNS rồi chặn IP nội bộ/loopback/metadata, giới hạn redirect.
 
 ## 7. An toàn AI
