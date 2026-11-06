@@ -1,0 +1,1 @@
+| Báo cáo + Landing/Bảng giá + Quyền riêng tư + Điều khoản UI (UI-FIDELITY-REPORTS-LEGAL, QRL1) | Có | `styles/reports-legal.css`, `components/public/public-shell.tsx`, `app/dev/ui/bao-cao`, `landing`, `privacy`, `terms` (`page.tsx`) | trang mẫu dev [MẪU] (404 ở production); khung công khai dùng chung; trang thật chờ `REPORTS`, `PUBLIC-PAGES` |

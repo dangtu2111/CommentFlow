@@ -43,6 +43,7 @@
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 
 ---
 
@@ -1053,6 +1054,18 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
 | 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |
 | 4 | Mở `/dev/ui/automation`, `/dev/ui/spam-rules`, `/dev/ui/leads` (bản dev). | Ô chế độ có màu Tự động/Chạy thử/Tắt; mọi nội dung mẫu có nhãn [MẪU]; production trả 404. Đăng nhập Owner mở `/app/automation`, `/app/spam-rules`: bố cục thẻ, Lưu vẫn hoạt động. |
+
+## KT-URL — Giao diện Báo cáo, Landing, Quyền riêng tư, Điều khoản (UI-FIDELITY-REPORTS-LEGAL, feat-ui-reports-legal)
+
+> Chỉ đổi giao diện, không đổi logic; trang mẫu dev. / UI only; dev sample pages.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy web dev, mở /dev/ui/bao-cao ở 1440px | Đầu trang, 4 thẻ KPI, biểu đồ cột, phân bố ý định, bảng top bài viết, hiệu suất nhân viên; mọi số có nhãn [MẪU]. |
+| 2 | Mở /dev/ui/landing, /dev/ui/privacy, /dev/ui/terms | Khung đầu/chân trang chung; không có huy hiệu "Meta Tech Partner", số shop, nút Google/Facebook; nội dung pháp lý ghi [MẪU]. |
+| 3 | Thu cửa sổ còn 390px | Không cuộn ngang; mục lục Điều khoản xếp lên trên. |
+| 4 | Chế độ tối của hệ điều hành | Chữ vẫn đọc được. |
+| 5 | Chạy bản production (NODE_ENV=production) | Bốn route /dev/ui/* trả 404. |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 
