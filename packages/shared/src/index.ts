@@ -50,6 +50,19 @@ export {
   shopProfileSchema,
   VOICE_LANGS,
 } from './kb-content';
+export {
+  type BurstComment,
+  type BurstGroup,
+  burstKey,
+  clampMergeWindowSeconds,
+  DEFAULT_MERGE_WINDOW_SECONDS,
+  isBurstReady,
+  MAX_BURST_SIZE,
+  MAX_MERGE_WINDOW_SECONDS,
+  MIN_MERGE_WINDOW_SECONDS,
+  mergeBurstText,
+  planMergeBurst,
+} from './merge-burst';
 export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
 export {
   CARD_VALUE_MAX,
@@ -83,6 +96,12 @@ export {
   SHOP_PRONOUNS,
   type ShopPronoun,
 } from './reply-style';
+export {
+  type RuleFilterInput,
+  type RuleFilterReason,
+  type RuleFilterResult,
+  ruleFilter,
+} from './rule-filter';
 export {
   isProductCacheStale,
   normalizeSearchText,
