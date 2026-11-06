@@ -1,8 +1,9 @@
 import { getTranslations } from 'next-intl/server';
-import { AutomationForm } from '../../../../components/automation/automation-form';
+import { AutomationView } from '../../../../components/automation/automation-view';
 import { Banner } from '../../../../components/ui/banner';
-import { PageHeader } from '../../../../components/ui/page-header';
 import { automationFormDefaults } from '../../../../lib/automation-form';
+import { AUTOMATION_SAMPLE_METRICS } from '../../../../lib/automation-sample';
+import { showSampleData } from '../../../../lib/sample-data';
 import { automationSettings } from '../../../../server/automation-settings';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -52,15 +53,22 @@ export default async function AutomationPage({ searchParams }: { searchParams: S
     );
   }
 
+  const sample = showSampleData();
   return (
     <main className="app-page app-page-wide stack">
-      <header className="auto-header">
-        <PageHeader title={t('title')} subtitle={t('subtitle')} />
-      </header>
-      <Banner variant="warning">{t('notWired')}</Banner>
-      {params.saved === '1' ? <Banner variant="success">{t('notice.saved')}</Banner> : null}
-      {error ? <Banner variant="danger">{t(`error.${error}`)}</Banner> : null}
-      <AutomationForm channels={view.channels} defaults={automationFormDefaults(view.config)} />
+      <AutomationView
+        channels={view.channels}
+        defaults={automationFormDefaults(view.config)}
+        metrics={sample ? AUTOMATION_SAMPLE_METRICS : null}
+        notices={
+          <>
+            <Banner variant="warning">{t('notWired')}</Banner>
+            {sample ? <Banner variant="info">{t('sampleBanner')}</Banner> : null}
+            {params.saved === '1' ? <Banner variant="success">{t('notice.saved')}</Banner> : null}
+            {error ? <Banner variant="danger">{t(`error.${error}`)}</Banner> : null}
+          </>
+        }
+      />
     </main>
   );
 }

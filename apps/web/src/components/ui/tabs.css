@@ -82,3 +82,63 @@
   color: var(--color-text);
   font-weight: var(--weight-semibold);
 }
+
+/* Biến thể toolbar: nền nhạt, tab có biểu tượng + huy hiệu (Stitch: bg-surface-container-low p-1.5 rounded-xl). */
+.toolbar-tabs {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  background: var(--selected-bg);
+}
+
+.toolbar-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.toolbar-tab:hover:not([aria-disabled="true"]) {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.toolbar-tab[aria-current="page"] {
+  background: var(--color-surface);
+  color: var(--link);
+  box-shadow: 0 1px 2px rgb(15 28 36 / 12%);
+}
+
+.toolbar-tab[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.tab-icon {
+  display: inline-flex;
+}
+
+.tab-badge {
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+}
+
+.toolbar-tab[aria-current="page"] .tab-badge {
+  background: var(--action-bg);
+  color: var(--action-fg);
+}

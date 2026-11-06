@@ -22,6 +22,57 @@
   line-height: 1.2;
 }
 
+/* Đầu trang có ô biểu tượng/hành động (Stitch: headline-md 22px). */
+.page-header-rich .page-title,
+.auto-top .page-title {
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: -0.015em;
+}
+
+.page-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page-header-rich {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.page-header-main {
+  display: flex;
+  flex: 1 1 16rem;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.page-header-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--selected-bg);
+  color: var(--action-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .page-subtitle {
   color: var(--color-text-muted);
   max-width: 70ch;

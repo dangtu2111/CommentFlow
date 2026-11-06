@@ -1,36 +1,29 @@
-import { DEFAULT_AUTOMATION_CONFIG } from '@flow/ai';
 import { notFound } from 'next/navigation';
-import { AutomationForm } from '../../../../components/automation/automation-form';
-import { automationFormDefaults } from '../../../../lib/automation-form';
-
-/** Mọi chữ ở trang mẫu dev đều gắn "[MẪU]" (không đi qua i18n vì không phải giao diện thật). */
-const SAMPLE = {
-  banner: '[MẪU] Kênh mẫu, cấu hình mặc định — không lưu được, không phải dữ liệu thật.',
-} as const;
-
-const SAMPLE_CHANNELS = [
-  { id: 'mau-fb', name: '[MẪU] Trang Facebook', platform: 'facebook' },
-  { id: 'mau-ig', name: '[MẪU] Instagram', platform: 'instagram' },
-] as const;
-
-const SAMPLE_DEFAULTS = automationFormDefaults({
-  ...DEFAULT_AUTOMATION_CONFIG,
-  rules: [
-    { channelId: 'mau-fb', target: 'comment', label: 'price', mode: 'auto' },
-    { channelId: 'mau-fb', target: 'comment', label: 'advice', mode: 'shadow' },
-  ],
-});
+import { getTranslations } from 'next-intl/server';
+import { AutomationView } from '../../../../components/automation/automation-view';
+import { Banner } from '../../../../components/ui/banner';
+import {
+  AUTOMATION_SAMPLE_CHANNELS,
+  AUTOMATION_SAMPLE_DEFAULTS,
+  AUTOMATION_SAMPLE_METRICS,
+} from '../../../../lib/automation-sample';
 
 /**
- * Xem giao diện Tự động hóa (design/stitch/automation.png) với kênh MẪU — CHỈ khi `NODE_ENV !== 'production'`
- * (UI-first 06/11/2026, QAL1). Dùng đúng `AutomationForm` thật; nút Lưu ở đây không có hiệu lực.
+ * Xem giao diện Tự động hóa (design/stitch/automation.html) với kênh và số liệu MẪU `[MẪU]` — CHỈ khi
+ * `NODE_ENV !== 'production'` (UI-first 06/11/2026). Dùng đúng `AutomationView` như trang thật; nút Lưu ở đây
+ * không có hiệu lực (không có phiên Owner).
  */
-export default function DevAutomationPage() {
+export default async function DevAutomationPage() {
   if (process.env.NODE_ENV === 'production') notFound();
+  const t = await getTranslations('automation');
   return (
     <main className="app-page app-page-wide stack">
-      <p className="badge badge-off">{SAMPLE.banner}</p>
-      <AutomationForm channels={[...SAMPLE_CHANNELS]} defaults={SAMPLE_DEFAULTS} />
+      <AutomationView
+        channels={AUTOMATION_SAMPLE_CHANNELS}
+        defaults={AUTOMATION_SAMPLE_DEFAULTS}
+        metrics={AUTOMATION_SAMPLE_METRICS}
+        notices={<Banner variant="info">{t('sampleBanner')}</Banner>}
+      />
     </main>
   );
 }

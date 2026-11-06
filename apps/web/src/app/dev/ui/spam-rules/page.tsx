@@ -1,50 +1,26 @@
 import { notFound } from 'next/navigation';
-import { SpamRuleBuilder } from '../../../../components/spam-rules/spam-rule-builder';
+import { getTranslations } from 'next-intl/server';
+import { parseSpamView, SpamRulesView } from '../../../../components/spam-rules/spam-rules-view';
+import { Banner } from '../../../../components/ui/banner';
 
-/** Mọi chữ ở trang mẫu dev đều gắn "[MẪU]" (không đi qua i18n vì không phải giao diện thật). */
-const SAMPLE = {
-  banner:
-    '[MẪU] Dữ liệu mẫu — không phải số liệu thật. Danh sách quy tắc chờ giao diện nối bảng `rules`.',
-  title: '[MẪU] Quy tắc spam',
-  list: '[MẪU] Quy tắc đang chạy',
-  on: '[MẪU] Đang bật',
-  off: '[MẪU] Tắt',
-} as const;
-
-const RULES = [
-  {
-    name: '[MẪU] Chặn số điện thoại lạ',
-    meta: '[MẪU] Loại: số điện thoại · Hành động: đánh dấu',
-    on: true,
-  },
-  { name: '[MẪU] Chặn link lạ', meta: '[MẪU] Loại: mẫu regex · Hành động: bỏ qua', on: true },
-  { name: '[MẪU] Từ khóa xúc phạm', meta: '[MẪU] Loại: từ khóa · Hành động: đánh dấu', on: false },
-] as const;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /**
- * Giao diện Quy tắc spam (design/stitch/spam-rules.png) với DỮ LIỆU MẪU — CHỈ khi `NODE_ENV !== 'production'`
- * (UI-first 06/11/2026, QAL1). Danh sách là mẫu không chức năng; trình tạo quy tắc là thành phần thật.
+ * Xem giao diện Quy tắc spam (design/stitch/spam-rules.html) với DỮ LIỆU MẪU `[MẪU]` — CHỈ khi
+ * `NODE_ENV !== 'production'` (UI-first 06/11/2026). Dùng đúng `SpamRulesView` như trang thật; `?view=logs` là
+ * khung nhìn "Bình luận đã bị ẩn". Không có phiên Owner nên Lưu/Xem trước ở đây không có hiệu lực.
  */
-export default function DevSpamRulesPage() {
+export default async function DevSpamRulesPage({ searchParams }: { searchParams: SearchParams }) {
   if (process.env.NODE_ENV === 'production') notFound();
+  const [t, params] = await Promise.all([getTranslations('spamRules'), searchParams]);
   return (
-    <main className="app-page app-page-wide spam-page">
-      <p className="badge badge-off">{SAMPLE.banner}</p>
-      <h1 className="auth-title">{SAMPLE.title}</h1>
-      <ul className="spam-rule-list" aria-label={SAMPLE.list}>
-        {RULES.map((rule) => (
-          <li key={rule.name} className="spam-rule-item">
-            <div>
-              <h2 className="spam-rule-title">{rule.name}</h2>
-              <p className="spam-rule-meta">{rule.meta}</p>
-            </div>
-            <span className={rule.on ? 'badge badge-on' : 'badge badge-off'}>
-              {rule.on ? SAMPLE.on : SAMPLE.off}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <SpamRuleBuilder />
+    <main className="app-page app-page-wide spam-page stack">
+      <SpamRulesView
+        view={parseSpamView(params.view)}
+        sample
+        basePath="/dev/ui/spam-rules"
+        notices={<Banner variant="info">{t('sampleBanner')}</Banner>}
+      />
     </main>
   );
 }

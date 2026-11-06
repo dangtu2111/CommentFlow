@@ -1,0 +1,26 @@
+/* Progress — thanh tiến độ nhiều đoạn. Chỉ dùng token từ styles/tokens.css. */
+
+.progress {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.progress.is-thin {
+  height: 6px;
+}
+
+.progress-bar {
+  height: 100%;
+}
+
+.progress-primary {
+  background: var(--action-bg);
+}
+
+.progress-warm {
+  background: var(--color-warning);
+}

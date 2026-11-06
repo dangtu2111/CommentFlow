@@ -116,6 +116,48 @@
   color: var(--color-warning);
 }
 
+.chip-solid,
+.chip-accent,
+.chip-warm,
+.chip-danger,
+.chip-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--weight-semibold);
+}
+
+.chip-solid {
+  border-color: var(--action-bg);
+  background: var(--action-bg);
+  color: var(--action-fg);
+}
+
+.chip-accent {
+  background: var(--color-ai-50);
+  border-color: var(--color-ai-300);
+  color: var(--color-ai-600);
+}
+
+.chip-warm {
+  background: color-mix(in srgb, var(--color-warning) 14%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-warning) 40%, var(--color-surface));
+  color: var(--color-warning);
+}
+
+.chip-danger {
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-surface));
+  color: var(--color-danger);
+}
+
+.chip-locked {
+  background: var(--color-bg);
+  border-color: transparent;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+}
+
 .chip-tone-reply {
   background: var(--color-ai-50);
   border-color: var(--color-ai-300);

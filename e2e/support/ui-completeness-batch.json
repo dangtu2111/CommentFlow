@@ -1,0 +1,16 @@
+[
+  { "slug": "auth-login-register", "routes": ["/login", "/register"] },
+  { "slug": "comments", "routes": ["/dev/ui/comments"] },
+  { "slug": "knowledge-base", "routes": ["/dev/ui/kb"] },
+  { "slug": "posts", "routes": ["/dev/ui/kb-posts"] },
+  { "slug": "settings-security", "routes": ["/dev/ui/settings"] },
+  { "slug": "settings-billing", "routes": ["/dev/ui/settings-billing"] },
+  { "slug": "settings-workspace-members", "routes": ["/dev/ui/members"] },
+  { "slug": "messages", "routes": ["/dev/ui/messages"] },
+  { "slug": "reports", "routes": ["/dev/ui/bao-cao"] },
+  { "slug": "activity-log", "routes": ["/dev/ui/activity"] },
+  { "slug": "leads", "routes": ["/dev/ui/leads"] },
+  { "slug": "privacy-data-deletion", "routes": ["/dev/ui/privacy"] },
+  { "slug": "terms-dpa", "routes": ["/dev/ui/terms"] },
+  { "slug": "landing-pricing", "routes": ["/dev/ui/landing"] }
+]
