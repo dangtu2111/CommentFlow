@@ -18,12 +18,12 @@ export async function LeadsView({
   const total = LEAD_STAGES.reduce((sum, stage) => sum + counts[stage], 0);
   return (
     <>
-      <div className="info-tiles" aria-label={t('kpi.label')}>
+      <section className="info-tiles" aria-label={t('kpi.label')}>
         <Stat label={t('kpi.total')} value={total} />
         {LEAD_STAGES.map((stage) => (
           <Stat key={stage} label={t(`stages.${stage}`)} value={counts[stage]} />
         ))}
-      </div>
+      </section>
       {total === 0 ? (
         <Banner>
           <strong>{t('empty.title')}</strong> {t('empty.body')}

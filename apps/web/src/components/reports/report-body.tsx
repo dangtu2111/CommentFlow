@@ -50,7 +50,7 @@ export async function ReportBody({ report, truncated }: { report: Report; trunca
   return (
     <>
       {truncated ? <Banner variant="warning">{t('truncated')}</Banner> : null}
-      <div className="info-tiles" aria-label={t('kpi.label')}>
+      <section className="info-tiles" aria-label={t('kpi.label')}>
         <Stat
           label={personal ? t('kpi.answered') : t('kpi.received')}
           value={personal ? report.answered : report.received}
@@ -72,7 +72,7 @@ export async function ReportBody({ report, truncated }: { report: Report; trunca
             noteOk
           />
         )}
-      </div>
+      </section>
       <Card aria-labelledby={HOURLY_ID}>
         <SectionHead
           id={HOURLY_ID}

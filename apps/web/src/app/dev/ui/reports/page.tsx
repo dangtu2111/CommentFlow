@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation';
 import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
 import { ReportBody, ReportHead } from '../../../../components/reports/report-body';
 
-const HOURLY = [2, 1, 0, 0, 1, 3, 8, 21, 34, 41, 33, 27, 22, 25, 29, 31, 26, 30, 38, 44, 47, 36, 18, 7];
+const HOURLY = [
+  2, 1, 0, 0, 1, 3, 8, 21, 34, 41, 33, 27, 22, 25, 29, 31, 26, 30, 38, 44, 47, 36, 18, 7,
+];
 
 const REPORT: Report = {
   scope: 'workspace',

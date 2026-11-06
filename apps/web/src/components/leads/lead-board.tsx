@@ -1,9 +1,9 @@
-import { isLocale, type LeadStage } from '@flow/shared';
 import type { LeadRow } from '@flow/db/runtime';
+import { isLocale, type LeadStage } from '@flow/shared';
 import { Mail, Phone, StickyNote } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { groupLeadsByStage, LEAD_STAGES, leadInitials, maskedPhone } from '../../lib/lead-view';
 import { formatRelativeTime } from '../../lib/inbox-format';
+import { groupLeadsByStage, LEAD_STAGES, leadInitials, maskedPhone } from '../../lib/lead-view';
 import { Avatar } from '../ui/avatar';
 import { Chip } from '../ui/chip';
 
