@@ -15,6 +15,24 @@
     "language": {
       "title": "Interface language",
       "body": "Applies to your whole interface on this device."
+    },
+    "replyLanguage": {
+      "title": "AI reply language",
+      "body": "Choose the language the AI uses when drafting replies for each channel. \"Match customer\" replies in the customer's language.",
+      "empty": "No channels connected yet.",
+      "save": "Save",
+      "option": {
+        "auto": "Match customer",
+        "vi": "Tiếng Việt",
+        "en": "English"
+      },
+      "notice": {
+        "saved": "Reply language saved.",
+        "not_found": "Channel not found.",
+        "invalid_language": "Invalid language.",
+        "unavailable": "Could not save, please try again."
+      },
+      "addressSoon": "How the shop refers to itself and addresses customers will be set in Brand voice (coming soon)."
     }
   },
   "auth": {

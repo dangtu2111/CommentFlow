@@ -15,6 +15,24 @@
     "language": {
       "title": "Ngôn ngữ giao diện",
       "body": "Áp dụng cho toàn bộ giao diện của bạn trên thiết bị này."
+    },
+    "replyLanguage": {
+      "title": "Ngôn ngữ trả lời của AI",
+      "body": "Chọn ngôn ngữ AI dùng khi soạn trả lời cho từng kênh. \"Theo khách\" là trả lời cùng ngôn ngữ với khách.",
+      "empty": "Chưa có kênh nào được kết nối.",
+      "save": "Lưu",
+      "option": {
+        "auto": "Theo khách",
+        "vi": "Tiếng Việt",
+        "en": "English"
+      },
+      "notice": {
+        "saved": "Đã lưu ngôn ngữ trả lời.",
+        "not_found": "Không tìm thấy kênh này.",
+        "invalid_language": "Ngôn ngữ không hợp lệ.",
+        "unavailable": "Chưa lưu được, vui lòng thử lại."
+      },
+      "addressSoon": "Cách xưng hô của shop và cách gọi khách sẽ được cài ở phần Giọng văn (sắp có)."
     }
   },
   "auth": {
