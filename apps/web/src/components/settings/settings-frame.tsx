@@ -1,4 +1,4 @@
-import { Link2, ShieldCheck, Users } from 'lucide-react';
+import { Bell, CreditCard, Database, Link2, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -9,7 +9,14 @@ import {
   settingsNavFor,
 } from '../../lib/settings-nav';
 
-const ICONS = { channels: Link2, members: Users, security: ShieldCheck } as const;
+const ICONS = {
+  channels: Link2,
+  members: Users,
+  billing: CreditCard,
+  notifications: Bell,
+  privacy: Database,
+  security: ShieldCheck,
+} as const;
 
 /**
  * Khung trang Cài đặt (design/stitch/settings-security.png): đường dẫn + cột trái "CẤU HÌNH WORKSPACE" + nội dung.

@@ -53,6 +53,7 @@
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
+| KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
 
 ---
 
@@ -1131,7 +1132,7 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 
 | # | Bước / Step | Kết quả mong đợi / Expected |
 |---|---|---|
-| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); không có mục Gói/Thông báo/Quyền riêng tư |
+| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); có thêm Gói & Thanh toán, Thông báo, Dữ liệu & Quyền riêng tư (xem KT-USP1) |
 | 2 | Bấm Kênh rồi Thành viên ở cột trái | Cùng khung, mục tương ứng được tô; không còn thanh tab phía trên |
 | 3 | Đăng nhập Staff, mở /app/settings | Cột trái chỉ có Tài khoản & Bảo mật |
 | 4 | Bật 2FA xong, bấm "Tôi đã lưu các mã này" | Hiện banner xanh "Kích hoạt xác thực 2 bước thành công"; tải lại trang → banner biến mất |
@@ -1160,6 +1161,18 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 3 | Thu cửa sổ còn 390px | Không cuộn ngang; mục lục Điều khoản xếp lên trên. |
 | 4 | Chế độ tối của hệ điều hành | Chữ vẫn đọc được. |
 | 5 | Chạy bản production (NODE_ENV=production) | Bốn route /dev/ui/* trả 404. |
+
+## KT-USP1 — Trang con Cài đặt (UI-FIDELITY-SETTINGS-PAGES, feat-ui-settings-pages)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Đăng nhập Owner, mở /app/settings, bấm "Gói & Thanh toán" | Trang "Quản lý Gói & Cước phí": thẻ "Gói hiện tại" nói chưa có thông tin gói; đồng hồ lượt AI; bảng so sánh Starter/Growth/Business + mua thêm; hóa đơn thật của workspace (hoặc "Chưa có hóa đơn nào") |
+| 2 | Bấm các nút Chọn gói / Mua thêm / Thay đổi chu kỳ | Đều tắt, ghi "Sắp có"; không có thanh toán nào xảy ra |
+| 3 | Bấm "Dữ liệu & Quyền riêng tư", bấm "Yêu cầu xuất dữ liệu" | Quay lại trang với thông báo "chưa mở", không dữ liệu nào đổi |
+| 4 | Ở khối Xóa workspace gõ sai tên rồi gửi; sau đó gõ đúng tên rồi gửi | Sai → "Tên workspace nhập chưa đúng"; đúng → "chưa mở"; workspace vẫn nguyên |
+| 5 | Mở "Thông báo" | Danh sách loại sự kiện, mỗi mục "Sắp có" |
+| 6 | Đăng nhập Staff | Cột trái chỉ có Thông báo + Tài khoản & Bảo mật; mở thẳng /app/settings/billing hoặc /privacy → 404 |
+| 7 | Chuyển English | Mọi chữ ở 3 trang đổi sang tiếng Anh, không còn khóa thô |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 
