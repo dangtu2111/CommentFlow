@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { LocaleSwitcher } from '../../../components/locale-switcher';
+import { ChangePasswordCard } from '../../../components/security/change-password-card';
 import { SessionsCard } from '../../../components/security/sessions-card';
 import { TwoFactorCard } from '../../../components/security/two-factor-card';
 import { Banner } from '../../../components/ui/banner';
@@ -32,6 +33,7 @@ export default async function SecurityPage() {
       {mustEnable ? <Banner variant="warning">{t('requiredBanner')}</Banner> : null}
       {/* Giữ nguyên vị trí TwoFactorCard trong cây: đổi vị trí/key làm nó mount lại và mất state `enrolling` (mã dự phòng biến mất). */}
       <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
+      <ChangePasswordCard />
       <section className="card stack" aria-labelledby="language-title">
         <h2 id="language-title" className="section-title">
           {t('language.title')}

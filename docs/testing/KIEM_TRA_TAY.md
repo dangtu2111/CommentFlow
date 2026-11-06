@@ -20,6 +20,7 @@
 | KT-010 | Ẩn / Bỏ ẩn bình luận | FB-HIDE | chưa | chưa | — |
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
+| KT-016 | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
@@ -182,7 +183,9 @@ Nếu hỏng: ghi số bước, ảnh chụp (che tên khách) và nội dung hi
 
 ## KT-012 — Connector Facebook thật (FB-CONNECTOR-CONTRACT, ADR 010)
 
-**Chưa thử được ở bước này:** connector mới chỉ có code + test bằng phản hồi viết tay; CHƯA đăng ký vào worker nên giao diện vẫn báo "Chưa kết nối được tới nền tảng để gửi" (đúng, xem KT-007). Mục này dành cho SAU KHI có `FB-OAUTH` + một Page thử + token thật và connector được nối vào worker (gap `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`). Dùng Page thử, không dùng Page khách.
+**Kích hoạt (KT-016):** đặt `FB_CONNECTOR_ENABLED=true` (kèm `META_APP_ID`, `META_APP_SECRET`, `TOKEN_ENC_KEYS`) cho worker rồi khởi động lại; cờ tắt (mặc định) → sổ connector rỗng, giao diện vẫn báo chưa kết nối được. Worker log `send bị nền tảng chặn (BLOCKED)` kèm id kênh khi Meta trả mã 368 (chưa tự tạm khóa kênh — gap `SEND-SUSPEND-ADMIN`). Kiểm tay chỉ làm được sau khi `SEND-SWEEP`/`HIDE-SWEEP` merge.
+
+**Trạng thái trước KT-016:** connector mới chỉ có code + test bằng phản hồi viết tay; CHƯA đăng ký vào worker nên giao diện vẫn báo "Chưa kết nối được tới nền tảng để gửi" (đúng, xem KT-007). Mục này dành cho SAU KHI có `FB-OAUTH` + một Page thử + token thật và connector được nối vào worker (gap `FB-CONNECTOR-REGISTER`, `SEND-FIND-REPLY-BY-PARENT`). Dùng Page thử, không dùng Page khách.
 
 | # | Bước | Kết quả mong đợi |
 |---|---|---|
@@ -374,6 +377,26 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 10 | Bỏ `FB_OAUTH_ENABLED` (hoặc đặt `false`), khởi động lại web, mở `/app/channels` và `/api/channels/facebook/start`. | Trang hiện "chưa được bật", không có nút; đường `start` trả 404. Đổi sang **English** + ~390px: chữ và bố cục đúng. |
 
 Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ mã lỗi, không có token).
+
+---
+
+## KT-020 — Đổi mật khẩu (AUTH-CHANGE-PW-UI, feat-auth-change-pw-ui)
+
+Điều kiện: đăng nhập một tài khoản thử; mở `/app/security` ở **hai trình duyệt** (A và B, cùng tài khoản). Có thể đặt `PWNED_CHECK=on` để thử bước 4 (cần mạng).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Ở A, mục **Đổi mật khẩu**: điền mật khẩu hiện tại SAI + mật khẩu mới hợp lệ. | Dải đỏ "Mật khẩu chưa đúng."; vẫn đăng nhập. |
+| 2 | Mật khẩu mới ngắn (< 10 ký tự). | Dải đỏ "Mật khẩu cần tối thiểu 10 ký tự." |
+| 3 | Mật khẩu mới trùng mật khẩu hiện tại; rồi ô nhập lại không khớp. | "Mật khẩu mới phải khác…"; "Hai mật khẩu chưa giống nhau…". |
+| 4 | Mật khẩu mới là `qwertyuiop` (và một mật khẩu từng lộ, khi bật HIBP). | "quá phổ biến" / "đã xuất hiện trong các vụ lộ dữ liệu". |
+| 5 | Sai mật khẩu hiện tại 5 lần liên tiếp, lần 6. | Thông báo "thử quá nhiều lần, đợi khoảng N phút". |
+| 6 | Đợi hết hạn (hoặc dùng tài khoản khác), nhập đúng mật khẩu hiện tại + mật khẩu mới mạnh. | Chuyển về `/login`. |
+| 7 | Ở B tải lại trang. | B cũng bị đưa về `/login` (mọi phiên đã bị xóa). |
+| 8 | Đăng nhập bằng mật khẩu CŨ, rồi bằng mật khẩu MỚI. | Cũ bị từ chối; mới vào được. |
+| 9 | Đổi sang **English** + ~390px, mở lại thẻ. | Chữ tiếng Anh đúng, ô nhập không tràn. |
+
+Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (không dán mật khẩu).
 
 ---
 
