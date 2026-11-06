@@ -1,3 +1,4 @@
+export * from './abbreviations';
 export * from './ai-usage';
 export * from './channels';
 export * from './comment-hides';

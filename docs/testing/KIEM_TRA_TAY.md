@@ -692,3 +692,11 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 | 1 | `pnpm --filter @flow/shared exec vitest run src/rule-filter.test.ts src/merge-burst.test.ts` | Xanh; không gọi mạng/DB/LLM |
 | 2 | Đọc nhanh `rule-filter.test.ts`: emoji/tag/dấu chấm → bỏ qua; "giá?", "1", "+", ảnh đính kèm → không bỏ qua | Khớp ý bạn muốn (nếu muốn nới/thắt, nói để đổi Q-PRF1) |
 | 3 | Khi pipeline được nối: gõ 3 bình luận ngắn liên tiếp dưới một bài | Một câu trả lời gộp vào bình luận cuối (US-109) |
+
+### ABBREV-DICT (FR-025, FR-050; chỉ dữ liệu + truy vấn, chưa có giao diện/chưa nối pipeline — Q-AD1)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared run test src/abbreviation.test.ts` | Xanh; không gọi mạng/DB |
+| 2 | Sau khi migrate `0041`: `SELECT short, full FROM cf.system_abbreviations WHERE lang = 'vi' ORDER BY short;` | Có "ib → inbox", "sz → size", "dc → được", "k → không"… Soát danh sách: từ nào sai/thiếu thì báo để thêm bằng migration mới |
+| 3 | Khi có giao diện (`KB-ABBREV-UI`): Owner thêm "cod" → "thanh toán khi nhận hàng", đăng nhập Staff | Staff thấy mục nhưng không thêm/sửa/xóa được; shop khác không thấy |
