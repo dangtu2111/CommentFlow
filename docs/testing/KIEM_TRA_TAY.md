@@ -74,6 +74,7 @@
 | KT-UIHLR | Khách tiềm năng, Báo cáo, Nhật ký dựng từ HTML Stitch | — | có | chưa | — |
 | KT-UIHS | Khung Cài đặt khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
+| KT-UIPL | Khung nội dung trải hết bề ngang | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-UKPH | Giao diện KB + Bài viết từ HTML Stitch | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
@@ -1398,6 +1399,15 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 4 | Nút "Tiếp tục với Facebook" ở /login | Có viền xám nhạt quanh nút (trước đây viền trong suốt) |
 | 5 | Thu cửa sổ còn 390px ở /app/settings | Cột trái thành dải cuộn ngang, không cuộn ngang cả trang |
 | 6 | Chạy production build, mở /dev/ui/kit | 404 |
+
+## KT-UIPL — Khung nội dung trải hết bề ngang (feat-ui-fix-posts-layout)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Mở `/app/posts` ở cửa sổ 1920px | Nội dung kéo hết bề ngang sau thanh bên, chỉ còn lề nhỏ 16px hai bên; không còn dải trống lớn |
+| 2 | Lặp lại với Cơ sở kiến thức, Tự động hóa, Spam, Tin nhắn | Cùng lề 16px hai bên, nội dung trải hết |
+| 3 | Mở Khách tiềm năng và Báo cáo ở 2560px | Nội dung dừng ở 1720px và canh giữa; ở 1920px vẫn trải hết |
+| 4 | Mở `/dev/ui/kb-posts` (chỉ dev) | Thẻ cấu hình bên phải chiếm 5/12 bề ngang (không cố định hẹp) |
 
 ## KT-UIS2 — Cài đặt khớp thiết kế (UI-FIDELITY-SETTINGS-V2, feat-ui-settings-v2)
 

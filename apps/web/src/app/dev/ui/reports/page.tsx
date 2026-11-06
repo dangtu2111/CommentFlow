@@ -31,7 +31,7 @@ export default function DevReportsPage() {
   if (process.env.NODE_ENV === 'production') notFound();
   return (
     <DevShell>
-      <main className="app-page app-page-wide stack">
+      <main className="app-page app-page-wide app-page-cap stack">
         <ReportHead days={7} isOwner />
         <p className="inbox-sample-note" role="note">
           {DEV_SAMPLE_NOTE}

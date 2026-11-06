@@ -31,7 +31,7 @@ export default async function ReportsPage({
     console.error('reports.load_failed', { workspaceId: workspace.id, error });
   }
   return (
-    <main className="app-page app-page-wide stack">
+    <main className="app-page app-page-wide app-page-cap stack">
       <ReportHead days={days} isOwner={workspace.role === 'owner'} />
       {data ? (
         <ReportBody report={data.report} truncated={data.truncated} />
