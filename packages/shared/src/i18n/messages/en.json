@@ -288,6 +288,7 @@
         "body": "Your own sign-in sessions. If you see a device you do not recognize, sign it out and change your password.",
         "current": "This device",
         "lastUsed": "Last active: {date}",
+        "signedInAt": "Signed in: {date} · Session …{code}",
         "signOut": "Sign out this device",
         "revoke": "Revoke",
         "signOutOthers": "Sign out all other devices",

@@ -18,13 +18,21 @@ const SAMPLE_ROLE = 'owner';
 const SETUP_DIALOG = 'dev-setup-step2';
 const NOW = new Date('2026-11-06T10:30:00Z');
 const SESSIONS: SessionRow[] = [
-  { id: 's1', browser: 'chrome', os: 'windows', current: true, lastUsedAt: NOW },
+  {
+    id: 's1a1b2',
+    browser: 'chrome',
+    os: 'windows',
+    current: true,
+    lastUsedAt: NOW,
+    createdAt: NOW,
+  },
   {
     id: 's2',
     browser: 'safari',
     os: 'ios',
     current: false,
     lastUsedAt: new Date(NOW.getTime() - 32 * 60_000),
+    createdAt: new Date(NOW.getTime() - 86_400_000),
   },
 ];
 
