@@ -79,6 +79,21 @@ export {
 } from './instagram/connector';
 export { parseInstagramWebhook } from './instagram/webhook';
 export {
+  createKiotVietConnector,
+  type KiotVietCatalog,
+  type KiotVietConnector,
+  type KiotVietConnectorOptions,
+  type KiotVietProduct,
+  type KiotVietVariant,
+} from './kiotviet/connector';
+export { buildKiotVietImportPlan, parseKiotVietMoney } from './kiotviet/normalize';
+export {
+  createKiotVietTokenProvider,
+  type KiotVietCredentials,
+  type KiotVietTokenProviderOptions,
+} from './kiotviet/token';
+export { signKiotVietBody, verifyKiotVietWebhook } from './kiotviet/webhook';
+export {
   createMessengerSender,
   MESSENGER_MAX_TEXT_LENGTH,
   MessageNotAllowedError,
