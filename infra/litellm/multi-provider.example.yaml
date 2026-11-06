@@ -1,0 +1,56 @@
+# LiteLLM nhiều nhà cung cấp — MẪU, KHÔNG được nạp mặc định (LITELLM-LANGFUSE, FR-034; Q-LLF1).
+# Muốn thử: gộp vào config.yaml TRÊN MÁY ẢO sau khi có khóa nhà cung cấp (docs/CAN_BAN_CUNG_CAP.md);
+# KHÔNG commit giá trị thật — chỉ tên biến môi trường (os.environ/…).
+# Tên nhóm `cf-*` khớp `DEFAULT_ROUTING` (packages/ai/src/observability/routing.ts); cờ app
+# `LITELLM_MULTI_PROVIDER_ENABLED` tắt → app chỉ gọi `mock-llm`.
+# Tên model nhà cung cấp dưới đây là GỢI Ý, đối chiếu tài liệu LiteLLM/nhà cung cấp trước khi bật.
+model_list:
+  # Bước phân loại/viết lại: model rẻ, nhanh.
+  - model_name: cf-classify
+    litellm_params:
+      model: anthropic/claude-haiku-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: cf-classify
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+  # Bước soạn trả lời: model mạnh hơn; hai nhà cung cấp cùng nhóm → LiteLLM cân bằng tải.
+  - model_name: cf-draft
+    litellm_params:
+      model: anthropic/claude-sonnet-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: cf-draft-backup
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+  # Embedding (tìm kiếm kiến thức).
+  - model_name: cf-embed
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: cf-embed-backup
+    litellm_params:
+      model: gemini/text-embedding-004
+      api_key: os.environ/GEMINI_API_KEY
+
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 1
+  timeout: 30
+  # Giữ khớp `fallbacks` trong DEFAULT_ROUTING.
+  fallbacks:
+    - cf-classify: ["cf-draft"]
+    - cf-draft: ["cf-draft-backup"]
+    - cf-embed: ["cf-embed-backup"]
+
+litellm_settings:
+  # Ngân sách tối đa toàn proxy (USD) — chặn cứng khi vượt; ngân sách từng workspace đặt khi tạo khóa ảo
+  # (`buildKeyBudget` → max_budget / budget_duration / model_max_budget).
+  max_budget: 50
+  budget_duration: 30d
+  # Trace sang Langfuse (đọc LANGFUSE_HOST / LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY từ môi trường).
+  # Phía proxy KHÔNG tự che PII: nội dung gửi vào LiteLLM đã là `MaskedText` (llm-client); trace do app gửi qua
+  # `createTraceSink` đều đi qua `maskForTrace`. Nếu bật callback này, chỉ bật khi đã xác nhận prompt đã che.
+  # ĐANG TẮT (comment) để không vượt qua cờ LANGFUSE_ENABLED của app; chỉ bật sau khi kiểm chứng riêng.
+  # success_callback: ["langfuse"]
+  # failure_callback: ["langfuse"]

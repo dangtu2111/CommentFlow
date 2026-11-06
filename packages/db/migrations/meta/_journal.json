@@ -428,6 +428,13 @@
       "when": 1793974838130,
       "tag": "0060_admin_plans_coupons",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1793982303815,
+      "tag": "0061_admin_shell",
+      "breakpoints": true
     }
   ]
 }

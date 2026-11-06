@@ -8,6 +8,19 @@ export {
   mergeAbbreviations,
   parseAbbreviation,
 } from './abbreviation';
+export {
+  ADMIN_AUDIT_DETAIL_MAX_BYTES,
+  ADMIN_ROLES,
+  ADMIN_SESSION_MAX_MS,
+  type AdminAuditInput,
+  type AdminRole,
+  type AdminSessionInput,
+  type AdminSessionState,
+  canRecordAdminAction,
+  canViewAdminAudit,
+  evaluateAdminSession,
+  parseAdminAuditInput,
+} from './admin-audit';
 export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } from './brand';
 export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
 export * from './conversation-window';
