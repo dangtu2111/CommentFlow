@@ -37,6 +37,7 @@
       "slug": "settings-security",
       "updated": null,
       "files": [
+        "settings-security.html",
         "settings-security.png"
       ]
     },
@@ -150,6 +151,7 @@
       "slug": "settings-billing",
       "updated": null,
       "files": [
+        "settings-billing.html",
         "settings-billing.png"
       ]
     },
@@ -267,6 +269,7 @@
       "slug": "settings-workspace-members",
       "updated": null,
       "files": [
+        "settings-workspace-members.html",
         "settings-workspace-members.png"
       ]
     }
