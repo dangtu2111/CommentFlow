@@ -496,3 +496,12 @@ Nếu hỏng: ghi số bước và ảnh chụp.
 Điều kiện: ...
 | # | Bước | Kết quả mong đợi |   (≤ 10 bước, cả vi và en)
 ```
+
+## KT-021 — LISTEN feature flag tự nối lại (FLAGS-RECONNECT, feat-flags-reconnect)
+Điều kiện: staging, worker/web đang chạy, truy cập được Postgres staging (máy phụ).
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Trên máy phụ: pg_terminate_backend cho kết nối LISTEN flags_changed của tiến trình | Log có cảnh báo mất kết nối (nếu đã nối onListenEvent); tiến trình vẫn chạy |
+| 2 | Chờ ≤ 2 giây | Có kết nối LISTEN mới trong pg_stat_activity; cảnh báo "đã nối lại" |
+| 3 | Đổi một flag ở DB | Tiến trình thấy giá trị mới ngay, không phải đợi 30 giây |
+| 4 | Tạm chặn cổng DB 70 giây rồi mở lại | Khoảng cách các lần thử tăng dần tới 60 giây; sau khi mở lại tự nối lại |

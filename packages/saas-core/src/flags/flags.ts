@@ -4,6 +4,21 @@ import { evaluateFlag, type FlagContext, type FlagKind, type FlagRow } from './e
 
 const DEFAULT_TTL_MS = 30_000;
 const CHANNEL = 'flags_changed';
+const RECONNECT_BASE_MS = 1_000;
+const RECONNECT_MAX_MS = 60_000;
+
+/**
+ * Sự kiện vòng đời của kết nối LISTEN, để nơi tạo `createFlags` ghi log/cảnh báo:
+ * `lost` (mất kết nối lần đầu), `reconnect_failed` (thử lại vẫn lỗi), `reconnected` (đã nối lại).
+ * `attempt` = số lần lỗi liên tiếp; `delayMs` = chờ bao lâu trước lần thử kế tiếp (không có ở `reconnected`).
+ */
+export type FlagsListenEvent = {
+  type: 'lost' | 'reconnect_failed' | 'reconnected';
+  attempt: number;
+  delayMs?: number;
+  /** Lỗi gốc; người nhận không nên log nguyên văn vì có thể chứa thông tin kết nối. */
+  error?: unknown;
+};
 
 export type FlagsOptions = {
   db: FlowDb;
@@ -16,6 +31,8 @@ export type FlagsOptions = {
   now?: () => number;
   /** Được gọi khi đọc DB lỗi (để ghi log; không đưa dữ liệu nhạy cảm vào). */
   onReadError?: (error: unknown) => void;
+  /** Được gọi khi kết nối LISTEN mất / nối lại thất bại / nối lại được (FR-117). */
+  onListenEvent?: (event: FlagsListenEvent) => void;
 };
 
 type Cached<T> = { value: T; loadedAt: number };
@@ -44,6 +61,10 @@ export function createFlags(options: FlagsOptions) {
   const overridesCache = new Map<string, Cached<Map<string, boolean>>>();
   const overridesInFlight = new Map<string, Promise<Map<string, boolean>>>();
   let unlisten: (() => Promise<void>) | undefined;
+  let running = false;
+  let connectionId = 0; // lỗi của kết nối cũ (id lệch) bị bỏ qua
+  let failures = 0; // số lần lỗi liên tiếp, về 0 khi nối lại được
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
   const fresh = (cached: Cached<unknown> | undefined): boolean =>
     cached !== undefined && now() - cached.loadedAt < ttlMs;
@@ -94,6 +115,53 @@ export function createFlags(options: FlagsOptions) {
     overridesInFlight.clear();
   }
 
+  function closeQuietly(close: (() => Promise<void>) | undefined): void {
+    if (close)
+      void Promise.resolve()
+        .then(close)
+        .catch(() => undefined);
+  }
+
+  /** Kết nối hiện tại đã chết: xóa cache (có thể lỡ thông báo), hẹn nối lại lùi dần. */
+  function onConnectionLost(error: unknown): void {
+    if (!running) return;
+    connectionId++;
+    closeQuietly(unlisten);
+    unlisten = undefined;
+    invalidate();
+    failures++;
+    const delayMs = Math.min(RECONNECT_BASE_MS * 2 ** (failures - 1), RECONNECT_MAX_MS);
+    options.onListenEvent?.({
+      type: failures === 1 ? 'lost' : 'reconnect_failed',
+      attempt: failures,
+      delayMs,
+      error,
+    });
+    retryTimer = setTimeout(() => {
+      retryTimer = undefined;
+      void connect();
+    }, delayMs);
+  }
+
+  async function connect(): Promise<void> {
+    const id = ++connectionId;
+    try {
+      const close = await options.db.listen(CHANNEL, invalidate, (error) => {
+        if (id === connectionId) onConnectionLost(error);
+      });
+      if (id !== connectionId) return closeQuietly(close); // stop() hoặc đã báo lỗi trong lúc nối
+      unlisten = close;
+      if (failures > 0) {
+        const attempt = failures;
+        failures = 0;
+        invalidate();
+        options.onListenEvent?.({ type: 'reconnected', attempt });
+      }
+    } catch (error) {
+      if (id === connectionId) onConnectionLost(error);
+    }
+  }
+
   return {
     /**
      * `failClosed: true` → khi không đọc được DB trả về false (dùng cho mọi đường tự gửi);
@@ -120,13 +188,21 @@ export function createFlags(options: FlagsOptions) {
 
     invalidate,
 
-    /** Bắt đầu nghe `flags_changed`; gọi một lần khi khởi động tiến trình. */
+    /**
+     * Bắt đầu nghe `flags_changed`; gọi một lần khi khởi động tiến trình. Không ném khi nối lỗi:
+     * tự thử lại lùi dần (1s, 2s, … tối đa 60s) và báo qua `onListenEvent`.
+     */
     async start(): Promise<void> {
-      if (unlisten) return;
-      unlisten = await options.db.listen(CHANNEL, invalidate, invalidate);
+      if (running) return;
+      running = true;
+      await connect();
     },
 
     async stop(): Promise<void> {
+      running = false;
+      connectionId++;
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = undefined;
       const stop = unlisten;
       unlisten = undefined;
       await stop?.();
