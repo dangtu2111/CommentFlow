@@ -23,19 +23,6 @@ export {
   FIXTURE_EXTRACT_DEFAULT,
 } from './classify/fixture-extractor';
 export {
-  buildChunkRows,
-  type ChunkRow,
-  contentHash,
-  createMockEmbedder,
-  EMBEDDING_DIMENSIONS,
-  type Embedder,
-  type ExistingChunk,
-  embedInBatches,
-  type HashedDraft,
-  type IndexingPlan,
-  planChunkIndexing,
-} from './kb-indexing';
-export {
   DEFAULT_DRAFT_MODEL,
   type DraftConfig,
   loadDraftConfig,
@@ -68,6 +55,19 @@ export {
   type DraftFixture,
   FIXTURE_DRAFT_DEFAULT,
 } from './draft/fixture-drafter';
+export {
+  buildChunkRows,
+  type ChunkRow,
+  contentHash,
+  createMockEmbedder,
+  EMBEDDING_DIMENSIONS,
+  type Embedder,
+  type ExistingChunk,
+  embedInBatches,
+  type HashedDraft,
+  type IndexingPlan,
+  planChunkIndexing,
+} from './kb-indexing';
 export {
   createLlmClient,
   type LlmCallInput,
