@@ -11,6 +11,7 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
       'comments',
       'posts',
       'tryAi',
+      'readiness',
       'channels',
       'members',
       'activity',

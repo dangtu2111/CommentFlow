@@ -118,6 +118,7 @@ export {
   type PostsSort,
 } from './queries/posts';
 export { type ActiveVariant, findActiveVariants } from './queries/products';
+export { loadReadinessSource, type ReadinessSourceData } from './queries/readiness';
 export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,
