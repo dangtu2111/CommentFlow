@@ -5,10 +5,12 @@ import { SessionsCard } from '../../../../components/security/sessions-card';
 import { TwoFactorCard } from '../../../../components/security/two-factor-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
 import { ReplyLanguageCard } from '../../../../components/settings/reply-language-card';
+import { UsageMeterCard } from '../../../../components/settings/usage-meter-card';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getDb } from '../../../../server/db';
 import { requestContext } from '../../../../server/request-context';
 import { requireAppUser } from '../../../../server/require-app-user';
+import { loadUsageMeterView } from '../../../../server/usage-meter';
 
 export async function generateMetadata() {
   const [t, tb] = await Promise.all([getTranslations('settings'), getTranslations('shell')]);
@@ -34,6 +36,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
     workspace.role === 'owner'
       ? await getDb().withActor(workspace.id, user.id, (tx) => listChannels(tx, workspace.id))
       : null;
+  // Đồng hồ lượt AI (FR-090): chỉ Owner (liên quan gói cước), chỉ đọc.
+  const usage = workspace.role === 'owner' ? await loadUsageMeterView(workspace.id) : null;
   const overview = await getAuthRuntime().twoFactor.overview((await requestContext()).headers);
   if (!overview) redirect('/login');
   const t = await getTranslations('settings');
@@ -43,6 +47,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <p className="auth-subtitle">{t('subtitle')}</p>
       <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
       <SessionsCard sessions={overview.sessions} />
+      {usage ? <UsageMeterCard view={usage} /> : null}
       <LanguageCard />
       {channels ? <ReplyLanguageCard channels={channels} notice={replyNoticeOf(query.rl)} /> : null}
     </main>
