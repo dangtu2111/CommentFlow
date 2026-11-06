@@ -116,13 +116,14 @@ export async function completeDataExport(
     rowCounts: Record<string, number>;
     expiresAt: Date;
   },
-): Promise<void> {
-  await tx.execute(sql`
+): Promise<boolean> {
+  const r = await tx.execute(sql`
     UPDATE core.data_exports
     SET status = 'ready', file_key = ${input.fileKey}, size_bytes = ${input.sizeBytes}::bigint,
         row_counts = ${JSON.stringify(input.rowCounts)}::jsonb, ready_at = now(),
         expires_at = ${input.expiresAt.toISOString()}::timestamptz, error_code = NULL, updated_at = now()
-    WHERE workspace_id = ${workspaceId}::uuid AND id = ${exportId}::uuid AND status = 'running'`);
+    WHERE workspace_id = ${workspaceId}::uuid AND id = ${exportId}::uuid AND status = 'running' RETURNING id`);
+  return r.rows.length > 0;
 }
 
 /** `errorCode` là mã ngắn cố định (không chứa thông điệp lỗi gốc, tránh lọt PII). */
@@ -203,7 +204,7 @@ export async function readCommentsPage(
     SELECT id, channel_id, post_id, external_id, author_external_id, text, lang, created_time, label, status,
            is_hidden, is_own, replied_at, deleted_at
     FROM cf.comments
-    WHERE workspace_id = ${workspaceId}::uuid AND id > ${afterId ?? ZERO_UUID}::uuid
+    WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL AND id > ${afterId ?? ZERO_UUID}::uuid
     ORDER BY id LIMIT ${limit}::integer`);
   return pageOf(r.rows, (x) => ({
     id: x.id,

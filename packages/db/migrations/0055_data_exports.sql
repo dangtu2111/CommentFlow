@@ -1,3 +1,5 @@
+SET LOCAL lock_timeout = '5s';
+--> statement-breakpoint
 CREATE TABLE "core"."data_exports" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"workspace_id" uuid NOT NULL,
@@ -33,7 +35,9 @@ CREATE INDEX "data_exports_expiry_idx" ON "core"."data_exports" USING btree ("ex
 -- ===================================================================================================
 ALTER TABLE core.data_exports ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
-GRANT SELECT, UPDATE ON core.data_exports TO cf_app;
+GRANT SELECT ON core.data_exports TO cf_app;
+--> statement-breakpoint
+GRANT UPDATE (status, file_key, size_bytes, row_counts, error_code, ready_at, expires_at, updated_at) ON core.data_exports TO cf_app;
 --> statement-breakpoint
 GRANT INSERT (workspace_id, requested_by) ON core.data_exports TO cf_app;
 --> statement-breakpoint

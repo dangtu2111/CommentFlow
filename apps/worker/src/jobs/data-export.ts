@@ -187,7 +187,7 @@ export async function runDataExport(
   const truncated: DataExportSection[] = [];
   try {
     const { bytes } = await deps.store.put(key, buildLines(deps, job, counts, truncated));
-    await deps.db.withJob(workspaceId, (tx) =>
+    const completed = await deps.db.withJob(workspaceId, (tx) =>
       deps.ops.complete(tx, workspaceId, exportId, {
         fileKey: key,
         sizeBytes: bytes,
@@ -195,6 +195,11 @@ export async function runDataExport(
         expiresAt: exportExpiresAt(deps.now()),
       }),
     );
+    if (!completed) {
+      // Yêu cầu đã bị đánh dấu kẹt (failed) trong lúc chạy: không để tệp mồ côi trong kho.
+      await deps.store.remove(key);
+      return { outcome: 'failed' };
+    }
     return { outcome: 'ready', counts, truncated };
   } catch (error) {
     deps.logger.error({ workspaceId, exportId, error: errorName(error) }, 'xuất dữ liệu lỗi');

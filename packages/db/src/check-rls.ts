@@ -370,6 +370,10 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.data_exports', 'error_code', 'INSERT'],
   ['cf_app', 'core.data_exports', 'ready_at', 'INSERT'],
   ['cf_app', 'core.data_exports', 'expires_at', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'id', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'requested_by', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'created_at', 'UPDATE'],
   // RETRIEVAL-LOG (0040): nhật ký chỉ thêm (không cột nào UPDATE được); kb_gaps khóa định danh không đổi
   ['cf_app', 'cf.retrieval_logs', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.retrieval_logs', 'query_masked', 'UPDATE'],

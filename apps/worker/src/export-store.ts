@@ -30,7 +30,7 @@ export function createLocalExportStore(rootDir: string): ExportFileStore {
     async put(key, lines) {
       const target = safePath(rootDir, key);
       const tmp = join(dirname(target), `.${Date.now()}.tmp`);
-      await mkdir(dirname(target), { recursive: true });
+      await mkdir(dirname(target), { recursive: true, mode: 0o700 });
       let bytes = 0;
       async function* counted(): AsyncGenerator<string> {
         for await (const line of lines) {

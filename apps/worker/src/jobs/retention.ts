@@ -57,7 +57,17 @@ async function cleanupDataExports({
   }
   try {
     const expired = await db.withSystem((tx) => exportOps.expire(tx));
-    for (const item of expired) await exportStore.remove(item.fileKey);
+    for (const item of expired) {
+      // Một tệp xóa lỗi không bỏ qua các tệp còn lại.
+      await exportStore
+        .remove(item.fileKey)
+        .catch((error: unknown) =>
+          logger.error(
+            { error: error instanceof Error ? error.name : 'unknown' },
+            'xóa một tệp xuất hết hạn lỗi',
+          ),
+        );
+    }
     if (expired.length > 0) logger.info({ expired: expired.length }, 'đã xóa tệp xuất hết hạn');
   } catch (error) {
     logger.error(

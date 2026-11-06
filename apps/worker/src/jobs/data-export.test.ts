@@ -50,7 +50,7 @@ function ops(over: Partial<DataExportOps> = {}): DataExportOps {
   return {
     isActiveOwner: vi.fn(async () => true),
     claim: vi.fn(async () => true),
-    complete: vi.fn(async () => undefined),
+    complete: vi.fn(async () => true),
     fail: vi.fn(async () => undefined),
     readComments: vi.fn(empty) as DataExportOps['readComments'],
     readLeads: vi.fn(empty) as DataExportOps['readLeads'],
