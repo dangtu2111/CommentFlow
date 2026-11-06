@@ -36,6 +36,7 @@
 | KT-AIH | Sức khỏe tích hợp & dead letter (chỉ logic + DB + test, chưa có giao diện; không cần khóa/dịch vụ ngoài) | feat-integration-health | chưa | chưa | — |
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
+| KT-APC | Xác nhận thanh toán tự động SePay/Casso (chờ tài khoản + migration làn b) | — | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-ASL | Admin tạm khóa gửi (chỉ logic + test, chưa có bảng/giao diện; không cần khóa/dịch vụ ngoài) | feat-admin-send-lock | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
@@ -614,6 +615,18 @@ Chỉ phần máy (chưa có job/banner, chưa ghi DB): người thử chạy te
 1. `pnpm --filter @flow/ai exec vitest run src/autopause` → 2 file xanh. Kết quả mong đợi: không test đỏ (Đánh dấu sai >10% và lỗi liên tiếp làm dừng workspace, lỗi 368 chỉ khóa kênh, spike chỉ cảnh báo, chỉ Owner Bật lại).
 
 ---
+
+## KT-APC — Xác nhận thanh toán tự động (AUTO-PAYMENT-CONFIRM, feat-auto-payment-confirm) — chỉ làm được khi đã có tài khoản SePay/Casso và migration làn b
+
+> Kiểm tự động đã phủ khóa sai, lệch tiền, gửi lại, mã mơ hồ: `pnpm test`. Các bước dưới cần tài khoản thật ở staging.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Cờ `BANK_WEBHOOK_ENABLED` tắt, gọi thử webhook | Trả 503, hóa đơn không đổi |
+| 2 | Bật cờ ở staging; tạo hóa đơn thử, chuyển ĐÚNG số tiền kèm nội dung `CF…` | Hóa đơn thành "Đã thanh toán", lượt AI được cộng đúng một lần |
+| 3 | Nhà cung cấp gửi lại cùng giao dịch | Không cộng lượt lần hai |
+| 4 | Chuyển thiếu hoặc thừa 1 đồng | Hóa đơn vẫn "Chờ xác nhận", không cộng lượt; có dòng log "amount_mismatch" |
+| 5 | Chuyển không kèm nội dung hoặc sai mã | Không hóa đơn nào đổi |
 
 ## KT-AR — Độ sẵn sàng của AI (AI-READINESS, FR-146, US-107)
 
