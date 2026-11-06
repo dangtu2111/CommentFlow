@@ -17,6 +17,7 @@ export * from './embedding';
 export * from './emergency';
 export * from './examples';
 export * from './gate';
+export * from './greetings';
 export * from './history';
 export * from './injection';
 export * from './normalize';
