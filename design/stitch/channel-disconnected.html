@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-secondary-fixed":"#1f0060","on-secondary-container":"#fffbff","on-error-container":"#93000a","secondary":"#633cd5","surface-container-lowest":"#ffffff","on-secondary":"#ffffff","on-tertiary-fixed-variant":"#6c3a02","on-background":"#101d25","secondary-container":"#7c59ef","surface":"#f5faff","error-container":"#ffdad6","secondary-fixed":"#e7deff","surface-tint":"#00687a","on-tertiary":"#ffffff","inverse-on-surface":"#e5f3fe","surface-container":"#e2f0fb","surface-container-high":"#dceaf5","surface-bright":"#f5faff","on-primary-container":"#bdf0ff","primary-fixed-dim":"#82d2e7","tertiary-container":"#945b23","on-primary-fixed":"#001f26","on-tertiary-container":"#ffe3cf","on-error":"#ffffff","error":"#ba1a1a","tertiary-fixed-dim":"#ffb779","surface-dim":"#cedce7","inverse-primary":"#82d2e7","on-surface":"#101d25","on-primary":"#ffffff","surface-container-highest":"#d7e4f0","primary-container":"#0b7285","inverse-surface":"#25323b","outline":"#6f797c","on-tertiary-fixed":"#2e1500","primary":"#005868","on-surface-variant":"#3f484b","on-primary-fixed-variant":"#004e5c","outline-variant":"#bec8cc","surface-container-low":"#eaf5ff","on-secondary-fixed-variant":"#4d1ebf","surface-variant":"#d7e4f0","primary-fixed":"#abedff","secondary-fixed-dim":"#ccbdff","background":"#f5faff","tertiary":"#77440b","tertiary-fixed":"#ffdcc1"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-sm":"0.5rem","space-lg":"1rem","space-md":"0.75rem","space-xs":"0.25rem","space-xl":"1.5rem","margin":"1.5rem","gutter":"1rem","margin-mobile":"1rem","gutter-mobile":"0.75rem"},"fontFamily":{"label-sm":["Be Vietnam Pro"],"title-md":["Be Vietnam Pro"],"label-md":["Be Vietnam Pro"],"body-sm":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"code-sm":["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"body-lg":["Be Vietnam Pro"],"title-sm":["Be Vietnam Pro"]},"fontSize":{"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"600"}],"title-md":["15px",{"lineHeight":"20px","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-md":["13px",{"lineHeight":"19px","fontWeight":"400"}],"code-sm":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"title-sm":["13px",{"lineHeight":"18px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-margin flex items-center justify-between"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">forum</span></div><span class="font-headline-sm text-headline-sm text-primary">CommentFlow AI</span></div><div class="h-4 w-px bg-outline-variant"></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-surface-container-low"><div class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></div><span class="font-label-sm text-label-sm text-on-surface-variant">Workspace Live</span></div></div><div class="flex items-center gap-space-xl"><nav class="hidden md:flex items-center gap-space-lg" data-active-classes="text-primary font-bold"><a class="font-title-sm text-title-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="inbox-live" href="#">Home / Inbox</a><a class="font-title-sm text-title-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="diagnostic-help-center" href="#">Help Center</a><a class="font-title-sm text-title-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="system-diagnostics" href="#">System Status</a></nav><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container"><span class="material-symbols-outlined text-[16px] text-primary">check_circle</span><span class="font-label-sm text-label-sm text-on-surface-variant">All Systems Operational</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full flex-1 pt-16 bg-surface"><div class="flex flex-col w-full">
+<!-- Critical Incident Banner -->
+<div class="w-full bg-error-container text-on-error-container px-margin py-space-md shadow-sm transition-all duration-300" id="incidentBanner">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div class="flex items-start md:items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0 text-on-error animate-pulse">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+</div>
+<div>
+<span class="font-title-sm text-title-sm font-bold block md:inline">Cảnh báo khẩn cấp:</span>
+<span class="font-body-md text-body-md ml-1">Fanpage <strong>Thời Trang Mẫu An Nhiên</strong> đã mất kết nối Meta API lúc <strong>09:15</strong> hôm nay. Bình luận và tin nhắn mới tạm thời không tự động đồng bộ vào hệ thống.</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0 self-end md:self-auto">
+<span class="font-label-sm text-label-sm uppercase tracking-wider bg-on-error-container/10 px-space-sm py-0.5 rounded text-on-error-container">Mức độ: Cao</span>
+</div>
+</div>
+</div>
+<!-- Main Stage Workspace -->
+<div class="w-full max-w-7xl mx-auto px-margin py-space-xl space-y-space-xl">
+<!-- Title & Navigation Breadcrumbs -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div class="space-y-space-xs">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
+<span class="hover:text-primary cursor-pointer transition-colors">Trung tâm Vận hành</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Kết nối Đa kênh</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-error font-semibold">Chẩn đoán sự cố Kênh Meta</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Khôi phục kết nối Fanpage Meta Facebook</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Trình chẩn đoán quyền truy cập và tự động tái cấp Access Token an toàn theo chuẩn Meta Graph API v19.0</p>
+</div>
+<!-- Quick Switcher to Other Channels -->
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="flex items-center gap-space-xs bg-surface-container-high hover:bg-surface-container text-on-surface px-space-md py-space-sm rounded-lg font-title-sm text-title-sm transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">swap_horiz</span>
+<span>Tạm thời xử lý Instagram &amp; TikTok</span>
+<span class="bg-primary/10 text-primary px-space-xs py-0.5 rounded-full font-label-sm text-label-sm ml-1">2 kênh sẵn sàng</span>
+</button>
+</div>
+</div>
+<!-- Asymmetric Grid: Status Stage & Wizard -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+<!-- Left Column: Channel Health & Diagnostics Card (7 Cols) -->
+<div class="lg:col-span-7 space-y-space-lg">
+<!-- Channel Health Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm space-y-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="relative w-14 h-14 rounded-xl bg-surface-container overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Modern Vietnamese luxury boutique logo with elegant serif typography and minimalist silk fabric silhouette with emerald teal accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF6e-XaezxrNj0JcPZEQq0SYNCIR7VuHN-h5NWGLdLoSGimNiH_Coc67vKuJ0wbRMVfoRzkLmHjpybSrkHg0RkeNLW3vP5j2Sz8mX4G4TJMOu0YJbOjAWqZmXFDRKiIqamo6OjHashv-j_2oTEOk-ECIbv-EBHSiLSXsNZ-sw1qVDZ-F9E6z6qTbwBF-0CP8oVznThhb8NvpjWbfYYW4pIH5aaVO4UPh50ctVs-cI7"/>
+<div class="absolute bottom-0 right-0 w-5 h-5 bg-[#1877F2] rounded-tl-lg flex items-center justify-center">
+<svg class="w-3.5 h-3.5 fill-white" viewbox="0 0 24 24">
+<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
+</svg>
+</div>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-space-sm flex-wrap">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Thời Trang Mẫu An Nhiên</h2>
+<span class="inline-flex items-center gap-1 bg-error-container text-on-error-container px-space-sm py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+                    Mất kết nối API (Token Expired)
+                  </span>
+</div>
+<div class="flex items-center gap-space-md text-on-surface-variant font-label-md text-label-md mt-1">
+<span>Page ID: <code class="font-code-sm text-code-sm text-primary font-bold">8842109281</code></span>
+<span>•</span>
+<span>Hạng mục: Bán lẻ Thời trang</span>
+</div>
+</div>
+</div>
+<!-- Health Score Mini Widget -->
+<div class="flex sm:flex-col items-center sm:items-end justify-between bg-surface-container-low sm:bg-transparent p-space-sm sm:p-0 rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lần đồng bộ cuối</span>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">09:12 (38 phút trước)</span>
+</div>
+</div>
+<!-- Root Cause Callout Box -->
+<div class="bg-surface-container-low rounded-xl p-space-lg space-y-space-sm">
+<div class="flex items-center gap-space-xs text-tertiary">
+<span class="material-symbols-outlined text-[20px]">manage_search</span>
+<span class="font-title-sm text-title-sm font-bold">Nguyên nhân xác định (Mục 9 Sổ tay Kỹ thuật Meta):</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+              Mã thông báo truy cập (<span class="font-code-sm text-code-sm bg-surface-container px-1 rounded text-primary">Page Access Token</span>) đã hết hạn theo chính sách xác thực bảo mật định kỳ của Meta hoặc Quản trị viên Fanpage vừa <strong>thay đổi mật khẩu tài khoản Facebook cá nhân</strong> liên kết.
+            </p>
+<div class="flex items-center gap-space-md pt-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-error">cancel</span> Webhook Events: Đình chỉ
+              </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-error">cancel</span> Messenger Direct: Gián đoạn
+              </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-primary">check_circle</span> Hàng đợi Lưu đệm (Buffer): Hoạt động
+              </span>
+</div>
+</div>
+<!-- Data Integrity Guarantee Card (Mục 7.6 & 7.8) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Cam kết Bảo toàn Toàn vẹn Dữ liệu 100%</h3>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div class="flex items-start gap-space-sm bg-surface-container-low p-space-md rounded-lg">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">check_circle</span>
+<p class="font-body-sm text-body-sm text-on-surface">Toàn bộ <strong>lịch sử bình luận, tin nhắn, danh bạ CRM &amp; Kịch bản AI</strong> đều được lưu trữ an toàn, không bị ảnh hưởng hay thất thoát.</p>
+</div>
+<div class="flex items-start gap-space-sm bg-surface-container-low p-space-md rounded-lg">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">sync</span>
+<p class="font-body-sm text-body-sm text-on-surface">Hệ thống kích hoạt <strong>Backfill Auto-Scan</strong> ngay khi nối lại, tự động kéo về mọi bình luận/tin nhắn bị dồn ứ trong khoảng 38 phút qua.</p>
+</div>
+</div>
+</div>
+<!-- Real-Time Telemetry / Diagnostic Tech Log (Collapsible Accordion) -->
+<div class="bg-surface-container rounded-xl overflow-hidden shadow-sm">
+<button class="w-full px-space-lg py-space-md flex items-center justify-between text-left hover:bg-surface-container-high transition-colors" id="toggleTechLogBtn">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[18px]">terminal</span>
+<span class="font-title-sm text-title-sm text-on-surface">Nhật ký Lỗi Kỹ thuật (Diagnostic Meta API Payload)</span>
+<span class="bg-error text-on-error font-code-sm text-[10px] px-1.5 py-0.5 rounded">HTTP 400</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform duration-200" id="logChevron">expand_more</span>
+</button>
+<div class="hidden px-space-lg pb-space-lg pt-space-xs font-code-sm text-code-sm bg-inverse-surface text-inverse-on-surface space-y-space-xs overflow-x-auto" id="techLogContent">
+<div class="flex items-center justify-between pb-space-xs text-on-surface-variant font-label-sm text-[10px]">
+<span>SERVER_NODE: sg-edge-04.commentflow.ai</span>
+<span>TRACE_ID: req_meta_6f98a211bc</span>
+</div>
+<p class="text-error-container">{</p>
+<p class="pl-4 text-primary-fixed-dim">"error": {</p>
+<p class="pl-8 text-inverse-on-surface">"message": "Error validating access token: Session has expired on Wednesday, 10-Jul-24 09:15:00 PDT.",</p>
+<p class="pl-8 text-inverse-on-surface">"type": "OAuthException",</p>
+<p class="pl-8 text-inverse-on-surface">"code": <span class="text-tertiary-fixed-dim font-bold">190</span>,</p>
+<p class="pl-8 text-inverse-on-surface">"error_subcode": <span class="text-tertiary-fixed-dim font-bold">463</span>,</p>
+<p class="pl-8 text-inverse-on-surface">"fbtrace_id": "ABfR99aK103mKq88xL"</p>
+<p class="pl-4 text-primary-fixed-dim">},</p>
+<p class="pl-4 text-inverse-on-surface">"sync_backlog_estimate": {"unprocessed_comments": 14, "unprocessed_messages": 3}</p>
+<p class="text-error-container">}</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Reconnection Wizard & Role-Based Actions (5 Cols) -->
+<div class="lg:col-span-5 space-y-space-lg">
+<!-- Two-Step Guided Wizard -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm space-y-space-lg relative overflow-hidden">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Quy trình Khắc phục 2 bước</h3>
+<span class="bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm px-space-sm py-0.5 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">timer</span> ~15 Giây
+            </span>
+</div>
+<!-- Wizard Steps List -->
+<div class="space-y-space-lg">
+<!-- Step 1 -->
+<div class="flex items-start gap-space-md relative">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-title-sm shrink-0">
+                1
+              </div>
+<div class="space-y-space-xs min-w-0">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold block">Đăng nhập tài khoản Facebook Quản trị viên</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Đảm bảo trình duyệt hiện tại đang đăng nhập tài khoản có quyền <strong>Quản trị viên (Admin)</strong> của Fanpage An Nhiên.</p>
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center gap-space-sm text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-primary text-[16px]">account_box</span>
+<span>Quản trị viên liên kết: <strong>Nguyễn Mai Linh</strong> (Chủ Shop)</span>
+</div>
+</div>
+</div>
+<!-- Visual Connector line -->
+<div class="w-0.5 h-6 bg-surface-container-high ml-4 -mt-3 -mb-3"></div>
+<!-- Step 2 -->
+<div class="flex items-start gap-space-md">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-title-sm shrink-0">
+                2
+              </div>
+<div class="space-y-space-xs min-w-0">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold block">Cấp lại quyền (Re-authorize Token)</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Nhấp nút ủy quyền Meta OAuth. Không làm xáo trộn bài đăng hay cài đặt bảo mật trang của bạn.</p>
+</div>
+</div>
+</div>
+<!-- Role-Based Action Switcher (Interactive Demo) -->
+<div class="pt-space-md space-y-space-md">
+<!-- Role Toggle Header -->
+<div class="flex items-center justify-between bg-surface-container-low p-space-xs rounded-lg">
+<button class="flex-1 py-space-xs px-space-sm rounded font-label-sm text-label-sm font-semibold transition-all bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-1" id="roleOwnerBtn">
+<span class="material-symbols-outlined text-[16px]">admin_panel_settings</span> Vai trò: Chủ shop (Admin)
+              </button>
+<button class="flex-1 py-space-xs px-space-sm rounded font-label-sm text-label-sm font-medium transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1" id="roleStaffBtn">
+<span class="material-symbols-outlined text-[16px]">support_agent</span> Vai trò: Trực ca (Staff)
+              </button>
+</div>
+<!-- OWNER ACTION PANEL -->
+<div class="space-y-space-md" id="ownerActions">
+<button class="w-full h-12 bg-primary hover:bg-primary-container text-on-primary rounded-xl font-title-md text-title-md flex items-center justify-center gap-space-sm shadow-md transition-all active:scale-[0.99] group" id="reconnectOAuthBtn">
+<span class="material-symbols-outlined text-[20px] transition-transform group-hover:rotate-12">bolt</span>
+<span>Kết nối lại Facebook Fanpage ngay (OAuth)</span>
+<span class="material-symbols-outlined text-[18px]">lock</span>
+</button>
+<button class="w-full h-10 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-title-sm text-title-sm flex items-center justify-center gap-space-sm transition-all" id="pingMetaBtn">
+<span class="material-symbols-outlined text-[18px] text-primary" id="pingIcon">network_ping</span>
+<span id="pingText">Kiểm tra chẩn đoán mạng (Ping Meta API)</span>
+</button>
+<!-- Ping feedback badge (hidden by default) -->
+<div class="hidden p-space-sm bg-surface-container-low rounded-lg text-center font-label-sm text-label-sm text-primary" id="pingFeedback">
+                Meta Graph Endpoint: <strong>200 OK (Latency 48ms)</strong>. Sẵn sàng nhận Token tái cấp.
+              </div>
+</div>
+<!-- STAFF ACTION PANEL (Hidden initially, toggled by script) -->
+<div class="hidden space-y-space-md" id="staffActions">
+<div class="bg-surface-container-low p-space-md rounded-xl space-y-space-sm">
+<div class="flex items-center gap-space-xs text-on-surface font-title-sm text-title-sm font-semibold">
+<span class="material-symbols-outlined text-primary text-[18px]">info</span>
+<span>Bạn đang ở tài khoản Nhân viên trực ca</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Chỉ Quản trị viên chính (Chủ shop) mới có quyền uỷ quyền Meta OAuth cho Fanpage. Bạn có thể gửi thông báo ưu tiên cao ngay tức khắc.
+                </p>
+</div>
+<button class="w-full h-12 bg-error text-on-error hover:bg-error/90 rounded-xl font-title-md text-title-md flex items-center justify-center gap-space-sm shadow-md transition-all" id="sendSosBtn">
+<span class="material-symbols-outlined text-[20px]">notifications_active</span>
+<span>Gửi thông báo SOS tới Chủ shop</span>
+</button>
+<div class="p-space-md bg-surface-container rounded-xl flex items-start gap-space-sm" id="sosSuccessBox">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">mark_chat_read</span>
+<div class="font-body-sm text-body-sm text-on-surface">
+<strong>Thông báo đã gửi thành công:</strong> SMS &amp; Push App đã chuyển tới Nguyễn Mai Linh lúc <strong>09:16</strong>.
+                </div>
+</div>
+</div>
+</div>
+<!-- OAuth Security Assurance Seal -->
+<div class="pt-space-sm flex items-center justify-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">lock_clock</span>
+<span>Chuẩn bảo mật mã hoá OAuth 2.0 • Meta App Verified #488102</span>
+</div>
+</div>
+<!-- 24/7 Priority Emergency Support Contact Card -->
+<div class="bg-surface-container-low rounded-xl p-space-lg shadow-sm flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[22px]">support_agent</span>
+</div>
+<div>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold block">Hỗ trợ Kỹ thuật Khẩn cấp 24/7</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Hotline chuyên viên kỹ thuật Fanpage:</span>
+</div>
+</div>
+<a class="font-title-md text-title-md text-primary font-bold hover:underline shrink-0 bg-surface-container px-space-md py-space-xs rounded-lg" href="tel:19006888">
+            1900 6888
+          </a>
+</div>
+</div>
+</div>
+<!-- Active Impact Metric Row / Operational Transparency -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">chat_bubble_outline</span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">14 bình luận</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Đang tạm lưu chờ kéo bù sau khi kết nối lại</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">history_toggle_off</span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">38 phút</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Thời gian gián đoạn ghi nhận từ 09:15</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">auto_awesome</span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm font-bold text-secondary">Sẵn sàng phản hồi</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant">AI CommentFlow sẽ tự động trả lời sau khi đồng bộ</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Reconnection Success Modal Simulation (Inline Modal) -->
+<div class="fixed inset-0 z-50 bg-inverse-surface/60 backdrop-blur-sm hidden items-center justify-center p-margin" id="reconnectModal">
+<div class="bg-surface-container-lowest max-w-md w-full rounded-2xl p-space-xl shadow-2xl space-y-space-lg transform transition-all">
+<div class="flex items-center justify-center w-14 h-14 bg-primary/10 rounded-full mx-auto text-primary">
+<span class="material-symbols-outlined text-[32px]">sync</span>
+</div>
+<div class="text-center space-y-space-xs">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Đang xác thực với Meta Graph API...</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Vui lòng không đóng cửa sổ. Đang đồng bộ và làm mới Access Token vĩnh viễn (Long-lived User Token).</p>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+<div class="bg-primary h-2 rounded-full w-1/4 transition-all duration-500" id="modalProgressBar"></div>
+</div>
+<div class="font-code-sm text-code-sm text-center text-outline-variant" id="modalStepText">
+        Connecting: graph.facebook.com/v19.0/oauth/access_token
+      </div>
+</div>
+</div>
+<script>
+    // Toggle Tech Diagnostic Logs
+    const toggleLogBtn = document.getElementById('toggleTechLogBtn');
+    const logContent = document.getElementById('techLogContent');
+    const logChevron = document.getElementById('logChevron');
+
+    if (toggleLogBtn && logContent && logChevron) {
+      toggleLogBtn.addEventListener('click', () => {
+        const isHidden = logContent.classList.contains('hidden');
+        if (isHidden) {
+          logContent.classList.remove('hidden');
+          logChevron.style.transform = 'rotate(180deg)';
+        } else {
+          logContent.classList.add('hidden');
+          logChevron.style.transform = 'rotate(0deg)';
+        }
+      });
+    }
+
+    // Role Switching Interaction (Owner vs Staff)
+    const ownerBtn = document.getElementById('roleOwnerBtn');
+    const staffBtn = document.getElementById('roleStaffBtn');
+    const ownerActions = document.getElementById('ownerActions');
+    const staffActions = document.getElementById('staffActions');
+
+    if (ownerBtn && staffBtn && ownerActions && staffActions) {
+      ownerBtn.addEventListener('click', () => {
+        ownerBtn.className = "flex-1 py-space-xs px-space-sm rounded font-label-sm text-label-sm font-semibold transition-all bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-1";
+        staffBtn.className = "flex-1 py-space-xs px-space-sm rounded font-label-sm text-label-sm font-medium transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1";
+        ownerActions.classList.remove('hidden');
+        staffActions.classList.add('hidden');
+      });
+
+      staffBtn.addEventListener('click', () => {
+        staffBtn.className = "flex-1 py-space-xs px-space-sm rounded font-label-sm text-label-sm font-semibold transition-all bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-1";
+        ownerBtn.className = "flex-1 py-space-xs px-space-sm rounded font-label-sm text-label-sm font-medium transition-all text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1";
+        staffActions.classList.remove('hidden');
+        ownerActions.classList.add('hidden');
+      });
+    }
+
+    // Ping API Diagnostic Simulation
+    const pingBtn = document.getElementById('pingMetaBtn');
+    const pingFeedback = document.getElementById('pingFeedback');
+    const pingIcon = document.getElementById('pingIcon');
+    const pingText = document.getElementById('pingText');
+
+    if (pingBtn && pingFeedback && pingIcon && pingText) {
+      pingBtn.addEventListener('click', () => {
+        pingIcon.classList.add('animate-spin');
+        pingText.textContent = "Đang kiểm tra kết nối API...";
+        setTimeout(() => {
+          pingIcon.classList.remove('animate-spin');
+          pingText.textContent = "Kiểm tra lại (Ping Meta API)";
+          pingFeedback.classList.remove('hidden');
+        }, 800);
+      });
+    }
+
+    // Send SOS Button Simulation
+    const sendSosBtn = document.getElementById('sendSosBtn');
+    if (sendSosBtn) {
+      sendSosBtn.addEventListener('click', () => {
+        sendSosBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">sync</span><span>Đang phát tín hiệu SOS...</span>';
+        setTimeout(() => {
+          sendSosBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check</span><span>Đã gửi tín hiệu cảnh báo!</span>';
+          sendSosBtn.classList.remove('bg-error');
+          sendSosBtn.classList.add('bg-primary-container', 'text-on-primary-container');
+        }, 700);
+      });
+    }
+
+    // Reconnect OAuth Modal Simulation
+    const reconnectBtn = document.getElementById('reconnectOAuthBtn');
+    const modal = document.getElementById('reconnectModal');
+    const progressBar = document.getElementById('modalProgressBar');
+    const modalStepText = document.getElementById('modalStepText');
+
+    if (reconnectBtn && modal && progressBar && modalStepText) {
+      reconnectBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        setTimeout(() => {
+          progressBar.style.width = '60%';
+          modalStepText.textContent = "Exchanging short-lived token for 60-day System Page Token...";
+        }, 800);
+
+        setTimeout(() => {
+          progressBar.style.width = '100%';
+          modalStepText.textContent = "Hoàn tất! Đang kích hoạt Backfill Auto-Scan bình luận dồn ứ...";
+        }, 1800);
+
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          // Banner update to success
+          const banner = document.getElementById('incidentBanner');
+          if (banner) {
+            banner.className = "w-full bg-surface-container px-margin py-space-md shadow-sm transition-all duration-300";
+            banner.innerHTML = `
+              <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-space-md">
+                  <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 text-on-primary">
+                    <span class="material-symbols-outlined text-[18px]">done_all</span>
+                  </div>
+                  <span class="font-body-md text-body-md text-on-surface">Đã khôi phục kết nối Fanpage thành công! Đang tự động kéo về 14 bình luận chưa xử lý.</span>
+                </div>
+                <a href="#" class="font-title-sm text-title-sm text-primary font-bold hover:underline">Xem Hộp thư Live &rarr;</a>
+              </div>
+            `;
+          }
+        }, 2600);
+      });
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-low py-space-lg mt-auto shadow-[0_-1px_8px_rgba(0,0,0,0.02)]"><div class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><span class="font-label-sm text-label-sm text-on-surface-variant">© 2025 CommentFlow AI Platform. All rights reserved.</span><span class="font-code-sm text-code-sm text-outline">v2.4.0-diagnostics</span></div><div class="flex items-center gap-space-lg"><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="diagnostic-help-center" href="#">Incident Documentation</a><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="channel-reconnection" href="#">Channel Auth Guide</a><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="system-diagnostics" href="#">Live Telemetry</a></div></div></footer></body></html>
