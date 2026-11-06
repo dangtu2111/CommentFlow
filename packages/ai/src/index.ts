@@ -87,6 +87,15 @@ export {
   type VariantAxis,
 } from './decide/decide-action';
 export {
+  checkDraftLegal,
+  type DraftLegalCheck,
+  evaluateLegalRules,
+  LEGAL_TOPICS,
+  type LegalEvaluation,
+  type LegalSource,
+  type LegalTopic,
+} from './decide/legal-rules';
+export {
   anyStockStale,
   DEFAULT_STOCK_STALE_DAYS,
   evaluateStockRules,
