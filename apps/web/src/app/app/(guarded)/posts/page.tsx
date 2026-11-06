@@ -2,6 +2,9 @@ import { getTranslations } from 'next-intl/server';
 import { PostsList } from '../../../../components/posts/posts-list';
 import { PostsTabs } from '../../../../components/posts/posts-tabs';
 import { PostsToolbar } from '../../../../components/posts/posts-toolbar';
+import { Card } from '../../../../components/ui/card';
+import { Chip } from '../../../../components/ui/chip';
+import { Breadcrumb } from '../../../../components/ui/page-header';
 import {
   POSTS_PAGE_SIZE,
   parsePostsSearchParams,
@@ -37,8 +40,8 @@ export default async function PostsPage({
   }
   if (!data) {
     return (
-      <main className="posts" role="alert">
-        <h1>{t('error.title')}</h1>
+      <main className="app-page" role="alert">
+        <h1 className="page-title">{t('error.title')}</h1>
         <p>{t('error.body')}</p>
       </main>
     );
@@ -47,39 +50,37 @@ export default async function PostsPage({
   const { page, channels, timeZone } = data;
   const filtered = Boolean(view.platform || view.channelId || view.kind || view.search);
   return (
-    <main className="posts">
+    <main className="app-page app-page-wide">
       <header className="posts-header">
-        <nav className="posts-breadcrumb" aria-label={t('breadcrumb.label')}>
-          <span>{t('breadcrumb.operations')}</span>
-          <span aria-hidden="true">›</span>
-          <span>{t('breadcrumb.content')}</span>
-          <span aria-hidden="true">›</span>
-          <span aria-current="page">{t('breadcrumb.current')}</span>
-        </nav>
+        <Breadcrumb
+          label={t('breadcrumb.label')}
+          parents={[t('breadcrumb.operations'), t('breadcrumb.content')]}
+          current={t('breadcrumb.current')}
+        />
         <div className="posts-title-row">
-          <h1>{t('heading')}</h1>
-          <span className="posts-total">{t('count', { count: page.total })}</span>
+          <h1 className="page-title">{t('heading')}</h1>
+          <Chip tone="info">{t('count', { count: page.total })}</Chip>
         </div>
-        <p className="muted">{t('subtitle')}</p>
+        <p className="page-subtitle">{t('subtitle')}</p>
       </header>
-      <PostsTabs view={view} />
-      <section className="posts-panel">
+      <Card className="posts-filter">
+        <PostsTabs view={view} />
         <PostsToolbar view={view} channels={channels} />
-        {page.items.length === 0 ? (
-          <div className="inbox-empty">
-            <h2>{filtered || view.page > 1 ? t('empty.filteredTitle') : t('empty.title')}</h2>
-            <p>{filtered || view.page > 1 ? t('empty.filteredBody') : t('empty.body')}</p>
-          </div>
-        ) : (
-          <PostsList
-            view={view}
-            items={page.items}
-            total={page.total}
-            pageCount={postsPageCount(page.total, POSTS_PAGE_SIZE)}
-            timeZone={timeZone}
-          />
-        )}
-      </section>
+      </Card>
+      {page.items.length === 0 ? (
+        <Card className="inbox-empty">
+          <h2>{filtered || view.page > 1 ? t('empty.filteredTitle') : t('empty.title')}</h2>
+          <p>{filtered || view.page > 1 ? t('empty.filteredBody') : t('empty.body')}</p>
+        </Card>
+      ) : (
+        <PostsList
+          view={view}
+          items={page.items}
+          total={page.total}
+          pageCount={postsPageCount(page.total, POSTS_PAGE_SIZE)}
+          timeZone={timeZone}
+        />
+      )}
     </main>
   );
 }

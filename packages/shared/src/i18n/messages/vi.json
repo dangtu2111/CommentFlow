@@ -1283,6 +1283,11 @@
     "completenessReady": "Đủ điều kiện bật tự động",
     "completenessNotReady": "Cần tối thiểu {min}% để bật tự động",
     "completenessDetail": "Xem chi tiết",
+    "overviewTitle": "Tổng quan kiến thức",
+    "actions": {
+      "test": "Chạy kiểm thử",
+      "publish": "Xuất bản"
+    },
     "groups": {
       "structure": "Cấu trúc tri thức",
       "tuning": "Tinh chỉnh & kiểm thử"

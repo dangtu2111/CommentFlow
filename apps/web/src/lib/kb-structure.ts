@@ -5,6 +5,9 @@ import type { NavItemKey } from './app-nav';
  * Chỉ trỏ tới trang ĐÃ TỒN TẠI (cùng nguồn với `app-nav.ts`); mục thiết kế có mà chưa có trang (Thông tin cửa hàng,
  * Chính sách, Tài liệu, Giọng văn, Từ điển viết tắt…) không hiện cho tới khi tính năng ra đời.
  */
+/** Trang tổng quan KB: mục đầu của rail (không thuộc nhóm nào). */
+export const KB_HOME: { key: NavItemKey; href: string } = { key: 'kb', href: '/app/kb' };
+
 export type KbSubnavGroupKey = 'structure' | 'tuning';
 export type KbSubnavItem = { key: NavItemKey; href: string; group: KbSubnavGroupKey };
 
