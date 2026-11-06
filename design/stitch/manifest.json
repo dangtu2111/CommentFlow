@@ -1,6 +1,6 @@
 {
   "project_id": "15298527895734533184",
-  "synced_at": "2026-11-02T19:15:22+07:00",
+  "synced_at": "2026-11-06T11:46:54.258Z",
   "screens": [
     {
       "stitch_id": "f96e516f1a6d41fb943b3b4c4fc065e2",
@@ -28,7 +28,8 @@
       "slug": "settings-2fa-disable-modal",
       "updated": null,
       "files": [
-        "settings-2fa-disable-modal.png"
+        "settings-2fa-disable-modal.png",
+        "settings-2fa-disable-modal.html"
       ]
     },
     {
@@ -97,7 +98,8 @@
       "slug": "automation",
       "updated": null,
       "files": [
-        "automation.png"
+        "automation.png",
+        "automation.html"
       ]
     },
     {
@@ -106,7 +108,8 @@
       "slug": "auth-login-register",
       "updated": null,
       "files": [
-        "auth-login-register.png"
+        "auth-login-register.png",
+        "auth-login-register.html"
       ]
     },
     {
@@ -115,7 +118,8 @@
       "slug": "spam-rules",
       "updated": null,
       "files": [
-        "spam-rules.png"
+        "spam-rules.png",
+        "spam-rules.html"
       ]
     },
     {
@@ -124,7 +128,8 @@
       "slug": "onboarding",
       "updated": null,
       "files": [
-        "onboarding.png"
+        "onboarding.png",
+        "onboarding.html"
       ]
     },
     {
@@ -133,7 +138,8 @@
       "slug": "email-invite",
       "updated": null,
       "files": [
-        "email-invite.png"
+        "email-invite.png",
+        "email-invite.html"
       ]
     },
     {
@@ -142,7 +148,8 @@
       "slug": "settings-password-changed",
       "updated": null,
       "files": [
-        "settings-password-changed.png"
+        "settings-password-changed.png",
+        "settings-password-changed.html"
       ]
     },
     {
@@ -161,7 +168,8 @@
       "slug": "accept-invite",
       "updated": null,
       "files": [
-        "accept-invite.png"
+        "accept-invite.png",
+        "accept-invite.html"
       ]
     },
     {
@@ -170,7 +178,8 @@
       "slug": "settings-change-password-modal",
       "updated": null,
       "files": [
-        "settings-change-password-modal.png"
+        "settings-change-password-modal.png",
+        "settings-change-password-modal.html"
       ]
     },
     {
@@ -179,7 +188,8 @@
       "slug": "leads",
       "updated": null,
       "files": [
-        "leads.png"
+        "leads.png",
+        "leads.html"
       ]
     },
     {
@@ -188,7 +198,8 @@
       "slug": "activity-log",
       "updated": null,
       "files": [
-        "activity-log.png"
+        "activity-log.png",
+        "activity-log.html"
       ]
     },
     {
@@ -197,7 +208,8 @@
       "slug": "error-404",
       "updated": null,
       "files": [
-        "error-404.png"
+        "error-404.png",
+        "error-404.html"
       ]
     },
     {
@@ -206,7 +218,8 @@
       "slug": "email-password-changed",
       "updated": null,
       "files": [
-        "email-password-changed.png"
+        "email-password-changed.png",
+        "email-password-changed.html"
       ]
     },
     {
@@ -215,7 +228,8 @@
       "slug": "knowledge-base",
       "updated": null,
       "files": [
-        "knowledge-base.png"
+        "knowledge-base.png",
+        "knowledge-base.html"
       ]
     },
     {
@@ -224,7 +238,8 @@
       "slug": "messages",
       "updated": null,
       "files": [
-        "messages.png"
+        "messages.png",
+        "messages.html"
       ]
     },
     {
@@ -233,7 +248,8 @@
       "slug": "terms-dpa",
       "updated": null,
       "files": [
-        "terms-dpa.png"
+        "terms-dpa.png",
+        "terms-dpa.html"
       ]
     },
     {
@@ -242,7 +258,8 @@
       "slug": "posts",
       "updated": null,
       "files": [
-        "posts.png"
+        "posts.png",
+        "posts.html"
       ]
     },
     {
@@ -251,7 +268,8 @@
       "slug": "channel-disconnected",
       "updated": null,
       "files": [
-        "channel-disconnected.png"
+        "channel-disconnected.png",
+        "channel-disconnected.html"
       ]
     },
     {
@@ -260,7 +278,8 @@
       "slug": "settings-2fa-setup-modal",
       "updated": null,
       "files": [
-        "settings-2fa-setup-modal.png"
+        "settings-2fa-setup-modal.png",
+        "settings-2fa-setup-modal.html"
       ]
     },
     {
