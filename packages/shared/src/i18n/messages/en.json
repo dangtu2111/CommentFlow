@@ -1807,8 +1807,8 @@
       "humanAgent": "Past 24 hours: only staff can reply (HUMAN_AGENT tag, up to 7 days); AI will not auto-send.",
       "locked": "More than 7 days since the last customer message: sending is no longer possible.",
       "short": "{hours}h {minutes}m left",
-    "shortHumanAgent": "Staff only",
-    "shortLocked": "Locked",
+      "shortHumanAgent": "Staff only",
+      "shortLocked": "Locked",
       "remainingShort": "{hours} h {minutes} min left",
       "privateReply": "A Private Reply from a comment allows one message within 7 days; the 24-hour window opens only after the customer replies."
     },

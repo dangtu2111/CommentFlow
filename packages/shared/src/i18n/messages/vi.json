@@ -1807,8 +1807,8 @@
       "humanAgent": "Đã quá 24 giờ: chỉ nhân viên được trả lời (thẻ HUMAN_AGENT, tối đa 7 ngày); AI không tự gửi.",
       "locked": "Đã quá 7 ngày kể từ tin cuối của khách: không thể gửi tin nhắn nữa.",
       "short": "Còn {hours}g {minutes}p",
-    "shortHumanAgent": "Chỉ nhân viên",
-    "shortLocked": "Đã khóa",
+      "shortHumanAgent": "Chỉ nhân viên",
+      "shortLocked": "Đã khóa",
       "remainingShort": "Còn {hours} giờ {minutes} phút",
       "privateReply": "Trả lời riêng (Private Reply) từ bình luận chỉ gửi được 1 tin trong 7 ngày; khách phản hồi mới mở cửa sổ 24 giờ."
     },
