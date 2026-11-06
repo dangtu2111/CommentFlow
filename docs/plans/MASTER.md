@@ -159,7 +159,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PIPE-CLASSIFY-EXTRACT | FR-027 (6 nhãn bằng model nhỏ), FR-145 (`labels[]`), FR-162 (một bước `extract`) | US-100–103 | PII-MASK-PIPE, AI-WRAPPER | — | **có** — khóa LLM trả phí | 🟡 Xong-mock (`feat-pipe-classify-extract`; cờ `CLASSIFY_LLM_ENABLED` tắt; chưa có nhánh ml; KT-030) |
 | PIPE-ROUTE | FR-136 (định tuyến theo ý định: giá/size/màu/tồn → tra DB) | US-101 | PIPE-CLASSIFY-EXTRACT, PRODUCTS-VARIANTS | — | không | ✅ (lõi hàm thuần, `feat-pipe-route`; ghi `retrieval_logs.route` chờ bảng; KT-PR) |
 | PIPE-REWRITE-CTX | FR-137 (viết lại câu hỏi theo ngữ cảnh), FR-144 (nhớ 5 lượt gần nhất) | — | PIPE-CLASSIFY-EXTRACT | — | không | ⏳ |
-| PIPE-RETRIEVE | FR-028 (tìm kiến thức cho nhãn cần trả lời; Khiếu nại không soạn) | — | KB-SEARCH-FTS, PIPE-ROUTE | — | không | ⏳ |
+| PIPE-RETRIEVE | FR-028 (tìm kiến thức cho nhãn cần trả lời; Khiếu nại không soạn) | — | KB-SEARCH-FTS, PIPE-ROUTE | — | không | 🟡 Xong-mock (lõi + cổng `retrieveKnowledge`, `feat-pipe-retrieve`; embedder fixture; còn rerank/ghi chú bài/`retrieval_logs`/nối pipeline; KT-RT) |
 | PIPE-DRAFT | FR-029 (JSON `{reply, lang, sources[], needs_human, reason}`), FR-138 (prompt caching), FR-140 (`claims[]` trích nguồn từng ý), FR-142 (xưng hô) | US-011, 012 | PIPE-RETRIEVE | — | **có** — khóa LLM | 🟡 Xong-mock (`feat-pipe-draft`; cờ `DRAFT_LLM_ENABLED` tắt; nguồn là đầu vào, chờ PIPE-RETRIEVE nối; KT-031) |
 | PIPE-GUARD-MONEY | FR-030 (mọi số tiền/%/ngày/SĐT/link phải có trong nguồn — kiểm bằng code) | US-103 | PIPE-DRAFT | S | không | ✅ (lõi; nối pipeline ở PIPE-DRAFT) |
 | PRICE-SNAPSHOT | FR-111 (lưu `drafts.price_snapshot` khi soạn) | US-045 | PIPE-GUARD-MONEY | S+DB | không | ⏳ |
