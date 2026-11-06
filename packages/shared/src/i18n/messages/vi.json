@@ -656,6 +656,46 @@
       "body": "Vui lòng tải lại trang sau ít phút."
     }
   },
+  "kbPublish": {
+    "pageTitle": "Phiên bản kiến thức",
+    "title": "Phiên bản kiến thức",
+    "subtitle": "AI chỉ trả lời theo phiên bản đã xuất bản. Sửa ở bản nháp, xem thay đổi rồi xuất bản; cần quay lại thì khôi phục một phiên bản cũ (hệ thống tạo phiên bản mới, không xóa bản nào).",
+    "draftTitle": "Bản nháp",
+    "currentNone": "Chưa có phiên bản nào được xuất bản.",
+    "currentVersion": "Phiên bản đang chạy: {number}",
+    "noChanges": "Bản nháp không có thay đổi nào so với phiên bản đang chạy.",
+    "summary": "Thêm {added} · Sửa {changed} · Xóa {removed} đoạn kiến thức",
+    "categories": "Nhóm thay đổi: {list}",
+    "blockedInjection": "{count} đoạn bị nghi chứa lệnh cài vào kiến thức nên không được xuất bản; hãy kiểm tra lại nội dung đó.",
+    "noteLabel": "Ghi chú phiên bản (tùy chọn)",
+    "confirmPublish": "Tôi đã xem thay đổi về Sản phẩm/Chính sách và đồng ý xuất bản.",
+    "confirmRestore": "Tôi hiểu AI sẽ trả lời theo nội dung phiên bản này.",
+    "publish": "Xuất bản",
+    "restore": "Khôi phục",
+    "queued": "Đã gửi yêu cầu. Phiên bản mới sẽ hiện trong danh sách sau ít giây; tải lại trang để xem.",
+    "noChangesResult": "Không có gì thay đổi nên chưa tạo phiên bản mới.",
+    "historyTitle": "Lịch sử phiên bản",
+    "historyEmpty": "Chưa có phiên bản nào.",
+    "versionLabel": "Phiên bản {number}",
+    "current": "Đang chạy",
+    "versionMeta": "{date} · {chunks} đoạn",
+    "category": {
+      "faq": "FAQ",
+      "policy": "Chính sách",
+      "product": "Sản phẩm",
+      "manual": "Nhập tay",
+      "url": "Liên kết"
+    },
+    "error": {
+      "invalid_note": "Ghi chú tối đa 500 ký tự.",
+      "confirm_required": "Hãy tick ô xác nhận trước khi tiếp tục.",
+      "unavailable": "Chưa gửi được yêu cầu, vui lòng thử lại."
+    },
+    "loadError": {
+      "title": "Chưa tải được phiên bản kiến thức",
+      "body": "Vui lòng tải lại trang sau ít phút."
+    }
+  },
   "readiness": {
     "pageTitle": "Độ sẵn sàng của AI",
     "title": "Độ sẵn sàng của AI",
@@ -810,6 +850,7 @@
       "readiness": "Độ sẵn sàng AI",
       "aiSent": "AI đã gửi",
       "kbGaps": "Câu hỏi chưa trả lời",
+      "kbPublish": "Phiên bản kiến thức",
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
