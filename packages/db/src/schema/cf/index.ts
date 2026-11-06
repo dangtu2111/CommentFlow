@@ -7,6 +7,7 @@ export * from './comment-tombstones';
 export * from './comments';
 export * from './kb';
 export * from './kb-content';
+export * from './post-notes';
 export * from './posts';
 export * from './product-aliases';
 export * from './products';
