@@ -10,5 +10,5 @@
    - Quyết định tự chọn: file riêng `docs/plans/quyet-dinh/q<mã>.md`, rồi `pnpm quyet:build` (`pnpm quyet:check` phải xanh).
    - Tài nguyên cần cung cấp: file riêng `docs/can-ban-cung-cap.d/<mã>.md`, rồi `pnpm cbcc:build`. Kiểm tra tay: `docs/testing/kiem-tra-tay.d/kt-<mã>.md` + `tt-<mã>.md`, rồi `pnpm kt:build`. Không sửa tay hai file sinh ra (`pnpm cbcc:check`, `pnpm kt:check` phải xanh).
 6. Việc chưa xong, hoặc sắp đổi agent → commit phần đã xong, ghi `docs/handoff/<nhánh>.md` theo `docs/handoff/TEMPLATE.md` (ghi rõ agent vừa làm). Xong hẳn → xóa handoff và plan của nhánh.
-7. Đề xuất commit message; không tự push.
+7. Trước **mỗi lần push** (kể cả push sửa lỗi sau CI đỏ): chạy `pnpm precheck` (lint, format check, typecheck, check:migrations, check:plans, codemap:check, quyet:check, cbcc:check, kt:check; dừng ở lỗi đầu). CI chỉ chạy ở PR/main nên không có CI "miễn phí" trên nhánh. Không dùng hook hay script tự chạy.
 8. **Merge:** chỉ bằng `gh pr merge <số> --merge --delete-branch` sau khi CI xanh. **Không xóa nhánh remote bằng tay** (`git push origin --delete …`): xóa nhánh khi PR chưa merge sẽ ĐÓNG PR. Merge báo lỗi tạm (502, "Base branch was modified") → thử lại hoặc `git fetch && git rebase origin/main` rồi push, và xác nhận `state = MERGED` trước khi dọn nhánh cục bộ.

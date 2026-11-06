@@ -1,7 +1,9 @@
 name: CI
 
+# Chỉ chạy ở PR và khi vào main (không chạy lặp khi push nhánh). Tên 5 job là check bắt buộc: không đổi.
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:

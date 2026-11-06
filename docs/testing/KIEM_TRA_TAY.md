@@ -756,6 +756,15 @@ Hàm thuần, chưa nối cổng tự gửi (AUTO-SEND-GATE) → chưa có bư�
 2. Mở `packages/ai/src/confidence/confidence.ts`, xem `DEFAULT_CONFIDENCE_WEIGHTS`. — Mong đợi: trọng số `default@1`; không có chỗ nào đọc trường `confidence`/`self_score` của JSON LLM.
 3. Kiểm tay khi nối pipeline: bản nháp có JSON hỏng hoặc hành động lạ → độ tin cậy 0, bình luận vào "Cần người", không tự gửi.
 
+## KT-PCS — Semantic cache LiteLLM (stub) (PIPE-CACHE-SEMANTIC-STUB, FR-026) · Semantic cache stub
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cache/semantic-cache.test.ts`. | Test xanh: cờ tắt → no-cache/no-store; bật → namespace chứa workspace_id + kb_version; hai shop không chung namespace. |
+| 2 | Mở `infra/litellm/semantic-cache.example.yaml`. | Chỉ là file mẫu (không nằm trong `config.yaml`); không có khóa/giá trị thật. |
+
 ## KT-PCX — Cache khớp chính xác (PIPE-CACHE-EXACT, FR-026/135) · Exact cache
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
