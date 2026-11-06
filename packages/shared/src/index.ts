@@ -12,6 +12,27 @@ export {
   resolveLocale,
 } from './i18n/locales';
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
+export {
+  BRAND_VOICE_LIST_MAX,
+  type BrandVoiceInput,
+  brandVoiceSchema,
+  CONTENT_LANGS,
+  type ContentLang,
+  expandContentLang,
+  type FaqItemInput,
+  faqItemSchema,
+  HANDOFF_TOPICS,
+  POLICY_KINDS,
+  type PolicyItemInput,
+  parseBrandVoice,
+  parseFaqItem,
+  parsePolicyItem,
+  parseShopProfile,
+  policyItemSchema,
+  type ShopProfileInput,
+  shopProfileSchema,
+  VOICE_LANGS,
+} from './kb-content';
 export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
 export {
   CARD_VALUE_MAX,

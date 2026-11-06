@@ -98,5 +98,11 @@ Code đã đọc cấu hình, đang chạy bằng **giá trị tạm** (`Comment
 
 Tên miền còn phải được xác minh (SPF/DKIM) ở nhà cung cấp email trước khi gửi thật.
 
+## 2e. Khóa LLM trả phí cho phân loại + tách thông tin — `PIPE-CLASSIFY-EXTRACT` (FR-027/145/162, Xong-mock, mã KT-030)
+
+Code đã có bước `extract` (`packages/ai/src/classify/`) gọi LLM qua LiteLLM sẵn có, nhưng cờ **tắt mặc định** và chưa nối vào pipeline; test chạy bằng fixture. Chỉ khi muốn chạy thật, bạn cần cung cấp:
+- Khóa ảo LiteLLM (`LITELLM_API_KEY`, đã có trong `env.example`) được cấp quyền cho **một model nhỏ, rẻ** của nhà cung cấp trả phí (khóa nhà cung cấp đặt trong cấu hình LiteLLM trên máy ảo, không vào repo).
+- Đặt `CLASSIFY_LLM_MODEL=<tên model trong LiteLLM>` và `CLASSIFY_LLM_ENABLED=true` (chỉ staging/thử; chưa có đo chất lượng — chờ `EVAL-RUNNER`).
+
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").

@@ -116,7 +116,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | KB-SCHEMA | FR-050, 055 (bảng `kb_*`, `kb_versions`, `kb_chunks` có `halfvec`) | US-003 | CH-SCHEMA | DB | không | ✅ (feat/kb-schema; HNSW + chỉ mục `embedding_model` còn ở KB-EMBED-COL) |
-| KB-SHOP-POLICY-FAQ | FR-050 (thông tin shop, chính sách, FAQ, giọng văn theo ngôn ngữ, quy tắc) | US-003, UF-1 | KB-SCHEMA | — | không | ⏳ |
+| KB-SHOP-POLICY-FAQ | FR-050 (thông tin shop, chính sách, FAQ, giọng văn theo ngôn ngữ, quy tắc) | US-003, UF-1 | KB-SCHEMA | — | không | ✅ (feat-kb-shop-policy-faq, migration 0036: `shop_profiles`/`policy_items`/`faq_items`/`brand_voice` + `@flow/shared` kiểm đầu vào + `queries/kb-content.ts`; giao diện → `KB-CONTENT-UI`, phạm vi kênh → `KB-SCOPE-CHANNEL`) |
 | PRODUCTS-VARIANTS | FR-129 (`products`, `product_variants`, `products.rev`), FR-056 (giá/tồn không vào vector), FR-058 (thẻ sản phẩm) | US-101 | KB-SCHEMA | DB | không | ✅ (feat-products-variants, migration 0034) |
 | PRODUCT-ALIAS | FR-128 (bí danh sản phẩm) | US-100 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
@@ -156,7 +156,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PIPE-NORMALIZE-LANG | FR-025 (NFC, viết thường, viết tắt), FR-120 (nhận vi/en), FR-159 (ngôn ngữ khác → `other`) | US-036 | ABBREV-DICT | — | không | ⏳ |
 | PII-MASK-PIPE | FR-033 (che SĐT/email trước LLM/Langfuse; lưu số vào Khách tiềm năng trước khi che) | — | PIPE-NORMALIZE-LANG | S | không | ⏳ |
 | PIPE-CACHE-EXACT | FR-026 (khớp chính xác; khóa chứa `workspace_id`, bài, `kb_version`, `product_revs`) | — | KB-SEARCH-FTS | S+DB | không | ⏳ |
-| PIPE-CLASSIFY-EXTRACT | FR-027 (6 nhãn bằng model nhỏ), FR-145 (`labels[]`), FR-162 (một bước `extract`) | US-100–103 | PII-MASK-PIPE, AI-WRAPPER | — | **có** — khóa LLM trả phí | ⛔ |
+| PIPE-CLASSIFY-EXTRACT | FR-027 (6 nhãn bằng model nhỏ), FR-145 (`labels[]`), FR-162 (một bước `extract`) | US-100–103 | PII-MASK-PIPE, AI-WRAPPER | — | **có** — khóa LLM trả phí | 🟡 Xong-mock (`feat-pipe-classify-extract`; cờ `CLASSIFY_LLM_ENABLED` tắt; chưa có nhánh ml; KT-030) |
 | PIPE-ROUTE | FR-136 (định tuyến theo ý định: giá/size/màu/tồn → tra DB) | US-101 | PIPE-CLASSIFY-EXTRACT, PRODUCTS-VARIANTS | — | không | ⏳ |
 | PIPE-REWRITE-CTX | FR-137 (viết lại câu hỏi theo ngữ cảnh), FR-144 (nhớ 5 lượt gần nhất) | — | PIPE-CLASSIFY-EXTRACT | — | không | ⏳ |
 | PIPE-RETRIEVE | FR-028 (tìm kiến thức cho nhãn cần trả lời; Khiếu nại không soạn) | — | KB-SEARCH-FTS, PIPE-ROUTE | — | không | ⏳ |
