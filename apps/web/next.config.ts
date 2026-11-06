@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),
   poweredByHeader: false,
+  // Nhập sản phẩm Excel/CSV gửi file qua Server Action (FR-051): nhận tối đa 10 MB + phần form; giới hạn 10 MB thật
+  // của file do `assertImportFileBytes` kiểm trước khi đọc (Q-KBIX1).
+  experimental: { serverActions: { bodySizeLimit: '11mb' } },
   // Next 16 tự sinh AGENTS.md trong apps/web; hướng dẫn cho agent của repo nằm ở AGENTS.md gốc.
   agentRules: false,
   async headers() {
