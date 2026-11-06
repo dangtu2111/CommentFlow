@@ -115,6 +115,10 @@ Code đã có bước `draft` (`packages/ai/src/draft/`) gọi LLM qua LiteLLM s
 - Đặt `DRAFT_LLM_MODEL=<tên model trong LiteLLM>` và `DRAFT_LLM_ENABLED=true` (chỉ staging/thử; chưa đo chất lượng và tỉ lệ trúng cache — chờ `EVAL-RUNNER`).
 - `PIPE-VARIATION` (FR-161, mã KT-PV) dùng chung đúng khóa/model này (3–5 biến thể câu trong cùng một lần gọi, không thêm tài nguyên); chất lượng đa dạng thật chỉ đo được khi bật thật.
 
+## 2h. `PIPE-RULE-FILTER` + `PIPE-MERGE-BURST` (FR-024, FR-148) — không cần tài nguyên ngoài
+
+Hai hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-032. Không có gì để chủ dự án cung cấp.
+
 ## 2g. Mô hình embedding (vector hóa) — `KB-SEARCH-FTS` (FR-057/127/139, Xong-mock, mã KT-KB-SEARCH)
 
 Tìm kiếm toàn văn + trigram chạy hoàn toàn trong Postgres (không cần khóa). Nhánh **vector** nhận vector dựng sẵn qua interface `Embedder` (`packages/ai/src/embedding/`); hiện chỉ có bản fixture (băm ký tự, không gọi mạng), chưa có bản gọi mô hình thật. Chỉ khi muốn chạy thật, bạn cần cung cấp:
