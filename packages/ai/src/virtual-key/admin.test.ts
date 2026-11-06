@@ -102,7 +102,7 @@ describe('FR-034 client HTTP quản trị khóa LiteLLM', () => {
 
   it('thiếu baseUrl/masterKey → CONFIG_INVALID', () => {
     expect(() => createLiteLlmKeyAdmin({ baseUrl: '', masterKey: MASTER })).toThrow(AppError);
-    expect(() => createLiteLlmKeyAdmin({ baseUrl: 'http://l.test', masterKey: '' })).toThrow(
+    expect(() => createLiteLlmKeyAdmin({ baseUrl: 'http://l.test', masterKey: '  ' })).toThrow(
       AppError,
     );
   });

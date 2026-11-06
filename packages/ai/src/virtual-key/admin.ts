@@ -31,7 +31,7 @@ const DEFAULT_TIMEOUT_MS = 15_000;
 const generateResponseSchema = z.object({ key: z.string().min(1) });
 
 export function createLiteLlmKeyAdmin(options: LiteLlmKeyAdminOptions): VirtualKeyAdmin {
-  if (options.baseUrl.trim() === '' || options.masterKey === '') {
+  if (options.baseUrl.trim() === '' || options.masterKey.trim() === '') {
     throw new AppError('CONFIG_INVALID', 'Thiếu địa chỉ hoặc khóa quản trị LiteLLM.');
   }
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
