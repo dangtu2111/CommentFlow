@@ -204,7 +204,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ⛔ |
+| PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ✅ Xong-mock (feat-plans-schema, Q-PLN1, migration 0054; giá seed chờ chủ dự án xác nhận) |
 | TRIAL-UPGRADE-UI | FR-090 (dùng thử, nâng gói, mua thêm) | US-060 | PLANS-SCHEMA | S | không | ⏳ |
 | QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ⛔ |
 | INVOICES | FR-091 (lịch sử hóa đơn, thông tin xuất hóa đơn) — nền dữ liệu ✅ Xong-mock (feat-invoices, Q-INV1, migration 0052: `core.invoices`/`core.payments`, hàm DEFINER chỉ hệ thống); còn giao diện lịch sử + thông tin xuất hóa đơn, QR, đường Admin | US-061 | QR-PAYMENT | S | không | 🔧 (nền dữ liệu xong; UI chờ `QR-PAYMENT`) |
