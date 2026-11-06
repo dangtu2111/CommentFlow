@@ -274,6 +274,13 @@
       "when": 1793937658826,
       "tag": "0038_kb_search_fts",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793939346962,
+      "tag": "0039_usage_counters",
+      "breakpoints": true
     }
   ]
 }

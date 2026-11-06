@@ -26,6 +26,7 @@ function fakeDb(parts: {
   tokenFunctions?: Row[];
   webhookFn?: Row[];
   stuckOutboxFn?: Row[];
+  usageFn?: Row[];
   leaveFn?: Row[];
   actionLogsCheck?: Row[];
   guards?: Row[];
@@ -96,6 +97,7 @@ function fakeDb(parts: {
       if (text.includes('/* channels-no-insert */')) return { rows: parts.channelInsert ?? [] };
       if (text.includes('/* webhook-function */')) return { rows: parts.webhookFn ?? [] };
       if (text.includes('/* stuck-outbox-function */')) return { rows: parts.stuckOutboxFn ?? [] };
+      if (text.includes('/* usage-function */')) return { rows: parts.usageFn ?? [] };
       if (text.includes('/* action-logs-check */')) return { rows: parts.actionLogsCheck ?? [] };
       if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
@@ -986,6 +988,40 @@ describe('checkRls: hàm liệt kê yêu cầu gửi/ẩn kẹt (SEND-SWEEP/HIDE
     // cf_worker được EXECUTE trực tiếp ĐÚNG hai hàm này (không hàm nào khác).
     const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
     expect(direct).toContain("'read_channel_token', 'list_stuck_outbox'");
+  });
+});
+
+describe('checkRls: hàm trừ lượt AI (USAGE-COUNTERS, FR-090)', () => {
+  it('FR-090 báo khi hàm thiếu, mở cho cf_app/PUBLIC hoặc bỏ kiểm ngữ cảnh', async () => {
+    const v = await checkRls(
+      fakeDb({ usageFn: [{ name: 'core.consume_usage', problem: 'cf_app (web) có EXECUTE' }] }),
+    );
+    expect(v).toContainEqual({
+      subject: 'core.consume_usage',
+      message: expect.stringContaining('cf_app (web) có EXECUTE'),
+    });
+  });
+
+  it('FR-090 SQL đòi DEFINER, chặn PUBLIC/cf_app/cf_auth, cấp cf_worker và kiểm thân hàm; worker được EXECUTE hàm này', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({});
+    await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    const sqlText = queries.find((q) => q.includes('/* usage-function */')) ?? '';
+    expect(sqlText).toContain('prosecdef');
+    expect(sqlText).toContain("has_function_privilege('public'");
+    expect(sqlText).toContain("has_function_privilege('cf_app'");
+    expect(sqlText).toContain("has_function_privilege('cf_auth'");
+    expect(sqlText).toContain("has_function_privilege('cf_worker'");
+    expect(sqlText).toContain('is_system_context() IS NOT TRUE');
+    expect(sqlText).toContain('current_workspace_id() IS DISTINCT FROM p_workspace_id');
+    expect(sqlText).toContain("session_user <> ''cf_worker''");
+    const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
+    expect(direct).toContain("p.proname = 'consume_usage'");
   });
 });
 

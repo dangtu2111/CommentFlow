@@ -96,3 +96,18 @@ export {
   RRF_K,
   reciprocalRankFusion,
 } from './search';
+export {
+  type ConsumeInput,
+  canConsume,
+  parseConsumeInput,
+  USAGE_MAX_AMOUNT,
+  USAGE_MAX_LIMIT,
+  USAGE_PRODUCTS,
+  USAGE_WARN_PERCENT,
+  type UsageCounts,
+  type UsageLevel,
+  type UsageProduct,
+  type UsageStatus,
+  usagePeriodStart,
+  usageStatus,
+} from './usage';
