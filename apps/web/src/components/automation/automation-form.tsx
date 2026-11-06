@@ -47,7 +47,10 @@ export async function AutomationForm({
           <fieldset key={channel.id} className="auto-channel stack">
             <legend className="auto-channel-name">
               <span className="auto-avatar" aria-hidden="true">
-                {(channel.name.replace(/^\[[^\]]*\]\s*/u, '').match(/[\p{L}\p{N}]/u)?.[0] ?? channel.name.slice(0, 1)).toUpperCase()}
+                {(
+                  channel.name.replace(/^\[[^\]]*\]\s*/u, '').match(/[\p{L}\p{N}]/u)?.[0] ??
+                  channel.name.slice(0, 1)
+                ).toUpperCase()}
               </span>
               {channel.name}
             </legend>
