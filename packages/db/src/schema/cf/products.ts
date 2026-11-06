@@ -34,7 +34,7 @@ const sqlList = (values: readonly string[]) => sql.raw(values.map((v) => `'${v}'
 
 /**
  * Sản phẩm (docs/10 §3, FR-129). Giá/tồn đọc TRỰC TIẾP từ bảng này và `product_variants`, không từ vector (FR-056).
- * `rev` do trigger tăng (migration 0031), người dùng không tự đặt. `card` = thẻ sản phẩm (FR-058, kiểm ở `@flow/shared`).
+ * `rev` do trigger tăng (migration 0034), người dùng không tự đặt. `card` = thẻ sản phẩm (FR-058, kiểm ở `@flow/shared`).
  * `name_embedding` + chỉ mục tìm kiếm thêm ở KB-SEARCH-FTS.
  */
 export const products = cf.table(

@@ -222,8 +222,29 @@
     {
       "idx": 31,
       "version": "7",
-      "when": 1793898780548,
-      "tag": "0031_products_variants",
+      "when": 1793896599981,
+      "tag": "0031_stuck_outbox_sweep",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793897304384,
+      "tag": "0032_action_logs_actor_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793929878440,
+      "tag": "0033_kb_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793930951645,
+      "tag": "0034_products_variants",
       "breakpoints": true
     }
   ]

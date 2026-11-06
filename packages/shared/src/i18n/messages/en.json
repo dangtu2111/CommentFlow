@@ -8,8 +8,16 @@
     "vi": "Tiếng Việt",
     "en": "English"
   },
+  "settings": {
+    "pageTitle": "Settings",
+    "title": "Account & Security",
+    "subtitle": "Manage two-step verification, your signed-in sessions and your interface language.",
+    "language": {
+      "title": "Interface language",
+      "body": "Applies to your whole interface on this device."
+    }
+  },
   "auth": {
-    "brand": "CommentFlow AI",
     "tabs": {
       "label": "Choose an action",
       "login": "Sign in",
@@ -85,6 +93,7 @@
       "passwordCommon": "This password is too common and easy to guess. Choose a different one.",
       "passwordPwned": "This password has appeared in data breaches. Choose a different one.",
       "passwordMismatch": "The two passwords don't match. Enter them again.",
+      "passwordSame": "The new password must be different from the current one.",
       "nameInvalid": "Enter your full name (up to 80 characters).",
       "required": "Fill in this field.",
       "generic": "Something went wrong on our side. Try again in a few minutes.",
@@ -107,7 +116,7 @@
       "bilingual": "Vietnamese and English interface."
     },
     "footer": {
-      "rights": "© {year} CommentFlow AI. All rights reserved."
+      "rights": "© {year} {appName}. All rights reserved."
     },
     "twoFactor": {
       "title": "Two-step verification",
@@ -127,6 +136,19 @@
       "subtitle": "Manage two-step verification and the devices signed in to your account.",
       "requiredBanner": "Workspace owners and administrators must turn on two-step verification. Turn it on now to keep using the app.",
       "backToApp": "Back to the app",
+      "changePassword": {
+        "title": "Change password",
+        "body": "After changing it you will be signed out of every device and need to sign in again with the new password.",
+        "currentLabel": "Password you use now",
+        "newLabel": "New password",
+        "newHint": "10 to 128 characters, not too common or found in data breaches.",
+        "confirmLabel": "Repeat the new password",
+        "submit": "Change password"
+      },
+      "language": {
+        "title": "Interface language",
+        "body": "Your choice is saved to your account: the interface, emails and your next sign-in on another device will use this language."
+      },
       "twoFactor": {
         "title": "Two-step verification (TOTP)",
         "offBody": "Add a second layer of protection: besides your password you need a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password...).",
@@ -213,7 +235,6 @@
       }
     },
     "header": {
-      "brand": "CommentFlow AI",
       "nav": "Main navigation"
     }
   },
@@ -370,6 +391,49 @@
       "first": "Back to first page",
       "lockedBy": "{name} is handling"
     },
+    "labels": {
+      "price": "Price question",
+      "advice": "Advice",
+      "purchase": "Purchase",
+      "complaint": "Complaint",
+      "spam": "Spam",
+      "other": "Other"
+    },
+    "bulk": {
+      "select": "Select comment from {name}",
+      "toolbar": "Bulk actions",
+      "selected": "{count} selected",
+      "clear": "Clear selection",
+      "skip": "Skip",
+      "hide": "Hide",
+      "relabel": "Change label",
+      "labelPick": "Choose new label",
+      "apply": "Apply",
+      "working": "Working…",
+      "shortcuts": "Shortcuts: X select row · J/K move · H hide · Esc clear",
+      "confirmTitle": "Hide {count} comments?",
+      "confirmBody": "These comments will be hidden from customers on the platform; each can be unhidden. AI never hides on its own.",
+      "confirmYes": "Hide {count} comments",
+      "confirmNo": "Cancel",
+      "result": "Processed {done}/{requested} comments.",
+      "reasons": {
+        "not_applicable": "{count} comments not applicable (already handled, being handled by a teammate, or gone).",
+        "not_found": "{count} comments not found.",
+        "not_hideable": "{count} comments can't be hidden in their current state.",
+        "locked_by_other": "{count} comments are being handled by a teammate.",
+        "channel_not_connected": "{count} comments belong to a channel that isn't connected.",
+        "forbidden": "{count} comments you aren't allowed to handle.",
+        "queue_unavailable": "{count} comments couldn't send the hide request, please retry.",
+        "unavailable": "{count} comments hit a temporary error, please retry."
+      },
+      "rejections": {
+        "invalid_input": "The comment list is invalid.",
+        "too_many": "Select at most {max} comments at a time.",
+        "invalid_label": "Invalid label.",
+        "confirm_required": "Confirmation is required before hiding.",
+        "unavailable": "The system hit a temporary error, please retry."
+      }
+    },
     "empty": {
       "title": "No comments yet",
       "body": "New comments from your connected Pages will show up here.",
@@ -386,7 +450,8 @@
       "noText": "(No text)",
       "redacted": "The customer deleted this comment; its content and the commenter details were removed from the system.",
       "notFoundTitle": "Comment not found",
-      "notFoundBody": "The comment no longer exists or is not in this workspace."
+      "notFoundBody": "The comment no longer exists or is not in this workspace.",
+      "back": "← Back to list"
     },
     "error": {
       "title": "Could not load the comment list",
@@ -501,10 +566,9 @@
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
-      "security": "Security"
+      "settings": "Settings"
     },
     "logout": "Sign out",
-    "brand": "CommentFlow AI",
     "navLabel": "Main navigation"
   },
   "banners": {
@@ -532,6 +596,10 @@
       },
       "more": "and {count} more channels",
       "reconnect": "Reconnect"
+    },
+    "webhookSilent": {
+      "title": "Webhook may be dropping events: {names}.",
+      "body": "The system had to fetch comments that Facebook did not report. Comments are still received, only later. Check the webhook subscription of your Meta app or reconnect the channel."
     }
   },
   "channels": {

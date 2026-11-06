@@ -9,6 +9,7 @@ import {
   fbNoticeOf,
 } from '../../../../lib/fb-connect-view';
 import { getAuthRuntime } from '../../../../server/auth';
+import { getBrand } from '../../../../server/brand';
 import { getDb } from '../../../../server/db';
 import { listConnectablePages } from '../../../../server/fb-connect';
 import {
@@ -22,7 +23,7 @@ import { cancelConnectAction, connectPagesAction } from './actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('channels');
-  return { title: `${t('title')} · ${(await getTranslations('auth'))('brand')}` };
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;

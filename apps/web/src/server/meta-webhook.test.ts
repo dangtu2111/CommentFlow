@@ -145,6 +145,22 @@ describe('FR-020 POST /api/webhooks/meta — chữ ký, ghi sự kiện, enqueue
     expect(record).not.toHaveBeenCalled();
   });
 
+  it('FR-020 biên 256 KB: đúng 256 KB không bị 413 (đi tiếp tới kiểm chữ ký/JSON), thêm 1 byte → 413', async () => {
+    const { handlers, record } = setup();
+    const post = (buf: ReturnType<typeof Buffer.alloc>) =>
+      handlers.POST(
+        new Request('http://localhost/api/webhooks/meta', {
+          method: 'POST',
+          headers: { 'x-hub-signature-256': signMetaBody(buf, APP_SECRET) },
+          body: buf,
+        }),
+      );
+    expect(MAX_WEBHOOK_BODY_BYTES).toBe(256 * 1024);
+    expect((await post(Buffer.alloc(MAX_WEBHOOK_BODY_BYTES, 97))).status).not.toBe(413);
+    expect((await post(Buffer.alloc(MAX_WEBHOOK_BODY_BYTES + 1, 97))).status).toBe(413);
+    expect(record).not.toHaveBeenCalled();
+  });
+
   it('FR-020 thân quá lớn → 413 (kiểm Content-Length lẫn thân thật), không ghi gì', async () => {
     const { handlers, record } = setup();
     const huge = Buffer.alloc(MAX_WEBHOOK_BODY_BYTES + 1, 97);

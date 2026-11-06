@@ -64,11 +64,13 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/member-leave`, migration 0028) |
 | LOG-STAFF-SYSTEM-ROWS | FR-092 | — | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/log-on-behalf-of`, migration 0029) |
 | WORKER-DB-ROLE | ADR 007 §2 (token Page), ADR 011 | — | LOG-STAFF-SYSTEM-ROWS | S+DB | verifier-security + verifier-db | 🟡 (`feat/worker-db-role`, migration 0030; chờ duyệt + KT-015) |
-| CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ⏳ |
-| AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ⏳ |
-| AUTH-LANG-PREF | FR-119 (`users.locale` từ Cài đặt) | — | I18N | — | không | ⏳ |
-| SETTINGS-PAGE | FR-001, 119 (gom bảo mật/ngôn ngữ vào Cài đặt theo Stitch `settings-security`) | US-005 | AUTH-CHANGE-PW-UI, AUTH-LANG-PREF | — | không | ⏳ |
-| AUTH-HARDEN-4a | FR-001 (REDIS_KEY_PREFIX bắt buộc, Zod ở Server Action bảo mật, `checkAdminInsertGuard` chính xác) | — | — | S | không | ⏳ |
+| ACTION-LOGS-ACTOR-INDEX | 05 FR-092, 10 §3.1 | — | LOG-STAFF-SYSTEM-ROWS | DB | verifier-db | 🟡 (`feat-action-logs-actor-index`, migration 0032; chờ verifier-db + KT-016) |
+| SEND-SWEEP + HIDE-SWEEP | ADR 008, ADR 009 §3 (quét yêu cầu gửi/ẩn kẹt `queued`/`sending` hết thuê; điều kiện trước connector thật) | — | FB-REPLY, FB-HIDE, WORKER-DB-ROLE | S+DB | verifier-security + verifier-db | 🟡 Xong-mock (`feat-send-hide-sweep`, migration 0031; chờ CI + KT-016) |
+| CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ✅ |
+| AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ✅ (feat-auth-change-pw-ui) |
+| AUTH-LANG-PREF | FR-119 (`users.locale` từ Cài đặt) | — | I18N | — | không | 🟡 (`feat-auth-lang-pref`; chờ KT-017) |
+| SETTINGS-PAGE | FR-001, 119 (gom bảo mật/ngôn ngữ vào Cài đặt theo Stitch `settings-security`) | US-005 | AUTH-CHANGE-PW-UI, AUTH-LANG-PREF | — | không | 🟡 (`feat-settings-page`: 2FA + phiên + ngôn ngữ xong; đổi mật khẩu/`users.locale` chờ AUTH-CHANGE-PW-UI, AUTH-LANG-PREF; KT-016) |
+| AUTH-HARDEN-4a | FR-001 (REDIS_KEY_PREFIX bắt buộc, Zod ở Server Action bảo mật, `checkAdminInsertGuard` chính xác) | — | — | S | không | ✅ `feat-auth-harden-4a` |
 | AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ⏳ |
 | FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ⏳ |
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ⏳ |
@@ -90,12 +92,12 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | INBOX-DETAIL-LOCK | FR-041 (khóa mềm `locked_until`, cảnh báo người thứ hai) | US-013 | INBOX-LIST | — | không | ✅ (chi tiết + khóa 2 phút; hành động Gửi/Ẩn/Bỏ qua ở `FB-REPLY`/`FB-HIDE`) |
 | FB-OAUTH | FR-010 (Facebook Login for Business, liệt kê Page, chọn trong giới hạn gói, đăng ký webhook) | US-002, UF-1 | TOKEN-ENC | S | **có** — Page thử (Meta App dev đã có; redirect localhost; xem `docs/CAN_BAN_CUNG_CAP.md`) | ✅ Xong-mock (feat/fb-oauth; chưa thử Page thật — KT-014; cờ `FB_OAUTH_ENABLED` tắt) |
 | CH-STATUS-BANNER | FR-012 (connected / token_expired / disconnected; banner Kết nối lại) | US-002 | FB-OAUTH | — | không | ✅ (banner theo trạng thái kênh; nút "Kết nối lại" chờ FB-OAUTH — gap `CH-RECONNECT-ACTION`) |
-| FB-BACKFILL | FR-011 (lấy bình luận cũ 3/7/30 ngày khi kết nối) | US-002 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
-| FB-REPLY | FR-042 (gửi trả lời tay; thành công/lỗi + lý do; timeout kiểm lại) | US-011, 016, UF-3 | FB-OAUTH, INBOX-DETAIL-LOCK | S (dùng token) | **có** — Page thử | ✅ backend (outbox + job `send` + `sendRecheck`, test bằng connector giả — feat/reply-backend); + giao diện hộp soạn/Gửi/Thử lại (feat/reply-ui); connector Facebook (hợp đồng + fixture) xong ở feat/fb-connector (ADR 010); còn đăng ký vào worker + Page thử |
+| FB-BACKFILL | FR-011 (lấy bình luận cũ 3/7/30 ngày khi kết nối) | US-002 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ✅ Xong-mock phần lõi (feat-polling-backfill: `backfillChannel` 3/7/30 ngày; nút chọn ngày khi kết nối = gap `FB-BACKFILL-UI`) |
+| FB-REPLY | FR-042 (gửi trả lời tay; thành công/lỗi + lý do; timeout kiểm lại) | US-011, 016, UF-3 | FB-OAUTH, INBOX-DETAIL-LOCK | S (dùng token) | **có** — Page thử | ✅ backend (outbox + job `send` + `sendRecheck`, test bằng connector giả — feat/reply-backend); + giao diện hộp soạn/Gửi/Thử lại (feat/reply-ui); connector Facebook (hợp đồng + fixture) xong ở feat/fb-connector (ADR 010); đăng ký vào worker **Xong-mock** (feat/fb-connector-register: cờ `FB_CONNECTOR_ENABLED` tắt mặc định, `findExistingReply` theo cha); còn Page thử (KT-016) |
 | FB-RETRY-UI | FR-042 (Gửi lỗi + Thử lại, lý do dễ hiểu) | US-016 | FB-REPLY | — | không | ✅ (cùng feat/reply-ui: lý do dễ hiểu + Thử lại; thử lại có kiểm trước) |
 | FB-HIDE | FR-044 (ẩn/bỏ ẩn `is_hidden`, không có xóa) | US-015 | FB-REPLY | — | **có** — Page thử | ✅ (feat/fb-hide, connector giả; thử Page thật: KT-010) |
 | COMMENT-EDIT-DELETE | FR-048 (bình luận sửa → cập nhật; xóa → ẩn khỏi inbox, giữ log) | — | WH-INGEST | — | không | ✅ (feat/comment-sync: sửa → cập nhật nội dung; xóa → `deleted_at` ẩn khỏi inbox; còn phân loại lại sau sửa) |
-| POLLING-BACKFILL | FR-023 (polling bù sót; cảnh báo webhook im lặng) | UF-2 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ⛔ |
+| POLLING-BACKFILL | FR-023 (polling bù sót; cảnh báo webhook im lặng) | UF-2 | FB-OAUTH, WH-INGEST | — | **có** — Page thử | ✅ Xong-mock (feat-polling-backfill; cờ `POLLING_ENABLED` tắt; chờ `POLLING-CHANNEL-LIST` — KT-016) |
 | ATTACHMENTS-STORE | FR-143 (lưu loại + link tệp đính kèm) | — | CH-SCHEMA | DB | không | ⏳ |
 | ADS-POSTS-LIST | FR-123 (bài quảng cáo/dark post của Page + bài thường) | — | FB-OAUTH | — | **có** — Meta App | ⛔ |
 | LOG-PAGE | FR-092 (trang Nhật ký: lọc, trước/sau, Staff chỉ thấy của mình) | — | GĐ0-DB | DB | không | ✅ (`/app/activity`: danh sách + lọc tác nhân/hành động/ngày + trước/sau; Staff chỉ của mình ép ở truy vấn VÀ ở RLS từ migration 0028 — gap `LOG-RLS-STAFF` ✅) |
@@ -113,9 +115,9 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| KB-SCHEMA | FR-050, 055 (bảng `kb_*`, `kb_versions`, `kb_chunks` có `halfvec`) | US-003 | CH-SCHEMA | DB | không | ⏳ |
+| KB-SCHEMA | FR-050, 055 (bảng `kb_*`, `kb_versions`, `kb_chunks` có `halfvec`) | US-003 | CH-SCHEMA | DB | không | ✅ (feat/kb-schema; HNSW + chỉ mục `embedding_model` còn ở KB-EMBED-COL) |
 | KB-SHOP-POLICY-FAQ | FR-050 (thông tin shop, chính sách, FAQ, giọng văn theo ngôn ngữ, quy tắc) | US-003, UF-1 | KB-SCHEMA | — | không | ⏳ |
-| PRODUCTS-VARIANTS | FR-129 (`products`, `product_variants`, `products.rev`), FR-056 (giá/tồn không vào vector), FR-058 (thẻ sản phẩm) | US-101 | KB-SCHEMA | DB | không | ✅ (feat-products-variants, migration 0031) |
+| PRODUCTS-VARIANTS | FR-129 (`products`, `product_variants`, `products.rev`), FR-056 (giá/tồn không vào vector), FR-058 (thẻ sản phẩm) | US-101 | KB-SCHEMA | DB | không | ✅ (feat-products-variants, migration 0034) |
 | PRODUCT-ALIAS | FR-128 (bí danh sản phẩm) | US-100 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ⏳ |
@@ -140,8 +142,8 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | — | không | ⏳ |
 | DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | ⏳ |
 | SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | ⏳ |
-| BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ⏳ |
-| INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ⏳ |
+| BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ✅ (feat/bulk-actions) |
+| INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ✅ (feat-inbox-mobile; còn Playwright 390px, KT-016) |
 | REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
 | AI-READINESS | FR-146 (thanh Độ sẵn sàng của AI, yêu cầu tối thiểu onboarding) | US-107 | KB-SHOP-POLICY-FAQ, PRODUCTS-VARIANTS | — | không | ⏳ |
 | KB-GAPS-UI | FR-134 (danh sách câu AI chưa trả lời + bổ sung kiến thức), UF-11 | US-106 | RETRIEVAL-LOG | — | không | ⏳ |

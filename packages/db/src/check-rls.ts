@@ -251,10 +251,20 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.channels', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.channels', 'platform', 'UPDATE'],
   ['cf_app', 'cf.channels', 'external_id', 'UPDATE'],
+  // kiến thức (KB-SCHEMA): cột định danh không đổi; phiên bản bất biến
+  ['cf_app', 'cf.kb_sources', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.kb_sources', 'type', 'UPDATE'],
+  ['cf_app', 'cf.kb_sources', 'external_key', 'UPDATE'],
+  ['cf_app', 'cf.kb_versions', 'number', 'UPDATE'],
+  ['cf_app', 'cf.kb_versions', 'note', 'UPDATE'],
+  ['cf_app', 'cf.kb_chunks', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.kb_chunks', 'source_id', 'UPDATE'],
+  ['cf_app', 'cf.kb_chunks', 'version_id', 'UPDATE'],
+  ['cf_app', 'cf.kb_chunks', 'chunk_key', 'UPDATE'],
   ['cf_app', 'cf.posts', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.posts', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.posts', 'external_id', 'UPDATE'],
-  // PRODUCTS-VARIANTS (0031): khóa định danh + rev không sửa được (rev chỉ do trigger đặt)
+  // PRODUCTS-VARIANTS (0034): khóa định danh + rev không sửa được (rev chỉ do trigger đặt)
   ['cf_app', 'cf.products', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.products', 'source', 'UPDATE'],
   ['cf_app', 'cf.products', 'external_id', 'UPDATE'],
@@ -349,9 +359,15 @@ async function checkUsersColumnAllowlist(db: Queryable, violations: RlsViolation
   }
 }
 
+/** Biểu thức WITH CHECK đúng của policy 0011 như `pg_get_expr` in ra (đã chuẩn hóa): `((NOT is_admin) AND (admin_role IS NULL))`. */
+const ADMIN_INSERT_GUARD_EXPR = '((notis_admin)and(admin_roleisnull))';
+
+/** Chỉ bỏ khoảng trắng + hạ chữ thường; GIỮ ngoặc vì `NOT (a AND b)` khác nghĩa `(NOT a) AND b`. */
+const normalizeExpr = (expr: string): string => expr.replace(/\s/g, '').toLowerCase();
+
 /**
  * cf_auth có INSERT mức bảng trên core.users nên chốt duy nhất chặn nó tạo Admin là policy RESTRICTIVE
- * (migration 0011): phải còn tồn tại, áp cho INSERT/ALL, và điều kiện nhắc is_admin lẫn admin_role.
+ * (migration 0011): phải còn tồn tại, áp cho INSERT/ALL, và điều kiện đúng bằng `NOT is_admin AND admin_role IS NULL` (so khớp chính xác).
  */
 async function checkAdminInsertGuard(db: Queryable, violations: RlsViolation[]): Promise<void> {
   const found = await db.query(`/* admin-insert-guard */
@@ -363,9 +379,7 @@ async function checkAdminInsertGuard(db: Queryable, violations: RlsViolation[]):
                       WHERE rid <> 0 AND pg_has_role('${AUTH_ROLE}', rid, 'MEMBER')))`);
   const guarded = found.rows.some(
     (row) =>
-      typeof row.withcheck === 'string' &&
-      /\bis_admin\b/.test(row.withcheck) &&
-      /\badmin_role\b/.test(row.withcheck),
+      typeof row.withcheck === 'string' && normalizeExpr(row.withcheck) === ADMIN_INSERT_GUARD_EXPR,
   );
   if (!guarded) {
     violations.push({
@@ -497,7 +511,7 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.posts', 'a', 'is_system_context'],
   ['cf.posts', 'w', 'is_system_context'],
   ['cf.posts', 'r', 'is_workspace_member'],
-  // PRODUCTS-VARIANTS (0031): thành viên (Owner+Staff) hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  // PRODUCTS-VARIANTS (0034): thành viên (Owner+Staff) hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
   ['cf.products', 'a', 'is_workspace_member'],
   ['cf.products', 'a', 'is_system_context'],
   ['cf.products', 'w', 'is_workspace_member'],
@@ -619,6 +633,8 @@ const NO_DELETE_TABLES = [
   'cf.comment_replies',
   'cf.comment_hides',
   'cf.comment_tombstones',
+  'cf.kb_sources',
+  'cf.kb_versions',
   'cf.ai_usage',
   'core.members',
   'core.invitations',
@@ -691,11 +707,12 @@ async function checkWorkerDirectPrivileges(
          LATERAL aclexplode(t.attacl) a, w
     WHERE t.attacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
     UNION ALL
-    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token)'
+    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox)'
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
-      AND NOT (n.nspname = 'cf' AND p.proname = 'read_channel_token' AND a.privilege_type = 'EXECUTE')`);
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox')
+               AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({
       subject: String(row.name),
@@ -761,6 +778,44 @@ async function checkWebhookFunction(db: Queryable, violations: RlsViolation[]): 
       OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'`);
   for (const row of found.rows) {
     violations.push({ subject: String(row.name), message: `hàm webhook: ${String(row.problem)}` });
+  }
+}
+
+/**
+ * Hàm liệt kê yêu cầu gửi/ẩn kẹt (0031, SEND-SWEEP/HIDE-SWEEP): phải tồn tại, SECURITY DEFINER, PUBLIC và cf_app KHÔNG có
+ * EXECUTE (chỉ cf_worker), và thân hàm chỉ cho NGỮ CẢNH TRẦN của kết nối cf_worker (từ chối khi có workspace/người
+ * dùng/ngữ cảnh job hoặc session_user khác) — nếu không, đường khác liệt kê được yêu cầu của mọi workspace.
+ * Phần thân chỉ kiểm bằng chuỗi con của prosrc; logic được kiểm bằng test tích hợp stuck-outbox.int.test.ts.
+ */
+async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* stuck-outbox-function */
+    SELECT 'cf.list_stuck_outbox' AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} (web) không được có quyền EXECUTE (chỉ ${WORKER_ROLE})'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE') THEN '${WORKER_ROLE} thiếu quyền EXECUTE'
+        ELSE 'thân hàm phải từ chối khi có workspace, người dùng, ngữ cảnh job hoặc session_user khác cf_worker (chỉ ngữ cảnh trần của worker)'
+      END AS problem
+    FROM (SELECT 1) AS one
+    LEFT JOIN pg_proc p ON p.pronamespace = 'cf'::regnamespace AND p.proname = 'list_stuck_outbox'
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%current_workspace_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%current_user_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'
+      OR p.prosrc NOT LIKE '%session_user <> ''${WORKER_ROLE}''%'`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm liệt kê yêu cầu kẹt: ${String(row.problem)}`,
+    });
   }
 }
 
@@ -1003,6 +1058,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkNoDelete(db, violations);
   await checkTokenFunctions(db, violations);
   await checkWebhookFunction(db, violations);
+  await checkStuckOutboxFunction(db, violations);
   await checkLeaveFunction(db, violations);
   await checkActionLogsOnBehalfCheck(db, violations);
 

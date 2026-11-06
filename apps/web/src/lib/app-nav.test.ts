@@ -1,13 +1,33 @@
 import { describe, expect, it } from 'vitest';
+import { getMessages } from '../i18n/messages';
 import { isNavActive, navGroupsFor } from './app-nav';
 
 const keys = (role: 'owner' | 'staff') =>
   navGroupsFor(role).flatMap((group) => group.items.map((item) => item.key));
 
 describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
-  it('FR-040 Owner thấy Bình luận, Thành viên, Nhật ký, Bảo mật; Staff không thấy Thành viên (có Nhật ký của mình, FR-092) (trang chỉ Owner, docs/13 §3.1)', () => {
-    expect(keys('owner')).toEqual(['comments', 'channels', 'members', 'activity', 'security']);
-    expect(keys('staff')).toEqual(['comments', 'activity', 'security']);
+  it('FR-040 Owner thấy Bình luận, Kênh, Thành viên, Nhật ký, Cài đặt; Staff không thấy Kênh/Thành viên (có Nhật ký của mình, FR-092) (trang chỉ Owner, docs/13 §3.1)', () => {
+    expect(keys('owner')).toEqual(['comments', 'channels', 'members', 'activity', 'settings']);
+    expect(keys('staff')).toEqual(['comments', 'activity', 'settings']);
+  });
+
+  it('FR-001 FR-119 mục Cài đặt (bảo mật + ngôn ngữ) có cho mọi vai trò, trỏ /app/settings; không còn mục Bảo mật riêng', () => {
+    for (const role of ['owner', 'staff'] as const) {
+      const items = navGroupsFor(role).flatMap((g) => g.items);
+      expect(items.find((i) => i.key === 'settings')?.href).toBe('/app/settings');
+      expect(items.map((i) => i.key)).not.toContain('security');
+    }
+  });
+
+  it('FR-119 mọi mục menu có nhãn shell.nav.<khóa> ở cả vi và en', () => {
+    for (const locale of ['vi', 'en'] as const) {
+      const nav = getMessages(locale).shell.nav as Record<string, string>;
+      for (const role of ['owner', 'staff'] as const) {
+        for (const item of navGroupsFor(role).flatMap((g) => g.items)) {
+          expect(nav[item.key], `${locale}:${item.key}`).toBeTruthy();
+        }
+      }
+    }
   });
 
   it('FR-040 "Rời workspace" không phải mục menu chính (nằm ở bộ chuyển workspace, trang /app/leave)', () => {

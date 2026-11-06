@@ -4,11 +4,12 @@ import { getTranslations } from 'next-intl/server';
 import { AcceptInviteForm } from '../../../components/app/accept-invite-form';
 import { AuthShell } from '../../../components/auth/auth-shell';
 import { getAuthRuntime } from '../../../server/auth';
+import { getBrand } from '../../../server/brand';
 import { getCurrentUser } from '../../../server/session';
 
 export async function generateMetadata() {
   const t = await getTranslations('invite');
-  return { title: `${t('title')} · ${(await getTranslations('auth'))('brand')}` };
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 /**

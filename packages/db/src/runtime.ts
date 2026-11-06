@@ -45,6 +45,7 @@ export {
   listChannelAlerts,
 } from './queries/channel-alerts';
 export { type ChannelListItem, listChannels } from './queries/channels';
+export { relabelComments, SKIPPABLE_STATUSES, skipComments } from './queries/comment-bulk';
 export { type CommentDetail, getCommentDetail } from './queries/comment-detail';
 export {
   acquireCommentLock,
@@ -74,6 +75,11 @@ export {
 } from './queries/inbox';
 export { type ActiveVariant, findActiveVariants } from './queries/products';
 export {
+  listWebhookSilentChannels,
+  WEBHOOK_SILENT_WINDOW_HOURS,
+  type WebhookSilentChannel,
+} from './queries/webhook-silent';
+export {
   cancelCommentReply,
   REPLY_REJECTIONS,
   ReplyRejectedError,
@@ -83,6 +89,12 @@ export {
 } from './replies';
 export { purgeExpiredWebhookPayloads, WEBHOOK_PAYLOAD_RETENTION_DAYS } from './retention';
 export { schema } from './schema';
+export {
+  listStuckOutbox,
+  type StuckOutboxKind,
+  type StuckOutboxOptions,
+  type StuckRequest,
+} from './stuck-outbox';
 export {
   type RecordedWebhookEvent,
   type RecordWebhookEventInput,

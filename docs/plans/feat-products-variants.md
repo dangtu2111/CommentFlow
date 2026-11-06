@@ -28,14 +28,14 @@ Không có (các lựa chọn tự quyết ghi ở `QUYET_DINH_CHO_DUYET.md` mã
 
 - `packages/shared/src/products.ts` (+ test), `index.ts` — chuẩn hóa thuộc tính, văn bản vector, thẻ sản phẩm.
 - `packages/db/src/schema/cf/products.ts`, `index.ts` — Drizzle schema.
-- `packages/db/migrations/0031_products_variants.sql`, `meta/` — bảng, RLS, trigger `rev`.
+- `packages/db/migrations/0034_products_variants.sql`, `meta/` — bảng, RLS, trigger `rev`.
 - `packages/db/src/check-rls.ts` — khai báo policy/NO_DELETE/cột không UPDATE.
 - `packages/db/src/queries/products.ts`, `runtime.ts` — `findActiveVariants`.
 - `packages/db/tests/products.int.test.ts`; docs: codemap, gap-matrix, MASTER, KIEM_TRA_TAY, QUYET_DINH, docs/10, handoff.
 
 ## Migration
 
-`0031_products_variants.sql` (làn b). Đường lùi: `DROP TABLE cf.product_variants, cf.products CASCADE; DROP FUNCTION cf.bump_product_rev_from_product(), cf.bump_product_rev_from_variant()` (mất dữ liệu sản phẩm; chưa có code ghi nên an toàn trước khi có nguồn đồng bộ).
+`0034_products_variants.sql` (làn b; đánh lại từ 0031 vì trùng số với main). Đường lùi: `DROP TABLE cf.product_variants, cf.products CASCADE; DROP FUNCTION cf.bump_product_rev_from_product(), cf.bump_product_rev_from_variant()` (mất dữ liệu sản phẩm; chưa có code ghi nên an toàn trước khi có nguồn đồng bộ).
 
 ## Test viết trước
 

@@ -1,5 +1,5 @@
 {
-  "id": "b4e46969-fe58-43f0-9c6e-517f5c474f02",
+  "id": "dd272704-9d1c-428c-8de3-70c6449ee450",
   "prevId": "5c1d7a52-3b0e-4f6a-9d21-7e8a4b0c6f13",
   "version": "7",
   "dialect": "postgresql",
@@ -1698,6 +1698,22 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "comment_hides_stuck_idx": {
+          "name": "comment_hides_stuck_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cf\".\"comment_hides\".\"status\" in ('queued', 'sending')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1924,6 +1940,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comment_replies_stuck_idx": {
+          "name": "comment_replies_stuck_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cf\".\"comment_replies\".\"status\" in ('queued', 'sending')",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2602,406 +2634,6 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "cf.product_variants": {
-      "name": "product_variants",
-      "schema": "cf",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "external_id": {
-          "name": "external_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sku": {
-          "name": "sku",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "attrs": {
-          "name": "attrs",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "attrs_norm": {
-          "name": "attrs_norm",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "price_vnd": {
-          "name": "price_vnd",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "compare_at_vnd": {
-          "name": "compare_at_vnd",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stock": {
-          "name": "stock",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
-        "updated_from_source_at": {
-          "name": "updated_from_source_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "product_variants_product_idx": {
-          "name": "product_variants_product_idx",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "product_variants_attrs_norm_idx": {
-          "name": "product_variants_attrs_norm_idx",
-          "columns": [
-            {
-              "expression": "attrs_norm",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "gin",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "product_variants_workspace_id_workspaces_id_fk": {
-          "name": "product_variants_workspace_id_workspaces_id_fk",
-          "tableFrom": "product_variants",
-          "tableTo": "workspaces",
-          "schemaTo": "core",
-          "columnsFrom": ["workspace_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "product_variants_product_fk": {
-          "name": "product_variants_product_fk",
-          "tableFrom": "product_variants",
-          "tableTo": "products",
-          "schemaTo": "cf",
-          "columnsFrom": ["workspace_id", "product_id"],
-          "columnsTo": ["workspace_id", "id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "product_variants_external_unique": {
-          "name": "product_variants_external_unique",
-          "nullsNotDistinct": false,
-          "columns": ["workspace_id", "product_id", "external_id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "product_variants_status_check": {
-          "name": "product_variants_status_check",
-          "value": "\"cf\".\"product_variants\".\"status\" IN ('active', 'archived')"
-        },
-        "product_variants_attrs_object_check": {
-          "name": "product_variants_attrs_object_check",
-          "value": "jsonb_typeof(\"cf\".\"product_variants\".\"attrs\") = 'object' AND jsonb_typeof(\"cf\".\"product_variants\".\"attrs_norm\") = 'object'"
-        },
-        "product_variants_price_check": {
-          "name": "product_variants_price_check",
-          "value": "\"cf\".\"product_variants\".\"price_vnd\" IS NULL OR \"cf\".\"product_variants\".\"price_vnd\" >= 0"
-        },
-        "product_variants_compare_at_check": {
-          "name": "product_variants_compare_at_check",
-          "value": "\"cf\".\"product_variants\".\"compare_at_vnd\" IS NULL OR \"cf\".\"product_variants\".\"compare_at_vnd\" >= 0"
-        },
-        "product_variants_stock_check": {
-          "name": "product_variants_stock_check",
-          "value": "\"cf\".\"product_variants\".\"stock\" IS NULL OR \"cf\".\"product_variants\".\"stock\" >= 0"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "cf.products": {
-      "name": "products",
-      "schema": "cf",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source": {
-          "name": "source",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'manual'"
-        },
-        "external_id": {
-          "name": "external_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sku": {
-          "name": "sku",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "price_vnd": {
-          "name": "price_vnd",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "compare_at_vnd": {
-          "name": "compare_at_vnd",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stock": {
-          "name": "stock",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "variants": {
-          "name": "variants",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "locked_fields": {
-          "name": "locked_fields",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::text[]"
-        },
-        "updated_from_source_at": {
-          "name": "updated_from_source_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "search_text": {
-          "name": "search_text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "card": {
-          "name": "card",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "rev": {
-          "name": "rev",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
-        "category": {
-          "name": "category",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "products_workspace_status_idx": {
-          "name": "products_workspace_status_idx",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "products_workspace_id_workspaces_id_fk": {
-          "name": "products_workspace_id_workspaces_id_fk",
-          "tableFrom": "products",
-          "tableTo": "workspaces",
-          "schemaTo": "core",
-          "columnsFrom": ["workspace_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "products_workspace_id_id_unique": {
-          "name": "products_workspace_id_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["workspace_id", "id"]
-        },
-        "products_source_external_unique": {
-          "name": "products_source_external_unique",
-          "nullsNotDistinct": false,
-          "columns": ["workspace_id", "source", "external_id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "products_source_check": {
-          "name": "products_source_check",
-          "value": "\"cf\".\"products\".\"source\" IN ('manual', 'excel', 'google_sheets', 'shopify', 'haravan', 'sapo', 'kiotviet', 'pancake')"
-        },
-        "products_status_check": {
-          "name": "products_status_check",
-          "value": "\"cf\".\"products\".\"status\" IN ('active', 'archived')"
-        },
-        "products_card_object_check": {
-          "name": "products_card_object_check",
-          "value": "jsonb_typeof(\"cf\".\"products\".\"card\") = 'object'"
-        },
-        "products_price_check": {
-          "name": "products_price_check",
-          "value": "\"cf\".\"products\".\"price_vnd\" IS NULL OR \"cf\".\"products\".\"price_vnd\" >= 0"
-        },
-        "products_compare_at_check": {
-          "name": "products_compare_at_check",
-          "value": "\"cf\".\"products\".\"compare_at_vnd\" IS NULL OR \"cf\".\"products\".\"compare_at_vnd\" >= 0"
-        },
-        "products_stock_check": {
-          "name": "products_stock_check",
-          "value": "\"cf\".\"products\".\"stock\" IS NULL OR \"cf\".\"products\".\"stock\" >= 0"
-        }
-      },
       "isRLSEnabled": false
     },
     "cf.webhook_events": {
