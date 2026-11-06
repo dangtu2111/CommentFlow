@@ -38,6 +38,7 @@
 | KT-ASL | Admin tạm khóa gửi (chỉ logic + test, chưa có bảng/giao diện; không cần khóa/dịch vụ ngoài) | feat-admin-send-lock | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
+| KT-DEXP | Xuất dữ liệu workspace (FR-094) | — | có | chưa | — |
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
 | KT-DIM | Mạo danh → chuyển người, gợi ý Ẩn (lõi, chờ nối) | — | không | chưa | — |
 | KT-DOC | Chốt đơn trong bình luận → lưu khách, trả lời không lặp PII (lõi, chờ nối) | — | không | chưa | — |
@@ -64,6 +65,7 @@
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 | KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
+| KT-WSD | Xóa workspace nhiều bước (chờ nối giao diện) | — | chưa | chưa | — |
 
 ---
 
@@ -655,6 +657,19 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 2. Mở `packages/ai/src/decide/decide-action.ts`, xem hàm `riskReason` và `decideAction`. — Mong đợi: rủi ro (ngôn ngữ khác, khiếu nại, mạo danh, lệch giá, pháp lý, hỏi lại ≥ 3) được xét TRƯỚC mọi thứ; không có chỗ nào đọc trường `action`/`needs_human` do AI tự ghi.
 3. Mở `packages/ai/src/draft/draft-prompt.ts`, xem `SYSTEM_PROMPT`. — Mong đợi: có câu "chỉ viết câu cho đúng hành động đó" và "Không tự tính tổng tiền, giảm giá, phí ship".
 4. Kiểm tay khi nối pipeline: bình luận "giá bao nhiêu, ship về Hà Nội bao nhiêu" với kiến thức chỉ có giá → câu gợi ý nêu giá + mời ib về phí ship, bình luận có tag Cần hỗ trợ thêm, không tự gửi khi `allow_partial` tắt.
+
+## KT-DEXP — Xuất dữ liệu workspace (DATA-EXPORT, FR-094, feat-data-export)
+
+Điều kiện: staging có migration 0056, `queue:install` đã chạy lại, `DATA_EXPORT_ENABLED=true` (web + worker), `DATA_EXPORT_DIR` đặt.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Cờ TẮT: Owner mở Cài đặt → Dữ liệu & Quyền riêng tư, bấm "Yêu cầu xuất dữ liệu" | Thông báo "chưa mở"; không có dòng mới ở `core.data_exports` |
+| 2 | Cờ BẬT: bấm lại | Thông báo "Đã ghi nhận yêu cầu xuất dữ liệu…"; trong vài giây dòng `core.data_exports` chuyển `pending` → `running` → `ready`, có `size_bytes`, `expires_at` = +7 ngày |
+| 3 | Bấm lần nữa khi dòng còn `pending`/`running` | "Đang có một yêu cầu xuất dữ liệu chưa xong" |
+| 4 | Mở tệp `$DATA_EXPORT_DIR/exports/<ws>/<id>.jsonl` trên máy worker | Mỗi dòng là JSON; dòng đầu `meta`, dòng cuối `summary`; KHÔNG thấy SĐT/email/tên khách thật (chỉ `[sđt]`, `[email]`, `kh_…`, `***1234`) |
+| 5 | Đăng nhập Staff, mở trang đó | 404 (không vào được) |
+| 6 | Sửa `expires_at` của dòng `ready` về quá khứ, chờ job retention (≤ 1 giờ) | Dòng thành `expired`, tệp bị xóa |
 
 ## KT-DH — Nhân viên đang giữ chuỗi thì AI không tự gửi (DA-HOLDER, FR-154, feat-da-holder)
 
@@ -1281,6 +1296,19 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Mở "Thông báo" | Danh sách loại sự kiện, mỗi mục "Sắp có" |
 | 6 | Đăng nhập Staff | Cột trái chỉ có Thông báo + Tài khoản & Bảo mật; mở thẳng /app/settings/billing hoặc /privacy → 404 |
 | 7 | Chuyển English | Mọi chữ ở 3 trang đổi sang tiếng Anh, không còn khóa thô |
+
+## KT-WSD — Xóa workspace nhiều bước (WORKSPACE-DELETE, feat-workspace-delete) — chỉ làm được khi đã nối giao diện
+
+> Hiện chưa có giao diện (nút ở "Dữ liệu & Quyền riêng tư" vẫn "Sắp có"); các bước dưới dành cho lúc đã nối. Kiểm tự động đã phủ phần dữ liệu: `pnpm test:db` (workspace-deletion.int.test.ts).
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner ở workspace THỬ bấm "Xóa workspace" (bước 1) | Hiện ô gõ lại mã workspace; chưa xóa gì |
+| 2 | Gõ sai mã rồi gửi | Báo mã chưa đúng; yêu cầu vẫn chờ xác nhận |
+| 3 | Gõ đúng mã rồi gửi (bước 2) | Báo "sẽ xóa sau 7 ngày", có nút Hủy; workspace vẫn dùng bình thường |
+| 4 | Staff mở cùng trang | Không thấy khối xóa; gọi trực tiếp bị từ chối |
+| 5 | Một Owner khác bấm Hủy | Yêu cầu bị hủy, có thể yêu cầu lại |
+| 6 | (Staging, cờ bật) lùi hạn xóa bằng tay trên DB thử rồi chờ worker | Workspace thử biến mất cùng dữ liệu; dòng nhật ký tối thiểu còn lại |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 

@@ -9,13 +9,33 @@ export function isDeletionConfirmed(typed: string, workspaceName: string): boole
 
 export type DataRequestResult = { ok: true } | { ok: false; reason: 'unavailable' };
 
-/** Cổng tới dịch vụ xuất/xóa dữ liệu. Bản mặc định báo "chưa khả dụng"; bản thật nối ở nhánh sau. */
+/** Cổng tới dịch vụ xóa workspace. Bản mặc định báo "chưa khả dụng"; bản thật nối ở `WORKSPACE-DELETE`. Xuất dữ liệu: `server/data-export.ts` (FR-094). */
 export interface WorkspaceDataLifecycle {
-  requestExport(workspaceId: string): Promise<DataRequestResult>;
   requestDeletion(workspaceId: string): Promise<DataRequestResult>;
 }
 
 export const unavailableDataLifecycle: WorkspaceDataLifecycle = {
-  requestExport: async () => ({ ok: false, reason: 'unavailable' }),
   requestDeletion: async () => ({ ok: false, reason: 'unavailable' }),
 };
+
+/** Thông báo hiển thị sau khi gửi form ở trang Quyền riêng tư (khóa `settings.privacy.notices.*`). */
+export const PRIVACY_NOTICES = [
+  'unavailable',
+  'mismatch',
+  'export_queued',
+  'already_active',
+  'rate_limited',
+] as const;
+export type PrivacyNotice = (typeof PRIVACY_NOTICES)[number];
+
+/** Chọn thông báo cho kết quả yêu cầu xuất dữ liệu (thành công → `export_queued`, lỗi → đúng lý do). */
+export function exportNoticeOf(
+  result: { ok: true } | { ok: false; reason: 'unavailable' | 'already_active' | 'rate_limited' },
+): PrivacyNotice {
+  return result.ok ? 'export_queued' : result.reason;
+}
+
+/** Chỉ nhận giá trị `notice` nằm trong danh sách (không phản chiếu chuỗi lạ từ URL). */
+export function parsePrivacyNotice(value: string | string[] | undefined): PrivacyNotice | null {
+  return PRIVACY_NOTICES.find((n) => n === value) ?? null;
+}

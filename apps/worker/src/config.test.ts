@@ -15,9 +15,20 @@ describe('loadConfig', () => {
       metaAppId: undefined,
       metaAppSecret: undefined,
       facebook: { enabled: false },
+      workspaceDeleteEnabled: false,
       instagram: { enabled: false },
+      dataExport: { enabled: false },
       messenger: { enabled: false },
     });
+  });
+
+  it('FR-094 cờ WORKSPACE_DELETE_ENABLED mặc định TẮT; chỉ đúng chữ "true" mới bật', () => {
+    const flag = (value?: string) =>
+      loadConfig({ DATABASE_WORKER_URL, WORKSPACE_DELETE_ENABLED: value }).workspaceDeleteEnabled;
+    expect(flag()).toBe(false);
+    expect(flag('1')).toBe(false);
+    expect(flag('')).toBe(false);
+    expect(flag('true')).toBe(true);
   });
 
   it('FR-023 cờ POLLING_ENABLED mặc định TẮT; chỉ đúng chữ "true" mới bật (như FB_OAUTH_ENABLED)', () => {

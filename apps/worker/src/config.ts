@@ -33,6 +33,11 @@ const envShape = z.object({
     .string()
     .optional()
     .transform((value) => value === 'true'),
+  /** FR-094: job xóa vĩnh viễn workspace đã tới hạn — cờ MẶC ĐỊNH TẮT; chỉ đúng chữ `true` mới bật. */
+  WORKSPACE_DELETE_ENABLED: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true'),
   META_APP_ID: z.string().optional(),
   META_APP_SECRET: z.string().optional(),
 });
@@ -97,6 +102,21 @@ function loadMetaConnectorConfig(
   return { enabled: true, appId: env.META_APP_ID, appSecret: env.META_APP_SECRET };
 }
 
+/**
+ * Xuất dữ liệu workspace (DATA-EXPORT, FR-094): cờ `DATA_EXPORT_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật).
+ * Tắt thì worker không đăng ký hàng đợi `data-export`. Bật thì bắt buộc `DATA_EXPORT_DIR` (thư mục ghi tệp xuất cục bộ,
+ * chờ object storage — gap DATA-EXPORT-DELIVERY).
+ */
+export type DataExportConfig = { enabled: false } | { enabled: true; dir: string };
+
+function loadDataExportConfig(source: Record<string, string | undefined>): DataExportConfig {
+  if (source.DATA_EXPORT_ENABLED?.trim() !== 'true') return { enabled: false };
+  const env = parseEnv(z.object({ DATA_EXPORT_DIR: z.string().trim().min(1) }), {
+    DATA_EXPORT_DIR: source.DATA_EXPORT_DIR?.trim() || undefined,
+  });
+  return { enabled: true, dir: env.DATA_EXPORT_DIR };
+}
+
 export type WorkerConfig = {
   logLevel: z.infer<typeof envSchema>['LOG_LEVEL'];
   port: number;
@@ -106,7 +126,9 @@ export type WorkerConfig = {
   metaAppId: string | undefined;
   metaAppSecret: string | undefined;
   facebook: FacebookConnectorConfig;
+  workspaceDeleteEnabled: boolean;
   instagram: InstagramConnectorConfig;
+  dataExport: DataExportConfig;
   messenger: MessengerConnectorConfig;
 };
 
@@ -121,7 +143,9 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     metaAppId: env.META_APP_ID,
     metaAppSecret: env.META_APP_SECRET,
     facebook: loadFacebookConfig(source),
+    workspaceDeleteEnabled: env.WORKSPACE_DELETE_ENABLED,
     instagram: loadInstagramConfig(source),
+    dataExport: loadDataExportConfig(source),
     messenger: loadMessengerConfig(source),
   };
 }
