@@ -150,6 +150,8 @@ export type WorkerConfig = {
   workspaceDeleteEnabled: boolean;
   instagram: InstagramConnectorConfig;
   dataExport: DataExportConfig;
+  /** FR-133: cờ `KB_REEMBED_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); tắt → không đăng ký hàng đợi `kb-reembed`. */
+  kbReembedEnabled: boolean;
   messenger: MessengerConnectorConfig;
   tiktok: TikTokConnectorConfig;
 };
@@ -168,6 +170,7 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     workspaceDeleteEnabled: env.WORKSPACE_DELETE_ENABLED,
     instagram: loadInstagramConfig(source),
     dataExport: loadDataExportConfig(source),
+    kbReembedEnabled: source.KB_REEMBED_ENABLED?.trim() === 'true',
     messenger: loadMessengerConfig(source),
     tiktok: loadTikTokConfig(source),
   };

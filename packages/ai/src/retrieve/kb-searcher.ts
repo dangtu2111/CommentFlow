@@ -6,6 +6,8 @@ export type KbSearchQuery = {
   lang: 'vi' | 'en';
   /** Vector truy vấn 1024 chiều do `Embedder` tạo. */
   queryVector: readonly number[];
+  /** `Embedder.model` đã tạo `queryVector`: nhánh vector chỉ so với đoạn cùng mô hình (FR-133). */
+  embeddingModel?: string;
   /** Sản phẩm của bài; rỗng = không lọc theo sản phẩm. */
   productIds: readonly string[];
 };
@@ -28,6 +30,7 @@ export function createDbKbSearcher(
       lang: query.lang,
       queryText: query.queryText,
       queryVector: query.queryVector,
+      embeddingModel: query.embeddingModel,
       productIds: query.productIds,
     });
 }

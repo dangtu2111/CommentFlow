@@ -4,6 +4,7 @@ import { Avatar } from './avatar';
 import { Button, buttonClass, IconButton } from './button';
 import { Chip } from './chip';
 import { Icon } from './icon';
+import { Inset } from './inset';
 import { Kbd } from './kbd';
 import { PageHeader } from './page-header';
 import { SectionHead } from './section-head';
@@ -23,6 +24,20 @@ const ITEMS = [
   { key: 'login', href: '/login', label: 'Đăng nhập', current: true },
   { key: 'register', href: '/register', label: 'Đăng ký', current: false },
 ];
+
+describe('UI-KIT Inset', () => {
+  it('có tiêu đề + biểu tượng ẩn với trình đọc màn hình; không tiêu đề thì không dựng phần đầu', () => {
+    const withTitle = renderToStaticMarkup(
+      <Inset title="Ngưỡng" icon={<i />} className="x">
+        nội dung
+      </Inset>,
+    );
+    expect(withTitle).toContain('inset x');
+    expect(withTitle).toContain('Ngưỡng');
+    expect(withTitle).toContain('aria-hidden="true"');
+    expect(renderToStaticMarkup(<Inset>chỉ nội dung</Inset>)).not.toContain('inset-head');
+  });
+});
 
 describe('UI-KIT Tabs', () => {
   it('chỉ tab hiện tại có aria-current="page", mỗi tab là liên kết thật', () => {

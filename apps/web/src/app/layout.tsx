@@ -15,6 +15,8 @@ import '../styles/frames.css';
 import '../components/kb/kb.css';
 import '../components/posts/posts.css';
 import '../styles/auto-leads.css';
+import '../styles/automation.css';
+import '../styles/spam-rules.css';
 import '../styles/reports-legal.css';
 import '../styles/settings-pages.css';
 import '../styles/messages.css';
