@@ -17,8 +17,8 @@ describe('AuthStatus', () => {
   it('tông màu đi theo class của biến thể; mặc định là trung tính', () => {
     const base = renderToStaticMarkup(<AuthStatus icon={MailCheck} title="A" />);
     const danger = renderToStaticMarkup(<AuthStatus icon={CircleAlert} tone="danger" title="B" />);
-    expect(base).not.toContain('auth-status-icon-danger');
-    expect(danger).toContain('auth-status-icon-danger');
+    expect(base).not.toContain('bg-error-container');
+    expect(danger).toContain('bg-error-container');
   });
 
   it('không có mô tả thì không sinh đoạn trống; nội dung con nằm sau tiêu đề', () => {
@@ -27,7 +27,7 @@ describe('AuthStatus', () => {
         <button type="button">Tiếp</button>
       </AuthStatus>,
     );
-    expect(html).not.toContain('auth-subtitle');
+    expect(html).not.toMatch(/<p[\s>]/);
     expect(html.indexOf('Tiếp')).toBeGreaterThan(html.indexOf('A'));
   });
 });

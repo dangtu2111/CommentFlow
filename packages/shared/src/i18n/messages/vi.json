@@ -497,12 +497,54 @@
       "tagPii": "Che số điện thoại trước khi gửi AI",
       "aiName": "Gợi ý của AI",
       "aiDraft": "Dạ chào chị, mẫu này size M hiện còn hàng. Giá và tồn kho lấy từ danh mục của shop ạ.",
-      "needsReview": "Nhân viên duyệt trước khi gửi"
+      "needsReview": "Nhân viên duyệt trước khi gửi",
+      "speed": "[MẪU] 1,2 giây",
+      "justNow": "Vừa xong",
+      "tagCrm": "Đã đẩy SĐT vào CRM (mẫu)"
     },
     "social": {
       "facebook": "Tiếp tục với Facebook",
       "unavailable": "Đăng nhập bằng Facebook chưa mở. Hãy dùng email.",
       "orEmail": "Hoặc tiếp tục bằng email"
+    },
+    "ui": {
+      "pending": "Đang xử lý…",
+      "soon": "Sắp có",
+      "header": {
+        "help": "Trung tâm trợ giúp"
+      },
+      "footer": {
+        "status": "Trạng thái hệ thống",
+        "privacy": "Chính sách quyền riêng tư",
+        "terms": "Điều khoản dịch vụ",
+        "support": "Hỗ trợ",
+        "rights": "© {year} {appName}. Bảo lưu mọi quyền."
+      },
+      "showcase": {
+        "metricShops": "[MẪU] Shop & Agency đang dùng",
+        "metricContext": "[MẪU] Độ chuẩn ngữ cảnh",
+        "metricHours": "[MẪU] Giờ tiết kiệm mỗi tuần/nhân sự",
+        "metricValue": "—"
+      },
+      "card": {
+        "legal": "Bằng việc tiếp tục, bạn đồng ý với <terms>Điều khoản dịch vụ</terms> và <privacy>Chính sách quyền riêng tư</privacy>.",
+        "encrypted": "Kết nối mã hóa HTTPS",
+        "officialApi": "Chỉ dùng API chính thức của Meta"
+      },
+      "form": {
+        "remember": "Ghi nhớ đăng nhập trong 30 ngày",
+        "trialBanner": "[MẪU] Dùng thử trọn gói: số Fanpage/kênh và lượt AI theo gói bạn chọn, không yêu cầu thẻ.",
+        "storeName": "Tên Shop / Doanh nghiệp",
+        "category": "Ngành hàng chính",
+        "categories": {
+          "fashion": "Thời trang & Phụ kiện",
+          "beauty": "Mỹ phẩm & Spa",
+          "fnb": "F&B / Đồ uống / Đồ ăn",
+          "home": "Gia dụng & Đời sống",
+          "agency": "Agency / Marketing Ops",
+          "other": "Ngành hàng khác"
+        }
+      }
     }
   },
   "workspace": {
@@ -685,6 +727,61 @@
       "invalid": "Không thể chấp nhận lời mời này. Lời mời có thể đã hết hạn, đã được dùng hoặc bị thu hồi, hoặc tài khoản đang đăng nhập không dùng email được mời. Hãy kiểm tra email đang đăng nhập hoặc nhờ Owner gửi lại lời mời.",
       "rateLimited": "Bạn thử quá nhiều lần. Vui lòng thử lại sau {minutes} phút.",
       "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
+    },
+    "ui": {
+      "status": "ĐANG CHỜ TIẾP NHẬN",
+      "industry": "Ngành hàng: {industry}",
+      "inviter": "Người gửi lời mời",
+      "channels": "{n} kênh bán hàng phụ trách trực tiếp",
+      "scope": {
+        "title": "Phạm vi quyền hạn (vai trò Nhân viên)",
+        "inbox": {
+          "title": "Hộp thư hợp nhất",
+          "body": "Trực bình luận, tin nhắn đa kênh và duyệt gợi ý từ AI."
+        },
+        "killSwitch": {
+          "title": "Quyền dừng khẩn cấp",
+          "body": "Ngắt tự động hóa AI ngay lập tức."
+        },
+        "crm": {
+          "title": "Quản lý khách tiềm năng",
+          "body": "Gắn thẻ, ghi chú hồ sơ người mua."
+        },
+        "limitTitle": "Giới hạn an toàn",
+        "limitBody": "Chỉ Chủ sở hữu (Owner) mới liên kết thêm Fanpage, cấu hình cơ sở kiến thức và thanh toán gói cước."
+      },
+      "verified": "Đã xác thực",
+      "private": "Không gian làm việc riêng của {workspace}",
+      "ribbon": "Lời mời hợp lệ",
+      "eyebrow": "Thiết lập tài khoản thành viên",
+      "heading": "Hoàn tất thiết lập tài khoản của bạn",
+      "lead": "Đăng nhập hoặc tạo tài khoản bằng đúng email nhận thư mời để bắt đầu xử lý tin nhắn bán hàng.",
+      "help": "Trợ giúp: liên hệ Chủ shop đã mời bạn",
+      "soon": "Sắp có",
+      "form": {
+        "soonNote": "Biểu mẫu đặt mật khẩu ngay trên trang này chưa có (hiện lời mời đi qua đăng nhập/đăng ký) — Sắp có.",
+        "email": "Email đăng nhập",
+        "locked": "Khóa theo lời mời",
+        "name": "Họ và tên hiển thị",
+        "nameHint": "Hiển thị trong hộp thoại & nhật ký",
+        "namePlaceholder": "Nhập họ và tên của bạn",
+        "passwordPlaceholder": "Nhập mật khẩu an toàn…",
+        "confirmPlaceholder": "Nhập lại mật khẩu mới…",
+        "strength": "Độ mạnh mật khẩu:",
+        "strengthNone": "Chưa nhập",
+        "rules": {
+          "length": "Tối thiểu 10 ký tự",
+          "common": "Không phải mật khẩu phổ biến",
+          "pwned": "Chưa lộ trong các vụ rò rỉ dữ liệu"
+        },
+        "enable2fa": "Kích hoạt xác thực 2 bước (2FA) sau khi đăng nhập",
+        "recommended": "Khuyên dùng",
+        "enable2faHint": "Bảo vệ tài khoản và quyền truy cập thông tin khách hàng.",
+        "agree": "Tôi đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư.",
+        "submit": "Chấp nhận lời mời & vào làm việc ngay",
+        "haveAccount": "Đã có tài khoản?",
+        "linkLogin": "Đăng nhập để liên kết workspace này"
+      }
     }
   },
   "comments": {
@@ -2460,7 +2557,7 @@
     "title": "Tin nhắn",
     "inboxHeading": "Hộp thư phân luồng",
     "search": "Tìm tên khách, SĐT, nội dung…",
-    "sortLabel": "Sắp xếp: 24h cận kề trước",
+    "sortLabel": "Sắp xếp:",
     "filter": "Lọc sâu",
     "tabs": {
       "nearDeadline": "Sắp hết 24h",
@@ -2469,20 +2566,23 @@
       "aiReplying": "AI đang trả lời",
       "willAutoSend": "Sẽ tự gửi",
       "done": "Đã xong",
-      "all": "Tất cả"
+      "all": "Tất cả",
+      "sendFailed": "Gửi lỗi"
     },
     "quick": {
       "heading": "Lọc nhanh nghiệp vụ",
       "platform": "Nền tảng mạng xã hội",
       "intent": "Nhãn dự đoán AI",
       "unreadOnly": "Từ bình luận qua",
-      "mineOnly": "Được giao cho tôi"
+      "mineOnly": "Được giao cho tôi",
+      "allIntents": "Tất cả nhãn"
     },
     "list": {
       "label": "Danh sách hội thoại",
       "fromComment": "Từ bình luận",
-      "youPrefix": "Bạn",
-      "aiPrefix": "AI"
+      "youPrefix": "Bạn:",
+      "aiPrefix": "AI:",
+      "customerPrefix": "Khách:"
     },
     "chip": {
       "needsHuman": "Cần nhân viên",
@@ -2498,7 +2598,15 @@
       "quotedFrom": "Trích dẫn bình luận gốc từ Fanpage",
       "viewPost": "Xem bài viết",
       "customerMsg": "Tin khách",
-      "sentAt": "Gửi lúc {time}"
+      "sentAt": "Gửi lúc {time}",
+      "page": "Trang",
+      "startedFromComment": "Bắt đầu từ bình luận sản phẩm",
+      "extend": "Gia hạn mẫu tin",
+      "more": "Thêm thao tác",
+      "urgent": "Cần trả lời gấp",
+      "aiReplied": "AI tự động trả lời",
+      "confidence": "Độ tin cậy: {value}",
+      "sourcePrefix": "Nguồn: {source}"
     },
     "window": {
       "open": "Cửa sổ 24 giờ Meta API: còn {hours} giờ {minutes} phút để trả lời tin nhắn.",
@@ -2522,10 +2630,13 @@
       "insertKb": "Chèn từ kiến thức",
       "hint": "Ctrl + Enter để gửi",
       "placeholder": "Nhập câu trả lời hoặc chỉnh sửa gợi ý AI tại đây…",
-      "sendingAs": "Gửi dưới tên: {page} ({staff})",
+      "sendingAs": "Gửi dưới tên: <b>{name}</b>",
       "saveDraft": "Lưu nháp",
       "send": "Gửi phản hồi",
-      "lockedHint": "Không thể soạn tin: đã khóa theo luật cửa sổ nhắn tin."
+      "lockedHint": "Không thể soạn tin: đã khóa theo luật cửa sổ nhắn tin.",
+      "attach": "Đính kèm tệp",
+      "image": "Chèn ảnh",
+      "emoji": "Chèn biểu tượng cảm xúc"
     },
     "customer": {
       "label": "Thông tin khách hàng",
@@ -2546,7 +2657,27 @@
       "staffOnly": "Chỉ nội bộ thấy",
       "saveNote": "Lưu ghi chú",
       "tags": "Thẻ phân loại khách",
-      "addTag": "+ Thêm thẻ"
+      "addTag": "+ Thêm thẻ",
+      "updatedBy": "Cập nhật bởi: {by}",
+      "notePlaceholder": "Nhập ghi chú khách hàng…"
+    },
+    "soon": "Sắp có",
+    "sortValue": "24h cận kề trước",
+    "filters": {
+      "label": "Bộ lọc trạng thái"
+    },
+    "stats": {
+      "nearDeadline": "{n} hội thoại gần chạm mốc 24h Meta API",
+      "onTime": "Tỷ lệ phản hồi đúng hạn:",
+      "avgHandle": "Tốc độ xử lý trung bình:",
+      "shortcuts": "Phím tắt nhanh:",
+      "kbdDone": "E (Xong)",
+      "kbdSend": "Ctrl + Enter (Gửi)",
+      "kbdAi": "Tab (Chèn AI)"
+    },
+    "automation": {
+      "title": "Tự động hóa ca trực",
+      "today": "{n} phản hồi tự động hôm nay"
     }
   }
 }

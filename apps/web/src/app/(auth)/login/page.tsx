@@ -1,9 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { AuthTabs } from '../../../components/auth/auth-shell';
-import { SocialLogin } from '../../../components/auth/auth-social';
-import { LoginForm } from '../../../components/auth/forms';
-import { Banner } from '../../../components/ui/banner';
+import { LoginView } from '../../../components/auth/auth-views';
 import { getBrand } from '../../../server/brand';
 import { getCurrentUser } from '../../../server/session';
 
@@ -18,19 +15,5 @@ export default async function LoginPage({
   searchParams: Promise<{ verified?: string; reset?: string; loggedOut?: string }>;
 }) {
   if (await getCurrentUser()) redirect('/app');
-  const [t, params] = await Promise.all([getTranslations('auth'), searchParams]);
-  return (
-    <>
-      <AuthTabs active="login" />
-      <div className="stack">
-        <h1 className="auth-title">{t('login.title')}</h1>
-        <p className="auth-subtitle">{t('login.subtitle')}</p>
-      </div>
-      {params.verified ? <Banner variant="success">{t('banners.verified')}</Banner> : null}
-      {params.reset ? <Banner variant="success">{t('banners.resetDone')}</Banner> : null}
-      {params.loggedOut ? <Banner variant="info">{t('banners.loggedOut')}</Banner> : null}
-      <SocialLogin />
-      <LoginForm />
-    </>
-  );
+  return <LoginView params={await searchParams} />;
 }

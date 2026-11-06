@@ -1,7 +1,9 @@
 import { CircleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { AuthHeading } from '../../../components/auth/auth-shell';
 import { AuthStatus } from '../../../components/auth/auth-status';
+import { authButtonClass } from '../../../components/auth/auth-styles';
 import { ResetPasswordForm } from '../../../components/auth/forms';
 import { getBrand } from '../../../server/brand';
 
@@ -26,7 +28,7 @@ export default async function ResetPasswordPage({
           title={t('invalidTitle')}
           description={t('invalidBody')}
         />
-        <Link href="/forgot-password" className="btn btn-primary btn-block">
+        <Link href="/forgot-password" className={authButtonClass()}>
           {t('requestNew')}
         </Link>
       </>
@@ -34,10 +36,7 @@ export default async function ResetPasswordPage({
   }
   return (
     <>
-      <div className="stack">
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">{t('subtitle')}</p>
-      </div>
+      <AuthHeading title={t('title')} subtitle={t('subtitle')} />
       <ResetPasswordForm token={params.token} />
     </>
   );

@@ -497,12 +497,54 @@
       "tagPii": "Phone number masked before AI",
       "aiName": "AI suggestion",
       "aiDraft": "Hello! Size M of this dress is in stock. Price and stock come from the shop catalog.",
-      "needsReview": "A staff member reviews before sending"
+      "needsReview": "A staff member reviews before sending",
+      "speed": "[SAMPLE] 1.2 s",
+      "justNow": "Just now",
+      "tagCrm": "Phone pushed to CRM (sample)"
     },
     "social": {
       "facebook": "Continue with Facebook",
       "unavailable": "Facebook sign-in is not available yet. Please use email.",
       "orEmail": "Or continue with email"
+    },
+    "ui": {
+      "pending": "Working…",
+      "soon": "Coming soon",
+      "header": {
+        "help": "Help center"
+      },
+      "footer": {
+        "status": "System status",
+        "privacy": "Privacy policy",
+        "terms": "Terms of service",
+        "support": "Support",
+        "rights": "© {year} {appName}. All rights reserved."
+      },
+      "showcase": {
+        "metricShops": "[SAMPLE] Shops & agencies using it",
+        "metricContext": "[SAMPLE] Context accuracy",
+        "metricHours": "[SAMPLE] Hours saved per week/person",
+        "metricValue": "—"
+      },
+      "card": {
+        "legal": "By continuing you agree to the <terms>Terms of service</terms> and the <privacy>Privacy policy</privacy>.",
+        "encrypted": "HTTPS encrypted connection",
+        "officialApi": "Official Meta APIs only"
+      },
+      "form": {
+        "remember": "Keep me signed in for 30 days",
+        "trialBanner": "[SAMPLE] Full-featured trial: Page/channel and AI limits follow the plan you pick, no card required.",
+        "storeName": "Shop / company name",
+        "category": "Main category",
+        "categories": {
+          "fashion": "Fashion & accessories",
+          "beauty": "Beauty & spa",
+          "fnb": "F&B / drinks / food",
+          "home": "Home & living",
+          "agency": "Agency / marketing ops",
+          "other": "Other category"
+        }
+      }
     }
   },
   "workspace": {
@@ -685,6 +727,61 @@
       "invalid": "This invitation cannot be accepted. It may have expired, been used or revoked, or the account you are signed in with is not the invited email. Check which email you are signed in with or ask an Owner to send it again.",
       "rateLimited": "Too many attempts. Please try again in {minutes} minutes.",
       "generic": "Could not complete that. Please try again in a few minutes."
+    },
+    "ui": {
+      "status": "WAITING TO BE ACCEPTED",
+      "industry": "Category: {industry}",
+      "inviter": "Invited by",
+      "channels": "{n} sales channels you will handle",
+      "scope": {
+        "title": "Permission scope (Staff role)",
+        "inbox": {
+          "title": "Unified inbox",
+          "body": "Handle comments, multi-channel messages and review AI suggestions."
+        },
+        "killSwitch": {
+          "title": "Emergency stop",
+          "body": "Switch AI automation off instantly."
+        },
+        "crm": {
+          "title": "Lead management",
+          "body": "Tag and annotate buyer profiles."
+        },
+        "limitTitle": "Safety limit",
+        "limitBody": "Only the Owner can link more Pages, configure the knowledge base and pay for plans."
+      },
+      "verified": "Verified",
+      "private": "Private workspace of {workspace}",
+      "ribbon": "Valid invitation",
+      "eyebrow": "Set up your member account",
+      "heading": "Finish setting up your account",
+      "lead": "Sign in or create an account with the exact email that received the invitation to start handling sales messages.",
+      "help": "Help: contact the shop owner who invited you",
+      "soon": "Coming soon",
+      "form": {
+        "soonNote": "Setting a password on this page is not available yet (invitations currently go through sign-in/sign-up) — coming soon.",
+        "email": "Sign-in email",
+        "locked": "Locked by invitation",
+        "name": "Display name",
+        "nameHint": "Shown in conversations & logs",
+        "namePlaceholder": "Enter your full name",
+        "passwordPlaceholder": "Enter a strong password…",
+        "confirmPlaceholder": "Re-enter the new password…",
+        "strength": "Password strength:",
+        "strengthNone": "Not entered",
+        "rules": {
+          "length": "At least 10 characters",
+          "common": "Not a common password",
+          "pwned": "Not found in known data leaks"
+        },
+        "enable2fa": "Turn on two-step verification (2FA) after signing in",
+        "recommended": "Recommended",
+        "enable2faHint": "Protects your account and access to customer information.",
+        "agree": "I agree to the Terms of service and the Privacy policy.",
+        "submit": "Accept invitation & start working",
+        "haveAccount": "Already have an account?",
+        "linkLogin": "Sign in to link this workspace"
+      }
     }
   },
   "comments": {
@@ -2460,7 +2557,7 @@
     "title": "Messages",
     "inboxHeading": "Triage inbox",
     "search": "Search name, phone, content…",
-    "sortLabel": "Sort: closest to 24h first",
+    "sortLabel": "Sort:",
     "filter": "Filter",
     "tabs": {
       "nearDeadline": "24h almost up",
@@ -2469,20 +2566,23 @@
       "aiReplying": "AI replying",
       "willAutoSend": "Will auto-send",
       "done": "Done",
-      "all": "All"
+      "all": "All",
+      "sendFailed": "Send failed"
     },
     "quick": {
       "heading": "Quick filters",
       "platform": "Social platform",
       "intent": "AI predicted label",
       "unreadOnly": "From comments",
-      "mineOnly": "Assigned to me"
+      "mineOnly": "Assigned to me",
+      "allIntents": "All labels"
     },
     "list": {
       "label": "Conversation list",
       "fromComment": "From comment",
-      "youPrefix": "You",
-      "aiPrefix": "AI"
+      "youPrefix": "You:",
+      "aiPrefix": "AI:",
+      "customerPrefix": "Customer:"
     },
     "chip": {
       "needsHuman": "Needs staff",
@@ -2498,7 +2598,15 @@
       "quotedFrom": "Original comment quoted from the Page",
       "viewPost": "View post",
       "customerMsg": "Customer message",
-      "sentAt": "Sent at {time}"
+      "sentAt": "Sent at {time}",
+      "page": "Page",
+      "startedFromComment": "Started from a product comment",
+      "extend": "Extend with template",
+      "more": "More actions",
+      "urgent": "Reply urgently",
+      "aiReplied": "AI replied automatically",
+      "confidence": "Confidence: {value}",
+      "sourcePrefix": "Source: {source}"
     },
     "window": {
       "open": "Meta 24-hour window: {hours} h {minutes} min left to reply.",
@@ -2522,10 +2630,13 @@
       "insertKb": "Insert from knowledge",
       "hint": "Ctrl + Enter to send",
       "placeholder": "Type a reply or edit the AI suggestion here…",
-      "sendingAs": "Sending as: {page} ({staff})",
+      "sendingAs": "Sending as: <b>{name}</b>",
       "saveDraft": "Save draft",
       "send": "Send reply",
-      "lockedHint": "Cannot compose: locked by the messaging-window rules."
+      "lockedHint": "Cannot compose: locked by the messaging-window rules.",
+      "attach": "Attach file",
+      "image": "Insert image",
+      "emoji": "Insert emoji"
     },
     "customer": {
       "label": "Customer information",
@@ -2546,7 +2657,27 @@
       "staffOnly": "Staff only",
       "saveNote": "Save note",
       "tags": "Customer tags",
-      "addTag": "+ Add tag"
+      "addTag": "+ Add tag",
+      "updatedBy": "Updated by: {by}",
+      "notePlaceholder": "Enter a customer note…"
+    },
+    "soon": "Coming soon",
+    "sortValue": "24h deadline first",
+    "filters": {
+      "label": "Status filters"
+    },
+    "stats": {
+      "nearDeadline": "{n} conversations near the 24h Meta API limit",
+      "onTime": "On-time reply rate:",
+      "avgHandle": "Average handling time:",
+      "shortcuts": "Quick keys:",
+      "kbdDone": "E (Done)",
+      "kbdSend": "Ctrl + Enter (Send)",
+      "kbdAi": "Tab (Insert AI)"
+    },
+    "automation": {
+      "title": "Shift automation",
+      "today": "{n} automatic replies today"
     }
   }
 }

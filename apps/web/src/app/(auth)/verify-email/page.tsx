@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { AuthStatus } from '../../../components/auth/auth-status';
+import { authButtonClass } from '../../../components/auth/auth-styles';
 import { getBrand } from '../../../server/brand';
 
 export async function generateMetadata() {
@@ -28,7 +29,7 @@ export default async function VerifyEmailPage({
         title={failed ? t('errorTitle') : t('successTitle')}
         description={failed ? t('errorBody') : t('successBody')}
       />
-      <Link href={failed ? '/login' : '/login?verified=1'} className="btn btn-primary btn-block">
+      <Link href={failed ? '/login' : '/login?verified=1'} className={authButtonClass()}>
         {t('toLogin')}
       </Link>
     </>

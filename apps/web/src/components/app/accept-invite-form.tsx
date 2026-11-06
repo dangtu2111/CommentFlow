@@ -3,8 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { type AcceptInviteState, acceptInviteAction } from '../../app/invite/[token]/actions';
-import { Banner } from '../ui/banner';
-import { SubmitButton } from '../ui/submit-button';
+import { AuthNotice, AuthSubmit } from '../auth/auth-fields';
 
 const IDLE: AcceptInviteState = { status: 'idle' };
 
@@ -17,10 +16,10 @@ export function AcceptInviteForm({ token }: { token: string }) {
       ? t(`errors.${state.message}`, { minutes: state.retryMinutes ?? 1 })
       : null;
   return (
-    <form action={action} className="form">
+    <form action={action} className="flex flex-col gap-space-md">
       <input type="hidden" name="token" value={token} />
-      {message ? <Banner variant="danger">{message}</Banner> : null}
-      <SubmitButton>{t('card.accept')}</SubmitButton>
+      {message ? <AuthNotice tone="danger">{message}</AuthNotice> : null}
+      <AuthSubmit>{t('card.accept')}</AuthSubmit>
     </form>
   );
 }

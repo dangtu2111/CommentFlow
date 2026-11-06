@@ -23,10 +23,10 @@ export default async function CheckEmailPage() {
         title={t('title')}
         description={email ? t('body', { email: maskEmail(email) }) : t('bodyNoEmail')}
       >
-        <p className="auth-subtitle">{t('hint')}</p>
+        <p className="font-body-md text-body-md text-on-surface-variant">{t('hint')}</p>
       </AuthStatus>
       {email ? <ResendVerificationForm email={email} /> : null}
-      <p className="text-center">
+      <p className="text-center font-label-md text-label-md text-primary [&_a]:hover:underline">
         <Link href="/login">{t('back')}</Link>
       </p>
     </>
