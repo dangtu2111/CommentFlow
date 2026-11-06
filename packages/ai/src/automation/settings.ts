@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import {
+  type ActiveHours,
   ALWAYS_BLOCKED_LABELS,
   AUTOMATION_MODES,
-  type ActiveHours,
   type AutomationMode,
   DEFAULT_THRESHOLD,
   keywordFold,
@@ -90,11 +90,7 @@ export const automationConfigSchema = z
       .array(z.string().max(MAX_KEYWORD_LENGTH + 20))
       .max(MAX_BLOCKED_KEYWORDS + 50)
       .transform(normalizeKeywords)
-      .pipe(
-        z
-          .array(z.string().max(MAX_KEYWORD_LENGTH))
-          .max(MAX_BLOCKED_KEYWORDS),
-      ),
+      .pipe(z.array(z.string().max(MAX_KEYWORD_LENGTH)).max(MAX_BLOCKED_KEYWORDS)),
     signature: z
       .string()
       .transform((s) => s.trim())

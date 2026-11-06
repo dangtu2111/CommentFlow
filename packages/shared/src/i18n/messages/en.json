@@ -621,6 +621,62 @@
       "body": "Please reload the page in a few minutes."
     }
   },
+  "automation": {
+    "pageTitle": "Auto-send settings",
+    "title": "Auto-send settings",
+    "subtitle": "Choose what the AI may do for each kind of comment/message: Off (suggestions for staff only), Trial run (records the reply it would send, without sending) or Auto (AI sends by itself once every safety check passes). Everything is Off by default.",
+    "notWired": "Note: settings are currently kept temporarily in server memory and do not yet drive real auto-sending (this will be connected once durable storage and the auto-send path exist). Restarting the server resets them to defaults.",
+    "save": "Save settings",
+    "matrix": {
+      "title": "Auto-send level by channel and label",
+      "body": "Each cell is a separate level for comments and for messages of that channel.",
+      "label": "Label",
+      "empty": "No channel yet. Connect a channel on the Channels page first.",
+      "complaintNote": "Complaint and Spam comments are never auto-sent; they always go to staff."
+    },
+    "target": { "comment": "Comments", "message": "Messages" },
+    "labels": { "price": "Price question", "advice": "Advice", "purchase": "Purchase" },
+    "mode": { "off": "Off", "shadow": "Trial run", "auto": "Auto" },
+    "general": {
+      "title": "General settings",
+      "threshold": "Confidence threshold (%)",
+      "thresholdHint": "The AI only auto-sends when confidence is at or above this value. Minimum 80%, default 85%.",
+      "delay": "Delay before sending",
+      "delayOption": {
+        "0": "Send immediately",
+        "60": "1 minute",
+        "120": "2 minutes",
+        "300": "5 minutes"
+      },
+      "dailyCap": "Daily limit of auto-sent replies",
+      "hours": "Active hours",
+      "hoursEnabled": "Only auto-send within this window (workspace time zone)",
+      "hoursFrom": "From",
+      "hoursTo": "To",
+      "hoursHint": "Untick to auto-send all day. Pick at least one day when enabled.",
+      "day": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+      "keywords": "Blocked keywords",
+      "keywordsHint": "One word or phrase per line (up to 50, each ≤ 60 characters). AI replies containing any of them are not auto-sent.",
+      "signature": "Disclosure signature",
+      "signatureHint": "A short single line (≤ 120 characters) saying the reply was written by AI, e.g. “— The shop's AI assistant”. Leave empty to skip."
+    },
+    "notice": { "saved": "Settings saved." },
+    "error": {
+      "rules": "A level selection is invalid. Please choose again.",
+      "threshold": "The confidence threshold must be between 80 and 100.",
+      "delaySeconds": "The delay is not valid.",
+      "dailyCap": "The daily limit must be a whole number from 1 to 1000.",
+      "activeHours": "Active hours are not valid: pick at least one day and different start and end times.",
+      "blockedKeywords": "Blocked keywords are not valid (up to 50, each ≤ 60 characters).",
+      "signature": "The signature is at most 120 characters and a single line.",
+      "form": "Invalid data. Please check and try again.",
+      "unavailable": "Cannot save right now. Please try again."
+    },
+    "loadError": {
+      "title": "Could not load settings",
+      "body": "Please reload the page in a few minutes."
+    }
+  },
   "productImport": {
     "pageTitle": "Import products from Excel/CSV",
     "title": "Import products from Excel/CSV",
@@ -918,6 +974,7 @@
       "posts": "Posts",
       "tryAi": "Try AI",
       "readiness": "AI readiness",
+      "automation": "Auto-send settings",
       "aiSent": "AI sent",
       "productImport": "Import products",
       "kbGaps": "Unanswered questions",

@@ -621,6 +621,57 @@
       "body": "Vui lòng tải lại trang sau ít phút."
     }
   },
+  "automation": {
+    "pageTitle": "Cài đặt tự gửi",
+    "title": "Cài đặt tự gửi",
+    "subtitle": "Chọn AI được làm gì với từng loại bình luận/tin nhắn: Tắt (chỉ gợi ý cho nhân viên), Chạy thử (ghi lại câu sẽ gửi nhưng không gửi) hoặc Tự động (AI tự gửi khi qua mọi cổng kiểm tra). Mặc định mọi ô là Tắt.",
+    "notWired": "Lưu ý: cấu hình đang lưu tạm trong bộ nhớ máy chủ và chưa áp dụng cho việc tự gửi thật (sẽ nối khi có kho lưu bền và đường gửi tự động). Khởi động lại máy chủ sẽ về mặc định.",
+    "save": "Lưu cài đặt",
+    "matrix": {
+      "title": "Mức tự gửi theo kênh và nhãn",
+      "body": "Mỗi ô là một mức riêng cho bình luận và tin nhắn của từng kênh.",
+      "label": "Nhãn",
+      "empty": "Chưa có kênh nào. Hãy kết nối kênh ở trang Kênh trước.",
+      "complaintNote": "Bình luận Khiếu nại và Spam không bao giờ được tự gửi; luôn chuyển cho nhân viên."
+    },
+    "target": { "comment": "Bình luận", "message": "Tin nhắn" },
+    "labels": { "price": "Hỏi giá", "advice": "Tư vấn", "purchase": "Mua hàng" },
+    "mode": { "off": "Tắt", "shadow": "Chạy thử", "auto": "Tự động" },
+    "general": {
+      "title": "Cài đặt chung",
+      "threshold": "Ngưỡng tin cậy (%)",
+      "thresholdHint": "AI chỉ tự gửi khi độ tin cậy từ ngưỡng này trở lên. Thấp nhất 80%, mặc định 85%.",
+      "delay": "Khoảng trễ trước khi gửi",
+      "delayOption": { "0": "Gửi ngay", "60": "1 phút", "120": "2 phút", "300": "5 phút" },
+      "dailyCap": "Giới hạn số câu tự gửi mỗi ngày",
+      "hours": "Giờ hoạt động",
+      "hoursEnabled": "Chỉ tự gửi trong khung giờ này (theo múi giờ của workspace)",
+      "hoursFrom": "Từ",
+      "hoursTo": "Đến",
+      "hoursHint": "Bỏ chọn để tự gửi cả ngày. Chọn ít nhất một ngày khi bật.",
+      "day": { "0": "CN", "1": "T2", "2": "T3", "3": "T4", "4": "T5", "5": "T6", "6": "T7" },
+      "keywords": "Từ khóa chặn",
+      "keywordsHint": "Mỗi dòng một từ hoặc cụm từ (tối đa 50, mỗi từ ≤ 60 ký tự). Câu AI có chứa từ này sẽ không được tự gửi.",
+      "signature": "Chữ ký công bố",
+      "signatureHint": "Một dòng ngắn (≤ 120 ký tự) cho biết câu trả lời do AI soạn, ví dụ “— Trợ lý AI của shop”. Để trống nếu không dùng."
+    },
+    "notice": { "saved": "Đã lưu cài đặt." },
+    "error": {
+      "rules": "Có ô chọn mức không hợp lệ. Vui lòng chọn lại.",
+      "threshold": "Ngưỡng tin cậy phải từ 80 đến 100.",
+      "delaySeconds": "Khoảng trễ không hợp lệ.",
+      "dailyCap": "Giới hạn mỗi ngày phải là số nguyên từ 1 đến 1000.",
+      "activeHours": "Giờ hoạt động không hợp lệ: chọn ít nhất một ngày và giờ bắt đầu khác giờ kết thúc.",
+      "blockedKeywords": "Từ khóa chặn không hợp lệ (tối đa 50 từ, mỗi từ ≤ 60 ký tự).",
+      "signature": "Chữ ký tối đa 120 ký tự và không xuống dòng.",
+      "form": "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.",
+      "unavailable": "Chưa thể lưu lúc này. Vui lòng thử lại."
+    },
+    "loadError": {
+      "title": "Không tải được cài đặt",
+      "body": "Vui lòng tải lại trang sau ít phút."
+    }
+  },
   "productImport": {
     "pageTitle": "Nhập sản phẩm từ Excel/CSV",
     "title": "Nhập sản phẩm từ Excel/CSV",
@@ -918,6 +969,7 @@
       "posts": "Bài viết",
       "tryAi": "Thử AI",
       "readiness": "Độ sẵn sàng AI",
+      "automation": "Cài đặt tự gửi",
       "aiSent": "AI đã gửi",
       "productImport": "Nhập sản phẩm",
       "kbGaps": "Câu hỏi chưa trả lời",

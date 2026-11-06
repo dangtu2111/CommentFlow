@@ -13,6 +13,7 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
       'aiSent',
       'tryAi',
       'readiness',
+      'automation',
       'productImport',
       'kbGaps',
       'kbPublish',

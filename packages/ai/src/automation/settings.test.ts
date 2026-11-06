@@ -39,7 +39,10 @@ describe('FR-070 mặc định và mức theo kênh × nhãn', () => {
   });
 
   it.each([
-    ['nhãn Khiếu nại (luôn chặn, FR-145)', { channelId: CH, target: 'comment', label: 'complaint', mode: 'auto' }],
+    [
+      'nhãn Khiếu nại (luôn chặn, FR-145)',
+      { channelId: CH, target: 'comment', label: 'complaint', mode: 'auto' },
+    ],
     ['nhãn Spam', { channelId: CH, target: 'comment', label: 'spam', mode: 'auto' }],
     ['mức lạ', { channelId: CH, target: 'comment', label: 'price', mode: 'always' }],
     ['kênh không phải uuid', { channelId: 'x', target: 'comment', label: 'price', mode: 'auto' }],
@@ -146,12 +149,22 @@ describe('FR-071 cầu nối sang cổng tự gửi', () => {
     const input = {
       target: 'comment',
       now: new Date('2026-11-06T03:00:00Z'),
-      workspace: { aiEnabled: true, emergencyStopped: false, aiCostCapUsd: null, aiCostMonthUsd: 0 },
+      workspace: {
+        aiEnabled: true,
+        emergencyStopped: false,
+        aiCostCapUsd: null,
+        aiCostMonthUsd: 0,
+      },
       levels: { channelLabel: 'auto', post: null },
       settings: { ...settings, allowPartial: false, allowClarify: true },
       labels: ['price'],
       confidence: 0.95,
-      decision: { action: 'answer', needsHuman: false, autoSendPolicy: 'standard', unansweredTopics: [] },
+      decision: {
+        action: 'answer',
+        needsHuman: false,
+        autoSendPolicy: 'standard',
+        unansweredTopics: [],
+      },
       draft: { reply: 'ok', needsHuman: false, claims: [], unansweredTopics: [] },
       grounding: { sourceTexts: [] },
       flags: {
