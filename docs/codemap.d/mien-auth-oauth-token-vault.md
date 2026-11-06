@@ -1,0 +1,1 @@
+| Mã hóa token OAuth `accounts` | `packages/saas-core/src/auth/oauth-token-vault.ts` | Niêm phong `access/refresh/id_token` AES-256-GCM qua interface cipher (khóa `TOKEN_ENC_KEYS`), phiên bản khóa trong chuỗi `enc:v<n>:…`, hook ghi `accounts` của Better Auth (TẮT mặc định), `rotate` cho xoay khóa | 13 §5 · Q-OTE1 |

@@ -5,6 +5,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { twoFactor } from 'better-auth/plugins';
 import { type Notifier, RESET_PASSWORD_HOURS, VERIFY_EMAIL_HOURS } from '../notify';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
+import { createAccountTokenHooks, type OAuthTokenCipher } from './oauth-token-vault';
 import { hashPassword, verifyPassword } from './password';
 import {
   APP_SESSION_SECONDS,
@@ -39,6 +40,11 @@ export type AuthOptions = {
   appEnv: AppEnv;
   /** Tên thương hiệu làm issuer 2FA trong app xác thực (FR-125, từ `loadBrandConfig`); bỏ trống → giá trị tạm mặc định. */
   appName?: string;
+  /**
+   * Bộ mã hóa token OAuth lưu ở `accounts` (docs/13 §5; `createTokenCipher` của @flow/connectors khớp interface này).
+   * Bỏ trống = không mã hóa (mặc định TẮT, chưa có nhà cung cấp OAuth đăng nhập nào bật).
+   */
+  oauthTokenCipher?: OAuthTokenCipher;
 };
 
 export type AppEnv = 'dev' | 'test' | 'ci' | 'staging' | 'production';
@@ -70,6 +76,7 @@ export function createAuth(options: AuthOptions) {
     );
   }
 
+  const accountTokenHooks = createAccountTokenHooks(options.oauthTokenCipher);
   const appUrl = options.baseURL.replace(/\/+$/, '');
   const recipientOf = (user: { email: string; name: string; locale?: unknown }) => {
     const locale: Locale = isLocale(user.locale) ? user.locale : 'vi';
@@ -165,6 +172,8 @@ export function createAuth(options: AuthOptions) {
       ipAddress: { ipAddressHeaders: ['x-forwarded-for'] },
     },
     databaseHooks: {
+      // Mã hóa token OAuth ở `accounts` (docs/13 §5) — chỉ khi nơi lắp ráp truyền cipher; mặc định TẮT.
+      ...(accountTokenHooks ? { account: accountTokenHooks } : {}),
       session: {
         create: {
           // Phiên Admin hết hạn sau 8 giờ; không bao giờ kéo dài hạn đã tính.
