@@ -163,6 +163,14 @@
         "export": "Export statement",
         "vatTitle": "VAT e-invoice",
         "vatBody": "VAT invoicing details will be editable in a later release."
+      },
+      "bento": {
+        "turns": "AI turns used this month",
+        "turnsOf": "/ {capacity} turns",
+        "channels": "Connected sales channels",
+        "channelsOf": "/ {total} channels added",
+        "members": "Team members",
+        "membersUnit": "accounts"
       }
     },
     "notifications": {

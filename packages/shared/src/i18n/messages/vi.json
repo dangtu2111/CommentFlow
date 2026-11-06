@@ -163,6 +163,14 @@
         "export": "Xuất bảng kê",
         "vatTitle": "Hóa đơn điện tử VAT",
         "vatBody": "Thông tin xuất hóa đơn VAT sẽ chỉnh sửa được ở bản sau."
+      },
+      "bento": {
+        "turns": "Lượt AI xử lý trong tháng",
+        "turnsOf": "/ {capacity} lượt",
+        "channels": "Kênh bán hàng kết nối",
+        "channelsOf": "/ {total} kênh đã thêm",
+        "members": "Thành viên nhân sự",
+        "membersUnit": "tài khoản"
       }
     },
     "notifications": {

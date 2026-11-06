@@ -53,7 +53,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
     userId: user.id,
   });
   return (
-    <main>
+    <main className="app-page app-page-settings">
       <SettingsFrame
         viewerRole={workspace.role}
         active="security"

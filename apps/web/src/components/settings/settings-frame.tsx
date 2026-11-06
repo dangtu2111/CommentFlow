@@ -95,7 +95,7 @@ export async function SettingsFrame({
   const items = settingsNavFor(viewerRole);
   const tabs = variant === 'tabs';
   return (
-    <div className="tw settings-frame-tw p-gutter flex flex-col gap-gutter">
+    <div className="tw flex flex-col gap-gutter">
       <nav
         aria-label={t('breadcrumb.label')}
         className="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md"

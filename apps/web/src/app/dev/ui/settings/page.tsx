@@ -51,7 +51,7 @@ export default async function DevSettingsPage({
   const enabled = params.state !== 'off';
   return (
     <DevShell>
-      <main>
+      <main className="app-page app-page-settings">
         <SettingsFrame
           viewerRole="owner"
           active="security"
