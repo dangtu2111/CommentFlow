@@ -1,0 +1,37 @@
+// API công khai của module send-lock (ADMIN-SEND-LOCK, FR-116). Thêm export mới ở ĐÂY.
+
+export {
+  canManageSendLock,
+  describeSendLock,
+  findActiveSendLock,
+  isPlatformAdmin,
+  type ParseLockCommandResult,
+  PLATFORM_ADMIN_ROLES,
+  parseSendLockCommand,
+  SEND_LOCK_MAX_MS,
+  SEND_LOCK_NOTE_MAX,
+  SEND_LOCK_PLATFORMS,
+  SEND_LOCK_REASON_CODES,
+  SEND_LOCK_ROLES,
+  SEND_LOCK_SCOPES,
+  type SendLock,
+  type SendLockActor,
+  type SendLockCommand,
+  type SendLockReasonCode,
+  type SendLockScope,
+  type SendLockStatus,
+  type SendLockTarget,
+  toGateSendLock,
+} from './send-lock';
+export {
+  createInMemorySendLock,
+  createSendLockService,
+  type InMemorySendLock,
+  type LiftResult,
+  type LockResult,
+  type SendLockAuditEntry,
+  type SendLockEffects,
+  type SendLockNotice,
+  type SendLockService,
+  type SendLockStore,
+} from './send-lock-service';
