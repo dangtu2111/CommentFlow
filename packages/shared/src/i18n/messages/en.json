@@ -653,6 +653,41 @@
       "UNAVAILABLE": "Could not import right now. Please try again later."
     }
   },
+  "kbGaps": {
+    "pageTitle": "Unanswered AI questions",
+    "title": "Questions the AI could not answer",
+    "subtitle": "Customer questions the AI had no knowledge for, grouped by topic. Write an answer to add it to your FAQ, or ignore it if staff should handle that topic. Sample questions have personal data masked.",
+    "filterLabel": "Filter questions",
+    "allTopics": "All topics",
+    "empty": "No questions in this view yet.",
+    "groupTitle": "{topic} · asked {total} times",
+    "seen": "Asked {count} times · last {date}",
+    "questionLabel": "Question (FAQ)",
+    "answerLabel": "Answer",
+    "langLabel": "Applies to language",
+    "add": "Add knowledge",
+    "ignore": "Ignore",
+    "reopen": "Reopen",
+    "lang": { "vi": "Vietnamese", "en": "English", "all": "Both" },
+    "status": { "open": "Open", "resolved": "Added", "ignored": "Ignored" },
+    "topic": {
+      "shipping": "Shipping & delivery",
+      "discount": "Discounts & promotions",
+      "product_info": "Product information",
+      "policy": "Policy",
+      "order_status": "Order status",
+      "size": "Size",
+      "other": "Other"
+    },
+    "error": {
+      "invalid_faq": "Enter both a question and a valid answer.",
+      "unavailable": "Could not save, please try again."
+    },
+    "loadError": {
+      "title": "Could not load the list",
+      "body": "Please reload the page in a few minutes."
+    }
+  },
   "readiness": {
     "pageTitle": "AI readiness",
     "title": "AI readiness",
@@ -806,6 +841,7 @@
       "tryAi": "Try AI",
       "readiness": "AI readiness",
       "productImport": "Import products",
+      "kbGaps": "Unanswered questions",
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
