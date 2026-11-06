@@ -131,6 +131,23 @@ describe('FR-021 job ingest — bình luận mới', () => {
     expect(row.processed_at).not.toBeNull();
   });
 
+  it('FR-143 lưu loại + link tệp đính kèm; bình luận chữ thuần → []; chữ vẫn lưu', async () => {
+    const { pageId, channelId } = await seedPage();
+    const img = 'https://scontent.example.invalid/a.jpg';
+    await handler()(job(ws, await record(pageId, change(pageId, { photo: img }))));
+    await handler()(job(ws, await record(pageId, change(pageId, { message: 'chỉ chữ' }))));
+    const rows = (
+      await admin.query(
+        "SELECT text, attachments FROM cf.comments WHERE channel_id = $1 ORDER BY (attachments = '[]'::jsonb), text",
+        [channelId],
+      )
+    ).rows;
+    expect(rows).toEqual([
+      { text: 'Còn size M không shop?', attachments: [{ type: 'photo', url: img }] },
+      { text: 'chỉ chữ', attachments: [] },
+    ]);
+  });
+
   it('chạy lại cùng job / cùng sự kiện → không thêm bình luận, không tăng đếm (idempotent)', async () => {
     const { pageId, channelId } = await seedPage();
     const eventId = await record(pageId, change(pageId));

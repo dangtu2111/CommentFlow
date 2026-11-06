@@ -91,6 +91,7 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
           authorExternalId: c.authorExternalId,
           authorName: c.authorName ?? null,
           text: c.text,
+          attachments: c.attachments ?? [],
           createdTime: c.createdAt,
           status: 'new',
           isOwn: false,
