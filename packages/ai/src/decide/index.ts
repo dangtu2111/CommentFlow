@@ -30,6 +30,13 @@ export {
   MAX_SHORT_TEXT_WORDS,
 } from './handoff-rules';
 export {
+  DEFAULT_HUMAN_HOLD_MINUTES,
+  evaluateHumanHold,
+  type HumanHoldReason,
+  type HumanHoldResult,
+  MAX_HUMAN_HOLD_MINUTES,
+} from './human-hold-rules';
+export {
   checkDraftLegal,
   type DraftLegalCheck,
   evaluateLegalRules,
