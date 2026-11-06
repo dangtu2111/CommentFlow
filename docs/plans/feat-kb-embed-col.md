@@ -12,7 +12,7 @@ Không có. Tự chọn theo AGENTS.md § Quy tắc hỏi: Q-KEC1.
 
 ## Tiêu chí nghiệm thu
 
-1. Migration 0041 tạo `kb_chunks_embedding_hnsw_idx` (hnsw, `halfvec_cosine_ops`, một phần: đã xuất bản, có vector, không nghi cài lệnh) hợp lệ — `kb-embed-col.int.test.ts`.
+1. Migration 0042 tạo `kb_chunks_embedding_hnsw_idx` (hnsw, `halfvec_cosine_ops`, một phần: đã xuất bản, có vector, không nghi cài lệnh) hợp lệ — `kb-embed-col.int.test.ts`.
 2. Tạo `kb_chunks_workspace_embedding_model_idx (workspace_id, embedding_model)` hợp lệ — cùng test.
 3. Khi ép dùng chỉ mục (`enable_seqscan=off`), truy vấn vector dùng HNSW — cùng test (EXPLAIN).
 4. `searchKbChunks` trả đủ kết quả của workspace dù workspace khác có nhiều vector gần hơn (iterative scan) — cùng test.
@@ -25,7 +25,7 @@ Không có. Tự chọn theo AGENTS.md § Quy tắc hỏi: Q-KEC1.
 
 ## File sẽ sửa / tạo
 
-- `packages/db/migrations/0041_kb_embed_col.sql` (+ journal, snapshot) — hai chỉ mục.
+- `packages/db/migrations/0042_kb_embed_col.sql` (+ journal, snapshot) — hai chỉ mục.
 - `packages/db/src/schema/cf/kb.ts` — khai báo chỉ mục.
 - `packages/db/src/queries/kb-search.ts` — bật `hnsw.iterative_scan = strict_order` cục bộ giao dịch.
 - `packages/db/tests/kb-embed-col.int.test.ts` — test mới.
@@ -33,7 +33,7 @@ Không có. Tự chọn theo AGENTS.md § Quy tắc hỏi: Q-KEC1.
 
 ## Migration
 
-0041: HNSW một phần (m=16, ef_construction=64) và B-tree `embedding_model`. Không đổi dữ liệu/RLS/quyền. Lùi: `DROP INDEX cf.kb_chunks_embedding_hnsw_idx, cf.kb_chunks_workspace_embedding_model_idx;`.
+0042: HNSW một phần (m=16, ef_construction=64) và B-tree `embedding_model`. Không đổi dữ liệu/RLS/quyền. Lùi: `DROP INDEX cf.kb_chunks_embedding_hnsw_idx, cf.kb_chunks_workspace_embedding_model_idx;`.
 
 ## Test viết trước
 

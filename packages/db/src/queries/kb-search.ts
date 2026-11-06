@@ -83,7 +83,7 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
   );
 
   if (input.queryVector) {
-    // HNSW (0041) quét gần đúng rồi mới lọc workspace/phiên bản → quét tiếp đến đủ LIMIT, giữ đúng thứ tự (FR-139).
+    // HNSW (0042) quét gần đúng rồi mới lọc workspace/phiên bản → quét tiếp đến đủ LIMIT, giữ đúng thứ tự (FR-139).
     await tx.execute(sql`SELECT set_config('hnsw.iterative_scan', 'strict_order', true)`);
   }
 

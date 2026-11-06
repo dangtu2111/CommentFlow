@@ -4,7 +4,7 @@ import type { FlowDb } from '../src/client';
 import { searchKbChunks } from '../src/queries/kb-search';
 import { createAdminPool, createAppDb, seedWorkspace } from './helpers';
 
-/** KB-EMBED-COL (FR-133, FR-139, migration 0041): HNSW cho kb_chunks.embedding + chỉ mục embedding_model. */
+/** KB-EMBED-COL (FR-133, FR-139, migration 0042): HNSW cho kb_chunks.embedding + chỉ mục embedding_model. */
 
 let admin: pg.Pool;
 let db: FlowDb;
@@ -32,7 +32,7 @@ async function indexInfo(name: string) {
   return rows[0];
 }
 
-describe('chỉ mục kb_chunks cho embedding (0041)', () => {
+describe('chỉ mục kb_chunks cho embedding (0042)', () => {
   it('HNSW một phần: halfvec_cosine_ops, chỉ đoạn đã xuất bản, có vector, không nghi cài lệnh', async () => {
     const info = await indexInfo('kb_chunks_embedding_hnsw_idx');
     expect(info?.valid).toBe(true);

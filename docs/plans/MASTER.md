@@ -129,7 +129,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | RETRIEVAL-LOG | FR-134 (`retrieval_logs`, kb_gaps) | US-106, UF-11 | KB-SEARCH-FTS | DB | không | ✅ Xong (feat-retrieval-log, migration 0040; chưa có nơi ghi → `RETRIEVAL-LOG-WIRE`; `test:db` chạy ở CI) |
 | KB-TRYAI | FR-059 (ô Thử AI hiện đoạn tìm được + điểm) | US-034 | KB-SEARCH-FTS | — | không | ⏳ |
 | KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | ⏳ |
-| KB-EMBED-COL | FR-133 (cột `embedding_model`; job tạo lại làm ở GĐ5), FR-139 (cột `halfvec(1024)` + HNSW) | — | KB-SCHEMA | DB | không | ✅ (feat-kb-embed-col, migration 0041; job tạo lại → GĐ5) |
+| KB-EMBED-COL | FR-133 (cột `embedding_model`; job tạo lại làm ở GĐ5), FR-139 (cột `halfvec(1024)` + HNSW) | — | KB-SCHEMA | DB | không | ✅ (feat-kb-embed-col, migration 0042; job tạo lại → GĐ5) |
 | GSHEETS-LINK | FR-121 (Google Sheets liên kết + đồng bộ định kỳ) | US-003 | KB-IMPORT-EXCEL | S (OAuth) | **có** — Google Cloud | ⛔ |
 | KB-INJECTION-GUARD | FR-164 (chống cài lệnh qua kiến thức nhập vào) | — | KB-CHUNKING | S | không | ✅ Xong-mock (feat-kb-injection-guard; duyệt/xuất bản → KB-INJECTION-REVIEW, KB-PUBLISH) |
 
