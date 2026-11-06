@@ -1,6 +1,7 @@
 import { CircleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { AuthStatus } from '../../../components/auth/auth-status';
 import { ResetPasswordForm } from '../../../components/auth/forms';
 import { getBrand } from '../../../server/brand';
 
@@ -19,13 +20,12 @@ export default async function ResetPasswordPage({
   if (params.error || !params.token) {
     return (
       <>
-        <span className="status-icon status-icon-danger">
-          <CircleAlert size={24} aria-hidden="true" />
-        </span>
-        <div className="stack">
-          <h1 className="auth-title">{t('invalidTitle')}</h1>
-          <p className="auth-subtitle">{t('invalidBody')}</p>
-        </div>
+        <AuthStatus
+          icon={CircleAlert}
+          tone="danger"
+          title={t('invalidTitle')}
+          description={t('invalidBody')}
+        />
         <Link href="/forgot-password" className="btn btn-primary btn-block">
           {t('requestNew')}
         </Link>
