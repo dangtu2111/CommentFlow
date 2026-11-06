@@ -301,6 +301,16 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.usage_counters', 'warned_80_at', 'UPDATE'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'INSERT'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'UPDATE'],
+  // RETRIEVAL-LOG (0040): nhật ký chỉ thêm (không cột nào UPDATE được); kb_gaps khóa định danh không đổi
+  ['cf_app', 'cf.retrieval_logs', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.retrieval_logs', 'query_masked', 'UPDATE'],
+  ['cf_app', 'cf.retrieval_logs', 'candidates', 'UPDATE'],
+  ['cf_app', 'cf.kb_gaps', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.kb_gaps', 'topic', 'UPDATE'],
+  ['cf_app', 'cf.kb_gaps', 'product_id', 'UPDATE'],
+  ['cf_app', 'cf.kb_gaps', 'first_seen_at', 'UPDATE'],
+  ['cf_app', 'cf.kb_gaps', 'count', 'INSERT'],
+  ['cf_app', 'cf.kb_gaps', 'status', 'INSERT'],
   ['cf_app', 'cf.comments', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.comments', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.comments', 'post_id', 'UPDATE'],
@@ -585,6 +595,13 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.webhook_events', 'r', 'is_workspace_owner'],
   // cf.comment_tombstones: cf_app KHÔNG có quyền trực tiếp (hàm DEFINER cf.mark_comment_deleted ghi); RLS chỉ hệ thống.
   ['cf.comment_tombstones', 'a', 'is_system_context'],
+  // RETRIEVAL-LOG (0040): nhật ký + gap chỉ do HỆ THỐNG ghi; thành viên chỉ đọc và (kb_gaps) đổi trạng thái
+  ['cf.retrieval_logs', 'a', 'is_system_context'],
+  ['cf.retrieval_logs', 'r', 'is_workspace_member'],
+  ['cf.kb_gaps', 'a', 'is_system_context'],
+  ['cf.kb_gaps', 'w', 'is_system_context'],
+  ['cf.kb_gaps', 'w', 'is_workspace_member'], // + trigger kb_gaps_guard_update chặn thành viên sửa cột đếm
+  ['cf.kb_gaps', 'r', 'is_workspace_member'],
 ];
 
 /** Chuỗi KHÔNG được xuất hiện trong policy của lệnh đó. */
@@ -624,6 +641,14 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.comment_tombstones', 'a', 'is_workspace_member'],
   ['cf.comment_tombstones', 'a', 'is_workspace_owner'],
   ['cf.comment_tombstones', 'a', 'IS NULL'],
+  // RETRIEVAL-LOG: INSERT chỉ hệ thống — không nhánh thành viên/Owner/"không người dùng" trong CÙNG policy
+  ['cf.retrieval_logs', 'a', 'is_workspace_member'],
+  ['cf.retrieval_logs', 'a', 'is_workspace_owner'],
+  ['cf.retrieval_logs', 'a', 'IS NULL'],
+  ['cf.kb_gaps', 'a', 'is_workspace_member'],
+  ['cf.kb_gaps', 'a', 'is_workspace_owner'],
+  ['cf.kb_gaps', 'a', 'IS NULL'],
+  ['cf.kb_gaps', 'w', 'IS NULL'],
 ];
 
 async function checkActorPolicies(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -687,6 +712,8 @@ const NO_DELETE_TABLES = [
   'cf.shop_profiles',
   'cf.brand_voice',
   'cf.ai_usage',
+  'cf.retrieval_logs',
+  'cf.kb_gaps',
   'core.members',
   'core.invitations',
   'core.action_logs',
@@ -765,7 +792,9 @@ async function checkWorkerDirectPrivileges(
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
       AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox')
                AND a.privilege_type = 'EXECUTE')
-      AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')`);
+      AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')
+      AND NOT (n.nspname = 'cf' AND p.proname = 'purge_expired_retrieval_logs'
+               AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({
       subject: String(row.name),

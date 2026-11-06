@@ -1,4 +1,4 @@
-import { COMMENT_LABELS } from '@flow/shared';
+import { COMMENT_LABELS, KB_GAP_TOPICS, type KbGapTopic } from '@flow/shared';
 import { z } from 'zod';
 import type { ActionKind } from '../confidence/confidence';
 
@@ -10,17 +10,8 @@ import type { ActionKind } from '../confidence/confidence';
  * Phát hiện lệch giá / tồn kho cũ / pháp lý / mạo danh là việc `DA-RULES-*`: ở đây chỉ nhận CỜ.
  */
 
-/** Chủ đề `kb_gaps.topic` (`docs/10`). */
-export const KB_GAP_TOPICS = [
-  'shipping',
-  'discount',
-  'product_info',
-  'policy',
-  'order_status',
-  'size',
-  'other',
-] as const;
-export type KbGapTopic = (typeof KB_GAP_TOPICS)[number];
+/** Chủ đề `kb_gaps.topic` (`docs/10`): một nguồn ở `@flow/shared` (RETRIEVAL-LOG); re-export cho nơi import từ đây. */
+export { KB_GAP_TOPICS, type KbGapTopic };
 
 /** Khóa mẫu câu mời `brand_voice.handoff_templates` (`docs/10`, FR-141/FR-152). */
 export const HANDOFF_TEMPLATE_KEYS = [
