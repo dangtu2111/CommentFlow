@@ -548,7 +548,10 @@
       "selfNote": "Bạn không thể tự đổi vai trò hay tự gỡ chính mình.",
       "unknownName": "(chưa có tên)",
       "emailHidden": "(email ẩn khi tạm khóa)",
-      "count": "{count} thành viên"
+      "count": "{count} thành viên",
+      "body": "Quản lý các tài khoản được cấp quyền trả lời, xem khách hàng tiềm năng và cấu hình bot.",
+      "invite": "Mời thành viên mới",
+      "locked": "Không thể thay đổi"
     },
     "actions": {
       "makeOwner": "Nâng lên Owner",
@@ -568,7 +571,11 @@
       "role": "Vai trò",
       "roleHint": "Owner có toàn quyền và bắt buộc bật xác thực 2 bước. Staff xử lý bình luận, tin nhắn.",
       "submit": "Gửi lời mời",
-      "sent": "Nếu email hợp lệ, lời mời đã được gửi. Bạn có thể theo dõi trong mục “Lời mời đang chờ”."
+      "sent": "Nếu email hợp lệ, lời mời đã được gửi. Bạn có thể theo dõi trong mục “Lời mời đang chờ”.",
+      "soon": "Sắp có",
+      "cancel": "Hủy bỏ",
+      "maskTitle": "Che bớt số điện thoại của khách hàng",
+      "maskBody": "Nhân sự này chỉ thấy dạng 0987***321 để tránh sao chép dữ liệu khách."
     },
     "pending": {
       "title": "Lời mời đang chờ",
@@ -587,6 +594,56 @@
       "leaveLastOwner": "Bạn là Owner đang hoạt động cuối cùng. Hãy nâng một thành viên khác lên Owner (hoặc xóa workspace) trước khi rời.",
       "invalid": "Thông tin chưa hợp lệ. Vui lòng tải lại trang rồi thử lại.",
       "generic": "Chưa thực hiện được. Vui lòng thử lại sau ít phút."
+    },
+    "soon": "Sắp có",
+    "headerTitle": "Cài đặt & Quản trị Workspace",
+    "docs": "Xem tài liệu hướng dẫn",
+    "saveChanges": "Lưu thay đổi",
+    "permissions": {
+      "owner": "Toàn quyền hệ thống",
+      "staff": "Xử lý bình luận, tin nhắn, xem khách tiềm năng"
+    },
+    "table": {
+      "person": "Nhân sự",
+      "role": "Vai trò",
+      "permissions": "Quyền thao tác",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "matrix": {
+      "title": "Ma trận đối chiếu quyền hạn (Owner vs Staff)",
+      "version": "Chi tiết phân quyền",
+      "task": "Tác vụ vận hành",
+      "rule": "Quy tắc bảo mật",
+      "mask": "Che SĐT",
+      "allowed": "Có quyền",
+      "denied": "Không có quyền",
+      "rows": {
+        "connect": {
+          "task": "Kết nối / ngắt kết nối Fanpage, Instagram",
+          "rule": "Chỉ Owner được ủy quyền OAuth Meta"
+        },
+        "kb": {
+          "task": "Soạn và sửa Cơ sở kiến thức AI (FAQ, bảng giá)",
+          "rule": "Tránh nhân viên sửa thông tin bảng giá gốc"
+        },
+        "rules": {
+          "task": "Cấu hình quy tắc AI tự trả lời và giọng văn",
+          "rule": "Chỉ Owner bật/tắt luồng tự động"
+        },
+        "stop": {
+          "task": "Nút Dừng khẩn cấp (Emergency Stop)",
+          "rule": "Bất kỳ ai cũng có thể ngắt ngay khi AI trả lời sai"
+        },
+        "leads": {
+          "task": "Xem danh sách Khách tiềm năng",
+          "rule": "Che số điện thoại để chống rò rỉ dữ liệu khách"
+        },
+        "billing": {
+          "task": "Quản lý gói cước, mua thêm lượt AI và hóa đơn",
+          "rule": "Toàn quyền thanh toán thuộc Owner"
+        }
+      }
     }
   },
   "leave": {
