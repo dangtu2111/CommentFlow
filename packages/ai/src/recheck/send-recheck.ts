@@ -111,6 +111,8 @@ const priceEntrySchema = z.object({
     .nullish()
     .transform((v) => v ?? null),
   priceVnd: nonNegativeInt,
+  /** Tồn kho (R5 "giá/tồn còn khớp"); thiếu/`null` = không biết — so cả `null`. */
+  stock: nonNegativeInt.nullish().transform((v) => v ?? null),
   /** `products.updated_from_source_at`; `null` = chưa đồng bộ từ nguồn. */
   updatedFromSourceAt: instant.nullable(),
 });
@@ -248,6 +250,7 @@ function snapshotStillMatches(snapshot: PriceEntry, current: readonly PriceEntry
   );
   if (now === undefined) return false;
   if (now.priceVnd !== snapshot.priceVnd) return false;
+  if (now.stock !== snapshot.stock) return false;
   return timeKey(now.updatedFromSourceAt) === timeKey(snapshot.updatedFromSourceAt);
 }
 

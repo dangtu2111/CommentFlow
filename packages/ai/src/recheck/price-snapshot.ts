@@ -8,7 +8,7 @@ import type { RecheckPriceEntry } from './send-recheck';
 
 /**
  * Ảnh chụp lưu ở `drafts` → mục R5. Cột hỏng/không đọc được → `[]`: R5 coi là `price_snapshot_missing` và CHẶN
- * (an toàn hơn bỏ qua), nên không cần ném lỗi ở đây. Tồn kho được lưu để hiển thị/đối chiếu, R5 chỉ so giá + mốc đồng bộ.
+ * (an toàn hơn bỏ qua), nên không cần ném lỗi ở đây. R5 so giá, tồn kho và mốc đồng bộ.
  */
 export function priceEntriesFromSnapshot(column: unknown): RecheckPriceEntry[] {
   const parsed = parsePriceSnapshot(column);
@@ -17,6 +17,7 @@ export function priceEntriesFromSnapshot(column: unknown): RecheckPriceEntry[] {
     productId: e.product_id,
     variantId: e.variant_id,
     priceVnd: e.price_vnd,
+    stock: e.stock,
     updatedFromSourceAt: e.updated_from_source_at,
   }));
 }
@@ -31,6 +32,7 @@ export function priceEntriesFromSources(sources: readonly PriceSource[]): Rechec
             productId: s.productId,
             variantId: s.variantId ?? null,
             priceVnd: s.priceVnd,
+            stock: s.stock,
             updatedFromSourceAt: s.updatedFromSourceAt,
           },
         ],

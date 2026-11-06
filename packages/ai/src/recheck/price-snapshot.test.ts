@@ -14,13 +14,14 @@ const src = (over: Record<string, unknown> = {}) => ({
 });
 
 describe('priceEntriesFromSnapshot', () => {
-  it('chuyển ảnh chụp (snake_case, JSON từ DB) thành mục R5, bỏ tồn kho', () => {
+  it('chuyển ảnh chụp (snake_case, JSON từ DB) thành mục R5 (kèm tồn kho)', () => {
     const json = JSON.parse(JSON.stringify(buildPriceSnapshot([src({ variantId: 'v1' })])));
     expect(priceEntriesFromSnapshot(json)).toEqual([
       {
         productId: 'p1',
         variantId: 'v1',
         priceVnd: 199_000,
+        stock: 5,
         updatedFromSourceAt: AT.toISOString(),
       },
     ]);
@@ -36,7 +37,9 @@ describe('priceEntriesFromSources', () => {
   it('giá hiện tại: bỏ mục không giá, giữ biến thể', () => {
     expect(
       priceEntriesFromSources([src({ variantId: 'v1' }), src({ productId: 'p2', priceVnd: null })]),
-    ).toEqual([{ productId: 'p1', variantId: 'v1', priceVnd: 199_000, updatedFromSourceAt: AT }]);
+    ).toEqual([
+      { productId: 'p1', variantId: 'v1', priceVnd: 199_000, stock: 5, updatedFromSourceAt: AT },
+    ]);
   });
 });
 
@@ -79,6 +82,14 @@ describe('ảnh chụp ↔ sendRecheck R5 (đầu-cuối)', () => {
 
   it('giá đúng biến thể v2 đổi (v1 giữ) → price_changed', () => {
     const r = run([src({ variantId: 'v1' }), src({ variantId: 'v2', priceVnd: 259_000 })]);
+    expect(r).toMatchObject({ ok: false, reason: 'price_changed' });
+  });
+
+  it('tồn kho đổi (về 0) dù giá và mốc đồng bộ giữ nguyên → price_changed', () => {
+    const r = run([
+      src({ variantId: 'v1', stock: 0 }),
+      src({ variantId: 'v2', priceVnd: 249_000 }),
+    ]);
     expect(r).toMatchObject({ ok: false, reason: 'price_changed' });
   });
 
