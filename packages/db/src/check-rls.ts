@@ -267,6 +267,11 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   // ABBREV-DICT (0041): workspace và ngôn ngữ của mục không đổi sau khi tạo
   ['cf_app', 'cf.abbreviations', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.abbreviations', 'lang', 'UPDATE'],
+  // SIZE-TABLE (0044): phạm vi của dòng (workspace, sản phẩm, danh mục) không đổi sau khi tạo
+  ['cf_app', 'cf.size_charts', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.size_charts', 'product_id', 'UPDATE'],
+  ['cf_app', 'cf.size_charts', 'category', 'UPDATE'],
+  ['cf_app', 'cf.size_charts', 'category_norm', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'kind', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'lang', 'UPDATE'],
@@ -595,6 +600,12 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.abbreviations', 'w', 'is_workspace_owner'],
   ['cf.abbreviations', 'w', 'is_system_context'],
   ['cf.abbreviations', 'r', 'is_workspace_member'],
+  // SIZE-TABLE (0044): Owner hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  ['cf.size_charts', 'a', 'is_workspace_owner'],
+  ['cf.size_charts', 'a', 'is_system_context'],
+  ['cf.size_charts', 'w', 'is_workspace_owner'],
+  ['cf.size_charts', 'w', 'is_system_context'],
+  ['cf.size_charts', 'r', 'is_workspace_member'],
   ['cf.comments', 'a', 'is_system_context'],
   ['cf.comments', 'w', 'is_workspace_member'], // + is_system_context (trigger chặn sửa dữ liệu nền tảng ở đường người dùng)
   ['cf.comments', 'r', 'is_workspace_member'],
@@ -640,6 +651,11 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.products', 'a', 'IS NULL'],
   ['cf.products', 'w', 'IS NULL'],
   ['cf.product_aliases', 'a', 'IS NULL'],
+  // bảng size: Staff không ghi; withWorkspace trần (không người dùng) không được ghi
+  ['cf.size_charts', 'a', 'is_workspace_member'],
+  ['cf.size_charts', 'w', 'is_workspace_member'],
+  ['cf.size_charts', 'a', 'IS NULL'],
+  ['cf.size_charts', 'w', 'IS NULL'],
   ['cf.product_variants', 'a', 'IS NULL'],
   ['cf.product_variants', 'w', 'IS NULL'],
   ['cf.channels', 'w', 'is_workspace_member'], // Staff không ghi kênh
