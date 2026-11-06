@@ -68,6 +68,10 @@ export const commentHides = cf.table(
       .where(sql`${t.status} in ('queued', 'sending')`),
     index('comment_hides_workspace_comment_idx').on(t.workspaceId, t.commentId),
     index('comment_hides_workspace_channel_idx').on(t.workspaceId, t.channelId),
+    // HIDE-SWEEP: quét yêu cầu kẹt theo `updated_at` (chỉ dòng đang hoạt động → chỉ mục nhỏ).
+    index('comment_hides_stuck_idx')
+      .on(t.updatedAt)
+      .where(sql`${t.status} in ('queued', 'sending')`),
     check(
       'comment_hides_action_check',
       sql`${t.action} in (${sql.raw(HIDE_ACTIONS.map((a) => `'${a}'`).join(', '))})`,

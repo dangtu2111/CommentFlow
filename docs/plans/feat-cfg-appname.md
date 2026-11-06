@@ -14,7 +14,7 @@ Không có. (Mặc định tên = "CommentFlow AI", logo/domain trống; ghi ở
 2. Giá trị sai (logo không phải đường dẫn gốc/http(s), domain có scheme/đường dẫn, tên quá dài/ký tự điều khiển) bị từ chối, lỗi chỉ nêu tên biến — kiểm bằng cùng file test.
 3. Cả 5 loại thư × vi/en dùng tên cấu hình, không còn tên cứng; tên được escape trong HTML; `createNotifier` truyền tên xuống — kiểm bằng `packages/saas-core/src/notify/notify.test.ts`.
 4. Web: `loadServerEnv` trả `brand` + `mailFrom` (ưu tiên `SMTP_FROM`, rồi `APP_EMAIL_FROM`, rồi tên + domain; thiếu hết → lỗi) — kiểm bằng `apps/web/src/server/env.test.ts`.
-5. Giao diện (đầu trang, tiêu đề tab, chân trang, issuer 2FA) lấy tên từ cấu hình; khóa i18n `brand` đã bỏ — kiểm bằng `pnpm lint:i18n` + `pnpm typecheck` + bước KT-016.
+5. Giao diện (đầu trang, tiêu đề tab, chân trang, issuer 2FA) lấy tên từ cấu hình; khóa i18n `brand` đã bỏ — kiểm bằng `pnpm lint:i18n` + `pnpm typecheck` + bước KT-018.
 6. `env.example` chỉ có tên biến — kiểm bằng review diff + gitleaks của CI.
 
 ## File sẽ đọc / sửa

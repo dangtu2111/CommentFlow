@@ -64,10 +64,11 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | MEMBER-LEAVE | FR-003 | US-004 | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/member-leave`, migration 0028) |
 | LOG-STAFF-SYSTEM-ROWS | FR-092 | — | TENANCY | S+DB | verifier-security + verifier-db | ✅ (`feat/log-on-behalf-of`, migration 0029) |
 | WORKER-DB-ROLE | ADR 007 §2 (token Page), ADR 011 | — | LOG-STAFF-SYSTEM-ROWS | S+DB | verifier-security + verifier-db | 🟡 (`feat/worker-db-role`, migration 0030; chờ duyệt + KT-015) |
+| SEND-SWEEP + HIDE-SWEEP | ADR 008, ADR 009 §3 (quét yêu cầu gửi/ẩn kẹt `queued`/`sending` hết thuê; điều kiện trước connector thật) | — | FB-REPLY, FB-HIDE, WORKER-DB-ROLE | S+DB | verifier-security + verifier-db | 🟡 Xong-mock (`feat-send-hide-sweep`, migration 0031; chờ CI + KT-016) |
 | CFG-APPNAME | FR-125 (`APP_NAME`, logo, domain, email gửi cấu hình được) | — | — | — | không (tên thật = Q6, dùng giá trị tạm) | ✅ |
 | AUTH-CHANGE-PW-UI | FR-001 (đổi mật khẩu + `AUTH-PWNED`) | US-001 | AUTH-2FA | S | không | ⏳ |
 | AUTH-LANG-PREF | FR-119 (`users.locale` từ Cài đặt) | — | I18N | — | không | ⏳ |
-| SETTINGS-PAGE | FR-001, 119 (gom bảo mật/ngôn ngữ vào Cài đặt theo Stitch `settings-security`) | US-005 | AUTH-CHANGE-PW-UI, AUTH-LANG-PREF | — | không | ⏳ |
+| SETTINGS-PAGE | FR-001, 119 (gom bảo mật/ngôn ngữ vào Cài đặt theo Stitch `settings-security`) | US-005 | AUTH-CHANGE-PW-UI, AUTH-LANG-PREF | — | không | 🟡 (`feat-settings-page`: 2FA + phiên + ngôn ngữ xong; đổi mật khẩu/`users.locale` chờ AUTH-CHANGE-PW-UI, AUTH-LANG-PREF; KT-016) |
 | AUTH-HARDEN-4a | FR-001 (REDIS_KEY_PREFIX bắt buộc, Zod ở Server Action bảo mật, `checkAdminInsertGuard` chính xác) | — | — | S | không | ⏳ |
 | AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ⏳ |
 | FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ⏳ |
@@ -140,7 +141,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | — | không | ⏳ |
 | DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | ⏳ |
 | SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | ⏳ |
-| BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ⏳ |
+| BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ✅ (feat/bulk-actions) |
 | INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ⏳ |
 | REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
 | AI-READINESS | FR-146 (thanh Độ sẵn sàng của AI, yêu cầu tối thiểu onboarding) | US-107 | KB-SHOP-POLICY-FAQ, PRODUCTS-VARIANTS | — | không | ⏳ |

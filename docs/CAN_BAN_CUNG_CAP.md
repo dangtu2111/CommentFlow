@@ -69,7 +69,7 @@ Lưu ý an toàn:
 - Không commit địa chỉ tunnel. Không đặt tunnel vào `BETTER_AUTH_URL` (đăng nhập vẫn chạy ở `http://localhost:3000`).
 - `CLIENT_IP_SOURCE` giữ `none` ở dev (không tin header IP của tunnel).
 
-## 2b. Tên sản phẩm, logo, tên miền, email gửi — `CFG-APPNAME` (FR-125, mã KT-016)
+## 2b. Tên sản phẩm, logo, tên miền, email gửi — `CFG-APPNAME` (FR-125, mã KT-018)
 
 Code đã đọc cấu hình, đang chạy bằng **giá trị tạm** (`CommentFlow AI`, không logo/tên miền). Khi chốt tên (Q6), chỉ cần đặt biến, **không sửa code**:
 

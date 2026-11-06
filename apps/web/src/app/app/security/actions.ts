@@ -91,6 +91,7 @@ export async function disableTwoFactorAction(
   if (result.status !== 'ok') return reauthFailureToState(result);
   applyCookies(await cookies(), result.cookies);
   revalidatePath('/app/security');
+  revalidatePath('/app/settings');
   return SECURITY_IDLE;
 }
 
@@ -103,4 +104,5 @@ export async function revokeSessionAction(data: FormData): Promise<void> {
   });
   if (!ok && !(await flows().posture((await requestContext()).headers))) redirect('/login');
   revalidatePath('/app/security');
+  revalidatePath('/app/settings');
 }
