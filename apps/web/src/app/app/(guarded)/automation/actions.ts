@@ -21,7 +21,12 @@ export async function saveAutomationAction(formData: FormData): Promise<void> {
       formData,
     );
     target = result.ok ? `${BACK}?saved=1` : `${BACK}?error=${result.field}`;
-  } catch {
+  } catch (error) {
+    // Chỉ mã cố định + workspace + tên lớp lỗi; không ghi nội dung form/chữ ký.
+    console.error('automation.save_failed', {
+      workspaceId: workspace.id,
+      error: error instanceof Error ? error.name : 'unknown',
+    });
     target = `${BACK}?error=unavailable`;
   }
   if (target.includes('saved')) revalidatePath(BACK);

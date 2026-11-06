@@ -51,6 +51,7 @@ const activeHoursSchema = z
     days: z
       .array(z.number().int().min(0).max(6))
       .min(1)
+      .max(7)
       .refine((days) => new Set(days).size === days.length, 'Ngày trùng'),
     from: z.string().regex(HHMM),
     to: z.string().regex(HHMM),
@@ -98,7 +99,7 @@ export const automationConfigSchema = z
         z
           .string()
           .max(MAX_SIGNATURE_LENGTH)
-          .refine((s) => !/[\r\n]/.test(s), 'Không xuống dòng'),
+          .refine((s) => !/[\p{Cc}\p{Cf}]/u.test(s), 'Không xuống dòng/ký tự điều khiển/vô hình'),
       )
       .nullable()
       .transform((s) => (s === '' || s === null ? null : s)),

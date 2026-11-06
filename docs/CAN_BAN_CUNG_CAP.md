@@ -166,3 +166,6 @@ Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phả
 
 ## 2l. `KB-TRYAI` (FR-059) — không cần tài nguyên ngoài mới
 Ô Thử AI có thể tìm trong KB thật của workspace (cờ `TRY_AI_KB_REAL`, mặc định TẮT; Xong-mock: embedding là fixture). Để vector có kết quả cần mô hình embedding ở 2g và worker điền `embedding` (`KB-CHUNKING`). Bạn **không** phải làm gì cho bản mock.
+
+## 2m. `AUTO-MATRIX-UI` (FR-070/071) — không cần tài nguyên ngoài
+Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, không cần khóa hay dịch vụ ngoài. Cấu hình hiện lưu tạm trong bộ nhớ và chưa áp dụng cho việc tự gửi thật; việc cắm bảng DB là `AUTO-MATRIX-DB` (migration, làn b). Bạn **không** phải làm gì.

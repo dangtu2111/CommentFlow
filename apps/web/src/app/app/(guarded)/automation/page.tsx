@@ -34,7 +34,11 @@ export default async function AutomationPage({ searchParams }: { searchParams: S
   let view: Awaited<ReturnType<ReturnType<typeof automationSettings>['load']>> | null = null;
   try {
     view = await automationSettings().load({ workspaceId: workspace.id, userId: user.id });
-  } catch {
+  } catch (error) {
+    console.error('automation.load_failed', {
+      workspaceId: workspace.id,
+      error: error instanceof Error ? error.name : 'unknown',
+    });
     view = null; // không lộ chi tiết lỗi ra giao diện
   }
   if (!view) {

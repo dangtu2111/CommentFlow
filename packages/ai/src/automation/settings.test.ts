@@ -119,6 +119,8 @@ describe('FR-071 cài đặt chung', () => {
     expect(good({ signature: '   ' }).signature).toBeNull();
     expect(ok({ signature: 'a'.repeat(121) }).success).toBe(false);
     expect(ok({ signature: 'a\nb' }).success).toBe(false);
+    expect(ok({ signature: 'a‮b' }).success).toBe(false); // đảo chiều chữ
+    expect(ok({ signature: 'a​b' }).success).toBe(false); // zero-width
   });
 
   it('FR-071 trường lạ bị từ chối (không lặng lẽ nhận cờ mở cổng)', () => {
