@@ -138,6 +138,41 @@ export {
   type LlmMessage,
 } from './llm-client';
 export {
+  type AbbreviationDict,
+  createAbbreviationDict,
+  type DetectedLang,
+  type KnownLang,
+  type LangDetection,
+  type LangDetector,
+  type LangRule,
+  type NormalizeLangInput,
+  type NormalizeLangResult,
+  normalizeAndDetectLang,
+  normalizeText,
+} from './normalize/normalize-lang';
+export {
+  executeRoute,
+  type RouteBranches,
+  type RouteOutcome,
+} from './route/execute-route';
+export {
+  ROUTES,
+  type RouteDecision,
+  type RouteExtract,
+  type RouteInput,
+  type RouteKind,
+  type RouteReason,
+  routeQuery,
+} from './route/route';
+export { type AskTopic, classifyAsk, SQL_ASK_TOPICS } from './route/route-topics';
+export {
+  createDbVariantLookup,
+  lookupVariantsForRoute,
+  type RouteVariant,
+  type VariantLookup,
+  wantedAttrs,
+} from './route/sql-lookup';
+export {
   type GuardVariantsInput,
   type GuardVariantsResult,
   guardVariants,

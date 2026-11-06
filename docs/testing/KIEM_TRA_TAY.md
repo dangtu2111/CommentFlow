@@ -95,6 +95,16 @@ Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: pa
 
 ---
 
+## KT-033 — Chuẩn hóa + nhận ngôn ngữ (PIPE-NORMALIZE-LANG, FR-025/120/159; chỉ lõi hàm thuần, chưa nối pipeline)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/normalize/normalize-lang.test.ts` | Xanh; không gọi mạng/DB/LLM |
+| 2 | Đọc nhanh test quy tắc §5: "áo này còn size M không" → vi; "How much is this shirt…" → en; chữ Hán/Thái/Hàn/Nga → other | Khớp ý bạn (muốn đổi ngưỡng/từ khóa → nói để sửa Q-PNL1) |
+| 3 | Khi ABBREV-DICT + pipeline được nối: bình luận "ib giá sz M bn" | Chuẩn hóa thành "inbox giá size m bao nhiêu", lang = vi |
+
+---
+
 ## KT-031 — Soạn trả lời bằng LLM (PIPE-DRAFT, FR-029/138/140/142)
 
 Chưa có giao diện/pipeline nối (cần `PIPE-RETRIEVE`, `PIPE-GUARD-MONEY`); mục này chỉ kiểm cờ và test. Không cần tiếng Việt/Anh.
@@ -646,6 +656,17 @@ Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB 
 | 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-content.int.test.ts` xanh |
 | 2 | Chạy `CF_LANE=b pnpm db:check-rls` | Không vi phạm |
 | 3 | Dùng tài khoản Staff ghi thử FAQ (qua test) | Bị chặn (42501); Staff đọc được |
+
+## KT-PR — Định tuyến theo ý định (PIPE-ROUTE, FR-136, feat-pipe-route)
+
+Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. Kiểm tay thật khi `PIPE-RETRIEVE` nối `route`. / Pure function, no UI yet; verify by command.
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/route` | Xanh (ví dụ + property-based) |
+| 2 | Khi nối pipeline: dưới bài gắn sản phẩm, bình luận "giá sao shop" | `retrieval_logs.route = sql`; không có lượt gọi rerank/vector |
+| 3 | Bình luận "lấy 2 cái size M ship về Cà Mau bao nhiêu" | `route = both` (có ý ship), câu trả lời có đơn giá biến thể M từ DB |
+| 4 | Bình luận "giá sao" dưới bài không gắn sản phẩm, tên sản phẩm không nhận ra | `route = both` (không bao giờ `sql`) |
 
 ### KB-CHUNKING (FR-055/130/131; chưa có giao diện)
 

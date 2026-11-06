@@ -153,11 +153,11 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | PIPE-RULE-FILTER | FR-024 (emoji/sticker/tag → Bỏ qua, không trừ lượt) | — | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; chưa nối pipeline) |
-| PIPE-NORMALIZE-LANG | FR-025 (NFC, viết thường, viết tắt), FR-120 (nhận vi/en), FR-159 (ngôn ngữ khác → `other`) | US-036 | ABBREV-DICT | — | không | ⏳ |
+| PIPE-NORMALIZE-LANG | FR-025 (NFC, viết thường, viết tắt), FR-120 (nhận vi/en), FR-159 (ngôn ngữ khác → `other`) | US-036 | ABBREV-DICT | — | không | ✅ Xong-mock (lõi hàm thuần; từ điển + lingua qua interface; chưa nối pipeline) |
 | PII-MASK-PIPE | FR-033 (che SĐT/email trước LLM/Langfuse; lưu số vào Khách tiềm năng trước khi che) | — | PIPE-NORMALIZE-LANG | S | không | ⏳ |
 | PIPE-CACHE-EXACT | FR-026 (khớp chính xác; khóa chứa `workspace_id`, bài, `kb_version`, `product_revs`) | — | KB-SEARCH-FTS | S+DB | không | ⏳ |
 | PIPE-CLASSIFY-EXTRACT | FR-027 (6 nhãn bằng model nhỏ), FR-145 (`labels[]`), FR-162 (một bước `extract`) | US-100–103 | PII-MASK-PIPE, AI-WRAPPER | — | **có** — khóa LLM trả phí | 🟡 Xong-mock (`feat-pipe-classify-extract`; cờ `CLASSIFY_LLM_ENABLED` tắt; chưa có nhánh ml; KT-030) |
-| PIPE-ROUTE | FR-136 (định tuyến theo ý định: giá/size/màu/tồn → tra DB) | US-101 | PIPE-CLASSIFY-EXTRACT, PRODUCTS-VARIANTS | — | không | ⏳ |
+| PIPE-ROUTE | FR-136 (định tuyến theo ý định: giá/size/màu/tồn → tra DB) | US-101 | PIPE-CLASSIFY-EXTRACT, PRODUCTS-VARIANTS | — | không | ✅ (lõi hàm thuần, `feat-pipe-route`; ghi `retrieval_logs.route` chờ bảng; KT-PR) |
 | PIPE-REWRITE-CTX | FR-137 (viết lại câu hỏi theo ngữ cảnh), FR-144 (nhớ 5 lượt gần nhất) | — | PIPE-CLASSIFY-EXTRACT | — | không | ⏳ |
 | PIPE-RETRIEVE | FR-028 (tìm kiến thức cho nhãn cần trả lời; Khiếu nại không soạn) | — | KB-SEARCH-FTS, PIPE-ROUTE | — | không | ⏳ |
 | PIPE-DRAFT | FR-029 (JSON `{reply, lang, sources[], needs_human, reason}`), FR-138 (prompt caching), FR-140 (`claims[]` trích nguồn từng ý), FR-142 (xưng hô) | US-011, 012 | PIPE-RETRIEVE | — | **có** — khóa LLM | 🟡 Xong-mock (`feat-pipe-draft`; cờ `DRAFT_LLM_ENABLED` tắt; nguồn là đầu vào, chờ PIPE-RETRIEVE nối; KT-031) |
