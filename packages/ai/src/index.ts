@@ -87,6 +87,12 @@ export {
   type VariantAxis,
 } from './decide/decide-action';
 export {
+  type AttachmentRuleResult,
+  evaluateAttachmentRules,
+  type ImageDependenceSource,
+  MAX_SHORT_TEXT_WORDS,
+} from './decide/handoff-rules';
+export {
   anyStockStale,
   DEFAULT_STOCK_STALE_DAYS,
   evaluateStockRules,
