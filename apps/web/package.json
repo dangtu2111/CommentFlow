@@ -12,6 +12,7 @@
     "lint:i18n": "eslint ."
   },
   "dependencies": {
+    "@flow/ai": "workspace:*",
     "@flow/connectors": "workspace:*",
     "@flow/db": "workspace:*",
     "@flow/saas-core": "workspace:*",

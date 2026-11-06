@@ -574,6 +574,72 @@
       }
     }
   },
+  "tryAi": {
+    "pageTitle": "Try AI",
+    "title": "Try AI",
+    "subtitle": "Type a sample comment to see how AI would classify it, reply, and whether it could auto-send. Does not use your plan's AI quota.",
+    "mockNote": "Running a simulation (no real AI call, sample knowledge). Results only preview the processing flow.",
+    "label": "Sample customer comment",
+    "placeholder": "E.g. how much is the basic tee, size M, black?",
+    "submit": "Try",
+    "quota": "{used}/{limit} tries used today",
+    "errors": {
+      "empty": "Enter a sample comment.",
+      "too_long": "Comment is too long (max {max} characters).",
+      "limit_reached": "You have used all of today's tries. Come back tomorrow.",
+      "unavailable": "Can't run the test right now. Try again later."
+    },
+    "skipped": "The comment has only emoji/tags/punctuation, so AI skips it (no classification, no reply, no quota used).",
+    "result": {
+      "label": "Label",
+      "lang": "Language",
+      "route": "Retrieval route",
+      "action": "Action",
+      "reply": "Suggested reply",
+      "noReply": "AI did not draft a reply (needs a staff member).",
+      "confidence": "Confidence",
+      "sources": "Sources found (with score)",
+      "noSources": "No relevant source found.",
+      "used": "used",
+      "score": "score {score}",
+      "autoSend": "Can it auto-send?",
+      "autoSendYes": "Can auto-send (if the Owner turns on auto-send for this label).",
+      "autoSendNo": "Not auto-sent because:",
+      "billed": "This try does not use your plan's AI quota."
+    },
+    "labels": {
+      "price": "Price question",
+      "advice": "Advice",
+      "purchase": "Wants to buy",
+      "complaint": "Complaint",
+      "spam": "Spam",
+      "other": "Other"
+    },
+    "langs": {
+      "vi": "Vietnamese",
+      "en": "English",
+      "other": "Other language"
+    },
+    "routes": {
+      "sql": "Product table lookup (price/stock)",
+      "hybrid": "Knowledge search",
+      "both": "Product lookup + knowledge search"
+    },
+    "actions": {
+      "answer": "Answer",
+      "clarify": "Ask the customer",
+      "redirect": "Redirect (invite to message the shop)",
+      "handoff": "Hand off to staff"
+    },
+    "blockReasons": {
+      "auto_send_off": "Auto-send is not turned on",
+      "needs_human": "Needs a staff member to review",
+      "policy_never": "This kind of reply is never auto-sent",
+      "low_confidence": "Confidence is below the threshold",
+      "guard_money": "Contains a price/date/link/phone not in the sources",
+      "empty_reply": "No reply drafted"
+    }
+  },
   "shell": {
     "groups": {
       "operations": "Operations",
@@ -582,6 +648,7 @@
     "nav": {
       "comments": "Comments",
       "posts": "Posts",
+      "tryAi": "Try AI",
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",

@@ -108,6 +108,34 @@ export {
 } from './draft/fixture-drafter';
 export { createFixtureEmbedder, FIXTURE_EMBEDDING_MODEL } from './embedding/fixture-embedder';
 export {
+  type ActiveHours,
+  ALWAYS_BLOCKED_LABELS,
+  AUTO_SEND_OUTCOMES,
+  AUTOMATION_MODES,
+  type AutomationMode,
+  type AutoSendDecision,
+  type AutoSendInput,
+  type AutoSendOutcome,
+  activeHoursSchema,
+  autoSendInputSchema,
+  CLOCK_SKEW_MS,
+  DEFAULT_THRESHOLD,
+  decideAutoSend,
+  GATE_CLAIM_KINDS,
+  GATE_COUNT,
+  GATE_LABELS,
+  GATE_REASONS,
+  type GateReason,
+  isWithinActiveHours,
+  keywordFold,
+  localDayMinute,
+  MESSAGE_WINDOW_HOURS,
+  READINESS_MIN_PERCENT,
+  REPEAT_HUMAN_THRESHOLD,
+  readAutoSendInput,
+  THRESHOLD_FLOOR,
+} from './gate/auto-send-gate';
+export {
   checkGuardMoney,
   extractClaims,
   type GuardClaim,
@@ -204,6 +232,31 @@ export {
   type VariantLookup,
   wantedAttrs,
 } from './route/sql-lookup';
+export {
+  AUTO_SEND_BLOCK_REASONS,
+  AUTO_SEND_THRESHOLD,
+  type AutoSendBlockReason,
+  type AutoSendPreview,
+  type AutoSendPreviewInput,
+  decideAutoSendPreview,
+} from './try/auto-send-preview';
+export { createDemoDrafter, createDemoExtractor } from './try/demo-ai';
+export { createDemoKnowledge } from './try/demo-knowledge';
+export {
+  runTryPipeline,
+  TRY_MAX_CHARS,
+  type TryCandidate,
+  type TryDeps,
+  type TryInput,
+  type TryKnowledge,
+  type TryResult,
+} from './try/try-pipeline';
+export {
+  createTryQuota,
+  DEFAULT_TRY_DAILY_LIMIT,
+  type TryQuota,
+  type TryQuotaResult,
+} from './try/try-quota';
 export {
   type GuardVariantsInput,
   type GuardVariantsResult,

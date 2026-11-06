@@ -21,6 +21,7 @@ export default defineConfig({
         'src/confidence/*.ts': { branches: 95 },
         'src/route/*.ts': { branches: 95 },
         'src/decide/*.ts': { branches: 95 },
+        'src/gate/*.ts': { branches: 95 },
       },
     },
   },
