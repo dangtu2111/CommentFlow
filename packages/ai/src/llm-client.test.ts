@@ -103,6 +103,25 @@ describe('createLlmClient.call — yêu cầu gửi đi', () => {
     expect(body.messages).toHaveLength(2);
   });
 
+  it('FR-138 tin nhắn có cache → khối cache_control ephemeral; không có thì giữ chuỗi thường', async () => {
+    const { db } = fakeDb();
+    const { fetchImpl, calls } = fakeFetch(() => jsonResponse(okBody()));
+    await client(db, fetchImpl).call(
+      input({
+        messages: [
+          { role: 'system', content: unsafeMarkMasked('Cố định'), cache: true },
+          { role: 'user', content: unsafeMarkMasked('Hay đổi') },
+        ],
+      }),
+    );
+    const body = JSON.parse(String(calls[0]?.init.body));
+    expect(body.messages[0]).toEqual({
+      role: 'system',
+      content: [{ type: 'text', text: 'Cố định', cache_control: { type: 'ephemeral' } }],
+    });
+    expect(body.messages[1]).toEqual({ role: 'user', content: 'Hay đổi' });
+  });
+
   it('nội dung gửi đi là bản đã che PII (email/SĐT không lọt ra ngoài)', async () => {
     const { db } = fakeDb();
     const { fetchImpl, calls } = fakeFetch(() => jsonResponse(okBody()));
