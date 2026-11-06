@@ -3,13 +3,14 @@ export const QUEUE_SCHEMA = 'pgboss';
 
 export const SYSTEM_PING_QUEUE = 'system.ping';
 
-import { DATA_EXPORT_QUEUE, KB_PUBLISH_QUEUE } from '@flow/shared';
+import { DATA_EXPORT_QUEUE, KB_PUBLISH_QUEUE, KB_REEMBED_QUEUE } from '@flow/shared';
 
 export {
   DATA_EXPORT_QUEUE,
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
+  KB_REEMBED_QUEUE,
   SEND_QUEUE,
 } from '@flow/shared';
 
@@ -46,4 +47,6 @@ export const QUEUES: QueueDefinition[] = [
   { name: ABUSE_QUEUE, retryLimit: ABUSE_RETRY_LIMIT, retryBackoff: true },
   // FR-094: data-export — xuất dữ liệu workspace; lỗi nghiệp vụ không ném (→ failed), chỉ lỗi bất ngờ mới thử lại; chạy lại → skipped.
   { name: DATA_EXPORT_QUEUE, retryLimit: 1, retryBackoff: true },
+  // FR-133: kb-reembed — tạo lại embedding khi đổi mô hình; idempotent (xong rồi → 0 đoạn) nên thử lại an toàn.
+  { name: KB_REEMBED_QUEUE, retryLimit: 2, retryBackoff: true },
 ];

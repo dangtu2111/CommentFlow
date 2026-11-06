@@ -54,6 +54,7 @@
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PGVECTOR-HYBRID | Tạo lại embedding khi đổi mô hình + độ chính xác tìm lai (chỉ DB + mã, không migration mới) | feat-pgvector-hybrid | chưa | chưa | — |
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
 | KT-PRP | Nhắn riêng từ bình luận (chờ nối DB + giao diện) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
@@ -1028,6 +1029,19 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 ## KT-PGM — Guard số tiền (PIPE-GUARD-MONEY, FR-030, feat-pipe-guard-money)
 
 Hàm thuần, chưa có giao diện/đường chạy → chưa có bước bấm tay. Kiểm tay khi `PIPE-DRAFT` nối guard: soạn câu có giá/ngày/SĐT/link không có trong kiến thức → bản nháp bị ép "Cần người", không tự gửi.
+
+## KT-PGVECTOR-HYBRID — Tạo lại embedding + tìm lai (PGVECTOR-HYBRID, FR-057/133) · Re-embedding and hybrid search
+
+Chưa có giao diện; kiểm bằng lệnh trên DB thử (`cf_dev`/`cf_test`, không migration mới). / No UI; verify on a test DB, no new migration.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/kb-reembed` và `pnpm --filter @flow/worker exec vitest run src/jobs/kb-reembed.test.ts src/config-kb-reembed.test.ts`. | Xanh (lô, chạy lại = 0, hash lệch bị bỏ qua, cờ TẮT mặc định). |
+| 2 | `pnpm --filter @flow/db run test:db tests/kb-reembed.int.test.ts`. | 6 test xanh (chỉ đoạn khác mô hình; nội dung/tsv/phiên bản không đổi; chéo workspace và ngoài `withJob` đều không ghi được; lọc mô hình ở nhánh vector). |
+| 3 | `pnpm --filter @flow/db run test:db tests/kb-hybrid-accuracy.int.test.ts`. | 2 test xanh (lai đúng cả truy vấn "ý nghĩa" và "mã chính xác", mỗi nhánh đơn chỉ đúng một). |
+| 4 | Kiểm `KB_REEMBED_ENABLED` trong `.env` của worker để trống. | Worker không đăng ký hàng đợi `kb-reembed` (nhật ký không có dòng "kb-reembed xong"). |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
 
 ## KT-PLN — Gói cước, dùng thử, mua thêm lượt (PLANS-SCHEMA, FR-090, US-060, Q-PLN1) · Plans store
 

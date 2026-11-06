@@ -1,3 +1,4 @@
+import { createMockEmbedder } from '@flow/ai';
 import { createDb } from '@flow/db';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
@@ -8,6 +9,7 @@ import { createDataExportHandler } from './jobs/data-export';
 import { createHideHandler } from './jobs/hide';
 import { createIngestHandler } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
+import { createKbReembedHandler } from './jobs/kb-reembed';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
@@ -20,6 +22,7 @@ import {
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
+  KB_REEMBED_QUEUE,
   SEND_QUEUE,
   SYSTEM_PING_QUEUE,
 } from './queue/definitions';
@@ -73,6 +76,15 @@ async function main(): Promise<void> {
     { batchSize: 1, localConcurrency: 1 },
     createKbPublishHandler({ db, logger }),
   );
+  // FR-133: kb-reembed — tạo lại embedding khi đổi mô hình. Cờ KB_REEMBED_ENABLED mặc định TẮT (chỉ có embedder mock,
+  // embedding thật = KB-EMBED-LITELLM): tắt thì không đăng ký hàng đợi.
+  if (config.kbReembedEnabled) {
+    await boss.work(
+      KB_REEMBED_QUEUE,
+      { batchSize: 1, localConcurrency: 1 },
+      createKbReembedHandler({ db, logger, embedder: createMockEmbedder() }),
+    );
+  }
   // FR-094: xuất dữ liệu workspace — cờ DATA_EXPORT_ENABLED mặc định TẮT: tắt thì không đăng ký hàng đợi, không dọn tệp.
   const exportStore = config.dataExport.enabled
     ? createLocalExportStore(config.dataExport.dir)

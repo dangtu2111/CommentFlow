@@ -287,7 +287,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | ADMIN-REST | FR-104 (gói & mã giảm giá, nội dung hệ thống, quản trị viên), Admin Console tiếng Anh | — | ADMIN-SHELL | S | không | ⏳ |
 | ADMIN-IMPERSONATE | FR-105 ("Xem như khách": lý do, chỉ đọc, ≤ 30 phút, nhật ký; `admin_impersonations`) | US-082 | ADMIN-SHELL | S+DB | không | ⏳ |
 | ML-SERVICE | FR-027 (bộ phân loại tự host), FR-025 (chuẩn hóa/nhận ngôn ngữ ở `ml`) | — | COST-GATE | — | không | ⏳ |
-| PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | ⏳ |
+| PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | 🟡 Xong-mock (`feat-pgvector-hybrid`, Q-PVH1, không migration; chờ CI; embedder thật → `KB-EMBED-LITELLM`) |
 | SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ⏳ |
 | LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | ⛔ |
 | SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ⛔ |

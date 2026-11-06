@@ -252,7 +252,7 @@ from (select * from v union all select * from t) x
 group by id order by score desc limit 20;
 ```
 
-**Thực tế (KB-SEARCH-FTS, migration 0038, QKS1–QKS6):** `kb_chunks.search_norm` = `lower(unaccent(context_header + content))` và `tsv` do trigger `cf.kb_chunks_fill_search` điền (vi `simple`, en `english`); truy vấn có thêm nhánh `g` trigram (`$q_norm <% search_norm`, GIN `gin_trgm_ops`), nhánh `t` dùng `to_tsquery` nối OR các từ đã chuẩn hóa, và bộ lọc `lang`, `NOT injection_suspected`, `NOT is_draft`; `productIds` rỗng = không lọc. Cài đặt: `packages/db/src/queries/kb-search.ts`.
+**Thực tế (KB-SEARCH-FTS, migration 0038, QKS1–QKS6):** `kb_chunks.search_norm` = `lower(unaccent(context_header + content))` và `tsv` do trigger `cf.kb_chunks_fill_search` điền (vi `simple`, en `english`); truy vấn có thêm nhánh `g` trigram (`$q_norm <% search_norm`, GIN `gin_trgm_ops`), nhánh `t` dùng `to_tsquery` nối OR các từ đã chuẩn hóa, và bộ lọc `lang`, `NOT injection_suspected`, `NOT is_draft`; `productIds` rỗng = không lọc. Cài đặt: `packages/db/src/queries/kb-search.ts`. **Tạo lại embedding (PGVECTOR-HYBRID, Q-PVH1, không migration):** vector khác mô hình không so được nên `searchKbChunks` nhận `embeddingModel` và nhánh vector chỉ so đoạn cùng `embedding_model`; job `kb-reembed` (`withJob`) ghi lại `embedding`/`embedding_model` cho mọi đoạn khác mô hình đích (kể cả đã xuất bản — cột dẫn xuất), kèm điều kiện `content_hash` khớp.
 
 Sau đó rerank top 20 → lấy 5. Bật `hnsw.iterative_scan = strict_order` (giữ đúng thứ tự khoảng cách; Q-KEC1) khi dùng HNSW với lọc. Lưu ý `hnsw.max_scan_tuples` mặc định 20000: workspace rất nhỏ trong chỉ mục lớn vẫn có thể nhận ít hơn giới hạn — theo dõi khi chỉ mục lớn.
 
