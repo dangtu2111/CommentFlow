@@ -1,0 +1,1 @@
+| QB3 | 05/11 | BULK-ACTIONS: phím tắt | `X` chọn dòng, `J/K` đổi dòng, `H` mở hộp xác nhận ẩn (không ẩn ngay), `Esc` bỏ chọn; `E`/`M` (docs/03) chưa rõ nghĩa nên chưa làm | docs/08 chỉ nêu `H`, `J/K`; ẩn luôn qua xác nhận | Sửa `lib/bulk-shortcuts.ts` |

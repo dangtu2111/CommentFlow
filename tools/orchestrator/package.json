@@ -1,0 +1,16 @@
+{
+  "name": "@flow/orchestrator",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Bộ điều phối nhiều làn song song (task → PR → CI → merge/sửa/kẹt), cấu hình bằng orchestrator.config.json. Chỉ dùng stdlib Node; không import gói nội bộ (ADR 012).",
+  "bin": {
+    "orchestrator": "./bin/orchestrator.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5"
+  }
+}

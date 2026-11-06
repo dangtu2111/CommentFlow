@@ -1,0 +1,1 @@
+| QW5 | 05/11 | WORKER-DB-ROLE: biến môi trường | `DATABASE_WORKER_URL` bắt buộc cho worker (thay `DATABASE_URL`, cả pg-boss); web KHÔNG nhận; `TEST_DATABASE_WORKER_URL` cho test | Bí mật worker chỉ nằm ở tiến trình worker | Đặt lại `DATABASE_URL` trong `config.ts` |

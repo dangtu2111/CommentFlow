@@ -1,0 +1,1 @@
+| QP4 | 06/11 | Liệt kê kênh xuyên workspace | Job nhận cổng `ChannelLister` tiêm vào; chưa có bản DB (cần hàm DEFINER = migration, chỉ làn b) → gap `POLLING-CHANNEL-LIST`; `main.ts` chỉ cảnh báo khi cờ BẬT mà chưa có lister | `channels` RLS theo workspace, `withSystem` không đọc được | Làn b thêm hàm + nối lister DB |

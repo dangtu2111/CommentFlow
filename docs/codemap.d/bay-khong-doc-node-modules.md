@@ -1,0 +1,1 @@
+- **Không đọc `node_modules`** của dự án (bị chặn); muốn xem mã thư viện thì `npm pack` vào thư mục tạm.

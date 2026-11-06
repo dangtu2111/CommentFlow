@@ -36,6 +36,14 @@ export {
   storeExactCache,
 } from './cache/exact-cache';
 export {
+  buildSemanticCacheControl,
+  DEFAULT_SEMANTIC_SIMILARITY_THRESHOLD,
+  isSemanticCacheEnabled,
+  SEMANTIC_CACHE_TTL_SECONDS,
+  type SemanticCacheControl,
+  type SemanticCacheInput,
+} from './cache/semantic-cache';
+export {
   type ClassifyConfig,
   DEFAULT_CLASSIFY_MODEL,
   loadClassifyConfig,
@@ -137,6 +145,12 @@ export {
   VARIANT_AXES,
   type VariantAxis,
 } from './decide/decide-action';
+export {
+  type AttachmentRuleResult,
+  evaluateAttachmentRules,
+  type ImageDependenceSource,
+  MAX_SHORT_TEXT_WORDS,
+} from './decide/handoff-rules';
 export {
   type BusinessHoursState,
   detectOrderStatusIntent,
