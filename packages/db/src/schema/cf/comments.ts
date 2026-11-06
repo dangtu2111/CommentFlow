@@ -112,7 +112,7 @@ export const comments = cf.table(
       'comments_status_check',
       sql`${t.status} in (${sql.raw(COMMENT_STATUSES.map((s) => `'${s}'`).join(', '))})`,
     ),
-    // FR-143: tệp đính kèm là mảng ≤ 10 phần tử (khớp MAX_ATTACHMENTS của @flow/connectors); migration 0035.
+    // FR-143: tệp đính kèm là mảng ≤ 10 phần tử (khớp MAX_ATTACHMENTS của @flow/connectors); migration 0036.
     check(
       'comments_attachments_shape_check',
       sql`case when jsonb_typeof(${t.attachments}) = 'array' then jsonb_array_length(${t.attachments}) <= 10 else false end`,

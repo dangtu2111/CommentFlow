@@ -11,6 +11,7 @@
 | KT-001 | Workspace, thành viên, lời mời, chỉ-Owner ở DB | #7, #11 | có | chưa | — |
 | KT-002 | Webhook bình luận Facebook (bắt tay, chữ ký, đường nhận) | #19 | có | chưa | — |
 | KT-003 | Trang Bình luận (tab, danh sách, tìm, lọc) | #20 | có | chưa | — |
+| KT-023 | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-004 | Khung ứng dụng (thanh trên, điều hướng, đăng xuất, ngôn ngữ) | #21 | có | chưa | — |
 | KT-005 | Chi tiết bình luận + khóa mềm (2 trình duyệt) | #22 | có | chưa | — |
 | KT-006 | Banner trạng thái kênh | #23 | có | chưa | — |
@@ -23,6 +24,7 @@
 | KT-021 | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-016 | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-023 | `two_factors` một dòng mỗi user (chỉ DB) | feat-auth-harden-4b | chưa | chưa | — |
 | KT-022 | Bảng sản phẩm + biến thể (chỉ DB, chưa có giao diện) | feat-products-variants | chưa | chưa | — |
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
@@ -339,6 +341,18 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 
 ---
 
+## KT-023 — `two_factors` UNIQUE(user_id) (AUTH-HARDEN-4b, feat-auth-harden-4b) · One 2FA row per user
+
+Chỉ DB, không có giao diện mới. / DB only, no new UI.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0035 áp được (báo "user_id trùng" → xử lý tay dòng trùng rồi chạy lại); check-rls "đạt". |
+| 2 | `CF_LANE=b pnpm --filter @flow/db test:db`. | Xanh, gồm test "mỗi user đúng một dòng (UNIQUE user_id)". |
+| 3 | Trên `/app/security` bật 2FA, tắt, bật lại. | Bật lại thành công, không lỗi. |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
+
 ## KT-022 — Bảng sản phẩm + biến thể (PRODUCTS-VARIANTS, feat-products-variants) · Products and variants tables
 
 Chưa có giao diện (trang Sản phẩm làm ở KB-IMPORT-*). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
@@ -459,6 +473,17 @@ Nếu hỏng: ghi số bước và nội dung hiện trên màn hình.
 Nếu hỏng: ghi số bước và ảnh chụp.
 
 ---
+
+## KT-023 — Ngôn ngữ trả lời của AI theo kênh (REPLY-LANG-SETTING, FR-120, feat-reply-lang-ui)
+
+Điều kiện: có ít nhất một kênh đã kết nối (KT-014); một tài khoản Owner và một Staff.
+1. Owner mở `/app/settings`. — Mong đợi: thẻ "Ngôn ngữ trả lời của AI" (en: "AI reply language") liệt kê từng kênh, mặc định "Theo khách" (en: "Match customer").
+2. Chọn "English" cho một kênh, bấm Lưu. — Mong đợi: thông báo "Đã lưu ngôn ngữ trả lời." và ô chọn giữ "English".
+3. Tải lại trang. — Mong đợi: vẫn "English" (đã lưu DB).
+4. Đổi sang "Tiếng Việt", lưu; rồi "Theo khách", lưu. — Mong đợi: mỗi lần đều lưu được.
+5. Chuyển giao diện vi ↔ en. — Mong đợi: nhãn và thông báo đổi ngôn ngữ.
+6. Đăng nhập Staff, mở `/app/settings`. — Mong đợi: KHÔNG thấy thẻ này.
+7. Đọc dòng cuối thẻ. — Mong đợi: nói xưng hô "sắp có" (chờ bảng `brand_voice`).
 
 ## KT-016 — Trang Cài đặt (SETTINGS-PAGE, feat-settings-page)
 

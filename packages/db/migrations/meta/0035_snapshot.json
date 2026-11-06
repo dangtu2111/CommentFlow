@@ -1,5 +1,5 @@
 {
-  "id": "765fc9fd-7063-4e4c-86bf-fce24d96ac5e",
+  "id": "f3d7b366-d18b-4de5-a8cf-5404cbcd2614",
   "prevId": "fd8ef94c-3676-42f8-92d5-4a12a16188a6",
   "version": "7",
   "dialect": "postgresql",
@@ -300,23 +300,7 @@
           "notNull": false
         }
       },
-      "indexes": {
-        "two_factors_user_id_idx": {
-          "name": "two_factors_user_id_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "two_factors_user_id_users_id_fk": {
           "name": "two_factors_user_id_users_id_fk",
@@ -330,7 +314,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "two_factors_user_id_unique": {
+          "name": "two_factors_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2550,10 +2540,6 @@
         "comments_status_check": {
           "name": "comments_status_check",
           "value": "\"cf\".\"comments\".\"status\" in ('new', 'processing', 'pending_review', 'needs_human', 'scheduled_auto', 'sending', 'replied', 'auto_replied', 'send_failed', 'skipped', 'spam_suspected', 'hidden')"
-        },
-        "comments_attachments_shape_check": {
-          "name": "comments_attachments_shape_check",
-          "value": "case when jsonb_typeof(\"cf\".\"comments\".\"attachments\") = 'array' then jsonb_array_length(\"cf\".\"comments\".\"attachments\") <= 10 else false end"
         },
         "comments_label_source_check": {
           "name": "comments_label_source_check",

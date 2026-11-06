@@ -111,5 +111,6 @@ export const twoFactors = core.table(
     failedVerificationCount: integer('failed_verification_count').notNull().default(0),
     lockedUntil: timestamptz('locked_until'),
   },
-  (t) => [index('two_factors_user_id_idx').on(t.userId)],
+  // Mỗi user đúng một dòng 2FA (migration 0035): chống hai lần bật song song để lại secret thừa.
+  (t) => [unique('two_factors_user_id_unique').on(t.userId)],
 );

@@ -71,7 +71,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | AUTH-LANG-PREF | FR-119 (`users.locale` từ Cài đặt) | — | I18N | — | không | 🟡 (`feat-auth-lang-pref`; chờ KT-017) |
 | SETTINGS-PAGE | FR-001, 119 (gom bảo mật/ngôn ngữ vào Cài đặt theo Stitch `settings-security`) | US-005 | AUTH-CHANGE-PW-UI, AUTH-LANG-PREF | — | không | 🟡 (`feat-settings-page`: 2FA + phiên + ngôn ngữ xong; đổi mật khẩu/`users.locale` chờ AUTH-CHANGE-PW-UI, AUTH-LANG-PREF; KT-016) |
 | AUTH-HARDEN-4a | FR-001 (REDIS_KEY_PREFIX bắt buộc, Zod ở Server Action bảo mật, `checkAdminInsertGuard` chính xác) | — | — | S | không | ✅ `feat-auth-harden-4a` |
-| AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ⏳ |
+| AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ✅ `feat-auth-harden-4b` |
 | FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ✅ |
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ✅ Xong (`feat-cli-parseenv`; chờ CI) |
 | E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ✅ xanh 6/6 trên CI (nguyên nhân gốc: cookie phiên cũ sau xoay phiên — đã sửa ở fix/2fa-backup-codes) |
@@ -144,7 +144,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | ⏳ |
 | BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ✅ (feat/bulk-actions) |
 | INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ✅ (feat-inbox-mobile; còn Playwright 390px, KT-016) |
-| REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
+| REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | 🟡 (`feat-reply-lang-ui`: `reply_language` theo kênh xong; xưng hô chờ `brand_voice` → gap `REPLY-ADDRESS-UI`) |
 | AI-READINESS | FR-146 (thanh Độ sẵn sàng của AI, yêu cầu tối thiểu onboarding) | US-107 | KB-SHOP-POLICY-FAQ, PRODUCTS-VARIANTS | — | không | ⏳ |
 | KB-GAPS-UI | FR-134 (danh sách câu AI chưa trả lời + bổ sung kiến thức), UF-11 | US-106 | RETRIEVAL-LOG | — | không | ⏳ |
 

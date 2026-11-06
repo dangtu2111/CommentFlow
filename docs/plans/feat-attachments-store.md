@@ -2,7 +2,7 @@
 
 Mã gap matrix: `ATTACHMENTS-STORE` · Spec: FR-143 (docs/05), `comments.attachments` (docs/10), `docs/12` §1.
 
-**Tóm tắt:** Cột `comments.attachments` (jsonb) đã có nhưng không có mã nào ghi vào — ảnh/video/sticker khách gửi kèm bị bỏ. Việc này cho connector Facebook đọc tệp đính kèm (webhook + Graph), worker ingest lưu `[{type, url?, external_id?}]`, và thêm ràng buộc DB (migration 0035) chặn dữ liệu sai dạng. Rủi ro: link ảnh do khách tạo → chỉ nhận `https`, giới hạn độ dài/số lượng; xóa bình luận vẫn xóa trắng như cũ.
+**Tóm tắt:** Cột `comments.attachments` (jsonb) đã có nhưng không có mã nào ghi vào — ảnh/video/sticker khách gửi kèm bị bỏ. Việc này cho connector Facebook đọc tệp đính kèm (webhook + Graph), worker ingest lưu `[{type, url?, external_id?}]`, và thêm ràng buộc DB (migration 0036) chặn dữ liệu sai dạng. Rủi ro: link ảnh do khách tạo → chỉ nhận `https`, giới hạn độ dài/số lượng; xóa bình luận vẫn xóa trắng như cũ.
 
 ## Điểm chưa rõ
 
@@ -28,12 +28,12 @@ Không có. (Quyết định tự chọn: Q-ATT1 trong `QUYET_DINH_CHO_DUYET.md`
 - `packages/connectors/src/types.ts`, `index.ts`: thêm `attachments?` vào `NormalizedComment`, export.
 - `packages/connectors/src/facebook/webhook.ts`, `connector.ts` (+ test, fixtures): đọc tệp.
 - `apps/worker/src/jobs/ingest.ts` (+ test tích hợp): ghi cột.
-- `packages/db/src/schema/cf/comments.ts`, `migrations/0035_comment_attachments_check.sql` (+ meta): ràng buộc CHECK.
+- `packages/db/src/schema/cf/comments.ts`, `migrations/0036_comment_attachments_check.sql` (+ meta): ràng buộc CHECK.
 - docs: gap-matrix, MASTER, codemap, docs/10, KIEM_TRA_TAY, QUYET_DINH, handoff.
 
 ## Migration
 
-0035: `ALTER TABLE cf.comments ADD CONSTRAINT comments_attachments_shape_check CHECK (jsonb_typeof(attachments)='array' AND jsonb_array_length(attachments) <= 10)`. Không bảng/policy mới, không đổi quyền. Đường lùi: `ALTER TABLE cf.comments DROP CONSTRAINT comments_attachments_shape_check`.
+0036: `ALTER TABLE cf.comments ADD CONSTRAINT comments_attachments_shape_check CHECK (jsonb_typeof(attachments)='array' AND jsonb_array_length(attachments) <= 10)`. Không bảng/policy mới, không đổi quyền. Đường lùi: `ALTER TABLE cf.comments DROP CONSTRAINT comments_attachments_shape_check`.
 
 ## Test viết trước
 

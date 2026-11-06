@@ -293,7 +293,7 @@ describe('posts và comments', () => {
   });
 });
 
-describe('FR-143 comments.attachments — ràng buộc hình dạng (migration 0035)', () => {
+describe('FR-143 comments.attachments — ràng buộc hình dạng (migration 0036)', () => {
   it('chấp nhận mảng ≤ 10 phần tử; từ chối không-phải-mảng và > 10 phần tử', async () => {
     const id = (await insertComment(wsA, channelA, postA)).rows[0].id;
     const setTo = (json: string) =>
