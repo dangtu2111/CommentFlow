@@ -97,6 +97,12 @@ export {
   type ShopPronoun,
 } from './reply-style';
 export {
+  type RuleFilterInput,
+  type RuleFilterReason,
+  type RuleFilterResult,
+  ruleFilter,
+} from './rule-filter';
+export {
   isProductCacheStale,
   normalizeSearchText,
   PRODUCT_MATCH_MARGIN,
@@ -109,9 +115,3 @@ export {
   RRF_K,
   reciprocalRankFusion,
 } from './search';
-export {
-  type RuleFilterInput,
-  type RuleFilterReason,
-  type RuleFilterResult,
-  ruleFilter,
-} from './rule-filter';
