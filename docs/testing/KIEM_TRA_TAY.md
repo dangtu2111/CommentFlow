@@ -35,6 +35,7 @@
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
+| KT-ASL | Admin tạm khóa gửi (chỉ logic + test, chưa có bảng/giao diện; không cần khóa/dịch vụ ngoài) | feat-admin-send-lock | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
@@ -606,6 +607,13 @@ Hàm thuần, chưa nối pipeline/DB → chưa có bước bấm tay; không c�
 | 2 | Đổi ngôn ngữ sang English | Menu "AI sent", tiêu đề "Replies the AI sent automatically", chữ trống bằng tiếng Anh |
 | 3 | Đăng nhập Staff, mở menu **AI đã gửi** | Staff cũng thấy menu và trang (không 404) |
 | 4 | Mở `/app/ai-sent?status=abc&page=-3` | Không lỗi; hiện như bộ lọc "Tất cả", trang 1 |
+
+## KT-ASL — Admin tạm khóa gửi (ADMIN-SEND-LOCK, FR-116)
+
+Chỉ phần máy (chưa có bảng lưu khóa, chưa có giao diện): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/send-lock src/gate/send-lock-gate.test.ts src/recheck/send-lock-recheck.test.ts` → xanh. Kết quả mong đợi: chỉ `admin`/`super_admin` khóa/mở khóa được; khóa Page áp xuyên workspace; khóa hết hạn/đã mở thì không chặn; khóa không đọc được thì chặn; cổng tự gửi cổng 1 và `sendRecheck` R3 đều trượt khi bị khóa.
+
+---
 
 ## KT-ATB — Ô Thử AI chạy cả pipeline, không trừ lượt (AI-TRY-BOX-UI, FR-059, FR-029, US-034, feat-ai-try-box-ui)
 
