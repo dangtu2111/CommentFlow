@@ -73,7 +73,13 @@ export {
   mergeBurstText,
   planMergeBurst,
 } from './merge-burst';
-export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
+export {
+  type ExtractedContacts,
+  extractPii,
+  type MaskedText,
+  maskPii,
+  unsafeMarkMasked,
+} from './pii';
 export {
   CARD_VALUE_MAX,
   foldText,
