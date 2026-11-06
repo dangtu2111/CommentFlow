@@ -5,4 +5,4 @@ export {
   type FlagRow,
   rolloutBucket,
 } from './evaluate';
-export { createFlags, type Flags, type FlagsOptions } from './flags';
+export { createFlags, type Flags, type FlagsListenEvent, type FlagsOptions } from './flags';

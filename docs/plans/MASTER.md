@@ -72,7 +72,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | SETTINGS-PAGE | FR-001, 119 (gom bảo mật/ngôn ngữ vào Cài đặt theo Stitch `settings-security`) | US-005 | AUTH-CHANGE-PW-UI, AUTH-LANG-PREF | — | không | 🟡 (`feat-settings-page`: 2FA + phiên + ngôn ngữ xong; đổi mật khẩu/`users.locale` chờ AUTH-CHANGE-PW-UI, AUTH-LANG-PREF; KT-016) |
 | AUTH-HARDEN-4a | FR-001 (REDIS_KEY_PREFIX bắt buộc, Zod ở Server Action bảo mật, `checkAdminInsertGuard` chính xác) | — | — | S | không | ✅ `feat-auth-harden-4a` |
 | AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ⏳ |
-| FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ⏳ |
+| FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ✅ |
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ⏳ |
 | E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ✅ xanh 6/6 trên CI (nguyên nhân gốc: cookie phiên cũ sau xoay phiên — đã sửa ở fix/2fa-backup-codes) |
 | FR-005-SEARCH | FR-005 (ô tìm kiếm của bộ chuyển workspace; số việc cần xử lý tách thành `FR-005-COUNT`) | US-006 | INBOX-LIST | — | không | ✅ (tìm kiếm) |
