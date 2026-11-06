@@ -8,6 +8,15 @@
     "vi": "Tiếng Việt",
     "en": "English"
   },
+  "settings": {
+    "pageTitle": "Cài đặt",
+    "title": "Tài khoản & Bảo mật",
+    "subtitle": "Quản lý xác thực 2 bước, các phiên đăng nhập và ngôn ngữ giao diện của riêng bạn.",
+    "language": {
+      "title": "Ngôn ngữ giao diện",
+      "body": "Áp dụng cho toàn bộ giao diện của bạn trên thiết bị này."
+    }
+  },
   "auth": {
     "brand": "CommentFlow AI",
     "tabs": {
@@ -544,7 +553,7 @@
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
-      "security": "Bảo mật"
+      "settings": "Cài đặt"
     },
     "logout": "Đăng xuất",
     "brand": "CommentFlow AI",
