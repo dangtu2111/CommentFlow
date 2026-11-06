@@ -28,6 +28,7 @@ export default defineConfig({
         'src/rules/*.ts': { branches: 95 },
         'src/pii/*.ts': { branches: 95 },
         'src/examples/*.ts': { branches: 95 },
+        'src/cost-gate/*.ts': { branches: 95 },
       },
     },
   },
