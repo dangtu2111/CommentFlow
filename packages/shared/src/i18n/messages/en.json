@@ -2501,7 +2501,12 @@
       "security_two_factor_disabled": "Two-factor authentication disabled",
       "security_backup_codes_regenerated": "Backup codes regenerated",
       "security_session_revoked": "Signed out one device",
-      "security_other_sessions_revoked": "Signed out other devices"
+      "security_other_sessions_revoked": "Signed out other devices",
+      "security_profile_updated": "Profile updated",
+      "security_avatar_changed": "Profile photo changed",
+      "security_avatar_removed": "Profile photo removed",
+      "security_phone_otp_sent": "Phone verification code sent",
+      "security_phone_verified": "Phone number verified"
     },
     "empty": {
       "title": "No log entries yet",

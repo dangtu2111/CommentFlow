@@ -2501,7 +2501,12 @@
       "security_two_factor_disabled": "Tắt xác thực hai bước",
       "security_backup_codes_regenerated": "Tạo lại mã dự phòng",
       "security_session_revoked": "Đăng xuất một thiết bị",
-      "security_other_sessions_revoked": "Đăng xuất các thiết bị khác"
+      "security_other_sessions_revoked": "Đăng xuất các thiết bị khác",
+      "security_profile_updated": "Cập nhật thông tin cá nhân",
+      "security_avatar_changed": "Đổi ảnh đại diện",
+      "security_avatar_removed": "Xóa ảnh đại diện",
+      "security_phone_otp_sent": "Gửi mã xác minh số điện thoại",
+      "security_phone_verified": "Xác minh số điện thoại"
     },
     "empty": {
       "title": "Chưa có nhật ký",
