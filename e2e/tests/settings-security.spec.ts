@@ -92,10 +92,15 @@ function runScenarios(locale: Locale) {
     try {
       const page = await context.newPage();
       await page.goto('/app/settings');
-      const open = page.getByRole('button', { name: sec('changePassword.open'), exact: true });
+      // Nút mở (ở thẻ) trùng tên với nút gửi trong hộp thoại → chỉ lấy nút có aria-haspopup="dialog",
+      // và chỉ bấm khi hộp thoại đang đóng (sau lần sai mật khẩu nó vẫn mở).
+      const open = page
+        .getByRole('button', { name: sec('changePassword.open'), exact: true })
+        .and(page.locator('[aria-haspopup="dialog"]'));
       const dialog = page.locator('#change-password-dialog');
       const fill = async (current: string, next: string) => {
-        await open.click();
+        if (!(await dialog.evaluate((d: HTMLDialogElement) => d.open))) await open.click();
+        await expect(dialog).toBeVisible();
         await dialog.getByLabel(sec('changePassword.currentLabel'), { exact: true }).fill(current);
         await dialog.getByLabel(sec('changePassword.newLabel'), { exact: true }).fill(next);
         await dialog.getByLabel(sec('changePassword.confirmLabel'), { exact: true }).fill(next);
