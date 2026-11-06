@@ -55,12 +55,31 @@ export const DECISION_REASONS = [
   'question_vague',
   'topic_unsourced',
   'stock_stale',
+  'order_status',
 ] as const;
 export type DecisionReason = (typeof DECISION_REASONS)[number];
 
-/** Cổng tự gửi nào áp dụng cho câu này (giá trị cài đặt đọc ở AUTO-SEND-GATE, `docs/09` §6 mục 6). */
+/**
+ * Cổng tự gửi nào áp dụng cho câu này (giá trị cài đặt đọc ở AUTO-SEND-GATE, `docs/09` §6 mục 6).
+ * Đây là MỨC SÀN tính trước khi soạn: câu `clarify`/`redirect` mà bản nháp lại có ý `fact` thì cổng phải
+ * nâng `allow_clarify` → `allow_partial` bằng `effectiveAutoSendPolicy`, không dùng nguyên giá trị này.
+ */
 export const AUTO_SEND_POLICIES = ['standard', 'allow_clarify', 'allow_partial', 'never'] as const;
 export type AutoSendPolicy = (typeof AUTO_SEND_POLICIES)[number];
+
+/**
+ * Chính sách thật sau khi có bản nháp: `allow_clarify` chỉ dành cho câu KHÔNG có ý `fact` (§6 mục 6);
+ * có ý `fact` → xét `allow_partial`. `never`/`standard`/`allow_partial` giữ nguyên.
+ */
+export function effectiveAutoSendPolicy(
+  policy: AutoSendPolicy,
+  draft: { claims: ReadonlyArray<{ kind: string }> },
+): AutoSendPolicy {
+  if (policy === 'allow_clarify' && draft.claims.some((claim) => claim.kind === 'fact')) {
+    return 'allow_partial';
+  }
+  return policy;
+}
 
 /** Tối đa 2 lần hỏi lại mỗi chuỗi (FR-147); quá → chuyển người. */
 export const MAX_CLARIFY_PER_THREAD = 2;
@@ -98,14 +117,13 @@ export const decideActionInputSchema = z.object({
     /** Số lần khách hỏi lại cùng một ý (FR-144). */
     repeatCount: nonNegativeInt,
   }),
-  risks: z
-    .object({
-      priceConflict: z.boolean().default(false),
-      legalUnsourced: z.boolean().default(false),
-      impersonation: z.boolean().default(false),
-      stockStale: z.boolean().default(false),
-    })
-    .prefault({}),
+  /** Cờ rủi ro do `DA-RULES-*` cấp. BẮT BUỘC đủ cờ: thiếu = không đọc được → chuyển người (không "mở khi lỗi"). */
+  risks: z.object({
+    priceConflict: z.boolean(),
+    legalUnsourced: z.boolean(),
+    impersonation: z.boolean(),
+    stockStale: z.boolean(),
+  }),
 });
 
 export type DecideActionInput = z.input<typeof decideActionInputSchema>;
@@ -286,6 +304,26 @@ export function decideAction(raw: unknown): ActionDecision {
   if (risk !== null) return handoff(risk, askedBefore);
 
   const { answered, unanswered } = splitTopics(input);
+
+  // FR-153: hỏi đơn hàng → chuyển hướng ib + chuyển người (chưa đọc dữ liệu đơn, kể cả khi có "nguồn").
+  if (answered.includes('order_status') || unanswered.includes('order_status')) {
+    const rest = answered.filter((topic) => topic !== 'order_status');
+    const missing = KB_GAP_TOPICS.filter(
+      (topic) => topic === 'order_status' || unanswered.includes(topic),
+    );
+    return {
+      action: 'redirect',
+      reason: 'order_status',
+      needsHuman: true,
+      needsSupportTag: true,
+      clarify: null,
+      answeredTopics: rest,
+      unansweredTopics: missing,
+      redirectTemplates: templatesFor(missing, input.risks.stockStale),
+      autoSendPolicy: 'never',
+      askedBefore,
+    };
+  }
 
   const need = clarifyNeed(input, answered, unanswered);
   if (need !== null) {

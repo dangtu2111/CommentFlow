@@ -60,6 +60,7 @@ export {
   type DecisionReason,
   decideAction,
   decideActionInputSchema,
+  effectiveAutoSendPolicy,
   HANDOFF_TEMPLATE_KEYS,
   type HandoffTemplateKey,
   KB_GAP_TOPICS,

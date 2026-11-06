@@ -5,12 +5,20 @@ import { ACTION_KINDS } from '../confidence/confidence';
 import {
   type DecideActionInput,
   decideAction,
+  effectiveAutoSendPolicy,
   KB_GAP_TOPICS,
   MAX_CLARIFY_OPTIONS,
   MAX_CLARIFY_PER_THREAD,
   REPEAT_HANDOFF_THRESHOLD,
   readDecideActionInput,
 } from './decide-action';
+
+const NO_RISK = {
+  priceConflict: false,
+  legalUnsourced: false,
+  impersonation: false,
+  stockStale: false,
+} as const;
 
 /** Ca mốc: một sản phẩm đã nhận, khách hỏi giá, nguồn có → trả lời. */
 function base(over: Partial<DecideActionInput> = {}): DecideActionInput {
@@ -27,7 +35,7 @@ function base(over: Partial<DecideActionInput> = {}): DecideActionInput {
     products: { candidates: ['Áo thun A'], missingAxes: [] },
     topics: [{ topic: 'product_info', sourced: true }],
     thread: { clarifyCount: 0, repeatCount: 0 },
-    risks: {},
+    risks: NO_RISK,
     ...over,
   };
 }
@@ -275,8 +283,44 @@ describe('FR-141 decideAction — bậc 3: chuyển hướng, trả lời một 
     expect(d.unansweredTopics).toEqual(['shipping']);
   });
 
+  it('hỏi đơn hàng (FR-153) → chuyển hướng ib + cần người, không tự gửi, dù có "nguồn" hay đang cần hỏi lại', () => {
+    const sourced = decideAction(
+      base({
+        topics: [
+          { topic: 'product_info', sourced: true },
+          { topic: 'order_status', sourced: true },
+        ],
+        products: { candidates: ['A', 'B'], missingAxes: [] },
+      }),
+    );
+    expect(sourced).toMatchObject({
+      action: 'redirect',
+      reason: 'order_status',
+      needsHuman: true,
+      needsSupportTag: true,
+      clarify: null,
+      answeredTopics: ['product_info'],
+      unansweredTopics: ['order_status'],
+      redirectTemplates: ['order_status'],
+      autoSendPolicy: 'never',
+    });
+    const unsourced = decideAction(base({ topics: [{ topic: 'order_status', sourced: false }] }));
+    expect(unsourced.action).toBe('redirect');
+    expect(unsourced.needsHuman).toBe(true);
+  });
+
+  it('effectiveAutoSendPolicy: allow_clarify chỉ khi bản nháp không có ý fact; có fact → allow_partial', () => {
+    const fact = { claims: [{ kind: 'fact' }, { kind: 'handoff' }] };
+    const noFact = { claims: [{ kind: 'question_back' }] };
+    expect(effectiveAutoSendPolicy('allow_clarify', fact)).toBe('allow_partial');
+    expect(effectiveAutoSendPolicy('allow_clarify', noFact)).toBe('allow_clarify');
+    expect(effectiveAutoSendPolicy('never', fact)).toBe('never');
+    expect(effectiveAutoSendPolicy('standard', fact)).toBe('standard');
+    expect(effectiveAutoSendPolicy('allow_partial', noFact)).toBe('allow_partial');
+  });
+
   it('tồn kho cũ (FR-151) → redirect mẫu stock_check dù mọi ý có nguồn', () => {
-    const d = decideAction(base({ risks: { stockStale: true } }));
+    const d = decideAction(base({ risks: { ...NO_RISK, stockStale: true } }));
     expect(d.action).toBe('redirect');
     expect(d.reason).toBe('stock_stale');
     expect(d.redirectTemplates).toEqual(['stock_check']);
@@ -321,11 +365,11 @@ describe('FR-147 decideAction — bậc 4: chuyển người khi có rủi ro (l
       },
       'complaint',
     ],
-    ['mạo danh (FR-155)', { risks: { impersonation: true } }, 'impersonation'],
-    ['xung đột giá (FR-150)', { risks: { priceConflict: true } }, 'price_conflict'],
+    ['mạo danh (FR-155)', { risks: { ...NO_RISK, impersonation: true } }, 'impersonation'],
+    ['xung đột giá (FR-150)', { risks: { ...NO_RISK, priceConflict: true } }, 'price_conflict'],
     [
       'cam kết pháp lý không nguồn (FR-160)',
-      { risks: { legalUnsourced: true } },
+      { risks: { ...NO_RISK, legalUnsourced: true } },
       'legal_unsourced',
     ],
     [
@@ -352,7 +396,7 @@ describe('FR-147 decideAction — bậc 4: chuyển người khi có rủi ro (l
   it('rủi ro thắng cả khi đồng thời thiếu thông tin khách và thiếu nguồn', () => {
     const d = decideAction(
       base({
-        risks: { priceConflict: true },
+        risks: { ...NO_RISK, priceConflict: true },
         products: { candidates: ['A', 'B'], missingAxes: ['size'] },
         topics: [{ topic: 'shipping', sourced: false }],
       }),
@@ -384,6 +428,8 @@ describe('FR-147 FR-032 decideAction — đầu vào không đọc được → 
     ['đếm âm', broken({ thread: { clarifyCount: -1, repeatCount: 0 } })],
     ['chủ đề lạ', broken({ topics: [{ topic: 'vat', sourced: true }] })],
     ['ngôn ngữ lạ', broken({ lang: 'fr' })],
+    ['thiếu cờ rủi ro (không "mở khi lỗi")', broken({ risks: { priceConflict: false } })],
+    ['thiếu hẳn risks', broken({ risks: undefined })],
   ])('%s → handoff input_unreadable', (_name, raw) => {
     expect(readDecideActionInput(raw)).toBeNull();
     const d = decideAction(raw);
@@ -399,7 +445,12 @@ describe('FR-147 FR-032 decideAction — đầu vào không đọc được → 
   });
 
   it('trường lạ do AI thêm (ví dụ action, needs_human tự chấm) bị bỏ, không đổi quyết định', () => {
-    const raw = { ...base(), action: 'answer', needs_human: false, risks: { priceConflict: true } };
+    const raw = {
+      ...base(),
+      action: 'answer',
+      needs_human: false,
+      risks: { ...NO_RISK, priceConflict: true },
+    };
     expect(decideAction(raw).action).toBe('handoff');
     const raw2 = {
       ...base({ products: { candidates: ['A', 'B'], missingAxes: [] } }),
@@ -454,15 +505,12 @@ describe('FR-147 FR-141 decideAction — property-based', () => {
     clarifyCount: fc.integer({ min: 0, max: 4 }),
     repeatCount: fc.integer({ min: 0, max: 4 }),
   });
-  const risksArb = fc.record(
-    {
-      priceConflict: fc.boolean(),
-      legalUnsourced: fc.boolean(),
-      impersonation: fc.boolean(),
-      stockStale: fc.boolean(),
-    },
-    { requiredKeys: [] },
-  );
+  const risksArb = fc.record({
+    priceConflict: fc.boolean(),
+    legalUnsourced: fc.boolean(),
+    impersonation: fc.boolean(),
+    stockStale: fc.boolean(),
+  });
   const inputArb: fc.Arbitrary<DecideActionInput> = fc.record({
     lang: fc.constantFrom('vi' as const, 'en' as const, 'other' as const),
     extract: extractArb,
@@ -475,7 +523,7 @@ describe('FR-147 FR-141 decideAction — property-based', () => {
   const hasRisk = (i: DecideActionInput) =>
     i.lang === 'other' ||
     i.extract.labels.some((l) => l.label === 'complaint') ||
-    Boolean(i.risks?.priceConflict || i.risks?.legalUnsourced || i.risks?.impersonation) ||
+    Boolean(i.risks.priceConflict || i.risks.legalUnsourced || i.risks.impersonation) ||
     i.thread.repeatCount >= REPEAT_HANDOFF_THRESHOLD;
 
   it('hành động luôn thuộc 4 loại, xác định, không ném; handoff ⇒ cần người và không tự gửi', () => {
@@ -504,12 +552,20 @@ describe('FR-147 FR-141 decideAction — property-based', () => {
         if (hasRisk(input)) expect(d.action).toBe('handoff');
         if (d.action === 'answer') {
           expect(input.topics.every((t) => t.sourced)).toBe(true);
-          expect(input.risks?.stockStale ?? false).toBe(false);
+          expect(input.risks.stockStale).toBe(false);
           expect(hasRisk(input)).toBe(false);
+          expect(input.topics.some((t) => t.topic === 'order_status')).toBe(false);
         }
-        const unsourced = new Set(input.topics.filter((t) => !t.sourced).map((t) => t.topic));
+        // Hỏi đơn hàng luôn tính là chưa trả lời được (FR-153), còn lại đúng theo `sourced`.
+        const unsourced = new Set(
+          input.topics.filter((t) => !t.sourced || t.topic === 'order_status').map((t) => t.topic),
+        );
         for (const topic of d.unansweredTopics) expect(unsourced.has(topic)).toBe(true);
         for (const topic of d.answeredTopics) expect(unsourced.has(topic)).toBe(false);
+        if (input.topics.some((t) => t.topic === 'order_status') && !hasRisk(input)) {
+          expect(d.needsHuman).toBe(true);
+          expect(d.autoSendPolicy).toBe('never');
+        }
       }),
       { seed: SEED, numRuns: 400 },
     );

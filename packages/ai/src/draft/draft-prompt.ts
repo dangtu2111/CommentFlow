@@ -122,9 +122,9 @@ function renderSource(source: DraftSource): string {
   return `<source id="${source.id}" kind="${source.kind}">\n${escapeSource(source.text)}\n</source>`;
 }
 
-/** Gợi ý lựa chọn (tên mẫu) đưa vào MỘT dòng: bỏ xuống dòng để không chèn được dòng lệnh. */
+/** Gợi ý lựa chọn (tên mẫu, có thể đến từ Shopify/Haravan…) đưa vào MỘT dòng, không giả được thẻ nguồn. */
 function cleanOption(option: string): string {
-  return option.replace(/\s+/g, ' ').trim().slice(0, MAX_OPTION_CHARS);
+  return escapeSource(option.replace(/\s+/g, ' ').trim()).slice(0, MAX_OPTION_CHARS);
 }
 
 /** Dòng mô tả hành động đã chọn (khối 3 — đổi theo từng câu). */
@@ -149,6 +149,12 @@ function renderDecision(decision: ActionBrief): string[] {
   if (decision.redirectTemplates.length > 0) {
     lines.push(`Mẫu câu mời: ${decision.redirectTemplates.join(', ')}`);
   }
+  if (decision.redirectTemplates.includes('stock_check')) {
+    // FR-151: tồn kho chưa chắc → không nói còn hàng / số lượng, chỉ mời shop kiểm kho.
+    lines.push(
+      'Tồn kho chưa chắc: KHÔNG nói còn hàng hay số lượng; mời khách để shop kiểm kho rồi báo.',
+    );
+  }
   return lines;
 }
 
@@ -157,7 +163,8 @@ function renderDecision(decision: ActionBrief): string[] {
  * chính sách → nguồn + hành động + câu hỏi. Hai khối đầu đánh dấu `cache`. `input.sources` ở đây là nguồn ĐÃ lọc.
  */
 export function buildDraftMessages(input: DraftInput): LlmMessage[] {
-  const question = input.question.slice(0, MAX_QUESTION_CHARS);
+  // Câu hỏi của khách cũng không được giả thẻ nguồn (chèn lệnh/dữ liệu giả).
+  const question = escapeSource(input.question.slice(0, MAX_QUESTION_CHARS));
   const user = [
     ...input.sources.map(renderSource),
     `Ngôn ngữ khách: ${input.lang}`,
