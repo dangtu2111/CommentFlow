@@ -1,5 +1,7 @@
 import { getTranslations } from 'next-intl/server';
+import { KbFrame } from '../../../../components/kb/kb-frame';
 import { KbTestSetForm } from '../../../../components/kb-testset/kb-testset-form';
+import { PageHeader } from '../../../../components/ui/page-header';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
@@ -15,11 +17,14 @@ export default async function KbTestSetPage() {
   await requireAppUser({ role: 'owner' });
   const t = await getTranslations('kbTestset');
   return (
-    <main className="app-page">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle')}</p>
-      <p className="muted">{t('mockNote')}</p>
-      <KbTestSetForm />
+    <main className="app-page app-page-wide">
+      <KbFrame active="kbTestset">
+        <header className="kb-head">
+          <PageHeader title={t('title')} subtitle={t('subtitle')} />
+        </header>
+        <p className="muted">{t('mockNote')}</p>
+        <KbTestSetForm />
+      </KbFrame>
     </main>
   );
 }

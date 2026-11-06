@@ -1295,6 +1295,11 @@
     "completenessReady": "Ready to turn on automatic replies",
     "completenessNotReady": "At least {min}% needed to turn on automatic replies",
     "completenessDetail": "View details",
+    "overviewTitle": "Knowledge overview",
+    "actions": {
+      "test": "Run tests",
+      "publish": "Publish"
+    },
     "groups": {
       "structure": "Knowledge structure",
       "tuning": "Tuning & testing"
