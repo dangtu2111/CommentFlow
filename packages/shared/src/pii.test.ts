@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { maskPii, unsafeMarkMasked } from './pii';
+import { extractPii, maskPii, unsafeMarkMasked } from './pii';
+
+describe('FR-033 extractPii', () => {
+  it('lấy SĐT chuẩn hóa về 0xxxxxxxxx và email chữ thường, bỏ trùng, giữ thứ tự', () => {
+    expect(
+      extractPii('gọi +84 912 345 678 hoặc 0912.345.678, mail A@B.co; 0987-654-321, a@b.co'),
+    ).toEqual({ phones: ['0912345678', '0987654321'], emails: ['a@b.co'] });
+  });
+
+  it('không có thông tin cá nhân → hai danh sách rỗng', () => {
+    expect(extractPii('Giá 1500000đ còn 12 cái')).toEqual({ phones: [], emails: [] });
+    expect(extractPii('')).toEqual({ phones: [], emails: [] });
+  });
+
+  it('dạng 84xxxxxxxxx cũng chuẩn hóa về đầu 0', () => {
+    expect(extractPii('84912345678').phones).toEqual(['0912345678']);
+  });
+});
 
 describe('maskPii', () => {
   it('che email', () => {
