@@ -233,12 +233,15 @@ function EnableFlow({
               />
             </div>
             <div className="bg-surface-container-lowest p-space-sm rounded-lg space-y-1.5">
-              <p className="font-label-sm text-label-sm text-on-surface-variant">
+              <p className="font-label-sm text-label-sm text-on-surface-variant space-y-1.5">
                 {t('manualKey')}
+                <code
+                  data-testid="two-factor-manual-key"
+                  className="block bg-surface-container-low px-2.5 py-1.5 rounded-lg font-code-sm text-code-sm font-bold text-primary-container tracking-wider break-all"
+                >
+                  {begin.manualKey}
+                </code>
               </p>
-              <code className="block bg-surface-container-low px-2.5 py-1.5 rounded-lg font-code-sm text-code-sm font-bold text-primary-container tracking-wider break-all">
-                {begin.manualKey}
-              </code>
             </div>
           </div>
           <div className="lg:col-span-7 bg-surface-container-lowest p-space-md rounded-xl space-y-space-md self-start">
