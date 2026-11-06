@@ -25,3 +25,5 @@ Kế hoạch: `docs/plans/feat-da-rules-price.md`
 pnpm --filter @flow/ai exec vitest run src/rules
 pnpm --filter @flow/ai test:coverage
 ```
+
+Verifier-security (một lần): chặn merge đã sửa — kho chưa có giá mà có số tiền được nhắc → `evaluatePriceRisk` chuyển người (đóng khi lỗi); khoảng giá không có trục để hỏi → `none` (`variant_unresolvable`). Mục còn lại ghi ở gap matrix.

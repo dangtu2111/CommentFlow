@@ -7,7 +7,7 @@ import { extractClaims } from '../guard-money';
  * Hàm THUẦN: không LLM, không DB. Giá kho do bước tra DB cấp (`products`/`product_variants`, nguyên tắc #4);
  * ở đây chỉ so sánh và dựng cờ `risks.priceConflict` cho `decideAction`. AI không xác nhận cũng không phủ nhận
  * giá khách nhắc: cờ bật → chuyển người (nguyên tắc #9). Thiếu giá kho thì KHÔNG tự kết luận xung đột
- * (`not_comparable`): câu về giá lúc đó vốn không có nguồn nên đã bị guard/`decideAction` chặn ở bước khác.
+ * (`not_comparable`) ở hàm kiểm, nhưng `evaluatePriceRisk` vẫn chuyển người (đóng khi lỗi).
  */
 
 type VndAmount = number;
@@ -139,8 +139,14 @@ export function evaluatePriceRisk(input: {
       },
     };
   }
-  if (input.customer?.conflict)
+  // Không so được (kho chưa có giá) mà có số tiền được nhắc → đóng khi lỗi: chuyển người, vì guard số tiền
+  // không bắt câu xác nhận không chứa số ("Dạ đúng rồi ạ").
+  if (input.caption?.status === 'not_comparable') {
+    return { priceConflict: true, source: 'caption', ownerAlert: null };
+  }
+  if (input.customer?.conflict || input.customer?.status === 'not_comparable') {
     return { priceConflict: true, source: 'customer', ownerAlert: null };
+  }
   return { priceConflict: false, source: null, ownerAlert: null };
 }
 
@@ -167,7 +173,7 @@ export type PriceQuote =
     }
   | {
       kind: 'none';
-      reason: 'no_price' | 'variant_not_found';
+      reason: 'no_price' | 'variant_not_found' | 'variant_unresolvable';
       missingAxes: VariantAxis[];
       knownPricesVnd: VndAmount[];
     };
@@ -228,5 +234,9 @@ export function buildPriceQuote(input: {
     );
     return values.size > 1;
   });
+  // Khác giá mà không có trục nào để hỏi lại → không báo khoảng (FR-158 bắt buộc kèm câu hỏi lại).
+  if (missingAxes.length === 0) {
+    return { kind: 'none', reason: 'variant_unresolvable', missingAxes: [], knownPricesVnd: [] };
+  }
   return { kind: 'range', minVnd, maxVnd, missingAxes, knownPricesVnd };
 }

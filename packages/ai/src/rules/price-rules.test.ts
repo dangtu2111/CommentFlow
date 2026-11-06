@@ -140,6 +140,25 @@ describe('FR-150 evaluatePriceRisk — cờ cho decideAction + cảnh báo Owner
       ownerAlert: null,
     });
   });
+  it('FR-150 kho chưa có giá mà khách nhắc giá → chuyển người (đóng khi lỗi), không cảnh báo Owner', () => {
+    const customer = checkCustomerQuotedPrice({
+      commentText: 'báo 199k đúng không',
+      stockPricesVnd: [],
+    });
+    expect(evaluatePriceRisk({ customer })).toEqual({
+      priceConflict: true,
+      source: 'customer',
+      ownerAlert: null,
+    });
+  });
+  it('FR-150 kho chưa có giá mà caption có số tiền → chuyển người, nguồn caption, không có hai con số', () => {
+    const caption = checkCaptionPrices({ captionText: '199k', stockPricesVnd: [] });
+    expect(evaluatePriceRisk({ caption })).toEqual({
+      priceConflict: true,
+      source: 'caption',
+      ownerAlert: null,
+    });
+  });
   it('cả hai xung đột → caption thắng (cảnh báo Owner giữ)', () => {
     const caption = checkCaptionPrices({ captionText: '199k', stockPricesVnd: stock });
     const customer = checkCustomerQuotedPrice({ commentText: 'báo 99k', stockPricesVnd: stock });
@@ -232,16 +251,16 @@ describe('FR-158 buildPriceQuote — khoảng giá khi chưa rõ biến thể', 
       });
     }
   });
-  it('khác giá nhưng không biến thể nào có trục (size/màu null) → range, không có trục để hỏi', () => {
+  it('FR-158 khác giá nhưng không có trục để hỏi (size/màu null) → none, không báo khoảng', () => {
     const r = buildPriceQuote({ variants: [v(100_000, null), v(120_000, null)], said: none });
-    expect(r).toMatchObject({ kind: 'range', missingAxes: [] });
+    expect(r).toMatchObject({ kind: 'none', reason: 'variant_unresolvable' });
   });
   it('trục chỉ có một giá trị khác nhau về giá thì không phải trục thiếu', () => {
     const r = buildPriceQuote({
       variants: [v(100_000, 'M', 'đen'), v(120_000, 'M', 'đen')],
       said: none,
     });
-    expect(r).toMatchObject({ kind: 'range', missingAxes: [] });
+    expect(r).toMatchObject({ kind: 'none', reason: 'variant_unresolvable' });
   });
   it('FR-158 range + trục thiếu → decideAction hỏi lại biến thể (clarify variant_missing)', () => {
     const q = buildPriceQuote({ variants: [v(199_000, 'S'), v(249_000, 'XL')], said: none });
