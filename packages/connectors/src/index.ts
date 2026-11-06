@@ -54,6 +54,12 @@ export {
   signMetaBody,
   verifyMetaSignature,
 } from './facebook/webhook';
+export {
+  createInstagramConnector,
+  type InstagramConnector,
+  type InstagramConnectorOptions,
+} from './instagram/connector';
+export { parseInstagramWebhook } from './instagram/webhook';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
 export {
   createTokenCipher,

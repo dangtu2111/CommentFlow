@@ -1,0 +1,1 @@
+- 06/11 (IG-CONNECTOR, Q-IG1): `docs/12` §2 — chọn đường Instagram API with Facebook Login (token Page, `graph.facebook.com`), quyền `instagram_basic` + `instagram_manage_comments`, webhook `comments` dùng `entry.time`, trả lời `POST /{comment}/replies`.
