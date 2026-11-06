@@ -8,6 +8,8 @@ export type RateAction =
   | 'forgot'
   | 'twofa'
   | 'reauth'
+  | 'recovery'
+  | 'recoveryComplete'
   | 'invite'
   | 'inviteAccept'
   | 'workspaceCreate';
@@ -64,6 +66,19 @@ export const RATE_POLICIES: Record<
   reauth: {
     buckets: [{ bucket: 'user', needs: ['userId'], max: 5, windowSeconds: 15 * 60 }],
     onStoreFailure: 'memory',
+  },
+  // Yêu cầu khôi phục 2FA (gửi thư xác minh): 3/giờ cho mỗi email, 10/giờ cho mỗi IP; kho lỗi → từ chối (không gửi thư không giới hạn).
+  recovery: {
+    buckets: [
+      { bucket: 'email', needs: ['email'], max: 3, windowSeconds: 3600 },
+      { bucket: 'ip', needs: ['ip'], max: 10, windowSeconds: 3600 },
+    ],
+    onStoreFailure: 'deny',
+  },
+  // Hoàn tất khôi phục 2FA (đoán mật khẩu bằng link bị lộ): 5 lần/15 phút cho mỗi người dùng.
+  recoveryComplete: {
+    buckets: [{ bucket: 'user', needs: ['userId'], max: 5, windowSeconds: 15 * 60 }],
+    onStoreFailure: 'deny',
   },
   // Gửi lời mời qua email (chống dùng hệ thống gửi thư rác): 20/giờ cho mỗi workspace và 3/ngày cho mỗi email
   // được mời (xuyên workspace). Kho lỗi → từ chối (thà không gửi còn hơn gửi không giới hạn).

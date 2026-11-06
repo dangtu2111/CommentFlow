@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { KbFrame } from '../../../../components/kb/kb-frame';
-import { buttonClass } from '../../../../components/ui/button';
-import { Card } from '../../../../components/ui/card';
-import { PageHeader } from '../../../../components/ui/page-header';
+import { KB_RAIL_ICONS, KbFrame } from '../../../../components/kb/kb-frame';
+import { Icon } from '../../../../components/ui/icon';
 import { kbSubnavFor } from '../../../../lib/kb-structure';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -46,24 +44,40 @@ export default async function KbHubPage() {
           minPercent: readiness.minPercent,
         }}
       >
-        <header className="kb-head">
-          <PageHeader title={t('overviewTitle')} subtitle={t('subtitle')} />
-        </header>
-        <ul className="kb-cards">
-          {kbSubnavFor().map((item) => (
-            <li key={item.key}>
-              <Card className="kb-card" aria-labelledby={`kb-card-${item.key}`}>
-                <h2 id={`kb-card-${item.key}`}>
+        <div className="tw space-y-space-xl">
+          <header>
+            <h1 className="font-headline-md text-headline-md text-on-surface">
+              {t('overviewTitle')}
+            </h1>
+            <p className="mt-space-xs font-body-md text-body-md text-on-surface-variant">
+              {t('subtitle')}
+            </p>
+          </header>
+          <ul className="grid gap-space-md sm:grid-cols-2 xl:grid-cols-3">
+            {kbSubnavFor().map((item) => (
+              <li
+                key={item.key}
+                className="flex flex-col items-start gap-space-sm rounded-xl bg-surface-container-lowest p-space-xl shadow-sm"
+              >
+                <span className="text-primary-container">
+                  <Icon name={KB_RAIL_ICONS[item.key] ?? 'menu_book'} size={24} />
+                </span>
+                <h2 className="font-title-md text-title-md text-on-surface">
                   {t(`cards.${item.key as 'productImport'}.title`)}
                 </h2>
-                <p className="muted">{t(`cards.${item.key as 'productImport'}.body`)}</p>
-                <Link href={item.href} className={buttonClass({ variant: 'secondary' })}>
+                <p className="flex-1 font-body-sm text-body-sm text-on-surface-variant">
+                  {t(`cards.${item.key as 'productImport'}.body`)}
+                </p>
+                <Link
+                  href={item.href}
+                  className="rounded-lg bg-surface-container px-3 py-2 font-title-sm text-title-sm text-on-surface shadow-sm transition-colors hover:bg-surface-container-high"
+                >
                   {t('open')}
                 </Link>
-              </Card>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
       </KbFrame>
     </main>
   );

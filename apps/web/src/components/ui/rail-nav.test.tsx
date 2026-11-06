@@ -33,6 +33,23 @@ describe('UI-KIT RailNav', () => {
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
   });
 
+  it('mục vô hiệu là <span aria-disabled> không có liên kết', () => {
+    const html = renderToStaticMarkup(
+      <RailNav
+        label="Điều hướng"
+        groups={[
+          {
+            key: 'g',
+            title: 'Nhóm',
+            items: [{ key: 'x', href: '/x', label: 'Mục X', current: false, disabled: true }],
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).not.toContain('href="/x"');
+  });
+
   it('mục đầu (không nhóm) hiện trước các nhóm khi có `lead`', () => {
     const html = renderToStaticMarkup(
       <RailNav

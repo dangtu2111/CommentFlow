@@ -203,7 +203,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | EVAL-SET-REAL | FR-165 (~300 bình luận thật đã che PII; mỗi mẫu có hành động đúng) | — | — | S (PII) | **có** — chủ dự án cung cấp | ⛔ |
 | EVAL-RUNNER | FR-120 (bộ đánh giá 4 nhóm ngôn ngữ), FR-165, `14` §4 (promptfoo, chạy CI) | — | EVAL-SET-REAL, PIPE-DECIDE-ACTION | — | **có** — khóa LLM; cài promptfoo (nêu giấy phép) | ⛔ |
 | COST-GATE | — (đo ≤ $2/1.000 lượt từ `ai_usage`) | — | EVAL-RUNNER | — | không | 🟡 Xong-mock phần cổng chặn trần chi phí (`feat-cost-gate`, Q-CG1, FR-071: `packages/ai/src/cost-gate/`; còn nối `COST-GATE-WIRE`/`-PERSIST`/`-PLAN-DEFAULT`); phép đo ≤ $2/1.000 lượt vẫn chờ EVAL-RUNNER |
-| AUTH-2FA-RECOVERY | FR-001 (khôi phục khi mất điện thoại + mã dự phòng) | US-005 | AUTH-2FA | S | **có** — quyết định sản phẩm | ⛔ |
+| AUTH-2FA-RECOVERY | FR-001 (khôi phục khi mất điện thoại + mã dự phòng) | US-005 | AUTH-2FA | S | không (QRCV1) | Xong-mock (logic; chờ bảng DB + giao diện) |
 | **CỔNG 2** | xem đầu mục GĐ2 | | tất cả 2A–2D | | chủ dự án xác nhận | ⏳ |
 
 ---
@@ -296,11 +296,11 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | ML-SERVICE | FR-027 (bộ phân loại tự host), FR-025 (chuẩn hóa/nhận ngôn ngữ ở `ml`) | — | COST-GATE | — | không | ⏳ |
 | PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | 🟡 Xong-mock (`feat-pgvector-hybrid`, Q-PVH1, không migration; chờ CI; embedder thật → `KB-EMBED-LITELLM`) |
 | SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ✅ Xong-mock (`feat-semantic-cache`, không migration; chưa nối Redis/pipeline; KT-SC) |
-| LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | ⛔ |
+| LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | 🟡 Xong-mock (`feat-litellm-langfuse`, Q-LLF1, không migration; cờ TẮT; chưa nối `llm-client`; KT-LLF) |
 | SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ✅ Xong-mock (`feat-src-haravan`, Q-HRV1; không migration; còn `HARAVAN-CONNECT-STORE` (OAuth + bảng token, làn b); KT-HRV) |
 | SRC-SAPO | FR-122 (Sapo) | — | SRC-HARAVAN | S | **có** — shop dev Sapo | ✅ Xong-mock (`feat-src-sapo`, Q-SAP1; không migration; còn `SAPO-CONNECT-STORE` (OAuth + bảng token, làn b); KT-SAP) |
 | SRC-KIOTVIET | FR-122 (KiotViet) | — | SRC-SAPO | S | **có** | ✅ Xong-mock (`feat-src-kiotviet`, Q-KIO1; không migration; còn `KIOTVIET-CONNECT-STORE` (bảng Client ID/Secret, làn b); KT-KIO) |
-| SRC-PANCAKE | FR-122 (Pancake POS) | — | SRC-KIOTVIET | S | **có** | ⛔ |
+| SRC-PANCAKE | FR-122 (Pancake POS) | — | SRC-KIOTVIET | S | **có** | ✅ Xong-mock (`feat-src-pancake`, Q-PAN1; không migration; còn `PANCAKE-CONNECT-STORE` (bảng mã shop + API key, làn b); KT-PAN) |
 | AUTO-PAYMENT-CONFIRM | FR-124 (xác nhận thanh toán tự động: SePay/Casso…) | — | QR-PAYMENT | S+DB | **có** — nhà cung cấp | ✅ Xong-mock phần code (`feat-auto-payment-confirm`, Q-APC1, không migration; cờ TẮT; chưa nối DB: gap `AUTO-PAYMENT-CONFIRM-DB` làn b; KT-APC) |
 | ATTACH-VISION | FR-143 (đọc ảnh, tùy chọn) | — | ATTACHMENTS-STORE | S (PII) | **có** — khóa LLM đa phương thức | ⛔ |
 
