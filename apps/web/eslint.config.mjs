@@ -24,6 +24,7 @@ export default [
               'aria-pressed',
               'aria-busy',
               'variant',
+              'tone',
               'name',
               'autoComplete',
               'autoCapitalize',

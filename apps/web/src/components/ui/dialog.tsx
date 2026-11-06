@@ -3,6 +3,8 @@
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect, useId, useRef } from 'react';
+import { buttonClass } from './button';
+import { Chip } from './chip';
 
 /**
  * Hộp thoại dùng `<dialog>` gốc (focus bị nhốt, Esc đóng, nền mờ do trình duyệt lo). Nội dung luôn được giữ trong cây
@@ -47,7 +49,7 @@ export function Dialog({
         <div className="dialog-head-text">
           <h2 id={titleId} className="dialog-title">
             {title}
-            {badge ? <span className="chip chip-info">{badge}</span> : null}
+            {badge ? <Chip tone="info">{badge}</Chip> : null}
           </h2>
           {description ? <p className="muted">{description}</p> : null}
         </div>
@@ -69,7 +71,7 @@ export function Dialog({
 /** Nút mở hộp thoại có `dialogId` tương ứng. */
 export function DialogTrigger({
   dialogId,
-  className = 'btn btn-secondary',
+  className = buttonClass({ variant: 'secondary' }),
   children,
 }: {
   dialogId: string;

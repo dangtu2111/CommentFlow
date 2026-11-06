@@ -1,0 +1,34 @@
+/* Avatar. Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
+
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--selected-bg);
+  border: 1px solid var(--selected-border);
+  color: var(--color-primary-700);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.avatar-lg {
+  width: 64px;
+  height: 64px;
+  font-size: var(--text-lg);
+}
+
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: var(--text-xs);
+}
+
+.avatar-ai {
+  background: var(--color-ai-50);
+  border-color: var(--color-ai-300);
+  color: var(--color-ai-600);
+}

@@ -1,0 +1,102 @@
+/* Banner / Banner hệ thống. Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.banner svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.banner-info {
+  background: var(--selected-bg);
+  border-color: var(--selected-border);
+}
+
+.banner-success {
+  border-color: var(--color-success);
+}
+
+.banner-success svg {
+  color: var(--color-success);
+}
+
+.banner-danger {
+  border-color: var(--color-danger);
+}
+
+.banner-danger svg {
+  color: var(--color-danger);
+}
+
+.banner-warning {
+  border-color: var(--color-warning);
+}
+
+.banner-warning svg {
+  color: var(--color-warning);
+}
+
+.banner-actions {
+  margin-top: var(--space-3);
+}
+
+.banners {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) 0;
+}
+
+.banners .banner {
+  align-items: center;
+  border: 1px solid var(--color-warning);
+  border-left-width: 4px;
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surface));
+}
+
+.banners .banner-expired,
+.banners .banner-revoked {
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+}
+
+.banner-icon {
+  flex: none;
+  color: var(--color-warning);
+}
+
+.banner-expired .banner-icon,
+.banner-revoked .banner-icon {
+  color: var(--color-danger);
+}
+
+.banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.banner-action {
+  flex: none;
+}
+
+.banner p {
+  margin: 0;
+}
+
+.banner-title {
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.banner-body {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

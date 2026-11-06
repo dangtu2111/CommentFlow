@@ -35,6 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
+| UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (`feat-ui-kit-foundation`, Q-UIKIT1); chuyển trang còn lại |
 | UI-FIDELITY-SETTINGS-PAGES | docs/08 §7 (settings-billing.png) | UF-4 | UI-FIDELITY-SETTINGS-V2 | — | không | ✅ Xong-mock giao diện (`feat-ui-settings-pages`, Q-USP1; còn `PLANS-SCHEMA`, `QR-PAYMENT`) |
 | UI-FIDELITY-SETTINGS-V2 | docs/08 §7 (settings-security.png) | UF-4 | UI-FIDELITY-SETTINGS | — | verifier-security (xóa phiên) | ✅ Giao diện khớp (`feat-ui-settings-v2`, Q-UISET2; còn `SETTINGS-SECURITY-DATA`) |
 | UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
