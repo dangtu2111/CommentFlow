@@ -413,6 +413,19 @@ export {
 } from './shopify-config';
 export { type HaravanConfig, readHaravanConfig } from './haravan-config';
 export {
+  canRunManualReconcile,
+  checkWebhookTopics,
+  type InternalProductSnapshot,
+  type InternalVariantSnapshot,
+  RECONCILE_ADMIN_RATIO,
+  RECONCILE_MANUAL_COOLDOWN_MS,
+  type ReconcileDiff,
+  type ReconcileDiffKind,
+  type ReconcileResult,
+  reconcileCatalog,
+  SHOPIFY_REQUIRED_WEBHOOK_TOPICS,
+} from './shopify-reconcile';
+export {
   decideSize,
   parseSizeChartRow,
   SIZE_CATEGORY_MAX,

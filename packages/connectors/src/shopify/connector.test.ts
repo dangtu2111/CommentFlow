@@ -15,6 +15,7 @@ import {
   throttle,
   variantNode,
   variantsPage,
+  webhooksResponse,
 } from './fixtures';
 
 type Call = {
@@ -182,6 +183,25 @@ describe('FR-052 Shopify connector — phân trang', () => {
         url: 'https://demo-shop.myshopify.com/policies/refund-policy',
       },
     ]);
+  });
+
+  it('FR-113 đọc chủ đề webhook đã đăng ký (chỉ query, không mutation), loại trùng', async () => {
+    const { connector, calls } = harness([jsonResponse(webhooksResponse)]);
+    expect(await connector.listWebhookSubscriptions()).toEqual([
+      'PRODUCTS_UPDATE',
+      'PRODUCTS_DELETE',
+    ]);
+    expect(calls[0]?.body.query).toContain('webhookSubscriptions');
+    expect(calls[0]?.body.query).not.toContain('mutation');
+  });
+
+  it('FR-113 webhook: dùng chung xử lý lỗi (401 → TOKEN_EXPIRED) và chặn hình dạng sai', async () => {
+    const unauthorized = harness([jsonResponse({}, { status: 401 })]);
+    expect((await failureOf(unauthorized.connector.listWebhookSubscriptions())).code).toBe(
+      'TOKEN_EXPIRED',
+    );
+    const bad = harness([jsonResponse({ data: { webhookSubscriptions: {} } })]);
+    expect((await failureOf(bad.connector.listWebhookSubscriptions())).code).toBe('UNKNOWN');
   });
 });
 
