@@ -1,0 +1,1 @@
+| QCI1 | 06/11 | CI-PRECHECK: phạm vi kích hoạt CI + precheck | CI chỉ chạy `pull_request` và push vào `main`; `pnpm precheck` do agent chạy tay (không hook); `format:check` = `biome format .` | Chủ dự án yêu cầu 06/11; hook/script tự chạy bị loại | Khôi phục `push:` không lọc nhánh trong ci.yml; xóa script precheck |

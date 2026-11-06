@@ -21,6 +21,7 @@ Cập nhật lần cuối: 2026-11-06 · nhánh `feat-auto-send-gate` · Gói n�
 | Migration / kiểm RLS | `pnpm db:migrate` · `pnpm db:check-rls` | cần role `cf_worker` có sẵn (migration 0030); chỉ DB `cf_dev`/`cf_test`/`cf_ci`, `APP_ENV` dev/test/ci |
 | Mutation testing | `pnpm --filter @flow/ai test:mutation` | Stryker 10 (`packages/ai/stryker.config.mjs`, plugin `vitest-runner` khai báo rõ vì pnpm cô lập); phạm vi `src/recheck`, `src/gate`, `src/guard-money.ts`; ngưỡng break 80%; chạy TRƯỚC KHI MERGE nhánh chạm các file đó (chưa ở CI — gap `MUTATION-STRYKER`); thư mục tạm `.stryker-tmp/`, `reports/` đã ignore |
 | Ngưỡng coverage | `pnpm test:coverage` | `@vitest/coverage-v8`, ngưỡng ở `packages/{ai,shared,saas-core}/vitest.config.ts` (ratchet); chạy ở CI, chỉ test đơn vị |
+| Kiểm nhanh trước push | `pnpm precheck` | lint + format:check + typecheck + check:migrations + check:plans + codemap:check + quyet:check, dừng ở lỗi đầu (`scripts/precheck.mjs`); agent chạy tay trước mỗi lần push |
 | Python (ml) | `cd services/ml && uv run pytest` · `uv run ruff check .` | |
 | Ranh giới gói | `pnpm depcruise` | luật ở `.dependency-cruiser.cjs`, test luật ở `tools/boundaries` |
 | Test tích hợp (DB thật `cf_test`) | `pnpm test:db` | cần `.env` + máy phụ bật; tự tạo lại schema mỗi lần |
