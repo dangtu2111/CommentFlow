@@ -1,7 +1,7 @@
 import { DEFAULT_BRAND, type Locale } from '@flow/shared';
 import type { MailMessage } from './transport';
 
-type StaticEmailKind = 'verify-email' | 'reset-password' | 'account-exists';
+type StaticEmailKind = 'verify-email' | 'reset-password' | 'account-exists' | 'password-changed';
 export type EmailKind = StaticEmailKind | 'workspace-invite' | 'owner-change';
 
 export type WorkspaceRole = 'owner' | 'staff';
@@ -12,6 +12,8 @@ export type EmailInput =
   | { kind: 'verify-email'; url: string }
   | { kind: 'reset-password'; url: string }
   | { kind: 'account-exists'; loginUrl: string; resetUrl: string }
+  /** Báo vừa đổi mật khẩu trong Cài đặt; `url` = trang đặt lại mật khẩu (nếu không phải chính chủ). */
+  | { kind: 'password-changed'; url: string }
   | {
       kind: 'workspace-invite';
       /** Liên kết nhận lời mời (chứa token — không bao giờ ghi log). */
@@ -71,6 +73,13 @@ const buildCopy = (brand: string): Record<Locale, Record<StaticEmailKind, Copy>>
       action: 'Đăng nhập',
       footer: 'Nếu không phải bạn, hãy bỏ qua thư này — không có tài khoản mới nào được tạo.',
     },
+    'password-changed': {
+      subject: `Mật khẩu của bạn vừa được đổi — ${brand}`,
+      greeting: (name) => `Chào ${name},`,
+      intro: `Mật khẩu tài khoản ${brand} của bạn vừa được đổi và mọi thiết bị đã bị đăng xuất. Nếu không phải bạn, hãy đặt lại mật khẩu ngay.`,
+      action: 'Đặt lại mật khẩu',
+      footer: 'Nếu chính bạn đã đổi, không cần làm gì thêm.',
+    },
   },
   en: {
     'verify-email': {
@@ -93,6 +102,13 @@ const buildCopy = (brand: string): Record<Locale, Record<StaticEmailKind, Copy>>
       intro: `Someone just tried to sign up for ${brand} with this email, but it already has an account. If that was you, sign in; if you forgot your password, you can reset it.`,
       action: 'Sign in',
       footer: "If that wasn't you, ignore this email — no new account was created.",
+    },
+    'password-changed': {
+      subject: `Your password was changed — ${brand}`,
+      greeting: (name) => `Hi ${name},`,
+      intro: `The password of your ${brand} account was just changed and all devices were signed out. If this wasn't you, reset your password right away.`,
+      action: 'Reset password',
+      footer: "If you made this change yourself, there's nothing more to do.",
     },
   },
 });

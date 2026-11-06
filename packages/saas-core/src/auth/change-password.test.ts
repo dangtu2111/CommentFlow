@@ -8,10 +8,21 @@ const headers = new Headers({ cookie: 'session=abc' });
 
 type Verdict = { ok: true } | { ok: false; reason: 'common' | 'pwned' };
 
-function setup(over: { session?: boolean; verdict?: Verdict; allowed?: boolean } = {}) {
-  const getSession = vi
-    .fn()
-    .mockResolvedValue(over.session === false ? null : { user: { id: 'u1' } });
+function setup(
+  over: {
+    session?: boolean;
+    verdict?: Verdict;
+    allowed?: boolean;
+    onChanged?: (user: unknown) => void;
+  } = {},
+) {
+  const getSession = vi.fn().mockResolvedValue(
+    over.session === false
+      ? null
+      : {
+          user: { id: 'u1', email: 'an@example.test', name: 'An', locale: 'en', image: 'x' },
+        },
+  );
   const changeAndRevoke = vi.fn().mockResolvedValue(undefined);
   const revokeAll = vi.fn().mockResolvedValue(2);
   const limiter = {
@@ -30,6 +41,7 @@ function setup(over: { session?: boolean; verdict?: Verdict; allowed?: boolean }
     passwordPolicy: { check },
     changeCredential: changeAndRevoke,
     revokeAll,
+    ...(over.onChanged ? { onChanged: over.onChanged } : {}),
   });
   return { flow, limiter, check, changeAndRevoke, revokeAll };
 }
@@ -154,5 +166,26 @@ describe('FR-001 đổi mật khẩu (saas-core)', () => {
     });
     expect(s.revokeAll).toHaveBeenCalledWith('u1');
     expect(s.limiter.reset).toHaveBeenCalledWith('reauth', { userId: 'u1' });
+  });
+
+  it('đổi xong → gọi onChanged đúng một lần với {id,email,name,locale} (gửi email báo), không mật khẩu', async () => {
+    const onChanged = vi.fn();
+    const s = setup({ onChanged });
+    expect((await run(s.flow)).status).toBe('ok');
+    expect(onChanged).toHaveBeenCalledTimes(1);
+    const arg = onChanged.mock.calls[0]?.[0];
+    expect(arg).toEqual({ id: 'u1', email: 'an@example.test', name: 'An', locale: 'en' });
+    expect(JSON.stringify(arg)).not.toContain(GOOD_NEW);
+  });
+
+  it('không gọi onChanged khi chưa đổi được; onChanged ném lỗi không làm hỏng kết quả', async () => {
+    const onChanged = vi.fn(() => {
+      throw new Error('smtp down');
+    });
+    const bad = setup({ onChanged, verdict: { ok: false, reason: 'pwned' } });
+    expect((await run(bad.flow)).status).toBe('invalid');
+    expect(onChanged).not.toHaveBeenCalled();
+    const ok = setup({ onChanged });
+    expect((await run(ok.flow)).status).toBe('ok');
   });
 });

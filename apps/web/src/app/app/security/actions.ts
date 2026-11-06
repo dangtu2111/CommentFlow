@@ -15,6 +15,7 @@ import {
 import { getAuthRuntime } from '../../../server/auth';
 import { requestContext } from '../../../server/request-context';
 import { requireAppUser } from '../../../server/require-app-user';
+import { recordSecurityEvent } from '../../../server/security-audit';
 
 /**
  * Server Action của trang bảo mật. Mỗi hàm đọc phiên từ cookie (phía server) — không nhận userId từ form —
@@ -53,7 +54,7 @@ export async function confirmTwoFactorAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
-  await requireAppUser(SECURITY_ACCESS);
+  const { user, workspace } = await requireAppUser(SECURITY_ACCESS);
   const code = parseSecurityInput('code', data);
   if (!code.ok) return code.state;
   const result = await flows().confirmEnrollment({
@@ -63,6 +64,10 @@ export async function confirmTwoFactorAction(
   if (result.status === 'unauthenticated') redirect('/login');
   if (result.status !== 'ok') return reauthFailureToState(result);
   applyCookies(await cookies(), result.cookies); // plugin xoay phiên khi bật 2FA
+  await recordSecurityEvent('two_factor_enabled', {
+    workspaceId: workspace?.id ?? null,
+    userId: user.id,
+  });
   return { status: 'done' };
 }
 
@@ -70,7 +75,7 @@ export async function regenerateBackupCodesAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
-  await requireAppUser(SECURITY_ACCESS);
+  const { user, workspace } = await requireAppUser(SECURITY_ACCESS);
   const password = parseSecurityInput('password', data);
   if (!password.ok) return password.state;
   const result = await flows().regenerateBackupCodes({
@@ -79,6 +84,10 @@ export async function regenerateBackupCodesAction(
   });
   if (result.status === 'unauthenticated') redirect('/login');
   if (result.status !== 'ok') return reauthFailureToState(result);
+  await recordSecurityEvent('backup_codes_regenerated', {
+    workspaceId: workspace?.id ?? null,
+    userId: user.id,
+  });
   return { status: 'codes', backupCodes: result.backupCodes };
 }
 
@@ -86,7 +95,7 @@ export async function disableTwoFactorAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
-  await requireAppUser(SECURITY_ACCESS);
+  const { user, workspace } = await requireAppUser(SECURITY_ACCESS);
   const password = parseSecurityInput('password', data);
   if (!password.ok) return password.state;
   const result = await flows().disable({
@@ -96,6 +105,10 @@ export async function disableTwoFactorAction(
   if (result.status === 'unauthenticated') redirect('/login');
   if (result.status !== 'ok') return reauthFailureToState(result);
   applyCookies(await cookies(), result.cookies);
+  await recordSecurityEvent('two_factor_disabled', {
+    workspaceId: workspace?.id ?? null,
+    userId: user.id,
+  });
   revalidatePath('/app/security');
   revalidatePath('/app/settings');
   return SECURITY_IDLE;
@@ -109,7 +122,7 @@ export async function changePasswordAction(
   _previous: SecurityState,
   data: FormData,
 ): Promise<SecurityState> {
-  await requireAppUser(SECURITY_ACCESS);
+  const { user, workspace } = await requireAppUser(SECURITY_ACCESS);
   const input = parseChangePasswordForm(data);
   if (!input.ok) return securityError(input.message);
   const result = await getAuthRuntime().changePassword.changePassword({
@@ -117,22 +130,34 @@ export async function changePasswordAction(
     newPassword: input.newPassword,
     headers: (await requestContext()).headers,
   });
-  if (result.status === 'ok' || result.status === 'unauthenticated') redirect('/login');
+  if (result.status === 'ok') {
+    await recordSecurityEvent('password_changed', {
+      workspaceId: workspace?.id ?? null,
+      userId: user.id,
+    });
+    redirect('/password-changed');
+  }
+  if (result.status === 'unauthenticated') redirect('/login');
   return changePasswordToState(result);
 }
 
 /** "Đăng xuất tất cả thiết bị khác": người dùng + phiên hiện tại lấy từ cookie (không nhận gì từ form). */
 export async function revokeOtherSessionsAction(): Promise<void> {
-  await requireAppUser(SECURITY_ACCESS);
+  const { user, workspace } = await requireAppUser(SECURITY_ACCESS);
   const removed = await flows().revokeOtherSessions((await requestContext()).headers);
   if (removed === null) redirect('/login');
+  await recordSecurityEvent('other_sessions_revoked', {
+    workspaceId: workspace?.id ?? null,
+    userId: user.id,
+    detail: { removed },
+  });
   revalidatePath('/app/security');
   revalidatePath('/app/settings');
 }
 
 /** Đăng xuất MỘT phiên khác của chính mình (id từ form chỉ là gợi ý; saas-core kiểm phiên thuộc về người dùng). */
 export async function revokeSessionAction(data: FormData): Promise<void> {
-  await requireAppUser(SECURITY_ACCESS);
+  const { user, workspace } = await requireAppUser(SECURITY_ACCESS);
   const sessionId = parseSecurityInput('sessionId', data);
   if (!sessionId.ok) return; // id không phải uuid: không có phiên nào để đăng xuất
   const ok = await flows().revokeSession({
@@ -140,6 +165,12 @@ export async function revokeSessionAction(data: FormData): Promise<void> {
     headers: (await requestContext()).headers,
   });
   if (!ok && !(await flows().posture((await requestContext()).headers))) redirect('/login');
+  if (ok) {
+    await recordSecurityEvent('session_revoked', {
+      workspaceId: workspace?.id ?? null,
+      userId: user.id,
+    });
+  }
   revalidatePath('/app/security');
   revalidatePath('/app/settings');
 }

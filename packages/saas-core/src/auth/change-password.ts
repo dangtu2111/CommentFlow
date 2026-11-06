@@ -48,6 +48,8 @@ export function createChangePasswordFlow(options: {
   changeCredential?: (input: ChangeInput) => Promise<void>;
   /** Chỉ để test; mặc định `revokeAllSessionsOfUser`. */
   revokeAll?: (userId: string) => Promise<unknown>;
+  /** Gọi SAU khi đổi xong (gửi email báo). Lỗi của hook bị nuốt có chủ đích: mật khẩu đã đổi, không được báo "chưa đổi". */
+  onChanged?: (user: { id: string; email: string; name: string; locale: string | null }) => void;
 }) {
   const { auth, authDb, limiter, passwordPolicy } = options;
   const changeCredential =
@@ -111,6 +113,18 @@ export function createChangePasswordFlow(options: {
         }
       }
       await limiter.reset('reauth', { userId });
+      try {
+        const { email, name } = current.user;
+        const locale = (current.user as { locale?: unknown }).locale;
+        options.onChanged?.({
+          id: userId,
+          email,
+          name,
+          locale: typeof locale === 'string' ? locale : null,
+        });
+      } catch {
+        console.warn(JSON.stringify({ event: 'change_password_notify_failed', userId }));
+      }
       return { status: 'ok' };
     },
   };

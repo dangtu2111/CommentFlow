@@ -267,6 +267,13 @@
       "subtitle": "Bắt đầu quản lý bình luận Fanpage cùng trợ lý AI.",
       "submit": "Tạo tài khoản"
     },
+    "passwordChanged": {
+      "title": "Cập nhật mật khẩu thành công",
+      "body": "Mật khẩu đã được đổi và mọi thiết bị đã bị đăng xuất. Hãy đăng nhập lại bằng mật khẩu mới; chúng tôi cũng đã gửi email thông báo.",
+      "integrationsNote": "Kết nối Fanpage và webhook của bạn không bị ảnh hưởng và vẫn hoạt động bình thường.",
+      "signIn": "Đăng nhập lại",
+      "viewLog": "Xem nhật ký bảo mật"
+    },
     "checkEmail": {
       "title": "Kiểm tra email của bạn",
       "body": "Nếu địa chỉ {email} nhận được thư, hãy bấm liên kết trong thư để kích hoạt tài khoản.",
@@ -2488,7 +2495,13 @@
       "comment_hide_cancelled": "Đã hủy yêu cầu ẩn bình luận",
       "comment_unhide_requested": "Yêu cầu bỏ ẩn bình luận",
       "comment_hidden": "Đã ẩn bình luận trên nền tảng",
-      "comment_unhidden": "Đã bỏ ẩn bình luận trên nền tảng"
+      "comment_unhidden": "Đã bỏ ẩn bình luận trên nền tảng",
+      "security_password_changed": "Đổi mật khẩu",
+      "security_two_factor_enabled": "Bật xác thực hai bước",
+      "security_two_factor_disabled": "Tắt xác thực hai bước",
+      "security_backup_codes_regenerated": "Tạo lại mã dự phòng",
+      "security_session_revoked": "Đăng xuất một thiết bị",
+      "security_other_sessions_revoked": "Đăng xuất các thiết bị khác"
     },
     "empty": {
       "title": "Chưa có nhật ký",

@@ -18,6 +18,12 @@ const KNOWN_ACTIONS = [
   'comment.unhide_requested',
   'comment.hidden',
   'comment.unhidden',
+  'security.password_changed',
+  'security.two_factor_enabled',
+  'security.two_factor_disabled',
+  'security.backup_codes_regenerated',
+  'security.session_revoked',
+  'security.other_sessions_revoked',
 ] as const;
 
 /** Khóa nhãn dịch: next-intl cấm dấu chấm trong tên khóa nên `member.left` → `member_left`. */

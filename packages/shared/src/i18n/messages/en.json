@@ -267,6 +267,13 @@
       "subtitle": "Start managing Fanpage comments with an AI assistant.",
       "submit": "Create account"
     },
+    "passwordChanged": {
+      "title": "Password updated",
+      "body": "Your password was changed and every device was signed out. Sign in again with the new password; we also sent you a notification email.",
+      "integrationsNote": "Your Fanpage connections and webhooks are not affected and keep working normally.",
+      "signIn": "Sign in again",
+      "viewLog": "View security log"
+    },
     "checkEmail": {
       "title": "Check your email",
       "body": "If {email} can receive email, select the link in the message to activate your account.",
@@ -2488,7 +2495,13 @@
       "comment_hide_cancelled": "Comment hide request cancelled",
       "comment_unhide_requested": "Comment unhide requested",
       "comment_hidden": "Comment hidden on the platform",
-      "comment_unhidden": "Comment unhidden on the platform"
+      "comment_unhidden": "Comment unhidden on the platform",
+      "security_password_changed": "Password changed",
+      "security_two_factor_enabled": "Two-factor authentication enabled",
+      "security_two_factor_disabled": "Two-factor authentication disabled",
+      "security_backup_codes_regenerated": "Backup codes regenerated",
+      "security_session_revoked": "Signed out one device",
+      "security_other_sessions_revoked": "Signed out other devices"
     },
     "empty": {
       "title": "No log entries yet",

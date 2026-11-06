@@ -22,6 +22,7 @@ import {
   type TwoFactorFlows,
   type WorkspaceAdmin,
 } from '@flow/saas-core';
+import { isLocale } from '@flow/shared';
 import type { ClientIpSource } from '../lib/client-ip';
 import { INVITE_COOKIE_LABEL, INVITE_COOKIE_TTL_SECONDS } from '../lib/invite-token';
 import { loadServerEnv } from './env';
@@ -122,6 +123,15 @@ function createRuntime(): AuthRuntime {
       authDb: authHandle,
       limiter,
       passwordPolicy,
+      onChanged: (user) =>
+        notifier.sendInBackground(
+          {
+            email: user.email,
+            name: user.name,
+            locale: isLocale(user.locale) ? user.locale : 'vi',
+          },
+          { kind: 'password-changed', url: `${env.BETTER_AUTH_URL}/forgot-password` },
+        ),
     }),
     tenancy,
     workspaceAdmin,
