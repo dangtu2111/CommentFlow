@@ -30,6 +30,7 @@
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
+| KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
@@ -514,6 +515,17 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 | # | Bước / Step | Kết quả mong đợi / Expected |
 |---|---|---|
 | 1 | `pnpm --filter @flow/ai exec vitest run src/delay` | Mọi test xanh (gồm property-based: câu đã hủy không bao giờ được giao; không giao trước `runAt`; mỗi câu giao đúng một lần). / All green. |
+
+## KT-AH — Tự ẩn bình luận chứa SĐT/link (AUTO-HIDE, FR-081, feat-auto-hide)
+
+> Hiện chỉ có logic + test; chưa nối pipeline/giao diện nên chưa có bước bấm trên web. Bước dưới là kiểm bằng máy. / Logic + tests only; no UI/pipeline wiring yet.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/autohide` | Tất cả test xanh (24). |
+| 2 | Mở `env.example` | Có tên biến `AUTO_HIDE_ENABLED=` để trống (cờ tắt mặc định). |
+| 3 | Khi có `AUTO-HIDE-DB` + `AUTO-HIDE-WIRE`: bật cờ + quy tắc Tự ẩn có `shadow_until`, gửi bình luận mẫu chứa SĐT từ Page thử | Trong thời gian shadow: chỉ có dòng "sẽ ẩn", bình luận chưa bị ẩn; sau đó bình luận bị ẩn và khách xuất hiện trong Khách tiềm năng TRƯỚC khi ẩn. |
+| 4 | Gửi bình luận không SĐT/link nhưng bị AI gán nhãn spam | KHÔNG bị ẩn (AI không tự ẩn). |
 
 ## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
 
