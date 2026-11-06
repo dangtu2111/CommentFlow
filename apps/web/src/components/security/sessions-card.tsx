@@ -10,6 +10,8 @@ export type SessionRow = {
   os: string;
   current: boolean;
   lastUsedAt: Date;
+  /** Thời điểm đăng nhập (tạo phiên). */
+  createdAt?: Date;
 };
 
 const MOBILE_OS = ['ios', 'android'];
@@ -61,6 +63,17 @@ export async function SessionsCard({ sessions }: { sessions: SessionRow[] }) {
                     }),
                   })}
                 </p>
+                {session.createdAt ? (
+                  <p className="muted">
+                    {t('sessions.signedInAt', {
+                      date: format.dateTime(session.createdAt, {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      }),
+                      code: session.id.slice(-4),
+                    })}
+                  </p>
+                ) : null}
               </div>
               {session.current ? null : (
                 <form action={revokeSessionAction}>

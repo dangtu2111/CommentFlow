@@ -2967,6 +2967,8 @@ a {
 .settings-subnav {
   display: grid;
   gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   padding: var(--space-3);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -2987,11 +2989,23 @@ a {
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 0;
   overflow-x: auto;
+}
+
+.settings-subnav li {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.settings-subnav-link svg {
+  flex-shrink: 0;
 }
 
 .settings-subnav-link {
   display: flex;
+  min-width: 0;
+  overflow: hidden;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3);
@@ -3012,8 +3026,10 @@ a {
 }
 
 .settings-subnav-count {
+  flex-shrink: 0;
   margin-left: auto;
   padding: 0 var(--space-2);
+  white-space: nowrap;
   border-radius: 999px;
   background: var(--selected-bg);
   color: var(--color-text-muted);
@@ -3023,12 +3039,16 @@ a {
 
 @media (min-width: 900px) {
   .settings-layout {
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 280px minmax(0, 1fr);
   }
 
   .settings-subnav ul {
     flex-direction: column;
     overflow: visible;
+  }
+
+  .settings-subnav-link {
+    white-space: normal;
   }
 }
 
