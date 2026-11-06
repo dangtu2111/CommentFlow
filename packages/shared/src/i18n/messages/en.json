@@ -639,7 +639,10 @@
       "adsOnly": "Ad posts only",
       "sort": "Sort",
       "apply": "Apply",
-      "clear": "Clear filters"
+      "clear": "Clear filters",
+      "platformAll": "All",
+      "labelsTitle": "AI labels",
+      "advanced": "Advanced filters"
     },
     "sort": {
       "oldest": "Oldest first",
@@ -720,7 +723,16 @@
       "redacted": "The customer deleted this comment; its content and the commenter details were removed from the system.",
       "notFoundTitle": "Comment not found",
       "notFoundBody": "The comment no longer exists or is not in this workspace.",
-      "back": "← Back to list"
+      "back": "← Back to list",
+      "postContext": "Post context",
+      "aiTitle": "Automatic intent analysis"
+    },
+    "strip": {
+      "shortcuts": "Shortcuts",
+      "send": "Send",
+      "move": "Previous/next row",
+      "select": "Select",
+      "hide": "Bulk hide"
     },
     "error": {
       "title": "Could not load the comment list",

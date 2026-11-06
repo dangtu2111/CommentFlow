@@ -3,10 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { Avatar } from './avatar';
 import { Button, buttonClass, IconButton } from './button';
 import { Chip } from './chip';
+import { Kbd } from './kbd';
 import { SplitLayout } from './split-layout';
 import { Stat } from './stat';
 import { Stepper } from './stepper';
 import { Tabs } from './tabs';
+import {
+  Workbench,
+  WorkbenchDetail,
+  WorkbenchFilters,
+  WorkbenchList,
+  WorkbenchStrip,
+} from './workbench';
 
 const ITEMS = [
   { key: 'login', href: '/login', label: 'Đăng nhập', current: true },
@@ -123,5 +131,26 @@ describe('UI-KIT Chip, Avatar, Stat, SplitLayout', () => {
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
     expect(html).toContain('settings-subnav-count');
     expect(html).toContain('nội dung');
+  });
+});
+
+describe('UI-KIT Workbench + Kbd', () => {
+  it('Workbench dựng dải phụ, ba cột đúng loại và data-pane cho mobile', () => {
+    const html = renderToStaticMarkup(
+      <Workbench strip={<WorkbenchStrip>Tiêu đề</WorkbenchStrip>} pane="detail">
+        <WorkbenchFilters>a</WorkbenchFilters>
+        <WorkbenchList>b</WorkbenchList>
+        <WorkbenchDetail>c</WorkbenchDetail>
+      </Workbench>,
+    );
+    expect(html).toContain('data-pane="detail"');
+    expect(html).toContain('class="wb-strip"');
+    expect(html).toContain('<div class="wb-pane wb-pane-filters">a</div>');
+    expect(html).toContain('wb-pane-list');
+    expect(html).toContain('<aside class="wb-pane wb-pane-detail">');
+  });
+
+  it('Kbd vẽ thẻ kbd', () => {
+    expect(renderToStaticMarkup(<Kbd>H</Kbd>)).toBe('<kbd class="kbd">H</kbd>');
   });
 });

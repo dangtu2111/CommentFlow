@@ -2,8 +2,15 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { CommentDetailPanel } from '../../../../components/comments/comment-detail';
 import { InboxList } from '../../../../components/comments/inbox-list';
+import { InboxStrip } from '../../../../components/comments/inbox-strip';
 import { InboxTabs } from '../../../../components/comments/inbox-tabs';
 import { InboxToolbar } from '../../../../components/comments/inbox-toolbar';
+import {
+  Workbench,
+  WorkbenchDetail,
+  WorkbenchFilters,
+  WorkbenchList,
+} from '../../../../components/ui/workbench';
 import { parseInboxSearchParams } from '../../../../lib/inbox-filters';
 import { buildInboxBackHref, inboxMobilePane } from '../../../../lib/inbox-pane';
 import { loadInbox } from '../../../../server/inbox';
@@ -47,9 +54,11 @@ export default async function CommentsPage({
   const now = new Date();
   const filtered = Boolean(view.platform || view.channelId || view.adsOnly || view.search);
   return (
-    <main className="inbox" data-pane={inboxMobilePane(view)}>
-      <InboxTabs view={view} counts={counts} />
-      <section className="inbox-list" aria-label={t('list.label')}>
+    <Workbench strip={<InboxStrip />} pane={inboxMobilePane(view)}>
+      <WorkbenchFilters>
+        <InboxTabs view={view} counts={counts} />
+      </WorkbenchFilters>
+      <WorkbenchList label={t('list.label')}>
         <InboxToolbar view={view} channels={channels} />
         {page.items.length === 0 ? (
           <div className="inbox-empty">
@@ -66,8 +75,8 @@ export default async function CommentsPage({
             now={now}
           />
         )}
-      </section>
-      <aside className="inbox-detail" aria-label={t('detail.title')}>
+      </WorkbenchList>
+      <WorkbenchDetail label={t('detail.title')}>
         {view.selected ? (
           <Link href={buildInboxBackHref(view)} className="inbox-back">
             {t('detail.back')}
@@ -82,9 +91,9 @@ export default async function CommentsPage({
             <p>{t('detail.notFoundBody')}</p>
           </div>
         ) : (
-          <p>{t('detail.empty')}</p>
+          <p className="inbox-detail-empty">{t('detail.empty')}</p>
         )}
-      </aside>
-    </main>
+      </WorkbenchDetail>
+    </Workbench>
   );
 }

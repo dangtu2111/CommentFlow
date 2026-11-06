@@ -97,7 +97,7 @@ export async function InboxList({
               className="inbox-item-link"
               aria-current={view.selected === item.id ? 'true' : undefined}
             >
-              <Avatar badge={platformBadgeText(item.platform)}>
+              <Avatar size="sm" badge={platformBadgeText(item.platform)}>
                 {userInitials(item.authorName ?? t('list.anonymous'))}
               </Avatar>
               <div className="inbox-item-body">
