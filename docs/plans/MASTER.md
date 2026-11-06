@@ -33,6 +33,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | GĐ0-DB | FR-092 (bảng), 117 (bảng), 118 | — | COMPOSE-DEV | S+DB | không | ✅ |
 | GĐ0-AUTH-CORE | FR-001–005 (lõi) | US-001, 005 | DB | S | không | ✅ |
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
+| UI-AUTH-FIDELITY | FR-001, 119 | US-001, UF-1 | UI-AUTH | — | không | 🟡 giao diện đăng nhập/đăng ký khớp Stitch; phần còn lại xem gap matrix |
 | AUTH-2FA | FR-001 (TOTP + mã dự phòng) | US-005 | AUTH-CORE | S | không | ✅ |
 | AUTH-SESSIONS-UI | FR-001 (thiết bị) | US-005 | AUTH-2FA | — | không | ✅ (trang tạm) |
 | AUTH-RATELIMIT | FR-001 (giới hạn đăng nhập) | — | AUTH-CORE | S | không | ✅ (M1; xô 2FA ở M3 xong) |
@@ -184,7 +185,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | AI-TRY-BOX-UI | FR-059 + FR-029 (Thử AI chạy cả pipeline, không trừ lượt) | US-034 | PIPE-DRAFT | — | không | ✅ Xong-mock (`feat-ai-try-box-ui`; còn `TRY-AI-REAL`: KB/LLM thật, bộ đếm bền, E2E; KT-ATB) |
 | EVAL-SET-REAL | FR-165 (~300 bình luận thật đã che PII; mỗi mẫu có hành động đúng) | — | — | S (PII) | **có** — chủ dự án cung cấp | ⛔ |
 | EVAL-RUNNER | FR-120 (bộ đánh giá 4 nhóm ngôn ngữ), FR-165, `14` §4 (promptfoo, chạy CI) | — | EVAL-SET-REAL, PIPE-DECIDE-ACTION | — | **có** — khóa LLM; cài promptfoo (nêu giấy phép) | ⛔ |
-| COST-GATE | — (đo ≤ $2/1.000 lượt từ `ai_usage`) | — | EVAL-RUNNER | — | không | ⏳ |
+| COST-GATE | — (đo ≤ $2/1.000 lượt từ `ai_usage`) | — | EVAL-RUNNER | — | không | 🟡 Xong-mock phần cổng chặn trần chi phí (`feat-cost-gate`, Q-CG1, FR-071: `packages/ai/src/cost-gate/`; còn nối `COST-GATE-WIRE`/`-PERSIST`/`-PLAN-DEFAULT`); phép đo ≤ $2/1.000 lượt vẫn chờ EVAL-RUNNER |
 | AUTH-2FA-RECOVERY | FR-001 (khôi phục khi mất điện thoại + mã dự phòng) | US-005 | AUTH-2FA | S | **có** — quyết định sản phẩm | ⛔ |
 | **CỔNG 2** | xem đầu mục GĐ2 | | tất cả 2A–2D | | chủ dự án xác nhận | ⏳ |
 

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { getBrand } from '../../server/brand';
 import { BrandLogo } from '../brand-logo';
 import { LocaleSwitcher } from '../locale-switcher';
+import { AuthDemoCard } from './auth-demo-card';
 
 /** Khung chung của mọi trang xác thực: đầu trang (logo + ngôn ngữ), panel giới thiệu, thẻ nội dung, chân trang. */
 export async function AuthShell({ children }: { children: ReactNode }) {
@@ -22,16 +23,21 @@ export async function AuthShell({ children }: { children: ReactNode }) {
       </header>
       <main className="auth-main">
         <aside className="auth-panel">
-          <h2 className="panel-title">{t('panel.title')}</h2>
-          <p className="panel-subtitle">{t('panel.subtitle')}</p>
-          <ul className="panel-points">
+          <ul className="panel-badges">
             {points.map(({ icon: Icon, text }) => (
-              <li key={text}>
-                <Icon size={18} aria-hidden="true" />
+              <li key={text} className="panel-badge">
+                <Icon size={14} aria-hidden="true" />
                 <span>{text}</span>
               </li>
             ))}
           </ul>
+          <h2 className="panel-title">{t('panel.title')}</h2>
+          <p className="panel-subtitle">{t('panel.subtitle')}</p>
+          <AuthDemoCard />
+          <p className="panel-note">
+            <ShieldCheck size={18} aria-hidden="true" />
+            <span>{t('panel.securityNote')}</span>
+          </p>
         </aside>
         <section className="auth-card">{children}</section>
       </main>

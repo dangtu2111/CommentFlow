@@ -144,7 +144,8 @@
       "subtitle": "Trợ lý AI soạn câu trả lời từ cơ sở kiến thức của shop; nhân viên duyệt trước khi gửi.",
       "officialApi": "Chỉ dùng API chính thức của Meta.",
       "humanInControl": "AI chỉ soạn câu; chỉ tự gửi khi chủ shop bật.",
-      "bilingual": "Giao diện tiếng Việt và tiếng Anh."
+      "bilingual": "Giao diện tiếng Việt và tiếng Anh.",
+      "securityNote": "Bảo mật: chỉ đọc bình luận/tin nhắn qua API chính thức của Meta. Không tự đăng bài; AI không tự ẩn bình luận."
     },
     "footer": {
       "rights": "© {year} {appName}. Bảo lưu mọi quyền."
@@ -233,6 +234,23 @@
           "other": "hệ điều hành khác"
         }
       }
+    },
+    "demo": {
+      "sample": "[MẪU]",
+      "title": "Ví dụ luồng trả lời (minh họa)",
+      "aria": "Ví dụ minh họa, không phải dữ liệu thật",
+      "customerName": "Khách A • bình luận mẫu",
+      "customerComment": "Shop ơi váy lụa xanh size M còn hàng không? SĐT mình 09xx***xxx",
+      "tagIntent": "Phân loại: Hỏi giá & tồn kho",
+      "tagPii": "Che số điện thoại trước khi gửi AI",
+      "aiName": "Gợi ý của AI",
+      "aiDraft": "Dạ chào chị, mẫu này size M hiện còn hàng. Giá và tồn kho lấy từ danh mục của shop ạ.",
+      "needsReview": "Nhân viên duyệt trước khi gửi"
+    },
+    "social": {
+      "facebook": "Tiếp tục với Facebook",
+      "unavailable": "Đăng nhập bằng Facebook chưa mở. Hãy dùng email.",
+      "orEmail": "Hoặc tiếp tục bằng email"
     }
   },
   "workspace": {
@@ -614,8 +632,15 @@
     "title": "Lịch sử AI đã tự gửi",
     "subtitle": "Các câu AI đã tự gửi cho khách. Nếu thấy câu nào sai, bấm Đánh dấu sai (kèm lý do nếu muốn): hệ thống dùng tín hiệu này để tự dừng tự gửi khi AI sai quá nhiều.",
     "filterLabel": "Lọc lịch sử",
-    "filter": { "all": "Tất cả", "sent": "Đã gửi", "marked_wrong": "Bị đánh dấu sai" },
-    "status": { "sent": "Đã gửi", "marked_wrong": "Đã đánh dấu sai" },
+    "filter": {
+      "all": "Tất cả",
+      "sent": "Đã gửi",
+      "marked_wrong": "Bị đánh dấu sai"
+    },
+    "status": {
+      "sent": "Đã gửi",
+      "marked_wrong": "Đã đánh dấu sai"
+    },
     "empty": "Chưa có câu nào AI tự gửi. Danh sách xuất hiện khi bạn bật chế độ Tự động và AI bắt đầu trả lời.",
     "meta": "Nhãn: {label} · độ tin cậy {confidence}% · gửi lúc {date}",
     "reason": "Lý do: {reason}",
@@ -649,28 +674,54 @@
       "empty": "Chưa có kênh nào. Hãy kết nối kênh ở trang Kênh trước.",
       "complaintNote": "Bình luận Khiếu nại và Spam không bao giờ được tự gửi; luôn chuyển cho nhân viên."
     },
-    "target": { "comment": "Bình luận", "message": "Tin nhắn" },
-    "labels": { "price": "Hỏi giá", "advice": "Tư vấn", "purchase": "Mua hàng" },
-    "mode": { "off": "Tắt", "shadow": "Chạy thử", "auto": "Tự động" },
+    "target": {
+      "comment": "Bình luận",
+      "message": "Tin nhắn"
+    },
+    "labels": {
+      "price": "Hỏi giá",
+      "advice": "Tư vấn",
+      "purchase": "Mua hàng"
+    },
+    "mode": {
+      "off": "Tắt",
+      "shadow": "Chạy thử",
+      "auto": "Tự động"
+    },
     "general": {
       "title": "Cài đặt chung",
       "threshold": "Ngưỡng tin cậy (%)",
       "thresholdHint": "AI chỉ tự gửi khi độ tin cậy từ ngưỡng này trở lên. Thấp nhất 80%, mặc định 85%.",
       "delay": "Khoảng trễ trước khi gửi",
-      "delayOption": { "0": "Gửi ngay", "60": "1 phút", "120": "2 phút", "300": "5 phút" },
+      "delayOption": {
+        "0": "Gửi ngay",
+        "60": "1 phút",
+        "120": "2 phút",
+        "300": "5 phút"
+      },
       "dailyCap": "Giới hạn số câu tự gửi mỗi ngày",
       "hours": "Giờ hoạt động",
       "hoursEnabled": "Chỉ tự gửi trong khung giờ này (theo múi giờ của workspace)",
       "hoursFrom": "Từ",
       "hoursTo": "Đến",
       "hoursHint": "Bỏ chọn để tự gửi cả ngày. Chọn ít nhất một ngày khi bật.",
-      "day": { "0": "CN", "1": "T2", "2": "T3", "3": "T4", "4": "T5", "5": "T6", "6": "T7" },
+      "day": {
+        "0": "CN",
+        "1": "T2",
+        "2": "T3",
+        "3": "T4",
+        "4": "T5",
+        "5": "T6",
+        "6": "T7"
+      },
       "keywords": "Từ khóa chặn",
       "keywordsHint": "Mỗi dòng một từ hoặc cụm từ (tối đa 50, mỗi từ ≤ 60 ký tự). Câu AI có chứa từ này sẽ không được tự gửi.",
       "signature": "Chữ ký công bố",
       "signatureHint": "Một dòng ngắn (≤ 120 ký tự) cho biết câu trả lời do AI soạn, ví dụ “— Trợ lý AI của shop”. Để trống nếu không dùng."
     },
-    "notice": { "saved": "Đã lưu cài đặt." },
+    "notice": {
+      "saved": "Đã lưu cài đặt."
+    },
     "error": {
       "rules": "Có ô chọn mức không hợp lệ. Vui lòng chọn lại.",
       "threshold": "Ngưỡng tin cậy phải từ 80 đến 100.",
@@ -800,8 +851,16 @@
     "add": "Bổ sung",
     "ignore": "Bỏ qua",
     "reopen": "Mở lại",
-    "lang": { "vi": "Tiếng Việt", "en": "English", "all": "Cả hai" },
-    "status": { "open": "Đang mở", "resolved": "Đã bổ sung", "ignored": "Đã bỏ qua" },
+    "lang": {
+      "vi": "Tiếng Việt",
+      "en": "English",
+      "all": "Cả hai"
+    },
+    "status": {
+      "open": "Đang mở",
+      "resolved": "Đã bổ sung",
+      "ignored": "Đã bỏ qua"
+    },
     "topic": {
       "shipping": "Phí ship & giao hàng",
       "discount": "Giảm giá & khuyến mãi",
@@ -1237,7 +1296,11 @@
       "empty": "Chưa có kênh nào.",
       "noWebhook": "Chưa nhận bình luận mới (chưa đăng ký webhook)"
     },
-    "platform": { "facebook": "Facebook", "instagram": "Instagram", "tiktok": "TikTok" },
+    "platform": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
     "status": {
       "connected": "Đang kết nối",
       "expired": "Hết hạn",
@@ -1370,22 +1433,22 @@
       }
     },
     "actions": {
-      "workspace.created": "Tạo workspace",
-      "member.role_changed": "Đổi vai trò thành viên",
-      "member.left": "Thành viên tự rời workspace",
-      "invitation.created": "Gửi lời mời",
-      "invitation.accepted": "Nhận lời mời",
-      "invitation.revoked": "Thu hồi lời mời",
-      "channel.connected": "Kết nối kênh",
-      "channel.reconnected": "Kết nối lại kênh",
-      "channel.token_set": "Cập nhật mã truy cập kênh",
-      "channel.token_cleared": "Xóa mã truy cập kênh",
-      "comment.reply_requested": "Yêu cầu gửi trả lời bình luận",
-      "comment.hide_requested": "Yêu cầu ẩn bình luận",
-      "comment.hide_cancelled": "Đã hủy yêu cầu ẩn bình luận",
-      "comment.unhide_requested": "Yêu cầu bỏ ẩn bình luận",
-      "comment.hidden": "Đã ẩn bình luận trên nền tảng",
-      "comment.unhidden": "Đã bỏ ẩn bình luận trên nền tảng"
+      "workspace_created": "Tạo workspace",
+      "member_role_changed": "Đổi vai trò thành viên",
+      "member_left": "Thành viên tự rời workspace",
+      "invitation_created": "Gửi lời mời",
+      "invitation_accepted": "Nhận lời mời",
+      "invitation_revoked": "Thu hồi lời mời",
+      "channel_connected": "Kết nối kênh",
+      "channel_reconnected": "Kết nối lại kênh",
+      "channel_token_set": "Cập nhật mã truy cập kênh",
+      "channel_token_cleared": "Xóa mã truy cập kênh",
+      "comment_reply_requested": "Yêu cầu gửi trả lời bình luận",
+      "comment_hide_requested": "Yêu cầu ẩn bình luận",
+      "comment_hide_cancelled": "Đã hủy yêu cầu ẩn bình luận",
+      "comment_unhide_requested": "Yêu cầu bỏ ẩn bình luận",
+      "comment_hidden": "Đã ẩn bình luận trên nền tảng",
+      "comment_unhidden": "Đã bỏ ẩn bình luận trên nền tảng"
     },
     "empty": {
       "title": "Chưa có nhật ký",

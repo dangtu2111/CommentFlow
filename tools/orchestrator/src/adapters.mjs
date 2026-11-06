@@ -48,6 +48,18 @@ export function createGh(config) {
       const exact = list.filter((p) => p.headRefName === branch);
       return exact.find((p) => p.state === 'OPEN') ?? exact[0] ?? null;
     },
+    listOpenPrs: () =>
+      json([
+        'pr',
+        'list',
+        ...repo,
+        '--state',
+        'open',
+        '--json',
+        'number,headRefName,headRefOid,createdAt,isDraft',
+        '--limit',
+        '100',
+      ]),
     async prView(number) {
       const v = await json([
         'pr',
@@ -163,9 +175,11 @@ export function createFiles(config) {
       return templates.get(name);
     },
     hasMarker: (name) => existsSync(marker(name)),
-    setMarker(name) {
+    readMarker: (name) =>
+      existsSync(marker(name)) ? readFileSync(marker(name), 'utf8').trim() : undefined,
+    setMarker(name, content = new Date().toISOString()) {
       mkdirSync(config.stateDir, { recursive: true });
-      writeFileSync(marker(name), new Date().toISOString());
+      writeFileSync(marker(name), content);
     },
     clearMarker: (name) => rmSync(marker(name), { force: true }),
   };

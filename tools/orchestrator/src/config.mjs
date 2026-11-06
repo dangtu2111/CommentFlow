@@ -37,6 +37,9 @@ export const DEFAULTS = {
     maxMinutes: 120,
   },
   log: { format: 'text' },
+  // Làn gỡ kẹt: janitor dùng worktree của làn này để sửa PR mồ côi (lane = null → chỉ kiểm nhịp tim).
+  janitor: { lane: null, intervalMinutes: 10, minAgeMinutes: 30, trackTtlMinutes: 15 },
+  heartbeat: { intervalMinutes: 5, silentMinutes: 15 },
 };
 
 function mergeSection(base, over) {
@@ -74,6 +77,10 @@ export function validateConfig(raw) {
   }
   const fmt = raw.log?.format;
   if (fmt !== undefined && !['text', 'json'].includes(fmt)) errors.push('log.format: text | json');
+  const jl = raw.janitor?.lane;
+  if (jl !== undefined && jl !== null && !raw.lanes?.[jl]) {
+    errors.push(`janitor.lane: làn "${jl}" không có trong lanes`);
+  }
   return errors;
 }
 
@@ -95,6 +102,8 @@ export function resolveConfig(raw, baseDir) {
     ci: mergeSection(DEFAULTS.ci, raw.ci),
     agent: mergeSection(DEFAULTS.agent, raw.agent),
     log: mergeSection(DEFAULTS.log, raw.log),
+    janitor: mergeSection(DEFAULTS.janitor, raw.janitor),
+    heartbeat: mergeSection(DEFAULTS.heartbeat, raw.heartbeat),
     baseDir,
     stateDir: resolve(baseDir, raw.stateDir ?? DEFAULTS.stateDir),
     promptDir: resolve(baseDir, raw.promptDir ?? DEFAULTS.promptDir),

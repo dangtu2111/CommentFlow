@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
@@ -80,7 +81,10 @@ export function LoginForm() {
           error={errors.forField('password')}
           aux={<Link href="/forgot-password">{t('login.forgot')}</Link>}
         />
-        <SubmitButton>{t('login.submit')}</SubmitButton>
+        <SubmitButton>
+          {t('login.submit')}
+          <ArrowRight size={18} aria-hidden="true" />
+        </SubmitButton>
       </form>
     </>
   );
@@ -120,7 +124,10 @@ export function RegisterForm() {
         autoComplete="new-password"
         error={errors.forField('password')}
       />
-      <SubmitButton>{t('register.submit')}</SubmitButton>
+      <SubmitButton>
+        {t('register.submit')}
+        <ArrowRight size={18} aria-hidden="true" />
+      </SubmitButton>
     </form>
   );
 }
