@@ -1,0 +1,1 @@
+| `packages/shared/src/integration-health.ts` | Sức khỏe tích hợp (ADMIN-INTEGRATION-HEALTH, FR-104, Q-AIH1): thuần — `canViewIntegrationHealth` (chỉ Super Admin), `evaluateProviderHealth`/`evaluateQueueHealth`/`summarizeIntegrationHealth` (ok/degraded/down; ingest tồn > 300 giây), `sanitizeIncidentMessage` (che PII/token, ≤ 300 ký tự). Test cùng thư mục |

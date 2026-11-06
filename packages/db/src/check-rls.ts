@@ -286,6 +286,13 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.messages', 'created_time', 'UPDATE'],
   ['cf_app', 'cf.messages', 'conversation_id', 'UPDATE'],
   ['cf_app', 'cf.messages', 'workspace_id', 'UPDATE'],
+  // ADMIN-INTEGRATION-HEALTH (0059): bất biến — cf_app không có UPDATE nào trên bảng
+  ['cf_app', 'cf.integration_incidents', 'message', 'UPDATE'],
+  ['cf_app', 'cf.integration_incidents', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.integration_incidents', 'provider', 'UPDATE'],
+  ['cf_app', 'cf.integration_incidents', 'kind', 'UPDATE'],
+  ['cf_app', 'cf.integration_incidents', 'code', 'UPDATE'],
+  ['cf_app', 'cf.integration_incidents', 'occurred_at', 'UPDATE'],
   ['cf_app', 'cf.post_notes', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_notes', 'post_id', 'UPDATE'],
   ['cf_app', 'cf.post_auto_overrides', 'workspace_id', 'UPDATE'],
@@ -698,6 +705,9 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.messages', 'a', 'is_workspace_member'],
   ['cf.messages', 'a', 'is_system_context'],
   ['cf.messages', 'r', 'is_workspace_member'],
+  // ADMIN-INTEGRATION-HEALTH (0059): INSERT chỉ hệ thống; đọc: thành viên hoặc không người dùng
+  ['cf.integration_incidents', 'a', 'is_system_context'],
+  ['cf.integration_incidents', 'r', 'is_workspace_member'],
   // POST-NOTES (0045): Owner hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
   ['cf.post_notes', 'a', 'is_workspace_owner'],
   ['cf.post_notes', 'a', 'is_system_context'],
