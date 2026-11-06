@@ -73,9 +73,19 @@ function loadInstagramConfig(source: Record<string, string | undefined>): Instag
   return loadMetaConnectorConfig(source, 'IG_CONNECTOR_ENABLED');
 }
 
+/**
+ * Gửi tin Messenger (MESSENGER-WEBHOOK, FR-014): cờ `MESSENGER_CONNECTOR_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới
+ * bật), cùng Meta App/biến với Facebook; độc lập với `FB_CONNECTOR_ENABLED`.
+ */
+export type MessengerConnectorConfig = FacebookConnectorConfig;
+
+function loadMessengerConfig(source: Record<string, string | undefined>): MessengerConnectorConfig {
+  return loadMetaConnectorConfig(source, 'MESSENGER_CONNECTOR_ENABLED');
+}
+
 function loadMetaConnectorConfig(
   source: Record<string, string | undefined>,
-  flag: 'FB_CONNECTOR_ENABLED' | 'IG_CONNECTOR_ENABLED',
+  flag: 'FB_CONNECTOR_ENABLED' | 'IG_CONNECTOR_ENABLED' | 'MESSENGER_CONNECTOR_ENABLED',
 ): FacebookConnectorConfig {
   if (source[flag]?.trim() !== 'true') return { enabled: false };
   const blank = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);
@@ -97,6 +107,7 @@ export type WorkerConfig = {
   metaAppSecret: string | undefined;
   facebook: FacebookConnectorConfig;
   instagram: InstagramConnectorConfig;
+  messenger: MessengerConnectorConfig;
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -111,5 +122,6 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     metaAppSecret: env.META_APP_SECRET,
     facebook: loadFacebookConfig(source),
     instagram: loadInstagramConfig(source),
+    messenger: loadMessengerConfig(source),
   };
 }
