@@ -28,6 +28,7 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
@@ -488,6 +489,14 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 3. (Khi đã có khóa LLM, tùy chọn) đặt `REWRITE_LLM_ENABLED=true` + `REWRITE_LLM_MODEL`, gọi `createLlmRewriter` với "còn không shop" + bình luận cha "áo này giá sao". — Mong đợi: `source: 'llm'`, câu tìm kiếm nêu rõ sản phẩm, không có SĐT/email; dòng `ai_usage` bước `rewrite`.
 
 ---
+
+## KT-ADC — Khoảng trễ tự gửi có hủy (AUTO-DELAY-CANCEL, FR-071, US-042, feat-auto-delay-cancel)
+
+> Chưa nối pipeline/giao diện nên kiểm bằng lệnh. / Not wired to pipeline/UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/delay` | Mọi test xanh (gồm property-based: câu đã hủy không bao giờ được giao; không giao trước `runAt`; mỗi câu giao đúng một lần). / All green. |
 
 ## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
 
