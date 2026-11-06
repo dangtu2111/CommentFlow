@@ -30,11 +30,38 @@ const envSchema = z.object({
   TOKEN_ENC_KEYS: z.string().optional(),
 });
 
+/**
+ * Connector Facebook (FB-CONNECTOR-REGISTER). Cờ `FB_CONNECTOR_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật): tắt thì
+ * không đọc biến nào khác và sổ connector rỗng như trước. Bật thì dùng lại `META_APP_*` (cùng Meta App với web) +
+ * `TOKEN_ENC_KEYS` (bắt buộc để giải mã token Page).
+ */
+const facebookSchema = z.object({
+  META_APP_ID: z.string().regex(/^[0-9]{5,30}$/),
+  META_APP_SECRET: z.string().trim().min(16),
+  TOKEN_ENC_KEYS: z.string().trim().min(1),
+});
+
+export type FacebookConnectorConfig =
+  | { enabled: false }
+  | { enabled: true; appId: string; appSecret: string };
+
+function loadFacebookConfig(source: Record<string, string | undefined>): FacebookConnectorConfig {
+  if (source.FB_CONNECTOR_ENABLED?.trim() !== 'true') return { enabled: false };
+  const blank = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);
+  const env = parseEnv(facebookSchema, {
+    META_APP_ID: blank(source.META_APP_ID),
+    META_APP_SECRET: blank(source.META_APP_SECRET),
+    TOKEN_ENC_KEYS: blank(source.TOKEN_ENC_KEYS),
+  });
+  return { enabled: true, appId: env.META_APP_ID, appSecret: env.META_APP_SECRET };
+}
+
 export type WorkerConfig = {
   logLevel: z.infer<typeof envSchema>['LOG_LEVEL'];
   port: number;
   databaseUrl: string;
   tokenEncKeys: string | undefined;
+  facebook: FacebookConnectorConfig;
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -44,5 +71,6 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     port: env.WORKER_PORT,
     databaseUrl: env.DATABASE_WORKER_URL,
     tokenEncKeys: env.TOKEN_ENC_KEYS,
+    facebook: loadFacebookConfig(source),
   };
 }

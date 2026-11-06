@@ -305,6 +305,26 @@ describe('FR-042 lỗi từ nền tảng', () => {
     }
   });
 
+  it('BLOCKED (368) → failed BLOCKED + gọi hook onBlocked đúng một lần với id kênh/yêu cầu (chỉ id, không nội dung/token); kênh KHÔNG bị tạm khóa ở đây (SEND-SUSPEND-ADMIN)', async () => {
+    const fx = await fixture();
+    const onBlocked = vi.fn();
+    await processSendJob({
+      db,
+      registry: connectorWith({ reply: failWith('BLOCKED') }).registry,
+      job: { workspaceId: ws, replyId: fx.replyId },
+      onBlocked,
+    });
+    expect(onBlocked).toHaveBeenCalledTimes(1);
+    expect(onBlocked).toHaveBeenCalledWith({ channelId: fx.channelId, replyId: fx.replyId });
+    expect(JSON.stringify(onBlocked.mock.calls)).not.toContain('EAAG');
+    expect(await replyRow(fx.replyId)).toMatchObject({ status: 'failed', error_code: 'BLOCKED' });
+    const suspended = await admin.query(
+      'SELECT send_suspended_until FROM cf.channels WHERE id = $1',
+      [fx.channelId],
+    );
+    expect(suspended.rows[0].send_suspended_until).toBeNull();
+  });
+
   it('RATE_LIMIT: chắc chắn chưa gửi → trả về queued và ném để thử lại; lần sau gửi được', async () => {
     const fx = await fixture();
     const limited = connectorWith({ reply: failWith('RATE_LIMIT') });

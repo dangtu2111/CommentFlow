@@ -11,6 +11,7 @@ describe('loadConfig', () => {
       port: 3001,
       databaseUrl: DATABASE_WORKER_URL,
       tokenEncKeys: undefined,
+      facebook: { enabled: false },
     });
   });
 
@@ -61,5 +62,48 @@ describe('loadConfig', () => {
         expect((error as Error).message).not.toContain('bimat123');
       }
     }
+  });
+
+  describe('FR-016 loadConfig FB_CONNECTOR_ENABLED (FB-CONNECTOR-REGISTER)', () => {
+    const META_APP_ID = '123456789012345';
+    const META_APP_SECRET = 'bi-mat-app-gia-0123456789abcdef';
+    const TOKEN_ENC_KEYS = `v1:${'a'.repeat(64)}`;
+    const full = { DATABASE_WORKER_URL, META_APP_ID, META_APP_SECRET, TOKEN_ENC_KEYS };
+
+    it('mặc định TẮT; chỉ đúng chữ `true` mới bật (TRUE/1/yes/rỗng vẫn tắt) và khi tắt không đọc META_*', () => {
+      for (const flag of [undefined, '', 'false', '1', 'yes', 'TRUE', 'True']) {
+        expect(
+          loadConfig({ DATABASE_WORKER_URL, FB_CONNECTOR_ENABLED: flag, META_APP_ID: 'sai' })
+            .facebook,
+        ).toEqual({ enabled: false });
+      }
+    });
+
+    it('bật đủ cấu hình → trả appId/appSecret (cắt khoảng trắng)', () => {
+      expect(
+        loadConfig({ ...full, FB_CONNECTOR_ENABLED: ' true ', META_APP_ID: ` ${META_APP_ID} ` })
+          .facebook,
+      ).toEqual({ enabled: true, appId: META_APP_ID, appSecret: META_APP_SECRET });
+    });
+
+    it('bật mà thiếu/sai biến → CONFIG_INVALID nêu tên biến, không lộ giá trị', () => {
+      const cases: Array<[string, Record<string, string | undefined>]> = [
+        ['META_APP_ID', { META_APP_ID: undefined }],
+        ['META_APP_ID', { META_APP_ID: 'khong-phai-so-bimat' }],
+        ['META_APP_SECRET', { META_APP_SECRET: 'ngan' }],
+        ['TOKEN_ENC_KEYS', { TOKEN_ENC_KEYS: ' ' }],
+      ];
+      for (const [name, override] of cases) {
+        try {
+          loadConfig({ ...full, FB_CONNECTOR_ENABLED: 'true', ...override });
+          expect.unreachable(name);
+        } catch (error) {
+          expect(isAppError(error) && error.code).toBe('CONFIG_INVALID');
+          expect((error as Error).message).toContain(name);
+          expect((error as Error).message).not.toContain(META_APP_SECRET);
+          expect((error as Error).message).not.toContain('bimat');
+        }
+      }
+    });
   });
 });
