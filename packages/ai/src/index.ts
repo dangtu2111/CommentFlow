@@ -348,6 +348,19 @@ export { createDemoDrafter, createDemoExtractor } from './try/demo-ai';
 export { createDemoKnowledge } from './try/demo-knowledge';
 export { createKbTryKnowledge, type KbTryKnowledgeDeps } from './try/kb-try-knowledge';
 export {
+  type ParseTestCasesResult,
+  parseTestCases,
+  runTestSet,
+  summarizeTestSet,
+  TEST_EXPECT_ACTIONS,
+  TESTSET_MAX_CASES,
+  type TestCase,
+  type TestCaseResult,
+  type TestExpectAction,
+  type TestFailure,
+  type TestSetSummary,
+} from './try/test-set';
+export {
   runTryPipeline,
   TRY_MAX_CHARS,
   type TryCandidate,

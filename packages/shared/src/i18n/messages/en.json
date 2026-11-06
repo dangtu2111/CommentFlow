@@ -869,6 +869,56 @@
       "body": "Something went wrong reading the data. Please try again later."
     }
   },
+  "kbTestset": {
+    "pageTitle": "Knowledge test questions",
+    "title": "Test questions before publishing",
+    "subtitle": "Write a few sample customer questions with the expected outcome and run them to check the AI handles them correctly before you publish knowledge. Does not use your plan's AI quota.",
+    "mockNote": "Running the simulation (no real AI call). The set is not saved and does not yet block the Publish button; run it again each time.",
+    "label": "Test question list",
+    "hint": "One per line: question | expected action | words the reply must contain (optional, separated by ;). Actions: answer, clarify, redirect, handoff, skip (ignored). Up to {max} lines.",
+    "sample": "ship về Hà Nội bao nhiêu | redirect | 20.000đ\náo thun basic size M màu đen giá bao nhiêu? | answer\n😀😀 | skip",
+    "submit": "Run test questions",
+    "quota": "Ran {used}/{limit} times today",
+    "knowledge": {
+      "demo": "Source: sample knowledge (your shop's real knowledge is not connected yet)",
+      "kb": "Source: your shop's published knowledge"
+    },
+    "errors": {
+      "empty": "Enter at least one test question.",
+      "too_many": "Too many questions (up to {max} lines per run).",
+      "invalid_line": "Line {line} is malformed: use \"question | action\" with a valid action, at most 5 keywords of up to 100 characters each.",
+      "limit_reached": "You have used today's runs. Come back tomorrow.",
+      "unavailable": "Cannot run right now. Please try again later."
+    },
+    "summary": "Passed {passed}/{total} · failed {failed} · errors {errored}",
+    "gate": {
+      "pass": "Passed: every question produced the expected outcome.",
+      "fail": "Not passed: fix the knowledge or the expectations and run again before publishing."
+    },
+    "result": {
+      "pass": "Passed",
+      "fail": "Failed",
+      "error": "Error while running",
+      "line": "Question {n}",
+      "expected": "Expected",
+      "actual": "Actual",
+      "reply": "Suggested reply",
+      "missing": "Missing keywords: {words}",
+      "errorName": "Error code: {name}"
+    },
+    "failures": {
+      "action_mismatch": "Action differs from expected",
+      "reply_missing": "Reply is missing expected keywords",
+      "guard_failed": "Reply contains an amount that is not in the sources"
+    },
+    "actions": {
+      "answer": "Answer",
+      "clarify": "Ask the customer",
+      "redirect": "Redirect (invite to message the shop)",
+      "handoff": "Hand off to staff",
+      "skip": "Skip (not processed)"
+    }
+  },
   "tryAi": {
     "pageTitle": "Try AI",
     "title": "Try AI",
@@ -953,6 +1003,7 @@
       "productImport": "Import products",
       "kbGaps": "Unanswered questions",
       "kbPublish": "Knowledge versions",
+      "kbTestset": "Test questions",
       "spamRules": "Spam rules",
       "channels": "Channels",
       "members": "Members",
