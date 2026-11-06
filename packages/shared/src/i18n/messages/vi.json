@@ -869,6 +869,56 @@
       "body": "Đã có lỗi khi đọc dữ liệu. Hãy thử lại sau."
     }
   },
+  "kbTestset": {
+    "pageTitle": "Câu kiểm thử kiến thức",
+    "title": "Câu kiểm thử trước khi xuất bản",
+    "subtitle": "Viết vài câu hỏi mẫu của khách kèm kết quả mong đợi, chạy thử để chắc AI xử lý đúng trước khi xuất bản kiến thức. Không trừ lượt AI của gói.",
+    "mockNote": "Đang chạy bản mô phỏng (không gọi AI thật). Bộ câu chưa được lưu và chưa chặn nút Xuất bản; bạn cần chạy lại mỗi lần.",
+    "label": "Danh sách câu kiểm thử",
+    "hint": "Mỗi dòng một câu: câu hỏi | hành động mong đợi | từ khóa phải có trong câu trả lời (không bắt buộc, cách nhau bằng dấu ;). Hành động: answer (trả lời), clarify (hỏi lại), redirect (chuyển hướng), handoff (chuyển nhân viên), skip (bỏ qua). Tối đa {max} dòng.",
+    "sample": "ship về Hà Nội bao nhiêu | redirect | 20.000đ\náo thun basic size M màu đen giá bao nhiêu? | answer\n😀😀 | skip",
+    "submit": "Chạy bộ câu kiểm thử",
+    "quota": "Đã chạy {used}/{limit} lần hôm nay",
+    "knowledge": {
+      "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
+      "kb": "Nguồn: kiến thức đã xuất bản của shop"
+    },
+    "errors": {
+      "empty": "Hãy nhập ít nhất một câu kiểm thử.",
+      "too_many": "Quá nhiều câu (tối đa {max} dòng mỗi lần chạy).",
+      "invalid_line": "Dòng {line} chưa đúng dạng: cần \"câu hỏi | hành động\" với hành động hợp lệ, từ khóa tối đa 5 và mỗi từ khóa tối đa 100 ký tự.",
+      "limit_reached": "Hôm nay bạn đã chạy hết số lần cho phép. Hãy quay lại vào ngày mai.",
+      "unavailable": "Không chạy được lúc này. Hãy thử lại sau."
+    },
+    "summary": "Đạt {passed}/{total} · không đạt {failed} · lỗi {errored}",
+    "gate": {
+      "pass": "Đạt: mọi câu cho kết quả như mong đợi.",
+      "fail": "Chưa đạt: hãy sửa kiến thức hoặc câu mong đợi rồi chạy lại trước khi xuất bản."
+    },
+    "result": {
+      "pass": "Đạt",
+      "fail": "Không đạt",
+      "error": "Lỗi khi chạy",
+      "line": "Câu {n}",
+      "expected": "Mong đợi",
+      "actual": "Thực tế",
+      "reply": "Câu trả lời gợi ý",
+      "missing": "Thiếu từ khóa: {words}",
+      "errorName": "Mã lỗi: {name}"
+    },
+    "failures": {
+      "action_mismatch": "Hành động khác mong đợi",
+      "reply_missing": "Câu trả lời thiếu từ khóa mong đợi",
+      "guard_failed": "Câu trả lời có số tiền không có trong nguồn"
+    },
+    "actions": {
+      "answer": "Trả lời",
+      "clarify": "Hỏi lại khách",
+      "redirect": "Chuyển hướng (mời nhắn shop)",
+      "handoff": "Chuyển nhân viên",
+      "skip": "Bỏ qua (không xử lý)"
+    }
+  },
   "tryAi": {
     "pageTitle": "Thử AI",
     "title": "Thử AI",
@@ -953,6 +1003,7 @@
       "productImport": "Nhập sản phẩm",
       "kbGaps": "Câu hỏi chưa trả lời",
       "kbPublish": "Phiên bản kiến thức",
+      "kbTestset": "Câu kiểm thử",
       "spamRules": "Quy tắc spam",
       "channels": "Kênh",
       "members": "Thành viên",
