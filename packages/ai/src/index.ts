@@ -31,5 +31,6 @@ export * from './rewrite';
 export * from './root-modules';
 export * from './route';
 export * from './rules';
+export * from './send-lock';
 export * from './try';
 export * from './variation';

@@ -40,6 +40,8 @@ export const GATE_REASONS = [
   // 1
   'workspace_ai_off',
   'emergency_stopped',
+  'admin_send_locked',
+  'send_lock_unknown',
   // 2
   'mode_off',
   // 3
@@ -77,7 +79,7 @@ export type GateReason = (typeof GATE_REASONS)[number];
 
 /** Nhãn cổng để hiện "Không tự gửi vì…" (chỉ số = số cổng). */
 export const GATE_LABELS: Readonly<Record<number, string>> = Object.freeze({
-  1: 'Công tắc workspace / Dừng khẩn cấp',
+  1: 'Công tắc workspace / Dừng khẩn cấp / Admin tạm khóa gửi',
   2: 'Mức kênh × nhãn',
   3: 'Ghi đè theo bài viết',
   4: 'Nhãn bị chặn',
@@ -194,6 +196,14 @@ export const autoSendInputSchema = z.object({
     readinessPercent: z.number().finite().min(0).max(100),
   }),
   usage: z.object({ autoSentToday: nonNegativeInt }),
+  /**
+   * Khóa gửi của Admin nền tảng (FR-116, `findActiveSendLock` → `toGateSendLock`). Không truyền = nơi gọi chưa nối
+   * nguồn khóa (`SEND-LOCK-WIRE`); `null` = đọc lỗi → chặn (thiên về chặn).
+   */
+  sendLock: z
+    .object({ locked: z.boolean(), unreadable: z.boolean().optional() })
+    .nullable()
+    .optional(),
   /** Tin nhắn cuối của khách (chỉ tin nhắn); `null` ở tin nhắn → chặn cổng 11. */
   message: z.object({ lastInboundAt: instant }).nullable(),
 });
@@ -220,6 +230,9 @@ type Gate = (input: Parsed) => GateReason | null;
 const gate1Switch: Gate = (i) => {
   if (!i.workspace.aiEnabled) return 'workspace_ai_off';
   if (i.workspace.emergencyStopped) return 'emergency_stopped';
+  if (i.sendLock === null) return 'send_lock_unknown';
+  if (i.sendLock?.unreadable === true) return 'send_lock_unknown';
+  if (i.sendLock?.locked === true) return 'admin_send_locked';
   return null;
 };
 
