@@ -674,7 +674,7 @@
       "tag_only": "Tags only"
     },
     "patternLabel": "Pattern",
-    "patternHint": "Keyword: separate several with commas. Regex: up to 200 characters, no nested repetition. Phone, link, emoji, tags: leave empty.",
+    "patternHint": "Keyword: separate several with commas. Regex: up to 200 characters, no repeated groups, at most 2 of * or +. Phone, link, emoji, tags: leave empty.",
     "actionLabel": "Action",
     "action": {
       "mark": "Only flag as suspected spam",

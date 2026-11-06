@@ -674,7 +674,7 @@
       "tag_only": "Chỉ gắn thẻ người khác"
     },
     "patternLabel": "Mẫu",
-    "patternHint": "Từ khóa: nhiều từ ngăn bằng dấu phẩy. Regex: tối đa 200 ký tự, không dùng lặp lồng nhau. Số điện thoại, link, emoji, thẻ tag: bỏ trống.",
+    "patternHint": "Từ khóa: nhiều từ ngăn bằng dấu phẩy. Regex: tối đa 200 ký tự, không lặp nhóm, tối đa 2 dấu * hoặc +. Số điện thoại, link, emoji, thẻ tag: bỏ trống.",
     "actionLabel": "Hành động",
     "action": {
       "mark": "Chỉ đánh dấu nghi spam",

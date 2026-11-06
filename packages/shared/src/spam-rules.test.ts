@@ -69,15 +69,30 @@ describe('FR-080 US-050 parseSpamRule (Zod)', () => {
   });
 
   it('FR-080 regex không hợp lệ hoặc nguy hiểm (lồng lặp, tham chiếu ngược) bị từ chối', () => {
-    for (const pattern of ['(', '(a+)+$', '(.*)*x', '(a|aa)+b', '(a)\\1']) {
+    for (const pattern of [
+      '(',
+      '(a+)+$',
+      '(.*)*x',
+      '(a|aa)+b',
+      '(a)\\1',
+      // Verifier: các dạng lọt heuristic cũ (lặp lồng bằng {n,}, ngoặc hai lớp, lặp nối tiếp).
+      '(a{1,})+',
+      '((a+))+',
+      '((a|a))+',
+      '.*.*.*.*.*.*.*.*x',
+      '(?=a+)+b',
+    ]) {
       expect(
         parseSpamRule({ name: 'a', type: 'regex', pattern, action: 'mark' }).success,
         pattern,
       ).toBe(false);
     }
-    expect(
-      parseSpamRule({ name: 'a', type: 'regex', pattern: 'zalo\\s*\\d+', action: 'mark' }).success,
-    ).toBe(true);
+    for (const pattern of ['zalo\\s*\\d+', '(zalo|fb)\\s?\\d{3,10}', '^ib\\b.*\\d{9}']) {
+      expect(
+        parseSpamRule({ name: 'a', type: 'regex', pattern, action: 'mark' }).success,
+        pattern,
+      ).toBe(true);
+    }
   });
 });
 
@@ -162,6 +177,13 @@ describe('FR-080 US-050 previewSpamRule (7 ngày)', () => {
     expect(p.matched).toBe(8);
     expect(p.samples).toHaveLength(5);
     expect(p.samples[0]?.textMasked).toBe('zalo [sđt] [email] #0');
+  });
+
+  it('FR-080 che PII TRƯỚC khi cắt: SĐT nằm vắt qua ký tự 300 không lộ một phần', () => {
+    const text = `zalo ${'x'.repeat(285)} 0912345678`;
+    const p = previewSpamRule(rule({}), [c(text)]);
+    expect(p.samples[0]?.textMasked).not.toMatch(/\d{3}/);
+    expect(p.samples[0]?.textMasked.length).toBeLessThanOrEqual(300);
   });
 
   it('FR-080 rỗng → 0/0', () => {

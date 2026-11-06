@@ -30,14 +30,18 @@ export const SPAM_TEXT_SCAN_MAX = 1000;
 
 const PATTERNLESS: readonly SpamRuleType[] = ['phone', 'link', 'emoji_only', 'tag_only'];
 
-// Lặp lồng nhau `(…+)+`, `(…*)*`, `(…|…)+`, tham chiếu ngược `\1` → nguy cơ ReDoS: từ chối.
-const NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[+*](?:[^()\\]|\\.)*\)[+*{]/;
-const ALTERNATION_REPEAT = /\((?:[^()\\]|\\.)*\|(?:[^()\\]|\\.)*\)[+*{]/;
-const BACKREFERENCE = /\\[1-9]|\\k</;
+// Chống ReDoS bằng TẬP CON cú pháp (whitelist), không đoán dạng nguy hiểm (Q-SPR1, verifier):
+// - nhóm `(...)` không được mang lượng từ `+ * {` (chỉ `?` hoặc không) → không lặp lồng;
+// - không look-around, không tham chiếu ngược;
+// - tối đa 2 lượng từ không giới hạn (`*`, `+`, `{n,}`) → so khớp nhiều nhất bậc hai, trên văn bản đã cắt.
+const GROUP_QUANTIFIED = /\)[+*{]/;
+const LOOK_OR_BACKREF = /\(\?[=!<]|\\[1-9]|\\k</;
+const UNBOUNDED_QUANTIFIER = /(?<!\\)(?:[*+]|\{\d+,\})/g;
+const MAX_UNBOUNDED_QUANTIFIERS = 2;
 
 export function isSafeRegex(pattern: string): boolean {
-  if (NESTED_QUANTIFIER.test(pattern) || ALTERNATION_REPEAT.test(pattern)) return false;
-  if (BACKREFERENCE.test(pattern)) return false;
+  if (GROUP_QUANTIFIED.test(pattern) || LOOK_OR_BACKREF.test(pattern)) return false;
+  if ((pattern.match(UNBOUNDED_QUANTIFIER)?.length ?? 0) > MAX_UNBOUNDED_QUANTIFIERS) return false;
   try {
     new RegExp(pattern, 'iu');
     return true;
@@ -77,9 +81,16 @@ function matchKeyword(pattern: string, text: string): boolean {
     .some((k) => haystack.includes(` ${k} `));
 }
 
+/** Regex chỉ quét phần đầu ngắn hơn (bậc hai trên ≤ 300 ký tự, nhân tối đa 2.000 bình luận/lần xem trước). */
+export const SPAM_REGEX_SCAN_MAX = 300;
+let lastRegex: { pattern: string; re: RegExp } | null = null;
+
 function matchRegex(pattern: string, text: string): boolean {
-  if (!isSafeRegex(pattern)) return false;
-  return new RegExp(pattern, 'iu').test(text);
+  if (lastRegex?.pattern !== pattern) {
+    if (!isSafeRegex(pattern)) return false;
+    lastRegex = { pattern, re: new RegExp(pattern, 'iu') };
+  }
+  return lastRegex.re.test(text.slice(0, SPAM_REGEX_SCAN_MAX));
 }
 
 /** Một bình luận có khớp quy tắc không. Không ném lỗi: mẫu hỏng → không khớp. */
@@ -129,6 +140,6 @@ export function previewSpamRule(rule: SpamRule, comments: readonly SpamSample[])
     total: eligible.length,
     samples: hits
       .slice(0, PREVIEW_MAX_SAMPLES)
-      .map((c) => ({ id: c.id, textMasked: maskPii(c.text.slice(0, 300)) })),
+      .map((c) => ({ id: c.id, textMasked: maskPii(c.text).slice(0, 300) })),
   };
 }
