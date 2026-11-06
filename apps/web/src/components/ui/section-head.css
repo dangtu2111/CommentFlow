@@ -1,0 +1,32 @@
+/* SectionHead — đầu mục có biểu tượng. Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.section-head-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--action-bg);
+  color: var(--action-fg);
+}
+
+.section-head-text {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.section-head-end {
+  flex: 0 1 auto;
+  max-width: 100%;
+}

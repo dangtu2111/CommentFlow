@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { isNavActive, type NavItemKey, type NavRole, sectionTabsFor } from '../../lib/app-nav';
+import { Tabs } from '../ui/tabs';
 
 /**
  * Thanh tab của trang cha (Bình luận ⟵ AI đã gửi; Cài đặt ⟵ Kênh, Thành viên). Tự ẩn khi trang hiện tại không thuộc
@@ -21,17 +21,15 @@ export function SectionTabs({
   const tabs = sectionTabsFor(role, pathname);
   if (!tabs) return null;
   return (
-    <nav className="section-tabs" aria-label={ariaLabel}>
-      {tabs.map((tab) => (
-        <Link
-          key={tab.key}
-          href={tab.href}
-          className="section-tab"
-          aria-current={isNavActive(pathname, tab.href) ? 'page' : undefined}
-        >
-          {labels[tab.key] ?? tab.key}
-        </Link>
-      ))}
-    </nav>
+    <Tabs
+      variant="section"
+      label={ariaLabel}
+      items={tabs.map((tab) => ({
+        key: tab.key,
+        href: tab.href,
+        label: labels[tab.key] ?? tab.key,
+        current: isNavActive(pathname, tab.href),
+      }))}
+    />
   );
 }
