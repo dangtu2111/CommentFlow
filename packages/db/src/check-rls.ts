@@ -696,6 +696,8 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['core.members', 'a', 'is_workspace_owner'],
   // Chỉ-hệ thống: không được mở thêm nhánh thành viên/Owner/"không người dùng" trong CÙNG policy (OR)
   ['cf.webhook_events', 'w', 'is_workspace_member'],
+  // POSTS-LINK-PRODUCT (0048): UPDATE (đổi chính) chỉ thành viên thật — hệ thống/AI không được thêm nhánh vào
+  ['cf.post_products', 'w', 'is_system_context'],
   ['cf.comment_replies', 'w', 'is_workspace_member'],
   ['cf.comment_replies', 'w', 'is_workspace_owner'],
   ['cf.comment_replies', 'w', 'IS NULL'],

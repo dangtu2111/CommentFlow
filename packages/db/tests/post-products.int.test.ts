@@ -246,8 +246,21 @@ describe('US-032 đề xuất của AI cần xác nhận', () => {
         tx.execute(sql`INSERT INTO cf.post_products (workspace_id, post_id, product_id, status, suggested_by_ai, is_primary)
           VALUES (${ws}::uuid, ${post}::uuid, ${a}::uuid, 'suggested', true, true)`),
       ),
-      CHECK,
+      RLS,
     );
+  });
+
+  it('CHECK ở DB (kể cả khi bỏ qua RLS): chính phải đã xác nhận; đề xuất phải do AI; trạng thái hợp lệ', async () => {
+    const post = await seedPost(ws);
+    const a = await seedProduct(ws, 'Dép A');
+    const ins = (status: string, byAi: boolean, primary: boolean) =>
+      admin.query(
+        'INSERT INTO cf.post_products (workspace_id, post_id, product_id, status, suggested_by_ai, is_primary) VALUES ($1, $2, $3, $4, $5, $6)',
+        [ws, post, a, status, byAi, primary],
+      );
+    await expectRejectCode(ins('suggested', true, true), CHECK);
+    await expectRejectCode(ins('suggested', false, false), CHECK);
+    await expectRejectCode(ins('other', true, false), CHECK);
   });
 
   it('kết nối worker không tạo confirmed dù giả người dùng (withActor), và không xóa được liên kết confirmed', async () => {
@@ -327,5 +340,10 @@ describe('FR-061 RLS chéo workspace', () => {
     await db.withActor(ws, owner, (tx) => linkProductsToPosts(tx, ws, owner, bulk([post], [a])));
     await admin.query('DELETE FROM cf.products WHERE id = $1', [a]);
     expect(await db.withActor(ws, owner, (tx) => listPostProducts(tx, ws, post))).toEqual([]);
+    const b = await seedProduct(ws, 'Ví B');
+    await db.withActor(ws, owner, (tx) => linkProductsToPosts(tx, ws, owner, bulk([post], [b])));
+    await admin.query('DELETE FROM cf.posts WHERE id = $1', [post]);
+    const left = await admin.query('SELECT 1 FROM cf.post_products WHERE post_id = $1', [post]);
+    expect(left.rowCount).toBe(0);
   });
 });

@@ -262,7 +262,7 @@ Sau đó rerank top 20 → lấy 5. Bật `hnsw.iterative_scan = strict_order` (
 Chạy trước tìm kiến thức; dừng ở bước đầu tiên có kết quả đủ tin cậy:
 
 ```sql
--- 1) sản phẩm gắn bài (post_products) — luôn ưu tiên
+-- 1) sản phẩm gắn bài (post_products, CHỈ status = 'confirmed' — `productIdsForAnswering`) — luôn ưu tiên
 -- 2) bí danh khớp: similarity(alias_norm, $q_norm) >= 0.6
 select product_id, max(similarity(alias_norm, $q_norm)) s
 from product_aliases where workspace_id = $ws and alias_norm % $q_norm

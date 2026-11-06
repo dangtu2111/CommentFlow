@@ -32,7 +32,10 @@ CREATE UNIQUE INDEX "post_products_one_primary_idx" ON "cf"."post_products" USIN
 --    INSERT: (a) 'suggested' — thành viên hoặc hệ thống, confirmed_by NULL, suggested_by_ai, không chính;
 --            (b) 'confirmed' — CHỈ thành viên là người dùng thật, confirmed_by = người đang ghi (không giả được);
 --            hệ thống/AI không thể tự tạo liên kết đã xác nhận (AGENTS.md nguyên tắc 3 — AI chỉ đề xuất).
---    UPDATE: chỉ is_primary + updated_at, chỉ thành viên. DELETE: thành viên hoặc hệ thống (từ chối/gỡ đề xuất).
+--            Kết nối cf_worker bị chặn cả khi giả người dùng bằng withActor (session_user, như 0030).
+--            Không CHECK "confirmed ⇒ confirmed_by NOT NULL": FK SET NULL khi xóa người dùng sẽ vướng (như 0043); RLS INSERT giữ.
+--    UPDATE: chỉ is_primary + updated_at, chỉ thành viên (không cf_worker). DELETE: thành viên (không cf_worker),
+--            hệ thống chỉ gỡ được đề xuất (status = 'suggested').
 --    Xác nhận một đề xuất = DELETE + INSERT 'confirmed' trong một giao dịch (không cấp UPDATE cho status/confirmed_by).
 --  * Mỗi lệnh đúng MỘT policy permissive. Cột định danh không nằm trong GRANT UPDATE.
 --
