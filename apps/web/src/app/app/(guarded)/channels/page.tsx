@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { Banner } from '../../../../components/ui/banner';
+import { PageHeader } from '../../../../components/ui/page-header';
 import {
   canReconnect,
   countParam,
@@ -107,8 +108,7 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
   return (
     <main className="app-page app-page-settings">
       <SettingsFrame viewerRole={workspace.role} active="channels" counts={counts}>
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">{t('subtitle', { workspace: workspace.name })}</p>
+        <PageHeader title={t('title')} subtitle={t('subtitle', { workspace: workspace.name })} />
 
         {notice ? (
           <Banner variant={NOTICE_VARIANT[notice]}>

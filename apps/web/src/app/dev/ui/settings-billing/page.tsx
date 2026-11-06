@@ -52,15 +52,15 @@ export default async function DevBillingPage({
   const unknown = params.state === 'unknown';
   return (
     <DevShell>
+      <p className="inbox-sample-note" role="note">
+        {DEV_SAMPLE_NOTE}
+      </p>
       <main className="app-page app-page-settings">
         <SettingsFrame
           viewerRole="owner"
           active="billing"
           counts={{ channelsConnected: 3, channelsTotal: 3, members: 5 }}
         >
-          <p className="inbox-sample-note" role="note">
-            {DEV_SAMPLE_NOTE}
-          </p>
           <BillingView
             currentPlan={unknown ? null : 'growth'}
             usage={buildUsageMeterView({ used: 2450, limit: 3000 })}

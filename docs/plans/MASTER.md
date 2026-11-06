@@ -316,3 +316,4 @@ Cổng: theo từng tính năng (`docs/14` §8).
 - Dòng `⛔` chỉ chuyển ⏳ khi chủ dự án cung cấp tài nguyên/quyết định; ghi lại trong handoff.
 - Việc cơ học (dịch chuỗi, đổi tên hàng loạt, cập nhật bản đồ) → issue nhãn `mech` cho máy phụ, không tính vào bảng này.
 | UI-FIDELITY-REPORTS-LEGAL | docs/08 §2 (reports, landing-pricing, privacy-data-deletion, terms-dpa) | — | REPORTS, PUBLIC-PAGES | — | không | 🟡 Giao diện mẫu dev khớp một phần (`feat-ui-reports-legal`, QRL1; trang thật chờ `REPORTS`, `PUBLIC-PAGES`) |
+| UI-HTML-SETTINGS | docs/08 §7 (settings-*.html) | UF-3 | UI-FIDELITY-SETTINGS | — | không | ◐ Khung Cài đặt dựng từ HTML Stitch (kit `SectionHead`/`SplitLayout`/`Stat`/`PageHeader`); còn hộp thoại (`feat-ui-html-settings`, Q-UIHS1) |

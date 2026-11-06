@@ -997,8 +997,8 @@ a {
 
 /* ===== UI-FIDELITY nhóm 4: Cài đặt / Thành viên / Nhật ký (Q-UIST1) ===== */
 .app-page-settings {
-  max-width: 1480px;
-  padding-inline: var(--space-4);
+  max-width: none;
+  padding-inline: var(--space-6);
 }
 
 /* Chip trạng thái / vai trò (nền nhạt theo token) */
@@ -1057,8 +1057,15 @@ a {
 }
 
 .session-info {
-  flex: 1;
+  flex: 1 1 200px;
   min-width: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.session-info .session-device {
+  font-size: 15px;
+  line-height: 20px;
 }
 
 @media (max-width: 600px) {
@@ -1244,15 +1251,32 @@ a {
 .backup-block {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-4);
+  align-items: flex-start;
+  gap: var(--space-2);
   padding: var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--selected-bg);
 }
 
+.backup-block .section-head-icon {
+  color: var(--color-warning);
+  margin-top: 2px;
+}
+
+.backup-block .section-subtitle {
+  font-size: 15px;
+  line-height: 20px;
+}
+
 .backup-block-text {
   flex: 1 1 280px;
+  display: grid;
+  gap: 2px;
+}
+
+.backup-block-text .muted {
+  font-size: 12px;
+  line-height: 16px;
 }
 
 .display-grid {
