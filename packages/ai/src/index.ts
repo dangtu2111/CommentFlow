@@ -87,6 +87,16 @@ export {
   type VariantAxis,
 } from './decide/decide-action';
 export {
+  anyStockStale,
+  DEFAULT_STOCK_STALE_DAYS,
+  evaluateStockRules,
+  MAX_ALTERNATIVES,
+  type StockAlternative,
+  type StockAvailability,
+  type StockFreshness,
+  type StockOutcome,
+} from './decide/stock-rules';
+export {
   DEFAULT_DRAFT_MODEL,
   type DraftConfig,
   loadDraftConfig,
