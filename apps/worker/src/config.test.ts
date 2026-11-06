@@ -16,6 +16,7 @@ describe('loadConfig', () => {
       metaAppSecret: undefined,
       facebook: { enabled: false },
       workspaceDeleteEnabled: false,
+      instagram: { enabled: false },
     });
   });
 
@@ -138,6 +139,40 @@ describe('loadConfig', () => {
           expect((error as Error).message).toContain(name);
           expect((error as Error).message).not.toContain(META_APP_SECRET);
           expect((error as Error).message).not.toContain('bimat');
+        }
+      }
+    });
+  });
+
+  describe('FR-013 loadConfig IG_CONNECTOR_ENABLED (IG-CONNECTOR)', () => {
+    const META_APP_ID = '123456789012345';
+    const META_APP_SECRET = 'bi-mat-app-gia-0123456789abcdef';
+    const TOKEN_ENC_KEYS = `v1:${'a'.repeat(64)}`;
+    const full = { DATABASE_WORKER_URL, META_APP_ID, META_APP_SECRET, TOKEN_ENC_KEYS };
+
+    it('mặc định TẮT; chỉ đúng chữ `true` mới bật; độc lập với cờ Facebook', () => {
+      for (const flag of [undefined, '', 'false', '1', 'yes', 'TRUE']) {
+        expect(loadConfig({ DATABASE_WORKER_URL, IG_CONNECTOR_ENABLED: flag }).instagram).toEqual({
+          enabled: false,
+        });
+      }
+      const cfg = loadConfig({ ...full, IG_CONNECTOR_ENABLED: 'true' });
+      expect(cfg.instagram).toEqual({
+        enabled: true,
+        appId: META_APP_ID,
+        appSecret: META_APP_SECRET,
+      });
+      expect(cfg.facebook).toEqual({ enabled: false });
+    });
+
+    it('bật mà thiếu biến → CONFIG_INVALID, không lộ bí mật', () => {
+      for (const override of [{ META_APP_ID: undefined }, { TOKEN_ENC_KEYS: ' ' }]) {
+        try {
+          loadConfig({ ...full, IG_CONNECTOR_ENABLED: 'true', ...override });
+          expect.unreachable();
+        } catch (error) {
+          expect(isAppError(error) && error.code).toBe('CONFIG_INVALID');
+          expect((error as Error).message).not.toContain(META_APP_SECRET);
         }
       }
     });

@@ -65,7 +65,24 @@ export type FacebookConnectorConfig =
   | { enabled: true; appId: string; appSecret: string };
 
 function loadFacebookConfig(source: Record<string, string | undefined>): FacebookConnectorConfig {
-  if (source.FB_CONNECTOR_ENABLED?.trim() !== 'true') return { enabled: false };
+  return loadMetaConnectorConfig(source, 'FB_CONNECTOR_ENABLED');
+}
+
+/**
+ * Connector Instagram (IG-CONNECTOR, FR-013): cờ `IG_CONNECTOR_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật), cùng Meta
+ * App và cùng biến với Facebook (Q-IG1). Cờ độc lập với `FB_CONNECTOR_ENABLED`.
+ */
+export type InstagramConnectorConfig = FacebookConnectorConfig;
+
+function loadInstagramConfig(source: Record<string, string | undefined>): InstagramConnectorConfig {
+  return loadMetaConnectorConfig(source, 'IG_CONNECTOR_ENABLED');
+}
+
+function loadMetaConnectorConfig(
+  source: Record<string, string | undefined>,
+  flag: 'FB_CONNECTOR_ENABLED' | 'IG_CONNECTOR_ENABLED',
+): FacebookConnectorConfig {
+  if (source[flag]?.trim() !== 'true') return { enabled: false };
   const blank = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);
   const env = parseEnv(facebookSchema, {
     META_APP_ID: blank(source.META_APP_ID),
@@ -85,6 +102,7 @@ export type WorkerConfig = {
   metaAppSecret: string | undefined;
   facebook: FacebookConnectorConfig;
   workspaceDeleteEnabled: boolean;
+  instagram: InstagramConnectorConfig;
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -99,5 +117,6 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     metaAppSecret: env.META_APP_SECRET,
     facebook: loadFacebookConfig(source),
     workspaceDeleteEnabled: env.WORKSPACE_DELETE_ENABLED,
+    instagram: loadInstagramConfig(source),
   };
 }

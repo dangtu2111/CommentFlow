@@ -42,6 +42,7 @@
 | KT-DOC | Chốt đơn trong bình luận → lưu khách, trả lời không lặp PII (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
+| KT-IG | Connector Instagram (`IG_CONNECTOR_ENABLED`, **cần tài khoản IG Business thử**; sau `IG-WEBHOOK-ROUTE` + `IG-CHANNEL-CONNECT`) | feat-ig-connector | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
@@ -743,6 +744,18 @@ Chỉ phần máy (chưa có nút/giao diện, chưa ghi DB): người thử ch�
 1. `pnpm --filter @flow/ai exec vitest run src/emergency` → 2 file xanh. Kết quả mong đợi: không test đỏ (Owner+Staff Dừng được, Staff không Bật lại được, Dừng hủy hẹn giờ của đúng workspace).
 
 ---
+
+## KT-IG — Connector Instagram với tài khoản thật (IG-CONNECTOR, FR-013)
+
+Điều kiện: tài khoản IG Business thử liên kết Page thử; kênh Instagram đã lưu (sau `IG-CHANNEL-CONNECT`); worker chạy với `IG_CONNECTOR_ENABLED=true` trên môi trường thử. **Chưa chạy được ở thời điểm Xong-mock.**
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng tài khoản khác bình luận vào một bài của tài khoản thử | Webhook `comments` tới; bình luận hiện ở hộp thư với đúng bài, tác giả, nội dung |
+| 2 | Trả lời bình luận đó từ ứng dụng | Câu trả lời hiện dưới bình luận trên Instagram; hệ thống ghi nhận đã gửi |
+| 3 | Ẩn bình luận từ ứng dụng, rồi bỏ ẩn | Bình luận ẩn/hiện trên Instagram tương ứng (ghi lại nếu bỏ ẩn bị từ chối) |
+| 4 | Bình luận do chính tài khoản thử viết | Không vào pipeline (chống vòng lặp) |
+| 5 | Trả lời lồng (trả lời vào một bình luận đã có trả lời) | Ghi lại hành vi thật (Instagram chỉ nhận trả lời cấp 1?) để chỉnh khai báo `reply` |
 
 ## KT-INV — Hóa đơn + xác nhận thanh toán thủ công (INVOICES, FR-091/FR-102, Q-INV1) · Invoices store
 
