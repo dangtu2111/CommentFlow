@@ -1,3 +1,4 @@
+export { writeActionLog } from './action-log';
 export { slugify, uniqueSlug } from './slug';
 export {
   createTenancy,

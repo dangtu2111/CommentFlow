@@ -24,6 +24,7 @@ describe('renderEmail', () => {
         loginUrl: 'https://app.example.test/login',
         resetUrl: 'https://app.example.test/forgot-password',
       },
+      { kind: 'password-changed', url: 'https://app.example.test/forgot-password' },
     ];
     for (const input of inputs) {
       const vi = renderEmail(input, 'vi', recipient);

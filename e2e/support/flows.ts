@@ -75,7 +75,7 @@ async function freshCode(secret: string): Promise<string> {
  * Ở trang /app/security: bật 2FA bằng mật khẩu → khóa nhập tay hiển thị → mã TOTP tính tại chỗ → lưu mã dự phòng.
  * (Khóa hiển thị dạng base32; chấp nhận cả khi web hiển thị URI otpauth.)
  */
-export async function enableTwoFactor(page: Page, t: Translate, user: TestUser): Promise<void> {
+export async function enableTwoFactor(page: Page, t: Translate, user: TestUser): Promise<string> {
   const tf = (key: string) => t(`auth.security.twoFactor.${key}`);
   // Hộp thoại bật 2FA tự mở với Owner/Admin; nút mở cùng tên với nút nộp nên mọi thao tác giới hạn trong hộp thoại.
   const dialog = page.locator('#two-factor-setup-dialog');
@@ -97,6 +97,20 @@ export async function enableTwoFactor(page: Page, t: Translate, user: TestUser):
   await expect(page.getByRole('heading', { name: tf('backupTitle') })).toHaveCount(0);
   await expect(page.getByRole('button', { name: tf('regenTitle'), ...exact })).toBeVisible();
   await expect(page.getByText(tf('statusOn'), exact)).toBeVisible();
+  return secret;
+}
+
+/** Đăng nhập tài khoản đã bật 2FA: mật khẩu rồi mã TOTP tính tại chỗ từ khóa `secret`. */
+export async function signInWithTotp(
+  page: Page,
+  t: Translate,
+  user: TestUser,
+  secret: string,
+): Promise<void> {
+  await signIn(page, t, user);
+  await expect(page).toHaveURL(/\/login\/2fa/);
+  await page.getByLabel(t('auth.twoFactor.codeLabel'), exact).fill(await freshCode(secret));
+  await page.getByRole('button', { name: t('auth.twoFactor.submit'), ...exact }).click();
 }
 
 /** Dòng chào + tên workspace của trang /app (bằng chứng đã vào được workspace đó). */
