@@ -169,7 +169,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | DA-RULES-PRICE | FR-150 (lệch giá quảng cáo ↔ kho → chuyển người), FR-158 (khoảng giá khi chưa rõ biến thể) | US-108 | PIPE-DECIDE-ACTION | S | không | ✅ lõi thuần (feat-da-rules-price); lưu DB → `DA-RULES-PRICE-DB` |
 | DA-RULES-STOCK | FR-151 (độ tươi tồn kho), FR-157 mẫu ngưng/hết hàng (phần gợi ý; tự gửi ở GĐ4) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-stock); nối DB/pipeline → `DA-RULES-STOCK-WIRE` |
 | DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-order-hours, Q-DROH1; nối giờ làm việc DB/pipeline → `DA-RULES-ORDER-HOURS-WIRE`; KT-DROH) |
-| DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ⏳ |
+| DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ✅ lõi thuần (feat-da-rules-legal); nối pipeline → `DA-RULES-LEGAL-WIRE` |
 | DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-handoff-rules); nối pipeline → `DA-HANDOFF-WIRE` |
 | PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ✅ Xong-mock (lõi hàm thuần, `feat-pipe-variation`; còn `VARIATION-WIRE`: Redis `…:recent` + ghi `drafts.variants`, và `VARIATION-NAME`: chèn tên khách) |
 | PIPE-MERGE-BURST | FR-148 (gộp bình luận liên tiếp < 30 giây) | US-109 | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; ghi `merged_into_id` chờ migration làn b) |

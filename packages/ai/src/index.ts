@@ -152,6 +152,15 @@ export {
   MAX_SHORT_TEXT_WORDS,
 } from './decide/handoff-rules';
 export {
+  checkDraftLegal,
+  type DraftLegalCheck,
+  evaluateLegalRules,
+  LEGAL_TOPICS,
+  type LegalEvaluation,
+  type LegalSource,
+  type LegalTopic,
+} from './decide/legal-rules';
+export {
   type BusinessHoursState,
   detectOrderStatusIntent,
   evaluateBusinessHours,

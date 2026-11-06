@@ -1028,6 +1028,14 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/shared test` và `pnpm --filter @flow/web exec vitest run src/lib/suggestion.test.ts`. | Xanh: gửi nguyên văn → `sent_as_is`; sửa → `edited` + khoảng cách; chip nguồn ≤ 5 (+N); ô gợi ý ẩn khi không có gợi ý. |
 | 2 | Mở một bình luận → ô "Đổi nhãn" → chọn nhãn khác → "Lưu nhãn". | Trang làm tươi, chip nhãn đổi; bình luận đã xóa không có ô đổi nhãn; đổi sang en vẫn đủ chữ. |
 
+## KT-DRL — Cam kết pháp lý/uy tín (DA-RULES-LEGAL, FR-160) · Legal/trust commitments
+
+Chưa có giao diện (lõi hàm thuần, chưa nối pipeline). / No UI yet (pure core, not wired).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/decide/legal-rules.test.ts` | Xanh: hỏi chính hãng/VAT/bảo hành/nguồn gốc/hoàn tiền mà kho không nhắc → cờ `legalUnsourced`; nháp khẳng định không nguồn hoặc thời hạn lạ → bị chặn. |
+
 ## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
