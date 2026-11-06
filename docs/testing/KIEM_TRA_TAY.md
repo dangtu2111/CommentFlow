@@ -86,8 +86,9 @@
 | 3 | Loại **Số điện thoại** (mẫu trống) → Xem trước | Chỉ bình luận có SĐT di động VN được đếm; bình luận của chính Page không tính |
 | 4 | Loại **Regex**, mẫu `(a+)+$` | Báo "Quy tắc chưa hợp lệ" (regex lặp lồng nhau bị từ chối) |
 | 5 | Mở danh sách Hành động | Chỉ có "Chỉ đánh dấu" và "Bỏ qua"; không có Tự ẩn |
-| 6 | Bấm **Lưu quy tắc** | Báo chưa khả dụng (chờ bảng `rules`); không bình luận nào bị đổi |
+| 6 | Bấm **Lưu quy tắc** (cần DB đã migrate 0050, feat-spam-rules-store) | Báo "Đã lưu"; hàng mới ở `cf.rules` (`enabled` = true, `created_by` = Owner); không bình luận nào bị đổi |
 | 7 | Đổi ngôn ngữ en | Mọi chuỗi trang đã dịch |
+| 8 | Lưu thêm cho đủ 50 quy tắc rồi lưu quy tắc thứ 51 | Báo "Đã đủ 50 quy tắc…"; không có hàng thứ 51 |
 
 ## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
 
@@ -992,3 +993,12 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/shared test` và `pnpm --filter @flow/web exec vitest run src/lib/suggestion.test.ts`. | Xanh: gửi nguyên văn → `sent_as_is`; sửa → `edited` + khoảng cách; chip nguồn ≤ 5 (+N); ô gợi ý ẩn khi không có gợi ý. |
 | 2 | Mở một bình luận → ô "Đổi nhãn" → chọn nhãn khác → "Lưu nhãn". | Trang làm tươi, chip nhãn đổi; bình luận đã xóa không có ô đổi nhãn; đổi sang en vẫn đủ chữ. |
+
+## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/post-products.test.ts`. | 14 test xanh: loại trùng, sản phẩm chính phải nằm trong danh sách, trần 200 bài × 20 sản phẩm, đề xuất AI chưa xác nhận không được dùng để trả lời. |
+| 2 | CI job `database` chạy `tests/post-products.int.test.ts` và `pnpm db:check-rls`. | Gắn nhiều sản phẩm, tối đa một chính/bài, gắn hàng loạt không trùng; worker chỉ tạo được đề xuất, không tự xác nhận; workspace khác không thấy. |
