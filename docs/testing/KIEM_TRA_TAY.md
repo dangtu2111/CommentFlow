@@ -48,6 +48,7 @@
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
+| KT-LEX | Xuất khách tiềm năng CSV/XLSX (chờ nối nguồn + giao diện) | — | chưa | chưa | — |
 | KT-MSG1 | Tin chào / ngoài giờ / báo chuyển người (logic; Page thử khi nối thật) | — | không | chưa | — |
 | KT-MSW | Messenger (`MESSENGER_CONNECTOR_ENABLED`, **cần Page thử + `pages_messaging`**; sau `MESSENGER-INGEST`) | feat-messenger-webhook | chưa | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
@@ -938,6 +939,19 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/shared exec vitest run src/lead-contact.test.ts` và `pnpm --filter @flow/db exec vitest run src/lead-vault.test.ts src/lead-sink.test.ts`. | Xanh: chuẩn hóa SĐT/email, tối đa 3 lead/lần, mã hóa khứ hồi (sai workspace/lead/trường/khóa thì không giải mã), băm ổn định, khóa băm không trùng khóa mã hóa, cờ tắt mặc định, bật mà thiếu khóa thì báo lỗi cấu hình. |
 | 2 | CI job `database` chạy `tests/leads.int.test.ts` và `pnpm db:check-rls`. | Chỉ hệ thống ghi lead; DB không chứa SĐT/email thô; trùng số không tạo lead mới; Staff đổi giai đoạn/giao người (chỉ cho thành viên đang hoạt động); Staff không xóa; workspace khác không thấy bản mã. |
 | 3 | (Khi có khóa trên staging) đặt `LEADS_CAPTURE_ENABLED=true`, `LEADS_ENC_KEYS`, `LEADS_HASH_KEY` rồi chờ việc nối pipeline. | Chưa áp dụng — việc nối pipeline và giao diện Kanban là việc sau (`LEADS-KANBAN`). |
+
+## KT-LEX — Xuất khách tiềm năng CSV/XLSX (LEADS-EXPORT, feat-leads-export) — chỉ làm được khi đã nối nguồn thật + giao diện
+
+> Hiện chưa có giao diện/nguồn DB (gap `LEADS-EXPORT-WIRE`); các bước dưới dành cho lúc đã nối. Kiểm tự động đã phủ phần lõi: `pnpm --filter @flow/shared exec vitest run src/lead-export.test.ts`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Cờ tắt, bấm "Xuất" | Bị từ chối, không có tệp |
+| 2 | Bật cờ ở workspace THỬ, Staff xuất CSV | Tệp mở bằng Excel đúng tiếng Việt; cột SĐT chỉ `••••••` + 4 số cuối |
+| 3 | Tạo lead thử có tên `=1+1`, xuất CSV rồi XLSX | Excel hiện nguyên chữ `'=1+1`, không tính công thức |
+| 4 | Staff yêu cầu xuất SĐT đầy đủ | Bị từ chối |
+| 5 | Owner (cấu hình `full`) yêu cầu đầy đủ | Ra số đầy đủ; có dòng nhật ký xuất |
+| 6 | Đặt `LEADS_EXPORT_MAX_ROWS` nhỏ hơn số lead rồi xuất | Báo "quá lớn", không có tệp cắt dở |
 
 ## KT-MSG1 — Tin chào / ngoài giờ / báo chuyển người (MSG-GREETINGS, feat-msg-greetings)
 
