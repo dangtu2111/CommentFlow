@@ -820,6 +820,10 @@
     "placeholder": "E.g. how much is the basic tee, size M, black?",
     "submit": "Try",
     "quota": "{used}/{limit} tries used today",
+    "knowledge": {
+      "demo": "Source: sample knowledge (your shop's real knowledge is not connected)",
+      "kb": "Source: your shop's published knowledge — the 0–1 score is the relevance computed by the system"
+    },
     "errors": {
       "empty": "Enter a sample comment.",
       "too_long": "Comment is too long (max {max} characters).",

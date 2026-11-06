@@ -820,6 +820,10 @@
     "placeholder": "Ví dụ: áo thun basic size M màu đen giá bao nhiêu?",
     "submit": "Thử",
     "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
+    "knowledge": {
+      "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
+      "kb": "Nguồn: kiến thức đã xuất bản của shop — điểm 0–1 là độ liên quan do hệ thống tính"
+    },
     "errors": {
       "empty": "Hãy nhập một bình luận mẫu.",
       "too_long": "Bình luận quá dài (tối đa {max} ký tự).",

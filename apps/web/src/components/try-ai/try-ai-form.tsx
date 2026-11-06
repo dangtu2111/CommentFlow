@@ -42,7 +42,12 @@ export function TryAiForm() {
       {state.status === 'done' && !state.ok ? (
         <p role="alert">{t(`errors.${state.reason}`, { max: TRY_AI_MAX_CHARS })}</p>
       ) : null}
-      {state.status === 'done' && state.ok ? <TryAiResultView result={state.result} /> : null}
+      {state.status === 'done' && state.ok ? (
+        <>
+          <p className="muted">{t(`knowledge.${state.knowledge}`)}</p>
+          <TryAiResultView result={state.result} />
+        </>
+      ) : null}
     </div>
   );
 }
