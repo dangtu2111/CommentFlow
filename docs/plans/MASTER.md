@@ -146,7 +146,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ✅ (feat-inbox-mobile; còn Playwright 390px, KT-016) |
 | REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | 🟡 (`feat-reply-lang-ui`: `reply_language` theo kênh xong; xưng hô chờ `brand_voice` → gap `REPLY-ADDRESS-UI`) |
 | AI-READINESS | FR-146 (thanh Độ sẵn sàng của AI, yêu cầu tối thiểu onboarding) | US-107 | KB-SHOP-POLICY-FAQ, PRODUCTS-VARIANTS | — | không | Xong-mock (feat-ai-readiness, không migration; lưu `readiness_checks` → AI-READINESS-PERSIST làn b; KT-AR) |
-| KB-GAPS-UI | FR-134 (danh sách câu AI chưa trả lời + bổ sung kiến thức), UF-11 | US-106 | RETRIEVAL-LOG | — | không | ⏳ |
+| KB-GAPS-UI | FR-134 (danh sách câu AI chưa trả lời + bổ sung kiến thức), UF-11 | US-106 | RETRIEVAL-LOG | — | không | ✅ Xong-UI (feat-kb-gaps-ui, Q-KG1; còn mở đúng mục KB → KB-CONTENT-UI) |
 
 ### 2C. Pipeline AI (lọc → nhận ngôn ngữ → cache → phân loại → tìm → soạn → kiểm)
 

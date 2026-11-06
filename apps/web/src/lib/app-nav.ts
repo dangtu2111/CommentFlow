@@ -12,6 +12,7 @@ export type NavItemKey =
   | 'posts'
   | 'tryAi'
   | 'readiness'
+  | 'kbGaps'
   | 'channels'
   | 'members'
   | 'activity'
@@ -31,6 +32,8 @@ const ENTRIES: readonly Entry[] = [
   { key: 'tryAi', href: '/app/try-ai', group: 'settings', roles: ['owner'] },
   // Độ sẵn sàng của AI (FR-146, US-107): Owner xem thiếu gì trước khi bật Tự động.
   { key: 'readiness', href: '/app/readiness', group: 'settings', roles: ['owner'] },
+  // Câu hỏi AI chưa trả lời được (FR-134, UF-11): Owner bổ sung kiến thức nhanh.
+  { key: 'kbGaps', href: '/app/kb-gaps', group: 'settings', roles: ['owner'] },
   { key: 'channels', href: '/app/channels', group: 'settings', roles: ['owner'] },
   // Trang Thành viên chỉ Owner (docs/13 §3.1); Staff nhận 404 nên không hiện liên kết.
   { key: 'members', href: '/app/members', group: 'settings', roles: ['owner'] },
