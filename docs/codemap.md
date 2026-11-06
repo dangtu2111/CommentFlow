@@ -120,6 +120,7 @@ Cập nhật lần cuối: 2026-11-06 · nhánh `feat-auto-send-gate` · Gói n�
 | Test | `*.test.ts` cạnh mã (đơn vị) · `tests/*.int.test.ts` (tích hợp) | Vitest; pytest cho `ml` | 14 |
 | Thanh toán / gói | Chưa có | | 10 §3.6 |
 | Trang Bình luận (UI) | Chưa có | | UI prompt 7.1 |
+| Cơ sở kiến thức + Bài viết UI (UI-FIDELITY-KB-POSTS, QUKP1) | Có | `components/kb/kb-frame.tsx`, `app/app/(guarded)/kb/page.tsx`, `lib/kb-structure.ts`, `components/posts/posts-tabs.tsx`, `lib/posts-pagination.ts`, `styles/kb-posts.css`, `app/dev/ui/kb-posts/page.tsx` | trang trung tâm `/app/kb` (Owner; % từ `loadReadiness`) + khung menu bọc products/import, try-ai, readiness; Bài viết: tab nền tảng, phân trang số; route dev [MẪU] |
 | Webhook Meta | Chưa có | | 12 §1 · 11 §13 |
 | Workspace / thành viên | `packages/saas-core/src/tenancy/` | `tenancy.ts` (tạo workspace có múi giờ/ngôn ngữ + `action_logs`, liệt kê workspace); `workspace-admin.ts` `createWorkspaceAdmin` (danh sách/đổi vai trò/tạm khóa/gỡ thành viên, lời mời: tạo/thu hồi/gửi lại/xem trước/nhận; chỉ Owner; email báo Owner); `leaveWorkspace` (tự rời, mọi vai trò, gọi `core.leave_workspace` 0028, báo mọi Owner, Owner cuối → CONFLICT); `action-log.ts`; `openWorkspaceServices` (một pool cf_app) | 09 §3.1 · ADR 005 |
 

@@ -11,6 +11,7 @@ export type NavItemKey =
   | 'comments'
   | 'posts'
   | 'aiSent'
+  | 'kb'
   | 'tryAi'
   | 'readiness'
   | 'automation'
@@ -36,6 +37,8 @@ const ENTRIES: readonly Entry[] = [
   // AI đã gửi + Đánh dấu sai (FR-075): Owner và Staff đều xem và đánh dấu được (docs/13 §3).
   { key: 'aiSent', href: '/app/ai-sent', group: 'operations', roles: ['owner', 'staff'] },
   // Trang Kênh (kết nối Facebook, FR-010) chỉ Owner; Staff nhận 404 nên không hiện liên kết.
+  // Cơ sở kiến thức (trang trung tâm, QUKP1): gom các trang kiến thức; chỉ Owner.
+  { key: 'kb', href: '/app/kb', group: 'settings', roles: ['owner'] },
   // Thử AI (FR-059, US-034): Owner thử trước khi bật tự gửi; không trừ lượt, chạy bằng mock.
   { key: 'tryAi', href: '/app/try-ai', group: 'settings', roles: ['owner'] },
   // Độ sẵn sàng của AI (FR-146, US-107): Owner xem thiếu gì trước khi bật Tự động.

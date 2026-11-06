@@ -1045,6 +1045,47 @@
       "skip": "Skip (not processed)"
     }
   },
+  "kb": {
+    "pageTitle": "Knowledge base",
+    "title": "AI knowledge base",
+    "subtitle": "Everything the AI uses to answer customers: products, Q&A, tests and versions.",
+    "navLabel": "Knowledge structure",
+    "overview": "Overview",
+    "completeness": "Knowledge completeness",
+    "completenessAria": "Knowledge completeness: {score}%",
+    "completenessReady": "Ready to turn on automatic replies",
+    "completenessNotReady": "At least {min}% needed to turn on automatic replies",
+    "completenessDetail": "View details",
+    "groups": { "structure": "Knowledge structure", "tuning": "Tuning & testing" },
+    "cards": {
+      "productImport": {
+        "title": "Products",
+        "body": "Import products, prices and stock from Excel/CSV. The AI only reads prices and stock from here."
+      },
+      "kbGaps": {
+        "title": "Q&A",
+        "body": "Customer questions the AI could not answer yet — turn them into knowledge quickly."
+      },
+      "readiness": {
+        "title": "AI readiness",
+        "body": "See what is still missing before turning on automatic mode."
+      },
+      "tryAi": {
+        "title": "Try AI",
+        "body": "Type a customer question to see how the AI would answer. No quota used."
+      },
+      "kbTestset": {
+        "title": "Tests",
+        "body": "Run sample questions to make sure the AI is still right before publishing."
+      },
+      "kbPublish": { "title": "Versions", "body": "Publish or restore a knowledge version." }
+    },
+    "open": "Open",
+    "error": {
+      "title": "Could not load the knowledge overview",
+      "body": "Something went wrong while loading. Please reload in a few minutes."
+    }
+  },
   "tryAi": {
     "pageTitle": "Try AI",
     "title": "Try AI",
@@ -1123,6 +1164,7 @@
     "nav": {
       "comments": "Comments",
       "posts": "Posts",
+      "kb": "Knowledge base",
       "tryAi": "Try AI",
       "readiness": "AI readiness",
       "automation": "Auto-send settings",
@@ -1290,6 +1332,16 @@
     "title": "Posts",
     "subtitle": "Posts from your connected channels, with the number of comments waiting for action.",
     "count": "{count} posts",
+    "heading": "Multichannel posts",
+    "breadcrumb": {
+      "label": "Breadcrumb",
+      "operations": "Multichannel operations",
+      "content": "Content management",
+      "current": "Posts"
+    },
+    "tabs": { "label": "Filter by platform", "all": "All posts" },
+    "range": "Showing {from} - {to} of {total} posts",
+    "pageNumber": "Page {page}",
     "error": {
       "title": "Could not load posts",
       "body": "Something went wrong while loading data. Please reload in a few minutes."
