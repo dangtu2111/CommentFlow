@@ -147,7 +147,7 @@ export async function createKbVersionFromChunks(
   const origin =
     input.scope.kind === 'draft'
       ? sql`c.version_id IS NULL AND c.is_draft AND NOT c.injection_suspected`
-      : sql`c.version_id = ${input.scope.versionId}::uuid`;
+      : sql`c.version_id = ${input.scope.versionId}::uuid AND NOT c.injection_suspected`;
   const copied = await tx.execute(sql`
     INSERT INTO cf.kb_chunks (workspace_id, source_id, version_id, chunk_key, injection_suspected,
       injection_reason, content, lang, content_hash, embedding, tsv, search_norm, metadata, is_draft,
