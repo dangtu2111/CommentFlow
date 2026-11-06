@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { NotificationBell } from '../../../../components/app/notification-bell';
 import { ShellNav } from '../../../../components/app/shell-nav';
+import { ShellQuotaCard } from '../../../../components/app/shell-quota-card';
 import { UserCard } from '../../../../components/app/user-card';
 import { BrandLogo } from '../../../../components/brand-logo';
 import {
@@ -16,6 +17,7 @@ import { LocaleSwitcher } from '../../../../components/locale-switcher';
 import { navGroupsFor } from '../../../../lib/app-nav';
 import { INBOX_TAB_KEYS, type InboxTabKey, type InboxView } from '../../../../lib/inbox-filters';
 import { buildNotifications } from '../../../../lib/notification-model';
+import { buildUsageMeterView } from '../../../../lib/usage-meter-view';
 
 const SAMPLE_TZ = 'Asia/Ho_Chi_Minh';
 const SAMPLE_NOTE = '[MẪU] Dữ liệu mẫu — không phải số liệu thật';
@@ -157,6 +159,7 @@ export default async function DevCommentsPage({
         <ShellNav
           groups={groups}
           label={t('shell.navLabel')}
+          quota={<ShellQuotaCard view={buildUsageMeterView({ used: 2140, limit: 3000 })} />}
           footer={
             <UserCard name="[MẪU] Nguyễn Mai Linh" roleLabel={t('workspace.switcher.role.owner')} />
           }

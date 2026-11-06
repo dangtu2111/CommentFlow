@@ -27,7 +27,7 @@ import { isNavActive, type NavGroupKey, type NavItemKey } from '../../lib/app-na
 type Group = {
   key: NavGroupKey;
   label: string;
-  items: Array<{ key: NavItemKey; href: string; label: string }>;
+  items: Array<{ key: NavItemKey; href: string; matchHrefs: string[]; label: string }>;
 };
 
 const ICONS: Record<NavItemKey, LucideIcon> = {
@@ -57,10 +57,13 @@ const ICONS: Record<NavItemKey, LucideIcon> = {
 export function ShellNav({
   groups,
   label,
+  quota,
   footer,
 }: {
   groups: Group[];
   label: string;
+  /** Thẻ "Hạn mức AI" ngay trên thẻ người dùng (Server Component truyền vào). */
+  quota?: ReactNode;
   footer?: ReactNode;
 }) {
   const pathname = usePathname();
@@ -78,7 +81,11 @@ export function ShellNav({
                     <Link
                       href={item.href}
                       className="shell-nav-link"
-                      aria-current={isNavActive(pathname, item.href) ? 'page' : undefined}
+                      aria-current={
+                        item.matchHrefs.some((href) => isNavActive(pathname, href))
+                          ? 'page'
+                          : undefined
+                      }
                     >
                       <Icon size={18} aria-hidden="true" />
                       {item.label}
@@ -90,6 +97,7 @@ export function ShellNav({
           </div>
         ))}
       </div>
+      {quota}
       {footer}
     </nav>
   );

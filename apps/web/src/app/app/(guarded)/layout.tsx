@@ -1,7 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { NotificationBell } from '../../../components/app/notification-bell';
+import { SectionTabs } from '../../../components/app/section-tabs';
 import { ShellNav } from '../../../components/app/shell-nav';
+import { ShellQuotaCard } from '../../../components/app/shell-quota-card';
 import { SystemBanners } from '../../../components/app/system-banners';
 import { UserCard } from '../../../components/app/user-card';
 import { WorkspaceSwitcher } from '../../../components/app/workspace-switcher';
@@ -13,6 +15,7 @@ import { buildNotifications } from '../../../lib/notification-model';
 import { getAuthRuntime } from '../../../server/auth';
 import { requireAppUser } from '../../../server/require-app-user';
 import { loadShellAlerts } from '../../../server/shell-alerts';
+import { loadUsageMeterView } from '../../../server/usage-meter';
 import { loadActionableCounts } from '../../../server/workspace-counts';
 import { logoutAction } from '../../(auth)/actions';
 
@@ -32,7 +35,16 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
     loadActionableCounts(user.id, memberships),
     loadShellAlerts(workspace.id, user.id, workspace.role),
   ]);
+  const usage = await loadUsageMeterView(workspace.id);
   const roleLabel = tRole(`role.${workspace.role}`);
+  // Nhãn tab = nhãn mục menu; riêng tab đầu của Cài đặt là "Chung" (tránh lặp tên trang cha).
+  const tabLabels = {
+    comments: t('nav.comments'),
+    aiSent: t('nav.aiSent'),
+    settings: t('tabs.general'),
+    channels: t('nav.channels'),
+    members: t('nav.members'),
+  };
   const groups = navGroupsFor(workspace.role).map((group) => ({
     key: group.key,
     label: t(`groups.${group.key}`),
@@ -60,6 +72,7 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
         <ShellNav
           groups={groups}
           label={t('navLabel')}
+          quota={usage ? <ShellQuotaCard view={usage} /> : null}
           footer={<UserCard name={user.name} roleLabel={roleLabel} />}
         />
         <div className="shell-main">
@@ -67,6 +80,7 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
           <div data-slot="banners">
             <SystemBanners alerts={alerts} />
           </div>
+          <SectionTabs role={workspace.role} labels={tabLabels} ariaLabel={t('tabsLabel')} />
           {children}
         </div>
       </div>

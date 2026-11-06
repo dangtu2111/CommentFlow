@@ -1,8 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import { navGroupsFor } from '../../lib/app-nav';
 import { buildNotifications } from '../../lib/notification-model';
+import { buildUsageMeterView } from '../../lib/usage-meter-view';
 import { NotificationBell } from '../app/notification-bell';
 import { ShellNav } from '../app/shell-nav';
+import { ShellQuotaCard } from '../app/shell-quota-card';
 import { UserCard } from '../app/user-card';
 import { BrandLogo } from '../brand-logo';
 import { LocaleSwitcher } from '../locale-switcher';
@@ -36,6 +38,8 @@ export async function DevShell({ children }: { children: React.ReactNode }) {
         <ShellNav
           groups={groups}
           label={t('shell.navLabel')}
+          // Số mẫu (nhãn [MẪU] ở chip tên cửa hàng + DEV_SAMPLE_NOTE); không phải số liệu thật.
+          quota={<ShellQuotaCard view={buildUsageMeterView({ used: 2140, limit: 3000 })} />}
           footer={<UserCard name={SAMPLE_USER} roleLabel={t('workspace.switcher.role.owner')} />}
         />
         <div className="shell-main">{children}</div>
