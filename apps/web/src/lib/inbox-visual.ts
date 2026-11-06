@@ -9,6 +9,12 @@ export function platformBadgeText(platform: string): string {
   return head === '' ? '?' : head.toLocaleUpperCase('vi');
 }
 
+/** Chữ cái đầu của tên khách trên ảnh đại diện (bỏ tiền tố nhãn "[MẪU]" của dữ liệu mẫu). */
+export function avatarInitial(name: string): string {
+  const clean = name.replace(/^\[MẪU\]\s*/u, '').trim();
+  return Array.from(clean)[0]?.toLocaleUpperCase('vi') ?? '?';
+}
+
 export type LabelTone = 'price' | 'advice' | 'purchase' | 'complaint' | 'spam' | 'neutral';
 
 /** Tông màu chip nhãn; nhãn không thuộc bộ chuẩn (hoặc `other`) → trung tính. */
