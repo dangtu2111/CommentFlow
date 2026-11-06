@@ -19,16 +19,17 @@ type RawNote = {
   id: string;
   post_id: string;
   content: string;
-  valid_from: Date;
-  valid_to: Date | null;
+  // `tx.execute` thô trả timestamptz dạng chuỗi (không qua parser của drizzle) → ép về Date ở toNote.
+  valid_from: Date | string;
+  valid_to: Date | string | null;
 };
 
 const toNote = (r: RawNote): PostNoteRow => ({
   id: r.id,
   postId: r.post_id,
   content: r.content,
-  validFrom: r.valid_from,
-  validTo: r.valid_to,
+  validFrom: new Date(r.valid_from),
+  validTo: r.valid_to === null ? null : new Date(r.valid_to),
 });
 
 /** `validFrom` null → now() của DB. */
