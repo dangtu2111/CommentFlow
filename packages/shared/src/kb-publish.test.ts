@@ -138,6 +138,8 @@ describe('FR-054 parsePublishNote', () => {
     expect(parsePublishNote('  hi  ')).toEqual({ ok: true, note: 'hi' });
     expect(parsePublishNote('   ')).toEqual({ ok: true, note: null });
     expect(parsePublishNote(undefined)).toEqual({ ok: true, note: null });
+    expect(parsePublishNote(null)).toEqual({ ok: true, note: null });
+    expect(parsePublishNote(42)).toEqual({ ok: false });
     expect(parsePublishNote('x'.repeat(500))).toMatchObject({ ok: true });
     expect(parsePublishNote('x'.repeat(501))).toEqual({ ok: false });
   });

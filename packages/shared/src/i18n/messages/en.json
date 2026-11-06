@@ -622,6 +622,46 @@
       "body": "Please reload the page in a few minutes."
     }
   },
+  "kbPublish": {
+    "pageTitle": "Knowledge versions",
+    "title": "Knowledge versions",
+    "subtitle": "The AI only answers from the published version. Edit the draft, review the changes, then publish; to go back, restore an older version (a new version is created, nothing is deleted).",
+    "draftTitle": "Draft",
+    "currentNone": "No version has been published yet.",
+    "currentVersion": "Live version: {number}",
+    "noChanges": "The draft has no changes compared with the live version.",
+    "summary": "Added {added} · Changed {changed} · Removed {removed} knowledge chunks",
+    "categories": "Changed: {list}",
+    "blockedInjection": "{count} chunk(s) look like they contain injected instructions and will not be published; please review that content.",
+    "noteLabel": "Version note (optional)",
+    "confirmPublish": "I have reviewed the Product/Policy changes and agree to publish.",
+    "confirmRestore": "I understand the AI will answer from this version's content.",
+    "publish": "Publish",
+    "restore": "Restore",
+    "queued": "Request sent. The new version will appear in the list in a few seconds; reload the page to see it.",
+    "noChangesResult": "Nothing changed, so no new version was created.",
+    "historyTitle": "Version history",
+    "historyEmpty": "No versions yet.",
+    "versionLabel": "Version {number}",
+    "current": "Live",
+    "versionMeta": "{date} · {chunks} chunks",
+    "category": {
+      "faq": "FAQ",
+      "policy": "Policies",
+      "product": "Products",
+      "manual": "Manual entry",
+      "url": "Links"
+    },
+    "error": {
+      "invalid_note": "The note can be at most 500 characters.",
+      "confirm_required": "Tick the confirmation box before continuing.",
+      "unavailable": "Could not send the request, please try again."
+    },
+    "loadError": {
+      "title": "Could not load knowledge versions",
+      "body": "Please reload the page in a few minutes."
+    }
+  },
   "readiness": {
     "pageTitle": "AI readiness",
     "title": "AI readiness",
@@ -775,6 +815,7 @@
       "tryAi": "Try AI",
       "readiness": "AI readiness",
       "kbGaps": "Unanswered questions",
+      "kbPublish": "Knowledge versions",
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
