@@ -308,3 +308,4 @@ Cổng: theo từng tính năng (`docs/14` §8).
 - Xong một việc → đổi trạng thái ở đây **và** dòng gap matrix cùng commit (`/finish`); thêm việc phát sinh vào đúng GĐ, giữ ≤ 1–2 ngày công.
 - Dòng `⛔` chỉ chuyển ⏳ khi chủ dự án cung cấp tài nguyên/quyết định; ghi lại trong handoff.
 - Việc cơ học (dịch chuỗi, đổi tên hàng loạt, cập nhật bản đồ) → issue nhãn `mech` cho máy phụ, không tính vào bảng này.
+| UI-FIDELITY-REPORTS-LEGAL | docs/08 §2 (reports, landing-pricing, privacy-data-deletion, terms-dpa) | — | REPORTS, PUBLIC-PAGES | — | không | 🟡 Giao diện mẫu dev khớp một phần (`feat-ui-reports-legal`, QRL1; trang thật chờ `REPORTS`, `PUBLIC-PAGES`) |
