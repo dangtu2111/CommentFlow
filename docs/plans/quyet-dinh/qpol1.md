@@ -1,0 +1,1 @@
+| QPOL1 | 06/11 | UI-FIDELITY vòng 2: chỉ sửa lỗi bố cục/CSS (tràn ngang Bình luận 390px, lề trái thừa ở ô nhập không biểu tượng, Kanban Leads xếp dọc, header không xuống dòng); KHÔNG thêm huy hiệu/số liệu/nút Google; điểm lệch cần dữ liệu thật giữ ở gap matrix | Không bịa nội dung; thay đổi chỉ CSS nên rủi ro thấp | `git revert` commit của nhánh `feat-ui-polish-pass` |

@@ -172,7 +172,7 @@ export default async function DevCommentsPage({
               <InboxList
                 view={view}
                 items={SAMPLE_ITEMS}
-                total={SAMPLE_COUNTS.pending_review}
+                total={SAMPLE_ITEMS.length}
                 nextCursor={null}
                 timeZone={SAMPLE_TZ}
                 now={NOW}
