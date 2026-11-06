@@ -17,8 +17,19 @@ const ON = { enabled: true };
 const PHONE_TEXT = 'ib em 0912345678 nhé';
 const LINK_TEXT = 'xem tại https://spam.example.com/x';
 
-const phoneRule: AutoHideRule = { type: 'phone', enabled: true, shadowUntil: null };
-const linkRule: AutoHideRule = { type: 'link', enabled: true, shadowUntil: null };
+// Mặc định: quy tắc đã qua giai đoạn chạy thử (chạy thật).
+const phoneRule: AutoHideRule = {
+  type: 'phone',
+  action: 'auto_hide',
+  enabled: true,
+  shadowUntil: PAST,
+};
+const linkRule: AutoHideRule = {
+  type: 'link',
+  action: 'auto_hide',
+  enabled: true,
+  shadowUntil: PAST,
+};
 
 function comment(over: Partial<AutoHideComment> = {}): AutoHideComment {
   return {
@@ -76,7 +87,12 @@ describe('FR-081 planAutoHide', () => {
     });
   });
   it('loại quy tắc khác phone/link (keyword…) bị bỏ qua dù khớp', () => {
-    const bad = { type: 'keyword', enabled: true, shadowUntil: null } as unknown as AutoHideRule;
+    const bad = {
+      type: 'keyword',
+      action: 'auto_hide',
+      enabled: true,
+      shadowUntil: PAST,
+    } as unknown as AutoHideRule;
     expect(plan(comment({ text: 'keyword' }), [bad])).toEqual({
       outcome: 'skip',
       reason: 'no_rule',
@@ -120,12 +136,22 @@ describe('FR-081 planAutoHide', () => {
     ]);
     expect(r).toMatchObject({ outcome: 'hide', matched: ['phone'] });
   });
-  it('hide mang liên hệ gốc để lưu trước khi ẩn', () => {
+  it('hồi quy: shadow_until null (chưa chạy thử) → would_hide, KHÔNG ẩn', () => {
+    expect(plan(comment(), [{ ...phoneRule, shadowUntil: null }])).toEqual({
+      outcome: 'would_hide',
+      matched: ['phone'],
+    });
+  });
+  it('quy tắc không phải mức auto_hide (mark/skip) bị bỏ qua', () => {
+    for (const action of ['mark', 'skip', '']) {
+      const rule = { ...phoneRule, action } as unknown as AutoHideRule;
+      expect(plan(comment(), [rule])).toEqual({ outcome: 'skip', reason: 'no_rule' });
+    }
+  });
+  it('kết quả plan không mang SĐT/email gốc', () => {
     const r = plan(comment({ text: 'zalo 0912345678 a@b.co' }));
     expect(r.outcome).toBe('hide');
-    if (r.outcome === 'hide') {
-      expect(r.contacts).toEqual({ phones: ['0912345678'], emails: ['a@b.co'] });
-    }
+    expect(JSON.stringify(r)).not.toContain('0912345678');
   });
   it('đầu vào hỏng → skip invalid_input, không ném', () => {
     expect(
@@ -192,7 +218,10 @@ describe('FR-081 AI không bao giờ tự ẩn (property)', () => {
 });
 
 describe('FR-081 runAutoHide: lưu khách trước, ẩn sau', () => {
-  type Over = { save?: ContactSink['save']; request?: (id: string) => Promise<string | null> };
+  type Over = {
+    save?: ContactSink['save'];
+    request?: (workspaceId: string, id: string) => Promise<string | null>;
+  };
   const deps = (order: string[], over: Over = {}) => ({
     contactSink: {
       save:
@@ -204,8 +233,8 @@ describe('FR-081 runAutoHide: lưu khách trước, ẩn sau', () => {
     hideRequester: {
       requestHide:
         over.request ??
-        (async (id: string) => {
-          order.push(`hide:${id}`);
+        (async (workspaceId: string, id: string) => {
+          order.push(`hide:${workspaceId}:${id}`);
           return 'h1';
         }),
     },
@@ -221,7 +250,7 @@ describe('FR-081 runAutoHide: lưu khách trước, ẩn sau', () => {
   it('lưu xong rồi mới yêu cầu ẩn', async () => {
     const order: string[] = [];
     const r = await runAutoHide(input(), deps(order));
-    expect(order).toEqual(['save:0912345678', 'hide:c1']);
+    expect(order).toEqual(['save:0912345678', 'hide:w1:c1']);
     expect(r).toEqual({ outcome: 'hide_requested', hideId: 'h1', matched: ['phone'] });
   });
   it('yêu cầu ẩn trả null (đã có việc đang chạy) → hide_requested hideId null', async () => {

@@ -1,4 +1,4 @@
-import { type ExtractedContacts, extractPii, matchSpamRule } from '@flow/shared';
+import { matchSpamRule } from '@flow/shared';
 import { z } from 'zod';
 import { type ContactSink, maskAndCapture } from '../pii';
 
@@ -29,8 +29,13 @@ export const AUTO_HIDE_ELIGIBLE_STATUSES = [
 
 export type AutoHideRule = {
   type: AutoHideRuleType;
+  /** Chỉ quy tắc mức `auto_hide` mới được ẩn; `mark`/`skip` bị bỏ qua (cột `rules.action`). */
+  action: 'auto_hide';
   enabled: boolean;
-  /** Còn hạn → chạy thử: chỉ ghi "sẽ ẩn", không ẩn thật (cột `rules.shadow_until`). */
+  /**
+   * Chạy đánh dấu trước (FR-081): chỉ khi mốc này ĐÃ QUA mới ẩn thật. `null` (chưa chạy thử) hoặc còn hạn →
+   * chỉ ghi "sẽ ẩn" (cột `rules.shadow_until`). Q-AH1 (verifier).
+   */
   shadowUntil: Date | null;
 };
 
@@ -48,6 +53,7 @@ const inputSchema = z.object({
   rules: z.array(
     z.object({
       type: z.string(),
+      action: z.string(),
       enabled: z.boolean(),
       shadowUntil: z.date().nullable(),
     }),
@@ -75,12 +81,7 @@ export type AutoHideSkipReason =
 export type AutoHidePlan =
   | { outcome: 'skip'; reason: AutoHideSkipReason }
   | { outcome: 'would_hide'; matched: AutoHideRuleType[] }
-  | {
-      outcome: 'hide';
-      matched: AutoHideRuleType[];
-      /** Liên hệ gốc (chưa che) — phải lưu vào Khách tiềm năng TRƯỚC khi ẩn; không log. */
-      contacts: ExtractedContacts;
-    };
+  | { outcome: 'hide'; matched: AutoHideRuleType[] };
 
 const isAutoHideType = (t: string): t is AutoHideRuleType =>
   (AUTO_HIDE_RULE_TYPES as readonly string[]).includes(t);
@@ -111,15 +112,14 @@ export function planAutoHide(input: {
   const live: AutoHideRuleType[] = [];
   const shadow: AutoHideRuleType[] = [];
   for (const rule of rules) {
-    if (!rule.enabled || !isAutoHideType(rule.type)) continue;
+    if (!rule.enabled || rule.action !== 'auto_hide' || !isAutoHideType(rule.type)) continue;
     const spamRule = { name: rule.type, type: rule.type, pattern: '', action: 'mark' } as const;
     if (!matchSpamRule(spamRule, comment)) continue;
-    const inShadow = rule.shadowUntil !== null && rule.shadowUntil.getTime() > now.getTime();
-    (inShadow ? shadow : live).push(rule.type);
+    const shadowOver = rule.shadowUntil !== null && rule.shadowUntil.getTime() <= now.getTime();
+    (shadowOver ? live : shadow).push(rule.type);
   }
 
-  if (live.length > 0)
-    return { outcome: 'hide', matched: live, contacts: extractPii(comment.text) };
+  if (live.length > 0) return { outcome: 'hide', matched: live };
   if (shadow.length > 0) return { outcome: 'would_hide', matched: shadow };
   return skip('no_rule');
 }
@@ -129,7 +129,8 @@ export function planAutoHide(input: {
  * (`AUTO-HIDE-DB`, cần migration làn b); trả id yêu cầu hoặc `null` khi không có việc mới (idempotent).
  */
 export interface HideRequester {
-  requestHide(commentId: string): Promise<string | null>;
+  /** Bản thật BẮT BUỘC lọc theo `workspaceId` (nguyên tắc #2). */
+  requestHide(workspaceId: string, commentId: string): Promise<string | null>;
 }
 
 export type AutoHideResult =
@@ -163,7 +164,7 @@ export async function runAutoHide(
   if (!captured.saved) return { outcome: 'held', reason: 'lead_save_failed' };
 
   try {
-    const hideId = await deps.hideRequester.requestHide(input.comment.id);
+    const hideId = await deps.hideRequester.requestHide(input.workspaceId, input.comment.id);
     return { outcome: 'hide_requested', hideId, matched: plan.matched };
   } catch {
     // Không đính kèm lỗi gốc: thông báo của driver có thể chứa nội dung bình luận.
