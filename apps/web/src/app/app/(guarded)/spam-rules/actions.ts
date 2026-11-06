@@ -15,7 +15,7 @@ export type SpamRuleState =
 
 /**
  * Xem trước / lưu quy tắc spam (FR-080, US-050). Chỉ Owner (Staff nhận 404); workspace lấy từ `requireAppUser`.
- * Xem trước chỉ đọc. Lưu vào `cf.rules` (0049); quá trần 50 quy tắc → `limit_reached`.
+ * Xem trước chỉ đọc. Lưu vào `cf.rules` (0050); quá trần 50 quy tắc → `limit_reached`.
  */
 export async function spamRuleAction(_prev: SpamRuleState, data: FormData): Promise<SpamRuleState> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });

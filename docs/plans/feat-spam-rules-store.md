@@ -26,7 +26,7 @@ Không có (tự chọn phương án khuyến nghị, ghi Q-SRS1 trong `QUYET_DI
 ## File sẽ sửa / tạo
 
 - `packages/db/src/schema/cf/spam-rules.ts` (mới) + `index.ts` — schema Drizzle `cf.rules`.
-- `packages/db/migrations/0049_spam_rules_store.sql` + `meta/*` — bảng, CHECK, RLS, GRANT.
+- `packages/db/migrations/0050_spam_rules_store.sql` + `meta/*` — bảng, CHECK, RLS, GRANT.
 - `packages/db/src/queries/spam-rules.ts` (mới), `runtime.ts` — `createSpamRule`/`listSpamRules`/`setSpamRuleEnabled`/`deleteSpamRule`.
 - `packages/db/src/check-rls.ts` — kỳ vọng RLS cho `cf.rules`.
 - `packages/db/tests/spam-rules.int.test.ts` (mới).
@@ -35,7 +35,7 @@ Không có (tự chọn phương án khuyến nghị, ghi Q-SRS1 trong `QUYET_DI
 
 ## Migration
 
-`0049_spam_rules_store` (số kế tiếp sau 0048 trên main). Tạo `cf.rules` (id, workspace_id FK cascade, name, type, pattern, action, enabled, shadow_until, created_by FK set null, created_at, updated_at), CHECK, RLS (đọc: thành viên/không người dùng; ghi: Owner hoặc hệ thống), GRANT theo cột. Không có `rule_matches` (thuộc việc chạy quy tắc sau). Đường lùi: `DROP TABLE cf.rules` + bỏ kỳ vọng ở check-rls.ts; web về `unavailable`.
+`0050_spam_rules_store` (số kế tiếp sau 0049 trên main). Tạo `cf.rules` (id, workspace_id FK cascade, name, type, pattern, action, enabled, shadow_until, created_by FK set null, created_at, updated_at), CHECK, RLS (đọc: thành viên/không người dùng; ghi: Owner hoặc hệ thống), GRANT theo cột. Không có `rule_matches` (thuộc việc chạy quy tắc sau). Đường lùi: `DROP TABLE cf.rules` + bỏ kỳ vọng ở check-rls.ts; web về `unavailable`.
 
 ## Test viết trước
 

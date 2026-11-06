@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
 
 /**
- * Quy tắc spam theo workspace (FR-080, migration 0049, Q-SRS1). Đầu vào ghi PHẢI đã qua `parseSpamRule`
+ * Quy tắc spam theo workspace (FR-080, migration 0050, Q-SRS1). Đầu vào ghi PHẢI đã qua `parseSpamRule`
  * (`@flow/shared`); lớp này chỉ lưu/đọc, DB giữ CHECK làm chốt cuối. Ghi: `withActor` (Owner, `userId` = chính họ) hoặc
  * `withJob` (`userId` null); RLS chặn Staff, workspace khác, người ngoài. Đọc: thành viên hoặc ngữ cảnh không người dùng.
  * Nội dung quy tắc bất biến: chỉ `enabled`/`shadow_until` đổi được; sửa nội dung = xóa + tạo lại.

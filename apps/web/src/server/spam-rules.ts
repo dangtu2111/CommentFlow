@@ -17,7 +17,7 @@ import { getDb } from './db';
  * (chỉ đọc, không đổi bình luận), khớp bằng hàm thuần ở `@flow/shared`. `workspaceId`/`userId` lấy từ
  * `requireAppUser`, không từ client. Q-SPR1.
  *
- * Lưu quy tắc vào `cf.rules` (migration 0049, Q-SRS1) trong `withActor` — RLS chỉ cho Owner ghi, `created_by` = chính
+ * Lưu quy tắc vào `cf.rules` (migration 0050, Q-SRS1) trong `withActor` — RLS chỉ cho Owner ghi, `created_by` = chính
  * người ghi. `SpamRuleStore` là interface; không có kho → `save` trả `unavailable` và KHÔNG ghi gì. Quá trần 50
  * quy tắc → `SpamRuleLimitError` (nơi gọi bắt). Quy tắc chỉ đánh dấu/bỏ qua; không có đường tự ẩn ở đây.
  */
