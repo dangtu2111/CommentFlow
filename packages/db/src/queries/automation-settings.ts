@@ -17,7 +17,7 @@ export type AutomationSettingsInput = {
   threshold: number;
   delaySeconds: number;
   dailyCap: number;
-  activeHours: unknown | null;
+  activeHours: Record<string, unknown> | null;
   blockedKeywords: readonly string[];
   signature: string | null;
   rules: readonly AutomationRuleRow[];
@@ -34,7 +34,7 @@ type RawSettings = {
   threshold: number;
   delay_seconds: number;
   daily_cap: number;
-  active_hours: unknown | null;
+  active_hours: Record<string, unknown> | null;
   blocked_keywords: string[];
   signature: string | null;
   updated_by: string | null;
@@ -96,7 +96,8 @@ export async function saveAutomationSettings(
       (workspace_id, threshold, delay_seconds, daily_cap, active_hours, blocked_keywords, signature, updated_by)
     VALUES (${workspaceId}::uuid, ${input.threshold}, ${input.delaySeconds}, ${input.dailyCap},
       ${input.activeHours === null ? null : JSON.stringify(input.activeHours)}::jsonb,
-      ARRAY(SELECT jsonb_array_elements_text(${JSON.stringify(input.blockedKeywords)}::jsonb)),
+      ARRAY(SELECT x.t FROM jsonb_array_elements_text(${JSON.stringify(input.blockedKeywords)}::jsonb)
+        WITH ORDINALITY AS x(t, i) ORDER BY x.i),
       ${input.signature}, ${userId}::uuid)
     ON CONFLICT (workspace_id) DO UPDATE SET
       threshold = EXCLUDED.threshold, delay_seconds = EXCLUDED.delay_seconds, daily_cap = EXCLUDED.daily_cap,
