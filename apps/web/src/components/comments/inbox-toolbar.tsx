@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowUp, RefreshCw, Search, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { buildInboxHref, INBOX_SEARCH_MAX, type InboxView } from '../../lib/inbox-filters';
@@ -12,9 +12,12 @@ type ChannelOption = { id: string; name: string; platform: string };
 export async function InboxToolbar({
   view,
   channels,
+  sample,
 }: {
   view: InboxView;
   channels: ChannelOption[];
+  /** Ghi chú ưu tiên + dải "N bình luận mới": chưa có cơ chế thật (đẩy realtime, sắp theo ưu tiên) → chỉ trang mẫu. */
+  sample?: { priorityNote: string; newCount: number };
 }) {
   const t = await getTranslations('comments');
   const hasFilter = Boolean(view.platform || view.channelId || view.adsOnly || view.search);
@@ -67,7 +70,7 @@ export async function InboxToolbar({
           href={buildInboxHref(view, { sort: nextSort, cursor: null })}
           title={t(`sort.${nextSort}`)}
         >
-          <span>{t('toolbar.sort')}:</span>
+          <span>{`${t('toolbar.sort')}:`}</span>
           <strong>{t(`sort.${view.sort}`)}</strong>
           <SortIcon size={12} aria-hidden="true" />
         </Link>
@@ -76,7 +79,17 @@ export async function InboxToolbar({
             {t('toolbar.clear')}
           </Link>
         ) : null}
+        {sample ? <span className="inbox-priority">{sample.priorityNote}</span> : null}
       </div>
+      {sample ? (
+        <button type="button" className="inbox-newbar" aria-disabled="true" title={t('soon')}>
+          <span className="inbox-newbar-ping" aria-hidden="true" />
+          <strong>{t('list.newBanner', { count: sample.newCount })}</strong>
+          <span className="inbox-newbar-load">
+            {t('list.loadNew')} <RefreshCw size={12} aria-hidden="true" />
+          </span>
+        </button>
+      ) : null}
     </div>
   );
 }

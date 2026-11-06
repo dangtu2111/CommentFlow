@@ -1,6 +1,18 @@
 import { DECLARED_CAPABILITIES } from '@flow/connectors';
 import { isCommentLabel, isLocale } from '@flow/shared';
-import { Newspaper, Sparkles } from 'lucide-react';
+import {
+  Archive,
+  Ellipsis,
+  ExternalLink,
+  History,
+  Lightbulb,
+  Mail,
+  Newspaper,
+  NotebookPen,
+  Sparkles,
+  Tag,
+  User,
+} from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { hideErrorKey } from '../../lib/hide-errors';
 import { deriveHideUi, type HideUiDetail } from '../../lib/hide-state';
@@ -12,6 +24,7 @@ import type { SuggestionView } from '../../lib/suggestion';
 import { userInitials } from '../../lib/user-initials';
 import { Avatar } from '../ui/avatar';
 import { Card } from '../ui/card';
+import { Kbd } from '../ui/kbd';
 import { CommentLock } from './comment-lock';
 import { HideButton } from './hide-button';
 import { HideProgress } from './hide-progress';
@@ -41,6 +54,14 @@ export type CommentDetailView = {
   lock: { holderName: string | null; heldByMe: boolean } | null;
   /** Gợi ý AI (FR-043). Chưa có nguồn dữ liệu (bảng `drafts`, SUGGEST-UI-PERSIST) → không truyền. */
   suggestion?: SuggestionView | null;
+  /** Dữ liệu bổ sung của thiết kế (sản phẩm đính kèm, CRM, độ tin cậy) — chưa có nguồn thật, chỉ trang xem mẫu truyền. */
+  extras?: CommentDetailExtras;
+};
+
+export type CommentDetailExtras = {
+  post?: { title: string; product: string; stock: string };
+  customer?: { badge: string; meta: string; history: string; purchase: string };
+  ai?: { confidence: string; reason: string };
 };
 
 const STATUSES = [
@@ -86,6 +107,7 @@ export async function CommentDetailPanel({
   const isDeleted = comment.deletedAt !== null;
   // Khách đã xóa: nội dung và danh tính đã bị xóa trắng ở DB (FR-048) → báo rõ thay vì khung rỗng.
   const bodyText = isDeleted ? t('detail.redacted') : comment.text || t('detail.noText');
+  const { extras } = comment;
   const reply = deriveReplyUi({ ...comment, deleted: isDeleted });
   // Nút hiện theo khả năng của nền tảng (docs/08: không hỗ trợ thì không hiện nút).
   const declared = (PLATFORMS as readonly string[]).includes(comment.platform)
@@ -116,6 +138,10 @@ export async function CommentDetailPanel({
   };
   // Nút Ẩn vào thanh hành động dính đáy khi đang soạn trả lời (thiết kế Stitch); trạng thái khác giữ khối riêng.
   const hideInDock = hideUi.mode === 'can' && reply.mode === 'compose';
+  // Câu AI soạn sẵn nằm trong ô soạn (thiết kế Stitch); người vẫn phải bấm gửi. Chỉ khi chưa có nội dung đã nhập.
+  const composePrefill =
+    reply.mode === 'compose' && reply.prefill === '' ? (comment.suggestion?.text ?? '') : '';
+  const soonKey = (key: string) => t('reply.shortcutSoon', { key });
   const hideButton =
     hideUi.mode === 'can' ? (
       <HideButton
@@ -134,6 +160,11 @@ export async function CommentDetailPanel({
     hint: t('reply.hint'),
     // Chỗ giữ chỗ {count}/{max} được client thay (ICU không phân tích lại giá trị tham số).
     counter: t('reply.counter', { count: '{count}', max: '{max}' }),
+    suggestedTitle: t('reply.suggestedTitle'),
+    rewrite: t('reply.rewrite'),
+    emoji: t('reply.emoji'),
+    sourcesLabel: t('reply.sourcesLabel'),
+    soon: t('soon'),
     failures: {
       empty: t('reply.failures.empty'),
       too_long: t('reply.failures.too_long'),
@@ -191,20 +222,40 @@ export async function CommentDetailPanel({
               <Newspaper size={16} aria-hidden="true" />
               {t('detail.postContext')}
             </span>
-            {comment.isAd ? <span className="chip">{t('list.ad')}</span> : null}
+            <span className="detail-card-end">
+              {comment.isAd ? <span className="chip">{t('list.ad')}</span> : null}
+              {/* Chưa lưu đường dẫn bài viết → liên kết vô hiệu (UI-first). */}
+              <span className="detail-link" aria-disabled="true" title={t('soon')}>
+                {t('detail.openOn', { platform })}
+                <ExternalLink size={12} aria-hidden="true" />
+              </span>
+            </span>
           </header>
-          <dl className="comment-detail-meta">
-            <div>
-              <dt>{t('detail.source')}</dt>
-              <dd>
-                {platform} · {comment.channelName}
-              </dd>
+          {extras?.post ? (
+            <div className="detail-post">
+              <h3 className="detail-post-title">{extras.post.title}</h3>
+              <p className="detail-post-meta">
+                <span className="detail-post-product">
+                  <Tag size={12} aria-hidden="true" />
+                  {extras.post.product}
+                </span>
+                <span>{extras.post.stock}</span>
+              </p>
             </div>
-            <div>
-              <dt>{t('detail.post')}</dt>
-              <dd className="comment-detail-code">{comment.postExternalId}</dd>
-            </div>
-          </dl>
+          ) : (
+            <dl className="comment-detail-meta">
+              <div>
+                <dt>{t('detail.source')}</dt>
+                <dd>
+                  {platform} · {comment.channelName}
+                </dd>
+              </div>
+              <div>
+                <dt>{t('detail.post')}</dt>
+                <dd className="comment-detail-code">{comment.postExternalId}</dd>
+              </div>
+            </dl>
+          )}
         </Card>
         <Card className="detail-card">
           <header className="comment-detail-head">
@@ -212,27 +263,54 @@ export async function CommentDetailPanel({
               {userInitials(comment.authorName ?? t('list.anonymous'))}
             </Avatar>
             <div className="comment-detail-author">
-              <h2>{comment.authorName ?? t('list.anonymous')}</h2>
+              <h2>
+                {comment.authorName ?? t('list.anonymous')}
+                {extras?.customer ? (
+                  <span className="chip chip-ai detail-vip">{extras.customer.badge}</span>
+                ) : null}
+              </h2>
               <p>
-                <time
-                  dateTime={comment.createdTime?.toISOString()}
-                  title={formatAbsoluteTime(comment.createdTime, locale, timeZone)}
-                >
-                  {formatRelativeTime(comment.createdTime, now, locale)}
-                </time>
-                {isDeleted ? null : (
+                {extras?.customer ? (
+                  extras.customer.meta
+                ) : (
                   <>
-                    {' · '}
-                    <span className="comment-detail-code">{comment.authorExternalId}</span>
+                    <time
+                      dateTime={comment.createdTime?.toISOString()}
+                      title={formatAbsoluteTime(comment.createdTime, locale, timeZone)}
+                    >
+                      {formatRelativeTime(comment.createdTime, now, locale)}
+                    </time>
+                    {isDeleted ? null : (
+                      <>
+                        {' · '}
+                        <span className="comment-detail-code">{comment.authorExternalId}</span>
+                      </>
+                    )}
                   </>
                 )}
               </p>
+            </div>
+            <div className="detail-icon-btns">
+              <button type="button" aria-disabled="true" title={t('detail.addNote')}>
+                <NotebookPen size={16} aria-hidden="true" />
+              </button>
+              <button type="button" aria-disabled="true" title={t('detail.openCrm')}>
+                <User size={16} aria-hidden="true" />
+              </button>
             </div>
           </header>
           {comment.parentExternalId ? (
             <p className="comment-detail-reply">{t('detail.isReply')}</p>
           ) : null}
           <blockquote className="comment-detail-text">{bodyText}</blockquote>
+          {extras?.customer ? (
+            <p className="detail-history">
+              <History size={14} aria-hidden="true" />
+              <strong>{extras.customer.history}</strong>
+              <span aria-hidden="true">•</span>
+              <em>{extras.customer.purchase}</em>
+            </p>
+          ) : null}
         </Card>
         <Card className="detail-card detail-ai">
           <header className="detail-card-head">
@@ -249,7 +327,18 @@ export async function CommentDetailPanel({
             ) : null}
             <span className={`chip chip-status chip-${comment.status}`}>{status}</span>
             {comment.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
+            {extras?.ai ? (
+              <span className="chip chip-confidence">{extras.ai.confidence}</span>
+            ) : null}
           </div>
+          {extras?.ai ? (
+            <p className="detail-reason">
+              <Lightbulb size={16} aria-hidden="true" />
+              <span>
+                <strong>{t('detail.reason')}</strong> {extras.ai.reason}
+              </span>
+            </p>
+          ) : null}
           {isDeleted ? null : (
             <RelabelSelect commentId={comment.id} current={comment.label} labels={relabelLabels} />
           )}
@@ -258,12 +347,49 @@ export async function CommentDetailPanel({
           {reply.mode === 'compose' ? (
             <ReplyComposer
               commentId={comment.id}
-              prefill={reply.prefill}
+              prefill={composePrefill || reply.prefill}
               labels={composerLabels}
               isRetry={false}
               suggestion={comment.suggestion ?? null}
               suggestionLabels={suggestionLabels}
-              dockStart={hideInDock ? hideButton : null}
+              dockStart={
+                <>
+                  {hideInDock ? (
+                    <span className="dock-slot" title={soonKey('H')}>
+                      {hideButton}
+                    </span>
+                  ) : null}
+                  {/* Bỏ qua/Nhắn riêng/Thêm hành động cho MỘT bình luận chưa có (chỉ hàng loạt) → vô hiệu. */}
+                  <button
+                    type="button"
+                    className="dock-btn"
+                    aria-disabled="true"
+                    title={soonKey('E')}
+                  >
+                    <Archive size={16} aria-hidden="true" />
+                    <span>{t('reply.skip')}</span>
+                    <Kbd>E</Kbd>
+                  </button>
+                  <button
+                    type="button"
+                    className="dock-btn dock-btn-ai"
+                    aria-disabled="true"
+                    title={soonKey('M')}
+                  >
+                    <Mail size={16} aria-hidden="true" />
+                    <span>{t('reply.privateReply')}</span>
+                    <Kbd>M</Kbd>
+                  </button>
+                  <button
+                    type="button"
+                    className="dock-btn dock-btn-icon"
+                    aria-disabled="true"
+                    title={t('reply.moreActions')}
+                  >
+                    <Ellipsis size={16} aria-hidden="true" />
+                  </button>
+                </>
+              }
             />
           ) : null}
           {reply.mode === 'sending' ? (

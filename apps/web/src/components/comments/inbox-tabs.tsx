@@ -1,4 +1,5 @@
 import { COMMENT_LABELS } from '@flow/shared';
+import { Brain } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import {
@@ -32,9 +33,12 @@ const TAB_ICON: Partial<Record<InboxTabKey, IconName>> = {
 export async function InboxTabs({
   view,
   counts,
+  aiHealth,
 }: {
   view: InboxView;
   counts: Record<InboxTabKey, number>;
+  /** Độ chính xác AI + ghi chú rule — chưa có số thật nên chỉ trang xem mẫu truyền (thiếu → "—"/"Sắp có"). */
+  aiHealth?: { accuracy: string; note: string };
 }) {
   const t = await getTranslations('comments');
   const renderTab = (tab: InboxTabKey) => (
@@ -108,6 +112,20 @@ export async function InboxTabs({
         <span>{t('toolbar.adsOnly')}</span>
         <span className="inbox-switch-track" aria-hidden="true" />
       </Link>
+      <label className="inbox-check" aria-disabled="true" title={t('soon')}>
+        <input type="checkbox" disabled />
+        <span>{t('tabsExtra.assignedToMe')}</span>
+      </label>
+      <aside className="inbox-ai-health" aria-label={t('tabsExtra.aiHealth')}>
+        <p className="inbox-ai-health-head">
+          <span>
+            <Brain size={14} aria-hidden="true" />
+            {t('tabsExtra.aiHealth')}
+          </span>
+          <strong>{aiHealth?.accuracy ?? '—'}</strong>
+        </p>
+        <p className="inbox-ai-health-note">{aiHealth?.note ?? t('soon')}</p>
+      </aside>
     </nav>
   );
 }
