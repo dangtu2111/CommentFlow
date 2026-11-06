@@ -26,6 +26,7 @@ export default defineConfig({
         'src/recheck/*.ts': { branches: 95 },
         'src/injection/*.ts': { branches: 95 },
         'src/rules/*.ts': { branches: 95 },
+        'src/pii/*.ts': { branches: 95 },
       },
     },
   },

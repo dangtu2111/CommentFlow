@@ -86,7 +86,13 @@ export {
   mergeBurstText,
   planMergeBurst,
 } from './merge-burst';
-export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
+export {
+  type ExtractedContacts,
+  extractPii,
+  type MaskedText,
+  maskPii,
+  unsafeMarkMasked,
+} from './pii';
 export {
   ALIAS_MATCH_THRESHOLD,
   PRODUCT_ALIAS_MAX,
