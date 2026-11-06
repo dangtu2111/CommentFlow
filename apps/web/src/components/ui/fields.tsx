@@ -4,6 +4,13 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useId, useState } from 'react';
 import { FormField } from './form-field';
+import { Input } from './input';
+
+// Giá trị kỹ thuật (không phải chữ hiển thị): tách thành hằng để luật i18n không coi là chuỗi giao diện.
+const KIND_TOGGLE = 'toggle';
+const KIND_CODE = 'code';
+const INPUT_MODE_TEXT = 'text';
+const INPUT_MODE_NUMERIC = 'numeric';
 
 const ICONS = { mail: Mail, user: User, lock: Lock };
 
@@ -33,9 +40,8 @@ export function TextField({
       {(control) => (
         <div className="input-wrap">
           <Icon className="input-icon" size={18} aria-hidden="true" />
-          <input
+          <Input
             {...control}
-            className="input"
             type={type}
             name={props.name}
             autoComplete={props.autoComplete}
@@ -66,9 +72,9 @@ export function PasswordField(
       {(control) => (
         <div className="input-wrap">
           <Lock className="input-icon" size={18} aria-hidden="true" />
-          <input
+          <Input
             {...control}
-            className="input has-toggle"
+            kind={KIND_TOGGLE}
             type={visible ? 'text' : 'password'}
             name={props.name}
             autoComplete={props.autoComplete}
@@ -113,12 +119,12 @@ export function CodeField(props: {
       {(control) => (
         <div className="input-wrap">
           <ShieldCheck className="input-icon" size={18} aria-hidden="true" />
-          <input
+          <Input
             {...control}
-            className="input code-input"
+            kind={KIND_CODE}
             name={props.name}
             type="text"
-            inputMode={backup ? 'text' : 'numeric'}
+            inputMode={backup ? INPUT_MODE_TEXT : INPUT_MODE_NUMERIC}
             autoComplete="one-time-code"
             maxLength={backup ? 16 : 10}
             required

@@ -22,6 +22,7 @@
     "check:migrations": "node scripts/check-migrations.mjs",
     "docs:build": "node scripts/build-docs.mjs",
     "docs:check": "node scripts/build-docs.mjs --check",
+    "ui:fidelity": "node e2e/support/ui-completeness.mjs --geometry",
     "codemap:build": "node scripts/build-codemap.mjs",
     "quyet:build": "node scripts/build-quyet-dinh.mjs",
     "cbcc:build": "node scripts/build-can-ban-cung-cap.mjs",
