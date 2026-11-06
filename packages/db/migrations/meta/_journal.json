@@ -407,6 +407,13 @@
       "when": 1793969276668,
       "tag": "0057_qr_payment",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793971010961,
+      "tag": "0058_msg_store",
+      "breakpoints": true
     }
   ]
 }
