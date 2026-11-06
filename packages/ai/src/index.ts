@@ -138,6 +138,19 @@ export {
   type LlmMessage,
 } from './llm-client';
 export {
+  type AbbreviationDict,
+  createAbbreviationDict,
+  type DetectedLang,
+  type KnownLang,
+  type LangDetection,
+  type LangDetector,
+  type LangRule,
+  type NormalizeLangInput,
+  type NormalizeLangResult,
+  normalizeAndDetectLang,
+  normalizeText,
+} from './normalize/normalize-lang';
+export {
   type CustomerContext,
   MAX_OTHER_POST_QUESTIONS,
   MAX_THREAD_TURNS,

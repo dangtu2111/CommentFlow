@@ -2,7 +2,7 @@
 
 ## Đã làm
 - `packages/ai/src/rewrite/`: `rewrite-query.ts`, `customer-context.ts`, `rewriter.ts`, `rewrite-prompt.ts`, `rewrite-config.ts`, `fixture-rewriter.ts` + test cạnh file; xuất ở `index.ts`; tên biến `REWRITE_LLM_*` ở `env.example`.
-- Quyết định Q-PRC1; docs: gap-matrix, MASTER, codemap, CAN_BAN_CUNG_CAP §2i, KIEM_TRA_TAY KT-033.
+- Quyết định Q-PRC1; docs: gap-matrix, MASTER, codemap, CAN_BAN_CUNG_CAP §2i, KIEM_TRA_TAY KT-034.
 
 ## Đã đọc + điều rút ra
 - `Extractor`/`Drafter` là mẫu: interface + bản LLM (một `llm.call`) + bản fixture + config cờ tắt. `LlmMessage.content` bắt buộc `MaskedText`; `maskPii` ở `@flow/shared`.

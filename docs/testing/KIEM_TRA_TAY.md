@@ -31,7 +31,7 @@
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
-| KT-033 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-033 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
@@ -86,12 +86,22 @@ Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: pa
 
 ---
 
-## KT-033 — Viết lại câu hỏi theo ngữ cảnh (PIPE-REWRITE-CTX, FR-137/144)
+## KT-034 — Viết lại câu hỏi theo ngữ cảnh (PIPE-REWRITE-CTX, FR-137/144)
 
 Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Không cần tiếng Việt/Anh.
 1. Chạy `pnpm --filter @flow/ai exec vitest run src/rewrite`. — Mong đợi: tất cả test xanh, không gọi mạng.
 2. Mở `env.example`. — Mong đợi: có `REWRITE_LLM_ENABLED` (để trống = tắt) và `REWRITE_LLM_MODEL`.
 3. (Khi đã có khóa LLM, tùy chọn) đặt `REWRITE_LLM_ENABLED=true` + `REWRITE_LLM_MODEL`, gọi `createLlmRewriter` với "còn không shop" + bình luận cha "áo này giá sao". — Mong đợi: `source: 'llm'`, câu tìm kiếm nêu rõ sản phẩm, không có SĐT/email; dòng `ai_usage` bước `rewrite`.
+
+---
+
+## KT-033 — Chuẩn hóa + nhận ngôn ngữ (PIPE-NORMALIZE-LANG, FR-025/120/159; chỉ lõi hàm thuần, chưa nối pipeline)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/normalize/normalize-lang.test.ts` | Xanh; không gọi mạng/DB/LLM |
+| 2 | Đọc nhanh test quy tắc §5: "áo này còn size M không" → vi; "How much is this shirt…" → en; chữ Hán/Thái/Hàn/Nga → other | Khớp ý bạn (muốn đổi ngưỡng/từ khóa → nói để sửa Q-PNL1) |
+| 3 | Khi ABBREV-DICT + pipeline được nối: bình luận "ib giá sz M bn" | Chuẩn hóa thành "inbox giá size m bao nhiêu", lang = vi |
 
 ---
 
