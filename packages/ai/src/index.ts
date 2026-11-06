@@ -23,6 +23,32 @@ export {
   FIXTURE_EXTRACT_DEFAULT,
 } from './classify/fixture-extractor';
 export {
+  type AssessDraftInput,
+  assessDraft,
+  type DraftOutcome,
+  factSourcedRatio,
+  REASON_DRAFT_NEEDS_HUMAN,
+  readDraftOutcome,
+} from './confidence/assess-draft';
+export {
+  ACTION_KINDS,
+  type ActionKind,
+  CONFIDENCE_WEIGHTS_VERSION,
+  type ConfidenceComponents,
+  type ConfidenceResult,
+  type ConfidenceSignals,
+  type ConfidenceWeights,
+  computeConfidence,
+  confidenceSignalsSchema,
+  confidenceWeightsSchema,
+  DEFAULT_CONFIDENCE_WEIGHTS,
+  REASON_HANDOFF_ACTION,
+  REASON_UNREADABLE,
+  readConfidenceSignals,
+  sigmoid,
+  unreadableConfidence,
+} from './confidence/confidence';
+export {
   DEFAULT_DRAFT_MODEL,
   type DraftConfig,
   loadDraftConfig,

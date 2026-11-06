@@ -18,6 +18,7 @@ export default defineConfig({
         branches: 90,
         // Module logic quy tắc (STANDARD §8): ≥95% nhánh theo file.
         'src/guard-money.ts': { branches: 95 },
+        'src/confidence/*.ts': { branches: 95 },
       },
     },
   },

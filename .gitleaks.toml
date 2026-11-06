@@ -18,5 +18,8 @@ paths = ['''(^|/)e2e/support/totp\.test\.ts$''']
 regexes = ['''GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ''']
 
 [[allowlists]]
-description = "Tên khóa thuộc tính trong test property-based (fast-check constantFrom) bị nhận nhầm là generic-api-key — không phải bí mật; chỉ áp cho đúng file test"
+description = "Tên trường tín hiệu 'sRetrievalTop2' đứng cạnh biến `key` trong test độ tin cậy (commit 8a7dbb2) bị luật generic-api-key bắt nhầm — là tên thuộc tính, không phải bí mật; chỉ áp cho đúng dòng trong đúng file test"
+matchCondition = "AND"
+regexTarget = "line"
 paths = ['''(^|/)packages/ai/src/confidence/confidence\.test\.ts$''']
+regexes = ['''sRetrievalTop2''']
