@@ -50,5 +50,5 @@ export async function createWorkspaceAction(
   }
   await rememberWorkspace(workspaceId);
   // Owner chưa bật 2FA sẽ được cổng requireAppUser chuyển tới /app/security ở trang kế tiếp.
-  redirect('/app');
+  redirect('/app/onboarding/setup');
 }

@@ -975,6 +975,7 @@
     }
   },
   "readiness": {
+    "details": "See readiness details",
     "pageTitle": "AI readiness",
     "title": "AI readiness",
     "subtitle": "The AI needs enough shop information to answer correctly. Below {min}% or with a required item missing, Auto mode cannot be turned on.",
@@ -1281,6 +1282,35 @@
     "promise": {
       "title": "Our commitment",
       "body": "Official platform APIs only. The AI only drafts replies; it never hides comments by itself and never posts on its own."
+    },
+    "setup": {
+      "title": "Initial setup",
+      "subtitle": "Connect channels, add knowledge for the AI and invite staff. You can come back at any time.",
+      "channels": {
+        "title": "Connect a platform",
+        "body": "Connect a Facebook Page so the AI can watch comments and suggest replies. Read and suggest only; it never posts on its own."
+      },
+      "pages": {
+        "title": "Choose the Pages to activate",
+        "body": "Channels already connected to this workspace. Add or pick Pages on the Channels page."
+      },
+      "noChannels": "No channel is connected yet.",
+      "manageChannels": "Manage channels",
+      "knowledge": {
+        "title": "Add knowledge for the AI",
+        "body": "Provide prices, sizes and policies so the AI answers correctly. Prices and stock always come from the product list.",
+        "importProducts": "Import products from Excel/CSV",
+        "openKb": "Open knowledge base"
+      },
+      "invite": {
+        "title": "Invite staff",
+        "body": "Invite staff to review replies together. You can skip this step and do it later.",
+        "open": "Open Members page"
+      },
+      "back": "Back",
+      "next": "Continue",
+      "finish": "Finish",
+      "skipHint": "You can skip this and set it up later in Settings."
     }
   },
   "errorPages": {

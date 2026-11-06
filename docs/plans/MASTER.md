@@ -217,7 +217,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 | WORKSPACE-DELETE | FR-094 (xóa workspace nhiều bước), `DB-MAINTENANCE-ROLE` | US-071 | DATA-EXPORT | S+DB | không | ⏳ |
 | RETENTION-JOB | FR-126 (12 tháng; `ai_usage` gộp 90 ngày) | — | DB-MAINTENANCE-ROLE | S+DB | không | ⏳ |
 | PUBLIC-PAGES | FR-125 (landing, chính sách quyền riêng tư, điều khoản, DPA) | — | CFG-APPNAME | — | **có** — tên miền (Q6), pháp lý | ⛔ |
-| ONBOARDING-WIZARD | FR-146 (wizard 5 bước, điều kiện sẵn sàng AI) | UF-1 | AI-READINESS, FB-OAUTH | — | không | ⏳ |
+| ONBOARDING-WIZARD | FR-146 (wizard 5 bước, điều kiện sẵn sàng AI) | UF-1 | AI-READINESS, FB-OAUTH | — | không | Xong-mock UI (feat-onboarding-wizard, Q-OBW1; KT-OBW) |
 | PRICE-QUOTE-MENTION | FR-150 (khách nhắc giá khác giá kho) | US-108 | DA-RULES-PRICE | S | không | ⏳ |
 | DB-BOOTSTRAP | — (extension/role cho staging) | — | — | DB | không | ⏳ |
 | QUEUE-PROD-INSTALL | — (cài pg-boss cho staging/production, CI có duyệt tay) | — | STAGING-DEPLOY | S+DB | không | ⏳ |

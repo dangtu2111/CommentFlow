@@ -1,0 +1,1 @@
+- **ONBOARDING-WIZARD (feat-onboarding-wizard, Q-OBW1):** `app/app/onboarding/setup/page.tsx` (bước 2–5, chỉ Owner; `lib/onboarding-setup.ts` chọn bước/điều hướng) dùng `listChannels`, `getEnabledFbConfig` (nút Facebook tắt khi chưa cờ), `loadReadiness` → `components/app/setup-readiness-bar.tsx`; `createWorkspaceAction` chuyển tới đây.

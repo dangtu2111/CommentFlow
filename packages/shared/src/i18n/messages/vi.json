@@ -975,6 +975,7 @@
     }
   },
   "readiness": {
+    "details": "Xem chi tiết độ sẵn sàng",
     "pageTitle": "Độ sẵn sàng của AI",
     "title": "Độ sẵn sàng của AI",
     "subtitle": "AI cần đủ thông tin shop thì mới trả lời đúng. Điểm dưới {min}% hoặc thiếu mục bắt buộc thì chưa bật được chế độ Tự động.",
@@ -1281,6 +1282,35 @@
     "promise": {
       "title": "Cam kết của hệ thống",
       "body": "Chỉ dùng API chính thức của nền tảng. AI chỉ soạn câu trả lời; AI không bao giờ tự ẩn bình luận và không tự đăng bài."
+    },
+    "setup": {
+      "title": "Thiết lập ban đầu",
+      "subtitle": "Kết nối kênh, nhập kiến thức cho AI và mời nhân viên. Bạn có thể quay lại bất cứ lúc nào.",
+      "channels": {
+        "title": "Kết nối nền tảng",
+        "body": "Kết nối Facebook Page để AI theo dõi bình luận và gợi ý trả lời. Chỉ đọc và gợi ý; không tự đăng bài."
+      },
+      "pages": {
+        "title": "Chọn Page kích hoạt",
+        "body": "Các kênh đã kết nối của workspace. Thêm hoặc chọn Page ở trang Kênh."
+      },
+      "noChannels": "Chưa có kênh nào được kết nối.",
+      "manageChannels": "Quản lý kênh",
+      "knowledge": {
+        "title": "Nhập kiến thức cho AI",
+        "body": "Cung cấp bảng giá, kích cỡ và chính sách để AI trả lời đúng. Giá và tồn kho luôn lấy từ danh sách sản phẩm.",
+        "importProducts": "Nhập sản phẩm từ Excel/CSV",
+        "openKb": "Mở cơ sở kiến thức"
+      },
+      "invite": {
+        "title": "Mời nhân viên",
+        "body": "Mời nhân viên để cùng duyệt câu trả lời. Bước này có thể bỏ qua và làm sau.",
+        "open": "Mở trang Thành viên"
+      },
+      "back": "Quay lại",
+      "next": "Tiếp tục",
+      "finish": "Hoàn tất",
+      "skipHint": "Bạn có thể bỏ qua và thiết lập sau trong Cài đặt."
     }
   },
   "errorPages": {
