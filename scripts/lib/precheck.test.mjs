@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PRECHECK_STEPS, runSteps } from './precheck.mjs';
 
 describe('PRECHECK_STEPS', () => {
-  it('gồm đủ 7 bước theo thứ tự rẻ → đắt', () => {
+  it('gồm đủ 9 bước theo thứ tự rẻ → đắt', () => {
     expect(PRECHECK_STEPS.map((s) => s.script)).toEqual([
       'lint',
       'format:check',
@@ -11,6 +11,8 @@ describe('PRECHECK_STEPS', () => {
       'check:plans',
       'codemap:check',
       'quyet:check',
+      'cbcc:check',
+      'kt:check',
     ]);
   });
 });

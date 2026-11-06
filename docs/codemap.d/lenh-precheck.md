@@ -1,1 +1,1 @@
-| Kiểm nhanh trước push | `pnpm precheck` | lint + format:check + typecheck + check:migrations + check:plans + codemap:check + quyet:check, dừng ở lỗi đầu (`scripts/precheck.mjs`); agent chạy tay trước mỗi lần push |
+| Kiểm nhanh trước push | `pnpm precheck` | lint + format:check + typecheck + check:migrations + check:plans + codemap:check + quyet:check + cbcc:check + kt:check, dừng ở lỗi đầu (`scripts/precheck.mjs`); agent chạy tay trước mỗi lần push |
