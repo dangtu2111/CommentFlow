@@ -73,7 +73,6 @@ export {
   MAX_INBOX_LIMIT,
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
-export { type ActiveVariant, findActiveVariants } from './queries/products';
 export {
   DEFAULT_POSTS_LIMIT,
   listPosts,
@@ -86,6 +85,7 @@ export {
   type PostsPage,
   type PostsSort,
 } from './queries/posts';
+export { type ActiveVariant, findActiveVariants } from './queries/products';
 export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,
