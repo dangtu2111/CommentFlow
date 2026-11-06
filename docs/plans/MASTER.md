@@ -33,6 +33,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | GĐ0-DB | FR-092 (bảng), 117 (bảng), 118 | — | COMPOSE-DEV | S+DB | không | ✅ |
 | GĐ0-AUTH-CORE | FR-001–005 (lõi) | US-001, 005 | DB | S | không | ✅ |
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
+| UI-AUTH-FIDELITY | FR-001, 119 | US-001, UF-1 | UI-AUTH | — | không | 🟡 giao diện đăng nhập/đăng ký khớp Stitch; phần còn lại xem gap matrix |
 | AUTH-2FA | FR-001 (TOTP + mã dự phòng) | US-005 | AUTH-CORE | S | không | ✅ |
 | AUTH-SESSIONS-UI | FR-001 (thiết bị) | US-005 | AUTH-2FA | — | không | ✅ (trang tạm) |
 | AUTH-RATELIMIT | FR-001 (giới hạn đăng nhập) | — | AUTH-CORE | S | không | ✅ (M1; xô 2FA ở M3 xong) |

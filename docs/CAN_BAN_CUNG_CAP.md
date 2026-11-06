@@ -191,3 +191,6 @@ Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, kh�
 
 ## 2q. `AUTO-CONFIG-STORE` (FR-070/071) — không cần tài nguyên ngoài
 Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_rules`, migration 0047). Chỉ cần **chủ dự án duyệt và chạy migration 0047 lên staging/production qua CI có duyệt** (agent không chạy lệnh ghi lên các DB đó). Không cần khóa hay dịch vụ ngoài.
+
+## 2r. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
+Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
