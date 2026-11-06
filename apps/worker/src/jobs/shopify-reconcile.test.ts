@@ -103,14 +103,21 @@ function setup(
 describe('FR-112 job shopify-reconcile (mock)', () => {
   it('cờ tắt → không mở DB, không gọi Shopify', async () => {
     const t = setup({ enabled: false });
-    await t.handler(job({ workspaceId: WS }));
+    await t.handler(job({ workspaceId: WS, trigger: 'nightly' }));
     expect(t.withJob).not.toHaveBeenCalled();
     expect(t.connectorFor).not.toHaveBeenCalled();
   });
 
   it('dữ liệu job sai → ném lỗi kiểm dữ liệu', async () => {
     const t = setup();
-    await expect(t.handler(job({ workspaceId: 'x' }))).rejects.toMatchObject({
+    await expect(t.handler(job({ workspaceId: 'x', trigger: 'nightly' }))).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+    });
+  });
+
+  it('thiếu trigger → lỗi kiểm dữ liệu (không mặc định)', async () => {
+    const t = setup();
+    await expect(t.handler(job({ workspaceId: WS }))).rejects.toMatchObject({
       code: 'VALIDATION_FAILED',
     });
   });
@@ -128,7 +135,7 @@ describe('FR-112 job shopify-reconcile (mock)', () => {
 
   it('lệch giá → ghi lệch để Owner duyệt (KHÔNG có ghi đè giá), báo Owner', async () => {
     const t = setup({ price: '120000' });
-    await t.handler(job({ workspaceId: WS }));
+    await t.handler(job({ workspaceId: WS, trigger: 'nightly' }));
     const run = t.store.runs(WS)[0];
     expect(run?.result.diffs[0]).toMatchObject({
       kind: 'price',
@@ -141,7 +148,7 @@ describe('FR-112 job shopify-reconcile (mock)', () => {
 
   it('thiếu webhook → đăng ký lại qua cổng, ghi nhận và báo Admin', async () => {
     const t = setup({ topics: ['PRODUCTS_UPDATE'] });
-    await t.handler(job({ workspaceId: WS }));
+    await t.handler(job({ workspaceId: WS, trigger: 'nightly' }));
     const missing = SHOPIFY_REQUIRED_WEBHOOK_TOPICS.filter((x) => x !== 'PRODUCTS_UPDATE');
     expect(t.registerWebhooks).toHaveBeenCalledWith(expect.anything(), WS, missing);
     expect(t.store.runs(WS)[0]).toMatchObject({
@@ -162,7 +169,7 @@ describe('FR-112 job shopify-reconcile (mock)', () => {
         throw new Error('secret-detail');
       },
     });
-    await t.handler(job({ workspaceId: WS }));
+    await t.handler(job({ workspaceId: WS, trigger: 'nightly' }));
     expect(t.store.runs(WS)[0]?.webhookRegistered).toEqual([]);
     expect(JSON.stringify(t.logger.error.mock.calls)).not.toContain('secret-detail');
   });
@@ -185,7 +192,7 @@ describe('FR-112 job shopify-reconcile (mock)', () => {
 
   it('chưa kết nối cửa hàng → bỏ qua, không ghi', async () => {
     const t = setup({ connector: null });
-    await t.handler(job({ workspaceId: WS }));
+    await t.handler(job({ workspaceId: WS, trigger: 'nightly' }));
     expect(t.store.runs(WS)).toEqual([]);
     expect(t.logger.info).toHaveBeenCalled();
   });
@@ -198,14 +205,16 @@ describe('FR-112 job shopify-reconcile (mock)', () => {
         },
       },
     });
-    await expect(t.handler(job({ workspaceId: WS }))).rejects.toBeInstanceOf(PlatformError);
+    await expect(t.handler(job({ workspaceId: WS, trigger: 'nightly' }))).rejects.toBeInstanceOf(
+      PlatformError,
+    );
     expect(t.store.runs(WS)).toEqual([]);
   });
 
   it('báo thất bại → chỉ log, không làm job lỗi (lần chạy đã ghi)', async () => {
     const t = setup({ price: '120000' });
     t.notify.mockRejectedValueOnce(new Error('smtp'));
-    await expect(t.handler(job({ workspaceId: WS }))).resolves.toBeUndefined();
+    await expect(t.handler(job({ workspaceId: WS, trigger: 'nightly' }))).resolves.toBeUndefined();
     expect(t.store.runs(WS)).toHaveLength(1);
     expect(t.logger.error).toHaveBeenCalled();
   });

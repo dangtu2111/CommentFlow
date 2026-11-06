@@ -19,4 +19,8 @@ Kế hoạch: `docs/plans/feat-shopify-reconcile.md`
 ## Còn lại (theo thứ tự)
 1. `SHOPIFY-RECONCILE-STORE` (làn b): migration `reconcile_runs`/`reconcile_diffs` + kết nối cửa hàng; bản DB của `ShopifyReconcilePorts` (`connectorFor`, `loadInternal`, `lastManualRunAt`, `recordRun`, `registerWebhooks`, `notify`); hàng đợi + lịch 02:00 theo múi giờ + đăng ký `main.ts`; giao diện duyệt lệch; áp lệch đã duyệt + lưu trữ sản phẩm biến mất.
 2. Kiểm với dev store: truy vấn `webhookSubscriptions`, tên chủ đề.
-3. Chống chạy trùng "Đối soát ngay" đồng thời (khóa/ràng buộc ở bản DB của `recordRun`).
+3. Chống chạy trùng "Đối soát ngay" đồng thời (khóa advisory theo workspace hoặc `INSERT … ON CONFLICT` chiếm chỗ + `singletonKey` khi xếp job) — TRƯỚC khi đăng ký job.
+
+## Từ verifier-security (không chặn merge)
+- Đã sửa: `trigger` bắt buộc (bỏ mặc định `nightly`); ghi yêu cầu nguyên tử vào chú thích cổng `lastManualRunAt`.
+- Còn lại trước khi bật: (a) gọi Shopify ngoài giao dịch `withJob` (chỉ đọc/ghi DB trong giao dịch); (b) `webhookSubscriptions(first: 100)` chưa phân trang/lọc theo chủ đề; (c) lần chạy lỗi chưa ghi `reconcile_runs` (chỉ mã lỗi) nên chưa tính vào giới hạn 1 lần/giờ; (d) nơi xếp job thủ công phải lấy `workspaceId` từ phiên.

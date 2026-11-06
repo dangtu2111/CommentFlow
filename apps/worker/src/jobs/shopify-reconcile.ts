@@ -26,7 +26,8 @@ import { type BatchHandler, workspaceJob } from './run-job';
 
 export const ReconcileJobPayloadSchema = z.object({
   workspaceId: z.uuid(),
-  trigger: z.enum(['nightly', 'manual']).default('nightly'),
+  /** Bắt buộc (không mặc định): thiếu → job lỗi kiểm dữ liệu thay vì lọt qua giới hạn 1 lần/giờ của `manual`. */
+  trigger: z.enum(['nightly', 'manual']),
 });
 export type ReconcileTrigger = z.infer<typeof ReconcileJobPayloadSchema>['trigger'];
 
@@ -48,7 +49,10 @@ export interface ShopifyReconcilePorts {
   connectorFor(tx: Database, workspaceId: string): Promise<ShopifyConnector | null>;
   /** Sản phẩm nguồn Shopify đang hoạt động của workspace (RLS giới hạn qua `tx`). */
   loadInternal(tx: Database, workspaceId: string): Promise<InternalProductSnapshot[]>;
-  /** Lần "Đối soát ngay" gần nhất (để giới hạn 1 lần/giờ). */
+  /**
+   * Lần "Đối soát ngay" gần nhất (để giới hạn 1 lần/giờ). Bản DB PHẢI chống chạy song song (khóa advisory theo
+   * workspace hoặc `INSERT … ON CONFLICT` chiếm chỗ) và nơi xếp job thủ công dùng `singletonKey` theo workspace.
+   */
   lastManualRunAt(tx: Database, workspaceId: string): Promise<Date | null>;
   recordRun(tx: Database, workspaceId: string, run: ReconcileRunRecord): Promise<void>;
   /** Đăng ký lại chủ đề webhook thiếu (ghi lên Shopify — cần scope; chỉ bản thật). */
