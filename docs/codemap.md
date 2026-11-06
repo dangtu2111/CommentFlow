@@ -68,6 +68,7 @@ Cập nhật lần cuối: 2026-11-06 · nhánh `feat-auto-send-gate` · Gói n�
 | `e2e/` | Kịch bản Playwright cổng 0 (`tests/gate0.spec.ts`, vi+en) và `support/{totp,mailpit,i18n,env,flows}.ts` (test đơn vị cạnh file); không import gói nội bộ, không nằm trong depcruise |
 | `docs/testing/` | `STANDARD.md` (chuẩn test), `KIEM_TRA_TAY.md` (kiểm tra tay dồn), `trace-baseline.json` (nợ truy vết), `ALLOWLIST_DE_XUAT.md` (đề xuất allow, chưa áp); thứ tự toàn bộ tính năng: `docs/plans/MASTER.md` |
 | `.claude/skills/` | 3 skill văn bản (`test-driven-development`, `systematic-debugging`, `verification-before-completion`); nguồn + giấy phép: `docs/decisions/006-skills.md` |
+| `tools/dev-seed/` | Dữ liệu mẫu DEV (DEV-SEED-DEMO, Q-UIF1): `pnpm dev:seed-demo [--reset]` → `cli.ts`; `guard.ts` (`assertDevSeedAllowed`: APP_ENV=dev + ba URL đều `cf_dev`; `assertDbMarkerAllowed`: `current_database()` + dấu `cf.env` staging/production → từ chối); `credentials.ts` (mật khẩu CSPRNG in một lần, email `@example.test`); `demo-data.ts` (nhãn `[MẪU]`, 42 bình luận, sản phẩm, bản nháp); `seed.ts` (`seedDemo`: createTenancy/createChannel/insertDraft/linkProductsToPosts/saveAutomationSettings… qua `withJob`/`withActor`; tài khoản bằng pool `cf_owner`). Test cạnh file |
 | `scripts/`, `tools/boundaries/` | Script vận hành (`cf-dev*`, `stack-check`, `e2e`) và test luật depcruise |
 | `env.example`, `infra/env.cf-dev.example` | Tên biến `.env` (máy code) và `.env.cf-dev` (máy ảo); không có giá trị thật |
 
