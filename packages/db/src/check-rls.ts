@@ -340,9 +340,15 @@ async function checkUsersColumnAllowlist(db: Queryable, violations: RlsViolation
   }
 }
 
+/** Biểu thức WITH CHECK đúng của policy 0011 như `pg_get_expr` in ra (đã chuẩn hóa): `((NOT is_admin) AND (admin_role IS NULL))`. */
+const ADMIN_INSERT_GUARD_EXPR = '((notis_admin)and(admin_roleisnull))';
+
+/** Chỉ bỏ khoảng trắng + hạ chữ thường; GIỮ ngoặc vì `NOT (a AND b)` khác nghĩa `(NOT a) AND b`. */
+const normalizeExpr = (expr: string): string => expr.replace(/\s/g, '').toLowerCase();
+
 /**
  * cf_auth có INSERT mức bảng trên core.users nên chốt duy nhất chặn nó tạo Admin là policy RESTRICTIVE
- * (migration 0011): phải còn tồn tại, áp cho INSERT/ALL, và điều kiện nhắc is_admin lẫn admin_role.
+ * (migration 0011): phải còn tồn tại, áp cho INSERT/ALL, và điều kiện đúng bằng `NOT is_admin AND admin_role IS NULL` (so khớp chính xác).
  */
 async function checkAdminInsertGuard(db: Queryable, violations: RlsViolation[]): Promise<void> {
   const found = await db.query(`/* admin-insert-guard */
@@ -354,9 +360,7 @@ async function checkAdminInsertGuard(db: Queryable, violations: RlsViolation[]):
                       WHERE rid <> 0 AND pg_has_role('${AUTH_ROLE}', rid, 'MEMBER')))`);
   const guarded = found.rows.some(
     (row) =>
-      typeof row.withcheck === 'string' &&
-      /\bis_admin\b/.test(row.withcheck) &&
-      /\badmin_role\b/.test(row.withcheck),
+      typeof row.withcheck === 'string' && normalizeExpr(row.withcheck) === ADMIN_INSERT_GUARD_EXPR,
   );
   if (!guarded) {
     violations.push({

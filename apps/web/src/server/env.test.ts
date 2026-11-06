@@ -8,16 +8,35 @@ const BASE = {
   DATABASE_AUTH_URL: 'postgresql://cf_auth:x@localhost:5432/db',
   DATABASE_URL: 'postgresql://cf_app:x@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379/0',
+  REDIS_KEY_PREFIX: 'dev:',
   SMTP_HOST: 'localhost',
   SMTP_PORT: '1025',
   SMTP_FROM: 'CommentFlow AI <no-reply@example.test>',
 };
 
 describe('loadServerEnv — nguồn IP (ADR 004 §2)', () => {
-  it('mặc định là none (không tin header nào) và REDIS_KEY_PREFIX mặc định rỗng', () => {
-    const env = loadServerEnv(BASE);
-    expect(env.CLIENT_IP_SOURCE).toBe('none');
-    expect(env.REDIS_KEY_PREFIX).toBe('');
+  it('mặc định là none (không tin header nào)', () => {
+    expect(loadServerEnv(BASE).CLIENT_IP_SOURCE).toBe('none');
+  });
+
+  it('REDIS_KEY_PREFIX bắt buộc khác rỗng ở dev/test/ci/staging (khóa luôn có tiền tố môi trường)', () => {
+    for (const appEnv of ['dev', 'test', 'ci', 'staging']) {
+      for (const prefix of [undefined, '', '   ']) {
+        expect(
+          () => loadServerEnv({ ...BASE, APP_ENV: appEnv, REDIS_KEY_PREFIX: prefix }),
+          `${appEnv}/${JSON.stringify(prefix)}`,
+        ).toThrow(/REDIS_KEY_PREFIX/);
+      }
+      expect(
+        loadServerEnv({ ...BASE, APP_ENV: appEnv, REDIS_KEY_PREFIX: 'x:' }).REDIS_KEY_PREFIX,
+      ).toBe('x:');
+    }
+  });
+
+  it('production được để trống tiền tố (Valkey riêng)', () => {
+    expect(
+      loadServerEnv({ ...BASE, APP_ENV: 'production', REDIS_KEY_PREFIX: '' }).REDIS_KEY_PREFIX,
+    ).toBe('');
   });
 
   it('cf-connecting-ip chỉ được dùng khi APP_ENV=staging', () => {
