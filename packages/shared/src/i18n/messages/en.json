@@ -1010,6 +1010,7 @@
     "soonTitle": "Coming soon: this feature is not available yet",
     "sampleBanner": "[SAMPLE] Sample figures for previewing the layout (dev only) — not real data.",
     "header": {
+      "badge": "AI control",
       "status": "Auto AI:",
       "running": "Running on {on}/{total} channels",
       "filterAll": "All connected channels ({total})",

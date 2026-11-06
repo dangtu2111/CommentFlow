@@ -1,34 +1,38 @@
-import {
-  Eye,
-  FlaskConical,
-  Globe,
-  Hand,
-  History,
-  Link2Off,
-  Pencil,
-  RefreshCw,
-  Ruler,
-  Scale,
-  Shield,
-  ShieldCheck,
-  Smartphone,
-  SmilePlus,
-} from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import type { SampleRule, SampleRuleBadge } from '../../lib/spam-rules-sample';
-import { Card } from '../ui/card';
-import { Chip, type ChipTone } from '../ui/chip';
-import { Switch } from '../ui/switch';
+import { Icon, type IconName } from '../ui/icon';
+import { Toggle } from '../ui/tw-form';
+import { Panel } from '../ui/tw-parts';
 
-const RULE_ICON = { phone: Smartphone, link: Link2Off, face: SmilePlus, flaky: Scale } as const;
-const BADGE_ICON = { shield: Shield, sync: RefreshCw, hand: Hand, flask: FlaskConical } as const;
-const BADGE_TONE: Record<SampleRuleBadge['tone'], ChipTone> = {
-  solid: 'solid',
-  accent: 'accent',
-  warm: 'warm',
-  muted: 'muted',
-  neutral: 'muted',
+const RULE_ICON: Record<SampleRule['icon'], { name: IconName; box: string }> = {
+  phone: { name: 'phone_iphone', box: 'bg-secondary-fixed text-on-secondary-fixed' },
+  link: { name: 'link_off', box: 'bg-surface-container-high text-primary-container' },
+  face: { name: 'sentiment_very_dissatisfied', box: 'bg-tertiary-fixed text-on-tertiary-fixed' },
+  flaky: { name: 'flaky', box: 'bg-surface-container-high text-on-surface-variant' },
 };
+const BADGE_ICON: Record<Exclude<SampleRuleBadge['icon'], 'none'>, IconName> = {
+  shield: 'shield',
+  sync: 'sync_saved_locally',
+  hand: 'pan_tool',
+  flask: 'science',
+};
+const BADGE_TONE: Record<SampleRuleBadge['tone'], string> = {
+  solid: 'bg-primary-container text-on-primary font-semibold px-2.5 py-0.5',
+  accent: 'bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5',
+  warm: 'bg-tertiary-fixed text-on-tertiary-fixed font-semibold px-2.5 py-0.5',
+  muted: 'bg-surface-container-high text-on-surface font-semibold px-2.5 py-0.5',
+  neutral: 'bg-surface-container-low text-on-surface-variant px-2 py-0.5',
+};
+/** Màu số "khớp" và "tỷ lệ sai" theo loại quy tắc (Stitch: xanh an toàn / cam cần duyệt / đỏ cần tinh chỉnh). */
+const STAT_TONE: Record<SampleRule['icon'], { matches: string; falseRate: string }> = {
+  phone: { matches: 'font-bold text-primary', falseRate: 'font-semibold text-primary' },
+  link: { matches: 'font-bold text-primary', falseRate: 'font-semibold text-primary' },
+  face: { matches: 'font-bold text-tertiary', falseRate: 'font-semibold text-tertiary' },
+  flaky: { matches: 'font-bold text-on-surface', falseRate: 'font-semibold text-error' },
+};
+
+const ICON_BUTTON =
+  'flex cursor-not-allowed items-center justify-center rounded-lg bg-surface-container-low p-2 text-on-surface opacity-70';
 
 /**
  * Danh sách quy tắc (design/stitch/spam-rules.html "Rule Card"). Chưa có UI đọc bảng `rules` nên `rules` chỉ là
@@ -36,106 +40,129 @@ const BADGE_TONE: Record<SampleRuleBadge['tone'], ChipTone> = {
  */
 export async function SpamRuleList({ rules }: { rules: readonly SampleRule[] }) {
   const t = await getTranslations('spamRules');
-  const soon = { disabled: true, title: t('soonTitle') } as const;
   if (rules.length === 0) {
     return (
-      <Card className="spam-empty">
-        <ShieldCheck size={28} aria-hidden="true" />
-        <p>
-          <strong>{t('rules.empty')}</strong>
-        </p>
-        <p className="muted">{t('rules.emptyBody')}</p>
-      </Card>
+      <Panel size="lg" className="flex flex-col items-center gap-1 text-center">
+        <span className="text-primary-container">
+          <Icon name="shield" size={28} />
+        </span>
+        <p className="font-title-md text-title-md text-on-surface">{t('rules.empty')}</p>
+        <p className="font-body-md text-body-md text-on-surface-variant">{t('rules.emptyBody')}</p>
+      </Panel>
     );
   }
   return (
-    <ul className="spam-rule-list" aria-label={t('rules.label')}>
+    <ul aria-label={t('rules.label')} className="space-y-space-md">
       {rules.map((rule) => {
-        const Icon = RULE_ICON[rule.icon];
-        const SecondIcon = rule.secondAction === 'history' ? History : Eye;
+        const icon = RULE_ICON[rule.icon];
+        const stat = STAT_TONE[rule.icon];
+        const secondLabel =
+          rule.secondAction === 'history' ? t('rules.history') : t('rules.simulation');
         return (
           <li key={rule.id}>
-            <Card className="spam-rule-card">
-              <span className={`spam-rule-icon is-${rule.icon}`} aria-hidden="true">
-                <Icon size={22} />
-              </span>
-              <div className="spam-rule-body">
-                <div className="spam-rule-head">
-                  <h2 className="spam-rule-title">{rule.name}</h2>
-                  {rule.badges.map((badge) => {
-                    const BadgeIcon = badge.icon === 'none' ? null : BADGE_ICON[badge.icon];
-                    return (
-                      <Chip
+            <Panel
+              size="lg"
+              className="flex flex-col justify-between gap-space-md transition-all hover:shadow-md lg:flex-row lg:items-center"
+            >
+              <div className="flex flex-1 items-start gap-space-md">
+                <span
+                  aria-hidden="true"
+                  className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg shadow-sm ${icon.box}`}
+                >
+                  <Icon name={icon.name} size={22} />
+                </span>
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="font-title-md text-title-md font-bold text-on-surface">
+                      {rule.name}
+                    </h2>
+                    {rule.badges.map((badge) => (
+                      <span
                         key={badge.text}
-                        tone={BADGE_TONE[badge.tone]}
-                        className="spam-rule-badge"
+                        className={`inline-flex items-center gap-1 rounded-full font-label-sm text-label-sm ${BADGE_TONE[badge.tone]}`}
                       >
-                        {BadgeIcon ? <BadgeIcon size={12} aria-hidden="true" /> : null}
+                        {badge.icon === 'none' ? null : (
+                          <Icon name={BADGE_ICON[badge.icon]} size={12} />
+                        )}
                         {badge.text}
-                      </Chip>
-                    );
-                  })}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="flex flex-wrap items-center gap-x-4 gap-y-1 font-body-sm text-body-sm text-on-surface-variant">
+                    <span className="flex items-center gap-1">
+                      <span className="text-primary-container">
+                        <Icon name="rule" size={14} />
+                      </span>
+                      <span>
+                        {t('rules.condition')} <strong>{rule.conditionStrong}</strong>
+                        {rule.conditionRest}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-outline">
+                        <Icon name="language" size={14} />
+                      </span>
+                      <span>
+                        {t('rules.scope')} <strong>{rule.scopeStrong}</strong>
+                        {rule.scopeRest}
+                      </span>
+                    </span>
+                  </p>
+                  <p className="flex flex-wrap items-center gap-space-lg pt-1 font-label-sm text-label-sm text-on-surface">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-on-surface-variant">
+                        {rule.matchesLabel === 'matches'
+                          ? t('rules.matches', { days: 30 })
+                          : t('rules.matchesSimulated')}
+                      </span>
+                      <span className={stat.matches}>
+                        {t('rules.matchCount', { count: rule.matches })}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-on-surface-variant">{t('rules.falseRate')}</span>
+                      <span className={stat.falseRate}>{rule.falseRate}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-on-surface-variant">{rule.extraLabel}</span>
+                      <span>{rule.extraValue}</span>
+                    </span>
+                  </p>
                 </div>
-                <p className="spam-rule-meta">
-                  <span>
-                    <Ruler size={14} aria-hidden="true" />
-                    <span>
-                      {t('rules.condition')} <strong>{rule.conditionStrong}</strong>
-                      {rule.conditionRest}
-                    </span>
-                  </span>
-                  <span>
-                    <Globe size={14} aria-hidden="true" />
-                    <span>
-                      {t('rules.scope')} <strong>{rule.scopeStrong}</strong>
-                      {rule.scopeRest}
-                    </span>
-                  </span>
-                </p>
-                <p className="spam-rule-stats">
-                  <span>
-                    <span className="muted">
-                      {rule.matchesLabel === 'matches'
-                        ? t('rules.matches', { days: 30 })
-                        : t('rules.matchesSimulated')}
-                    </span>{' '}
-                    <strong>{t('rules.matchCount', { count: rule.matches })}</strong>
-                  </span>
-                  <span>
-                    <span className="muted">{t('rules.falseRate')}</span>{' '}
-                    <strong>{rule.falseRate}</strong>
-                  </span>
-                  <span>
-                    <span className="muted">{rule.extraLabel}</span> {rule.extraValue}
-                  </span>
-                </p>
               </div>
-              <div className="spam-rule-actions">
-                <Switch defaultChecked {...soon} label={t('rules.on')} />
+              <div className="flex shrink-0 items-center justify-end gap-space-md pt-space-xs lg:pt-0">
+                <span className="flex items-center gap-2" title={t('soonTitle')}>
+                  <Toggle defaultChecked disabled label={t('rules.on')} />
+                  <span className="font-label-sm text-label-sm font-semibold text-on-surface">
+                    {t('rules.on')}
+                  </span>
+                </span>
+                <div className="hidden h-6 w-px bg-surface-container-high sm:block" />
                 <button
                   type="button"
-                  className="icon-button"
-                  disabled
+                  aria-disabled="true"
+                  tabIndex={-1}
                   title={t('rules.edit')}
                   aria-label={t('rules.edit')}
+                  className={ICON_BUTTON}
                 >
-                  <Pencil size={18} aria-hidden="true" />
+                  <Icon name="edit" size={18} />
                 </button>
                 <button
                   type="button"
-                  className="icon-button"
-                  disabled
-                  title={
-                    rule.secondAction === 'history' ? t('rules.history') : t('rules.simulation')
-                  }
-                  aria-label={
-                    rule.secondAction === 'history' ? t('rules.history') : t('rules.simulation')
-                  }
+                  aria-disabled="true"
+                  tabIndex={-1}
+                  title={secondLabel}
+                  aria-label={secondLabel}
+                  className={ICON_BUTTON}
                 >
-                  <SecondIcon size={18} aria-hidden="true" />
+                  <Icon
+                    name={rule.secondAction === 'history' ? 'history' : 'visibility'}
+                    size={18}
+                  />
                 </button>
               </div>
-            </Card>
+            </Panel>
           </li>
         );
       })}

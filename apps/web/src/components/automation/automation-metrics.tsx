@@ -1,8 +1,60 @@
-import { CircleAlert, Hourglass, Send, ShieldCheck, Undo2 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import type { AutomationMetricsData } from '../../lib/automation-sample';
-import { MetricCard } from '../ui/metric-card';
-import { TONE } from '../ui/rich';
+import { Icon, type IconName } from '../ui/icon';
+import { Badge, Panel } from '../ui/tw-parts';
+
+const SAMPLE_LABEL = '[MẪU]';
+
+type Tile = {
+  label: string;
+  icon: IconName;
+  iconClass: string;
+  value: number | null;
+  valueClass: string;
+  unit?: string;
+  unitClass: string;
+  note: string;
+  noteClass: string;
+  noteIcon?: IconName;
+};
+
+function MetricTile({ tile, sample }: { tile: Tile; sample: boolean }) {
+  return (
+    <Panel size="lg" className="flex flex-col justify-between">
+      <div className="flex items-center justify-between">
+        <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">
+          {tile.label}
+        </span>
+        <span className={`rounded-lg p-1.5 ${tile.iconClass}`}>
+          <Icon name={tile.icon} size={18} />
+        </span>
+      </div>
+      <div className="mt-space-md">
+        <div className="flex items-baseline gap-2">
+          <span className={`font-headline-lg text-headline-lg ${tile.valueClass}`}>
+            {tile.value ?? '—'}
+          </span>
+          {tile.unit ? (
+            <span className={`font-title-sm text-title-sm font-semibold ${tile.unitClass}`}>
+              {tile.unit}
+            </span>
+          ) : null}
+          {sample ? (
+            <Badge variant="box" tone="neutral">
+              {SAMPLE_LABEL}
+            </Badge>
+          ) : null}
+        </div>
+        <div
+          className={`mt-1 flex items-center gap-1.5 font-label-sm text-label-sm ${tile.noteClass}`}
+        >
+          {tile.noteIcon ? <Icon name={tile.noteIcon} size={14} /> : null}
+          <span>{tile.note}</span>
+        </div>
+      </div>
+    </Panel>
+  );
+}
 
 /**
  * Bốn thẻ số liệu trong ngày (design/stitch/automation.html). `data` null = chưa có số liệu thật (chưa nối
@@ -10,51 +62,60 @@ import { TONE } from '../ui/rich';
  */
 export async function AutomationMetrics({ data }: { data: AutomationMetricsData | null }) {
   const t = await getTranslations('automation.metrics');
-  const sample = data !== null;
   const none = t('noData');
+  const muted = 'text-on-surface-variant';
+  const tiles: Tile[] = [
+    {
+      label: t('sent'),
+      icon: 'send',
+      iconClass: 'bg-primary-fixed text-on-primary-fixed',
+      value: data?.sentToday ?? null,
+      valueClass: 'text-on-surface',
+      unit: data ? t('sentUnit') : undefined,
+      unitClass: 'text-primary',
+      note: data ? t('accuracy', { value: data.accuracyPercent }) : none,
+      noteClass: data ? 'text-primary-container' : muted,
+      noteIcon: data ? 'verified' : undefined,
+    },
+    {
+      label: t('pending'),
+      icon: 'hourglass_top',
+      iconClass: 'bg-tertiary-fixed text-on-tertiary-fixed',
+      value: data?.pendingDelay ?? null,
+      valueClass: 'text-tertiary',
+      unit: data ? t('pendingUnit') : undefined,
+      unitClass: 'text-tertiary',
+      note: data ? t('pendingNote', { seconds: data.pendingAvgSeconds }) : none,
+      noteClass: muted,
+    },
+    {
+      label: t('cancelled'),
+      icon: 'undo',
+      iconClass: 'bg-surface-container-high text-on-surface-variant',
+      value: data?.cancelledByStaff ?? null,
+      valueClass: 'text-on-surface',
+      unit: data ? t('cancelledUnit') : undefined,
+      unitClass: muted,
+      note: data ? t('cancelledNote') : none,
+      noteClass: muted,
+    },
+    {
+      label: t('flagged'),
+      icon: 'error_outline',
+      iconClass: 'bg-error-container text-on-error-container',
+      value: data?.flaggedWrong ?? null,
+      valueClass: 'text-on-surface',
+      unit: data ? t('flaggedUnit') : undefined,
+      unitClass: muted,
+      note: data ? t('flaggedNote') : none,
+      noteClass: data ? 'font-semibold text-primary' : muted,
+    },
+  ];
   return (
-    <div className="metric-grid" id="auto-metrics">
-      <MetricCard
-        large
-        sample={sample}
-        label={t('sent')}
-        value={data?.sentToday ?? null}
-        unit={data ? t('sentUnit') : undefined}
-        note={data ? t('accuracy', { value: data.accuracyPercent }) : none}
-        noteTone={data ? TONE.primary : TONE.neutral}
-        icon={<Send size={18} />}
-      />
-      <MetricCard
-        large
-        sample={sample}
-        label={t('pending')}
-        value={data?.pendingDelay ?? null}
-        unit={data ? t('pendingUnit') : undefined}
-        note={data ? t('pendingNote', { seconds: data.pendingAvgSeconds }) : none}
-        icon={<Hourglass size={18} />}
-        iconTone={TONE.warm}
-      />
-      <MetricCard
-        large
-        sample={sample}
-        label={t('cancelled')}
-        value={data?.cancelledByStaff ?? null}
-        unit={data ? t('cancelledUnit') : undefined}
-        note={data ? t('cancelledNote') : none}
-        icon={<Undo2 size={18} />}
-        iconTone={TONE.neutral}
-      />
-      <MetricCard
-        large
-        sample={sample}
-        label={t('flagged')}
-        value={data?.flaggedWrong ?? null}
-        unit={data ? t('flaggedUnit') : undefined}
-        note={data ? t('flaggedNote') : none}
-        noteTone={data ? TONE.primary : TONE.neutral}
-        icon={data ? <ShieldCheck size={18} /> : <CircleAlert size={18} />}
-        iconTone={TONE.danger}
-      />
+    <div id="auto-metrics" className="grid grid-cols-1 gap-space-md sm:grid-cols-2 lg:grid-cols-4">
+      {tiles.map((tile) => (
+        <MetricTile key={tile.label} tile={tile} sample={data !== null} />
+      ))}
     </div>
   );
 }

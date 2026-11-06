@@ -1010,6 +1010,7 @@
     "soonTitle": "Sắp có: chức năng này chưa dùng được",
     "sampleBanner": "[MẪU] Số liệu mẫu để xem giao diện (chỉ bản dev) — không phải dữ liệu thật.",
     "header": {
+      "badge": "Kiểm soát AI",
       "status": "AI tự động:",
       "running": "Đang chạy ở {on}/{total} kênh",
       "filterAll": "Tất cả kênh kết nối ({total})",
