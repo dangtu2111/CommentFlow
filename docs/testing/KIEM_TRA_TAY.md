@@ -71,6 +71,7 @@
 | KT-SC | Semantic cache đầy đủ (qua interface, mock) | — | không | chưa | — |
 | KT-SHI | Nhập sản phẩm từ Shopify (chỉ đọc, fixture) | feat-shopify-import | có | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
+| KT-SRC | Đối soát Shopify (chỉ ghi nhận lệch, mock) | feat-shopify-reconcile | có | chưa | — |
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
@@ -1346,6 +1347,18 @@ Lõi là hàm thuần; đường người gửi (hộp soạn trả lời) đã 
 3. (vi + en) Mở một bình luận, bấm Gửi; ngay sau đó ở cửa sổ khác bấm Ẩn bình luận đó trước khi worker gửi (hoặc tắt worker, ẩn, bật lại). — Mong đợi: yêu cầu gửi bị hủy, hộp soạn hiện lý do "Bình luận đã bị ẩn hoặc gộp nên không gửi nữa." / "The comment was hidden or merged, so it was not sent." (mã `recheck:R2`), không có bài trả lời trên Page.
 4. (vi + en) Ngắt kết nối kênh (hoặc đặt `channels.status = 'expired'` trên `cf_dev`) rồi bấm Gửi. — Mong đợi: trạng thái "Gửi lỗi" với lý do "Kênh đang không kết nối hoặc đang bị tạm khóa gửi." (`recheck:R3`), nút Thử lại; bình luận về `send_failed`.
 5. Kiểm sau khi nối tự gửi (`SEND-RECHECK-WIRE`): đổi giá sản phẩm trong khoảng trễ → bản nháp về Chờ duyệt với lý do "Giá hoặc tồn kho đã đổi" (`recheck:R5`); bấm Dừng khẩn cấp → `recheck:R4`.
+
+## KT-SRC — Đối soát Shopify (SHOPIFY-RECONCILE, FR-112/113, feat-shopify-reconcile)
+
+> Chưa có giao diện/bảng lưu; kiểm bằng test + (khi có dev store) một script thử. / No UI or storage yet; verify via tests and, once a dev store exists, a one-off script.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/shared exec vitest run src/shopify-reconcile.test.ts` và `pnpm --filter @flow/worker exec vitest run src/jobs/shopify-reconcile.test.ts` | Mọi test xanh (lệch giá/tồn/tên, sản phẩm biến mất, ngưỡng 5%, webhook thiếu, 1 lần/giờ). |
+| 2 | Không đặt `SHOPIFY_ENABLED` | Job không làm gì, không gọi Shopify. |
+| 3 | (Có dev store) Đổi giá một biến thể trên Shopify, chạy đối soát | Có đúng một dòng lệch `price` (giá nội bộ cũ / giá Shopify mới); giá nội bộ KHÔNG tự đổi. |
+| 4 | Xóa webhook `PRODUCTS_UPDATE` của app, chạy đối soát | Ghi nhận thiếu chủ đề đó và báo Admin. |
+| 5 | Bấm "Đối soát ngay" hai lần trong 1 giờ (khi có giao diện) | Lần hai bị từ chối, nói rõ còn bao lâu. |
 
 ## KT-ST — Bảng size có cấu trúc (SIZE-TABLE, FR-149, US-102) · Size chart
 
