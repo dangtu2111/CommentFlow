@@ -132,6 +132,43 @@ describe('FR-071 createCostGatedLlmClient', () => {
     expect(call).toHaveBeenCalledTimes(1);
   });
 
+  it('onBlock ném lỗi vẫn trả COST_CAP_REACHED và không gọi LLM', async () => {
+    const ledger = createMemoryCostLedger();
+    ledger.setCap(WS, 0);
+    const call = vi.fn();
+    const client = createCostGatedLlmClient(
+      { call },
+      {
+        ledger,
+        now: () => NOW,
+        onBlock: () => {
+          throw new Error('log hỏng');
+        },
+      },
+    );
+    await expect(client.call(input())).rejects.toMatchObject({ code: 'COST_CAP_REACHED' });
+    expect(call).not.toHaveBeenCalled();
+  });
+
+  it('UUID viết hoa và thường dùng chung một sổ đặt chỗ', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const { client, call } = setup(0.03, 0, async () => {
+      await gate;
+      return result();
+    });
+    const first = client.call(input());
+    await new Promise((r) => setTimeout(r, 10));
+    await expect(client.call(input({ workspaceId: WS.toUpperCase() }))).rejects.toMatchObject({
+      code: 'COST_CAP_REACHED',
+    });
+    release();
+    await first;
+    expect(call).toHaveBeenCalledTimes(1);
+  });
+
   it('workspace khác không bị ảnh hưởng bởi trần của workspace này', async () => {
     const { client, call } = setup(1, 1);
     await expect(client.call(input())).rejects.toBeDefined();

@@ -34,10 +34,12 @@ export function createCostGatedLlmClient(
 
   return {
     async call(input) {
-      const release = await book.withLock(input.workspaceId, async () => {
+      // Khóa/sổ đặt chỗ theo UUID chuẩn hóa chữ thường (hoa/thường không thành hai khóa).
+      const lockKey = input.workspaceId.toLowerCase();
+      const release = await book.withLock(lockKey, async () => {
         let snapshot: Awaited<ReturnType<CostLedger['read']>>;
         try {
-          snapshot = await options.ledger.read(input.workspaceId, now());
+          snapshot = await options.ledger.read(lockKey, now());
         } catch {
           // Không đo được chi phí → không gọi (đóng khi không chắc); không lộ nguyên nhân.
           throw new AppError('INTERNAL', 'Không đọc được chi phí AI; tạm không gọi AI.');
@@ -52,19 +54,23 @@ export function createCostGatedLlmClient(
         );
         const decision = evaluateCostGate({
           spentUsd: snapshot.spentMonthUsd,
-          reservedUsd: book.inFlightUsd(input.workspaceId),
+          reservedUsd: book.inFlightUsd(lockKey),
           estimateUsd,
           capUsd: snapshot.capUsd,
         });
         if (!decision.allow) {
-          options.onBlock?.({
-            workspaceId: input.workspaceId,
-            step: input.step,
-            reason: decision.reason,
-          });
+          try {
+            options.onBlock?.({
+              workspaceId: input.workspaceId,
+              step: input.step,
+              reason: decision.reason,
+            });
+          } catch {
+            // Hook ghi log lỗi không được đổi mã lỗi trả về.
+          }
           throw new AppError('COST_CAP_REACHED', BLOCK_MESSAGE);
         }
-        return book.reserve(input.workspaceId, estimateUsd);
+        return book.reserve(lockKey, estimateUsd);
       });
 
       try {

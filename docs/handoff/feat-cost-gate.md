@@ -20,6 +20,7 @@ Kế hoạch: `docs/plans/feat-cost-gate.md`
 2. `COST-GATE-WIRE`: bọc `createLlmClient` ở nơi dựng (worker/web), cảnh báo Owner khi `nearCap`.
 3. `COST-GATE-PERSIST` (Redis đa tiến trình), `COST-GATE-PLAN-DEFAULT` (cột trần theo gói — migration làn b), ô nhập hạn mức ở `AUTO-SETTINGS-COST`.
 4. Đo ≤ $2/1.000 lượt vẫn chờ EVAL-RUNNER.
+5. Ghi nhận từ verifier-security (không chặn merge; đã sửa: khóa UUID chữ thường, `onBlock` ném lỗi không đổi mã lỗi). Còn lại → `COST-GATE-WIRE`: (a) hết giờ/ghi `ai_usage` lỗi vẫn bị tính tiền nhưng chỗ đặt bị nhả → cần ghi bù ước tính hoặc giữ chỗ; (b) `llm-client` ghi `cost_usd = 0` khi LiteLLM thiếu header chi phí → ghi ước tính; (c) ước tính nên theo byte UTF-8 + phụ phí mỗi tin nhắn + giá model dự phòng đắt nhất; (d) khóa workspace chưa có thời hạn (đọc sổ treo); (e) chỉ xuất bản đã bọc cổng cho tầng ứng dụng.
 
 ## Lệnh test liên quan
 ```
