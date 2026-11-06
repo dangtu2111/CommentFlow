@@ -13,6 +13,23 @@ export {
 } from './i18n/locales';
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
 export {
+  buildContextHeader,
+  CHUNK_MAX_CHARS,
+  type ChunkDocument,
+  type ChunkDraft,
+  type ChunkKind,
+  chunkDocument,
+  chunkText,
+  EXPIRY_WARNING_DAYS,
+  FAQ_CHUNK_MAX_CHARS,
+  HEADER_MAX_CHARS,
+  indexText,
+  isChunkValidAt,
+  isExpiringSoon,
+  parseValidity,
+  type Validity,
+} from './kb-chunking';
+export {
   BRAND_VOICE_LIST_MAX,
   type BrandVoiceInput,
   brandVoiceSchema,
