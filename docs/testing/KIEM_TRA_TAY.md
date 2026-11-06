@@ -61,6 +61,7 @@
 | KT-OTE | Mã hóa token OAuth ở `accounts` (logic thuần, chưa có giao diện; chạy test) | feat-oauth-token-enc | chưa | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PE | Thông báo đẩy + email (chờ nối giao diện/DB/nhà cung cấp) | — | chưa | chưa | — |
 | KT-PGVECTOR-HYBRID | Tạo lại embedding khi đổi mô hình + độ chính xác tìm lai (chỉ DB + mã, không migration mới) | feat-pgvector-hybrid | chưa | chưa | — |
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
 | KT-PRP | Nhắn riêng từ bình luận (chờ nối DB + giao diện) | — | có | chưa | — |
@@ -1112,6 +1113,16 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
 | 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
+
+## KT-PE — Thông báo đẩy + email (chờ nối giao diện/DB/nhà cung cấp thật)
+
+Điều kiện: chưa kiểm tay được — cần `PUSH-EMAIL-STORE`, `PUSH-EMAIL-UI`, `PUSH-EMAIL-PROVIDERS`, khóa VAPID và SMTP thật.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Bật cờ `PUSH_EMAIL_ENABLED` ở staging, đăng ký thông báo đẩy trên trình duyệt, đặt giờ yên lặng 22:00–07:00 giờ Việt Nam. | Lưu được; tắt/mở từng sự kiện×kênh có hiệu lực. |
+| 2 | Tạo mục cần người xử lý lúc 23:00. | Không có thông báo đến 07:00, sau đó nhận một thông báo (gom). |
+| 3 | Làm hỏng token kênh thử lúc 23:00. | Nhận ngay đẩy + email; nội dung chỉ có nhãn chung + số lượng, không tên/SĐT/email khách. |
 
 ## KT-PGM — Guard số tiền (PIPE-GUARD-MONEY, FR-030, feat-pipe-guard-money)
 

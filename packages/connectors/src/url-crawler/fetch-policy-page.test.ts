@@ -241,6 +241,23 @@ describe('FR-053 fetchPolicyPage — nhập chính sách từ link website', () 
     ).toBe(true);
   });
 
+  it('maxBytes/timeoutMs tùy chỉnh được chuyển tới bộ chuyển cho cả robots.txt và trang', async () => {
+    const { net, deps } = setup({
+      'https://shop.example.vn/robots.txt': robots('User-agent: *\nAllow: /\n'),
+      'https://shop.example.vn/p': htmlPage(POLICY_HTML),
+    });
+    await fetchPolicyPage('https://shop.example.vn/p', deps, {
+      ...OPTIONS,
+      maxBytes: 12_345,
+      timeoutMs: 4_321,
+    });
+    expect(net.requests).toHaveLength(2);
+    const [robotsRequest, pageRequest] = net.requests;
+    expect(robotsRequest?.maxBytes).toBe(512_000); // robots.txt có trần riêng
+    expect(pageRequest?.maxBytes).toBe(12_345);
+    expect(pageRequest?.timeoutMs).toBe(4_321);
+  });
+
   it('SSRF: URL nội bộ/DNS trỏ nội bộ bị chặn trước mọi yêu cầu; throttle mặc định khi không tiêm', async () => {
     const net = createFakeNetwork({}, { 'shop.example.vn': ['192.168.1.9'] });
     const deps = { transport: net.transport, resolver: net.resolver };
