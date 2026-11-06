@@ -25,9 +25,21 @@ const SCREENS = [
         'main .xl\\:col-span-3 a.bg-primary-container',
         '.settings-subnav-link[aria-current="page"]',
       ],
-      ['thẻ-2fa', 'main .xl\\:col-span-9 > div:nth-child(1)', '.settings-content > section:nth-of-type(1)'],
-      ['thẻ-tài-khoản', 'main .xl\\:col-span-9 > div:nth-child(2)', '.settings-content > section:nth-of-type(2)'],
-      ['thẻ-phiên', 'main .xl\\:col-span-9 > div:nth-child(3)', '.settings-content > section:nth-of-type(4)'],
+      [
+        'thẻ-2fa',
+        'main .xl\\:col-span-9 > div:nth-child(1)',
+        '.settings-content > section:nth-of-type(1)',
+      ],
+      [
+        'thẻ-tài-khoản',
+        'main .xl\\:col-span-9 > div:nth-child(2)',
+        '.settings-content > section:nth-of-type(2)',
+      ],
+      [
+        'thẻ-phiên',
+        'main .xl\\:col-span-9 > div:nth-child(3)',
+        '.settings-content > section:nth-of-type(4)',
+      ],
     ],
   },
   {
