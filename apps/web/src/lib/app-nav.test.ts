@@ -14,6 +14,7 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
       'readiness',
       'productImport',
       'kbGaps',
+      'kbPublish',
       'channels',
       'members',
       'activity',
