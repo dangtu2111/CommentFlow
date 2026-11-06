@@ -7,7 +7,10 @@ export function SectionHead({
   title,
   description,
   end,
+  hero = false,
 }: {
+  /** Thẻ chính của trang: biểu tượng trong ô 48px nền nút chính (mặc định: biểu tượng trần 24px). */
+  hero?: boolean;
   id: string;
   icon: ReactNode;
   title: ReactNode;
@@ -16,7 +19,7 @@ export function SectionHead({
 }) {
   return (
     <header className="section-head">
-      <span className="section-head-icon" aria-hidden="true">
+      <span className={hero ? 'section-head-icon is-hero' : 'section-head-icon'} aria-hidden="true">
         {icon}
       </span>
       <div className="section-head-text">

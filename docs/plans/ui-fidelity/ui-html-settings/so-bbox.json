@@ -1,0 +1,340 @@
+{
+  "settings-security": {
+    "stitch": [
+      {
+        "name": "thanh-bên",
+        "w": 256,
+        "h": 900,
+        "x": 0,
+        "y": 0,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "64px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "thanh-trên",
+        "w": 1440,
+        "h": 64,
+        "x": 0,
+        "y": 0,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "tiêu-đề",
+        "w": 792,
+        "h": 38,
+        "x": 256,
+        "y": 194,
+        "style": {
+          "fontSize": "30px",
+          "fontWeight": "700",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "cột-con",
+        "w": 284,
+        "h": 374,
+        "x": 256,
+        "y": 272,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "8px",
+          "paddingLeft": "8px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "mục-con-đang-chọn",
+        "w": 268,
+        "h": 48,
+        "x": 264,
+        "y": 590,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "10px",
+          "paddingLeft": "12px",
+          "borderRadius": "8px"
+        }
+      },
+      {
+        "name": "thẻ-2fa",
+        "w": 884,
+        "h": 518,
+        "x": 556,
+        "y": 272,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "24px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thẻ-tài-khoản",
+        "w": 884,
+        "h": 274,
+        "x": 556,
+        "y": 806,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "24px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thẻ-phiên",
+        "w": 884,
+        "h": 240,
+        "x": 556,
+        "y": 1096,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "24px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      }
+    ],
+    "build": [
+      {
+        "name": "thanh-bên",
+        "w": 256,
+        "h": 836,
+        "x": 0,
+        "y": 64,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "12px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "thanh-trên",
+        "w": 1440,
+        "h": 64,
+        "x": 0,
+        "y": 0,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "0px",
+          "paddingLeft": "24px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "tiêu-đề",
+        "w": 1136,
+        "h": 38,
+        "x": 280,
+        "y": 133,
+        "style": {
+          "fontSize": "32px",
+          "fontWeight": "700",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "cột-con",
+        "w": 280,
+        "h": 329,
+        "x": 280,
+        "y": 215,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "8px",
+          "paddingLeft": "8px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "mục-con-đang-chọn",
+        "w": 264,
+        "h": 40,
+        "x": 288,
+        "y": 497,
+        "style": {
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "10px",
+          "paddingLeft": "12px",
+          "borderRadius": "8px"
+        }
+      },
+      {
+        "name": "thẻ-2fa",
+        "w": 840,
+        "h": 373,
+        "x": 576,
+        "y": 249,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "24px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thẻ-tài-khoản",
+        "w": 840,
+        "h": 193,
+        "x": 576,
+        "y": 698,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "24px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thẻ-phiên",
+        "w": 840,
+        "h": 290,
+        "x": 576,
+        "y": 1017,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "24px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      }
+    ]
+  },
+  "settings-workspace-members": {
+    "stitch": [
+      {
+        "name": "tiêu-đề",
+        "w": 318,
+        "h": 28,
+        "x": 288,
+        "y": 92,
+        "style": {
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      }
+    ],
+    "build": [
+      {
+        "name": "tiêu-đề",
+        "w": 1136,
+        "h": 38,
+        "x": 280,
+        "y": 167,
+        "style": {
+          "fontSize": "32px",
+          "fontWeight": "700",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      }
+    ]
+  },
+  "settings-billing": {
+    "stitch": [
+      {
+        "name": "tiêu-đề",
+        "w": 327,
+        "h": 38,
+        "x": 280,
+        "y": 100,
+        "style": {
+          "fontSize": "30px",
+          "fontWeight": "700",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      }
+    ],
+    "build": [
+      {
+        "name": "tiêu-đề",
+        "w": 1136,
+        "h": 38,
+        "x": 280,
+        "y": 167,
+        "style": {
+          "fontSize": "32px",
+          "fontWeight": "700",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      }
+    ]
+  }
+}

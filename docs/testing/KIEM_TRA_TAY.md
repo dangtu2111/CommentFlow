@@ -69,6 +69,7 @@
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
+| KT-UIHS | Khung Cài đặt khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-UKPH | Giao diện KB + Bài viết từ HTML Stitch | — | có | chưa | — |
@@ -1340,6 +1341,15 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Chọn một bình luận | Cột phải hiện thẻ bối cảnh, khách + bình luận, AI phân tích (nhãn, Đổi nhãn), ô trả lời AI; thanh dưới có Ẩn và Gửi kèm `Ctrl + Enter` dính đáy khi cuộn |
 | 6 | Gõ trả lời rồi bấm Ctrl+Enter | Gửi như trước (không đổi logic) |
 | 7 | Thu cửa sổ còn 390px | Hai ngăn (danh sách / chi tiết) đúng; không cuộn ngang cả trang |
+
+## KT-UIHS — Khung Cài đặt khớp HTML Stitch (UI-HTML-SETTINGS, feat-ui-html-settings)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Mở `/dev/ui/settings` ở 1440px | Đường dẫn + tiêu đề ở hàng trên; cột con bên trái, các thẻ bên phải, thẻ đầu thẳng mép trên với cột con, không có khoảng trống lớn |
+| 2 | Xem thẻ 2FA | Biểu tượng khóa trong ô 48px; chip "Đang bật" cạnh tiêu đề; các thẻ khác chỉ có biểu tượng trần |
+| 3 | Mở `/dev/ui/members` và `/dev/ui/settings-billing` | Mô tả dưới tiêu đề nằm ở hàng trên (không nằm cạnh cột con) |
+| 4 | Thu còn 390px | Không cuộn ngang; cột con thành hàng cuộn ngang phía trên |
 
 ## KT-UIKIT — Bộ thành phần dùng chung (UI-KIT, feat-ui-kit-foundation)
 
