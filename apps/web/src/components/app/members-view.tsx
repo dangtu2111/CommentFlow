@@ -2,6 +2,7 @@ import { MailPlus, Users } from 'lucide-react';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { roleTone } from '../../lib/settings-visual';
 import { userInitials } from '../../lib/user-initials';
+import { SettingsFrame, type SettingsFrameScope } from '../settings/settings-frame';
 import { Avatar } from '../ui/avatar';
 import { Chip } from '../ui/chip';
 import { PageHeader } from '../ui/page-header';
@@ -33,7 +34,9 @@ export async function MembersView({
   workspaceName,
   members,
   invitations,
+  frame,
 }: {
+  frame: SettingsFrameScope;
   currentUserId: string;
   workspaceName: string;
   members: MemberRowView[];
@@ -42,9 +45,13 @@ export async function MembersView({
   const [t, format] = await Promise.all([getTranslations('members'), getFormatter()]);
   const activeOwners = members.filter((m) => m.role === 'owner' && m.status === 'active').length;
   return (
-    <>
-      <PageHeader title={t('title')} subtitle={t('subtitle', { workspace: workspaceName })} />
-
+    <SettingsFrame
+      {...frame}
+      active="members"
+      header={
+        <PageHeader title={t('title')} subtitle={t('subtitle', { workspace: workspaceName })} />
+      }
+    >
       <section className="card stack" aria-labelledby="members-title">
         <SectionHead
           id="members-title"
@@ -130,6 +137,6 @@ export async function MembersView({
           ))}
         </ul>
       </section>
-    </>
+    </SettingsFrame>
   );
 }

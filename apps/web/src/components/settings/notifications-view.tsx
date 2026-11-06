@@ -1,18 +1,22 @@
 import { Bell } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { PageHeader } from '../ui/page-header';
 import { SectionHead } from '../ui/section-head';
+import { SettingsFrame, type SettingsFrameScope } from './settings-frame';
 
 const ITEMS = ['usage', 'channel', 'handoff', 'pause'] as const;
 
 /** Trang Thông báo: các loại sự kiện dự kiến, công tắc tắt kèm "Sắp có" (chưa có nơi lưu tùy chọn). */
-export async function NotificationsView() {
+export async function NotificationsView({ frame }: { frame: SettingsFrameScope }) {
   const t = await getTranslations('settings');
   return (
-    <>
-      <header className="stack-tight">
-        <h1 className="page-title">{t('notifications.title')}</h1>
-        <p className="page-subtitle">{t('notifications.subtitle')}</p>
-      </header>
+    <SettingsFrame
+      {...frame}
+      active="notifications"
+      header={
+        <PageHeader title={t('notifications.title')} subtitle={t('notifications.subtitle')} />
+      }
+    >
       <section className="card stack" aria-labelledby="notif-list">
         <SectionHead
           id="notif-list"
@@ -32,6 +36,6 @@ export async function NotificationsView() {
           ))}
         </ul>
       </section>
-    </>
+    </SettingsFrame>
   );
 }

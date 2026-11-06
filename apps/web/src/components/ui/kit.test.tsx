@@ -135,6 +135,18 @@ describe('UI-KIT Chip, Avatar, Stat, SplitLayout', () => {
     expect(html).toContain('settings-subnav-count');
     expect(html).toContain('nội dung');
   });
+
+  it('SplitLayout đặt header phía trên lưới hai cột (không còn thủ thuật trải hàng)', () => {
+    const html = renderToStaticMarkup(
+      <SplitLayout navLabel="Cài đặt" navTitle="CẤU HÌNH" items={[]} header={<h1>Đầu trang</h1>}>
+        <section>thẻ</section>
+      </SplitLayout>,
+    );
+    expect(html.indexOf('Đầu trang')).toBeLessThan(html.indexOf('settings-body'));
+    expect(html.indexOf('settings-body')).toBeLessThan(html.indexOf('settings-subnav'));
+    expect(html.indexOf('settings-subnav')).toBeLessThan(html.indexOf('settings-content'));
+    expect(html).toContain('thẻ');
+  });
 });
 
 describe('UI-KIT Workbench + Kbd', () => {
