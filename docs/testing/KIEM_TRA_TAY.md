@@ -68,6 +68,7 @@
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIHA | Tự động hóa + Quy tắc spam khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHS | Khung Cài đặt khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
@@ -1334,6 +1335,15 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIHA — Tự động hóa + Quy tắc spam khớp HTML Stitch (UI-HTML-AUTOMATION, feat-ui-html-automation)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner mở `/app/automation` | Hai bảng Bình luận/Tin nhắn (kênh × Hỏi giá/Tư vấn/Mua hàng), ô chọn dạng viên đổi màu theo mức |
+| 2 | Đổi vài ô, chỉnh ngưỡng/giờ/từ khóa, bấm Lưu | Banner "Đã lưu"; tải lại thấy đúng giá trị (logic không đổi) |
+| 3 | Mở `/app/spam-rules`, điền quy tắc, Enter trong ô tên | Chỉ Xem trước, không lưu; bấm Lưu quy tắc mới lưu |
+| 4 | Thu cửa sổ 390px cả hai trang | Không cuộn ngang cả trang; bảng ma trận cuộn ngang trong khung |
 
 ## KT-UIHC — Hộp thư Bình luận khớp HTML Stitch (UI-HTML-COMMENTS, feat-ui-html-comments)
 

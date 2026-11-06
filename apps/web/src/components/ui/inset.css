@@ -1,0 +1,27 @@
+/* Inset — khối nền nhạt trong thẻ (Stitch: bg-surface-container-low, bo 12, đệm 16). Chỉ dùng token. */
+
+.inset {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  min-width: 0;
+}
+
+.inset-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.inset-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.inset-icon {
+  display: inline-flex;
+  color: var(--action-bg);
+}

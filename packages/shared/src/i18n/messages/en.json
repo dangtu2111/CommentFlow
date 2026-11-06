@@ -906,7 +906,8 @@
       "body": "Each cell is a separate level for comments and for messages of that channel.",
       "label": "Label",
       "empty": "No channel yet. Connect a channel on the Channels page first.",
-      "complaintNote": "Complaint and Spam comments are never auto-sent; they always go to staff."
+      "complaintNote": "Complaint and Spam comments are never auto-sent; they always go to staff.",
+      "channel": "Connected channel"
     },
     "target": {
       "comment": "Comments",
@@ -951,7 +952,8 @@
       "keywords": "Blocked keywords",
       "keywordsHint": "One word or phrase per line (up to 50, each ≤ 60 characters). AI replies containing any of them are not auto-sent.",
       "signature": "Disclosure signature",
-      "signatureHint": "A short single line (≤ 120 characters) saying the reply was written by AI, e.g. “— The shop's AI assistant”. Leave empty to skip."
+      "signatureHint": "A short single line (≤ 120 characters) saying the reply was written by AI, e.g. “— The shop's AI assistant”. Leave empty to skip.",
+      "body": "Confidence threshold, delay, daily limit, active hours and the other safety guards for auto-send."
     },
     "notice": {
       "saved": "Settings saved."
@@ -1072,7 +1074,10 @@
       "invalid_rule": "The rule is not valid: check the name, pattern (regex must not use nested repetition) and action.",
       "limit_reached": "You have reached 50 rules. Delete an old rule before adding a new one.",
       "unavailable": "Could not complete this now. Please try again later."
-    }
+    },
+    "builderTitle": "Set up a rule",
+    "builderBody": "Pick the condition that identifies spam and the action when it matches. Preview before saving.",
+    "conditionTitle": "Detection condition"
   },
   "kbGaps": {
     "pageTitle": "Unanswered AI questions",
