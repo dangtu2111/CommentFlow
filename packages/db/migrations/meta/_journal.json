@@ -218,6 +218,13 @@
       "when": 1793891000000,
       "tag": "0030_worker_db_role",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793896599981,
+      "tag": "0031_stuck_outbox_sweep",
+      "breakpoints": true
     }
   ]
 }

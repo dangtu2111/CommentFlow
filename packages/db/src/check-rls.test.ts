@@ -25,6 +25,7 @@ function fakeDb(parts: {
   noDelete?: Row[];
   tokenFunctions?: Row[];
   webhookFn?: Row[];
+  stuckOutboxFn?: Row[];
   leaveFn?: Row[];
   actionLogsCheck?: Row[];
   guards?: Row[];
@@ -94,6 +95,7 @@ function fakeDb(parts: {
       if (text.includes('/* is-system-context-body */')) return { rows: parts.systemFn ?? [] };
       if (text.includes('/* channels-no-insert */')) return { rows: parts.channelInsert ?? [] };
       if (text.includes('/* webhook-function */')) return { rows: parts.webhookFn ?? [] };
+      if (text.includes('/* stuck-outbox-function */')) return { rows: parts.stuckOutboxFn ?? [] };
       if (text.includes('/* action-logs-check */')) return { rows: parts.actionLogsCheck ?? [] };
       if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
@@ -949,6 +951,41 @@ describe('checkRls: trigger giới hạn cột, thân is_system_context, INSERT 
       subject: 'cf.channels',
       message: expect.stringContaining('INSERT'),
     });
+  });
+});
+
+describe('checkRls: hàm liệt kê yêu cầu gửi/ẩn kẹt (SEND-SWEEP/HIDE-SWEEP)', () => {
+  it('báo khi hàm thiếu, mở cho cf_app/PUBLIC hoặc bỏ kiểm ngữ cảnh', async () => {
+    const v = await checkRls(
+      fakeDb({
+        stuckOutboxFn: [{ name: 'cf.list_stuck_outbox', problem: 'cf_app (web) có EXECUTE' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.list_stuck_outbox',
+      message: expect.stringContaining('cf_app (web) có EXECUTE'),
+    });
+  });
+
+  it('SQL đòi SECURITY DEFINER, chặn PUBLIC/cf_app/cf_auth, cấp cf_worker và kiểm thân (ngữ cảnh trần + session_user)', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({});
+    await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    const sqlText = queries.find((q) => q.includes('/* stuck-outbox-function */')) ?? '';
+    expect(sqlText).toContain('prosecdef');
+    expect(sqlText).toContain("has_function_privilege('public'");
+    expect(sqlText).toContain("has_function_privilege('cf_app'");
+    expect(sqlText).toContain("has_function_privilege('cf_worker'");
+    expect(sqlText).toContain('is_system_context() IS NOT FALSE');
+    expect(sqlText).toContain("session_user <> ''cf_worker''");
+    // cf_worker được EXECUTE trực tiếp ĐÚNG hai hàm này (không hàm nào khác).
+    const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
+    expect(direct).toContain("'read_channel_token', 'list_stuck_outbox'");
   });
 });
 
