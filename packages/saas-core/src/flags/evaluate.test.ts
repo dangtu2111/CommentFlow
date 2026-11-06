@@ -12,7 +12,7 @@ const flag = (overrides: Partial<FlagRow> = {}): FlagRow => ({
   ...overrides,
 });
 
-describe('evaluateFlag — thứ tự quyết định (docs/09 §10)', () => {
+describe('FR-117 evaluateFlag — thứ tự quyết định (docs/09 §10)', () => {
   it('1. override theo workspace thắng gói/rollout/default_on (cả bật và tắt) với flag thường', () => {
     expect(evaluateFlag({ flag: flag({ defaultOn: false }), override: true, context: {} })).toBe(
       true,

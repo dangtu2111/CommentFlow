@@ -124,7 +124,7 @@ describe('createLlmClient.call — yêu cầu gửi đi', () => {
   });
 });
 
-describe('createLlmClient.call — kết quả và ghi ai_usage', () => {
+describe('FR-034 createLlmClient.call — kết quả và ghi ai_usage', () => {
   it('trả kết quả và ghi ĐÚNG MỘT dòng ai_usage trong ngữ cảnh workspace', async () => {
     const { db, inserted } = fakeDb();
     const { fetchImpl } = fakeFetch(() =>
