@@ -238,6 +238,11 @@ export {
   searchProductsByAlias,
 } from './queries/product-aliases';
 export { applyProductImport, type ProductImportResult } from './queries/product-import';
+export {
+  applyProductSourceSync,
+  type ExternalProductSource,
+  type ProductSourceSyncResult,
+} from './queries/product-source-sync';
 export { type ActiveVariant, findActiveVariants } from './queries/products';
 export { loadReadinessSource, type ReadinessSourceData } from './queries/readiness';
 export {

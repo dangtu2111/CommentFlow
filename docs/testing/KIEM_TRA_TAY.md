@@ -65,6 +65,7 @@
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-SC | Semantic cache đầy đủ (qua interface, mock) | — | không | chưa | — |
+| KT-SHI | Nhập sản phẩm từ Shopify (chỉ đọc, fixture) | feat-shopify-import | có | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
@@ -1256,6 +1257,18 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 Nếu hỏng: ghi số bước và ảnh chụp.
 
 ---
+
+## KT-SHI — Nhập sản phẩm từ Shopify (SHOPIFY-IMPORT, FR-052, feat-shopify-import)
+
+> Chưa có giao diện/job; kiểm bằng test + (khi có dev store) một script thử. / No UI yet; verify via tests and, once a dev store exists, a one-off script.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/connectors exec vitest run src/shopify` | Mọi test xanh (fixture 2 trang, throttle, lỗi 401/403/429, chữ ký webhook). |
+| 2 | Mở `.env`/env.example: không đặt `SHOPIFY_ENABLED` | Cờ tắt; không có lệnh gọi mạng nào tới Shopify. |
+| 3 | (Có dev store) Dựng connector với domain `<tên>.myshopify.com` + token chỉ đọc, chạy `fetchCatalog()` | Trả đủ sản phẩm ACTIVE kèm biến thể; giá VND là số nguyên; tồn chỉ có với biến thể theo dõi tồn. |
+| 4 | Đặt tiền tệ cửa hàng khác VND rồi chạy lại | Giá/giá gốc đều trống (không quy đổi). |
+| 5 | Dùng domain không phải `*.myshopify.com` | Bị từ chối ngay, không gọi mạng. |
 
 ## KT-SPF — Thông tin shop, chính sách, FAQ, giọng văn (KB-SHOP-POLICY-FAQ, feat-kb-shop-policy-faq, migration 0036) · Shop info, policy, FAQ, brand voice tables
 
