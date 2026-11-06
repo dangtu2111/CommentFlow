@@ -137,3 +137,16 @@ export {
   type LlmClientOptions,
   type LlmMessage,
 } from './llm-client';
+export {
+  type AbbreviationDict,
+  createAbbreviationDict,
+  type DetectedLang,
+  type KnownLang,
+  type LangDetection,
+  type LangDetector,
+  type LangRule,
+  type NormalizeLangInput,
+  type NormalizeLangResult,
+  normalizeAndDetectLang,
+  normalizeText,
+} from './normalize/normalize-lang';
