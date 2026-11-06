@@ -10,6 +10,7 @@ import '../styles/frames.css';
 import '../styles/kb-posts.css';
 import '../styles/auto-leads.css';
 import '../styles/reports-legal.css';
+import '../styles/settings-pages.css';
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();

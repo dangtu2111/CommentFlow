@@ -1,6 +1,7 @@
 // Barrel gốc của @flow/ai: chỉ re-export từng module. Export mới thêm vào `src/<module>/index.ts` của module đó;
 // chỉ khi tạo module (thư mục) mới mới thêm một dòng ở đây (xếp theo vần).
 
+export * from './abuse';
 export * from './autohide';
 export * from './automation';
 export * from './autopause';

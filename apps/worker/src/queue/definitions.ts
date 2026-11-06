@@ -22,6 +22,10 @@ export const SEND_RETRY_LIMIT = 3;
 /** Số lần pg-boss THỬ LẠI hàng đợi `hide` (tổng số lần chạy tối đa = retryLimit + 1). */
 export const HIDE_RETRY_LIMIT = 3;
 
+/** FR-115: hàng đợi `abuse` — mỗi workspace một job/15 phút; hiệu ứng idempotent nên thử lại an toàn. */
+export const ABUSE_QUEUE = 'abuse';
+export const ABUSE_RETRY_LIMIT = 2;
+
 export const QUEUES: QueueDefinition[] = [
   { name: SYSTEM_PING_QUEUE, retryLimit: 0 },
   // docs/09 §9: ingest — thử lại 5 lần, backoff mũ; idempotent theo sự kiện.
@@ -32,4 +36,6 @@ export const QUEUES: QueueDefinition[] = [
   { name: 'hide', retryLimit: HIDE_RETRY_LIMIT, retryBackoff: true },
   // FR-054: kb-publish — xuất bản/khôi phục phiên bản kiến thức; một giao dịch, chạy lại → no_changes nên thử lại an toàn.
   { name: KB_PUBLISH_QUEUE, retryLimit: 2, retryBackoff: true },
+  // FR-115: abuse — chấm tín hiệu lạm dụng theo workspace (docs/09 §11.2).
+  { name: ABUSE_QUEUE, retryLimit: ABUSE_RETRY_LIMIT, retryBackoff: true },
 ];

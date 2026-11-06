@@ -28,6 +28,7 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-ABJ | Job phát hiện lạm dụng (chỉ logic + test, chưa đăng ký job/DB; không cần khóa/dịch vụ ngoài) | feat-abuse-job | chưa | chưa | — |
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
@@ -36,6 +37,8 @@
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
+| KT-DIM | Mạo danh → chuyển người, gợi ý Ẩn (lõi, chờ nối) | — | không | chưa | — |
+| KT-DOC | Chốt đơn trong bình luận → lưu khách, trả lời không lặp PII (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
@@ -54,6 +57,7 @@
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
+| KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
 
 ---
 
@@ -502,6 +506,13 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 
 ---
 
+## KT-ABJ — Job phát hiện lạm dụng (ABUSE-JOB, FR-115)
+
+Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/abuse` và `pnpm --filter @flow/worker exec vitest run src/jobs/abuse.test.ts` → xanh. Kết quả mong đợi: không test đỏ (câu bị xóa >20% chỉ cảnh báo, từ khóa cấm chặn tự gửi + xem xét, lỗi gửi liên tiếp dừng workspace và thông báo đúng một lần, quyết định không bao giờ có hành động ẩn bình luận).
+
+---
+
 ## KT-AC — Hiệu chuẩn ngưỡng tự gửi + độ tin cậy (AUTO-CALIBRATION, FR-072, FR-163, feat-auto-calibration)
 
 > Chưa nối DB/giao diện nên kiểm bằng lệnh. / Not wired to DB/UI yet — verify by command.
@@ -642,6 +653,26 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 | 2 | (Sau khi nối) Khách bình luận ảnh + "mẫu này giá sao" trên bài chưa gắn sản phẩm | Bình luận vào "Cần người", lý do "Có ảnh, chưa nhận ra sản phẩm", không tự gửi |
 | 3 | (Sau khi nối) Cùng bình luận trên bài đã gắn đúng 1 sản phẩm | AI trả lời bình thường |
 | 4 | (Sau khi nối) Chỉ gửi sticker kèm chữ | Không bị coi là hỏi về ảnh |
+
+## KT-DIM — Bình luận mạo danh chuyển người, không tự gửi/ẩn (DA-IMPERSONATION, FR-155, feat-da-impersonation)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-IMPERSONATION-WIRE`. / Core + automated tests only; manual checks deferred to `DA-IMPERSONATION-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/impersonation-rules.test.ts` | Mọi test xanh |
+| 2 | (Sau khi nối) Tài khoản tên giống Page bình luận kèm link/"nhận quà" | Nhãn đỏ "Nghi mạo danh", báo ngay, AI không tự gửi; nút Ẩn chỉ hiện để người bấm |
+| 3 | (Sau khi nối) Khách trùng tên Page hỏi giá bình thường | Không bị gắn nhãn mạo danh |
+
+## KT-DOC — Khách chốt đơn trong bình luận: lưu khách trước, trả lời công khai không lặp SĐT/địa chỉ (DA-ORDER-IN-COMMENT, FR-156, feat-da-order-in-comment)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-ORDER-IN-COMMENT-WIRE`. / Core + automated tests only; manual checks deferred to `DA-ORDER-IN-COMMENT-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/order-comment-rules.test.ts` | Mọi test xanh |
+| 2 | (Sau khi nối) Dùng Page thử, bình luận "Chốt áo M, sđt 09xx…, giao 12 đường…" | Khách xuất hiện ở Khách tiềm năng; câu trả lời công khai chỉ là "Shop đã nhận… sẽ inbox xác nhận", không có SĐT/địa chỉ; có gợi ý Ẩn cho nhân viên bấm |
+| 3 | (Sau khi nối) Bình luận chỉ có "Chốt đơn nhé" hoặc chỉ có SĐT | Không bị coi là đơn hàng trong bình luận |
 
 ## KT-DRL — Cam kết pháp lý/uy tín (DA-RULES-LEGAL, FR-160) · Legal/trust commitments
 
@@ -1143,7 +1174,7 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 
 | # | Bước / Step | Kết quả mong đợi / Expected |
 |---|---|---|
-| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); không có mục Gói/Thông báo/Quyền riêng tư |
+| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); có thêm Gói & Thanh toán, Thông báo, Dữ liệu & Quyền riêng tư (xem KT-USP1) |
 | 2 | Bấm Kênh rồi Thành viên ở cột trái | Cùng khung, mục tương ứng được tô; không còn thanh tab phía trên |
 | 3 | Đăng nhập Staff, mở /app/settings | Cột trái chỉ có Tài khoản & Bảo mật |
 | 4 | Bật 2FA xong, bấm "Tôi đã lưu các mã này" | Hiện banner xanh "Kích hoạt xác thực 2 bước thành công"; tải lại trang → banner biến mất |
@@ -1172,6 +1203,18 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 3 | Thu cửa sổ còn 390px | Không cuộn ngang; mục lục Điều khoản xếp lên trên. |
 | 4 | Chế độ tối của hệ điều hành | Chữ vẫn đọc được. |
 | 5 | Chạy bản production (NODE_ENV=production) | Bốn route /dev/ui/* trả 404. |
+
+## KT-USP1 — Trang con Cài đặt (UI-FIDELITY-SETTINGS-PAGES, feat-ui-settings-pages)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Đăng nhập Owner, mở /app/settings, bấm "Gói & Thanh toán" | Trang "Quản lý Gói & Cước phí": thẻ "Gói hiện tại" nói chưa có thông tin gói; đồng hồ lượt AI; bảng so sánh Starter/Growth/Business + mua thêm; hóa đơn thật của workspace (hoặc "Chưa có hóa đơn nào") |
+| 2 | Bấm các nút Chọn gói / Mua thêm / Thay đổi chu kỳ | Đều tắt, ghi "Sắp có"; không có thanh toán nào xảy ra |
+| 3 | Bấm "Dữ liệu & Quyền riêng tư", bấm "Yêu cầu xuất dữ liệu" | Quay lại trang với thông báo "chưa mở", không dữ liệu nào đổi |
+| 4 | Ở khối Xóa workspace gõ sai tên rồi gửi; sau đó gõ đúng tên rồi gửi | Sai → "Tên workspace nhập chưa đúng"; đúng → "chưa mở"; workspace vẫn nguyên |
+| 5 | Mở "Thông báo" | Danh sách loại sự kiện, mỗi mục "Sắp có" |
+| 6 | Đăng nhập Staff | Cột trái chỉ có Thông báo + Tài khoản & Bảo mật; mở thẳng /app/settings/billing hoặc /privacy → 404 |
+| 7 | Chuyển English | Mọi chữ ở 3 trang đổi sang tiếng Anh, không còn khóa thô |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 
