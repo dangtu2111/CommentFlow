@@ -32,6 +32,7 @@
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
+| KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
@@ -92,6 +93,15 @@ Chưa có giao diện (ô Thử AI là `KB-TRYAI`; nối pipeline là `PIPE-RETR
 | 4 | (Tùy chọn, `psql` trên `cf_dev`) `SELECT search_norm, tsv FROM cf.kb_chunks LIMIT 1;` sau khi có đoạn. | `search_norm` thường + không dấu; `tsv` có từ không dấu (vi). |
 
 Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
+
+---
+
+## KT-034 — Viết lại câu hỏi theo ngữ cảnh (PIPE-REWRITE-CTX, FR-137/144)
+
+Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/rewrite`. — Mong đợi: tất cả test xanh, không gọi mạng.
+2. Mở `env.example`. — Mong đợi: có `REWRITE_LLM_ENABLED` (để trống = tắt) và `REWRITE_LLM_MODEL`.
+3. (Khi đã có khóa LLM, tùy chọn) đặt `REWRITE_LLM_ENABLED=true` + `REWRITE_LLM_MODEL`, gọi `createLlmRewriter` với "còn không shop" + bình luận cha "áo này giá sao". — Mong đợi: `source: 'llm'`, câu tìm kiếm nêu rõ sản phẩm, không có SĐT/email; dòng `ai_usage` bước `rewrite`.
 
 ---
 
