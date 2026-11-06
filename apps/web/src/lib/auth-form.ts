@@ -17,6 +17,7 @@ export const MESSAGE_KEYS = [
   'passwordCommon',
   'passwordPwned',
   'passwordMismatch',
+  'passwordSame',
   'nameInvalid',
   'required',
   'generic',

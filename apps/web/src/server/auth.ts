@@ -2,8 +2,10 @@ import {
   type Auth,
   type AuthFlows,
   type AuthHandle,
+  type ChangePasswordFlow,
   createAuth,
   createAuthFlows,
+  createChangePasswordFlow,
   createNotifier,
   createPasswordPolicy,
   createSealedValueCodec,
@@ -39,6 +41,8 @@ export type AuthRuntime = {
   authHandle: AuthHandle;
   flows: AuthFlows;
   twoFactor: TwoFactorFlows;
+  /** Đổi mật khẩu của chính mình (kiểm mật khẩu lộ + rate limit + xóa mọi phiên). */
+  changePassword: ChangePasswordFlow;
   tenancy: Tenancy;
   /** Thành viên + lời mời (Owner); kiểm quyền Owner nằm trong saas-core. */
   workspaceAdmin: WorkspaceAdmin;
@@ -113,6 +117,12 @@ function createRuntime(): AuthRuntime {
     authHandle,
     flows: createAuthFlows({ auth, limiter, passwordPolicy, twoFactor }),
     twoFactor,
+    changePassword: createChangePasswordFlow({
+      auth,
+      authDb: authHandle,
+      limiter,
+      passwordPolicy,
+    }),
     tenancy,
     workspaceAdmin,
     workspaceCookie: createSignedValueCodec({

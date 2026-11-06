@@ -365,6 +365,41 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 
 ---
 
+## KT-020 — Đổi mật khẩu (AUTH-CHANGE-PW-UI, feat-auth-change-pw-ui)
+
+Điều kiện: đăng nhập một tài khoản thử; mở `/app/security` ở **hai trình duyệt** (A và B, cùng tài khoản). Có thể đặt `PWNED_CHECK=on` để thử bước 4 (cần mạng).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Ở A, mục **Đổi mật khẩu**: điền mật khẩu hiện tại SAI + mật khẩu mới hợp lệ. | Dải đỏ "Mật khẩu chưa đúng."; vẫn đăng nhập. |
+| 2 | Mật khẩu mới ngắn (< 10 ký tự). | Dải đỏ "Mật khẩu cần tối thiểu 10 ký tự." |
+| 3 | Mật khẩu mới trùng mật khẩu hiện tại; rồi ô nhập lại không khớp. | "Mật khẩu mới phải khác…"; "Hai mật khẩu chưa giống nhau…". |
+| 4 | Mật khẩu mới là `qwertyuiop` (và một mật khẩu từng lộ, khi bật HIBP). | "quá phổ biến" / "đã xuất hiện trong các vụ lộ dữ liệu". |
+| 5 | Sai mật khẩu hiện tại 5 lần liên tiếp, lần 6. | Thông báo "thử quá nhiều lần, đợi khoảng N phút". |
+| 6 | Đợi hết hạn (hoặc dùng tài khoản khác), nhập đúng mật khẩu hiện tại + mật khẩu mới mạnh. | Chuyển về `/login`. |
+| 7 | Ở B tải lại trang. | B cũng bị đưa về `/login` (mọi phiên đã bị xóa). |
+| 8 | Đăng nhập bằng mật khẩu CŨ, rồi bằng mật khẩu MỚI. | Cũ bị từ chối; mới vào được. |
+| 9 | Đổi sang **English** + ~390px, mở lại thẻ. | Chữ tiếng Anh đúng, ô nhập không tràn. |
+
+Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (không dán mật khẩu).
+
+---
+
+## KT-019 — Chỉ mục Nhật ký của Staff (ACTION-LOGS-ACTOR-INDEX, migration 0032)
+
+Điều kiện: nhánh `feat-action-logs-actor-index`; máy ảo `cf` bật; đã có `.env`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (cf_dev). | Áp migration 0032, không lỗi; chạy lại lần hai cũng không lỗi. |
+| 2 | Trên máy ảo, `psql` vào `cf_dev`: `\d core.action_logs`. | Thấy hai chỉ mục `action_logs_ws_actor_created_idx` và `action_logs_ws_on_behalf_created_idx` (có `WHERE`). |
+| 3 | `pnpm db:check-rls`. | 0 vi phạm. |
+| 4 | Đăng nhập Staff, mở **Nhật ký**. | Vẫn chỉ thấy dòng của mình + dòng hệ thống do mình yêu cầu (hành vi không đổi). |
+
+Nếu hỏng: ghi số bước và nội dung hiện trên màn hình.
+
+---
+
 ## KT-018 — Tên sản phẩm, logo, tên miền, email gửi cấu hình được (CFG-APPNAME, FR-125)
 
 Điều kiện: web dev chạy; máy ảo (Mailpit) bật. Đặt trong `.env.local` (tên tạm, không cần chốt Q6): `APP_NAME=Tên Thử`, `APP_LOGO_URL=https://picsum.photos/64` (hoặc để trống), `APP_DOMAIN=thu.example.com`; xóa dòng `SMTP_FROM` để thử địa chỉ gửi tự dựng. Khởi động lại web sau mỗi lần đổi biến.
