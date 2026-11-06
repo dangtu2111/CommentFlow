@@ -4,5 +4,6 @@ export * from './comment-hides';
 export * from './comment-replies';
 export * from './comment-tombstones';
 export * from './comments';
+export * from './kb';
 export * from './posts';
 export * from './webhook-events';
