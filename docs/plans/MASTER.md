@@ -141,7 +141,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | POSTS-LINK-PRODUCT | FR-061 (gắn nhiều sản phẩm, sản phẩm chính, gắn hàng loạt; AI gợi ý cần xác nhận) | US-032 | POSTS-LIST, PRODUCTS-VARIANTS | — | không | ⏳ |
 | POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | — | không | ⏳ |
 | DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | ⏳ |
-| SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | ⏳ |
+| SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | 🟡 Xong-mock phần không cần cột mới (`feat-suggest-ui`; còn `SUGGEST-UI-PERSIST` cần bảng `drafts` — làn b; KT-SUI) |
 | BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ✅ (feat/bulk-actions) |
 | INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ✅ (feat-inbox-mobile; còn Playwright 390px, KT-016) |
 | REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | 🟡 (`feat-reply-lang-ui`: `reply_language` theo kênh xong; xưng hô chờ `brand_voice` → gap `REPLY-ADDRESS-UI`) |
