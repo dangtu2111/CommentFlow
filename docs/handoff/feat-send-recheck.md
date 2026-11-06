@@ -9,6 +9,7 @@ Kế hoạch: `docs/plans/feat-send-recheck.md`
 - verifier-security (một lần): không chặn merge; 2 "nên sửa" đã sửa (R1 theo chế độ, R5 `hasMoney`); ghi nhận → Q-SR1 (i).
 - Worker `apps/worker/src/jobs/send.ts`: R1–R3 viết thẳng → `sendRecheck(recheckInputFromRow(row, now))` + `settlementForRecheck`; R9 → `SendRetryableError('recheck:R9')`; `@flow/ai` thêm vào deps worker. Test đơn vị `send-recheck-input.test.ts`; test tích hợp `apps/worker/tests/send.int.test.ts` (R1–R3) KHÔNG chạy ở làn c — CI/làn b chạy.
 - Web: `reply-errors.ts` + i18n `recheckR4–R9` (vi/en); `reply-state.test.ts`.
+- Sửa CI đỏ (job Database, test `R2 deleted_at` → `recheck:input`): NGUYÊN NHÂN GỐC là Drizzle/node-postgres trả cột `timestamptz` của `tx.execute()` dưới dạng CHUỖI thô Postgres (`2026-11-06 05:43:03.943757+00`), không phải `Date`, nên Zod `z.iso.datetime` từ chối → `recheck:input`. Thêm `packages/db/src/row-timestamp.ts` (`timestampFromRow`, `RawTimestamp`, dùng bộ phân tích của `pg`; chuỗi hỏng → ném `AppError`) + test; `send.ts` đọc `deleted_at`/`comment_created_time` qua nó (cả `referenceAt` của `evaluateAction` và `fetchComments`); test hồi quy trong `send-recheck-input.test.ts`. Merge `origin/main` (AI-READINESS, injection) giữ cả hai phía ở `KIEM_TRA_TAY.md`, `packages/ai/src/index.ts`, `vitest.config.ts`.
 - Docs: Q-SR1, gap matrix (SEND-RECHECK ✅, SEND-RECHECK-WIRE, MUTATION-STRYKER, SEND-RATE-LIMIT), MASTER, codemap, STANDARD §8, CAN_BAN §2j, KT-SR.
 
 ## Đã đọc và rút ra (để phiên sau không đọc lại)

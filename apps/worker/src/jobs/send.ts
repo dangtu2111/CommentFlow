@@ -9,7 +9,7 @@ import {
   type PlatformError,
   textLengthOf,
 } from '@flow/connectors';
-import { type Database, type FlowDb, sql } from '@flow/db';
+import { type Database, type FlowDb, type RawTimestamp, sql, timestampFromRow } from '@flow/db';
 import { AppError, type SendJob, sendJobSchema } from '@flow/shared';
 import type { Logger } from '../logger';
 import { SEND_RETRY_LIMIT } from '../queue/definitions';
@@ -51,8 +51,9 @@ type Row = {
   comment_external_reply_id: string | null;
   is_hidden: boolean;
   merged_into_id: string | null;
-  deleted_at: Date | null;
-  comment_created_time: Date | null;
+  /** Cột thời gian của `tx.execute` về dạng CHUỖI thô Postgres (không phải `Date`) — đọc qua `timestampFromRow`. */
+  deleted_at: RawTimestamp;
+  comment_created_time: RawTimestamp;
   channel_id: string;
   channel_status: string;
   channel_platform: Platform;
@@ -95,7 +96,7 @@ export function recheckInputFromRow(
       externalReplyId: row.comment_external_reply_id,
       isHidden: row.is_hidden,
       mergedIntoId: row.merged_into_id,
-      deletedAt: row.deleted_at,
+      deletedAt: timestampFromRow(row.deleted_at),
     },
     channel: { status: row.channel_status, sendSuspended: row.channel_suspended },
     automation: null,
@@ -187,7 +188,7 @@ async function prepare(
   }
   const connector = registry.get(row.channel_platform);
   const decision = evaluateAction(connector.capabilities, 'reply', {
-    referenceAt: row.comment_created_time ?? now,
+    referenceAt: timestampFromRow(row.comment_created_time) ?? now,
     now,
     byHuman: true,
     textLength: textLengthOf(row.reply_text),
@@ -257,7 +258,10 @@ export async function findExistingReply(
 ): Promise<string | null> {
   const comments = connector.fetchReplies
     ? await connector.fetchReplies(channel, row.comment_external_id)
-    : await connector.fetchComments(channel, row.comment_created_time ?? new Date(0));
+    : await connector.fetchComments(
+        channel,
+        timestampFromRow(row.comment_created_time) ?? new Date(0),
+      );
   const wanted = row.reply_text.trim();
   const match = comments.find(
     (c) =>

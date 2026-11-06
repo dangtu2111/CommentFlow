@@ -73,6 +73,16 @@ describe('FR-110 recheckInputFromRow — đường người gửi (outbox commen
     }
   });
 
+  it('R2 (hồi quy CI): deleted_at về dạng CHUỖI thô Postgres của `tx.execute` (không phải Date/ISO) → vẫn recheck:R2, không phải recheck:input', () => {
+    const check = failed({ ...clean, deleted_at: '2026-11-06 05:43:03.943757+00' });
+    expect(check.rule).toBe('recheck:R2');
+    expect(check.reason).toBe('comment_deleted');
+    expect(
+      recheckInputFromRow({ ...clean, deleted_at: '2026-11-06 05:43:03+00' }, NOW).comment
+        .deletedAt,
+    ).toEqual(new Date('2026-11-06T05:43:03.000Z'));
+  });
+
   it('R3: kênh không connected hoặc tạm khóa gửi → recheck:R3, failed, bình luận send_failed', () => {
     for (const row of [
       { ...clean, channel_status: 'expired' },
