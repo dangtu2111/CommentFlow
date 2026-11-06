@@ -160,3 +160,6 @@ Trang "Câu hỏi AI chưa trả lời được" chỉ đọc/ghi `kb_gaps` và 
 ## pgvector >= 0.8 cho chỉ mục HNSW — `KB-EMBED-COL`
 
 Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phải dùng PostgreSQL 16 + pgvector >= 0.8 (hiện `pgvector/pgvector:0.8.7-pg16`). Migration 0042 báo lỗi rõ nếu thấp hơn. Chủ dự án chỉ cần nâng image khi dựng staging/production mới.
+
+## 2l. `KB-TRYAI` (FR-059) — không cần tài nguyên ngoài mới
+Ô Thử AI có thể tìm trong KB thật của workspace (cờ `TRY_AI_KB_REAL`, mặc định TẮT; Xong-mock: embedding là fixture). Để vector có kết quả cần mô hình embedding ở 2g và worker điền `embedding` (`KB-CHUNKING`). Bạn **không** phải làm gì cho bản mock.

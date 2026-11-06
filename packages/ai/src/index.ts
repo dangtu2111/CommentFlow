@@ -304,6 +304,7 @@ export {
 } from './try/auto-send-preview';
 export { createDemoDrafter, createDemoExtractor } from './try/demo-ai';
 export { createDemoKnowledge } from './try/demo-knowledge';
+export { createKbTryKnowledge, type KbTryKnowledgeDeps } from './try/kb-try-knowledge';
 export {
   runTryPipeline,
   TRY_MAX_CHARS,
