@@ -27,3 +27,21 @@ export {
   readAutoSendInput,
   THRESHOLD_FLOOR,
 } from './auto-send-gate';
+export {
+  AUTO_LANGS,
+  type AutoLang,
+  type AutoSendByLangDecision,
+  type AutoSendByLangInput,
+  decideAutoSendByLang,
+  LANG_CELL_SCOPES,
+  LANG_GATE_REASONS,
+  type LangCell,
+  type LangGateReason,
+  type LangOverride,
+  type LangOverrides,
+  REPLY_LANGS,
+  type ReplyLang,
+  resolveLangLevel,
+  resolveLangSettings,
+  resolveReplyLang,
+} from './lang-autosend';

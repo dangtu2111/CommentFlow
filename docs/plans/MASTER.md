@@ -205,7 +205,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ⛔ |
+| PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ✅ Xong-mock (feat-plans-schema, Q-PLN1, migration 0054; giá seed chờ chủ dự án xác nhận) |
 | TRIAL-UPGRADE-UI | FR-090 (dùng thử, nâng gói, mua thêm) | US-060 | PLANS-SCHEMA | S | không | ⏳ |
 | QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ⛔ |
 | INVOICES | FR-091 (lịch sử hóa đơn, thông tin xuất hóa đơn) — nền dữ liệu ✅ Xong-mock (feat-invoices, Q-INV1, migration 0052: `core.invoices`/`core.payments`, hàm DEFINER chỉ hệ thống); còn giao diện lịch sử + thông tin xuất hóa đơn, QR, đường Admin | US-061 | QR-PAYMENT | S | không | 🔧 (nền dữ liệu xong; UI chờ `QR-PAYMENT`) |
@@ -246,7 +246,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | EMERGENCY-STOP | FR-073 (dừng khẩn cấp toàn workspace) | US-043 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-emergency-stop`, Q-ES1: `packages/ai/src/emergency/` quy tắc vai trò + store + dịch vụ hủy hẹn giờ; DB/UI → `EMERGENCY-STOP-WIRE`) |
 | AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ✅ Xong-mock (`feat-auto-pause`, Q-AP1: `packages/ai/src/autopause/` `evaluateAutoPause` thuần + store + dịch vụ hủy hẹn giờ `ai_paused`; DB/job/banner → `AUTO-PAUSE-WIRE`; KT-AP) |
 | AI-SENT-HISTORY | FR-075 (lịch sử AI đã gửi + Đánh dấu sai) | US-040 | AUTO-SEND-GATE | — | không | ✅ Xong-mock (feat-ai-sent-history; phần DB ở AI-SENT-HISTORY-DB) |
-| AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ⏳ |
+| AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ✅ Xong-mock (lõi thuần, feat-autosend-lang-partial; còn nối pipeline/DB) |
 | RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | 🧪 Xong-mock (feat-rate-limit-page; nối job/Redis → `RATE-LIMIT-PAGE-WIRE`) |
 | ABUSE-JOB | FR-115 (phát hiện lạm dụng: Đánh dấu sai, câu bị xóa, lỗi 368, tăng đột biến) | — | AI-SENT-HISTORY | S | không | ✅ Xong-mock (`feat-abuse-job`, Q-ABJ1: `evaluateAbuse` thuần + handler `withJob` + `AbuseSink`; DB/đăng ký/lịch → `ABUSE-JOB-WIRE`; KT-ABJ) |
 | ADMIN-SEND-LOCK | FR-116 (Admin tạm khóa gửi; trang Sức khỏe Meta App) | US-084 | ADMIN-SHELL, ABUSE-JOB | S | không | ⏳ |

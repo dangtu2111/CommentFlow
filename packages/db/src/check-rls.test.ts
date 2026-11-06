@@ -30,6 +30,8 @@ function fakeDb(parts: {
   invoiceTables?: Row[];
   paymentsPii?: Row[];
   invoiceFn?: Row[];
+  planTables?: Row[];
+  planFn?: Row[];
   leaveFn?: Row[];
   actionLogsCheck?: Row[];
   guards?: Row[];
@@ -104,6 +106,8 @@ function fakeDb(parts: {
       if (text.includes('/* invoice-tables */')) return { rows: parts.invoiceTables ?? [] };
       if (text.includes('/* payments-pii-columns */')) return { rows: parts.paymentsPii ?? [] };
       if (text.includes('/* invoice-functions */')) return { rows: parts.invoiceFn ?? [] };
+      if (text.includes('/* plan-tables */')) return { rows: parts.planTables ?? [] };
+      if (text.includes('/* plan-functions */')) return { rows: parts.planFn ?? [] };
       if (text.includes('/* action-logs-check */')) return { rows: parts.actionLogsCheck ?? [] };
       if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
@@ -1052,6 +1056,35 @@ describe('checkRls: hóa đơn/thanh toán (INVOICES, FR-091)', () => {
       subject: 'core.create_invoice',
       message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
     });
+  });
+});
+
+describe('checkRls: gói cước (PLANS-SCHEMA, FR-090)', () => {
+  it('báo bảng cf_app ghi được và hàm gói cước mở quyền; whitelist hàm cf_worker có 3 hàm gói', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({
+      planTables: [{ name: 'core.subscriptions', problem: 'RLS chưa bật' }],
+      planFn: [{ name: 'core.activate_plan', problem: 'PUBLIC có quyền EXECUTE' }],
+    });
+    const v = await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    expect(v).toContainEqual({
+      subject: 'core.subscriptions',
+      message: expect.stringContaining('RLS chưa bật'),
+    });
+    expect(v).toContainEqual({
+      subject: 'core.activate_plan',
+      message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
+    });
+    const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
+    expect(direct).toContain("'start_trial', 'activate_plan', 'grant_usage_addon'");
+    const fn = queries.find((q) => q.includes('/* plan-functions */')) ?? '';
+    expect(fn).toContain('is_system_context() IS NOT TRUE');
+    expect(fn).toContain("session_user <> ''cf_worker''");
   });
 });
 

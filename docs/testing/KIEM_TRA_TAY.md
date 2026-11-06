@@ -32,6 +32,7 @@
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
+| KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
@@ -47,6 +48,7 @@
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
@@ -540,6 +542,16 @@ Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy te
 | 3 | Khi có `AUTO-HIDE-DB` + `AUTO-HIDE-WIRE`: bật cờ + quy tắc Tự ẩn có `shadow_until`, gửi bình luận mẫu chứa SĐT từ Page thử | Trong thời gian shadow: chỉ có dòng "sẽ ẩn", bình luận chưa bị ẩn; sau đó bình luận bị ẩn và khách xuất hiện trong Khách tiềm năng TRƯỚC khi ẩn. |
 | 4 | Gửi bình luận không SĐT/link nhưng bị AI gán nhãn spam | KHÔNG bị ẩn (AI không tự ẩn). |
 
+## KT-ALP1 — Tự gửi theo ngôn ngữ (AUTOSEND-LANG-PARTIAL, feat-autosend-lang-partial)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/gate/lang-autosend.test.ts` | Mọi test xanh (30 ca, gồm property-based) |
+| 2 | Khi đã nối pipeline: đặt ô Tự động chỉ cho tiếng Việt, gửi bình luận tiếng Anh | Không tự gửi (mức tắt) — hiện lý do "Mức kênh × nhãn" |
+| 3 | Ngôn ngữ chưa đạt bộ đánh giá, ô Tự động | Chỉ ghi "sẽ gửi" (Chạy thử), không gửi thật |
+| 4 | Bình luận bằng ngôn ngữ ngoài vi/en | Chuyển người, không tự gửi |
+| 5 | Câu hỏi lại size ("Chị lấy size S, M hay L ạ?") ở ô Tự động, `allow_clarify` bật | Tự gửi; tắt `allow_clarify` → chờ duyệt |
+
 ## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
 
 > Cấu hình lưu bền trong DB (migration 0047, feat-auto-config-store; cần DB đã migrate) nhưng chưa áp dụng cho việc gửi thật. Cần ≥ 1 kênh để thấy ma trận.
@@ -935,6 +947,17 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 ## KT-PGM — Guard số tiền (PIPE-GUARD-MONEY, FR-030, feat-pipe-guard-money)
 
 Hàm thuần, chưa có giao diện/đường chạy → chưa có bước bấm tay. Kiểm tay khi `PIPE-DRAFT` nối guard: soạn câu có giá/ngày/SĐT/link không có trong kiến thức → bản nháp bị ép "Cần người", không tự gửi.
+
+## KT-PLN — Gói cước, dùng thử, mua thêm lượt (PLANS-SCHEMA, FR-090, US-060, Q-PLN1) · Plans store
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/plan.test.ts`. | Xanh: hết dùng thử/hết kỳ/đã hủy → hạn mức 0; `past_due` còn kỳ giữ hạn mức nhưng không tự gửi; thiếu gói → không cho dùng. / Green: expired, canceled or missing plans grant nothing. |
+| 2 | CI job `database` chạy `tests/plans.int.test.ts` và `pnpm db:check-rls`. | Bảng giá có đúng 5 gói; web không ghi được bảng giá hay gói; workspace khác không thấy gói của mình; chỉ job hệ thống đúng workspace bắt đầu dùng thử/đặt gói/cộng lượt mua thêm; dùng thử chỉ một lần; lượt mua thêm dùng được ngay và không mất khi mua đồng thời. / Web cannot write plans; cross-workspace isolation; trial once; add-on turns counted. |
+| 3 | Mở bảng giá trong DB dev: `SELECT code, price_vnd, monthly_turns FROM core.plans ORDER BY price_vnd;` (máy ảo). | Giá khớp mục CAN_BAN_CUNG_CAP `PLANS-SCHEMA`; báo lại nếu cần đổi. |
+| 4 | (Sau khi có `TRIAL-UPGRADE-UI`) đăng ký, xem thẻ gói, nâng gói, mua thêm lượt. | Chưa áp dụng — giao diện là việc sau. |
 
 ## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
 
