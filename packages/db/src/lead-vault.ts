@@ -48,7 +48,9 @@ export function parseLeadKeys(raw: string | undefined): ParsedLeadKeys {
     const version = Number(match[1]);
     const key = match[2] as string;
     if (!Number.isSafeInteger(version)) {
-      throw new LeadKeyConfigError(`LEADS_ENC_KEYS: phiên bản ở mục thứ ${index + 1} không hợp lệ.`);
+      throw new LeadKeyConfigError(
+        `LEADS_ENC_KEYS: phiên bản ở mục thứ ${index + 1} không hợp lệ.`,
+      );
     }
     if (!HEX_KEY.test(key)) {
       throw new LeadKeyConfigError(

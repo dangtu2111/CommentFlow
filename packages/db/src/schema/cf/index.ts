@@ -9,6 +9,7 @@ export * from './comments';
 export * from './drafts';
 export * from './kb';
 export * from './kb-content';
+export * from './leads';
 export * from './post-notes';
 export * from './post-products';
 export * from './posts';

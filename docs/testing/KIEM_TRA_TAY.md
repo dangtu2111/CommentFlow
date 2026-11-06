@@ -1065,3 +1065,13 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/web dev` (cổng riêng), mở `/dev/ui/kb-posts` (bản dev). | Thẻ bài + tab nền tảng + phân trang số + panel cấu hình; mọi nội dung có nhãn [MẪU]; bản production trả 404. |
 | 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
 | 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |
+
+## KT-LDS — Lưu khách tiềm năng (LEADS-STORE, FR-082/033, Q-LDS1) · Leads store
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/lead-contact.test.ts` và `pnpm --filter @flow/db exec vitest run src/lead-vault.test.ts src/lead-sink.test.ts`. | Xanh: chuẩn hóa SĐT/email, tối đa 3 lead/lần, mã hóa khứ hồi (sai workspace/lead/trường/khóa thì không giải mã), băm ổn định, cờ tắt mặc định, bật mà thiếu khóa thì báo lỗi cấu hình. |
+| 2 | CI job `database` chạy `tests/leads.int.test.ts` và `pnpm db:check-rls`. | Chỉ hệ thống ghi lead; DB không chứa SĐT/email thô; trùng số không tạo lead mới; Staff đổi giai đoạn/giao người (chỉ cho thành viên đang hoạt động); Staff không xóa; workspace khác không thấy. |
+| 3 | (Khi có khóa trên staging) đặt `LEADS_CAPTURE_ENABLED=true`, `LEADS_ENC_KEYS`, `LEADS_HASH_KEY` rồi chờ việc nối pipeline. | Chưa áp dụng — việc nối pipeline và giao diện Kanban là việc sau (`LEADS-KANBAN`). |

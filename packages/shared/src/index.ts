@@ -83,19 +83,6 @@ export {
   planKbVersion,
 } from './kb-publish';
 export {
-  type BurstComment,
-  type BurstGroup,
-  burstKey,
-  clampMergeWindowSeconds,
-  DEFAULT_MERGE_WINDOW_SECONDS,
-  isBurstReady,
-  MAX_BURST_SIZE,
-  MAX_MERGE_WINDOW_SECONDS,
-  MIN_MERGE_WINDOW_SECONDS,
-  mergeBurstText,
-  planMergeBurst,
-} from './merge-burst';
-export {
   LEAD_MAX_PER_CAPTURE,
   LEAD_NAME_MAX,
   LEAD_NOTE_MAX,
@@ -111,6 +98,19 @@ export {
   phoneLast4,
   planLeadsFromContacts,
 } from './lead-contact';
+export {
+  type BurstComment,
+  type BurstGroup,
+  burstKey,
+  clampMergeWindowSeconds,
+  DEFAULT_MERGE_WINDOW_SECONDS,
+  isBurstReady,
+  MAX_BURST_SIZE,
+  MAX_MERGE_WINDOW_SECONDS,
+  MIN_MERGE_WINDOW_SECONDS,
+  mergeBurstText,
+  planMergeBurst,
+} from './merge-burst';
 export {
   type ExtractedContacts,
   extractPii,

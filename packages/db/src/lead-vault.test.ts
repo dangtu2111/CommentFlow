@@ -73,9 +73,9 @@ describe('FR-082 mã hóa SĐT/email lead (AES-256-GCM)', () => {
     expect(() => v.decrypt(enc.ciphertext, enc.keyVersion, { ...email, workspaceId: WS2 })).toThrow(
       LeadDecryptError,
     );
-    expect(() =>
-      v.decrypt(enc.ciphertext, enc.keyVersion, { ...email, leadId: WS2 }),
-    ).toThrow(LeadDecryptError);
+    expect(() => v.decrypt(enc.ciphertext, enc.keyVersion, { ...email, leadId: WS2 })).toThrow(
+      LeadDecryptError,
+    );
     expect(() => v.decrypt(enc.ciphertext, enc.keyVersion, ctx)).toThrow(LeadDecryptError);
     expect(() => v.decrypt(enc.ciphertext, 1, email)).toThrow(LeadDecryptError);
   });

@@ -24,6 +24,23 @@ export {
   requestCommentHide,
 } from './hides';
 export {
+  createLeadCaptureFromEnv,
+  createLeadContactSink,
+  type LeadCaptureConfig,
+  type LeadPersist,
+  persistLeadsWith,
+} from './lead-sink';
+export {
+  createLeadVault,
+  type EncryptedLeadField,
+  type LeadCipherContext,
+  LeadDecryptError,
+  LeadKeyConfigError,
+  type LeadVault,
+  parseLeadHashKey,
+  parseLeadKeys,
+} from './lead-vault';
+export {
   createAbbreviation,
   deleteAbbreviation,
   listAbbreviations,
@@ -136,6 +153,20 @@ export {
   searchProducts,
   setProductNameEmbedding,
 } from './queries/kb-search';
+export {
+  countLeadsByStage,
+  deleteLead,
+  getLeadCipher,
+  LEADS_PAGE_MAX,
+  type LeadCipherRow,
+  type LeadRow,
+  type LeadSourceType,
+  type ListLeadsOptions,
+  listLeads,
+  type PreparedLead,
+  recordLeads,
+  updateLead,
+} from './queries/leads';
 export { linkProductsToPosts } from './queries/post-products';
 export {
   DEFAULT_POSTS_LIMIT,

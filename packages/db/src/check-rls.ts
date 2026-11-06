@@ -291,6 +291,19 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.rules', 'action', 'UPDATE'],
   ['cf_app', 'cf.rules', 'created_by', 'UPDATE'],
   ['cf_app', 'cf.rules', 'created_at', 'UPDATE'],
+  // LEADS-STORE (0051): định danh, nguồn, bản mã/băm bất biến sau INSERT; chỉ name/note/stage/assigned_to đổi được
+  ['cf_app', 'cf.leads', 'id', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'channel_id', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'source_type', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'source_id', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'phone_enc', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'phone_hash', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'phone_last4', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'email_enc', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'email_hash', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'key_version', 'UPDATE'],
+  ['cf_app', 'cf.leads', 'created_at', 'UPDATE'],
   // POSTS-LINK-PRODUCT (0049): định danh + trạng thái xác nhận bất biến sau INSERT; chỉ is_primary đổi được
   ['cf_app', 'cf.post_products', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_products', 'post_id', 'UPDATE'],
@@ -672,6 +685,11 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.rules', 'w', 'is_workspace_owner'],
   ['cf.rules', 'w', 'is_system_context'],
   ['cf.rules', 'r', 'is_workspace_member'],
+  // LEADS-STORE (0051): INSERT chỉ hệ thống; UPDATE thành viên hoặc hệ thống; đọc: thành viên hoặc không người dùng
+  ['cf.leads', 'a', 'is_system_context'],
+  ['cf.leads', 'w', 'is_workspace_member'],
+  ['cf.leads', 'w', 'is_system_context'],
+  ['cf.leads', 'r', 'is_workspace_member'],
   // POSTS-LINK-PRODUCT (0049): INSERT/UPDATE thành viên (đề xuất: + hệ thống); DELETE thành viên hoặc hệ thống
   ['cf.post_products', 'a', 'is_workspace_member'],
   ['cf.post_products', 'a', 'is_system_context'],
@@ -760,6 +778,11 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.rules', 'w', 'IS NULL'],
   ['cf.product_variants', 'a', 'IS NULL'],
   ['cf.product_variants', 'w', 'IS NULL'],
+  // khách tiềm năng: INSERT chỉ hệ thống (không nhánh thành viên/Owner/"không người dùng"); withWorkspace trần không sửa được
+  ['cf.leads', 'a', 'is_workspace_member'],
+  ['cf.leads', 'a', 'is_workspace_owner'],
+  ['cf.leads', 'a', 'IS NULL'],
+  ['cf.leads', 'w', 'IS NULL'],
   // bản nháp AI: INSERT chỉ hệ thống (không nhánh thành viên/Owner/"không người dùng"); withWorkspace trần không sửa được
   ['cf.drafts', 'a', 'is_workspace_member'],
   ['cf.drafts', 'a', 'is_workspace_owner'],
