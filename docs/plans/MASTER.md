@@ -35,7 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
-| UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (`feat-ui-kit-foundation`, Q-UIKIT1); chuyển trang còn lại |
+| UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (Q-UIKIT1) · PR2 avatar/pill/Stepper (`feat-ui-kit-migrate`, Q-UIKIT2); còn EmptyState/Table/AppShell + trang nhóm 2 |
 | UI-FIDELITY-SETTINGS-PAGES | docs/08 §7 (settings-billing.png) | UF-4 | UI-FIDELITY-SETTINGS-V2 | — | không | ✅ Xong-mock giao diện (`feat-ui-settings-pages`, Q-USP1; còn `PLANS-SCHEMA`, `QR-PAYMENT`) |
 | UI-FIDELITY-SETTINGS-V2 | docs/08 §7 (settings-security.png) | UF-4 | UI-FIDELITY-SETTINGS | — | verifier-security (xóa phiên) | ✅ Giao diện khớp (`feat-ui-settings-v2`, Q-UISET2; còn `SETTINGS-SECURITY-DATA`) |
 | UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
@@ -250,7 +250,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ✅ Xong-mock (lõi thuần, feat-autosend-lang-partial; còn nối pipeline/DB) |
 | RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | 🧪 Xong-mock (feat-rate-limit-page; nối job/Redis → `RATE-LIMIT-PAGE-WIRE`) |
 | ABUSE-JOB | FR-115 (phát hiện lạm dụng: Đánh dấu sai, câu bị xóa, lỗi 368, tăng đột biến) | — | AI-SENT-HISTORY | S | không | ✅ Xong-mock (`feat-abuse-job`, Q-ABJ1: `evaluateAbuse` thuần + handler `withJob` + `AbuseSink`; DB/đăng ký/lịch → `ABUSE-JOB-WIRE`; KT-ABJ) |
-| ADMIN-SEND-LOCK | FR-116 (Admin tạm khóa gửi; trang Sức khỏe Meta App) | US-084 | ADMIN-SHELL, ABUSE-JOB | S | không | ⏳ |
+| ADMIN-SEND-LOCK | FR-116 (Admin tạm khóa gửi; trang Sức khỏe Meta App) | US-084 | ADMIN-SHELL, ABUSE-JOB | S | không | ✅ Xong-mock (`feat-admin-send-lock`, Q-ASL1: logic thuần + guard cổng 1/R3 + store/effects interface; bảng/giao diện → `SEND-LOCK-WIRE`; KT-ASL) |
 | DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ✅ lõi thuần (`feat-da-holder`, Q-DH1; nối pipeline → `DA-HOLDER-WIRE`; KT-DH) |
 | DA-IMPERSONATION | FR-155 (chống mạo danh Page/shop) | US-111 | AUTO-SEND-GATE | S | không | ✅ lõi thuần (`feat-da-impersonation`, Q-DIM1; nối pipeline → `DA-IMPERSONATION-WIRE`; KT-DIM) |
 | DA-ORDER-IN-COMMENT | FR-156 (đặt hàng trong bình luận → Khách tiềm năng), FR-157 (mẫu ngưng/hết hàng khi tự gửi) | US-112 | LEADS-KANBAN | S (PII) | không | ✅ lõi thuần (`feat-da-order-in-comment`, Q-DOC1; nối pipeline → `DA-ORDER-IN-COMMENT-WIRE`, lưu đơn → `DA-ORDER-IN-COMMENT-DB`; KT-DOC) |
@@ -275,13 +275,13 @@ Cổng: theo từng tính năng (`docs/14` §8).
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| TIKTOK-CONNECTOR | FR-015 (đọc + trả lời bình luận; ẩn chỉ khi có API) | — | CONNECTOR-IFACE | S | **có** — quyền TikTok (Q5) | ⛔ |
+| TIKTOK-CONNECTOR | FR-015 (đọc + trả lời bình luận; ẩn chỉ khi có API) | — | CONNECTOR-IFACE | S | **có** — quyền TikTok (Q5) | ✅ Xong-mock (`feat-tiktok-connector`, Q-TT1; còn `TIKTOK-CHANNEL-CONNECT`, `TIKTOK-POLLING`) |
 | MESSENGER-WEBHOOK | FR-014 (webhook `messages`, gửi trong cửa sổ) | UF-6 | FB-OAUTH | S | **có** — Meta App Review | ✅ Xong-mock (`feat-messenger-webhook`, Q-MSW1; còn `MESSENGER-INGEST` cần migration làn b) |
 | IG-DM | FR-013 (tin nhắn Instagram) | UF-6 | IG-CONNECTOR | S | **có** — Meta | ⛔ |
 | MSG-INBOX | FR-047 (hội thoại: cửa sổ 24 giờ/7 ngày, AI theo hội thoại, tối đa lượt AI, chuyển người) | US-020–023 | MESSENGER-WEBHOOK | S | không | ⏳ |
 | PRIVATE-REPLY | FR-046 (nhắn riêng từ bình luận, 1 tin ≤ 7 ngày) | US-017 | MESSENGER-WEBHOOK | S | không | ✅ Xong-mock (logic thuần; nối DB/giao diện → `PRIVATE-REPLY-WIRE`) |
-| MSG-GREETINGS | FR-074 (tin chào, ngoài giờ, báo chuyển nhân viên theo ngôn ngữ) | — | MSG-INBOX | — | không | ⏳ |
-| REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ |
+| MSG-GREETINGS | FR-074 (tin chào, ngoài giờ, báo chuyển nhân viên theo ngôn ngữ) | — | MSG-INBOX | — | không | ✅ Xong-mock (`feat-msg-greetings`, Q-MSG1; còn `MSG-GREETINGS-WIRE` cần migration làn b + `MSG-GREETINGS-UI`) |
+| REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ (logic chỉ số + CSV: Xong-mock `feat-reports-metrics`; còn `REPORTS-UI`, `REPORTS-WEEKLY-EMAIL`) |
 | PUSH-EMAIL | FR-084 (thông báo đẩy PWA + email, giờ yên lặng) | — | REPORTS | — | **có** — nhà cung cấp email (SMTP thật) | ⛔ |
 | ADMIN-REST | FR-104 (gói & mã giảm giá, nội dung hệ thống, quản trị viên), Admin Console tiếng Anh | — | ADMIN-SHELL | S | không | ⏳ |
 | ADMIN-IMPERSONATE | FR-105 ("Xem như khách": lý do, chỉ đọc, ≤ 30 phút, nhật ký; `admin_impersonations`) | US-082 | ADMIN-SHELL | S+DB | không | ⏳ |

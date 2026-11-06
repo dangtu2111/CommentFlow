@@ -7,6 +7,8 @@ const CLASSES = {
   segmented: { nav: 'tabs', item: 'tab' },
   /** Tab mục của trang cha (Bình luận ⟵ AI đã gửi). */
   section: { nav: 'section-tabs', item: 'section-tab' },
+  /** Viên thuốc lọc theo nền tảng (Tất cả | Facebook | Instagram). */
+  pill: { nav: 'pill-tabs', item: 'pill-tab' },
 } as const;
 
 /**

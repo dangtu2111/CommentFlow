@@ -3,16 +3,21 @@ import {
   createConnectorRegistry,
   createFacebookConnector,
   createInstagramConnector,
+  createTikTokConnector,
   createTokenCipher,
   parseTokenKeys,
 } from '@flow/connectors';
 import type { FlowDb } from '@flow/db';
-import type { FacebookConnectorConfig, InstagramConnectorConfig } from '../config';
+import type {
+  FacebookConnectorConfig,
+  InstagramConnectorConfig,
+  TikTokConnectorConfig,
+} from '../config';
 import type { Logger } from '../logger';
 import { createWorkerTokenProvider } from './token-provider';
 
 /**
- * Sổ connector của worker (FB-CONNECTOR-REGISTER, IG-CONNECTOR). Cả hai cờ (`FB_CONNECTOR_ENABLED`, `IG_CONNECTOR_ENABLED`)
+ * Sổ connector của worker (FB-CONNECTOR-REGISTER, IG-CONNECTOR, TIKTOK-CONNECTOR). Cả ba cờ (`FB_CONNECTOR_ENABLED`, `IG_CONNECTOR_ENABLED`, `TIKTOK_CONNECTOR_ENABLED`)
  * tắt → RỖNG (lệnh gửi/ẩn ghi `connector_unavailable`, không gọi Meta). Cờ nào bật thì thêm connector đó, token Page giải mã qua
  * `createWorkerTokenProvider`. Khóa mã hóa sai/thiếu → ném (worker không khởi động). Dựng không gọi mạng/DB; thông báo lỗi
  * không kèm khóa/bí mật.
@@ -21,11 +26,15 @@ export function buildConnectorRegistry(options: {
   db: FlowDb;
   facebook: FacebookConnectorConfig;
   instagram: InstagramConnectorConfig;
+  /** Thiếu = TẮT (TIKTOK-CONNECTOR, FR-015). */
+  tiktok?: TikTokConnectorConfig;
   tokenEncKeys: string | undefined;
   logger: Pick<Logger, 'warn'>;
 }): ConnectorRegistry {
   const { db, facebook, instagram, tokenEncKeys, logger } = options;
-  if (!facebook.enabled && !instagram.enabled) return createConnectorRegistry([]);
+  const tiktok: TikTokConnectorConfig = options.tiktok ?? { enabled: false };
+  if (!facebook.enabled && !instagram.enabled && !tiktok.enabled)
+    return createConnectorRegistry([]);
   const cipher = createTokenCipher(parseTokenKeys(tokenEncKeys));
   const tokenProvider = createWorkerTokenProvider({
     db,
@@ -50,6 +59,9 @@ export function buildConnectorRegistry(options: {
             appSecret: instagram.appSecret,
           }),
         ]
+      : []),
+    ...(tiktok.enabled
+      ? [createTikTokConnector({ tokenProvider, clientSecret: tiktok.clientSecret })]
       : []),
   ]);
 }

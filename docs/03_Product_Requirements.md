@@ -71,7 +71,7 @@
 | Chỉ số | Định nghĩa |
 |---|---|
 | Thời gian phản hồi trung vị | Từ lúc bình luận/tin nhắn tạo đến lúc Page trả lời |
-| % trả lời trong 15 phút | — |
+| % trả lời trong 15 phút | Đã trả lời ≤ 15 phút / đã trả lời có mốc giờ hợp lệ (Q-RPT1) |
 | % AI tự xử lý | Số câu AI tự gửi / tổng câu đã trả lời |
 | Tỷ lệ gửi nguyên văn | Gợi ý AI được gửi không sửa / tổng gợi ý đã duyệt |
 | Tỷ lệ đổi nhãn | Nhãn bị nhân viên đổi / tổng đã duyệt |

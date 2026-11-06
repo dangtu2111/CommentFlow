@@ -5,6 +5,7 @@ import { Button, buttonClass, IconButton } from './button';
 import { Chip } from './chip';
 import { SplitLayout } from './split-layout';
 import { Stat } from './stat';
+import { Stepper } from './stepper';
 import { Tabs } from './tabs';
 
 const ITEMS = [
@@ -26,6 +27,35 @@ describe('UI-KIT Tabs', () => {
     expect(html).toContain('section-tabs');
     expect(html).toContain('section-tab"');
     expect(html).not.toContain('class="tabs"');
+  });
+});
+
+describe('UI-KIT Tabs pill, Avatar badge, Stepper', () => {
+  it('biến thể pill dùng class pill-tabs', () => {
+    const html = renderToStaticMarkup(<Tabs items={ITEMS} label="Nền tảng" variant="pill" />);
+    expect(html).toContain('pill-tabs');
+    expect(html).toContain('pill-tab"');
+  });
+
+  it('Avatar chỉ vẽ huy hiệu khi có badge', () => {
+    expect(renderToStaticMarkup(<Avatar>AB</Avatar>)).not.toContain('avatar-badge');
+    expect(renderToStaticMarkup(<Avatar badge="FB">AB</Avatar>)).toContain(
+      '<span class="avatar-badge">FB</span>',
+    );
+  });
+
+  it('Stepper: chỉ bước hiện tại có aria-current="step", có thanh tiến độ khi truyền progress', () => {
+    const steps = [
+      { key: 'a', state: 'done' as const, title: 'A' },
+      { key: 'b', state: 'current' as const, title: 'B', eyebrow: 'Bước 2', caption: 'Đang làm' },
+      { key: 'c', state: 'todo' as const, title: 'C' },
+    ];
+    const html = renderToStaticMarkup(<Stepper label="Các bước" steps={steps} progress={50} />);
+    expect(html.match(/aria-current="step"/g)).toHaveLength(1);
+    expect(html).toContain('<ol');
+    expect(html).toContain('--stepper-cols:3');
+    expect(html).toContain('width:50%');
+    expect(renderToStaticMarkup(<Stepper label="x" steps={steps} />)).not.toContain('stepper-bar');
   });
 });
 

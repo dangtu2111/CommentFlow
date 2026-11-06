@@ -64,6 +64,8 @@ export const RECHECK_REASONS = [
   // R3
   'channel_disconnected',
   'channel_send_suspended',
+  'admin_send_locked',
+  'send_lock_unknown',
   // R4
   'automation_unknown',
   'workspace_ai_off',
@@ -97,7 +99,7 @@ export type RecheckReason = (typeof RECHECK_REASONS)[number];
 export const RECHECK_LABELS: Readonly<Record<number, string>> = Object.freeze({
   1: 'Bình luận đã được trả lời / đổi trạng thái',
   2: 'Bình luận đã bị xóa, ẩn hoặc gộp',
-  3: 'Kênh mất kết nối hoặc bị tạm khóa gửi',
+  3: 'Kênh mất kết nối hoặc bị tạm khóa gửi (kể cả Admin tạm khóa)',
   4: 'Workspace dừng khẩn cấp / AI tạm dừng / mức không còn Tự động',
   5: 'Giá hoặc tồn kho đã đổi',
   6: 'Cơ sở kiến thức đã đổi',
@@ -148,6 +150,14 @@ export const sendRecheckInputSchema = z.object({
     /** `send_suspended_until > now()` (§11) — do nơi gọi tính. */
     sendSuspended: z.boolean(),
   }),
+  /**
+   * R3 (mọi chế độ): khóa gửi của Admin nền tảng (FR-116, `toGateSendLock(findActiveSendLock(…))`). Không truyền =
+   * nơi gọi chưa nối nguồn khóa (`SEND-LOCK-WIRE`); `null` = đọc lỗi → trượt.
+   */
+  sendLock: z
+    .object({ locked: z.boolean(), unreadable: z.boolean().optional() })
+    .nullable()
+    .optional(),
   /** R4 (chỉ tự gửi): cài đặt tự động đọc lại lúc gửi; `null` = không đọc được → trượt. */
   automation: z
     .object({
@@ -247,6 +257,10 @@ const r3ChannelOk: Rule = (i) => {
   if (i.channel.status !== 'connected')
     return { reason: 'channel_disconnected', action: 'channel_error' };
   if (i.channel.sendSuspended) return { reason: 'channel_send_suspended', action: 'channel_error' };
+  if (i.sendLock === null) return { reason: 'send_lock_unknown', action: 'channel_error' };
+  if (i.sendLock?.unreadable === true)
+    return { reason: 'send_lock_unknown', action: 'channel_error' };
+  if (i.sendLock?.locked === true) return { reason: 'admin_send_locked', action: 'channel_error' };
   return null;
 };
 

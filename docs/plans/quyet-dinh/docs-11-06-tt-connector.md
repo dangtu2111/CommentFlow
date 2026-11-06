@@ -1,0 +1,1 @@
+- 06/11 (TIKTOK-CONNECTOR, Q-TT1): `docs/12` §3 — connector TikTok chỉ đọc + trả lời bình luận, đọc bằng polling (chưa có webhook bình luận chính thức), id bình luận ghép `<video_id>:<comment_id>`, ẩn không hỗ trợ (đã khớp khai báo); không sửa nội dung docs/12 ngoài ghi chú này.

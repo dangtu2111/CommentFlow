@@ -35,6 +35,7 @@
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
+| KT-ASL | Admin tạm khóa gửi (chỉ logic + test, chưa có bảng/giao diện; không cần khóa/dịch vụ ngoài) | feat-admin-send-lock | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-DEXP | Xuất dữ liệu workspace (FR-094) | — | có | chưa | — |
@@ -47,6 +48,7 @@
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
+| KT-MSG1 | Tin chào / ngoài giờ / báo chuyển người (logic; Page thử khi nối thật) | — | không | chưa | — |
 | KT-MSW | Messenger (`MESSENGER_CONNECTOR_ENABLED`, **cần Page thử + `pages_messaging`**; sau `MESSENGER-INGEST`) | feat-messenger-webhook | chưa | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
@@ -60,6 +62,7 @@
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
+| KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
@@ -611,6 +614,13 @@ Hàm thuần, chưa nối pipeline/DB → chưa có bước bấm tay; không c�
 | 3 | Đăng nhập Staff, mở menu **AI đã gửi** | Staff cũng thấy menu và trang (không 404) |
 | 4 | Mở `/app/ai-sent?status=abc&page=-3` | Không lỗi; hiện như bộ lọc "Tất cả", trang 1 |
 
+## KT-ASL — Admin tạm khóa gửi (ADMIN-SEND-LOCK, FR-116)
+
+Chỉ phần máy (chưa có bảng lưu khóa, chưa có giao diện): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/send-lock src/gate/send-lock-gate.test.ts src/recheck/send-lock-recheck.test.ts` → xanh. Kết quả mong đợi: chỉ `super` (workspace + kênh) và `support` (chỉ kênh) khóa/mở khóa được, `finance` không; khóa Page áp xuyên workspace; khóa hết hạn/đã mở thì không chặn; khóa không đọc được thì chặn; cổng tự gửi cổng 1 và `sendRecheck` R3 đều trượt khi bị khóa.
+
+---
+
 ## KT-ATB — Ô Thử AI chạy cả pipeline, không trừ lượt (AI-TRY-BOX-UI, FR-059, FR-029, US-034, feat-ai-try-box-ui)
 
 | # | Bước | Kết quả mong đợi |
@@ -929,6 +939,17 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 2 | CI job `database` chạy `tests/leads.int.test.ts` và `pnpm db:check-rls`. | Chỉ hệ thống ghi lead; DB không chứa SĐT/email thô; trùng số không tạo lead mới; Staff đổi giai đoạn/giao người (chỉ cho thành viên đang hoạt động); Staff không xóa; workspace khác không thấy bản mã. |
 | 3 | (Khi có khóa trên staging) đặt `LEADS_CAPTURE_ENABLED=true`, `LEADS_ENC_KEYS`, `LEADS_HASH_KEY` rồi chờ việc nối pipeline. | Chưa áp dụng — việc nối pipeline và giao diện Kanban là việc sau (`LEADS-KANBAN`). |
 
+## KT-MSG1 — Tin chào / ngoài giờ / báo chuyển người (MSG-GREETINGS, feat-msg-greetings)
+
+> Chỉ có phần logic (chưa giao diện, chưa gửi thật); mục đầy đủ trên Page thử làm khi nối `MSG-GREETINGS-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/greetings` | Tất cả test đạt / All tests pass |
+| 2 | Đọc tên test nhóm "luật Meta" | Có ca đúng 24 giờ gửi được, 24 giờ + 1 ms bị chặn; bình luận bị chặn / 24h edge and comment target covered |
+| 3 | Đọc tên test nhóm "chọn mẫu theo ngôn ngữ" | vi, en, ngôn ngữ khác → dự phòng, thiếu mẫu → mặc định / vi, en, fallback, default covered |
+| 4 | (Sau khi nối thật) Nhắn tin vào Page thử ngoài giờ làm việc, rồi nhắn thêm lần hai | Nhận đúng 1 tin ngoài giờ nêu giờ mở cửa; lần hai không có tin lặp / One out-of-hours reply with opening time, no repeat |
+
 ## KT-MSW — Messenger với Page thật (MESSENGER-WEBHOOK, FR-014)
 
 Điều kiện: Page thử có quyền `pages_messaging`, webhook đã đăng ký `messages` + `message_echoes`; worker chạy với `MESSENGER_CONNECTOR_ENABLED=true` trên môi trường thử; có `MESSENGER-INGEST`. **Chưa chạy được ở thời điểm Xong-mock.**
@@ -1234,6 +1255,19 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/shared test` và `pnpm --filter @flow/web exec vitest run src/lib/suggestion.test.ts`. | Xanh: gửi nguyên văn → `sent_as_is`; sửa → `edited` + khoảng cách; chip nguồn ≤ 5 (+N); ô gợi ý ẩn khi không có gợi ý. |
 | 2 | Mở một bình luận → ô "Đổi nhãn" → chọn nhãn khác → "Lưu nhãn". | Trang làm tươi, chip nhãn đổi; bình luận đã xóa không có ô đổi nhãn; đổi sang en vẫn đủ chữ. |
+
+## KT-TT — Connector TikTok với tài khoản thật (TIKTOK-CONNECTOR, FR-015)
+
+Điều kiện: có quyền TikTok API for Business và tài khoản Business thử; kênh TikTok đã lưu (sau `TIKTOK-CHANNEL-CONNECT`); worker chạy với `TIKTOK_CONNECTOR_ENABLED=true` trên môi trường thử. **Chưa chạy được ở thời điểm Xong-mock.**
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng tài khoản khác bình luận vào một video của tài khoản thử, chờ chu kỳ polling | Bình luận hiện ở hộp thư đúng video, tác giả, nội dung |
+| 2 | Trả lời bình luận đó từ ứng dụng (≤ 150 ký tự) | Câu trả lời hiện dưới bình luận trên TikTok; hệ thống ghi đã gửi |
+| 3 | Trả lời bình luận quá 48 giờ / dài hơn 150 ký tự | Bị chặn trước khi gọi TikTok (ghi lại nếu TikTok cho phép khác khai báo) |
+| 4 | Xem một bình luận TikTok ở hộp thư | Không có nút Ẩn (chưa hỗ trợ) |
+| 5 | Bình luận do chính tài khoản thử viết | Không vào pipeline (chống vòng lặp) |
+| 6 | Thử token hết hạn/thu hồi quyền | Kênh báo hết hạn, banner Kết nối lại |
 
 ## KT-UC — Bộ đếm lượt AI (USAGE-COUNTERS, FR-090)
 

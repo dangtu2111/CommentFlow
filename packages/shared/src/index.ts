@@ -289,6 +289,22 @@ export {
   type ShopPronoun,
 } from './reply-style';
 export {
+  buildReport,
+  csvCell,
+  median,
+  REPORT_DEFAULT_MINUTES_PER_AUTO_REPLY,
+  REPORT_DEFAULT_TZ_OFFSET_MINUTES,
+  REPORT_FAST_REPLY_MS,
+  REPORT_PEAK_HOURS_COUNT,
+  type Report,
+  type ReportCommentRow,
+  type ReportOptions,
+  type ReportRole,
+  type ReportViewer,
+  reportToCsv,
+  type StaffProductivity,
+} from './reports';
+export {
   buildKbGapRecord,
   buildRetrievalLogRecord,
   KB_GAP_STATUSES,

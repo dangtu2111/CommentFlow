@@ -246,6 +246,14 @@ Logic kiểm tra (1 tin, ≤ 7 ngày, chỉ nhân viên bấm Gửi) đã xong v
 ## 2y. `QR-PAYMENT` (FR-091, US-061) — cần tài khoản ngân hàng nhận tiền
 Mã QR chuyển khoản (VietQR) và nút "Tôi đã chuyển khoản" đã xong dạng mock, chạy sau cờ `QR_PAYMENT_ENABLED` (web) mặc định TẮT. Bạn cần cung cấp: (1) tài khoản ngân hàng nhận tiền của công ty: **mã BIN ngân hàng** (6 chữ số, tra theo danh mục NAPAS), **số tài khoản**, **tên chủ tài khoản** → đặt vào biến `PAYMENT_BANK_BIN`, `PAYMENT_ACCOUNT_NUMBER`, `PAYMENT_ACCOUNT_NAME` (chỉ tên biến nằm trong `env.example`; giá trị đặt ở máy chạy thật, không commit); (2) chỉ bật cờ khi đã thử quét QR bằng app ngân hàng thật với số tiền nhỏ và đối chiếu số tiền/nội dung hiện đúng; (3) quyết định tài khoản cá nhân hay doanh nghiệp (ảnh hưởng xuất hóa đơn, ngoài phạm vi việc này). Chưa có đường Admin xác nhận (`ADMIN-PAYMENTS`) nên hóa đơn "chờ xác nhận" tạm chỉ chuyển `paid` bằng hàm hệ thống. Kiểm tay mã KT-QRP.
 
+## 2w. Connector TikTok — `TIKTOK-CONNECTOR` (FR-015, Xong-mock)
+
+Code connector TikTok đã nối vào worker nhưng cờ **tắt mặc định**, chưa từng gọi TikTok thật (chỉ fixture viết tay theo tài liệu công khai). Để bật thật bạn cần cung cấp (dùng tài khoản thử, không dùng tài khoản khách):
+- Đăng ký **TikTok API for Business** (developer), xin quyền đọc/trả lời bình luận organic; một **tài khoản TikTok Business thử**. Một số khu vực (EU, Anh, Thụy Sĩ…) bị loại; chưa rõ Việt Nam có được cấp không (Q5).
+- Luồng OAuth TikTok lấy token tài khoản, lưu mã hóa như token Page — **chưa làm** (gap `TIKTOK-CHANNEL-CONNECT`, cần migration/route do làn khác).
+- Trên **máy chạy worker** đặt `TIKTOK_CONNECTOR_ENABLED=true`, `TIKTOK_CLIENT_SECRET`, `TOKEN_ENC_KEYS` (cùng khóa với web). Không commit giá trị.
+- Đối chiếu với tài khoản thật rồi sửa nếu lệch: tên endpoint/trường, mã lỗi, định dạng chữ ký webhook, có API ẩn bình luận hay không, giới hạn 150 ký tự/48 giờ. Kiểm tay: KT-TT.
+
 ## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
 Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
 
