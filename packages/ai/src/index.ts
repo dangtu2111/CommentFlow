@@ -93,6 +93,18 @@ export {
   MAX_SHORT_TEXT_WORDS,
 } from './decide/handoff-rules';
 export {
+  type BusinessHoursState,
+  detectOrderStatusIntent,
+  evaluateBusinessHours,
+  type Invitation,
+  type InvitationSource,
+  type NextOpening,
+  nextOpening,
+  promisesImmediateReply,
+  resolveInvitation,
+  withOrderStatusTopic,
+} from './decide/order-hours-rules';
+export {
   anyStockStale,
   DEFAULT_STOCK_STALE_DAYS,
   evaluateStockRules,
