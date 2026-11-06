@@ -1,0 +1,1 @@
+| `packages/ai/src/index.ts` · `packages/ai/src/<module>/index.ts` · `packages/ai/src/root-modules.ts` | Barrel theo module: `index.ts` gốc chỉ `export * from './<module>'`; export mới thêm vào `index.ts` của module (không sửa file gốc); `root-modules.ts` gom `guard-money`, `kb-indexing`, `llm-client` nằm thẳng trong `src/` |
