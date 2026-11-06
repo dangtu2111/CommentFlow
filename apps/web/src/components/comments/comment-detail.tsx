@@ -16,7 +16,7 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 import { hideErrorKey } from '../../lib/hide-errors';
 import { deriveHideUi, type HideUiDetail } from '../../lib/hide-state';
-import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
+import { formatAbsoluteTime, formatRelativeTime, toIsoString } from '../../lib/inbox-format';
 import { labelTone, platformBadgeText } from '../../lib/inbox-visual';
 import { replyErrorKey } from '../../lib/reply-errors';
 import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
@@ -275,7 +275,7 @@ export async function CommentDetailPanel({
                 ) : (
                   <>
                     <time
-                      dateTime={comment.createdTime?.toISOString()}
+                      dateTime={toIsoString(comment.createdTime)}
                       title={formatAbsoluteTime(comment.createdTime, locale, timeZone)}
                     >
                       {formatRelativeTime(comment.createdTime, now, locale)}

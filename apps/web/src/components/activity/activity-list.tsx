@@ -9,7 +9,7 @@ import {
   buildActivityHref,
 } from '../../lib/action-log-filters';
 import { actionLabelKey, onBehalfOfDisplay } from '../../lib/action-log-format';
-import { formatAbsoluteTime } from '../../lib/inbox-format';
+import { formatAbsoluteTime, toIsoString } from '../../lib/inbox-format';
 import { activityTone } from '../../lib/settings-visual';
 import { userInitials } from '../../lib/user-initials';
 import { Avatar } from '../ui/avatar';
@@ -98,7 +98,7 @@ export async function ActivityList({
                   href={buildActivityHref(view, { selected: item.id })}
                   className="log-row-link"
                 >
-                  <time dateTime={item.createdAt.toISOString()}>
+                  <time dateTime={toIsoString(item.createdAt)}>
                     {formatAbsoluteTime(item.createdAt, locale, timeZone)}
                   </time>
                 </Link>

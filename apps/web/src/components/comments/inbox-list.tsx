@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BULK_MAX } from '../../lib/bulk-input';
 import { buildInboxHref, type InboxCursorValue, type InboxView } from '../../lib/inbox-filters';
-import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
+import { formatAbsoluteTime, formatRelativeTime, toIsoString } from '../../lib/inbox-format';
 import { labelTone, platformBadgeText } from '../../lib/inbox-visual';
 import { userInitials } from '../../lib/user-initials';
 import { Avatar } from '../ui/avatar';
@@ -115,7 +115,7 @@ export async function InboxList({
                   <span className="inbox-author">{item.authorName ?? t('list.anonymous')}</span>
                   <time
                     className="inbox-time"
-                    dateTime={item.createdTime?.toISOString()}
+                    dateTime={toIsoString(item.createdTime)}
                     title={formatAbsoluteTime(item.createdTime, locale, timeZone)}
                   >
                     {formatRelativeTime(item.createdTime, now, locale)}
