@@ -28,6 +28,7 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-ABJ | Job phát hiện lạm dụng (chỉ logic + test, chưa đăng ký job/DB; không cần khóa/dịch vụ ngoài) | feat-abuse-job | chưa | chưa | — |
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-AH | Tự ẩn SĐT/link: logic + test (chưa nối pipeline/UI; bước 3–4 chờ `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE` + Page thử) | feat-auto-hide | chưa | chưa | — |
@@ -497,6 +498,13 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 1. Chạy `pnpm --filter @flow/ai exec vitest run src/rewrite`. — Mong đợi: tất cả test xanh, không gọi mạng.
 2. Mở `env.example`. — Mong đợi: có `REWRITE_LLM_ENABLED` (để trống = tắt) và `REWRITE_LLM_MODEL`.
 3. (Khi đã có khóa LLM, tùy chọn) đặt `REWRITE_LLM_ENABLED=true` + `REWRITE_LLM_MODEL`, gọi `createLlmRewriter` với "còn không shop" + bình luận cha "áo này giá sao". — Mong đợi: `source: 'llm'`, câu tìm kiếm nêu rõ sản phẩm, không có SĐT/email; dòng `ai_usage` bước `rewrite`.
+
+---
+
+## KT-ABJ — Job phát hiện lạm dụng (ABUSE-JOB, FR-115)
+
+Chỉ phần máy (chưa đăng ký job, chưa ghi DB): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/abuse` và `pnpm --filter @flow/worker exec vitest run src/jobs/abuse.test.ts` → xanh. Kết quả mong đợi: không test đỏ (câu bị xóa >20% chỉ cảnh báo, từ khóa cấm chặn tự gửi + xem xét, lỗi gửi liên tiếp dừng workspace và thông báo đúng một lần, quyết định không bao giờ có hành động ẩn bình luận).
 
 ---
 
