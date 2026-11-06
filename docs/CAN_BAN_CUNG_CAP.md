@@ -123,6 +123,10 @@ Code đã có bước `rewrite` (`packages/ai/src/rewrite/`): phần ghép `sear
 - Khóa ảo LiteLLM (`LITELLM_API_KEY`) được cấp quyền cho **model rẻ** (có thể dùng chung model phân loại).
 - Đặt `REWRITE_LLM_MODEL=<tên model trong LiteLLM>` và `REWRITE_LLM_ENABLED=true` (chỉ staging/thử).
 
+## 2h0. `DA-RULES-STOCK` (FR-151, FR-157) — không cần tài nguyên ngoài
+
+Hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-DRS. Chủ dự án chỉ cần quyết định sau này (khi nối DB): `stock_stale_days` mặc định 3 có phù hợp, và có bật gợi ý mẫu thay thế (`suggest_alternatives`, mặc định TẮT) cho shop nào.
+
 ## 2h. `PIPE-RULE-FILTER` + `PIPE-MERGE-BURST` (FR-024, FR-148) — không cần tài nguyên ngoài
 
 Hai hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-032. Không có gì để chủ dự án cung cấp.
