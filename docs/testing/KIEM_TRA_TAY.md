@@ -30,6 +30,7 @@
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
 | KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
+| KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
@@ -525,6 +526,13 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 | 7 | Đăng nhập Staff, mở `/app/automation` | 404; menu không có mục này |
 | 8 | (KT-ACS, feat-auto-config-store) Khởi động lại máy chủ web rồi mở lại trang bằng Owner | Mọi giá trị đã lưu ở bước 2–5 vẫn còn; dòng "lần sửa cuối" hiện đúng người + giờ |
 | 9 | Với hai workspace khác nhau, lưu hai cấu hình khác nhau | Mỗi workspace chỉ thấy cấu hình của mình |
+
+## KT-AP — AI tự tạm dừng khi bất thường (AUTO-PAUSE, FR-073)
+
+Chỉ phần máy (chưa có job/banner, chưa ghi DB): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/autopause` → 2 file xanh. Kết quả mong đợi: không test đỏ (Đánh dấu sai >10% và lỗi liên tiếp làm dừng workspace, lỗi 368 chỉ khóa kênh, spike chỉ cảnh báo, chỉ Owner Bật lại).
+
+---
 
 ## KT-AR — Độ sẵn sàng của AI (AI-READINESS, FR-146, US-107)
 

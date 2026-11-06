@@ -241,7 +241,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-delay-cancel`, Q-ADC1: `packages/ai/src/delay/` máy trạng thái thuần + `AutoSendDelayScheduler` bộ nhớ; bản bền/nối pipeline/nút Hủy UI → `AUTO-DELAY-WIRE` làn b; KT-ADC) |
 | AUTO-CALIBRATION | FR-072 (50/10%/15/0,80; đề xuất kèm lý do), FR-163 (hiệu chuẩn độ tin cậy) | US-041 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-calibration`, Q-AC1: `packages/ai/src/calibration/` hàm thuần đề xuất ngưỡng + hồi quy logistic/ECE; nối DB/UI/job hằng tuần → `AUTO-CALIBRATION-WIRE` làn b; KT-AC) |
 | EMERGENCY-STOP | FR-073 (dừng khẩn cấp toàn workspace) | US-043 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-emergency-stop`, Q-ES1: `packages/ai/src/emergency/` quy tắc vai trò + store + dịch vụ hủy hẹn giờ; DB/UI → `EMERGENCY-STOP-WIRE`) |
-| AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ⏳ |
+| AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ✅ Xong-mock (`feat-auto-pause`, Q-AP1: `packages/ai/src/autopause/` `evaluateAutoPause` thuần + store + dịch vụ hủy hẹn giờ `ai_paused`; DB/job/banner → `AUTO-PAUSE-WIRE`; KT-AP) |
 | AI-SENT-HISTORY | FR-075 (lịch sử AI đã gửi + Đánh dấu sai) | US-040 | AUTO-SEND-GATE | — | không | ✅ Xong-mock (feat-ai-sent-history; phần DB ở AI-SENT-HISTORY-DB) |
 | AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ⏳ |
 | RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | ⏳ |
