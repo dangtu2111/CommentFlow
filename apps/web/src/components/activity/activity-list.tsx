@@ -1,4 +1,5 @@
 import { isLocale } from '@flow/shared';
+import { Cog, ShieldCheck, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import {
@@ -9,6 +10,8 @@ import {
 } from '../../lib/action-log-filters';
 import { actionLabelKey, onBehalfOfDisplay } from '../../lib/action-log-format';
 import { formatAbsoluteTime } from '../../lib/inbox-format';
+import { activityTone } from '../../lib/settings-visual';
+import { userInitials } from '../../lib/user-initials';
 
 export type ActivityListItem = {
   id: string;
@@ -43,6 +46,23 @@ export function actorDisplay(
   return item.actorName ?? t('actors.formerMember');
 }
 
+/** Ảnh đại diện của tác nhân: người dùng → chữ viết tắt; AI/hệ thống/quản trị → biểu tượng (không logo, không ảnh thật). */
+function ActorAvatar({ item, name }: { item: ActivityListItem; name: string }) {
+  if (item.actorType === 'user') {
+    return (
+      <span className="avatar avatar-sm" aria-hidden="true">
+        {userInitials(name)}
+      </span>
+    );
+  }
+  const Icon = item.actorType === 'ai' ? Sparkles : item.actorType === 'admin' ? ShieldCheck : Cog;
+  return (
+    <span className={`avatar avatar-sm avatar-${item.actorType}`} aria-hidden="true">
+      <Icon size={16} />
+    </span>
+  );
+}
+
 /** Danh sách dòng nhật ký (cột giữa). Chỉ hiển thị dữ liệu thật của `action_logs`. */
 export async function ActivityList({
   view,
@@ -71,17 +91,20 @@ export async function ActivityList({
                 className="inbox-item-link"
                 aria-current={view.selected === item.id ? 'true' : undefined}
               >
-                <div className="inbox-item-head">
-                  <span className="inbox-author">
-                    {key ? t(`actions.${key as 'workspace_created'}`) : item.action}
-                  </span>
-                  <time className="inbox-time" dateTime={item.createdAt.toISOString()}>
-                    {formatAbsoluteTime(item.createdAt, locale, timeZone)}
-                  </time>
-                </div>
-                <div className="inbox-source">
-                  {actorDisplay(t, item, viewerId)}
-                  {item.targetType ? ` · ${item.targetType}` : ''}
+                <ActorAvatar item={item} name={actorDisplay(t, item, viewerId)} />
+                <div className="log-row-body">
+                  <div className="inbox-item-head">
+                    <span className={`chip chip-tone-${activityTone(item.action)}`}>
+                      {key ? t(`actions.${key as 'workspace_created'}`) : item.action}
+                    </span>
+                    <time className="inbox-time" dateTime={item.createdAt.toISOString()}>
+                      {formatAbsoluteTime(item.createdAt, locale, timeZone)}
+                    </time>
+                  </div>
+                  <div className="inbox-source">
+                    {actorDisplay(t, item, viewerId)}
+                    {item.targetType ? ` · ${item.targetType}` : ''}
+                  </div>
                 </div>
               </Link>
             </li>

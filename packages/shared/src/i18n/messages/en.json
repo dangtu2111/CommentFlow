@@ -46,6 +46,15 @@
         "unavailable": "Could not save, please try again."
       },
       "addressSoon": "How the shop refers to itself and addresses customers will be set in Brand voice (coming soon)."
+    },
+    "breadcrumb": {
+      "label": "Breadcrumb"
+    },
+    "account": {
+      "title": "Sign-in & account details",
+      "body": "Your identity details in this workspace.",
+      "email": "Sign-in email address",
+      "verified": "Verified"
     }
   },
   "auth": {
@@ -175,7 +184,30 @@
         "newLabel": "New password",
         "newHint": "10 to 128 characters, not too common or found in data breaches.",
         "confirmLabel": "Repeat the new password",
-        "submit": "Change password"
+        "submit": "Change password",
+        "open": "Change password",
+        "dialogTitle": "Change account password",
+        "dialogBody": "Enter your current password and a new one. You will need to sign in again afterwards.",
+        "strength": {
+          "title": "Password strength",
+          "level": {
+            "0": "Not entered",
+            "1": "Weak",
+            "2": "Fair",
+            "3": "Good",
+            "4": "Very strong"
+          },
+          "checks": {
+            "length": "At least {min} characters",
+            "mixedCase": "Upper and lower case letters",
+            "digit": "At least one digit",
+            "special": "A special character"
+          }
+        },
+        "match": {
+          "yes": "Passwords match",
+          "no": "Passwords do not match yet"
+        }
       },
       "language": {
         "title": "Interface language",
@@ -206,7 +238,23 @@
         "regen": "Generate new codes",
         "disableTitle": "Turn off two-step verification",
         "disableBody": "Your account will be protected by the password only. All existing backup codes will be deleted.",
-        "disable": "Turn off two-step verification"
+        "disable": "Turn off two-step verification",
+        "setupTitle": "Turn on two-factor authentication",
+        "setupBody": "Protect your account with a 6-digit code from an authenticator app.",
+        "steps": {
+          "label": "Steps to turn on two-factor authentication",
+          "step": "Step {n}",
+          "name": {
+            "1": "Confirm password",
+            "2": "Scan QR and enter code",
+            "3": "Save backup codes"
+          }
+        },
+        "tiles": {
+          "method": "Primary method",
+          "methodValue": "Authenticator app (TOTP)",
+          "methodHint": "Google / Microsoft / 1Password"
+        }
       },
       "sessions": {
         "title": "Signed-in devices",
@@ -303,7 +351,8 @@
       "you": "You",
       "selfNote": "You cannot change your own role or remove yourself.",
       "unknownName": "(no name yet)",
-      "emailHidden": "(email hidden while suspended)"
+      "emailHidden": "(email hidden while suspended)",
+      "count": "{count} members"
     },
     "actions": {
       "makeOwner": "Make Owner",
@@ -1150,14 +1199,28 @@
     "eyebrow": "Initial setup",
     "stepLabel": "Step {n}",
     "stepsLabel": "Setup steps",
-    "state": { "done": "Done", "current": "In progress", "todo": "Not started" },
+    "state": {
+      "done": "Done",
+      "current": "In progress",
+      "todo": "Not started"
+    },
     "skippable": "Can be skipped",
     "steps": {
-      "workspace": { "title": "Create workspace" },
-      "channels": { "title": "Connect platforms" },
-      "pages": { "title": "Choose Pages to activate" },
-      "knowledge": { "title": "Add knowledge for AI" },
-      "invite": { "title": "Invite staff" }
+      "workspace": {
+        "title": "Create workspace"
+      },
+      "channels": {
+        "title": "Connect platforms"
+      },
+      "pages": {
+        "title": "Choose Pages to activate"
+      },
+      "knowledge": {
+        "title": "Add knowledge for AI"
+      },
+      "invite": {
+        "title": "Invite staff"
+      }
     },
     "next": {
       "title": "After you create the workspace",
@@ -1181,9 +1244,18 @@
       "inbox": "Go to the comment inbox",
       "quickTitle": "Shortcuts",
       "links": {
-        "comments": { "title": "Comments", "hint": "Review the comments waiting for you." },
-        "posts": { "title": "Posts", "hint": "Posts of your connected Pages." },
-        "settings": { "title": "Settings", "hint": "Account security and language." }
+        "comments": {
+          "title": "Comments",
+          "hint": "Review the comments waiting for you."
+        },
+        "posts": {
+          "title": "Posts",
+          "hint": "Posts of your connected Pages."
+        },
+        "settings": {
+          "title": "Settings",
+          "hint": "Account security and language."
+        }
       },
       "open": "Open"
     },
@@ -1423,5 +1495,8 @@
       "title": "Could not load the log",
       "body": "Something went wrong while loading. Please try again later."
     }
+  },
+  "dialog": {
+    "close": "Close"
   }
 }

@@ -1,8 +1,10 @@
 import { listChannels } from '@flow/db/runtime';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { ChangePasswordCard } from '../../../../components/security/change-password-card';
 import { SessionsCard } from '../../../../components/security/sessions-card';
 import { TwoFactorCard } from '../../../../components/security/two-factor-card';
+import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
 import { ReplyLanguageCard } from '../../../../components/settings/reply-language-card';
 import { UsageMeterCard } from '../../../../components/settings/usage-meter-card';
@@ -42,10 +44,22 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
   if (!overview) redirect('/login');
   const t = await getTranslations('settings');
   return (
-    <main className="app-page">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle')}</p>
+    <main className="app-page app-page-settings">
+      <nav className="breadcrumb" aria-label={t('breadcrumb.label')}>
+        <span>{t('pageTitle')}</span>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">{t('title')}</span>
+      </nav>
+      <h1 className="page-title">{t('title')}</h1>
+      <p className="page-subtitle">{t('subtitle')}</p>
       <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
+      <AccountCard
+        name={user.name}
+        email={user.email}
+        emailVerified={user.emailVerified}
+        memberRole={workspace.role}
+      />
+      <ChangePasswordCard />
       <SessionsCard sessions={overview.sessions} />
       {usage ? <UsageMeterCard view={usage} /> : null}
       <LanguageCard />

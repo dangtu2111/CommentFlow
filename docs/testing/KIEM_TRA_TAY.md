@@ -1044,3 +1044,14 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/shared exec vitest run src/post-products.test.ts`. | 14 test xanh: loại trùng, sản phẩm chính phải nằm trong danh sách, trần 200 bài × 20 sản phẩm, đề xuất AI chưa xác nhận không được dùng để trả lời. |
 | 2 | CI job `database` chạy `tests/post-products.int.test.ts` và `pnpm db:check-rls`. | Gắn nhiều sản phẩm, tối đa một chính/bài, gắn hàng loạt không trùng; worker chỉ tạo được đề xuất, không tự xác nhận; workspace khác không thấy. |
+
+## KT-UST — Giao diện Cài đặt/Thành viên/Nhật ký (UI-FIDELITY-SETTINGS, Q-UIST1) · Settings/members/activity UI
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/web exec vitest run src/lib/settings-visual.test.ts`. | 10 test xanh: kiểm mật khẩu gợi ý, độ mạnh 0–4, bước 2FA, tông hành động nhật ký, tông vai trò. |
+| 2 | Mở `/app/settings` (dev), bấm "Đổi mật khẩu", gõ mật khẩu mới rồi nhập lại. | Hộp thoại mở; thanh độ mạnh đổi theo; báo "trùng khớp"; Esc hoặc nút X đóng; gửi vẫn đổi mật khẩu và chuyển về /login như trước. |
+| 3 | Chưa bật 2FA: bấm "Bật xác thực 2 bước" → nhập mật khẩu → quét QR + nhập mã → lưu mã dự phòng. | Thanh 3 bước chuyển bước 1 → 2 → 3; mã dự phòng hiện một lần; đóng hộp thoại giữa chừng rồi mở lại không mất trạng thái. |
+| 4 | Đã bật 2FA: "Tạo lại mã dự phòng" và "Tắt xác thực 2 bước" (Owner không thấy nút tắt). | Mỗi nút mở hộp thoại đúng; cần mật khẩu; kết quả như trước khi đổi giao diện. |
+| 5 | `/app/members`, `/app/activity`. | Dòng có ảnh đại diện chữ, chip vai trò/trạng thái/hành động; thao tác thành viên và bộ lọc nhật ký hoạt động như cũ. |
+| 6 | Mở `/dev/ui/settings`, `/dev/ui/members`, `/dev/ui/activity` (chỉ dev). | Có nhãn [MẪU]; bản production trả 404. |
