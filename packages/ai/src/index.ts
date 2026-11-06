@@ -291,6 +291,7 @@ export {
   type ReadinessResult,
   type ReadinessTopic,
 } from './readiness/readiness';
+export { priceEntriesFromSnapshot, priceEntriesFromSources } from './recheck/price-snapshot';
 export {
   AUTO_MESSAGE_WINDOW_MS,
   HUMAN_AGENT_WINDOW_MS,

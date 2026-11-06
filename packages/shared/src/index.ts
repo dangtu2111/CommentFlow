@@ -114,6 +114,15 @@ export {
   postNoteStatus,
 } from './post-notes';
 export {
+  buildPriceSnapshot,
+  type PriceSnapshot,
+  type PriceSnapshotEntry,
+  type PriceSource,
+  parsePriceSnapshot,
+  priceSnapshotEntrySchema,
+  priceSnapshotSchema,
+} from './price-snapshot';
+export {
   ALIAS_MATCH_THRESHOLD,
   PRODUCT_ALIAS_MAX,
   PRODUCT_ALIAS_SOURCES,
