@@ -5,8 +5,11 @@ import {
   type ChangePasswordFlow,
   createAuth,
   createAuthFlows,
+  createAuthProfileStore,
   createChangePasswordFlow,
+  createMockSmsProvider,
   createNotifier,
+  createPhoneVerifyFlows,
   createPasswordPolicy,
   createSealedValueCodec,
   createSignedValueCodec,
@@ -15,6 +18,8 @@ import {
   createValkeyRateLimiter,
   openAuthDb,
   openWorkspaceServices,
+  type AuthProfileStore,
+  type PhoneVerifyFlows,
   type RateLimiter,
   type SealedValueCodec,
   type SignedValueCodec,
@@ -23,9 +28,11 @@ import {
   type WorkspaceAdmin,
 } from '@flow/saas-core';
 import { isLocale } from '@flow/shared';
+import { appendFile } from 'node:fs/promises';
 import type { ClientIpSource } from '../lib/client-ip';
 import { INVITE_COOKIE_LABEL, INVITE_COOKIE_TTL_SECONDS } from '../lib/invite-token';
 import { loadServerEnv } from './env';
+import { resolvePhoneVerify } from './profile-config';
 import {
   FB_SESSION_COOKIE_LABEL,
   FB_STATE_COOKIE_LABEL,
@@ -42,6 +49,10 @@ export type AuthRuntime = {
   authHandle: AuthHandle;
   flows: AuthFlows;
   twoFactor: TwoFactorFlows;
+  /** Hồ sơ phần `cf_app` không đọc được (múi giờ, giao diện, SĐT) — đọc bằng `cf_auth` theo userId của phiên. */
+  profileStore: AuthProfileStore;
+  /** Xác minh SĐT bằng OTP; `enabled` theo cờ `PHONE_VERIFY_ENABLED` (SMS MOCK, chỉ dev/test/ci). */
+  phoneVerify: PhoneVerifyFlows;
   /** Đổi mật khẩu của chính mình (kiểm mật khẩu lộ + rate limit + xóa mọi phiên). */
   changePassword: ChangePasswordFlow;
   tenancy: Tenancy;
@@ -113,11 +124,28 @@ function createRuntime(): AuthRuntime {
     workspaceRoles: async (userId) =>
       (await tenancy.listWorkspacesOfUser(userId)).map((w) => w.role),
   });
+  const profileStore = createAuthProfileStore(authHandle);
+  const outboxFile = process.env.SMS_MOCK_OUTBOX_FILE?.trim();
+  const phoneVerify = createPhoneVerifyFlows({
+    store: profileStore.challenges,
+    sms: createMockSmsProvider({
+      appEnv: env.APP_ENV,
+      // SĐT đã che; mã OTP chỉ vào log dev (MOCK từ chối chạy ở staging/production).
+      log: (line) => console.info(line),
+      ...(outboxFile ? { outbox: { append: (line: string) => appendFile(outboxFile, line) } } : {}),
+    }),
+    limiter,
+    secret: env.BETTER_AUTH_SECRET,
+    enabled: resolvePhoneVerify({ APP_ENV: env.APP_ENV, PHONE_VERIFY_ENABLED: process.env.PHONE_VERIFY_ENABLED })
+      .enabled,
+  });
   return {
     auth,
     authHandle,
     flows: createAuthFlows({ auth, limiter, passwordPolicy, twoFactor }),
     twoFactor,
+    profileStore,
+    phoneVerify,
     changePassword: createChangePasswordFlow({
       auth,
       authDb: authHandle,

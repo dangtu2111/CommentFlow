@@ -12,10 +12,19 @@ export type RateAction =
   | 'recoveryComplete'
   | 'invite'
   | 'inviteAccept'
-  | 'workspaceCreate';
+  | 'workspaceCreate'
+  | 'phoneOtpSend'
+  | 'phoneOtpVerify';
 
 /** Danh tính của một lần thử. Không có IP (dev không tin header nào) thì xô cần IP bị BỎ QUA — không có khóa chung "unknown". */
-export type RateIdentity = { email?: string; ip?: string; userId?: string; workspaceId?: string };
+export type RateIdentity = {
+  email?: string;
+  ip?: string;
+  userId?: string;
+  workspaceId?: string;
+  /** SĐT dạng E.164 (đã chuẩn hóa); chỉ nằm trong khóa dưới dạng băm HMAC. */
+  phone?: string;
+};
 
 type BucketPolicy = {
   bucket: string;
@@ -102,6 +111,21 @@ export const RATE_POLICIES: Record<
     buckets: [{ bucket: 'user', needs: ['userId'], max: 5, windowSeconds: 24 * 3600 }],
     onStoreFailure: 'deny',
   },
+  // Gửi OTP xác minh SĐT: 3 lần/10 phút cho mỗi (người dùng, SĐT) và 6 lần/ngày cho mỗi người dùng (chống đốt tiền SMS).
+  phoneOtpSend: {
+    buckets: [
+      { bucket: 'user-phone', needs: ['userId', 'phone'], max: 3, windowSeconds: 10 * 60 },
+      { bucket: 'user', needs: ['userId'], max: 6, windowSeconds: 24 * 3600 },
+    ],
+    onStoreFailure: 'deny',
+  },
+  // Nhập OTP: ngoài trần 5 lần/mã ở bảng, thêm trần theo (người dùng, SĐT) để xin mã mới không làm mới số lần đoán.
+  phoneOtpVerify: {
+    buckets: [
+      { bucket: 'user-phone', needs: ['userId', 'phone'], max: 10, windowSeconds: 15 * 60 },
+    ],
+    onStoreFailure: 'deny',
+  },
   // Nhận lời mời (chống dò token): 10 lần/15 phút cho mỗi người dùng đã đăng nhập.
   inviteAccept: {
     buckets: [{ bucket: 'user', needs: ['userId'], max: 10, windowSeconds: 15 * 60 }],
@@ -145,6 +169,7 @@ export function createRateLimiter(options: {
       ip,
       userId: identity.userId?.trim() || undefined,
       workspaceId: identity.workspaceId?.trim() || undefined,
+      phone: identity.phone?.trim() || undefined,
     };
     return RATE_POLICIES[action].buckets.flatMap((policy) => {
       if (policy.needs.some((need) => values[need] === undefined)) return [];

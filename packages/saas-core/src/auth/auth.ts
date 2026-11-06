@@ -5,6 +5,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { twoFactor } from 'better-auth/plugins';
 import { type Notifier, RESET_PASSWORD_HOURS, VERIFY_EMAIL_HOURS } from '../notify';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
+import { maskIp } from './ip-mask';
 import { createAccountTokenHooks, type OAuthTokenCipher } from './oauth-token-vault';
 import { hashPassword, verifyPassword } from './password';
 import {
@@ -180,6 +181,8 @@ export function createAuth(options: AuthOptions) {
           before: async (session) => ({
             data: {
               ...session,
+              // Riêng tư: chỉ lưu IP đã che (`113.161.x.x`); giới hạn tốc độ dùng IP thô từ header, không từ cột này.
+              ipAddress: maskIp((session as { ipAddress?: string | null }).ipAddress),
               expiresAt: capSessionExpiry({
                 expiresAt: session.expiresAt,
                 isAdminSession: (session as { isAdminSession?: boolean }).isAdminSession === true,

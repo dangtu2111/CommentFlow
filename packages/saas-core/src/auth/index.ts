@@ -68,3 +68,20 @@ export {
   type VerifyTwoFactorResult,
 } from './two-factor';
 export type { BrowserKind, OsKind } from './ua';
+export { BACKUP_CODES_TOTAL } from './backup-codes';
+export { maskIp } from './ip-mask';
+export { maskPhone, normalizePhoneE164 } from './phone';
+export {
+  createPhoneVerifyFlows,
+  OTP_MAX_ATTEMPTS,
+  OTP_RESEND_SECONDS,
+  OTP_TTL_SECONDS,
+  type PhoneChallenge,
+  type PhoneChallengeStore,
+  type PhoneVerifyFlows,
+  type SmsProvider,
+  type StartPhoneVerifyResult,
+  type VerifyPhoneResult,
+} from './phone-verify';
+export { type AuthProfile, type AuthProfileStore, createAuthProfileStore } from './profile-store';
+export { createMockSmsProvider } from './sms-mock';
