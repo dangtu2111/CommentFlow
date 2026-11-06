@@ -39,7 +39,7 @@ function constantTimeEqual(a: string, b: string): boolean {
 }
 
 /** Đọc thân thô nhưng dừng ngay khi vượt giới hạn (không nạp cả thân khổng lồ vào bộ nhớ). */
-async function readCapped(req: Request, limit: number): Promise<Buffer | 'too_large'> {
+export async function readCapped(req: Request, limit: number): Promise<Buffer | 'too_large'> {
   const declared = Number(req.headers.get('content-length'));
   if (Number.isFinite(declared) && declared > limit) return 'too_large';
   if (!req.body) return Buffer.alloc(0);

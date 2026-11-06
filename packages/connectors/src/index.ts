@@ -6,6 +6,13 @@ export {
   normalizeAttachments,
 } from './attachments';
 export {
+  type BankTransaction,
+  parseCassoPayload,
+  parseSepayPayload,
+  verifyCassoToken,
+  verifySepayAuth,
+} from './bank/bank-webhook';
+export {
   ACTIONS,
   type ActionCapability,
   type ActionContext,
