@@ -282,6 +282,15 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.automation_rules', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.automation_rules', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.automation_rules', 'mode', 'UPDATE'],
+  // SPAM-RULES-STORE (0050): nội dung quy tắc bất biến; chỉ enabled/shadow_until/updated_at được sửa
+  ['cf_app', 'cf.rules', 'id', 'UPDATE'],
+  ['cf_app', 'cf.rules', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.rules', 'name', 'UPDATE'],
+  ['cf_app', 'cf.rules', 'type', 'UPDATE'],
+  ['cf_app', 'cf.rules', 'pattern', 'UPDATE'],
+  ['cf_app', 'cf.rules', 'action', 'UPDATE'],
+  ['cf_app', 'cf.rules', 'created_by', 'UPDATE'],
+  ['cf_app', 'cf.rules', 'created_at', 'UPDATE'],
   // POSTS-LINK-PRODUCT (0049): định danh + trạng thái xác nhận bất biến sau INSERT; chỉ is_primary đổi được
   ['cf_app', 'cf.post_products', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_products', 'post_id', 'UPDATE'],
@@ -657,6 +666,12 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.automation_rules', 'a', 'is_workspace_owner'],
   ['cf.automation_rules', 'a', 'is_system_context'],
   ['cf.automation_rules', 'r', 'is_workspace_member'],
+  // SPAM-RULES-STORE (0050): Owner hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  ['cf.rules', 'a', 'is_workspace_owner'],
+  ['cf.rules', 'a', 'is_system_context'],
+  ['cf.rules', 'w', 'is_workspace_owner'],
+  ['cf.rules', 'w', 'is_system_context'],
+  ['cf.rules', 'r', 'is_workspace_member'],
   // POSTS-LINK-PRODUCT (0049): INSERT/UPDATE thành viên (đề xuất: + hệ thống); DELETE thành viên hoặc hệ thống
   ['cf.post_products', 'a', 'is_workspace_member'],
   ['cf.post_products', 'a', 'is_system_context'],
@@ -738,6 +753,11 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.automation_rules', 'w', 'is_workspace_member'],
   ['cf.automation_rules', 'a', 'IS NULL'],
   ['cf.automation_rules', 'w', 'IS NULL'],
+  // quy tắc spam: Staff không ghi; withWorkspace trần không ghi; hệ thống phải created_by null (num_nonnulls)
+  ['cf.rules', 'a', 'is_workspace_member'],
+  ['cf.rules', 'w', 'is_workspace_member'],
+  ['cf.rules', 'a', 'IS NULL'],
+  ['cf.rules', 'w', 'IS NULL'],
   ['cf.product_variants', 'a', 'IS NULL'],
   ['cf.product_variants', 'w', 'IS NULL'],
   // bản nháp AI: INSERT chỉ hệ thống (không nhánh thành viên/Owner/"không người dùng"); withWorkspace trần không sửa được
