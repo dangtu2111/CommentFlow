@@ -24,6 +24,7 @@
 | KT-021 | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-016 | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-023 | `two_factors` một dòng mỗi user (chỉ DB) | feat-auth-harden-4b | chưa | chưa | — |
 | KT-022 | Bảng sản phẩm + biến thể (chỉ DB, chưa có giao diện) | feat-products-variants | chưa | chưa | — |
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
@@ -339,6 +340,18 @@ Nếu hỏng: ghi số bước và nội dung lỗi (không dán mật khẩu).
 Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
 
 ---
+
+## KT-023 — `two_factors` UNIQUE(user_id) (AUTH-HARDEN-4b, feat-auth-harden-4b) · One 2FA row per user
+
+Chỉ DB, không có giao diện mới. / DB only, no new UI.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (DB `cf_dev`), rồi `pnpm db:check-rls`. | Migration 0035 áp được (báo "user_id trùng" → xử lý tay dòng trùng rồi chạy lại); check-rls "đạt". |
+| 2 | `CF_LANE=b pnpm --filter @flow/db test:db`. | Xanh, gồm test "mỗi user đúng một dòng (UNIQUE user_id)". |
+| 3 | Trên `/app/security` bật 2FA, tắt, bật lại. | Bật lại thành công, không lỗi. |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
 
 ## KT-022 — Bảng sản phẩm + biến thể (PRODUCTS-VARIANTS, feat-products-variants) · Products and variants tables
 
