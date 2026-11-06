@@ -894,20 +894,23 @@
     }
   },
   "automation": {
-    "pageTitle": "Auto-send settings",
-    "title": "Auto-send settings",
-    "subtitle": "Choose what the AI may do for each kind of comment/message: Off (suggestions for staff only), Trial run (records the reply it would send, without sending) or Auto (AI sends by itself once every safety check passes). Everything is Off by default.",
+    "pageTitle": "AI automation",
+    "title": "AI automation",
+    "subtitle": "Control center for real-time monitoring of the smart reply flow",
     "notWired": "Note: settings are saved durably but do not yet drive real auto-sending (this will be connected once the auto-send path exists).",
     "save": "Save settings",
     "saveHint": "Owner only. Changes take effect after you press Save settings.",
     "matrix": {
       "legend": "Auto-send level legend",
-      "title": "Auto-send level by channel and label",
-      "body": "Each cell is a separate level for comments and for messages of that channel.",
+      "title": "1. Auto Mode Matrix",
+      "body": "Set when AI replies automatically, per sales channel and per intent label",
       "label": "Label",
       "empty": "No channel yet. Connect a channel on the Channels page first.",
-      "complaintNote": "Complaint and Spam comments are never auto-sent; they always go to staff.",
-      "channel": "Connected channel"
+      "complaintNote": "Complaints and Spam always go to staff or to separate hide rules; AI never replies on its own, to keep the customer experience safe.",
+      "channel": "Connected channel",
+      "legendOff": "Off / Locked",
+      "unsupported": "Not supported",
+      "noteLead": "Important:"
     },
     "target": {
       "comment": "Comments",
@@ -916,7 +919,9 @@
     "labels": {
       "price": "Price question",
       "advice": "Advice",
-      "purchase": "Purchase"
+      "purchase": "Purchase",
+      "complaint": "Complaint",
+      "spam": "Spam"
     },
     "mode": {
       "off": "Off",
@@ -934,7 +939,7 @@
         "120": "2 minutes",
         "300": "5 minutes"
       },
-      "dailyCap": "Daily limit of auto-sent replies",
+      "dailyCap": "Daily limit",
       "hours": "Active hours",
       "hoursEnabled": "Only auto-send within this window (workspace time zone)",
       "hoursFrom": "From",
@@ -949,10 +954,10 @@
         "5": "Fri",
         "6": "Sat"
       },
-      "keywords": "Blocked keywords",
-      "keywordsHint": "One word or phrase per line (up to 50, each ≤ 60 characters). AI replies containing any of them are not auto-sent.",
-      "signature": "Disclosure signature",
-      "signatureHint": "A short single line (≤ 120 characters) saying the reply was written by AI, e.g. “— The shop's AI assistant”. Leave empty to skip.",
+      "keywords": "Blocked keywords (Blacklist)",
+      "keywordsHint": "Up to 50 words or phrases, each ≤ 60 characters. AI replies containing these words are never auto-sent.",
+      "signature": "AI disclosure signature",
+      "signatureHint": "One short line (≤ 120 characters) saying the reply was drafted by AI. Turn the switch off to skip it.",
       "body": "Confidence threshold, delay, daily limit, active hours and the other safety guards for auto-send."
     },
     "notice": {
@@ -972,6 +977,87 @@
     "loadError": {
       "title": "Could not load settings",
       "body": "Please reload the page in a few minutes."
+    },
+    "soon": "Coming soon",
+    "soonTitle": "Coming soon: this feature is not available yet",
+    "sampleBanner": "[SAMPLE] Sample figures for previewing the layout (dev only) — not real data.",
+    "header": {
+      "status": "Auto AI:",
+      "running": "Running on {on}/{total} channels",
+      "filterAll": "All connected channels ({total})",
+      "stop": "Emergency stop",
+      "stopHint": "Emergency stop for the whole auto-reply bot"
+    },
+    "tabs": {
+      "label": "Automation sections",
+      "overview": "Overview",
+      "comment": "Comments (Settings)",
+      "selected": "Selected",
+      "message": "Messages (Settings)",
+      "general": "General settings & Threshold",
+      "shadow": "Trial run & Review (Shadow Mode)"
+    },
+    "metrics": {
+      "sent": "Auto-sent today",
+      "sentUnit": "replies",
+      "accuracy": "Accuracy {value}%",
+      "pending": "In delay window",
+      "pendingUnit": "replies pending cancel",
+      "pendingNote": "Average countdown < {seconds} seconds",
+      "cancelled": "Cancelled by staff",
+      "cancelledUnit": "times",
+      "cancelledNote": "Staff took over manually",
+      "flagged": "Marked wrong",
+      "flaggedUnit": "errors",
+      "flaggedNote": "System fully safe",
+      "noData": "No real data yet"
+    },
+    "behavior": {
+      "title": "2. Reply style & Behavior",
+      "body": "Choose how public comments and private inbox messages work together.",
+      "both": "Public reply + Private message",
+      "recommended": "Suggested",
+      "bothBody": "Recommended for online shops: raises order closing and moves engagement into private 1-1 conversations.",
+      "publicOnly": "Public reply only",
+      "publicOnlyBody": "Reply directly under the customer comment only; never start a Messenger/DM conversation.",
+      "privateOnly": "Private message only",
+      "privateOnlyBody": "The public comment announces automatically:",
+      "privateOnlyQuote": "\"The shop has sent you a private message 💕\"",
+      "price": "Public price quotes",
+      "priceBody": "Let AI quote prices directly in a comment when a product from the database is attached."
+    },
+    "guard": {
+      "title": "3. Safety threshold & Delay (Guardrails)",
+      "body": "Brand-protection rules that give staff time to step in and cancel.",
+      "threshold": "Confidence threshold for auto-send",
+      "badge": {
+        "loose": "Lenient",
+        "balanced": "Balanced",
+        "strict": "Strict"
+      },
+      "badgeText": "{tier} (Confidence ≥ {value}%)",
+      "tickLow": "{value}% (Lenient)",
+      "tickMid": "{value}% (Recommended)",
+      "tickHigh": "{value}% (Strict)",
+      "thresholdNote": "AI replies with confidence below {value}% go straight to <b>Pending review</b> for staff to confirm.",
+      "delay": "Delay before sending",
+      "delayHint": "Live countdown on the comment card before the API call.",
+      "dailyCap": "Daily limit",
+      "usage": "{used} / {cap} replies",
+      "remaining": "{left} replies left",
+      "usageLabel": "Auto-sent replies against the daily limit",
+      "keywords": "Blocked keywords (Blacklist)",
+      "keywordsAdd": "Add keyword",
+      "keywordsBody": "When a customer comment contains these words, AI cancels the auto-reply and hands over to staff:",
+      "keywordsPlaceholder": "Type a keyword, then press Add keyword",
+      "keywordsRemove": "Remove keyword {word}",
+      "keywordsEmpty": "No blocked keywords yet.",
+      "signature": "AI disclosure signature",
+      "signatureSample": "\"— Automated assistant of An Nhien Store\"",
+      "signaturePlaceholder": "— AI assistant of the shop"
+    },
+    "savebar": {
+      "reset": "Restore defaults"
     }
   },
   "productImport": {
@@ -1041,28 +1127,32 @@
     }
   },
   "spamRules": {
-    "title": "Spam rules",
+    "title": "Spam rules & Auto-hide",
     "principle": {
       "title": "Core safety principle: AI never hides a comment on its own",
-      "body": "Rules only flag or skip comments. Hiding a comment is always a human action, with a confirmation step."
+      "body": "Rules only flag or skip comments. Hiding a comment is always a human action, with a confirmation step.",
+      "zero": "Zero Silent Loss",
+      "learn": "Learn about the security rule set",
+      "autoHideSoon": "When Auto-hide launches (coming soon), only rules you set up that contain a <b>phone number</b> or an <b>unfamiliar link (URL)</b> can trigger it. Every hide is logged and can be <b>unhidden or restored</b> with one click."
     },
-    "subtitle": "Create rules to flag or skip spam comments. Press Preview to see how many comments from the last 7 days a rule matches; preview is read-only and changes no comment. AI never hides comments on its own.",
-    "nameLabel": "Rule name",
+    "subtitle": "Stop order hijacking, malicious links and offensive keywords across Facebook, Instagram and TikTok with a transparent policy.",
+    "nameLabel": "Rule name *",
     "typeLabel": "Rule type",
     "type": {
-      "keyword": "Keyword",
-      "regex": "Regex pattern",
-      "phone": "Phone number",
-      "link": "Link",
+      "keyword": "Contains a banned keyword",
+      "regex": "Matches a regex pattern",
+      "phone": "Contains a phone number (Phone regex & Text)",
+      "link": "Contains a URL / unfamiliar domain",
       "emoji_only": "Emoji only",
-      "tag_only": "Tags only"
+      "tag_only": "Only tags other people"
     },
     "patternLabel": "Pattern",
     "patternHint": "Keyword: separate several with commas. Regex: up to 200 characters, no repeated groups, at most 2 of * or +. Phone, link, emoji, tags: leave empty.",
-    "actionLabel": "Action",
+    "actionLabel": "Action when the rule matches *",
     "action": {
-      "mark": "Only flag as suspected spam",
-      "skip": "Skip (no reply drafted)"
+      "mark": "Only mark as suspected spam",
+      "skip": "Skip (do not draft a reply)",
+      "autoHide": "Hide the comment immediately"
     },
     "noAutoHide": "Auto-hide is a separate feature enabled only after a trial period; rules here never hide comments.",
     "preview": "Preview 7 days",
@@ -1075,9 +1165,131 @@
       "limit_reached": "You have reached 50 rules. Delete an old rule before adding a new one.",
       "unavailable": "Could not complete this now. Please try again later."
     },
-    "builderTitle": "Set up a rule",
-    "builderBody": "Pick the condition that identifies spam and the action when it matches. Preview before saving.",
-    "conditionTitle": "Detection condition"
+    "builderTitle": "Rule Condition Builder",
+    "builderBody": "Build custom rules with automatic error prevention and safe testing.",
+    "conditionTitle": "Combined conditions (AND / OR)",
+    "soon": "Coming soon",
+    "soonTitle": "Coming soon: this feature is not available yet",
+    "sampleBanner": "[SAMPLE] Sample data for previewing the layout (dev only) — not real data.",
+    "header": {
+      "crumbLabel": "Breadcrumb",
+      "crumbRoot": "System & Intelligence",
+      "crumbCurrent": "Spam rules & Auto-hide",
+      "pillActive": "{count} active rules",
+      "pillFiltered": "{count} comments filtered (7 days)",
+      "badge": "Brand protection",
+      "dryRun": "Test against the last 7 days of comments",
+      "create": "+ New rule"
+    },
+    "metrics": {
+      "hidden": "Comments hidden in total (30 days)",
+      "hiddenUnit": "times",
+      "hiddenNote": "+{value}% vs last month",
+      "leads": "Rescued order-hijack leads (CRM)",
+      "leadsUnit": "phones",
+      "leadsNote": "Extracted into Leads",
+      "falsePositive": "False-positive rate",
+      "falsePositiveNote": "Safe standard (< {value}%)",
+      "reaction": "Average auto-hide reaction time",
+      "reactionUnit": "seconds",
+      "reactionNote": "Realtime webhook sync",
+      "noData": "No real data yet"
+    },
+    "tabs": {
+      "label": "Spam rule views",
+      "rules": "Running rules",
+      "logs": "Hidden comments",
+      "filter": "Channel filter: All channels",
+      "export": "Export report"
+    },
+    "rules": {
+      "label": "Rule list",
+      "condition": "Condition:",
+      "scope": "Scope:",
+      "matches": "Matches {days} days:",
+      "matchesSimulated": "Simulated matches:",
+      "matchCount": "{count} times",
+      "falseRate": "False rate:",
+      "on": "On",
+      "off": "Off",
+      "edit": "Edit rule",
+      "history": "Detailed log",
+      "simulation": "View simulation result",
+      "empty": "No rules yet.",
+      "emptyBody": "Create your first rule with the builder below. Saved rules will be listed here (coming soon)."
+    },
+    "namePlaceholder": "Enter a memorable rule name...",
+    "descLabel": "Internal description",
+    "descPlaceholder": "Note what the rule is for...",
+    "addBranch": "Add condition branch",
+    "ifLabel": "IF",
+    "notLabel": "AND NOT",
+    "matchPattern": "Match pattern:",
+    "removeCondition": "Remove condition",
+    "notOption": {
+      "whitelist": "Exclusion keywords / Whitelist",
+      "admin": "Is a comment from an admin / the Page",
+      "vip": "VIP customer with a tag"
+    },
+    "notPlaceholder": "Enter exception keywords that prevent wrong hides...",
+    "aiOption": "AI classification: Heavy spam suspicion (>85%)",
+    "scopeLabel": "Sales channels the rule applies to *",
+    "scopeAll": "All connected channels",
+    "scopeAllNote": "Rules currently apply to every channel; per-channel scope is coming soon",
+    "actionTitle": "Action when the rule matches *",
+    "actionBody": {
+      "mark": "Shown in the \"Suspected spam\" tab of Comments. Support staff approve before it is displayed.",
+      "skip": "Comments matching the rule get no drafted reply.",
+      "autoHide": "Hides instantly on Facebook/Instagram via the API. The commenter still sees their own comment."
+    },
+    "actionNote": {
+      "mark": "Recommended for keyword rules",
+      "skip": "For comments that clearly need no reply",
+      "autoHide": "Needs a passing trial run (Dry-run) before it can be turned on"
+    },
+    "recommended": "Recommended",
+    "leadCapture": "Automatically extract name & phone into <b>Leads (CRM)</b> before hiding",
+    "leadCaptureBadge": "Avoid losing hijacked orders",
+    "dryRun": {
+      "title": "Interaction preview (Dry-run)",
+      "badge": "Real data, 7 days",
+      "estimated": "Estimated matches:",
+      "estimatedValue": "{count} comments",
+      "real": "{count} real spam ({percent}%)",
+      "check": "{count} to review",
+      "breakdownLabel": "Real spam versus needs review",
+      "summary": "Simulation of the last 7 days: this rule would match <b>{count} real comments</b> on the Page. The system checks the safety rate before granting auto-hide.",
+      "idle": "Press 7-day preview to see how many real comments the rule matches. Preview is read-only and changes no comment.",
+      "list": "View the list of {count} sample comments",
+      "standards": "CommentFlow safety standards",
+      "standard1": "Valid exclusion keywords are set",
+      "standard2": "Undo available for 30 days",
+      "standard3": "Two-way realtime webhook sync with the Meta API",
+      "saveDry": "Save trial mode"
+    },
+    "logs": {
+      "selectAll": "Select all {count} comments",
+      "restoreBulk": "Unhide in bulk (Undo)",
+      "notSpam": "Mark: Not spam",
+      "search": "Search by customer name or violating keyword...",
+      "advancedFilter": "Advanced filter",
+      "select": "Select",
+      "colCustomer": "Customer & Source",
+      "colContent": "Hidden comment content (Reconciled)",
+      "colRule": "Triggered rule",
+      "colTime": "Hidden at",
+      "colActions": "Safe actions",
+      "restore": "Unhide",
+      "restoreTitle": "Restore the comment on the Page",
+      "openOriginal": "Open the original post on Facebook",
+      "reportWrong": "Report a wrong flag to improve the AI",
+      "blockUser": "Block this user",
+      "showing": "Showing <b>{from} - {to}</b> of <b>{total}</b> safely hidden comments",
+      "prev": "Previous page",
+      "next": "Next page",
+      "empty": "No comments have been hidden yet.",
+      "emptyBody": "Auto-hide is not on yet (coming soon), so no comment has been hidden by a rule."
+    }
   },
   "kbGaps": {
     "pageTitle": "Unanswered AI questions",

@@ -1,41 +1,68 @@
 import { AUTOMATION_MODES, DELAY_SECONDS_OPTIONS, MATRIX_LABELS, MATRIX_TARGETS } from '@flow/ai';
 import type { InboxChannel } from '@flow/db/runtime';
-import { LayoutGrid, ShieldCheck } from 'lucide-react';
+import {
+  Ban,
+  CloudCheck,
+  Eye,
+  Gauge,
+  LayoutGrid,
+  Lock,
+  MessagesSquare,
+  ShieldCheck,
+  Tag,
+  Timer,
+  Zap,
+} from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { saveAutomationAction } from '../../app/app/(guarded)/automation/actions';
 import type { AutomationFormDefaults } from '../../lib/automation-form';
 import { modeTone } from '../../lib/automation-ui';
+import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { Chip } from '../ui/chip';
 import { Inset } from '../ui/inset';
+import { PlatformBadge } from '../ui/platform-badge';
+import { Progress } from '../ui/progress';
 import { SectionHead } from '../ui/section-head';
+import { Switch } from '../ui/switch';
+import { KeywordChips } from './keyword-chips';
+import { ThresholdSlider } from './threshold-slider';
 
 const MATRIX_ID = 'automation-matrix-title';
-const GENERAL_ID = 'automation-general-title';
+const BEHAVIOR_ID = 'automation-behavior-title';
+const GUARD_ID = 'automation-guard-title';
 const DAYS = [1, 2, 3, 4, 5, 6, 0] as const;
 
-/** Chữ cái đầu của tên kênh (bỏ nhãn "[MẪU]") cho ô đại diện. */
-function channelInitial(name: string): string {
-  const bare = name.replace(/^\[[^\]]*\]\s*/u, '');
-  return (bare.match(/[\p{L}\p{N}]/u)?.[0] ?? name.slice(0, 1)).toUpperCase();
-}
+/** Nhãn mà AI không bao giờ tự gửi (hiện khóa "Không hỗ trợ"; không có trong form). */
+const LOCKED_LABELS = ['complaint', 'spam'] as const;
+
+const MODE_ICON = { auto: Zap, shadow: Eye, off: null } as const;
 
 /**
- * Form Cài đặt tự gửi (FR-070 ma trận kênh × nhãn × bình luận/tin nhắn; FR-071 cài đặt chung). Chỉ Owner thấy
- * (trang kiểm vai trò; action kiểm lại). Không có script phía client: form HTML thuần gửi Server Action.
- * Bố cục theo design/stitch/automation.html: mỗi đối tượng (bình luận/tin nhắn) một bảng kênh × nhãn.
+ * Form Cài đặt tự gửi (FR-070 ma trận kênh × nhãn; FR-071 cài đặt chung), bố cục theo
+ * design/stitch/automation.html: ma trận (mỗi đối tượng một bảng) → kiểu trả lời | ngưỡng an toàn → thanh lưu.
+ * Chỉ Owner thấy (trang kiểm vai trò; action kiểm lại). Form HTML thuần gửi Server Action; chỉ thanh ngưỡng và ô
+ * từ khóa có script phía client. Phần thiết kế chưa có chức năng (kiểu trả lời, báo giá công khai, khôi phục mặc
+ * định) hiện vô hiệu kèm "Sắp có". `usedToday` null = chưa có số liệu thật.
  */
 export async function AutomationForm({
   channels,
   defaults,
+  usedToday,
 }: {
   channels: InboxChannel[];
   defaults: AutomationFormDefaults;
+  usedToday: number | null;
 }) {
   const t = await getTranslations('automation');
   const modeOf = (channelId: string, target: string, label: string) =>
     defaults.rules.find(
       (r) => r.channelId === channelId && r.target === target && r.label === label,
     )?.mode ?? 'off';
+  const soon = { disabled: true, title: t('soonTitle') } as const;
+  const soonChip = <Chip tone="muted">{t('soon')}</Chip>;
+  const used = usedToday ?? 0;
+  const percentUsed = usedToday === null ? 0 : (used / Math.max(1, defaults.dailyCap)) * 100;
 
   return (
     <form action={saveAutomationAction} className="stack auto-form">
@@ -47,18 +74,22 @@ export async function AutomationForm({
           description={t('matrix.body')}
           end={
             <ul className="auto-legend" aria-label={t('matrix.legend')}>
-              {[...AUTOMATION_MODES].reverse().map((mode) => (
-                <li key={mode} className={`mode-pill mode-pill-${modeTone(mode)}`}>
-                  {t(`mode.${mode}`)}
-                </li>
-              ))}
+              {[...AUTOMATION_MODES].reverse().map((mode) => {
+                const Icon = MODE_ICON[mode];
+                return (
+                  <li key={mode} className={`mode-pill mode-pill-${modeTone(mode)}`}>
+                    {Icon ? <Icon size={12} aria-hidden="true" /> : null}
+                    {mode === 'off' ? t('matrix.legendOff') : t(`mode.${mode}`)}
+                  </li>
+                );
+              })}
             </ul>
           }
         />
         {channels.length === 0 ? <p className="muted">{t('matrix.empty')}</p> : null}
         {channels.length > 0
           ? MATRIX_TARGETS.map((target) => (
-              <div key={target} className="auto-matrix">
+              <div key={target} id={`auto-matrix-${target}`} className="auto-matrix">
                 <h3 className="auto-matrix-title">{t(`target.${target}`)}</h3>
                 <div className="auto-table-wrap">
                   <table className="table auto-table">
@@ -70,6 +101,11 @@ export async function AutomationForm({
                             {t(`labels.${label}`)}
                           </th>
                         ))}
+                        {LOCKED_LABELS.map((label) => (
+                          <th key={label} scope="col">
+                            {t(`labels.${label}`)}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
@@ -77,9 +113,7 @@ export async function AutomationForm({
                         <tr key={channel.id}>
                           <th scope="row">
                             <span className="auto-channel-name">
-                              <span className="auto-avatar" aria-hidden="true">
-                                {channelInitial(channel.name)}
-                              </span>
+                              <PlatformBadge platform={channel.platform} />
                               {channel.name}
                             </span>
                           </th>
@@ -106,6 +140,14 @@ export async function AutomationForm({
                               </td>
                             );
                           })}
+                          {LOCKED_LABELS.map((label) => (
+                            <td key={label}>
+                              <Chip tone="locked">
+                                <Lock size={12} aria-hidden="true" />
+                                {t('matrix.unsupported')}
+                              </Chip>
+                            </td>
+                          ))}
                         </tr>
                       ))}
                     </tbody>
@@ -115,61 +157,147 @@ export async function AutomationForm({
             ))
           : null}
         <p role="note" className="auto-note">
-          {t('matrix.complaintNote')}
+          <strong>{t('matrix.noteLead')}</strong> {t('matrix.complaintNote')}
         </p>
       </Card>
 
-      <Card stack className="auto-card" aria-labelledby={GENERAL_ID}>
-        <SectionHead
-          id={GENERAL_ID}
-          icon={<ShieldCheck size={22} aria-hidden="true" />}
-          title={t('general.title')}
-          description={t('general.body')}
-        />
-        <div className="auto-guard-grid">
-          <Inset title={t('general.threshold')} className="auto-guard-wide">
-            <input
+      <div className="auto-split">
+        <Card stack className="auto-card auto-behavior" aria-labelledby={BEHAVIOR_ID}>
+          <SectionHead
+            id={BEHAVIOR_ID}
+            icon={<MessagesSquare size={22} aria-hidden="true" />}
+            title={t('behavior.title')}
+            description={t('behavior.body')}
+            end={soonChip}
+          />
+          <div className="auto-options" role="radiogroup" aria-label={t('behavior.title')}>
+            <label className="auto-option is-selected">
+              <input type="radio" defaultChecked {...soon} aria-disabled="true" />
+              <span>
+                <span className="auto-option-title">
+                  {t('behavior.both')}
+                  <Chip tone="accent">{t('behavior.recommended')}</Chip>
+                </span>
+                <span className="muted">{t('behavior.bothBody')}</span>
+              </span>
+            </label>
+            <label className="auto-option">
+              <input type="radio" {...soon} aria-disabled="true" />
+              <span>
+                <span className="auto-option-title">{t('behavior.publicOnly')}</span>
+                <span className="muted">{t('behavior.publicOnlyBody')}</span>
+              </span>
+            </label>
+            <label className="auto-option">
+              <input type="radio" {...soon} aria-disabled="true" />
+              <span>
+                <span className="auto-option-title">{t('behavior.privateOnly')}</span>
+                <span className="muted">
+                  {t('behavior.privateOnlyBody')}{' '}
+                  <em className="auto-quote">{t('behavior.privateOnlyQuote')}</em>
+                </span>
+              </span>
+            </label>
+          </div>
+          <Inset title={t('behavior.price')} icon={<Tag size={18} aria-hidden="true" />}>
+            <Switch defaultChecked {...soon} aria-label={t('behavior.price')} />
+            <p className="muted">{t('behavior.priceBody')}</p>
+          </Inset>
+        </Card>
+
+        <Card stack className="auto-card auto-guard" id="auto-guard" aria-labelledby={GUARD_ID}>
+          <SectionHead
+            id={GUARD_ID}
+            icon={<ShieldCheck size={22} aria-hidden="true" />}
+            title={t('guard.title')}
+            description={t('guard.body')}
+          />
+          <Inset>
+            <ThresholdSlider
               name="threshold"
-              type="number"
-              inputMode="decimal"
-              min={80}
-              max={100}
-              step="any"
-              required
-              defaultValue={defaults.thresholdPercent}
-              className="input"
-              aria-label={t('general.threshold')}
+              defaultValue={Number(defaults.thresholdPercent)}
+              label={t('guard.threshold')}
             />
-            <small className="muted">{t('general.thresholdHint')}</small>
           </Inset>
-          <Inset title={t('general.delay')}>
-            <select
-              name="delaySeconds"
-              defaultValue={defaults.delaySeconds}
-              className="input"
-              aria-label={t('general.delay')}
-            >
-              {DELAY_SECONDS_OPTIONS.map((seconds) => (
-                <option key={seconds} value={seconds}>
-                  {t(`general.delayOption.${seconds}`)}
-                </option>
-              ))}
-            </select>
+          <div className="auto-guard-pair">
+            <Inset title={t('guard.delay')} icon={<Timer size={18} aria-hidden="true" />}>
+              <select
+                name="delaySeconds"
+                defaultValue={defaults.delaySeconds}
+                className="input"
+                aria-label={t('guard.delay')}
+              >
+                {DELAY_SECONDS_OPTIONS.map((seconds) => (
+                  <option key={seconds} value={seconds}>
+                    {t(`general.delayOption.${seconds}`)}
+                  </option>
+                ))}
+              </select>
+              <small className="muted">{t('guard.delayHint')}</small>
+            </Inset>
+            <Inset title={t('guard.dailyCap')} icon={<Gauge size={18} aria-hidden="true" />}>
+              <input
+                name="dailyCap"
+                type="number"
+                min={1}
+                max={1000}
+                step={1}
+                required
+                defaultValue={defaults.dailyCap}
+                className="input"
+                aria-label={t('guard.dailyCap')}
+              />
+              <div className="auto-usage">
+                <strong>
+                  {t('guard.usage', { used: usedToday ?? '—', cap: defaults.dailyCap })}
+                </strong>
+                {usedToday === null ? null : (
+                  <span className="auto-usage-left">
+                    {t('guard.remaining', { left: Math.max(0, defaults.dailyCap - used) })}
+                  </span>
+                )}
+              </div>
+              <Progress thin label={t('guard.usageLabel')} segments={[{ percent: percentUsed }]} />
+            </Inset>
+          </div>
+          <Inset
+            title={t('guard.keywords')}
+            icon={<Ban size={18} aria-hidden="true" />}
+            className="auto-keywords"
+          >
+            <p className="muted">{t('guard.keywordsBody')}</p>
+            <KeywordChips
+              name="blockedKeywords"
+              initial={defaults.keywordsText.split('\n').filter(Boolean)}
+            />
+            <small className="muted">{t('general.keywordsHint')}</small>
           </Inset>
-          <Inset title={t('general.dailyCap')}>
+          <Inset className="auto-signature">
+            <input type="hidden" name="signatureToggle" value="1" />
+            <div className="auto-signature-row">
+              <span className="inset-title">{t('guard.signature')}</span>
+              <Switch
+                name="signatureEnabled"
+                value="on"
+                defaultChecked={defaults.signature !== ''}
+                aria-label={t('guard.signature')}
+              />
+            </div>
+            {defaults.signature ? (
+              <p className="auto-signature-sample">{`"${defaults.signature}"`}</p>
+            ) : null}
             <input
-              name="dailyCap"
-              type="number"
-              min={1}
-              max={1000}
-              step={1}
-              required
-              defaultValue={defaults.dailyCap}
+              name="signature"
+              type="text"
+              maxLength={120}
+              defaultValue={defaults.signature}
+              placeholder={t('guard.signaturePlaceholder')}
               className="input"
-              aria-label={t('general.dailyCap')}
+              aria-label={t('guard.signature')}
             />
+            <small className="muted">{t('general.signatureHint')}</small>
           </Inset>
-          <Inset title={t('general.hours')} className="auto-guard-wide" role="group">
+          <Inset title={t('general.hours')} className="auto-hours" role="group">
             <label className="row">
               <input
                 type="checkbox"
@@ -214,35 +342,22 @@ export async function AutomationForm({
             </div>
             <small className="muted">{t('general.hoursHint')}</small>
           </Inset>
-          <Inset title={t('general.keywords')} className="auto-guard-wide">
-            <textarea
-              name="blockedKeywords"
-              rows={4}
-              defaultValue={defaults.keywordsText}
-              className="input"
-              aria-label={t('general.keywords')}
-            />
-            <small className="muted">{t('general.keywordsHint')}</small>
-          </Inset>
-          <Inset title={t('general.signature')} className="auto-guard-wide">
-            <input
-              name="signature"
-              type="text"
-              maxLength={120}
-              defaultValue={defaults.signature}
-              className="input"
-              aria-label={t('general.signature')}
-            />
-            <small className="muted">{t('general.signatureHint')}</small>
-          </Inset>
-        </div>
-      </Card>
+        </Card>
+      </div>
 
       <div className="auto-savebar">
-        <p className="muted">{t('saveHint')}</p>
-        <button type="submit" className="btn btn-primary">
-          {t('save')}
-        </button>
+        <p className="auto-savebar-hint">
+          <CloudCheck size={20} aria-hidden="true" />
+          <span>{t('saveHint')}</span>
+        </p>
+        <div className="auto-savebar-actions">
+          <Button variant="secondary" {...soon}>
+            {t('savebar.reset')}
+          </Button>
+          <button type="submit" className="btn btn-primary">
+            {t('save')}
+          </button>
+        </div>
       </div>
     </form>
   );

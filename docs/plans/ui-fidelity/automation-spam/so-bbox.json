@@ -1,0 +1,270 @@
+{
+  "automation": {
+    "stitch": [
+      {
+        "name": "thẻ-số-liệu",
+        "w": 279,
+        "h": 147,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "đầu-bảng",
+        "w": 329,
+        "h": 42,
+        "style": {
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(63, 72, 75)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "12px",
+          "paddingLeft": "16px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "viên-chế-độ",
+        "w": 86,
+        "h": 24,
+        "style": {
+          "fontSize": "11px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "4px",
+          "paddingLeft": "12px",
+          "borderRadius": "9999px"
+        }
+      },
+      {
+        "name": "khối-ngưỡng",
+        "w": 633,
+        "h": 148,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(234, 245, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thanh-lưu",
+        "w": 1152,
+        "h": 72,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(234, 245, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      }
+    ],
+    "build": [
+      {
+        "name": "thẻ-số-liệu",
+        "w": 275,
+        "h": 121,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "đầu-bảng",
+        "w": 270,
+        "h": 44,
+        "style": {
+          "fontSize": "13px",
+          "fontWeight": "700",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(246, 248, 249)",
+          "paddingTop": "12px",
+          "paddingLeft": "16px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "viên-chế-độ",
+        "w": 112,
+        "h": 44,
+        "style": {
+          "fontSize": "11px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "0px",
+          "paddingLeft": "12px",
+          "borderRadius": "999px"
+        }
+      },
+      {
+        "name": "khối-ngưỡng",
+        "w": 454,
+        "h": 159,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(246, 248, 249)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thanh-lưu",
+        "w": 848,
+        "h": 108,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(227, 250, 252)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      }
+    ],
+    "overflow1440": false,
+    "overflow390": true
+  },
+  "spam-rules": {
+    "stitch": [
+      {
+        "name": "tiêu-đề",
+        "w": 287,
+        "h": 28,
+        "style": {
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "thẻ-quy-tắc",
+        "w": 1136,
+        "h": 102,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thẻ-số-liệu",
+        "w": 275,
+        "h": 86,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "12px",
+          "paddingLeft": "12px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "nút-chính",
+        "w": 163,
+        "h": 34,
+        "style": {
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "8px",
+          "paddingLeft": "0px",
+          "borderRadius": "8px"
+        }
+      }
+    ],
+    "build": [
+      {
+        "name": "tiêu-đề",
+        "w": 216,
+        "h": 56,
+        "style": {
+          "fontSize": "22px",
+          "fontWeight": "700",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "thẻ-quy-tắc",
+        "w": 848,
+        "h": 188,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thẻ-số-liệu",
+        "w": 275,
+        "h": 122,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "nút-chính",
+        "w": 114,
+        "h": 74,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "0px",
+          "paddingLeft": "24px",
+          "borderRadius": "8px"
+        }
+      }
+    ],
+    "overflow1440": false,
+    "overflow390": false
+  }
+}

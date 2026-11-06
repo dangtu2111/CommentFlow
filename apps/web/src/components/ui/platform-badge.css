@@ -1,0 +1,25 @@
+/* PlatformBadge — ô biểu tượng nền tảng 24px (Stitch: p-1 rounded bg-primary/secondary/inverse). Chỉ dùng token. */
+
+.platform-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--color-text-muted);
+  color: var(--action-fg);
+}
+
+.platform-badge.is-facebook {
+  background: var(--action-bg-hover);
+}
+
+.platform-badge.is-instagram {
+  background: var(--color-ai-600);
+}
+
+.platform-badge.is-tiktok {
+  background: var(--color-text);
+}

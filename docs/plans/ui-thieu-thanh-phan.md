@@ -1,0 +1,1509 @@
+# Kiểm kê thành phần còn thiếu theo trang (UI-COMPLETE-AUTO-SPAM)
+
+Sinh bằng `node e2e/support/ui-completeness.mjs --batch e2e/support/ui-completeness-batch.json` (06/11/2026): so chữ trong vùng `<main>` của `design/stitch/<slug>.html` với trang mẫu `/dev/ui/*` (đăng nhập: `/login`, `/register`). Mỗi mục "##" = một trang để việc sau sửa; mục thiếu dạng chữ đã chuẩn hóa (không dấu cách thừa, không số liệu, chữ thường). Một phần chữ thiếu là nhãn dữ liệu minh họa của thiết kế (tên người/số liệu) — việc sau cần rà từng mục theo QUY TẮC ĐỦ THÀNH PHẦN: thành phần thật thiếu thì dựng (dữ liệu `[MẪU]` hoặc vô hiệu "Sắp có"); chữ bịa/không trung thực thì ghi lý do bỏ.
+
+Đã đạt ≥ 95% (không nằm trong danh sách việc cần sửa): `automation` 96,5%, `spam-rules` 98,3% (báo cáo ở `docs/plans/ui-fidelity/automation-spam/`).
+
+| Màn | Route | Khớp | Thiếu |
+|---|---|---|---|
+| auth-login-register | /login, /register | 7/43 = 16.3% | 36 |
+| comments | /dev/ui/comments | 38/105 = 36.2% | 67 |
+| knowledge-base | /dev/ui/kb | 5/88 = 5.7% | 83 |
+| posts | /dev/ui/kb-posts | 9/104 = 8.7% | 95 |
+| settings-security | /dev/ui/settings | 25/97 = 25.8% | 72 |
+| settings-billing | /dev/ui/settings-billing | 38/151 = 25.2% | 113 |
+| settings-workspace-members | /dev/ui/members | 13/136 = 9.6% | 123 |
+| messages | /dev/ui/messages | 58/142 = 40.8% | 84 |
+| reports | /dev/ui/bao-cao | 20/96 = 20.8% | 76 |
+| activity-log | /dev/ui/activity | 5/120 = 4.2% | 115 |
+| leads | /dev/ui/leads | 9/137 = 6.6% | 128 |
+| privacy-data-deletion | /dev/ui/privacy | 7/97 = 7.2% | 90 |
+| terms-dpa | /dev/ui/terms | 4/198 = 2.0% | 194 |
+| landing-pricing | /dev/ui/landing | 8/134 = 6.0% | 126 |
+
+
+## auth-login-register (/login + /register)
+
+Khớp 7/43 = 16.3%
+
+Thiếu 36 mục:
+- mvp v
+- meta tech partner certified
+- genai engine
+- tự động hóa phản hồi bình luận & tin nhắn đa kênh với trợ lý ai
+- tăng gấp lần tỷ lệ chốt đơn, loại bỏ hoàn toàn nguy cơ cướp khách và tiết kiệm hàng chục giờ trực ca trên facebook, instagram & tiktok.
+- luồng phản hồi tự động thời gian thực
+- giây
+- mai phương • fanpage post #
+- vừa xong
+- "shop ơi váy lụa xanh size m còn hàng ko? giá nhiêu và ship về đà nẵng bao lâu tới? sđt mình
+- phân loại: [hỏi giá & tồn kho]
+- đã tự động ẩn sđt (chống cướp khách)
+- đã đẩy sđt vào crm lead #
+- commentflow ai • trợ lý bán hàng
+- độ tin cậy:
+- "dạ chào chị phương, đầm lụa xanh size m hiện còn chiếc tại kho. giá ưu đãi là . shop freeship về đà nẵng từ - ngày ạ! shop đã nhắn tin hình thật và link đặt giữ hàng qua inbox riêng cho chị rồi nha ❤️"
+- shop & agency active
+- chuẩn ngữ cảnh b b
+- giờ
+- tiết kiệm/tuần/nhân sự
+- bảo mật tối đa:
+- commentflow chỉ đọc bình luận/tin nhắn công khai qua meta graph api v chính thức. tuyệt đối không tự ý đăng bài, mã hóa đường truyền ssl -bit.
+- đăng ký (dùng thử ngày)
+- đăng nhập để điều phối trợ lý ai và xử lý hội thoại fanpage, instagram tức thì.
+- đồng bộ fanpage, tin nhắn và bình luận tức thì chỉ với -chạm
+- tiếp tục với google workspace
+- email công việc
+- linh.sales@annhienstore.vn
+- ghi nhớ đăng nhập trong ngày
+- đăng nhập vào workspace
+- bằng việc tiếp tục, bạn đồng ý với
+- điều khoản dịch vụ
+- chính sách bảo mật dữ liệu
+- của commentflow ai.
+- mã hóa ssl -bit
+- meta graph api v
+
+## comments (/dev/ui/comments)
+
+Khớp 38/105 = 36.2%
+
+Thiếu 67 mục:
+- luồng quản lý bình luận
+- phiên làm việc:
+- ca sáng ( - )
+- sla còn lại:
+- ctrl+enter
+- duyệt gửi
+- cột chuẩn
+- tập trung
+- giao cho tôi
+- độ chính xác ai
+- đang áp dụng rules ngữ cảnh & bảng giá t /
+- tìm theo tên khách, nội dung...
+- sắp xếp:
+- ưu tiên: mua & khiếu nại
+- bình luận mới
+- bấm để tải
+- fb: an nhiên store
+- ai đã soạn sẵn câu trả lời cực chuẩn
+- có ai
+- "váy hoa nhí tay bồng này còn size m màu be không shop? giá bao nhiêu vậy ạ?"
+- lượt
+- ig: @annhien.official
+- an đang xử lý
+- "cho mình đặt áo sơ mi trắng size l nhé, ship về cầu giấy hà nội"
+- mua hàng (ưu tiên)
+- cod • hà nội
+- ads
+- tiktok shop live
+- "áo này chất vải gì vậy shop có bị xù lông không?"
+- chiến dịch t
+- facebook user (ẩn danh)
+- "hàng giao chậm quá ngày chưa thấy đâu"
+- khiếu nại (cần gấp)
+- chờ cskh
+- hiển thị / chờ duyệt
+- xem trang kế tiếp
+- bối cảnh bài viết & sản phẩm đính kèm
+- mở trên facebook
+- bộ sưu tập mùa hè - váy hoa nhí vintage thanh lịch, form dáng chuẩn công sở & dạo phố
+- váy hoa nhí tay bồng vintage (sku: vhn- - )
+- đã bán • tồn kho:
+- khách vip tiềm năng
+- bình luận lúc hôm nay • id: @thao.le
+- thêm ghi chú khách
+- xem hồ sơ crm
+- đã bình luận lần trên trang
+- đã mua đơn tháng trước (đơn #an- : váy linen cổ vuông)
+- phân tích ý định tự động bởi commentflow ai
+- độ tin cậy: cao ( )
+- lý do ai suy luận:
+- khách hỏi giá và tồn kho sản phẩm trong bài viết. phát hiện từ khóa: "còn size m màu be không", "giá bao nhiêu".
+- câu trả lời đề xuất bởi ai (đã sẵn sàng duyệt)
+- viết lại câu khác
+- thêm biểu tượng cảm xúc
+- dạ chào bạn thảo! mẫu váy hoa nhí tay bồng màu be hiện tại shop vẫn còn sẵn size m bạn nha. giá sản phẩm là và đang được miễn phí vận chuyển toàn quốc hôm nay ạ. bạn có muốn shop giữ mẫu này cho bạn không ạ?
+- nguồn kiến thức nạp vào:
+- sản phẩm: váy hoa nhí vintage
+- chính sách: miễn phí ship từ
+- tồn kho: size m be ( chiếc)
+- / ký tự
+- phím tắt: h
+- ẩn bình luận
+- phím tắt: e
+- phím tắt: m
+- nhắn riêng (private reply)
+- thêm hành động
+- duyệt & gửi trả lời
+
+## knowledge-base (/dev/ui/kb)
+
+Khớp 5/88 = 5.7%
+
+Thiếu 83 mục:
+- rag engine v
+- bản nháp — thay đổi chưa xuất bản (v )
+- áp dụng cho:
+- tất cả kênh ( kênh)
+- xem thay đổi (diff)
+- chạy kiểm thử (test cases)
+- xuất bản v
+- gợi ý: bổ sung chính sách đổi trả hàng sale • tối ưu tỷ lệ giải đáp tự động thêm +
+- tối ưu ngay
+- nguồn dữ liệu
+- thông tin cửa hàng
+- chính sách
+- hỏi – đáp faq
+- tài liệu
+- pdf
+- tinh chỉnh hành vi
+- giọng văn thương hiệu
+- quy tắc & giới hạn
+- từ điển viết tắt
+- từ
+- kiểm thử & phiên bản
+- có thay đổi từ nguồn website chờ duyệt
+- url: annhienstore.vn/huong-dan-chon-size đã bổ sung bảng số đo váy suông hè .
+- xem so sánh
+- chấp nhận
+- kết nối shopify store
+- đã kết nối
+- annhien-fashion.myshopify.com • đồng bộ lần cuối lúc hôm nay (thành công)
+- đồng bộ ngay
+- cài đặt phạm vi
+- ngắt kết nối
+- sản phẩm đã nạp vào vector db
+- chính sách bán hàng đồng bộ
+- trang blog & giới thiệu shop
+- website & nguồn url web crawling
+- tự động cập nhật thông tin trang tĩnh theo chu kỳ giờ/lần
+- + thêm liên kết mới
+- địa chỉ url
+- phân loại
+- trạng thái ai
+- cập nhật
+- thao tác
+- https://annhienstore.vn/chinh-sach-doi-tra
+- đổi trả hàng
+- đã đọc ( )
+- giờ trước
+- quét lại
+- xóa
+- https://annhienstore.vn/phi-van-chuyen
+- vận chuyển
+- hôm qua
+- https://annhienstore.vn/huong-dan-chon-size
+- faq & size
+- có thay đổi chờ duyệt
+- phút trước
+- so sánh
+- xem trước sản phẩm trích xuất (bảng mini)
+- dữ liệu thực thể được ánh xạ vào rag. trường khóa sẽ đồng bộ tự động từ shopify.
+- hiển thị trên sản phẩm
+- váy hoa nhí vintage tay bồng
+- đang bán
+- sku: an-vh - • danh mục: váy thiết kế hè
+- tồn kho:
+- chiếc
+- biến thể:
+- s, m, l ( phân loại)
+- vector embeddings: đã tạo
+- ghi chú riêng cho ai (agent hint override)
+- áp dụng tức thì cho kịch bản tư vấn
+- sản phẩm chủ đạo mùa hè, tặng kèm scrunchies cùng màu cho mỗi đơn đặt trong tuần này. nếu khách hỏi chiều cao dưới m thì ưu tiên khuyên lấy size s để tôn dáng.
+- widget chạy thử nghiệm ai (live playground)
+- mô phỏng tức thì phản hồi của bot với cơ sở tri thức hiện tại
+- llm: gemini pro (temperature: )
+- nhập câu hỏi test giả lập khách hàng...
+- trích xuất tri thức:
+- nguồn: website > chính sách vận chuyển (annhienstore.vn/phi-van-chuyen)
+- độ tin cậy:
+- độ trễ: ms
+- câu trả lời dự kiến của bot:
+- trả lời đạt yêu cầu!
+- “dạ chào bạn! shop
+- miễn phí vận chuyển toàn quốc cho tất cả đơn hàng từ trở lên
+- nha. đơn của bạn là đủ điều kiện nhận ưu đãi freeship rồi ạ! bạn có muốn shop tư vấn thêm chọn size hay chốt đơn luôn không ạ? 🥰”
+
+## posts (/dev/ui/kb-posts)
+
+Khớp 9/104 = 8.7%
+
+Thiếu 95 mục:
+- vận hành đa kênh
+- quản lý nội dung
+- bài viết & gắn sản phẩm
+- bài viết đa kênh
+- quản lý bài đăng từ facebook, instagram, tiktok & gắn sản phẩm để ai tự động trích xuất thông số, báo giá tức thì và tra cứu tồn kho chính xác theo từng ngữ cảnh.
+- đồng bộ bài viết mới
+- gắn sản phẩm hàng loạt ( bài)
+- dạng danh sách chi tiết
+- dạng lưới thẻ
+- phát hiện bài viết chưa được liên kết với kho hàng
+- hiện có
+- bình luận hỏi giá & size
+- đang ở trạng thái chờ duyệt thủ công. gắn sản phẩm ngay để mở khóa phản hồi tự động chuẩn xác từ ai!
+- xem bài này
+- bỏ qua nhắc nhở
+- facebook page
+- tiktok shop
+- dữ liệu: ngày gần nhất
+- tìm theo tiêu đề, id bài viết (fb_post_...), sku...
+- trạng thái gắn: tất cả
+- chưa gắn sản phẩm ( )
+- ai gợi ý chờ duyệt ( )
+- đã gắn sản phẩm ( )
+- tất cả loại bài
+- bài quảng cáo (ads)
+- bài đăng thường
+- livestream
+- bộ lọc nâng cao
+- danh sách bài đăng theo thời gian
+- sắp xếp: bình luận chờ giảm dần
+- fb: an nhiên store
+- quảng cáo ads
+- vừa cập nhật phút trước
+- chưa gắn sản phẩm
+- bst nắng hè - nét dịu dàng nữ tính
+- "nàng thơ mùa hạ gọi tên thiết kế hoa nhí cổ bồng siêu tôn dáng! vải chiffon hàn lớp thoáng mát tuyệt đối, không nhăn, sẵn size s m l cho chị em thử nha..."
+- bình luận chờ ( hỏi giá)
+- id: fb_post_
+- ai gợi ý:
+- váy hoa nhí vintage tay bồng (sku: vhn- )
+- độ tin cậy
+- xác nhận gắn
+- bỏ qua
+- ig: @annhien.official
+- đăng ngày trước
+- đã gắn sản phẩm
+- áo sơ mi linen cổ trụ mềm mát công sở & dạo phố
+- tone màu kem be tối giản, phối cùng quần suông hay chân váy đều tinh tế...
+- chính: áo linen al- ( )
+- ai: tự động phản hồi
+- tiktok: an nhiên shop
+- đăng hôm qua
+- ai gợi ý chờ duyệt
+- video thử đồ thực tế: đầm xòe công sở dạo phố
+- cận cảnh chất vải dệt kim mềm rũ, form giấu eo cực đỉnh, các nàng xem hết clip nhé!
+- gợi ý: đầm xòe hoa nhí dx-
+- fb live: an nhiên store
+- đã gắn: sản phẩm
+- livestream xả kho cuối tuần / - tri ân khách hàng
+- ghi chú: đồng giá trong live
+- đã phản hồi tự động: bình luận
+- • tỉ lệ chốt đơn:
+- đang thiết lập dữ liệu ngữ cảnh cho bài facebook id
+- xem gốc
+- kênh: fb fanpage • đăng: am hôm nay
+- sản phẩm gắn kèm cho bài
+- đồng bộ shopify: sẵn sàng
+- tìm theo tên sản phẩm hoặc mã sku kho...
+- váy hoa nhí vintage tay bồng
+- chính
+- sku: vhn-
+- còn chiếc
+- gỡ sản phẩm
+- scrunchies vải lụa tặng kèm
+- quà tặng
+- sku: pk-
+- cross-sell
+- + gắn thêm sản phẩm phụ / cross-sell
+- ghi chú riêng cho bài viết (ai override hint)
+- ví dụ: áp dụng mã freeship cho khách hỏi bài này. khách nặng trên kg tư vấn size l trở lên...
+- áp dụng mã freeship cho khách hỏi bài này. khách nặng trên kg hoặc ngực > cm tư vấn size l trở lên để mặc thoải mái.
+- hiệu lực: đến ngày / /
+- đổi thời hạn
+- tự động trả lời ngay khi độ tin cậy ai >= . không cần nhân viên duyệt lại.
+- luôn duyệt tay trước khi gửi (draft only)
+- ai soạn sẵn câu trả lời vào hàng đợi, nhân viên ấn duyệt mới bắn tin cho khách. an toàn tối đa cho bài livestream/kol.
+- tắt hoàn toàn ai trên bài này
+- không quét và không tự động phản hồi bài viết này.
+- nguyên tắc phân tầng:
+- ai sẽ ưu tiên:
+- ghi chú riêng của bài
+- sản phẩm gắn kèm
+- cơ sở kiến thức chung của shop
+- hủy thay đổi
+- lưu cấu hình bài viết
+
+## settings-security (/dev/ui/settings)
+
+Khớp 25/97 = 25.8%
+
+Thiếu 72 mục:
+- kích hoạt xác thực bước ( fa) thành công!
+- đạt chuẩn meta partner
+- tài khoản của bạn hiện đã được bảo vệ tuyệt đối bằng lớp xác thực thứ hai qua ứng dụng totp (google authenticator / microsoft authenticator). mọi yêu cầu truy cập từ thiết bị mới đều sẽ cần mã bảo mật số.
+- lưu mã dự phòng
+- quản lý thông tin đăng nhập cá nhân, bảo mật lớp và giám sát các phiên truy cập vào workspace của bạn.
+- điểm bảo mật:
+- / (tối ưu)
+- growth
+- meta compliant
+- meta tech partner tier
+- chính sách bảo mật dữ liệu facebook graph api & tiktok business yêu cầu chủ sở hữu workspace kích hoạt xác thực hai yếu tố bắt buộc.
+- tiêu chuẩn: iso
+- hợp lệ
+- xác thực bước (two-factor authentication - fa)
+- đang hoạt động • được bảo vệ
+- lớp bảo vệ nâng cao ngăn chặn việc chiếm đoạt tài khoản ngay cả khi mật khẩu của bạn bị lộ.
+- đổi thiết bị
+- lưu ý: tắt fa có thể khiến workspace không thể đồng bộ meta webhooks theo chính sách bảo mật
+- tắt fa
+- ứng dụng totp authenticator
+- thiết bị đã đồng bộ
+- apple iphone pro
+- google authenticator v
+- kích hoạt lúc hôm nay
+- chính sách bảo mật meta
+- đạt chuẩn meta tech
+- áp dụng cho workspace owner
+- đồng bộ webhook an toàn
+- mã khôi phục dự phòng (backup recovery codes)
+- còn / mã chưa dùng
+- mã dự phòng dùng một lần để đăng nhập khi bạn không mang theo điện thoại, mất quyền truy cập ứng dụng authenticator hoặc thiết bị bị hỏng.
+- xem lại mã
+- tải file .txt
+- tạo bộ mã mới sẽ hủy toàn bộ các mã cũ
+- tạo lại mã mới
+- cf a- x
+- m - p
+- yq- l
+- n b- c
+- pl - zz
+- kv - rr
+- qw- ta
+- xc- mn
+- thông tin xác thực danh tính quản trị viên chính của cửa hàng
+- chỉnh sửa thông tin
+- workspace owner
+- id: cf-
+- linh.sales@annhienstore.vn
+- số điện thoại liên hệ
+- nhận cảnh báo sms
+- mật khẩu tài khoản
+- lần đổi gần nhất: ngày trước (ngày / / )
+- phiên đăng nhập đang hoạt động (active sessions)
+- theo dõi và quản lý mọi thiết bị đang mở phiên làm việc commentflow ai
+- google chrome trên macos sequoia
+- phiên hiện tại • đang hoạt động
+- hà nội, việt nam
+- ip:
+- bảo vệ bởi fa totp
+- đăng nhập lúc sáng nay
+- commentflow web app trên iphone pro
+- safari mobile
+- hoạt động phút trước
+- thu hồi quyền
+- tùy chỉnh không gian làm việc commentflow ai cá nhân của bạn
+- tiếng việt (mặc định)
+- english (us)
+- bahasa indonesia
+- ไทย (thai)
+- bao gồm toàn bộ thuật ngữ hỗ trợ khách hàng và nhãn phân loại bình luận.
+- chế độ giao diện (appearance)
+- tối ưu cho ca làm việc ban ngày độ tập trung cao.
+
+## settings-billing (/dev/ui/settings-billing)
+
+Khớp 38/151 = 25.2%
+
+Thiếu 113 mục:
+- workspace:
+- an nhiên store (cf- )
+- pro growth
+- gói hiện tại: growth
+- / tháng
+- kỳ thanh toán: hàng tháng
+- ngày gia hạn tiếp theo:
+- (còn ngày)
+- tự động trừ hạn mức qua vietqr ủy quyền
+- cảnh báo chạm ngưỡng dung lượng ai trong tháng
+- workspace đã xử lý
+- lượt. với tốc độ trung bình
+- lượt/ngày
+- , hệ thống dự báo tài khoản sẽ cạn lượt ai vào ngày
+- (sớm hơn chu kỳ ngày). ai tự động phản hồi sẽ tạm ngưng khi đạt giới hạn.
+- mua thêm + lượt ( )
+- nâng cấp business
+- lượt ai xử lý trong tháng
+- lượt bình luận
+- lượt tin nhắn
+- bình luận:
+- tin nhắn:
+- còn:
+- lượt = bình luận hoặc tin nhắn do ai tự động xử lý hoặc tạo bản thảo gợi ý.
+- kênh bán hàng kết nối
+- đầy
+- / kênh tối đa
+- fb: fanpage an nhiên store
+- ig: @annhien.official
+- tiktok: an nhiên official
+- muốn thêm kênh tiktok thứ ?
+- nâng business ( kênh) →
+- thành viên nhân sự
+- khả dụng
+- / tài khoản
+- chủ sở hữu (owner)
+- nhân viên cskh
+- còn chỗ trống nhân viên
+- mời nhân viên
+- chọn gói giải pháp phù hợp với quy mô tương tác của thương hiệu. nâng cấp lập tức, số ngày dư được cấn trừ tự động.
+- theo tháng
+- theo năm (tiết kiệm )
+- dành cho shop bán hàng cá nhân, fanpage.
+- kết nối duy nhất
+- chỉ tạo bản thảo gợi ý (không tự gửi)
+- tài khoản nhân viên
+- lọc spam cơ bản
+- hạ cấp về starter
+- gói bạn đang dùng
+- tối ưu cho cửa hàng thời trang, mỹ phẩm đa kênh.
+- kết nối đồng thời
+- có ai tự động trả lời (auto-reply)
+- nhật ký hoạt động ngày
+- gói đang sử dụng (tự động gia hạn)
+- khuyên dùng mở rộng
+- dành cho chuỗi cửa hàng, agency vận hành lớn.
+- kết nối không giới hạn nền tảng
+- ưu tiên tốc độ ai cực nhanh ( s)
+- tài khoản nhân viên & phân quyền sâu
+- hỗ trợ riêng - qua zalo & sla cam kết
+- nâng cấp gói ngay
+- gói mua thêm (add-on)
+- dành cho mùa sale, chống cạn lượt đột xuất.
+- không giới hạn hạn dùng
+- (cộng dồn)
+- kích hoạt ngay lập tức qua vietqr
+- dùng chung cho cả bình luận và tin nhắn
+- không thay đổi kỳ hạn thuê bao chính
+- mua thêm gói lượt
+- cổng thanh toán tự động
+- quét mã qr qua ứng dụng ngân hàng bất kỳ. hệ thống tự động kích hoạt gói và cấp hạn mức ai trong vòng giây.
+- đang chờ tín hiệu quét mã...
+- mb
+- bank
+- napas
+- nạp thêm lượt ai
+- vnđ
+- mở app ngân hàng bất kỳ để quét (vcb, mb, techcombank, vpbank...)
+- ngân hàng thụ hưởng
+- mb bank (ngân hàng tmcp quân đội)
+- sao chép tên ngân hàng
+- sao chép
+- số tài khoản thụ hưởng
+- sao chép stk
+- chủ tài khoản (đơn vị vận hành)
+- cong ty co phan commentflow ai
+- nội dung chuyển khoản (bắt buộc)
+- cf annhien
+- vui lòng giữ nguyên mã này để hệ thống gán đúng vào workspace của bạn.
+- sao chép mã
+- cơ chế xác thực tức thì:
+- hệ thống kết nối webhook trực tiếp với cổng ngân hàng. ngay khi biến động số dư hoàn tất (trung bình - giây), tài khoản sẽ tự động cộng hạn mức ai mà không cần chụp biên lai gửi nhân viên hỗ trợ.
+- tất cả các lần gia hạn và nạp thêm lượt từ khi khởi tạo workspace.
+- xuất bảng kê excel
+- mã gd
+- gói dịch vụ
+- phương thức
+- chứng từ
+- #inv- -
+- hoàn tất
+- tải hóa đơn pdf
+- khởi tạo starter (thử nghiệm)
+- đã xác minh
+- hóa đơn gtgt điện tử (e-invoice) được phát hành và tự động gửi tới email kế toán trong giờ làm việc sau mỗi giao dịch thành công.
+- tên pháp nhân doanh nghiệp
+- công ty tnhh thời trang mẫu an nhiên
+- mã số thuế (mst)
+- địa chỉ trụ sở đăng ký
+- tầng , tòa nhà paragon, số nguyễn lương bằng, phường quang trung, quận đống đa, hà nội
+- email tiếp nhận hóa đơn xml/pdf
+- ketoan@annhienstore.vn
+- chỉnh sửa thông tin xuất hóa đơn
+- đã sao chép vào bộ nhớ tạm!
+
+## settings-workspace-members (/dev/ui/members)
+
+Khớp 13/136 = 9.6%
+
+Thiếu 123 mục:
+- cài đặt & quản trị workspace
+- chủ sở hữu (owner)
+- ws-
+- quản lý kết nối đa kênh, đội ngũ nhân sự cskh, gói cước lượt ai và thiết lập bảo mật hệ thống.
+- xem tài liệu hướng dẫn
+- lưu thay đổi
+- gói cước & thanh toán
+- gói growth
+- cài đặt thông báo
+- tài khoản & bảo mật fa
+- kênh đã kết nối ( nguồn hoạt động)
+- + kết nối thêm kênh mới
+- an nhiên store
+- facebook fanpage • id:
+- đang kết nối
+- bình luận:
+- tin nhắn:
+- đồng bộ: phút trước
+- đồng bộ lại
+- @annhien.official
+- instagram business • id:
+- an nhiên shop
+- tiktok shop official • id: tt_annhien
+- cần cấp quyền
+- chưa cấp
+- yêu cầu quyền direct message
+- cấp quyền ngay
+- / nhân sự theo gói
+- quản lý các tài khoản nhân viên được cấp quyền trả lời, xem khách hàng tiềm năng và cấu hình bot.
+- + mời thành viên mới
+- nhân sự
+- quyền thao tác
+- trạng thái
+- thao tác
+- linhm@annhienstore.vn
+- toàn quyền hệ thống
+- không thể thay đổi
+- huytq@annhienstore.vn
+- nhân viên cskh (staff)
+- trực chat, duyệt bài, xem lead
+- sửa quyền
+- xóa
+- dunglt@annhienstore.vn
+- trực chat, duyệt bài (che sđt)
+- hn
+- hoàng bích ngọc
+- ngochb.cskh@gmail.com
+- quyền mặc định staff
+- chờ nhận ( ngày trước)
+- hủy
+- ma trận đối chiếu quyền hạn (owner vs staff)
+- chi tiết phân quyền mvp v
+- tác vụ vận hành
+- quy tắc bảo mật lead
+- kết nối / ngắt kết nối fanpage, ig, tiktok
+- chỉ owner được ủy quyền oauth meta
+- soạn & sửa cơ sở kiến thức ai (faq, bảng giá)
+- tránh nhân viên sửa thông tin bảng giá gốc
+- cấu hình quy tắc ai tự trả lời & tone giọng
+- chỉ quản lý được bật/tắt luồng tự động
+- nút dừng khẩn cấp (emergency stop)
+- bất kỳ ai cũng có thể ngắt ngay khi bot hallucinate
+- xem danh sách khách tiềm năng (crm lead)
+- che sđt
+- che số cuối sđt để chống rò rỉ dữ liệu khách
+- quản lý gói cước, mua lượt ai & hóa đơn
+- toàn quyền cho owner thanh toán
+- mời thành viên mới vào workspace
+- gửi email kích hoạt trực tiếp, thành viên sẽ nhận liên kết gia nhập qua email.
+- địa chỉ email nhân sự
+- ví dụ: linh.sales@gmail.com
+- vai trò cấp quyền
+- nhân viên cskh (staff - xử lý hội thoại & lead)
+- quản trị viên phụ (admin - sửa kiến thức & bot)
+- phân công kênh phụ trách (mặc định được xem và chat):
+- facebook: an nhiên store
+- instagram: @annhien.official
+- tiktok: an nhiên shop
+- che bớt số điện thoại của khách hàng (bảo mật lead)
+- nhân sự này chỉ thấy dạng *** để tránh sao chép tệp data khách.
+- hủy bỏ
+- gửi lời mời ngay
+- gói cước workspace
+- / tháng • chu kỳ hàng tháng
+- ngày gia hạn:
+- / / (còn ngày)
+- đồng hồ lượt ai (tokens)
+- đã dùng
+- lượt
+- tổng hạn mức:
+- với tốc độ hiện tại, dự kiến hết lượt vào
+- . khuyến nghị nạp bổ sung trước cao điểm black friday.
+- nâng lên gói business ( / lượt)
+- mua thêm + lượt ( )
+- chuyển khoản qr (vietqr)
+- tự động /
+- quét bằng mọi ứng dụng ngân hàng
+- ngân hàng:
+- mb bank (quân đội)
+- chủ tài khoản:
+- ctcp commentflow ai
+- số tài khoản:
+- sao chép
+- số tiền mua:
+- nội dung chuyển:
+- commentflow ws
+- sao chép cú pháp
+- hệ thống tự động kích hoạt lượt sau
+- - phút
+- khi nhận tiền qua webhook ngân hàng. không cần tải ủy nhiệm chi.
+- dữ liệu & quyền riêng tư (meta platform compliance)
+- tuân thủ nghiêm ngặt chính sách bảo vệ dữ liệu người dùng meta graph api, lưu trữ mã hóa chuẩn aes- .
+- chỉ mục bảo mật: soc type ii ready
+- yêu cầu xóa dữ liệu (meta callback)
+- khởi tạo url tự động phản hồi meta data deletion request khi khách hàng trên facebook yêu cầu gỡ dữ liệu cá nhân.
+- cấu hình callback url
+- xuất toàn bộ dữ liệu workspace
+- tải về toàn bộ nhật ký bình luận, tin nhắn bot và danh sách khách hàng tiềm năng theo định dạng csv / json nén.
+- xuất csv (.zip)
+- xuất json api
+- xóa vĩnh viễn workspace này
+- hành động không thể hoàn tác: hủy kết nối toàn bộ fanpage, xóa sạch cơ sở tri thức ai và nhật ký khách hàng.
+- xóa workspace vĩnh viễn
+
+## messages (/dev/ui/messages)
+
+Khớp 58/142 = 40.8%
+
+Thiếu 84 mục:
+- hội thoại gần chạm mốc h meta api
+- tỷ lệ phản hồi đúng hạn:
+- tốc độ xử lý trung bình:
+- m s
+- phím tắt nhanh:
+- e (xong)
+- ctrl + enter (gửi)
+- tab (chèn ai)
+- bộ lọc trạng thái
+- gửi lỗi
+- lọc nhanh nghiệp vụ
+- nền tảng mạng xã hội
+- tiktok
+- nhãn dự đoán ai
+- tất cả nhãn
+- tư vấn chọn size
+- hỏi báo giá
+- khiếu nại giao hàng
+- yêu cầu tư vấn viên
+- từ bình luận qua
+- được giao cho tôi
+- tự động hóa ca trực
+- phản hồi tự động hôm nay
+- danh sách tin nhắn
+- tìm tên khách, sđt, nội dung...
+- hoàng bích ngọc
+- dạ shop đã gửi bảng size váy hoa nhí cho...
+- còn h m
+- đặng minh tú
+- khách: cho mình gặp trực tiếp nhân viên tư vấn ạ
+- an đang xử lý
+- vũ thu trang
+- shop vừa kiểm tra đơn hàng mã an- ...
+- tra cứu đơn
+- hq
+- lê hồng quân
+- mẫu này nam mặc phối đôi có vừa không...
+- khu vực trò chuyện chính
+- trang:
+- thời trang an nhiên
+- bắt đầu từ bình luận sản phẩm
+- ai tự động:
+- cửa sổ giờ meta api:
+- để gửi tin nhắn phản hồi tự do không tốn phí thẻ thông báo.
+- gia hạn mẫu tin
+- hôm nay • sa
+- xem bài viết
+- “shop tư vấn size giúp mình nhé, mẫu váy hoa nhí be này cao m mặc đến đâu ạ?”
+- bài đăng: bst nắng hè • bình luận lúc
+- mình cao m nặng kg thì mặc size m hay l vừa ạ? mình sợ vòng hơi chật.
+- ai tự động trả lời
+- độ tin cậy:
+- dạ chào chị ngọc! với chiều cao m và cân nặng kg thì chị mặc
+- là vừa vặn và tôn dáng nhất chị nhé. chiều dài váy qua gối khoảng cm rất thanh lịch ạ!
+- nguồn:
+- bảng size & thông số váy hoa nhí
+- sa • đã gửi tự động qua messenger
+- vòng eo của size m là bao nhiêu cm vậy shop? chất vải có co giãn không ạ?
+- sa ( phút trước)
+- cần trả lời gấp
+- tạo phương án khác
+- “dạ số đo vòng eo của size m là - cm bạn nha! phía sau lưng váy có may bo chun mềm co giãn nhẹ - cm nên ngồi làm việc hay ăn no đều rất thoải mái, không lo bị siết eo đâu ạ.”
+- nhập câu trả lời hoặc chỉnh sửa gợi ý ai tại đây...
+- an nhiên store (nhân viên mai linh)
+- hồ sơ khách hàng
+- khách hàng tiềm năng • đang cân nhắc
+- kênh chat:
+- id người dùng:
+- khu vực:
+- cầu giấy, hà nội
+- lịch sử đơn:
+- váy hoa nhí vintage be
+- sku: vhn-
+- bình luận trên fanpage ( )
+- chi tiết
+- bài viết: bst nắng hè
+- “shop tư vấn size giúp mình nhé...”
+- đã tự động chuyển thành hội thoại này
+- bài viết: váy maxi đi biển
+- “mẫu này có màu đen không shop?”
+- ai đã phản hồi tự động
+- nhập ghi chú khách hàng...
+- khách thích form thoải mái, ưu tiên freeship nếu chốt đơn trong hôm nay.
+- cập nhật bởi: mai linh ( )
+
+## reports (/dev/ui/bao-cao)
+
+Khớp 20/96 = 20.8%
+
+Thiếu 76 mục:
+- mục b • pro
+- theo dõi tốc độ phản hồi sla, tỷ lệ tự động hóa ai, hiệu suất nhân viên và tối ưu chuyển đổi doanh thu
+- tất cả kênh (fb, ig, tiktok)
+- xuất excel
+- làm mới dữ liệu
+- bình luận:
+- tin nhắn:
+- so với tháng trước
+- tự gửi chuẩn xác không qua duyệt
+- đạt chuẩn an toàn
+- m s
+- trước khi có ai: phút
+- giảm thời gian chờ
+- giờ công nhân sự tiết kiệm
+- giờ
+- tương đương ~ nhân sự toàn thời gian
+- tiết kiệm ước tính
+- tr ₫
+- khách tiềm năng & sđt
+- từ chat & comment tự động
+- tỷ lệ cđ:
+- + tuần này
+- khối lượng công việc tự động giải phóng cho đội ngũ cskh
+- tốc độ tự động giải phóng đang tăng
+- kể từ khi bổ sung cơ sở dữ liệu bảng size váy.
+- xem chi tiết ca trực
+- phân bố nhãn ý định (ai intent)
+- mô hình phân loại nlp nhận diện tự động từ khách hàng
+- phân nhóm
+- (ai nhanh nhất)
+- ý định mua hàng (ưu tiên)
+- (chuyển cskh)
+- độ chính xác nhận diện ý định đạt
+- (f -score)
+- huấn luyện thêm
+- top bài viết nhiều bình luận hỏi giá nhất
+- phân bổ nguồn tương tác để tối ưu liên kết sản phẩm tự động chốt đơn
+- xem tất cả bài viết
+- ai tự động hóa
+- thao tác
+- bst nắng hè (chạy ads)
+- facebook fanpage
+- váy hoa nhí vintage
+- xem page
+- lookbook áo blazer linen hàn quốc
+- instagram post
+- blazer linen lớp
+- tiktok video: áo thun basic cotton
+- tiktok viral (chưa tự động hóa)
+- chưa gắn sp
+- người trả lời
+- gắn ngay
+- gắn sản phẩm giúp ai trích xuất giá, bảng size và tồn kho chính xác .
+- tự động gắn hàng loạt →
+- tốc độ phản hồi và độ tin cậy vào gợi ý ai
+- nhân sự
+- nguyễn mai linh
+- câu đã duyệt • sla m s
+- rất tin tưởng ai
+- trần quốc huy
+- tin tưởng ổn định
+- lê thuỳ dung
+- chăm chút thủ công
+- tỷ lệ đồng thuận với ai toàn đội:
+- cài đặt phân quyền
+- đề xuất tối ưu cơ sở kiến thức (ai smart insight)
+- khuyến nghị cấp thiết
+- ai gặp khó khăn nhất với câu hỏi:
+- "chính sách bảo hành phụ kiện khi mua kèm"
+- . khách đã hỏi
+- lần
+- trong ngày qua nhưng chưa có kịch bản mẫu hoặc tài liệu trong faq.
+- nếu bổ sung mục này, tỷ lệ tự động xử lý dự kiến sẽ tăng thêm
+- và giảm thêm giờ công cho nhân sự.
+- + thêm câu này vào cơ sở kiến thức ngay
+- bỏ qua cảnh báo
+
+## activity-log (/dev/ui/activity)
+
+Khớp 5/120 = 4.2%
+
+Thiếu 115 mục:
+- nhật ký hoạt động (audit trail & activity log)
+- chỉ đọc (read-only) • mã hóa bảo toàn
+- đồng bộ thời gian thực
+- ghi nhận mọi hành động của nhân viên, quản trị viên và tiến trình ai tự động trên toàn bộ các kênh liên kết theo thời gian thực.
+- xuất file audit
+- lưu trữ ( ngày)
+- tự làm mới ( s)
+- tổng thao tác hôm nay
+- + vs hôm qua
+- ai tự động thực hiện
+- khối lượng
+- tự gửi • ẩn sđt • gắn nhãn
+- nhân viên thực hiện
+- cskh hoạt động
+- duyệt gửi • chỉnh câu • sửa kb
+- độ tin cậy thao tác
+- lỗi meta api
+- thời gian phản hồi tb: ms
+- tìm theo id, từ khóa, tên khách, mã nhân viên...
+- tác nhân: tất cả
+- ai tự động (spark engine)
+- nguyễn mai linh (cskh)
+- trần quốc huy (cskh)
+- lê thuỳ dung (lead)
+- trần trọng nghĩa (owner)
+- loại: tất cả hành động
+- ai tự gửi trả lời
+- ẩn bình luận (bảo vệ sđt)
+- nhân viên gửi trả lời
+- bỏ ẩn bình luận
+- đổi nhãn crm / intent
+- sửa cơ sở kiến thức
+- dừng khẩn cấp
+- tất cả kênh
+- fb: an nhiên store
+- ig: @annhien.official
+- tiktok: an nhiên
+- hôm nay
+- giờ qua
+- ngày qua
+- đặt lại bộ lọc
+- đang áp dụng:
+- tác nhân: ai engine
+- hành động: ẩn bình luận sđt
+- kênh: fb: an nhiên store
+- xóa toàn bộ
+- tìm thấy
+- sự kiện phù hợp
+- thời gian
+- tác nhân (actor)
+- đối tượng / kênh
+- tóm tắt payload
+- kết quả
+- ai spark engine
+- tự ẩn bình luận sđt
+- post: bst nắng hè
+- bảo vệ sđt: ` `
+- chuyển thành lead #l-
+- thành công
+- xem log
+- nguyễn mai linh avatar
+- mai linh (cskh)
+- nhân viên sửa & gửi
+- direct: @hoangle_
+- đổi giá km đầm lụa:
+- sửa gợi ý ai: thêm freeship
+- video: set áo linen hồng
+- "chào bạn, mẫu này shop còn size m..."
+- độ tin cậy: (quy tắc kho- )
+- lỗi gửi meta api
+- comment id: ...
+- graphapi error # : oauth token
+- hệ thống đã xếp hàng chờ gửi lại
+- thất bại ( )
+- trần trọng nghĩa (admin)
+- toàn bộ kênh
+- module: chính sách đổi trả
+- tăng thời hạn đổi hàng từ lên ngày
+- cập nhật embedding vector ai v
+- gửi tin nhắn riêng (private)
+- khách: hoàng gia huy
+- gửi báo giá combo qua messenger
+- kèm ảnh bảng màu đầm hoa nhí
+- hàng/trang
+- trong tổng số
+- bản ghi hôm nay
+- #log-
+- chi tiết nhật ký hoạt động hệ thống
+- đóng bảng xem
+- thời gian chính xác:
+- tác nhân điều phối:
+- ai spark v (rule engine)
+- kênh thực thi:
+- bình luận id:
+- fb_cmt_
+- quy tắc kích hoạt: #spam-
+- "chặn cướp khách: tự động ẩn bình luận chứa số điện thoại & đồng thời đẩy vào khách tiềm năng (crm)".
+- biến động trạng thái (diff state)
+- trạng thái bình luận:
+- công khai (public)
+- đã ẩn trên facebook (hidden)
+- dữ liệu bóc tách:
+- sđt:
+- khách hàng:
+- trần thu thảo
+- hành động crm: tạo lead mới
+- #l-
+- kỹ thuật meta graph trace
+- sao chép json
+- post https://graph.facebook.com/v /fb_cmt_ /
+- { "is_hidden": true }
+- ➔ response: ok (latency: ms)
+- { "success": true, "trace_id": "mta- a" }
+- mở bình luận trên fanpage
+- xem hồ sơ lead #l-
+
+## leads (/dev/ui/leads)
+
+Khớp 9/137 = 6.6%
+
+Thiếu 128 mục:
+- anti-poaching crm
+- đồng bộ thời gian thực (realtime webhook)
+- khách tiềm năng (leads & crm)
+- tự động trích xuất sđt, địa chỉ và sản phẩm từ bình luận/tin nhắn để phòng chống cướp khách và chốt đơn đa kênh.
+- xuất excel / csv
+- đổi trạng thái hàng loạt
+- thêm khách thủ công
+- so với tháng trước ( leads)
+- đạt chỉ tiêu
+- ai scan
+- tự ẩn số điện thoại
+- tiết kiệm ~ h cskh
+- đã chốt đơn thành công
+- cr:
+- thời gian chốt tb:
+- phút
+- + vs tuần trước
+- aov: /đơn
+- đơn chờ thanh toán
+- tìm theo tên khách, sđt, mã đơn, sản phẩm...
+- dạng danh sách
+- nền tảng:
+- tất cả
+- phụ trách:
+- nguồn:
+- bình luận tự ẩn
+- ngày qua
+- đặt lại bộ lọc
+- tt
+- trần thu thảo
+- fb: an nhiên store
+- sao chép sđt
+- gọi điện
+- váy hoa nhí vintage tay bồng
+- size: m • sl:
+- cầu giấy, hn
+- trích xuất từ bình luận: đầm voan hoa...
+- phút trước
+- nhận phụ trách
+- hk
+- hoàng đăng khôi
+- tiktok shop live
+- live stream
+- áo blazer linen lớp
+- size: l • be sáng
+- bình luận livestream (tự ẩn)
+- giờ trước
+- mai linh
+- vt
+- vũ thu trang
+- instagram direct
+- tin nhắn inbox
+- set đồ đi biển maxi đi biển
+- hội thoại tư vấn từ story
+- quốc huy
+- đang tư vấn / đã liên hệ
+- lp
+- lê phương thảo
+- fb messenger
+- đã gọi lần
+- váy hoa nhí vintage (vhn- )
+- ghi chú cskh:
+- "khách lăn tăn giữa size s và m, đã gửi ảnh mẫu mặc thật, hẹn chiều chốt"
+- lịch gọi lại:
+- hôm nay
+- dm
+- đặng minh tú
+- zalo active
+- áo sơ mi lụa trắng l
+- "khách cần giao gấp trước thứ ở cầu giấy để đi dự hội thảo"
+- hôm qua
+- bn
+- nguyễn bích ngọc
+- fb fanpage
+- #cf-
+- đã lên pos
+- x váy maxi + scrunchies
+- freeship cod
+- "đã xin đủ địa chỉ, chuyển sang bộ phận kho gói hàng"
+- thuỳ dung
+- hy
+- phạm hải yến
+- giao hàng tiết kiệm (ghtk)
+- đã xuất mã
+- vn
+- bùi văn nam
+- thuê bao
+- set vest nam slimfit
+- "thuê bao lần không liên lạc được, đã nhắn tin sms/zalo chờ phản hồi"
+- lead #l-
+- tạo lúc ( phút trước)
+- thu nhỏ
+- đóng drawer
+- trạng thái:
+- hủy / không nghe máy
+- gọi ngay
+- nhắn zalo/sms
+- sao chép đủ
+- thông tin trích xuất tự động
+- độ tin cậy
+- họ và tên:
+- số điện thoại:
+- đã bảo mật
+- địa chỉ giao:
+- số ngõ chùa hà, p. quan hoa, q. cầu giấy, hà nội
+- sản phẩm mua:
+- mã sku:
+- vhn-
+- • màu be • size m
+- giá trị dự kiến:
+- (+ ship)
+- ngữ cảnh bình luận gốc
+- đã tự ẩn lúc
+- bài viết: bst nắng hè
+- fanpage an nhiên store
+- "shop ship cho mình set size m về địa chỉ này nhé, gọi mình số:
+- bảo vệ an toàn chống đối thủ cướp khách
+- xem trên bài viết
+- lịch sử & ghi chú nội bộ
+- thêm ghi chú cskh nội bộ (không gửi khách)...
+- lưu
+- — ai phát hiện sđt
+- & tự động tạo khách tiềm năng.
+- — quy tắc bảo vệ kích hoạt: đã tự động ẩn bình luận chứa số điện thoại trên facebook.
+- nguyễn mai linh
+- đã mở hồ sơ khách hàng.
+- hủy lead
+- chuyển sang đã chốt đơn
+
+## privacy-data-deletion (/dev/ui/privacy)
+
+Khớp 7/97 = 7.2%
+
+Thiếu 90 mục:
+- chứng nhận tuân thủ toàn cầu
+- tương thích meta graph api v , tiktok business api, tiêu chuẩn mã hóa aes- & webhook callback điều chính sách nền tảng meta.
+- meta data deletion callback: active
+- v (rev. )
+- cổng pháp lý & quyền riêng tư khách hàng
+- minh bạch dữ liệu, điều khoản & tra cứu yêu cầu xóa dữ liệu
+- commentflow ai cam kết tôn trọng quyền riêng tư người dùng theo chuẩn meta app review, tiktok developer terms và nghị định / /nđ-cp về bảo vệ dữ liệu cá nhân.
+- tra cứu xóa dữ liệu (deletion tracker)
+- meta review
+- chính sách quyền riêng tư & thỏa thuận dpa
+- công cụ bắt buộc theo quy chế meta developer
+- kiểm tra tiến trình hủy bỏ & xóa dữ liệu người dùng
+- nhập mã định danh yêu cầu xóa dữ liệu (confirmation code) được cấp từ facebook business integrations hoặc cung cấp sau khi gửi đơn yêu cầu xóa thủ công.
+- cơ chế callback tự động
+- phản hồi http json tức thì
+- ví dụ: del-fb- hoặc cf-req- ...
+- tra cứu trạng thái ngay
+- mã mẫu thử nghiệm:
+- del-fb- (đã hoàn tất)
+- del-ig- (đang xử lý)
+- del-tt- (đã tiếp nhận)
+- del-fb-
+- đã hoàn tất xóa vĩnh viễn
+- yêu cầu xóa dữ liệu tự động phát sinh qua meta webhook data deletion request callback.
+- tải biên bản xác nhận (pdf)
+- nền tảng khởi tạo
+- facebook fanpage graph api
+- app scoped user id (asid)
+- thời điểm tiếp nhận webhook
+- - - utc
+- ip máy chủ meta inc: xác thực hợp lệ
+- thời điểm hoàn tất xóa sạch
+- thời gian xử lý: giây
+- mã hàm băm kiểm toán (audit hash)
+- sha f b ff... a
+- lưu vết bất biến ngày theo quy chế
+- báo cáo kiểm kê các khối dữ liệu đã tiêu hủy
+- quy chuẩn zero-footprint sanitization
+- hạng mục dữ liệu
+- phạm vi tác động
+- phương thức xử lý
+- page access tokens & user token
+- toàn bộ token xác thực graph api của fanpage & quyền quản trị viên
+- thu hồi và ghi đè crypto-shredding
+- đã tiêu hủy
+- bộ nhớ đệm tin nhắn & lịch sử bình luận
+- id bình luận, nội dung văn bản khách hỏi, hình ảnh đính kèm tạm thời
+- xóa vĩnh viễn khỏi redis cache & postgresql db
+- dữ liệu ngữ cảnh ai & vector embeddings
+- vector tri thức sinh ra từ kịch bản hội thoại của trang doanh nghiệp
+- hard delete từ vector database
+- webhook subscriptions
+- đăng ký sự kiện feed, messages, mentions
+- gửi lệnh unsubscribe qua meta graph api
+- đã hủy liên kết
+- cách gỡ ứng dụng & kích hoạt xóa dữ liệu tự động trên facebook
+- người dùng sở hữu trang có thể chủ động hủy kết nối với commentflow ai bất kỳ lúc nào trực tiếp trên giao diện của meta theo các bước sau:
+- đăng nhập tài khoản cá nhân quản lý fanpage trên facebook máy tính hoặc ứng dụng di động.
+- cài đặt & quyền riêng tư (settings & privacy)
+- > chọn
+- cài đặt (settings)
+- tiện ích tích hợp cho doanh nghiệp (business integrations)
+- hoặc
+- ứng dụng và trang web (apps and websites)
+- commentflow ai
+- , tích chọn và nhấn nút
+- hệ thống của meta sẽ lập tức kích hoạt url webhook deletion callback của commentflow ai, hoàn tất xóa sạch trong vòng vài giây và hiển thị mã xác nhận cho bạn.
+- gửi yêu cầu xóa dữ liệu trực tiếp đến đội ngũ kỹ thuật
+- nếu bạn không còn quyền truy cập tài khoản facebook hoặc muốn yêu cầu xóa hồ sơ đại lý, hóa đơn và lịch sử trao đổi trên máy chủ commentflow ai, vui lòng gửi biểu mẫu xác minh:
+- privacy@commentflow.vn
+- tiêu đề thư:
+- - <tên fanpage hoặc tiktok handle>
+- . cam kết xử lý và phản hồi bằng văn bản trong vòng tối đa
+- giờ làm việc
+- đáp ứng đầy đủ
+- chính sách nền tảng của meta (mục .f)
+- và quyền được xóa bỏ dữ liệu cá nhân theo luật hiện hành.
+- văn phòng tuân thủ & khiếu nại
+- đội ngũ bảo vệ dữ liệu (data protection officer)
+- được thành lập chuyên trách giải quyết các phản ánh về an toàn thông tin, yêu cầu trích xuất hồ sơ và phối hợp kiểm toán nền tảng.
+- phản hồi chính thức < giờ
+- hotline giải quyết khiếu nại
+- (nhánh )
+- - (thứ - thứ )
+- trụ sở công ty
+- tầng , tòa nhà techhub building
+- quận cầu giấy, tp. hà nội, việt nam
+- đăng ký doanh nghiệp
+- mã số thuế:
+- cấp bởi sở kh&đt tp. hà nội
+
+## terms-dpa (/dev/ui/terms)
+
+Khớp 4/198 = 2.0%
+
+Thiếu 194 mục:
+- trung tâm tuân thủ & pháp lý
+- văn bản pháp chế hợp nhất
+- điều khoản dịch vụ & thỏa thuận dpa
+- v (hiệu lực: / / )
+- chuẩn meta graph v & nđ /
+- tất cả
+- chỉ điều khoản (tos)
+- chỉ thỏa thuận dpa
+- in văn bản
+- tải bản pdf
+- pdf ký số
+- so sánh v
+- mục lục điều khoản
+- phần i: điều khoản dịch vụ (tos)
+- . định nghĩa & phạm vi áp dụng
+- . tài khoản & quyền workspace
+- . tuân thủ meta & tiktok api
+- . cơ chế ai & giới hạn trách nhiệm
+- . gói cước & thanh toán qr
+- . chấm dứt & tạm ngưng dịch vụ
+- phần ii: thỏa thuận dpa (nđ )
+- . vai trò kiểm soát vs xử lý
+- . dữ liệu xử lý & mục đích
+- . kỹ thuật an ninh (aes- /soc )
+- . quyền chủ thể & xóa dữ liệu
+- . vi phạm dữ liệu (data breach)
+- . chuyển giao & bên thứ ba
+- kiểm chứng tuân thủ
+- tài liệu được cập nhật phù hợp với điều khoản meta developer policy và nghị định số / /nđ-cp của chính phủ việt nam.
+- bộ phận bảo vệ dữ liệu (dpo)
+- mr. phan thanh vũ
+- dpo@commentflow.ai
+- đường dây nóng khiếu nại bảo mật: + ( )
+- tóm tắt nhanh dành cho chủ doanh nghiệp & nhà bán hàng (tl;dr)
+- cam kết không & đảm bảo
+- . không bao giờ tự ý đăng bài
+- commentflow ai chỉ lắng nghe bình luận và tin nhắn đến, tuyệt đối không tạo bài viết mới hoặc can thiệp quảng cáo mà không có phê duyệt.
+- . không chia sẻ dữ liệu cho đối thủ
+- kho dữ liệu sản phẩm, doanh thu và tin nhắn hội thoại được cách ly đa người thuê (multi-tenant) hoàn toàn bằng schema độc lập.
+- . xóa sạch dữ liệu trong vòng h
+- khi bạn gỡ quyền fanpage trên facebook/tiktok hoặc gửi yêu cầu xóa, hệ thống lập tức thanh lọc toàn bộ cache và vector embeddings.
+- . tri thức kịch bản thuộc về shop
+- mọi tài liệu nạp vào cơ chế rag (retrieval-augmented generation) là tài sản độc quyền của bạn, không dùng để huấn luyện mô hình mở công cộng.
+- phần i: điều khoản dịch vụ chung (terms of service)
+- điều . định nghĩa & phạm vi áp dụng
+- sec-tos-
+- . giải thích từ ngữ:
+- "commentflow ai"
+- hoặc
+- "hệ thống"
+- : là nền tảng dịch vụ phần mềm quản trị tương tác, phân luồng bình luận và tự động hóa trả lời bằng mô hình ngôn ngữ lớn, được vận hành bởi công ty cổ phần công nghệ commentflow ai corp.
+- "khách hàng"
+- "bên sử dụng"
+- : bất kỳ cá nhân, hộ kinh doanh hoặc doanh nghiệp đăng ký tài khoản và kết nối trang truyền thông xã hội với dịch vụ.
+- "nền tảng kết nối"
+- : bao gồm nhưng không giới hạn ở meta platforms inc. (facebook pages, instagram business, messenger) và bytedance / tiktok pte. ltd. (tiktok shop, tiktok direct message).
+- "dữ liệu khách hàng"
+- : nội dung bình luận, tin nhắn, định danh người dùng (psid), thông tin đơn hàng do bên sử dụng ủy quyền nạp vào hệ thống.
+- . thỏa thuận bắt buộc:
+- bằng cách đăng ký tài khoản, kết nối fanpage thông qua quy trình meta oauth login, hoặc cấu hình webhook api, khách hàng xác nhận đã đọc, hiểu rõ và đồng ý bị ràng buộc vô điều kiện bởi toàn bộ nội dung của điều khoản này.
+- điều . tài khoản doanh nghiệp & phân quyền workspace
+- . cấu trúc không gian làm việc (workspace):
+- mỗi tổ chức được cấp không gian làm việc chính với khả năng gắn nhiều người dùng (agent, team lead, admin). chủ tài khoản (workspace owner) chịu trách nhiệm toàn bộ đối với hành vi và quyền hạn phân bổ cho nhân viên của mình.
+- . bảo mật khóa truy cập & token:
+- khách hàng có trách nhiệm bảo mật thông tin đăng nhập, thiết lập xác thực lớp ( fa) và không được chia sẻ user access token của meta/tiktok cho bất kỳ bên thứ ba không được ủy quyền.
+- điều . tuân thủ nghiêm ngặt chính sách meta platforms & tiktok api
+- thông báo xét duyệt meta app review (graph api v )
+- ứng dụng commentflow ai cam kết hoạt động trong khuôn khổ giới hạn đã được meta phê duyệt. hệ thống không sử dụng các kỹ thuật "scraping" (thu thập dữ liệu chui), không khai thác các trường thông tin cá nhân ngoài phạm vi được chỉ định bởi người dùng cấp quyền.
+- . giới hạn khung thời gian phản hồi ( -hour messaging window):
+- khách hàng hiểu và chấp hành quy chuẩn giờ của meta messenger platform. commentflow ai không hỗ trợ việc gửi tin nhắn ngoài khung h nếu không có message tag hợp lệ theo chính sách của meta (như confirmed_event_update, post_purchase_update).
+- . cấm hành vi spam & tin nhắn rác:
+- nghiêm cấm cấu hình ai để phát tán tin nhắn hàng loạt có nội dung lừa đảo, cờ bạc, đa cấp, chất cấm hoặc vi phạm tiêu chuẩn cộng đồng của meta và chính sách nội dung tiktok. commentflow ai có quyền đình chỉ ngay lập tức tài khoản vi phạm mà không cần báo trước.
+- . tự động ngắt kết nối:
+- nếu người dùng thu hồi quyền hạn trong mục
+- "cài đặt doanh nghiệp > ứng dụng doanh nghiệp"
+- của facebook, commentflow ai sẽ nhận tín hiệu webhook và hủy đăng ký kết nối trong vòng giây.
+- điều . cơ chế vận hành ai, mô hình rag & giới hạn trách nhiệm
+- kiến trúc ai tri thức rag & điểm tin cậy (confidence score)
+- mô hình rag của commentflow ai chỉ truy vấn trong tệp dữ liệu huấn luyện do chính chủ shop nạp vào (catalog sản phẩm, bảng giá, chính sách đổi trả). nếu điểm tin cậy phản hồi dưới , hệ thống sẽ tự động gán nhãn cho chuyên viên hỗ trợ (human-in-the-loop) thay vì gửi phản hồi tự động bừa bãi.
+- . bản chất xác suất của trí tuệ nhân tạo:
+- các mô hình ngôn ngữ lớn (llm) mang bản chất xử lý ngôn ngữ dựa trên xác suất thống kê. dù chúng tôi áp dụng bộ lọc guardrails ngặt nghèo, khách hàng thừa nhận rằng ai có thể đôi khi sinh ra các câu trả lời chưa tối ưu (hallucination). khách hàng có toàn quyền rà soát và thiết lập quy tắc phê duyệt thủ công trước khi xuất bản.
+- . miễn trừ trách nhiệm về cam kết bán hàng:
+- commentflow ai không chịu trách nhiệm pháp lý đối với bất kỳ cam kết sai lệch về giá bán, khuyến mãi, hoặc thỏa thuận giao hàng do bot ai phản hồi nếu lỗi xuất phát từ việc khách hàng nạp tài liệu hướng dẫn không chính xác hoặc do sự bất cẩn trong cấu hình prompt hệ thống.
+- điều . gói cước, hạn mức xử lý & thanh toán qr vietqr
+- . mô hình tính phí:
+- dịch vụ được cung cấp theo chu kỳ thuê bao định kỳ (hàng tháng hoặc hàng năm) tương ứng với các hạn mức: số lượng fanpage/kênh kết nối, số lượng bình luận/tin nhắn tự động phản hồi mỗi tháng, và dung lượng vector database.
+- . thanh toán & hóa đơn điện tử:
+- hỗ trợ thanh toán tự động qua cổng vietqr chuẩn napas và thẻ tín dụng. hóa đơn điện tử giá trị gia tăng (vat) hợp lệ theo quy định của tổng cục thuế việt nam sẽ được gửi qua email trong vòng giờ sau khi ghi nhận thanh toán thành công.
+- . chính sách hoàn tiền:
+- khách hàng được quyền yêu cầu hoàn tiền trong vòng ngày kể từ lần thanh toán đầu tiên nếu chất lượng dịch vụ không đúng như cam kết sla kỹ thuật .
+- điều . chấm dứt & tạm ngưng cung cấp dịch vụ
+- . tự nguyện chấm dứt:
+- khách hàng có thể hủy gói thuê bao bất cứ lúc nào tại trang quản trị tài khoản. khi kỳ cước hiện tại kết thúc, tài khoản sẽ chuyển về trạng thái free tier hoặc ngưng kích hoạt theo yêu cầu.
+- . quyền đình chỉ của commentflow ai:
+- chúng tôi có quyền khóa tạm thời hoặc vĩnh viễn tài khoản nếu phát hiện: (a) hành vi tấn công từ chối dịch vụ (ddos) vào hạ tầng api; (b) khách hàng bị meta/tiktok gắn cờ trừng phạt do spam có hệ thống; (c) không thanh toán phí gia hạn quá ngày làm việc.
+- phần ii: thỏa thuận xử lý dữ liệu (data processing agreement - dpa)
+- bắt buộc theo nghị định / /nđ-cp & quy chuẩn dữ liệu doanh nghiệp meta
+- điều . phân định vai trò pháp lý (kiểm soát vs xử lý dữ liệu)
+- sec-dpa-
+- căn cứ theo điều nghị định / /nđ-cp và tiêu chuẩn dữ liệu người dùng quốc tế:
+- khách hàng (bên kiểm soát dữ liệu - data controller)
+- là chủ thể sở hữu fanpage và cơ sở khách hàng. khách hàng quyết định mục đích, phương tiện xử lý và có trách nhiệm đảm bảo việc thu thập dữ liệu cá nhân của người tiêu dùng tuân thủ đầy đủ việc lấy sự đồng ý (consent).
+- commentflow ai (bên xử lý dữ liệu - data processor)
+- chỉ tiến hành xử lý dữ liệu thay mặt và theo chỉ đạo bằng văn bản/cấu hình kỹ thuật của khách hàng. chúng tôi cam kết không sử dụng dữ liệu này cho mục đích kinh doanh riêng biệt hay bán cho bất kỳ đơn vị quảng cáo nào.
+- điều . các loại dữ liệu được xử lý & ma trận thời hạn lưu trữ
+- cơ chế tự động ẩn số điện thoại & chống cướp đơn
+- nhằm bảo vệ dữ liệu cá nhân của người mua theo điều nđ và ngăn ngừa tình trạng đánh cắp đơn hàng tại việt nam, commentflow ai tích hợp bộ lọc regex thời gian thực để tự động ẩn bình luận chứa số điện thoại trên fanpage ngay trong vòng mili-giây kể từ khi nhận webhook.
+- chi tiết các loại dữ liệu, cơ chế kỹ thuật và thời hạn lưu trữ cụ thể được mô tả tại bảng ma trận dưới đây:
+- hạng mục dữ liệu
+- phạm vi trường dữ liệu
+- mục đích xử lý kỹ thuật
+- mã hóa tại chỗ
+- thời hạn lưu giữ
+- định danh mxh (meta psid/tiktok openid)
+- id, name, scoped_id
+- định tuyến tin nhắn phản hồi đúng đối tượng
+- aes-
+- theo vòng đời tài khoản hoặc khi xóa
+- bình luận & lịch sử chat
+- message_text, attachments, timestamp
+- cung cấp ngữ cảnh cho ai sinh phản hồi chuẩn
+- aes- gcm
+- ngày mặc định (hoặc tùy chỉnh bởi shop)
+- vector embeddings (tri thức shop)
+- -dim vectors, doc_chunks
+- tìm kiếm tương đồng ngữ nghĩa trong hệ thống rag
+- kms managed
+- xóa ngay khi chủ shop hủy tệp tài liệu
+- thông tin nhận dạng cá nhân (pii)
+- số điện thoại, địa chỉ nhận hàng
+- đẩy webhook sang hệ thống crm / kiotviet / haravan
+- che mờ (masked)
+- lưu trữ tối đa ngày cho đối soát đơn
+- điều . tiêu chuẩn kỹ thuật & an ninh bảo mật đa tầng
+- chúng tôi áp dụng các chuẩn mực an ninh thông tin cấp công nghiệp nhằm phòng ngừa rủi ro rò rỉ dữ liệu theo điều nghị định :
+- mã hóa tls & aes-
+- mọi dữ liệu truyền tải (in-transit) và lưu trữ tĩnh (at-rest) đều được mã hóa bằng tiêu chuẩn fips - .
+- hạ tầng đạt chuẩn soc type ii
+- trung tâm dữ liệu máy chủ đặt tại aws singapore & vnpt idc tân bình với hệ thống kiểm soát truy cập phân tầng.
+- kiểm soát truy cập rbac
+- phân quyền chi tiết tới từng vai trò; ghi vết kiểm toán (audit logs) toàn diện không thể sửa xóa trong ngày.
+- điều . quyền của chủ thể dữ liệu & cơ chế xóa dữ liệu (deletion tracker)
+- . tôn trọng đầy đủ các quyền theo nđ / /nđ-cp:
+- bao gồm quyền được biết, quyền đồng ý, quyền truy cập, quyền rút lại sự đồng ý, quyền xóa dữ liệu và quyền khiếu nại bồi thường.
+- . quy trình xóa dữ liệu tự động của meta (user data deletion callback):
+- khi người dùng xóa ứng dụng commentflow ai khỏi tài khoản facebook, meta sẽ gửi tín hiệu http post có chữ ký bảo mật (signed_request) tới endpoint của chúng tôi. hệ thống sẽ tự động thực thi chuỗi tác vụ:
+- xóa toàn bộ bản ghi trò chuyện có gắn liền với user id đó trong cơ sở dữ liệu phân tán.
+- sinh mã biên nhận kỹ thuật (confirmation code) ngẫu nhiên và url kiểm tra trạng thái xóa (deletion status url) trả về cho meta.
+- chủ thể dữ liệu có thể truy cập url này để xác minh quá trình xóa đã hoàn tất .
+- tra cứu trạng thái xóa dữ liệu (meta deletion verification portal)
+- tự phục vụ /
+- nhập mã xác nhận (ví dụ: del- - -vn)
+- kiểm tra
+- điều . xử lý sự cố vi phạm dữ liệu (data breach notification)
+- . cam kết mốc thời gian giờ:
+- trong trường hợp phát hiện bất kỳ sự cố rò rỉ dữ liệu hoặc xâm nhập trái phép nào ảnh hưởng đến dữ liệu của khách hàng, commentflow ai cam kết thông báo cho bên kiểm soát dữ liệu trong vòng không quá
+- kể từ thời điểm xác nhận sự cố, tuân thủ điều nghị định / /nđ-cp.
+- . báo cáo khắc phục:
+- báo cáo thông báo sự cố sẽ bao gồm: (a) mô tả bản chất của vi phạm và các bên bị ảnh hưởng; (b) biện pháp kỹ thuật đang áp dụng để khoanh vùng sự cố; (c) khuyến nghị dành cho shop để bảo vệ khách hàng cuối.
+- điều . chuyển giao dữ liệu ra nước ngoài & bên thứ ba xử lý phụ
+- . danh mục bên xử lý phụ (sub-processors):
+- khách hàng chấp thuận cho commentflow ai sử dụng các nhà cung cấp hạ tầng điện toán đám mây và trí tuệ nhân tạo chuyên biệt để vận hành dịch vụ:
+- amazon web services (aws singapore):
+- cung cấp máy chủ lưu trữ dữ liệu chính, sao lưu định kỳ và tường lửa ứng dụng (waf).
+- openai llc / microsoft azure openai service:
+- xử lý tính toán mô hình ngôn ngữ lớn (thông qua api bảo mật với thỏa thuận zero data retention cho huấn luyện).
+- pinecone systems inc.:
+- hạ tầng cơ sở dữ liệu vector database phục vụ tìm kiếm ngữ nghĩa theo thời gian thực.
+- . hồ sơ đánh giá tác động:
+- commentflow ai đã hoàn tất việc lập và lưu giữ hồ sơ đánh giá tác động chuyển dữ liệu cá nhân ra nước ngoài (tia) sẵn sàng xuất trình theo yêu cầu của cục an ninh mạng và phòng, chống tội phạm sử dụng công nghệ cao (a ) - bộ công an.
+- thông tin đại diện pháp nhân & cam kết thực thi
+- hợp đồng điện tử được xác thực theo luật giao dịch điện tử việt nam
+- mst:
+- đơn vị phát hành nền tảng
+- công ty cổ phần công nghệ commentflow ai corp
+- trụ sở chính:
+- tầng , tòa nhà innovation tower, nguyễn thị minh khai, phường võ thị sáu, quận , tp. hồ chí minh, việt nam.
+- giấy phép đkkd:
+- do sở kế hoạch và đầu tư tp.hcm cấp ngày / / .
+- đại diện pháp luật:
+- trần hoàng long
+- - giám đốc điều hành.
+- bộ phận tuân thủ (compliance):
+- legal@commentflow.ai | hotline:
+- chứng thư số hợp lệ
+- ký điện tử bởi viettel-ca
+- dấu số
+- hợp lệ
+- công ty cp công nghệ commentflow ai
+- ký ngày: / / gmt+
+- thuật toán ký: rsa-sha / -bit
+- văn bản này có giá trị pháp lý tương đương bản ký tay truyền thống theo quy định của nghị định / /nđ-cp và luật giao dịch điện tử sửa đổi năm .
+- bạn có câu hỏi hoặc cần ký phụ lục thỏa thuận dpa song phương riêng biệt (enterprise dpa)?
+- liên hệ đội ngũ pháp chế
+
+## landing-pricing (/dev/ui/landing)
+
+Khớp 8/134 = 6.0%
+
+Thiếu 126 mục:
+- meta tech partner verified
+- ai engine thế hệ mới cho shop & agency việt nam
+- vẫn chuẩn xác đúng giọng của shop
+- tự động hóa phản hồi bình luận và tin nhắn trên facebook, instagram và tiktok tốc độ
+- < s
+- với trợ lý ai được huấn luyện từ chính dữ liệu sản phẩm, chính sách và bảng giá của cửa hàng bạn. bạn hoàn toàn chủ động quyết định mức độ tự động.
+- dùng thử ngày miễn phí (full tính năng)
+- xem demo thực tế ( phút)
+- không cần thẻ tín dụng
+- cài đặt trong phút
+- cam kết không tự ý đăng bài
+- đang lắng nghe webhook: graph api v
+- latency s
+- mô phỏng chu trình bảo vệ và chốt đơn thời gian thực
+- chế độ auto-pilot đang bật
+- facebook ads post
+- am
+- tn
+- thanh nga
+- khách bình luận công khai
+- áo blazer linen be còn size m không shop? ship về cầu giấy bn thế ạ? sđt mình:
+- tư vấn giúp m nhé!
+- nguy cơ: đối thủ quét sđt cướp đơn
+- sau giây
+- đã tự động ẩn bình luận công khai
+- "chỉ admin và thanh nga nhìn thấy nội dung. đối thủ hoàn toàn không thấy sđt."
+- phân loại ai:
+- độ tin cậy:
+- tự tạo crm contact #
+- phản hồi chuẩn xác
+- nguồn: shopify live stock
+- in-stock:
+- dạ chào chị nga, áo blazer linen tone be size m bên em hiện vẫn còn sẵn ạ! đơn cầu giấy được áp dụng freeship đơn từ . em đã gửi bảng thông số chi tiết qua tin nhắn riêng cho chị rồi nha ❤️
+- đã mở messenger riêng
+- đồng bộ tức thì vào bảng quản lý khách hàng
+- lợi ích vượt trội cho shop & agency
+- không chỉ là chatbot trả lời sẵn theo mẫu khô khan. commentflow ai vận hành như một chuyên viên chăm sóc khách hàng giàu kinh nghiệm, bảo vệ doanh thu từng giây.
+- quy tắc thông minh quét sạch và ẩn ngay lập tức bình luận chứa sđt, mã vận đơn hoặc link spam mạo danh trong < giây. đồng thời tự động kích hoạt inbox tư vấn - và ghi thẳng vào crm.
+- tỉ lệ chặn đối thủ cướp lead
+- trả lời đúng ngữ cảnh của shop
+- đồng bộ trực tiếp dữ liệu sản phẩm từ shopify, kho hàng, link website hoặc file excel bảng giá. ai chỉ nói những gì bạn đã phê duyệt, luôn minh bạch trích dẫn nguồn tài liệu tham chiếu.
+- không bịa đặt thông tin kho hay khuyến mãi ảo ngoài kịch bản shop cấp.
+- kiểm soát linh hoạt - bạn là người làm chủ
+- lựa chọn cấp độ:
+- tắt
+- (dừng hẳn) -
+- chạy thử
+- (ai soạn, nhân viên duyệt -chạm) -
+- (auto-pilot). trang bị nút dừng khẩn cấp (emergency stop) -chạm ngay trên màn hình.
+- emergency stop
+- ngắt tức thì s
+- kiến trúc công nghệ
+- vòng lặp vận hành ai bước khép kín
+- đảm bảo tốc độ phản hồi tính bằng mili-giây nhưng tuyệt đối tuân thủ chính sách nền tảng và kiểm soát chất lượng.
+- tiếp nhận đa kênh
+- lắng nghe và thu nạp bình luận & tin nhắn messenger, instagram direct, tiktok shop live stream theo thời gian thực qua webhooks chính thức.
+- độ trễ trung bình < ms
+- ai phân loại thông minh
+- tự động nhận diện ý định khách hàng và gán trong nhãn:
+- hỏi giá, tư vấn, mua hàng, khiếu nại, spam, khác
+- kèm chỉ số confidence score.
+- nhãn hành vi người mua
+- soạn câu trả lời chuẩn xác
+- truy vấn cơ sở tri thức (rag) đối chiếu bài đăng quảng cáo, tồn kho thực tế, chương trình flash sale và chính sách giao hàng của shop để viết câu phản hồi tự nhiên.
+- trích dẫn nguồn chính xác
+- tự gửi an toàn / duyệt -chạm
+- gửi tin qua meta graph api & tiktok business api, tuân thủ cửa sổ h nhắn tin, tự động ghi vết nhật ký audit trail để quản lý toàn diện.
+- tuân thủ graph api
+- bảng giá minh bạch
+- đầu tư thông minh, bứt phá doanh số
+- thanh toán tự động linh hoạt qua vietqr, kích hoạt ngay sau - phút. không phí ẩn, hủy bất kỳ lúc nào.
+- starter
+- khởi nghiệp
+- dành cho shop mới mở, lượng bình luận vừa phải, cần kiểm duyệt kỹ lưỡng trước khi gửi.
+- khoảng /ngày làm việc
+- kênh kết nối
+- (fanpage facebook)
+- lượt phản hồi ai
+- gợi ý câu trả lời ai (duyệt tay -chạm)
+- chống cướp khách cơ bản (ẩn sđt tự động)
+- tự động gửi (auto-pilot)
+- đồng bộ shopify & web crawler
+- chọn gói starter
+- khuyên dùng nhiều nhất
+- growth
+- tăng trưởng nhanh
+- hoàn hảo cho shop đang chạy quảng cáo mạnh, cần tự động hóa / cả bình luận và tin nhắn.
+- dùng thử ngày (free lượt ai)
+- (fb, instagram, tiktok)
+- auto-pilot tự gửi
+- bình luận & inbox
+- đồng bộ
+- shopify & web crawler dữ liệu
+- phân quyền nhân viên che sđt chống tuồn khách
+- hỗ trợ nút dừng khẩn cấp emergency stop
+- dùng thử ngày miễn phí
+- business
+- doanh nghiệp / agency
+- giải pháp chuyên sâu cho các nhãn hàng lớn và agency vận hành nhiều nhãn hiệu song song.
+- đầy đủ quyền quản trị đa workspace
+- đa nền tảng
+- đa workspace riêng biệt cho từng brand khách hàng
+- api tùy chỉnh & xuất lead trực tiếp webhook crm
+- đội ngũ kỹ sư ai đồng hành thiết lập - riêng biệt
+- chọn gói business
+- gói nạp thêm lượt ai linh hoạt
+- / + lượt ai
+- . khi hết hạn ngạch tháng, tin nhắn và bình luận vẫn đổ về đầy đủ , không bao giờ mất tương tác khách hàng.
+- vietqr kích hoạt - phút
+- giải đáp thắc mắc
+- câu hỏi thường gặp (faq)
+- những điều các chủ shop thường quan tâm nhất trước khi tích hợp trợ lý ai vào quy trình.
+- ai có tự ý trả lời bậy bạ hoặc vi phạm chính sách làm mất fanpage không?
+- hoàn toàn không. commentflow ai sử dụng kiến trúc giới hạn tri thức đóng (strict rag guardrails). ai chỉ trả lời dựa trên tài liệu sản phẩm và chính sách cửa hàng bạn nạp vào. bạn có thể bật chế độ "chạy thử (duyệt tay)" trong những ngày đầu để quan sát trước khi bật "auto-pilot". hơn nữa, nút
+- cho phép bạn ngắt toàn bộ tự động trong giây chỉ với cú click.
+- dữ liệu khách hàng và sản phẩm của shop có bị chia sẻ cho đối thủ không?
+- chính sách cửa sổ giờ của facebook messenger hoạt động thế nào?
+- hết hạn ngày dùng thử có bị tự động trừ tiền không?
+- sẵn sàng bứt phá ngay hôm nay
+- sẵn sàng nhân tốc độ chốt đơn và bảo vệ khách hàng của bạn ngay hôm nay?
+- đăng ký cài đặt trong phút. đầy đủ tính năng cao cấp của gói growth. không cần thẻ tín dụng, trải nghiệm miễn phí ngày trọn vẹn.
+- bắt đầu dùng thử ngày - không cần thẻ tín dụng
+- hotline kỹ thuật:
+- zalo kỹ thuật viên hỗ trợ - :
+- @commentflow.vn
+- bảo mật chuẩn meta graph api v
