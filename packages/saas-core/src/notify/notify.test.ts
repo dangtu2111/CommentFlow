@@ -225,3 +225,51 @@ describe('thư mời workspace và báo đổi Owner', () => {
     ).toThrow();
   });
 });
+
+describe('FR-125 thương hiệu trong thư', () => {
+  const inputs: EmailInput[] = [
+    VERIFY,
+    { kind: 'reset-password', url: 'https://a.test/r' },
+    { kind: 'account-exists', loginUrl: 'https://a.test/l', resetUrl: 'https://a.test/f' },
+    {
+      kind: 'workspace-invite',
+      url: 'https://a.test/i',
+      workspaceName: 'Shop A',
+      role: 'staff',
+      inviterName: 'Minh',
+      days: 7,
+    },
+    {
+      kind: 'owner-change',
+      url: 'https://a.test/m',
+      workspaceName: 'Shop A',
+      change: 'added',
+      targetName: 'B',
+      actorName: 'A',
+    },
+  ];
+
+  it('mọi loại thư dùng tên truyền vào, không còn tên mặc định', () => {
+    for (const input of inputs) {
+      for (const locale of ['vi', 'en'] as const) {
+        const mail = renderEmail(input, locale, recipient, { brandName: 'Tên Tạm X' });
+        const all = `${mail.subject}${mail.text}${mail.html}`;
+        expect(all, `${input.kind}/${locale}`).toContain('Tên Tạm X');
+        expect(all).not.toContain('CommentFlow');
+      }
+    }
+  });
+
+  it('tên thương hiệu được escape trong HTML', () => {
+    const mail = renderEmail(VERIFY, 'en', recipient, { brandName: 'A<b>&Co' });
+    expect(mail.html).not.toContain('A<b>');
+    expect(mail.html).toContain('A&lt;b&gt;&amp;Co');
+  });
+
+  it('createNotifier truyền brandName xuống mẫu thư', async () => {
+    const transport = createMemoryTransport();
+    const notifier = createNotifier({ transport, brandName: 'Tên Tạm Y' });
+    await notifier.sendNow({ ...recipient, locale: 'vi' }, VERIFY);
+    expect(transport.sent[0]?.subject).toContain('Tên Tạm Y');
+  });
+});

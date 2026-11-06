@@ -3,11 +3,12 @@ import { getTranslations } from 'next-intl/server';
 import { AuthTabs } from '../../../components/auth/auth-shell';
 import { LoginForm } from '../../../components/auth/forms';
 import { Banner } from '../../../components/ui/banner';
+import { getBrand } from '../../../server/brand';
 import { getCurrentUser } from '../../../server/session';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('login.title')} · ${t('brand')}` };
+  return { title: `${t('login.title')} · ${getBrand().name}` };
 }
 
 export default async function LoginPage({

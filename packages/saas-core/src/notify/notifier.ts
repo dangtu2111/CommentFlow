@@ -9,6 +9,8 @@ export type NotifyFailure = { kind: EmailKind; reason: string };
 
 export type NotifierOptions = {
   transport: MailTransport;
+  /** Tên thương hiệu trong thư (FR-125, từ `loadBrandConfig`); bỏ trống → giá trị tạm mặc định. */
+  brandName?: string;
   /** Gọi khi gửi không chờ (`*InBackground`) thất bại; không bao giờ ném lỗi ra ngoài. */
   onFailure?: (failure: NotifyFailure) => void;
 };
@@ -16,7 +18,14 @@ export type NotifierOptions = {
 /** Lớp gửi thông báo của saas-core: dựng thư theo ngôn ngữ người nhận rồi giao cho transport. */
 export function createNotifier(options: NotifierOptions) {
   async function deliver(to: Recipient, input: EmailInput): Promise<void> {
-    await options.transport.send(renderEmail(input, to.locale, { name: to.name, email: to.email }));
+    await options.transport.send(
+      renderEmail(
+        input,
+        to.locale,
+        { name: to.name, email: to.email },
+        options.brandName === undefined ? {} : { brandName: options.brandName },
+      ),
+    );
   }
 
   /**

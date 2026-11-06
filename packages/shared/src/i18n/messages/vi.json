@@ -18,7 +18,6 @@
     }
   },
   "auth": {
-    "brand": "CommentFlow AI",
     "tabs": {
       "label": "Chọn thao tác",
       "login": "Đăng nhập",
@@ -116,7 +115,7 @@
       "bilingual": "Giao diện tiếng Việt và tiếng Anh."
     },
     "footer": {
-      "rights": "© {year} CommentFlow AI. Bảo lưu mọi quyền."
+      "rights": "© {year} {appName}. Bảo lưu mọi quyền."
     },
     "twoFactor": {
       "title": "Xác thực 2 bước",
@@ -136,6 +135,10 @@
       "subtitle": "Quản lý xác thực 2 bước và các thiết bị đang đăng nhập.",
       "requiredBanner": "Tài khoản của chủ workspace hoặc quản trị viên bắt buộc bật xác thực 2 bước. Hãy bật ngay để tiếp tục sử dụng.",
       "backToApp": "Về trang chính",
+      "language": {
+        "title": "Ngôn ngữ giao diện",
+        "body": "Lựa chọn được lưu cho tài khoản của bạn: giao diện, email và lần đăng nhập sau trên thiết bị khác sẽ dùng ngôn ngữ này."
+      },
       "twoFactor": {
         "title": "Xác thực 2 bước (TOTP)",
         "offBody": "Thêm một lớp bảo vệ: ngoài mật khẩu, bạn cần mã 6 chữ số từ ứng dụng xác thực (Google Authenticator, Microsoft Authenticator, 1Password...).",
@@ -222,7 +225,6 @@
       }
     },
     "header": {
-      "brand": "CommentFlow AI",
       "nav": "Điều hướng chính"
     }
   },
@@ -438,7 +440,8 @@
       "noText": "(Không có nội dung chữ)",
       "redacted": "Khách đã xóa bình luận này; nội dung và thông tin người bình luận đã được xóa khỏi hệ thống.",
       "notFoundTitle": "Không tìm thấy bình luận",
-      "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này."
+      "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này.",
+      "back": "← Quay lại danh sách"
     },
     "error": {
       "title": "Không tải được danh sách bình luận",
@@ -556,7 +559,6 @@
       "settings": "Cài đặt"
     },
     "logout": "Đăng xuất",
-    "brand": "CommentFlow AI",
     "navLabel": "Điều hướng chính"
   },
   "banners": {

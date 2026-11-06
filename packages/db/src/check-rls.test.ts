@@ -697,6 +697,11 @@ describe('checkRls — danh sách cho phép cột users và chốt chặn tạo 
       [],
       [{ polname: 'x', withcheck: '(true)' }],
       [{ polname: 'x', withcheck: '(NOT is_admin)' }],
+      [{ polname: 'x', withcheck: '(NOT (is_admin AND (admin_role IS NULL)))' }],
+      // Chỉ nhắc tên cột nhưng không phải điều kiện chặn → đỏ (so khớp chính xác, không regex)
+      [{ polname: 'x', withcheck: '((NOT is_admin) OR (admin_role IS NULL))' }],
+      [{ polname: 'x', withcheck: '((is_admin OR true) AND (admin_role IS NOT NULL))' }],
+      [{ polname: 'x', withcheck: '((NOT is_admin) AND (admin_role IS NULL) OR true)' }],
     ]) {
       const v = await checkRls(fakeDb({ ...base, adminGuard }));
       expect(v, JSON.stringify(adminGuard)).toContainEqual(

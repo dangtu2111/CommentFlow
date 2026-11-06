@@ -1,7 +1,9 @@
-import { Bot, Languages, MessageSquareText, ShieldCheck } from 'lucide-react';
+import { Bot, Languages, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { getBrand } from '../../server/brand';
+import { BrandLogo } from '../brand-logo';
 import { LocaleSwitcher } from '../locale-switcher';
 
 /** Khung chung của mọi trang xác thực: đầu trang (logo + ngôn ngữ), panel giới thiệu, thẻ nội dung, chân trang. */
@@ -15,12 +17,7 @@ export async function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="auth-page">
       <header className="auth-header">
-        <Link href="/" className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            <MessageSquareText size={18} />
-          </span>
-          {t('brand')}
-        </Link>
+        <BrandLogo href="/" />
         <LocaleSwitcher />
       </header>
       <main className="auth-main">
@@ -39,7 +36,7 @@ export async function AuthShell({ children }: { children: ReactNode }) {
         <section className="auth-card">{children}</section>
       </main>
       <footer className="auth-footer">
-        <p>{t('footer.rights', { year: new Date().getFullYear() })}</p>
+        <p>{t('footer.rights', { year: new Date().getFullYear(), appName: getBrand().name })}</p>
       </footer>
     </div>
   );

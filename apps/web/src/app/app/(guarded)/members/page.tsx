@@ -3,11 +3,12 @@ import { InvitationActions } from '../../../../components/app/invitation-actions
 import { InviteForm } from '../../../../components/app/invite-form';
 import { MemberActions } from '../../../../components/app/member-actions';
 import { getAuthRuntime } from '../../../../server/auth';
+import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
   const t = await getTranslations('members');
-  return { title: `${t('title')} · ${(await getTranslations('auth'))('brand')}` };
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 /** Trang Thành viên (chỉ Owner; Staff nhận 404 — docs/13 §3.1): danh sách, đổi vai trò, tạm khóa, gỡ, lời mời. */

@@ -5,10 +5,11 @@ import { getTranslations } from 'next-intl/server';
 import { ResendVerificationForm } from '../../../components/auth/forms';
 import { maskEmail } from '../../../lib/auth-form';
 import { PENDING_EMAIL_COOKIE } from '../../../lib/pending-email';
+import { getBrand } from '../../../server/brand';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('checkEmail.title')} · ${t('brand')}` };
+  return { title: `${t('checkEmail.title')} · ${getBrand().name}` };
 }
 
 export default async function CheckEmailPage() {

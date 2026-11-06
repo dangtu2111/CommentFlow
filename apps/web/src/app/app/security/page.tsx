@@ -1,16 +1,18 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { LocaleSwitcher } from '../../../components/locale-switcher';
 import { SessionsCard } from '../../../components/security/sessions-card';
 import { TwoFactorCard } from '../../../components/security/two-factor-card';
 import { Banner } from '../../../components/ui/banner';
 import { getAuthRuntime } from '../../../server/auth';
+import { getBrand } from '../../../server/brand';
 import { requestContext } from '../../../server/request-context';
 import { requireAppUser } from '../../../server/require-app-user';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('security.pageTitle')} · ${t('brand')}` };
+  return { title: `${t('security.pageTitle')} · ${getBrand().name}` };
 }
 
 /**
@@ -30,6 +32,13 @@ export default async function SecurityPage() {
       {mustEnable ? <Banner variant="warning">{t('requiredBanner')}</Banner> : null}
       {/* Giữ nguyên vị trí TwoFactorCard trong cây: đổi vị trí/key làm nó mount lại và mất state `enrolling` (mã dự phòng biến mất). */}
       <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
+      <section className="card stack" aria-labelledby="language-title">
+        <h2 id="language-title" className="section-title">
+          {t('language.title')}
+        </h2>
+        <p className="muted">{t('language.body')}</p>
+        <LocaleSwitcher />
+      </section>
       <SessionsCard sessions={overview.sessions} />
       <p>
         <Link href="/app">{t('backToApp')}</Link>

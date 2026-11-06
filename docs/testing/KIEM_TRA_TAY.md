@@ -21,6 +21,7 @@
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 
 ---
@@ -305,6 +306,23 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 
 ---
 
+## KT-017 — Lưu ngôn ngữ theo người dùng (AUTH-LANG-PREF, FR-119)
+
+Điều kiện: nhánh `feat-auth-lang-pref`; máy ảo bật; một tài khoản đã đăng nhập.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/app/security` (mục Bảo mật trong điều hướng). | Có thẻ "Ngôn ngữ giao diện" với hai nút Tiếng Việt / English; nút ngôn ngữ đang dùng bị mờ. |
+| 2 | Bấm "English". | Trang đổi sang tiếng Anh ngay (tiêu đề thẻ: "Interface language"). |
+| 3 | Trong `psql` (máy ảo, `cf_dev`): `SELECT locale FROM core.users WHERE email = '<email của bạn>';` | `en`. |
+| 4 | Đăng xuất, xóa cookie `NEXT_LOCALE` của trang, đăng nhập lại. | Giao diện vẫn tiếng Anh (lấy từ tài khoản). |
+| 5 | Bấm "Tiếng Việt" ở thanh trên (hoặc ở Cài đặt). | Giao diện tiếng Việt; bước 3 cho `vi`. |
+| 6 | Đăng xuất, ở trang đăng nhập bấm đổi ngôn ngữ. | Giao diện đổi (cookie), không lỗi; DB không đổi vì chưa có phiên. |
+
+Nếu hỏng: ghi số bước, ảnh chụp.
+
+---
+
 ## KT-016 — Quét yêu cầu gửi/ẩn kẹt (SEND-SWEEP + HIDE-SWEEP, ADR 008/009)
 
 Điều kiện: nhánh `feat-send-hide-sweep`; máy ảo `cf` bật; đã `pnpm db:migrate` (0031) và chạy worker bản mới. Sổ connector của worker còn RỖNG (chưa có connector thật) nên bước gửi/ẩn kết thúc `connector_unavailable` — đủ để thấy quét hoạt động.
@@ -344,7 +362,7 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 
 ---
 
-## KT-016 — Chỉ mục Nhật ký của Staff (ACTION-LOGS-ACTOR-INDEX, migration 0032)
+## KT-019 — Chỉ mục Nhật ký của Staff (ACTION-LOGS-ACTOR-INDEX, migration 0032)
 
 Điều kiện: nhánh `feat-action-logs-actor-index`; máy ảo `cf` bật; đã có `.env`.
 
@@ -356,6 +374,22 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 | 4 | Đăng nhập Staff, mở **Nhật ký**. | Vẫn chỉ thấy dòng của mình + dòng hệ thống do mình yêu cầu (hành vi không đổi). |
 
 Nếu hỏng: ghi số bước và nội dung hiện trên màn hình.
+
+---
+
+## KT-018 — Tên sản phẩm, logo, tên miền, email gửi cấu hình được (CFG-APPNAME, FR-125)
+
+Điều kiện: web dev chạy; máy ảo (Mailpit) bật. Đặt trong `.env.local` (tên tạm, không cần chốt Q6): `APP_NAME=Tên Thử`, `APP_LOGO_URL=https://picsum.photos/64` (hoặc để trống), `APP_DOMAIN=thu.example.com`; xóa dòng `SMTP_FROM` để thử địa chỉ gửi tự dựng. Khởi động lại web sau mỗi lần đổi biến.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/login`, `/register`, `/app` (đã đăng nhập) ở cả `vi` và `en`. | Tên "Tên Thử" ở đầu trang, tab trình duyệt và chân trang ("© năm Tên Thử"); không còn chữ "CommentFlow AI". |
+| 2 | Có `APP_LOGO_URL` → nhìn đầu trang; bỏ biến rồi khởi động lại. | Có biến: ảnh logo nằm trong ô vuông. Không có: biểu tượng tin nhắn mặc định. |
+| 3 | Đăng ký tài khoản mới, mở thư xác minh trong Mailpit. | Chủ đề, nội dung, chân thư mang "Tên Thử"; người gửi `Tên Thử <no-reply@thu.example.com>`. |
+| 4 | Bật 2FA (`/app/security`), nhìn mục trong ứng dụng xác thực. | Tên nhà phát hành là "Tên Thử". |
+| 5 | Đặt `APP_DOMAIN=https://sai` rồi khởi động web. | Web không chạy, lỗi chỉ nêu tên biến `APP_DOMAIN` (không nêu giá trị). |
+
+Nếu hỏng: ghi số bước và ảnh chụp.
 
 ---
 
@@ -379,6 +413,18 @@ Nếu hỏng: ghi số bước và ảnh chụp.
 ## Mẫu cho mục mới
 
 ```
+## KT-016 — Bình luận trên mobile 390px (INBOX-MOBILE, feat-inbox-mobile)
+Điều kiện: workspace có ≥ 1 bình luận; trình duyệt giả lập 390px (DevTools).
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/app/comments` ở 390px | Chỉ thấy tab (cuộn ngang) + bộ lọc + danh sách; không có khung chi tiết; không cuộn ngang cả trang |
+| 2 | Chạm một bình luận | Chi tiết toàn màn hình, có "← Quay lại danh sách" (en: "← Back to list") |
+| 3 | Chạm Quay lại | Về danh sách, tab/lọc/tìm giữ nguyên |
+| 4 | Nút Back của trình duyệt ở bước 2 | Cũng về danh sách |
+| 5 | Các tab, ô lọc, nút Quay lại | Chạm được dễ (cao ≥ 44px); ô lọc rộng hết dòng |
+| 6 | Nới cửa sổ ≥ 900px | Bố cục desktop như cũ; không thấy nút Quay lại |
+| 7 | Lặp bước 1–3 ở tiếng Anh | Chuỗi đúng ngôn ngữ |
+
 ## KT-00N — <tên tính năng> (PR #...)
 Điều kiện: ...
 | # | Bước | Kết quả mong đợi |   (≤ 10 bước, cả vi và en)
