@@ -1541,7 +1541,13 @@
     "completenessNotReady": "Cần tối thiểu {min}% để bật tự động",
     "completenessDetail": "Xem chi tiết",
     "overviewTitle": "Tổng quan kiến thức",
+    "soon": "Sắp có",
+    "scope": {
+      "label": "Áp dụng cho:",
+      "value": "Tất cả kênh"
+    },
     "actions": {
+      "diff": "Xem thay đổi (Diff)",
       "test": "Chạy kiểm thử",
       "publish": "Xuất bản"
     },
@@ -1887,18 +1893,40 @@
   },
   "posts": {
     "title": "Bài viết",
-    "subtitle": "Bài đăng của các kênh đã kết nối, kèm số bình luận đang chờ xử lý.",
+    "subtitle": "Quản lý bài đăng từ Facebook, Instagram, TikTok & gắn sản phẩm để AI tự động trích xuất thông số, báo giá tức thì và tra cứu tồn kho chính xác theo từng ngữ cảnh.",
     "count": "{count} bài",
     "heading": "Bài viết đa kênh",
+    "soon": "Sắp có",
+    "platformShort": {
+      "facebook": "FB",
+      "instagram": "IG",
+      "tiktok": "TikTok"
+    },
+    "actions": {
+      "sync": "Đồng bộ bài viết mới",
+      "bulk": "Gắn sản phẩm hàng loạt",
+      "bulkCount": "Gắn sản phẩm hàng loạt ({count} bài)",
+      "viewList": "Dạng danh sách chi tiết",
+      "viewGrid": "Dạng lưới thẻ"
+    },
+    "panel": {
+      "title": "Cấu hình bài viết & AI",
+      "hint": "Chọn một bài để thiết lập sản phẩm gắn kèm, ghi chú và chế độ AI."
+    },
     "breadcrumb": {
       "label": "Đường dẫn",
       "operations": "Vận hành đa kênh",
       "content": "Quản lý nội dung",
-      "current": "Bài viết"
+      "current": "Bài viết & Gắn sản phẩm"
     },
     "tabs": {
       "label": "Lọc theo nền tảng",
-      "all": "Tất cả bài viết"
+      "all": "Tất cả bài viết",
+      "platforms": {
+        "facebook": "Facebook Page",
+        "instagram": "Instagram",
+        "tiktok": "TikTok Shop"
+      }
     },
     "range": "Hiển thị {from} - {to} trên {total} bài đăng",
     "pageNumber": "Trang {page}",
@@ -1909,7 +1937,11 @@
     "toolbar": {
       "label": "Lọc bài viết",
       "searchLabel": "Tìm bài viết",
-      "search": "Tìm theo nội dung hoặc mã bài…",
+      "search": "Tìm theo nội dung, ID bài viết (fb_post_...)",
+      "kindOption": {
+        "ads": "Bài quảng cáo (ADS)",
+        "organic": "Bài đăng thường"
+      },
       "platform": "Nền tảng",
       "allPlatforms": "Tất cả nền tảng",
       "channel": "Kênh",
@@ -1917,6 +1949,8 @@
       "kind": "Loại bài",
       "allKinds": "Tất cả loại bài",
       "sort": "Sắp xếp",
+      "linkState": "Trạng thái gắn: Tất cả",
+      "advanced": "Bộ lọc nâng cao",
       "apply": "Áp dụng",
       "clear": "Xóa bộ lọc"
     },
@@ -1926,19 +1960,21 @@
       "tiktok": "TikTok"
     },
     "kind": {
-      "ads": "Quảng cáo",
+      "ads": "Quảng cáo ADS",
       "organic": "Bài thường"
     },
     "sort": {
-      "pending": "Bình luận chờ nhiều nhất",
+      "pending": "Bình luận chờ giảm dần",
       "newest": "Mới đăng nhất"
     },
     "list": {
       "label": "Danh sách bài viết",
+      "heading": "Danh sách bài đăng theo thời gian",
+      "sortSummary": "Sắp xếp: {sort}",
       "noMessage": "(Chưa có nội dung bài — mã {id})",
-      "postId": "Mã bài: {id}",
+      "postId": "ID: {id}",
       "comments": "{count} bình luận",
-      "pending": "{count} chờ xử lý",
+      "pending": "{count} bình luận chờ",
       "noPending": "Không có bình luận chờ",
       "viewOriginal": "Xem bài gốc",
       "unknownTime": "Chưa rõ thời gian đăng"

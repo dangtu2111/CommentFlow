@@ -12,8 +12,6 @@ import '../components/auth/auth-status.css';
 import '../components/auth/auth-demo-card.css';
 import '../components/auth/auth-social.css';
 import '../styles/frames.css';
-import '../components/kb/kb.css';
-import '../components/posts/posts.css';
 import '../styles/leads.css';
 import '../styles/reports.css';
 import '../styles/activity.css';

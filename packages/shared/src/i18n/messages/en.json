@@ -1541,7 +1541,13 @@
     "completenessNotReady": "At least {min}% needed to turn on automatic replies",
     "completenessDetail": "View details",
     "overviewTitle": "Knowledge overview",
+    "soon": "Coming soon",
+    "scope": {
+      "label": "Applies to:",
+      "value": "All channels"
+    },
     "actions": {
+      "diff": "View changes (Diff)",
       "test": "Run tests",
       "publish": "Publish"
     },
@@ -1887,18 +1893,40 @@
   },
   "posts": {
     "title": "Posts",
-    "subtitle": "Posts from your connected channels, with the number of comments waiting for action.",
+    "subtitle": "Manage posts from Facebook, Instagram and TikTok and link products so AI can extract specs, quote prices instantly and check stock accurately in context.",
     "count": "{count} posts",
     "heading": "Multichannel posts",
+    "soon": "Coming soon",
+    "platformShort": {
+      "facebook": "FB",
+      "instagram": "IG",
+      "tiktok": "TikTok"
+    },
+    "actions": {
+      "sync": "Sync new posts",
+      "bulk": "Bulk link products",
+      "bulkCount": "Bulk link products ({count} posts)",
+      "viewList": "Detailed list view",
+      "viewGrid": "Card grid view"
+    },
+    "panel": {
+      "title": "Post & AI settings",
+      "hint": "Choose a post to set its linked products, note and AI mode."
+    },
     "breadcrumb": {
       "label": "Breadcrumb",
       "operations": "Multichannel operations",
       "content": "Content management",
-      "current": "Posts"
+      "current": "Posts & product links"
     },
     "tabs": {
       "label": "Filter by platform",
-      "all": "All posts"
+      "all": "All posts",
+      "platforms": {
+        "facebook": "Facebook Page",
+        "instagram": "Instagram",
+        "tiktok": "TikTok Shop"
+      }
     },
     "range": "Showing {from} - {to} of {total} posts",
     "pageNumber": "Page {page}",
@@ -1909,7 +1937,11 @@
     "toolbar": {
       "label": "Filter posts",
       "searchLabel": "Search posts",
-      "search": "Search by text or post ID…",
+      "search": "Search by text, post ID (fb_post_...)",
+      "kindOption": {
+        "ads": "Ad posts (ADS)",
+        "organic": "Organic posts"
+      },
       "platform": "Platform",
       "allPlatforms": "All platforms",
       "channel": "Channel",
@@ -1917,6 +1949,8 @@
       "kind": "Post type",
       "allKinds": "All post types",
       "sort": "Sort by",
+      "linkState": "Link status: All",
+      "advanced": "Advanced filters",
       "apply": "Apply",
       "clear": "Clear filters"
     },
@@ -1926,17 +1960,19 @@
       "tiktok": "TikTok"
     },
     "kind": {
-      "ads": "Ad",
+      "ads": "Ad (ADS)",
       "organic": "Organic"
     },
     "sort": {
-      "pending": "Most pending comments",
+      "pending": "Pending comments, high to low",
       "newest": "Newest first"
     },
     "list": {
       "label": "Post list",
+      "heading": "Posts by time",
+      "sortSummary": "Sort: {sort}",
       "noMessage": "(Post text not synced yet — ID {id})",
-      "postId": "Post ID: {id}",
+      "postId": "ID: {id}",
       "comments": "{count} comments",
       "pending": "{count} pending",
       "noPending": "No pending comments",
