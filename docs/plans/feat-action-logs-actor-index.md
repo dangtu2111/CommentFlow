@@ -25,13 +25,13 @@ Không có. Quyết định tự chọn: Q-AI1 trong `QUYET_DINH_CHO_DUYET.md`.
 
 ## File sẽ sửa / tạo
 
-- `packages/db/migrations/0031_action_logs_actor_index.sql` + `meta/0031_snapshot.json`, `_journal.json`; `packages/db/src/schema/core/platform.ts` (khai báo 2 chỉ mục).
+- `packages/db/migrations/0032_action_logs_actor_index.sql` + `meta/0032_snapshot.json`, `_journal.json`; `packages/db/src/schema/core/platform.ts` (khai báo 2 chỉ mục).
 - `packages/db/tests/action-logs-actor-index.int.test.ts` (mới).
 - Docs: `docs/10` §4 (câu chỉ mục), `docs/codemap.md`, `docs/gap-matrix.md`, `docs/plans/MASTER.md`, `docs/plans/QUYET_DINH_CHO_DUYET.md`, `docs/testing/KIEM_TRA_TAY.md` (KT-016), `docs/handoff/feat-action-logs-actor-index.md`.
 
 ## Migration
 
-`0031_action_logs_actor_index.sql` (nhánh duy nhất có migration): `SET LOCAL lock_timeout='5s'` + hai `CREATE INDEX IF NOT EXISTS`. Đường lùi: `DROP INDEX IF EXISTS` hai chỉ mục (không đổi quyền/dữ liệu).
+`0032_action_logs_actor_index.sql` (nhánh duy nhất có migration): `SET LOCAL lock_timeout='5s'` + hai `CREATE INDEX IF NOT EXISTS`. Đường lùi: `DROP INDEX IF EXISTS` hai chỉ mục (không đổi quyền/dữ liệu).
 
 ## Test viết trước
 

@@ -8,6 +8,7 @@ import { createIngestHandler } from './jobs/ingest';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
+import { startSweep } from './jobs/sweep';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
 import { HIDE_QUEUE, INGEST_QUEUE, SEND_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
@@ -20,6 +21,8 @@ async function main(): Promise<void> {
   // Thiếu khóa cho key_version đang dùng = lỗi cấu hình: dừng ngay, không làm hỏng kênh nào.
   await verifyTokenKeysAtStartup(db, config.tokenEncKeys);
   const boss = createBoss(config.databaseUrl, logger);
+  // Sổ connector dùng chung cho `send`, `hide` và job quét (RỖNG cho tới `feat/fb-connector`).
+  const connectorRegistry = createConnectorRegistry([]);
 
   // "Sẵn sàng" chỉ khi đã kết nối pg-boss và đăng ký xong các job.
   let ready = false;
@@ -39,16 +42,19 @@ async function main(): Promise<void> {
   await boss.work(
     SEND_QUEUE,
     { batchSize: 1, localConcurrency: 3 },
-    createSendHandler({ db, registry: createConnectorRegistry([]), logger }),
+    createSendHandler({ db, registry: connectorRegistry, logger }),
   );
   // FR-044: hide — ẩn/bỏ ẩn bình luận; kiểm lại trước khi gọi nền tảng, ẩn lặp lại idempotent. Sổ connector RỖNG như `send`.
   await boss.work(
     HIDE_QUEUE,
     { batchSize: 1, localConcurrency: 3 },
-    createHideHandler({ db, registry: createConnectorRegistry([]), logger }),
+    createHideHandler({ db, registry: connectorRegistry, logger }),
   );
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
   const stopRetention = startRetention({ db, logger });
+  // SEND-SWEEP + HIDE-SWEEP (ADR 008/009): mỗi 60 giây xử lý lại yêu cầu gửi/ẩn kẹt qua đúng job gửi/ẩn (kiểm lại R1–R3/H1–H3).
+  // Cùng sổ connector với hai job trên (RỖNG cho tới `feat/fb-connector`); đăng ký connector thật PHẢI dùng chung một sổ.
+  const stopSweep = startSweep({ db, registry: connectorRegistry, logger });
   ready = true;
   logger.info({ port: config.port }, 'worker đã khởi động');
 
@@ -56,6 +62,7 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'worker đang dừng');
     ready = false;
     stopRetention();
+    stopSweep();
     await boss.stop({ graceful: true });
     await db.close();
     await health.close();

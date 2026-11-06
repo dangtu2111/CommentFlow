@@ -27,7 +27,7 @@ async function indexInfo(name: string) {
   return rows[0];
 }
 
-describe('chỉ mục action_logs cho truy vấn Staff (0031)', () => {
+describe('chỉ mục action_logs cho truy vấn Staff (0032)', () => {
   it('action_logs_ws_actor_created_idx: (workspace_id, actor_id, created_at DESC) WHERE actor_type=user', async () => {
     const info = await indexInfo('action_logs_ws_actor_created_idx');
     expect(info?.valid).toBe(true);
