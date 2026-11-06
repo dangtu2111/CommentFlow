@@ -1,0 +1,1 @@
+- 06/11 (LEADS-STORE, Q-LDS1): `docs/10_Database_Design.md` dòng `leads` — thêm `id`, `phone_hash`, `email_enc`, `email_hash`, `key_version`, `created_at`, `updated_at`; SĐT/email không thô (mã hóa + băm HMAC), chống trùng theo băm (migration 0051).

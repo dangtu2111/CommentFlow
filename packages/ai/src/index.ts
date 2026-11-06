@@ -6,6 +6,7 @@ export * from './classify';
 export * from './confidence';
 export * from './cost-gate';
 export * from './decide';
+export * from './delay';
 export * from './draft';
 export * from './embedding';
 export * from './examples';
