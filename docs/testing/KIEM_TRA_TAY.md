@@ -47,6 +47,7 @@
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
+| KT-MSG1 | Tin chào / ngoài giờ / báo chuyển người (logic; Page thử khi nối thật) | — | không | chưa | — |
 | KT-MSW | Messenger (`MESSENGER_CONNECTOR_ENABLED`, **cần Page thử + `pages_messaging`**; sau `MESSENGER-INGEST`) | feat-messenger-webhook | chưa | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
@@ -927,6 +928,17 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/shared exec vitest run src/lead-contact.test.ts` và `pnpm --filter @flow/db exec vitest run src/lead-vault.test.ts src/lead-sink.test.ts`. | Xanh: chuẩn hóa SĐT/email, tối đa 3 lead/lần, mã hóa khứ hồi (sai workspace/lead/trường/khóa thì không giải mã), băm ổn định, khóa băm không trùng khóa mã hóa, cờ tắt mặc định, bật mà thiếu khóa thì báo lỗi cấu hình. |
 | 2 | CI job `database` chạy `tests/leads.int.test.ts` và `pnpm db:check-rls`. | Chỉ hệ thống ghi lead; DB không chứa SĐT/email thô; trùng số không tạo lead mới; Staff đổi giai đoạn/giao người (chỉ cho thành viên đang hoạt động); Staff không xóa; workspace khác không thấy bản mã. |
 | 3 | (Khi có khóa trên staging) đặt `LEADS_CAPTURE_ENABLED=true`, `LEADS_ENC_KEYS`, `LEADS_HASH_KEY` rồi chờ việc nối pipeline. | Chưa áp dụng — việc nối pipeline và giao diện Kanban là việc sau (`LEADS-KANBAN`). |
+
+## KT-MSG1 — Tin chào / ngoài giờ / báo chuyển người (MSG-GREETINGS, feat-msg-greetings)
+
+> Chỉ có phần logic (chưa giao diện, chưa gửi thật); mục đầy đủ trên Page thử làm khi nối `MSG-GREETINGS-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/greetings` | Tất cả test đạt / All tests pass |
+| 2 | Đọc tên test nhóm "luật Meta" | Có ca đúng 24 giờ gửi được, 24 giờ + 1 ms bị chặn; bình luận bị chặn / 24h edge and comment target covered |
+| 3 | Đọc tên test nhóm "chọn mẫu theo ngôn ngữ" | vi, en, ngôn ngữ khác → dự phòng, thiếu mẫu → mặc định / vi, en, fallback, default covered |
+| 4 | (Sau khi nối thật) Nhắn tin vào Page thử ngoài giờ làm việc, rồi nhắn thêm lần hai | Nhận đúng 1 tin ngoài giờ nêu giờ mở cửa; lần hai không có tin lặp / One out-of-hours reply with opening time, no repeat |
 
 ## KT-MSW — Messenger với Page thật (MESSENGER-WEBHOOK, FR-014)
 
