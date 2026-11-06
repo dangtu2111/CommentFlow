@@ -66,10 +66,14 @@ export async function writeReembeddedChunks(
 ): Promise<number> {
   let written = 0;
   for (const row of rows) {
+    if (row.embedding.length !== 1024 || !row.embedding.every(Number.isFinite)) {
+      throw new Error('Vector embedding không hợp lệ (cần 1024 số hữu hạn).');
+    }
     const result = await tx.execute(sql`
       UPDATE cf.kb_chunks
       SET embedding = ${vectorLiteral(row.embedding)}::halfvec, embedding_model = ${model}, updated_at = now()
-      WHERE workspace_id = ${workspaceId}::uuid AND id = ${row.id}::uuid AND content_hash = ${row.contentHash}`);
+      WHERE workspace_id = ${workspaceId}::uuid AND id = ${row.id}::uuid AND content_hash = ${row.contentHash}
+        AND embedding_model IS DISTINCT FROM ${model}`);
     written += result.rowCount ?? 0;
   }
   return written;
