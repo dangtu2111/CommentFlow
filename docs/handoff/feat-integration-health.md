@@ -13,3 +13,7 @@
 
 ## Còn lại (gap)
 `INTEGRATION-HEALTH-WIRE` (connector/worker gọi `recordIntegrationIncident`), `-QUEUE-WIRE` (số liệu pg-boss), `-UI` (trang Admin + Thử lại/Bỏ qua có lý do), `-RETENTION` (dọn sự cố cũ).
+
+- `INTEGRATION-HEALTH-RETENTION`: dọn sự cố cũ.
+- `INTEGRATION-HEALTH-HARDEN` (từ verifier): kiểm check-rls riêng cho 3 hàm DEFINER; partial index `webhook_events (created_at DESC) WHERE status = dead` ở migration riêng; route web phải kiểm phiên Admin + `canViewIntegrationHealth` trước `withUser`; rà nơi ghi `webhook_events.error`.
+- Đã sửa theo verifier: hàm từ chối khi có workspace, `code` theo regex, cắt lỗi sau khi che, thêm cột bất biến.
