@@ -288,6 +288,13 @@
       "when": 1793940482755,
       "tag": "0040_retrieval_logs_kb_gaps",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793943795108,
+      "tag": "0041_kb_embed_col",
+      "breakpoints": true
     }
   ]
 }

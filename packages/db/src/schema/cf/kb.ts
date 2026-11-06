@@ -96,7 +96,7 @@ export const kbVersions = cf.table(
 /**
  * Đoạn kiến thức đã cắt + embedding (FR-055, FR-130, FR-131, FR-133, FR-139). Chỉ worker (hệ thống) ghi.
  * `version_id` rỗng khi là bản nháp. `product_id` chưa có khóa ngoại: bảng `products` do PRODUCTS-VARIANTS tạo.
- * HNSW cho `embedding` và chỉ mục `embedding_model` thuộc KB-EMBED-COL.
+ * HNSW cho `embedding` và chỉ mục `embedding_model`: KB-EMBED-COL (0041).
  */
 export const kbChunks = cf.table(
   'kb_chunks',
@@ -144,6 +144,13 @@ export const kbChunks = cf.table(
     index('kb_chunks_workspace_version_idx').on(t.workspaceId, t.versionId),
     index('kb_chunks_tsv_idx').using('gin', t.tsv),
     index('kb_chunks_search_norm_trgm_idx').using('gin', t.searchNorm.op('gin_trgm_ops')),
+    // FR-139 (0041): chỉ đoạn đã xuất bản, có vector, không nghi cài lệnh — khớp bộ lọc của `searchKbChunks`.
+    index('kb_chunks_embedding_hnsw_idx')
+      .using('hnsw', t.embedding.op('halfvec_cosine_ops'))
+      .with({ m: 16, ef_construction: 64 })
+      .where(sql`${t.embedding} is not null and not ${t.isDraft} and not ${t.injectionSuspected}`),
+    // FR-133 (0041): job tạo lại embedding tìm đoạn theo mô hình.
+    index('kb_chunks_workspace_embedding_model_idx').on(t.workspaceId, t.embeddingModel),
     index('kb_chunks_workspace_product_idx')
       .on(t.workspaceId, t.productId)
       .where(sql`${t.productId} is not null`),
