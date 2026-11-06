@@ -20,6 +20,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@flow/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@flow/connectors':
         specifier: workspace:*
         version: link:../../packages/connectors

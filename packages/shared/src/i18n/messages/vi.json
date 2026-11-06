@@ -574,6 +574,72 @@
       }
     }
   },
+  "tryAi": {
+    "pageTitle": "Thử AI",
+    "title": "Thử AI",
+    "subtitle": "Gõ một bình luận mẫu để xem AI sẽ phân loại, trả lời và có được tự gửi hay không. Không trừ lượt AI của gói.",
+    "mockNote": "Đang chạy bản mô phỏng (không gọi AI thật, kiến thức mẫu). Kết quả chỉ để xem trước luồng xử lý.",
+    "label": "Bình luận mẫu của khách",
+    "placeholder": "Ví dụ: áo thun basic size M màu đen giá bao nhiêu?",
+    "submit": "Thử",
+    "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
+    "errors": {
+      "empty": "Hãy nhập một bình luận mẫu.",
+      "too_long": "Bình luận quá dài (tối đa {max} ký tự).",
+      "limit_reached": "Hôm nay bạn đã dùng hết lượt thử. Hãy quay lại vào ngày mai.",
+      "unavailable": "Không thử được lúc này. Hãy thử lại sau."
+    },
+    "skipped": "Bình luận chỉ có biểu tượng/tag/dấu câu nên AI bỏ qua (không phân loại, không trả lời, không trừ lượt).",
+    "result": {
+      "label": "Nhãn",
+      "lang": "Ngôn ngữ",
+      "route": "Cách tìm nguồn",
+      "action": "Hành động",
+      "reply": "Câu trả lời gợi ý",
+      "noReply": "AI không soạn câu trả lời (cần nhân viên).",
+      "confidence": "Độ tin cậy",
+      "sources": "Nguồn tìm được (kèm điểm)",
+      "noSources": "Không tìm được nguồn liên quan.",
+      "used": "đã dùng",
+      "score": "điểm {score}",
+      "autoSend": "Có được tự gửi không?",
+      "autoSendYes": "Được tự gửi (nếu Owner bật tự gửi cho nhãn này).",
+      "autoSendNo": "Không tự gửi vì:",
+      "billed": "Lượt này không trừ lượt AI của gói."
+    },
+    "labels": {
+      "price": "Hỏi giá",
+      "advice": "Xin tư vấn",
+      "purchase": "Muốn mua",
+      "complaint": "Khiếu nại",
+      "spam": "Spam",
+      "other": "Khác"
+    },
+    "langs": {
+      "vi": "Tiếng Việt",
+      "en": "Tiếng Anh",
+      "other": "Ngôn ngữ khác"
+    },
+    "routes": {
+      "sql": "Tra bảng sản phẩm (giá/tồn)",
+      "hybrid": "Tìm kiến thức",
+      "both": "Tra sản phẩm + tìm kiến thức"
+    },
+    "actions": {
+      "answer": "Trả lời",
+      "clarify": "Hỏi lại khách",
+      "redirect": "Chuyển hướng (mời nhắn shop)",
+      "handoff": "Chuyển nhân viên"
+    },
+    "blockReasons": {
+      "auto_send_off": "Chưa bật tự gửi",
+      "needs_human": "Cần nhân viên xem",
+      "policy_never": "Loại câu này không bao giờ tự gửi",
+      "low_confidence": "Độ tin cậy dưới ngưỡng",
+      "guard_money": "Có số tiền/ngày/link/SĐT không có trong nguồn",
+      "empty_reply": "Không có câu trả lời"
+    }
+  },
   "shell": {
     "groups": {
       "operations": "Điều hướng vận hành",
@@ -582,6 +648,7 @@
     "nav": {
       "comments": "Bình luận",
       "posts": "Bài viết",
+      "tryAi": "Thử AI",
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
