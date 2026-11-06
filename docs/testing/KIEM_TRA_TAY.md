@@ -38,6 +38,7 @@
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
 | KT-DIM | Mạo danh → chuyển người, gợi ý Ẩn (lõi, chờ nối) | — | không | chưa | — |
+| KT-DOC | Chốt đơn trong bình luận → lưu khách, trả lời không lặp PII (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
@@ -661,6 +662,16 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 | 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/impersonation-rules.test.ts` | Mọi test xanh |
 | 2 | (Sau khi nối) Tài khoản tên giống Page bình luận kèm link/"nhận quà" | Nhãn đỏ "Nghi mạo danh", báo ngay, AI không tự gửi; nút Ẩn chỉ hiện để người bấm |
 | 3 | (Sau khi nối) Khách trùng tên Page hỏi giá bình thường | Không bị gắn nhãn mạo danh |
+
+## KT-DOC — Khách chốt đơn trong bình luận: lưu khách trước, trả lời công khai không lặp SĐT/địa chỉ (DA-ORDER-IN-COMMENT, FR-156, feat-da-order-in-comment)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-ORDER-IN-COMMENT-WIRE`. / Core + automated tests only; manual checks deferred to `DA-ORDER-IN-COMMENT-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/order-comment-rules.test.ts` | Mọi test xanh |
+| 2 | (Sau khi nối) Dùng Page thử, bình luận "Chốt áo M, sđt 09xx…, giao 12 đường…" | Khách xuất hiện ở Khách tiềm năng; câu trả lời công khai chỉ là "Shop đã nhận… sẽ inbox xác nhận", không có SĐT/địa chỉ; có gợi ý Ẩn cho nhân viên bấm |
+| 3 | (Sau khi nối) Bình luận chỉ có "Chốt đơn nhé" hoặc chỉ có SĐT | Không bị coi là đơn hàng trong bình luận |
 
 ## KT-DRL — Cam kết pháp lý/uy tín (DA-RULES-LEGAL, FR-160) · Legal/trust commitments
 

@@ -53,6 +53,17 @@ export {
   type LegalTopic,
 } from './legal-rules';
 export {
+  checkOrderReplyLeak,
+  evaluateOrderInComment,
+  handleOrderInComment,
+  MAX_ORDER_COMMENT_LENGTH,
+  ORDER_COMMENT_REASONS,
+  ORDER_RECEIVED_REPLIES,
+  type OrderCommentReason,
+  type OrderInCommentOutcome,
+  type OrderInCommentResult,
+} from './order-comment-rules';
+export {
   type BusinessHoursState,
   detectOrderStatusIntent,
   evaluateBusinessHours,
