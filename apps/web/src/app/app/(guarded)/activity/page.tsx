@@ -1,11 +1,7 @@
-import { Lock } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { ActivityDetailPanel } from '../../../../components/activity/activity-detail';
-import { ActivityList } from '../../../../components/activity/activity-list';
-import { ActivityToolbar } from '../../../../components/activity/activity-toolbar';
-import { Chip } from '../../../../components/ui/chip';
-import { PageHeader } from '../../../../components/ui/page-header';
+import { ActivityPageView } from '../../../../components/activity/activity-view';
 import { parseActivitySearchParams } from '../../../../lib/action-log-filters';
+import { showSampleData } from '../../../../lib/sample-data';
 import { loadActionLog } from '../../../../server/action-log';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -15,8 +11,9 @@ export async function generateMetadata() {
 }
 
 /**
- * Trang Nhật ký (FR-092): chỉ đọc. Owner thấy mọi dòng của workspace, Staff chỉ dòng của chính mình. Bộ lọc là tham số
- * URL (GET form). Workspace/người dùng/vai trò lấy từ `requireAppUser`, không từ URL.
+ * Trang Nhật ký (FR-092): chỉ đọc, dựng từ design/stitch/activity-log.html (Tailwind). Owner thấy mọi dòng của
+ * workspace, Staff chỉ dòng của chính mình. Bộ lọc là tham số URL (GET form). Workspace/người dùng/vai trò lấy từ
+ * `requireAppUser`, không từ URL.
  */
 export default async function ActivityPage({
   searchParams,
@@ -35,56 +32,35 @@ export default async function ActivityPage({
   }
   if (!data) {
     return (
-      <main className="log-page log-error" role="alert">
-        <h1>{t('error.title')}</h1>
-        <p>{t('error.body')}</p>
+      <main className="tw w-full">
+        <div
+          role="alert"
+          className="m-space-lg rounded-xl bg-error-container p-space-md font-body-md text-body-md text-on-error-container"
+        >
+          <h1 className="font-title-md text-title-md">{t('error.title')}</h1>
+          <p>{t('error.body')}</p>
+        </div>
       </main>
     );
   }
 
   const { page, actions, timeZone, detail } = data;
-  const filtered = Boolean(view.actorType || view.action || view.fromDate || view.toDate);
-  const isOwner = workspace.role === 'owner';
   return (
-    <main className="log-page">
-      <div className="log-header">
-        <PageHeader
-          title={t('title')}
-          subtitle={isOwner ? t('subtitle.owner') : t('subtitle.staff')}
+    <main className="tw w-full">
+      <div className="flex w-full flex-col">
+        <ActivityPageView
+          view={view}
+          items={page.items}
+          nextCursor={page.nextCursor}
+          actions={actions}
+          timeZone={timeZone}
+          viewerId={user.id}
+          isOwner={workspace.role === 'owner'}
+          detail={detail}
+          selectedMissing={Boolean(view.selected) && !detail}
+          sample={showSampleData()}
         />
-        <Chip>
-          <Lock size={12} aria-hidden="true" /> {t('readOnly')}
-        </Chip>
       </div>
-      <section className="log-list" aria-label={t('list.label')}>
-        <ActivityToolbar view={view} actions={actions} showActor={isOwner} />
-        {page.items.length === 0 ? (
-          <div className="inbox-empty">
-            <h2>{filtered ? t('empty.filteredTitle') : t('empty.title')}</h2>
-            <p>{filtered ? t('empty.filteredBody') : t('empty.body')}</p>
-          </div>
-        ) : (
-          <ActivityList
-            view={view}
-            items={page.items}
-            nextCursor={page.nextCursor}
-            timeZone={timeZone}
-            viewerId={user.id}
-          />
-        )}
-      </section>
-      <aside className="log-detail" aria-label={t('detail.title')}>
-        {detail ? (
-          <ActivityDetailPanel entry={detail} timeZone={timeZone} viewerId={user.id} />
-        ) : view.selected ? (
-          <div className="inbox-empty" role="alert">
-            <h2>{t('detail.notFoundTitle')}</h2>
-            <p>{t('detail.notFoundBody')}</p>
-          </div>
-        ) : (
-          <p>{t('detail.empty')}</p>
-        )}
-      </aside>
     </main>
   );
 }

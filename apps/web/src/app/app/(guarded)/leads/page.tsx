@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { LeadsView } from '../../../../components/leads/leads-view';
-import { Banner } from '../../../../components/ui/banner';
-import { PageHeader } from '../../../../components/ui/page-header';
+import { TwPage } from '../../../../components/ui/tw-parts';
+import { showSampleData } from '../../../../lib/sample-data';
 import { loadLeadsBoard } from '../../../../server/leads';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -11,8 +11,9 @@ export async function generateMetadata() {
 }
 
 /**
- * Khách tiềm năng (FR-082): bảng Kanban CHỈ ĐỌC, mọi thành viên xem được (RLS theo workspace). SĐT chỉ hiện 4 số
- * cuối; chưa có kéo-thả/giải mã/xuất file (Q-UIHLR1). Workspace + người dùng lấy từ `requireAppUser`.
+ * Khách tiềm năng (FR-082): bảng Kanban CHỈ ĐỌC dựng từ design/stitch/leads.html (Tailwind), mọi thành viên xem được
+ * (RLS theo workspace). SĐT chỉ hiện 4 số cuối; kéo-thả/giải mã/xuất file/ngăn chi tiết là khung "Sắp có". Workspace +
+ * người dùng lấy từ `requireAppUser`.
  */
 export default async function LeadsPage() {
   const { user, workspace } = await requireAppUser({});
@@ -25,15 +26,17 @@ export default async function LeadsPage() {
     console.error('leads.load_failed', { workspaceId: workspace.id, error });
   }
   return (
-    <main className="app-page app-page-wide app-page-cap stack">
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+    <TwPage>
       {data ? (
-        <LeadsView leads={data.leads} counts={data.counts} />
+        <LeadsView leads={data.leads} counts={data.counts} sample={showSampleData()} />
       ) : (
-        <Banner variant="danger">
+        <div
+          role="alert"
+          className="rounded-xl bg-error-container p-space-md font-body-md text-body-md text-on-error-container"
+        >
           <strong>{t('error.title')}</strong> {t('error.body')}
-        </Banner>
+        </div>
       )}
-    </main>
+    </TwPage>
   );
 }

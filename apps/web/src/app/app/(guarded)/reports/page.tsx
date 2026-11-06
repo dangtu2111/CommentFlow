@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { ReportBody, ReportHead } from '../../../../components/reports/report-body';
-import { Banner } from '../../../../components/ui/banner';
+import { TwPage } from '../../../../components/ui/tw-parts';
 import { parseReportRange } from '../../../../lib/report-view';
+import { showSampleData } from '../../../../lib/sample-data';
 import { loadReport } from '../../../../server/reports';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -11,9 +12,9 @@ export async function generateMetadata() {
 }
 
 /**
- * Báo cáo (FR-083): chỉ đọc. Owner thấy cả workspace, Staff chỉ số cá nhân (do `buildReport` thu hẹp phạm vi trước
- * khi tính). Khoảng ngày là tham số URL đã kiểm (7/30). Số liệu chưa có nguồn (xu hướng ngày, ý định, top bài viết)
- * không dựng (Q-UIHLR1).
+ * Báo cáo (FR-083): chỉ đọc, dựng từ design/stitch/reports.html bằng Tailwind. Owner thấy cả workspace, Staff chỉ số
+ * cá nhân (do `buildReport` thu hẹp phạm vi trước khi tính). Khoảng ngày là tham số URL đã kiểm (7/30). Khối chưa có
+ * nguồn (xu hướng ngày, ý định, top bài viết, gợi ý AI) hiện `[MẪU]` ở dev, "—"/"Sắp có" ở môi trường khác.
  */
 export default async function ReportsPage({
   searchParams,
@@ -23,6 +24,7 @@ export default async function ReportsPage({
   const { user, workspace } = await requireAppUser({});
   const [t, params] = await Promise.all([getTranslations('reports'), searchParams]);
   const days = parseReportRange(params.range);
+  const sample = showSampleData();
 
   let data: Awaited<ReturnType<typeof loadReport>> | null = null;
   try {
@@ -31,15 +33,18 @@ export default async function ReportsPage({
     console.error('reports.load_failed', { workspaceId: workspace.id, error });
   }
   return (
-    <main className="app-page app-page-wide app-page-cap stack">
-      <ReportHead days={days} isOwner={workspace.role === 'owner'} />
+    <TwPage>
+      <ReportHead days={days} isOwner={workspace.role === 'owner'} sample={sample} />
       {data ? (
-        <ReportBody report={data.report} truncated={data.truncated} />
+        <ReportBody report={data.report} truncated={data.truncated} sample={sample} />
       ) : (
-        <Banner variant="danger">
+        <div
+          role="alert"
+          className="rounded-xl bg-error-container p-space-md font-body-md text-body-md text-on-error-container"
+        >
           <strong>{t('error.title')}</strong> {t('error.body')}
-        </Banner>
+        </div>
       )}
-    </main>
+    </TwPage>
   );
 }
