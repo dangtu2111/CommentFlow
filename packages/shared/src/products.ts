@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const CARD_VALUE_MAX = 600;
 
 /** Bỏ dấu, thường, gộp khoảng trắng: dạng so khớp của khóa/giá trị thuộc tính. */
-function fold(text: string): string {
+export function foldText(text: string): string {
   return text
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
@@ -60,9 +60,9 @@ const COLOR_ALIASES: Record<string, string> = {
 export function normalizeAttrs(attrs: Record<string, string>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [rawKey, rawValue] of Object.entries(attrs)) {
-    const value = fold(rawValue);
+    const value = foldText(rawValue);
     if (value === '') continue;
-    const foldedKey = fold(rawKey);
+    const foldedKey = foldText(rawKey);
     const key = KEY_ALIASES[foldedKey] ?? foldedKey;
     result[key] = key === 'color' ? (COLOR_ALIASES[value] ?? value) : value;
   }

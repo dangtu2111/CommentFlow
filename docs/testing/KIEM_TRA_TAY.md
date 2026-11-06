@@ -603,3 +603,10 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 | 2 | Khi nối pipeline: dưới bài gắn sản phẩm, bình luận "giá sao shop" | `retrieval_logs.route = sql`; không có lượt gọi rerank/vector |
 | 3 | Bình luận "lấy 2 cái size M ship về Cà Mau bao nhiêu" | `route = both` (có ý ship), câu trả lời có đơn giá biến thể M từ DB |
 | 4 | Bình luận "giá sao" dưới bài không gắn sản phẩm, tên sản phẩm không nhận ra | `route = both` (không bao giờ `sql`) |
+
+### KB-CHUNKING (FR-055/130/131; chưa có giao diện)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-chunks.int.test.ts` xanh (ghi nháp qua worker, tsv bỏ dấu, lọc hạn hiệu lực) |
+| 2 | `pnpm --filter @flow/shared exec vitest run src/kb-chunking.test.ts` và `pnpm --filter @flow/ai exec vitest run src/kb-indexing.test.ts` | Xanh; embedding chỉ là mock, không gọi mạng |
