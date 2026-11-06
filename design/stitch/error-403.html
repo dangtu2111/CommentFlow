@@ -261,10 +261,10 @@
     const btn = document.getElementById('request-perm-btn');
     const status = document.getElementById('request-status');
     if (!btn || !status) return;
-
+    
     btn.disabled = true;
     btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>Đang chuyển yêu cầu...</span>';
-
+    
     setTimeout(() => {
       btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">done_all</span><span>Yêu cầu đã gửi</span>';
       btn.classList.add('opacity-75', 'cursor-not-allowed');

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-background":"#101d25","on-tertiary-container":"#ffe3cf","on-tertiary-fixed-variant":"#6c3a02","on-error":"#ffffff","surface-container-highest":"#d7e4f0","surface-tint":"#00687a","tertiary":"#77440b","background":"#f5faff","tertiary-container":"#945b23","primary":"#005868","on-primary-fixed-variant":"#004e5c","on-primary":"#ffffff","primary-container":"#0b7285","secondary-container":"#7c59ef","surface-variant":"#d7e4f0","tertiary-fixed-dim":"#ffb779","on-secondary-fixed":"#1f0060","on-secondary-container":"#fffbff","on-error-container":"#93000a","primary-fixed-dim":"#82d2e7","surface-container-low":"#eaf5ff","inverse-on-surface":"#e5f3fe","surface-dim":"#cedce7","secondary":"#633cd5","on-surface-variant":"#3f484b","error-container":"#ffdad6","on-surface":"#101d25","on-secondary":"#ffffff","on-secondary-fixed-variant":"#4d1ebf","surface-container-lowest":"#ffffff","secondary-fixed":"#e7deff","surface-container-high":"#dceaf5","surface":"#f5faff","surface-container":"#e2f0fb","on-primary-container":"#bdf0ff","primary-fixed":"#abedff","surface-bright":"#f5faff","error":"#ba1a1a","inverse-surface":"#25323b","secondary-fixed-dim":"#ccbdff","on-primary-fixed":"#001f26","outline":"#6f797c","on-tertiary-fixed":"#2e1500","inverse-primary":"#82d2e7","outline-variant":"#bec8cc","on-tertiary":"#ffffff","tertiary-fixed":"#ffdcc1"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin":"1.5rem","space-lg":"1rem","space-md":"0.75rem","gutter":"1rem","space-xl":"1.5rem","space-xs":"0.25rem","space-sm":"0.5rem","margin-mobile":"1rem","gutter-mobile":"0.75rem"},"fontFamily":{"body-sm":["Be Vietnam Pro"],"label-md":["Be Vietnam Pro"],"code-sm":["Be Vietnam Pro"],"body-lg":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"label-sm":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"title-md":["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"title-sm":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"]},"fontSize":{"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"code-sm":["12px",{"lineHeight":"16px","fontWeight":"500"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"title-md":["15px",{"lineHeight":"20px","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"title-sm":["13px",{"lineHeight":"18px","fontWeight":"600"}],"body-md":["13px",{"lineHeight":"19px","fontWeight":"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-margin flex items-center justify-between"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">forum</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">CommentFlow AI</span><span class="font-label-sm text-label-sm text-on-surface-variant">Smart Social Ops</span></div></div><div class="hidden md:flex items-center gap-space-sm pl-space-lg"><span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span><span class="font-title-sm text-title-sm text-primary">Thiết lập ban đầu (Setup Studio)</span><span class="px-space-sm py-space-xs rounded-full bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant">Quy trình 5 bước</span></div></div><nav class="hidden lg:flex items-center gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-lg"><a aria-current="page" class="px-space-md py-space-sm transition-colors bg-primary-container text-on-primary-container font-semibold rounded-lg" data-path="step-1-connect-channels" href="#">Kênh bán</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors" data-path="step-2-ai-persona" href="#">Nhân cách AI</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors" data-path="step-3-knowledge-base" href="#">Dữ liệu mẫu</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors" data-path="step-4-automation-rules" href="#">Quy tắc phản hồi</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface rounded-lg transition-colors" data-path="step-5-team-review" href="#">Kích hoạt</a></nav><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">help_center</span><span class="hidden sm:inline">Trợ giúp</span></button><div class="flex items-center gap-space-sm pl-space-xs"><div class="hidden sm:flex flex-col text-right"><span class="font-title-sm text-title-sm text-on-surface leading-tight">Admin Studio</span><span class="font-label-sm text-label-sm text-on-surface-variant">retail@flow.vn</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-16 bg-surface"><div class="flex flex-col w-full">
+<!-- Top Ambient Glow -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-32 left-1/4 w-96 h-96 bg-primary-fixed/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute -top-24 right-1/4 w-80 h-80 bg-secondary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
+<!-- Page Intro Header & Stepper Card -->
+<div class="max-w-7xl mx-auto px-margin pt-space-lg pb-space-md">
+<!-- Breadcrumb / Objective Banner -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container-low p-space-md rounded-xl shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">rocket_launch</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Thiết Lập Ban Đầu (Quick Onboarding)</span>
+<span class="px-space-sm py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">Bản thử nghiệm Growth</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Chuẩn hoá kênh bán hàng và kích hoạt trợ lý AI thông minh trong chưa đầy 10 phút.</p>
+</div>
+</div>
+<div class="flex items-center gap-space-lg bg-surface-container px-space-md py-space-sm rounded-lg shrink-0">
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-[20px]">timer</span>
+<span class="font-title-sm text-title-sm">Ước tính: ~8 phút còn lại</span>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-space-xs text-tertiary">
+<span class="material-symbols-outlined text-[20px]">flag</span>
+<span class="font-title-sm text-title-sm">Bình luận đầu tiên: &lt;30 phút</span>
+</div>
+</div>
+</div>
+<!-- 5-Step Stepper Component -->
+<div class="mt-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-5 gap-space-md relative">
+<!-- Step 1: Finished -->
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-primary">Bước 1</p>
+<p class="font-title-sm text-title-sm text-on-surface truncate">Tạo Workspace</p>
+<span class="font-body-sm text-body-sm text-primary">Đã xong</span>
+</div>
+</div>
+<!-- Step 2: Finished -->
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-primary">Bước 2</p>
+<p class="font-title-sm text-title-sm text-on-surface truncate">Kết nối nền tảng</p>
+<span class="font-body-sm text-body-sm text-primary">Meta &amp; TikTok</span>
+</div>
+</div>
+<!-- Step 3: Current Focused -->
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-xs rounded-lg">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 shadow-sm ring-2 ring-secondary/30">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-space-xs">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Bước 3 (Đang chọn)</p>
+</div>
+<p class="font-title-sm text-title-sm text-on-surface truncate">Chọn Page kích hoạt</p>
+<span class="font-body-sm text-body-sm text-secondary font-medium">Đang tiến hành</span>
+</div>
+</div>
+<!-- Step 4: Current Intertwined (Quick Knowledge) -->
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-xs rounded-lg">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-primary">Bước 4</p>
+<p class="font-title-sm text-title-sm text-on-surface truncate">Nhập kiến thức AI</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Shopify / Web</span>
+</div>
+</div>
+<!-- Step 5: Upcoming -->
+<div class="flex items-center gap-space-sm opacity-60">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="font-label-md text-label-md">5</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Bước 5</p>
+<p class="font-title-sm text-title-sm text-on-surface truncate">Mời nhân viên</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Có thể bỏ qua</span>
+</div>
+</div>
+</div>
+<!-- Overall Progress bar -->
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-space-md overflow-hidden">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500" style="width: 62%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Wizard Workspace: 2 Column Layout (Left: Channel & Knowledge Config, Right: AI Simulation & Security) -->
+<div class="max-w-7xl mx-auto px-margin py-space-sm w-full">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT WORKSPACE (Col 8) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- SECTION 1: Chọn Kênh & Page Quét được (Bước 3) -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-md gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Kênh &amp; Trang mạng xã hội đã quét</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Chọn fanpage bạn muốn cấp quyền cho AI tự động theo dõi và gợi ý phản hồi.</p>
+</div>
+</div>
+<div class="inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-primary/10 text-primary self-start sm:self-auto shrink-0">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span class="font-label-sm text-label-sm font-semibold">Đã chọn 2/3 kênh (Gói Growth 14 ngày)</span>
+</div>
+</div>
+<!-- Channel List -->
+<div class="space-y-space-md">
+<!-- Channel Item 1: Facebook Active -->
+<label class="relative flex flex-col sm:flex-row sm:items-center justify-between p-space-md rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer shadow-sm group">
+<div class="flex items-start sm:items-center gap-space-md">
+<input checked="" class="mt-1 sm:mt-0 w-5 h-5 rounded text-primary focus:ring-0 accent-primary cursor-pointer" type="checkbox"/>
+<div class="relative w-12 h-12 rounded-full overflow-hidden bg-surface-container shrink-0 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Female fashion boutique brand profile photo, high aesthetic studio portrait with calm neutral tones and minimalist lighting, sharp clarity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoU0Q5j-LIS9kaGuYvmTRSIeYPljYy_c9jU27aZz_qqtbvr4BAyPH1iuie59TfRP0Vf_ArR8_XNgTTnYs2N85cw7ki8F4TWO0abQtq1q6GbShOslJybPy3C3W91B4D8mOCLD2PZBBr23xU5HHI5nki2x4TvHw1QrNF4FEUzKzl3i08buVXq3s4DOcXtUcf_iFTmxoUjKdhlYEcF7kRBeW0L1S_WKqEzRZrb2yi6oVV"/>
+<span class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#1877F2] text-white flex items-center justify-center text-[10px] font-bold">f</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface">An Nhiên Store - Thời Trang Thiết Kế</span>
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex flex-wrap items-center gap-x-space-md gap-y-space-xs mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
+<span>ID: 104829184</span>
+<span>•</span>
+<span class="font-semibold text-on-surface">18.5k người theo dõi</span>
+<span>•</span>
+<span class="text-primary font-medium">Facebook Page</span>
+</div>
+<!-- Permissions summary -->
+<div class="flex items-center gap-space-xs mt-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">Đọc bình luận</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">Gửi câu trả lời</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">Nhắn tin Messenger</span>
+</div>
+</div>
+</div>
+<div class="mt-space-sm sm:mt-0 flex items-center gap-space-sm shrink-0 pl-8 sm:pl-0">
+<span class="inline-flex items-center gap-1 text-[#237A36] bg-[#EBF7ED] px-space-sm py-1 rounded-full font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-[#237A36] animate-pulse"></span>
+                  Sẵn sàng đồng bộ
+                </span>
+</div>
+</label>
+<!-- Channel Item 2: Instagram Active -->
+<label class="relative flex flex-col sm:flex-row sm:items-center justify-between p-space-md rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer shadow-sm group">
+<div class="flex items-start sm:items-center gap-space-md">
+<input checked="" class="mt-1 sm:mt-0 w-5 h-5 rounded text-primary focus:ring-0 accent-primary cursor-pointer" type="checkbox"/>
+<div class="relative w-12 h-12 rounded-full overflow-hidden bg-surface-container shrink-0 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Instagram aesthetic editorial modern apparel logo monogram icon, clean geometric beige background, pastel violet touches" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEbG7pcdYtS7cxcv-Uv3BHT87Gw9dGI-FSmJINzWHtx08aeOes9eTPW8uNRF1op0toO2k0hOSVq0PX_HBU0vndXRpHvNaD_pwaVBzF9YXZGfL3RhuaeR_L-LbhwdOh5Yle3QEUCZRmAZ1f9Xe32RgXBbaJhvzjR08fw9gDzFzES-Crx3vid_mvWDH20bjSi1QYGYLabA0nOeftVhXj5U3Yd2AWGMFGGHHdobfbdDcx"/>
+<span class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-gradient-to-tr from-[#FD1D1D] to-[#833AB4] text-white flex items-center justify-center text-[10px] font-bold">ig</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface">@annhien.official</span>
+<span class="px-space-xs py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">Instagram Pro</span>
+</div>
+<div class="flex flex-wrap items-center gap-x-space-md gap-y-space-xs mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
+<span>IG Business ID: 9942018</span>
+<span>•</span>
+<span class="font-semibold text-on-surface">12.4k followers</span>
+<span>•</span>
+<span class="text-secondary font-medium">Bình luận bài viết &amp; Reel</span>
+</div>
+<div class="flex items-center gap-space-xs mt-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">Đồng bộ Story DM</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant">Ẩn spam tiêu cực</span>
+</div>
+</div>
+</div>
+<div class="mt-space-sm sm:mt-0 flex items-center gap-space-sm shrink-0 pl-8 sm:pl-0">
+<span class="inline-flex items-center gap-1 text-[#237A36] bg-[#EBF7ED] px-space-sm py-1 rounded-full font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-[#237A36]"></span>
+                  Đã liên kết
+                </span>
+</div>
+</label>
+<!-- Channel Item 3: TikTok Disabled / Limit Reached -->
+<div class="relative flex flex-col sm:flex-row sm:items-center justify-between p-space-md rounded-xl bg-surface-container/50 opacity-80 cursor-not-allowed">
+<div class="flex items-start sm:items-center gap-space-md">
+<input class="mt-1 sm:mt-0 w-5 h-5 rounded text-outline cursor-not-allowed" disabled="" type="checkbox"/>
+<div class="relative w-12 h-12 rounded-full overflow-hidden bg-surface-variant shrink-0">
+<div class="w-full h-full bg-[#000000] text-white flex items-center justify-center font-bold text-[14px]">TT</div>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface-variant">An Nhiên Shop Official (TikTok Shop)</span>
+<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Khóa giới hạn</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                    Đã đạt giới hạn 2 kênh của gói dùng thử Growth (14 ngày).
+                  </p>
+</div>
+</div>
+<div class="mt-space-sm sm:mt-0 flex items-center gap-space-sm shrink-0 pl-8 sm:pl-0">
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary font-label-md text-label-md transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">upgrade</span>
+                  Nâng cấp Business
+                </button>
+</div>
+</div>
+</div>
+<!-- Real-time Initial Crawl Status Bar -->
+<div class="mt-space-md p-space-md rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 animate-spin">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface">Đang đồng bộ dữ liệu ban đầu từ Fanpage...</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Đang lấy 50 bài viết gần nhất và 120 bình luận để huấn luyện ngữ cảnh phản hồi mẫu.</p>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0 w-full sm:w-48">
+<div class="flex justify-between w-full font-label-sm text-label-sm text-primary mb-1">
+<span>Tiến trình nạp</span>
+<span class="font-bold">85%</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all duration-700" style="width: 85%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Nhập Kiến Thức Nhanh (Bước 4 - Quick Knowledge Onboarding) -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-md gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">neurology</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Nhập kiến thức nhanh cho AI (Spark Knowledge)</h2>
+<span class="px-space-xs py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">Khuyên dùng</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Cung cấp bảng giá, kích cỡ và chính sách giao hàng để trợ lý AI trả lời chuẩn xác ngay lần đầu.</p>
+</div>
+</div>
+</div>
+<!-- 2 Quick Import Shortcuts (Shopify & Web Policy Link) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md mb-space-lg">
+<!-- Shortcut 1: Shopify 1-Click Sync -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-[#95BF47]/20 text-[#2E6A1B] flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+</div>
+<span class="px-space-xs py-0.5 rounded-full bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm">Đồng bộ tự động</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface">Nhập từ gian hàng Shopify</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  1 chạm lấy trọn bộ tên sản phẩm, hình ảnh, mã SKU, giá bán và tồn kho theo thời gian thực.
+                </p>
+<div class="mt-space-md">
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Tên miền Shopify của bạn</label>
+<div class="flex items-center bg-surface-container-lowest rounded-lg px-space-sm py-1.5 shadow-sm">
+<input class="w-full bg-transparent font-code-sm text-code-sm text-on-surface focus:outline-none" type="text" value="annhien-store.myshopify.com"/>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm">
+<button class="w-full flex items-center justify-center gap-space-xs py-2 px-space-md rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+                  Kết nối &amp; Nhập tự động
+                </button>
+</div>
+</div>
+<!-- Shortcut 2: Paste URL Policy -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-secondary/15 text-secondary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[24px]">link</span>
+</div>
+<span class="px-space-xs py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">Web Crawler AI</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface">Dán đường dẫn trang chính sách</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  AI tự động đọc và tóm tắt chính sách freeship, đổi trả hàng, bảng size từ trang web có sẵn.
+                </p>
+<div class="mt-space-md">
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">URL trang chính sách hoặc đổi trả</label>
+<div class="flex items-center bg-surface-container-lowest rounded-lg px-space-sm py-1.5 shadow-sm">
+<input class="w-full bg-transparent font-body-sm text-body-sm text-on-surface focus:outline-none placeholder:text-outline" placeholder="https://annhienstore.vn/chinh-sach-doi-tra" type="url"/>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm">
+<button class="w-full flex items-center justify-center gap-space-xs py-2 px-space-md rounded-lg bg-secondary hover:bg-secondary-container text-on-secondary font-label-md text-label-md transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">auto_stories</span>
+                  Trích xuất nội dung URL
+                </button>
+</div>
+</div>
+</div>
+<!-- Fallback Manual Upload & Core Store Info -->
+<div class="bg-surface-container-low p-space-md rounded-xl">
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-title-sm text-title-sm text-on-surface flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">tune</span>
+                Cách 2: Tải file sản phẩm hoặc điền form nhanh
+              </span>
+<a class="font-label-sm text-label-sm text-primary hover:underline flex items-center gap-0.5" href="#">
+<span class="material-symbols-outlined text-[14px]">download</span>
+                Tải file mẫu Excel (.xlsx)
+              </a>
+</div>
+<!-- Upload Area & Form Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md">
+<!-- Upload Box -->
+<div class="md:col-span-5 bg-surface-container-lowest rounded-xl p-space-md flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-bright transition-colors shadow-sm">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary mb-space-sm">
+<span class="material-symbols-outlined text-[24px]">cloud_upload</span>
+</div>
+<p class="font-title-sm text-title-sm text-on-surface">Kéo thả file Excel / CSV vào đây</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Hỗ trợ .csv, .xlsx dung lượng tối đa 15MB</p>
+<span class="mt-space-sm inline-block px-space-md py-1 rounded bg-surface-container text-primary font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">
+                  Chọn file từ máy
+                </span>
+</div>
+<!-- Quick Basic Store Info -->
+<div class="md:col-span-7 space-y-space-sm bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="grid grid-cols-2 gap-space-sm">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Tên cửa hàng đại diện</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-sm py-1.5 font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container" type="text" value="An Nhiên Store"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Hotline CSKH</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-sm py-1.5 font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container" type="text" value="0988 123 456"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Giờ mở cửa phục vụ</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-sm py-1.5 font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container" type="text" value="08:30 - 22:00 (Tất cả các ngày)"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Chính sách ưu đãi Freeship</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-sm py-1.5 font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container" type="text" value="Freeship toàn quốc đơn từ 500k"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT HELPER & AI PREVIEW STAGE (Col 4) -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Interactive AI Simulation Box -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md relative overflow-hidden">
+<!-- Spark Accent gradient bar -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary"></div>
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">smart_toy</span>
+<span class="font-title-md text-title-md text-on-surface">Xem trước AI phản hồi tức thì</span>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+              Live Preview
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+            Mô phỏng cách Spark AI hiểu dữ liệu từ Shopify và trả lời khách hàng Facebook ngay lập tức.
+          </p>
+<!-- Chat Simulator Card -->
+<div class="bg-surface-container-low p-space-md rounded-xl space-y-space-md">
+<!-- Customer Comment -->
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-surface-variant shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Customer avatar illustration, young female Vietnamese customer with friendly smile, colorful artistic soft gradient circle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPH-FBYAbYt-RZT_HwNAA5ND_-b1pb_iBkjktXVb9LaleLC9OZVSzBIb8M7Q_SJALkX8r7xvgVslkzm0px2Jhc4wB_qcCmz1S6skoMEnesqHrBQznZl8o2G0JueiquEqzxJLvz5LwtmLfoDUUC_jZKHzi6DvEezuAjYJOM6mj0Cp0i6_P0xFBzVm99gWvwGZ5IbuI1jIeNDxCQgxF7325-3a0uJzl7Lwf-U_7W_LZe"/>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface">Thu Hương</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Vừa xong trên Facebook</span>
+</div>
+<div class="mt-1 p-space-sm rounded-xl bg-surface-container-lowest text-on-surface font-body-sm text-body-sm shadow-sm max-w-xs">
+                  "Shop ơi mẫu váy hoa nhí size M còn hàng không, giá bao nhiêu và có freeship về Cầu Giấy không ạ?"
+                </div>
+</div>
+</div>
+<!-- AI Engine Generated Output -->
+<div class="flex items-start gap-space-sm pl-2">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">spark</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-secondary">CommentFlow Spark Engine</span>
+<span class="px-space-xs py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">Độ tin cậy 98%</span>
+</div>
+<div class="mt-1 p-space-sm rounded-xl bg-[#F3F0FF] text-on-surface font-body-sm text-body-sm shadow-sm">
+                  Dạ An Nhiên chào chị Hương ạ! Mẫu <strong>Váy hoa nhí Vintage</strong> bên em hiện còn sẵn size M (phù hợp 48-54kg) với giá ưu đãi <strong>349.000đ</strong> ạ. 
+                  <br/><br/>
+                  Đơn hàng gửi về Cầu Giấy bên em hỗ trợ phí ship chỉ 20k, hoặc chị chọn thêm 1 phụ kiện để đạt đơn 500k sẽ được <strong>Freeship toàn quốc</strong> nhé ạ. Em nhắn tin gửi chị bảng ảnh thực tế qua Messenger luôn nha! ✨
+                </div>
+<!-- Knowledge Sources Attribution Tagging -->
+<div class="flex flex-wrap items-center gap-space-xs mt-space-xs">
+<span class="inline-flex items-center gap-1 px-space-xs py-0.5 rounded bg-primary/10 text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[12px]">inventory_2</span>
+                    Shopify: Váy hoa nhí
+                  </span>
+<span class="inline-flex items-center gap-1 px-space-xs py-0.5 rounded bg-secondary/15 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[12px]">straighten</span>
+                    Bảng size M (48-54kg)
+                  </span>
+<span class="inline-flex items-center gap-1 px-space-xs py-0.5 rounded bg-[#FFF4E5] text-[#B35C00] font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[12px]">local_shipping</span>
+                    Chính sách Freeship 500k
+                  </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Micro interaction: Retest prompt -->
+<div class="mt-space-md pt-space-sm flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Tốc độ phản hồi: <strong class="text-on-surface">1.2 giây</strong></span>
+<button class="text-secondary font-title-sm text-title-sm hover:underline flex items-center gap-0.5" type="button">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+              Thử nghiệm câu hỏi khác
+            </button>
+</div>
+</div>
+<!-- Meta Platform & Security Compliance Card -->
+<div class="bg-surface-container-low p-space-md rounded-xl">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-on-surface">Cam kết tuân thủ chính sách Meta &amp; TikTok</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-relaxed">
+                CommentFlow chỉ đọc bình luận và tin nhắn công khai nhằm hỗ trợ đề xuất câu trả lời. 
+                Hệ thống <strong>tuyệt đối KHÔNG</strong> tự ý đăng bài, KHÔNG can thiệp quyền sở hữu hay quản trị Fanpage của bạn.
+              </p>
+<div class="mt-space-sm flex items-center gap-space-md">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-[#237A36]">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                  Mã hoá SSL 256-bit
+                </span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-[#237A36]">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                  Meta Tech Partner API
+                </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Tips card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[20px]">lightbulb</span>
+<p class="font-body-sm text-body-sm text-on-surface">Cần kỹ sư hỗ trợ nạp dữ liệu riêng của doanh nghiệp?</p>
+</div>
+<button class="font-title-sm text-title-sm text-primary hover:underline shrink-0 pl-space-sm" type="button">
+            Chat 1-1
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- STICKY ACTION FOOTER BAR -->
+<div class="sticky bottom-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md py-space-md shadow-[0_-4px_16px_rgba(0,0,0,0.06)] mt-space-xl">
+<div class="max-w-7xl mx-auto px-margin flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<!-- Back Button & Hint -->
+<div class="flex items-center gap-space-md w-full sm:w-auto justify-between sm:justify-start">
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+<span>Quay lại bước 2</span>
+</button>
+<div class="hidden md:flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">info</span>
+<span>Bạn có thể bỏ qua bước nạp sản phẩm nếu muốn cài đặt thủ công sau trong Cài Đặt.</span>
+</div>
+</div>
+<!-- Action Confirmation Buttons -->
+<div class="flex items-center gap-space-sm w-full sm:w-auto justify-end">
+<!-- Skip Action -->
+<button class="flex-1 sm:flex-none px-space-md py-space-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm transition-colors text-center" type="button">
+          Để sau (Bỏ qua nạp sản phẩm)
+        </button>
+<!-- Primary Advance Action -->
+<button class="flex-1 sm:flex-none flex items-center justify-center gap-space-xs px-space-xl py-space-sm rounded-lg bg-primary hover:bg-primary-container text-on-primary font-title-sm text-title-sm shadow-md transition-all" type="button">
+<span>Tiếp tục: Mời nhân viên &amp; Kích hoạt</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-container-low py-space-xl mt-margin"><div class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[18px]">shield_with_heart</span><p class="font-body-sm text-body-sm text-on-surface-variant">© 2025 CommentFlow AI. Hệ thống quản trị tự động hoá bình luận đa nền tảng.</p></div><div class="flex items-center gap-space-lg"><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Chính sách bảo mật dữ liệu</a><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Tài liệu API &amp; Webhook</a><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Trung tâm hỗ trợ 24/7</a></div></div></footer></body></html>

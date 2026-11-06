@@ -60,6 +60,19 @@ export {
   type InstagramConnectorOptions,
 } from './instagram/connector';
 export { parseInstagramWebhook } from './instagram/webhook';
+export {
+  createMessengerSender,
+  MESSENGER_MAX_TEXT_LENGTH,
+  MessageNotAllowedError,
+  type MessengerSender,
+  type MessengerSenderOptions,
+} from './messenger/sender';
+export {
+  type NormalizedMessage,
+  type NormalizedMessageEvent,
+  parseMessengerWebhook,
+} from './messenger/webhook';
+export { type MessengerSendMode, messengerSendMode } from './messenger/window';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
 export {
   createTokenCipher,

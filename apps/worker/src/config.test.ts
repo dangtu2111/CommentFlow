@@ -17,6 +17,7 @@ describe('loadConfig', () => {
       facebook: { enabled: false },
       workspaceDeleteEnabled: false,
       instagram: { enabled: false },
+      messenger: { enabled: false },
     });
   });
 
@@ -140,6 +141,41 @@ describe('loadConfig', () => {
           expect((error as Error).message).not.toContain(META_APP_SECRET);
           expect((error as Error).message).not.toContain('bimat');
         }
+      }
+    });
+  });
+
+  describe('FR-014 loadConfig MESSENGER_CONNECTOR_ENABLED (MESSENGER-WEBHOOK)', () => {
+    const full = {
+      DATABASE_WORKER_URL,
+      META_APP_ID: '123456789012345',
+      META_APP_SECRET: 'bi-mat-app-gia-0123456789abcdef',
+      TOKEN_ENC_KEYS: `v1:${'a'.repeat(64)}`,
+    };
+
+    it('mặc định TẮT; chỉ đúng chữ `true` mới bật; độc lập với cờ Facebook/Instagram', () => {
+      for (const flag of [undefined, '', 'false', '1', 'yes', 'TRUE']) {
+        expect(
+          loadConfig({ DATABASE_WORKER_URL, MESSENGER_CONNECTOR_ENABLED: flag }).messenger,
+        ).toEqual({ enabled: false });
+      }
+      const cfg = loadConfig({ ...full, MESSENGER_CONNECTOR_ENABLED: 'true' });
+      expect(cfg.messenger).toEqual({
+        enabled: true,
+        appId: full.META_APP_ID,
+        appSecret: full.META_APP_SECRET,
+      });
+      expect(cfg.facebook).toEqual({ enabled: false });
+      expect(cfg.instagram).toEqual({ enabled: false });
+    });
+
+    it('bật mà thiếu biến → CONFIG_INVALID, không lộ bí mật', () => {
+      try {
+        loadConfig({ ...full, MESSENGER_CONNECTOR_ENABLED: 'true', META_APP_ID: undefined });
+        expect.unreachable();
+      } catch (error) {
+        expect(isAppError(error) && error.code).toBe('CONFIG_INVALID');
+        expect((error as Error).message).not.toContain(full.META_APP_SECRET);
       }
     });
   });
