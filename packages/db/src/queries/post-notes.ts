@@ -111,7 +111,12 @@ export async function listActivePostNotes(
   return r.rows.map(toNote);
 }
 
-/** Đặt (`off`/`shadow`) hoặc bỏ (`null`) ghi đè chế độ tự động của bài. Chỉ siết, DB CHECK chặn `auto`. */
+/**
+ * Đặt (`off`/`shadow`) hoặc bỏ (`null`) ghi đè chế độ tự động của bài. Chỉ siết, DB CHECK chặn `auto`.
+ * Lưu ý: tầng gọi PHẢI kiểm vai trò Owner trước — với Staff, đặt ghi đè lỗi 42501 còn bỏ ghi đè (DELETE) bị RLS lọc
+ * im lặng; tương tự `updatePostNote`/`deletePostNote` trả `false` cho cả "không thấy" lẫn "bị RLS chặn".
+ * `updatePostNote`: bỏ `validTo` nghĩa là bỏ hạn (khác `validFrom`, giữ ngày cũ).
+ */
 export async function setPostAutoOverride(
   tx: Database,
   workspaceId: string,
