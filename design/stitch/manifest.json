@@ -1,6 +1,6 @@
 {
   "project_id": "15298527895734533184",
-  "synced_at": "2026-11-06T11:46:54.258Z",
+  "synced_at": "2026-11-06T18:31:48.414Z",
   "screens": [
     {
       "stitch_id": "f96e516f1a6d41fb943b3b4c4fc065e2",
@@ -290,6 +290,33 @@
       "files": [
         "settings-workspace-members.html",
         "settings-workspace-members.png"
+      ]
+    },
+    {
+      "stitch_id": "db4f699191a541b093a551260ec2395c",
+      "name": "Cài đặt - Tài khoản & Bảo mật (Chế độ tối - Dark Mode)",
+      "slug": "cai-dat-tai-khoan-bao-mat-che-do-toi-dark-mode",
+      "updated": null,
+      "files": [
+        "cai-dat-tai-khoan-bao-mat-che-do-toi-dark-mode.html"
+      ]
+    },
+    {
+      "stitch_id": "e3c7990dd20d489190dcadbe965a4784",
+      "name": "Cài đặt - Xác minh số điện thoại (Phone Verification Modal Flow)",
+      "slug": "cai-dat-xac-minh-so-dien-thoai-phone-verification-modal-flow",
+      "updated": null,
+      "files": [
+        "cai-dat-xac-minh-so-dien-thoai-phone-verification-modal-flow.html"
+      ]
+    },
+    {
+      "stitch_id": "69aede8807964ceb9c1ff3901b449550",
+      "name": "Cài đặt - Chỉnh sửa thông tin cá nhân (Edit Profile Modal)",
+      "slug": "cai-dat-chinh-sua-thong-tin-ca-nhan-edit-profile-modal",
+      "updated": null,
+      "files": [
+        "cai-dat-chinh-sua-thong-tin-ca-nhan-edit-profile-modal.html"
       ]
     }
   ]
