@@ -183,6 +183,24 @@ export {
   type StockOutcome,
 } from './decide/stock-rules';
 export {
+  type AfterCancel,
+  type AutoSendTimer,
+  CANCEL_REASONS,
+  type CancelReason,
+  type CancelResult,
+  cancelAutoSendTimer,
+  dispatchAutoSendTimer,
+  planAutoSendDelay,
+  resolveAutoSendTimer,
+  type SystemCancelReason,
+} from './delay/auto-send-delay';
+export {
+  type AutoSendDelayScheduler,
+  createInMemoryAutoSendDelayScheduler,
+  type ScheduleInput,
+  type ScheduleResult,
+} from './delay/delay-scheduler';
+export {
   DEFAULT_DRAFT_MODEL,
   type DraftConfig,
   loadDraftConfig,
@@ -532,21 +550,3 @@ export {
   REASON_VARIANTS_EXHAUSTED,
   replyFingerprint,
 } from './variation/variation';
-export {
-  type AfterCancel,
-  type AutoSendTimer,
-  CANCEL_REASONS,
-  type CancelReason,
-  type CancelResult,
-  cancelAutoSendTimer,
-  dispatchAutoSendTimer,
-  planAutoSendDelay,
-  resolveAutoSendTimer,
-  type SystemCancelReason,
-} from './delay/auto-send-delay';
-export {
-  type AutoSendDelayScheduler,
-  createInMemoryAutoSendDelayScheduler,
-  type ScheduleInput,
-  type ScheduleResult,
-} from './delay/delay-scheduler';

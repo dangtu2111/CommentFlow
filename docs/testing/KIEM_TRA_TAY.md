@@ -1,5 +1,13 @@
 # Kiểm tra tay — danh sách dồn
 
+## KT-ADC — Khoảng trễ tự gửi có hủy (AUTO-DELAY-CANCEL, FR-071, US-042, feat-auto-delay-cancel) — chưa thử
+
+> Chưa nối pipeline/giao diện nên kiểm bằng lệnh. / Not wired to pipeline/UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/delay` | Mọi test xanh (gồm property-based: câu đã hủy không bao giờ được giao; không giao trước `runAt`; mỗi câu giao đúng một lần). / All green. |
+
 ## KT-DSD — Dữ liệu mẫu DEV (DEV-SEED-DEMO, feat-dev-seed-demo) — chưa thử
 
 > Cần `.env` + máy ảo bật, DB `cf_dev` đã migrate. Chỉ dev. / Needs `.env` + dev VM; dev DB only.

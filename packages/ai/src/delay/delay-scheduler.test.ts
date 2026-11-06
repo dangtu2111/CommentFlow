@@ -30,6 +30,12 @@ describe('FR-071 AutoSendDelayScheduler', () => {
     expect(await scheduler.claimDue()).toEqual([]);
   });
 
+  it('đồng hồ mặc định là giờ hệ thống', async () => {
+    const scheduler = createInMemoryAutoSendDelayScheduler();
+    const r = await scheduler.schedule(job('a', 'd1', 60));
+    expect(r.ok && Math.abs(r.timer.scheduledAt - Date.now()) < 5_000).toBe(true);
+  });
+
   it('trễ 0 giây giao ngay ở lần claim đầu', async () => {
     const { scheduler } = setup();
     await scheduler.schedule(job('a', 'd1', 0));

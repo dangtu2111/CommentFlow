@@ -101,7 +101,11 @@ export function planAutoSendDelay(input: PlanInput): PlanResult {
 
 export function cancelAutoSendTimer(timer: AutoSendTimer, input: CancelInput): CancelResult {
   const { workspaceId, reason, nowMs } = input;
-  if (!isId(workspaceId) || !isTime(nowMs) || !(CANCEL_REASONS as readonly unknown[]).includes(reason)) {
+  if (
+    !isId(workspaceId) ||
+    !isTime(nowMs) ||
+    !(CANCEL_REASONS as readonly unknown[]).includes(reason)
+  ) {
     return { ok: false, reason: 'invalid_input' };
   }
   if (timer.workspaceId !== workspaceId) return { ok: false, reason: 'not_found' };
