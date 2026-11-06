@@ -52,6 +52,7 @@
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
 | KT-LEX | Xuất khách tiềm năng CSV/XLSX (chờ nối nguồn + giao diện) | — | chưa | chưa | — |
+| KT-MIL1 | Logic hộp thư tin nhắn (cửa sổ, quyền gửi, khóa người xử lý) | feat-msg-inbox-logic | có | chưa | — |
 | KT-MSG1 | Tin chào / ngoài giờ / báo chuyển người (logic; Page thử khi nối thật) | — | không | chưa | — |
 | KT-MSW | Messenger (`MESSENGER_CONNECTOR_ENABLED`, **cần Page thử + `pages_messaging`**; sau `MESSENGER-INGEST`) | feat-messenger-webhook | chưa | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
@@ -993,6 +994,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 4 | Staff yêu cầu xuất SĐT đầy đủ | Bị từ chối |
 | 5 | Owner (cấu hình `full`) yêu cầu đầy đủ | Ra số đầy đủ; có dòng nhật ký xuất |
 | 6 | Đặt `LEADS_EXPORT_MAX_ROWS` nhỏ hơn số lead rồi xuất | Báo "quá lớn", không có tệp cắt dở |
+
+## KT-MIL1 — Logic hộp thư tin nhắn (MSG-INBOX-LOGIC, feat-msg-inbox-logic)
+Điều kiện: chưa có giao diện/nơi gọi trong pipeline; kiểm bằng lệnh trên máy code (chỉ đọc kết quả).
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/inbox` | Mọi test xanh (cửa sổ, quyền gửi AI/nhân viên, trạng thái, chuyển người, khóa) |
+| 2 | Đọc tên test "quyền gửi khớp R8 của sendRecheck (property)" | Có và xanh: inbox cho gửi ⇔ `sendRecheck` R8 qua |
+| 3 | Chạy `pnpm --filter @flow/ai test:coverage` | Không báo thiếu ngưỡng; `src/inbox` ≥ 95% nhánh |
+| 4 | Khi có giao diện hộp thư (`MSG-INBOX-WIRE`) | Lặp lại kiểm tay: hội thoại >24 giờ khóa nút AI, hiện thẻ HUMAN_AGENT cho nhân viên; >7 ngày khóa ô soạn (vi + en) |
 
 ## KT-MSG1 — Tin chào / ngoài giờ / báo chuyển người (MSG-GREETINGS, feat-msg-greetings)
 

@@ -30,6 +30,7 @@ export default defineConfig({
         'src/examples/*.ts': { branches: 95 },
         'src/cost-gate/*.ts': { branches: 95 },
         'src/autohide/*.ts': { branches: 95 },
+        'src/inbox/*.ts': { branches: 95 },
       },
     },
   },
