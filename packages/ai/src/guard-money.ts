@@ -11,7 +11,7 @@
  * (số trong link không thành số tiền).
  */
 
-export type GuardClaimKind = 'money' | 'percent' | 'date' | 'phone' | 'email' | 'link';
+export type GuardClaimKind = 'money' | 'number' | 'percent' | 'date' | 'phone' | 'email' | 'link';
 
 type DateParts = { d?: number; m?: number; y?: number };
 
@@ -47,45 +47,77 @@ export type GuardMoneyResult = {
   claimsChecked: number;
 };
 
-const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+const NOT_AFTER_NUM = String.raw`(?<!\p{N}|\p{N}[.,])`;
+const EMAIL = /(?<![A-Z0-9._%+-])[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const URL_SCHEME = /(?:https?:\/\/|www\.)[^\s<>"')\]]+/giu;
 const BARE_DOMAIN =
-  /(?<![\p{L}\p{N}@./-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:com|vn|net|org|io|me|app|shop|store|xyz|info|co|edu|gov|ly|page|link)(?:\/[^\s<>"')\]]*)?(?![\p{L}\p{N}-])/giu;
-// Di động/bàn VN: 0 hoặc 84/+84 rồi 9–10 chữ số (cho phép . - khoảng trắng); tổng đài 1800/1900.
+  /(?<![\p{L}\p{N}@./-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:com|vn|net|org|io|me|app|shop|store|xyz|info|co|edu|gov|ly|page|link|online|site|biz|cc|asia|tv|top|club|vip|pro|tech|live|click|website|world|today)(?:\/[^\s<>"')\]]*)?(?![\p{L}\p{N}-])/giu;
+// Đuôi bất kỳ nhưng bắt buộc có đường dẫn (vd "muahang.xyz123/sp1").
+const BARE_PATH =
+  /(?<![\p{L}\p{N}@./-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}\/[^\s<>"')\]]+/giu;
+// Di động/bàn VN: 0 hoặc 84/+84 (có thể trong ngoặc) rồi 9–10 chữ số, phân cách tối đa 3 ký tự (. - khoảng trắng);
+// tổng đài 1800/1900.
 const PHONE =
-  /(?<![\p{N}+])(?:\+?84|0)[\s.-]?\d(?:[\s.-]?\d){8,9}(?![\p{N}])|(?<![\p{N}])1[89]00[\s.-]?\d{4,6}(?![\p{N}])/gu;
-const DATE_ISO = /(?<![\p{N}])(\d{4})-(\d{1,2})-(\d{1,2})(?![\p{N}])/gu;
+  /(?<![\p{N}+]|\p{N}[.,])\(?(?:\+?84|0)\)?[\s.-]{0,3}\d(?:[\s.-]{0,3}\d){8,9}(?![\p{N}])|(?<![\p{N}])1[89]00[\s.-]?\d{4,6}(?![\p{N}])/gu;
+const DATE_ISO = /(?<![\p{N}])(\d{4})([-/])(\d{1,2})\2(\d{1,2})(?![\p{N}])/gu;
 const DATE_VERBAL = /(?:ngày\s+)?(\d{1,2})\s+tháng\s+(\d{1,2})(?:\s+năm\s+(\d{4}))?(?![\p{N}])/giu;
 const DATE_NUMERIC = /(?<![\p{N}.,/-])(\d{1,2})([/.-])(\d{1,2})(?:\2(\d{4}|\d{2}))?(?![\p{N}])/gu;
-const DAY_ONLY = /ngày\s+(\d{1,2})(?![\p{N}])/giu;
+// "đến 30-11", "hết 30.11": không năm nhưng đứng sau từ chỉ hạn/ngày → là ngày.
+const DATE_CONTEXT = /(?:đến|hết|từ|trước|sau|ngày)\s+(\d{1,2})([.-])(\d{1,2})(?![\p{N}.,/-])/giu;
+const DAY_ONLY = /(?:ngày|mùng|mồng)\s+(\d{1,2})(?![\p{N}])/giu;
 const MONTH_ONLY = /tháng\s+(\d{1,2})(?![\p{N}])/giu;
-const PERCENT = /(?<![\p{N}.,])(\d+(?:[.,]\d+)?)\s*(?:%|phần trăm|phan tram)/giu;
-const UNIT = '(k|nghìn|ngàn|tr|triệu|tỷ)';
+const PCT_WORD = '(?:%|phần trăm|phan tram)';
+const PERCENT_RANGE = new RegExp(
+  `${NOT_AFTER_NUM}(\\d+(?:[.,]\\d+)?)\\s*[-–—]\\s*(\\d+(?:[.,]\\d+)?)\\s*${PCT_WORD}`,
+  'giu',
+);
+const PERCENT = new RegExp(`${NOT_AFTER_NUM}(\\d+(?:[.,]\\d+)?)\\s*${PCT_WORD}`, 'giu');
+const UNIT = '(k|nghìn|nghin|ngàn|ngan|tr|triệu|trieu|tỷ|tỉ|ty)';
 const MONEY_RANGE = new RegExp(
-  `(?<![\\p{N}.,])(\\d+(?:[.,]\\d+)?)\\s*[-–—]\\s*(\\d+(?:[.,]\\d+)?)\\s*${UNIT}(?![\\p{L}\\p{N}])`,
+  `${NOT_AFTER_NUM}(\\d+(?:[.,]\\d+)?)\\s*[-–—]\\s*(\\d+(?:[.,]\\d+)?)\\s*${UNIT}(?![\\p{L}\\p{N}])`,
   'giu',
 );
+// Sau đơn vị có thể có phần lẻ: "2tr5", "1 triệu 2", "1 triệu rưỡi", "2 triệu mốt".
 const MONEY_UNIT = new RegExp(
-  `(?<![\\p{N}.,])(\\d+(?:[.,]\\d+)?)\\s*${UNIT}(\\d{1,3})?(?![\\p{L}\\p{N}])`,
+  `${NOT_AFTER_NUM}(\\d+(?:[.,]\\d+)?)\\s*${UNIT}(?:\\s*(\\d{1,3})|\\s+(rưỡi|mốt))?(?![\\p{L}\\p{N}])`,
   'giu',
 );
-const MONEY_CURRENCY =
-  /(?<![\p{N}.,])(\d{1,3}(?:[.,]\d{3})+|\d+)\s*(?:đ|₫|vnd|vnđ|đồng)(?![\p{L}\p{N}])/giu;
-const MONEY_GROUPED = /(?<![\p{N}.,])\d{1,3}(?:[.,]\d{3})+(?![\p{N}])/gu;
+const MONEY_CURRENCY = new RegExp(
+  `${NOT_AFTER_NUM}(\\d{1,3}(?:[.,]\\d{3})+|\\d+)\\s*(?:đồng|dong|vnđ|vnd|đ|₫|d)(?![\\p{L}\\p{N}])`,
+  'giu',
+);
+const MONEY_GROUPED = new RegExp(`${NOT_AFTER_NUM}\\d{1,3}(?:[.,]\\d{3})+(?![\\p{N}])`, 'gu');
+// Số trần ≥3 chữ số còn sót (không đơn vị/ký hiệu): coi là có thể là giá → phải có trong nguồn.
+const BARE_NUMBER = new RegExp(`${NOT_AFTER_NUM}\\d{3,}(?!\\p{N}|[.,]\\p{N})`, 'gu');
 
 const UNIT_MULTIPLIER: Record<string, number> = {
   k: 1e3,
   nghìn: 1e3,
+  nghin: 1e3,
   ngàn: 1e3,
+  ngan: 1e3,
   tr: 1e6,
   triệu: 1e6,
+  trieu: 1e6,
   tỷ: 1e9,
+  tỉ: 1e9,
+  ty: 1e9,
 };
+const WORD_TAIL: Record<string, string> = { rưỡi: '5', mốt: '1' };
 
 const toNumber = (s: string): number => Number(s.replace(',', '.'));
 const vnd = (n: number): string => `vnd:${Math.round(n)}`;
 const validDay = (d: number): boolean => d >= 1 && d <= 31;
 const validMonth = (m: number): boolean => m >= 1 && m <= 12;
+
+/** "1.500k" → dấu chấm là phân cách nghìn (1500 nghìn); "1,5tr" → thập phân; "2tr5" → 2,5. */
+function unitAmount(num: string, unit: string, tail?: string): number {
+  const mult = UNIT_MULTIPLIER[unit.toLowerCase()] as number;
+  const grouped = /^\d{1,3}(?:[.,]\d{3})+$/.test(num);
+  const base = grouped ? num.replace(/[.,]/g, '') : num.replace(',', '.');
+  const full = tail === undefined || base.includes('.') ? base : `${base}.${tail}`;
+  return Number(full) * mult;
+}
 
 function dateKey(p: DateParts): string {
   const parts: string[] = [];
@@ -140,16 +172,23 @@ const dateClaim = (d?: number, m?: number, y?: number) => {
   return [{ kind: 'date' as const, key: dateKey(date), date }];
 };
 
-/** Rút mọi khẳng định kiểm được (tiền, %, ngày, SĐT, email, link) khỏi một đoạn văn. Theo thứ tự xuất hiện. */
+const moneyClaims = (...amounts: number[]) =>
+  amounts.map((n) => ({ kind: 'money' as const, key: vnd(n) }));
+
+/**
+ * Rút mọi khẳng định kiểm được (tiền, %, ngày, SĐT, email, link, số trần ≥3 chữ số) khỏi một đoạn văn,
+ * theo thứ tự xuất hiện. Chuẩn hóa NFKC + bỏ ký tự rộng 0 trước (chống lách bằng Unicode).
+ * `raw` có thể chứa PII — bên gọi không được log.
+ */
 export function extractClaims(text: string): GuardClaim[] {
-  const work = { text };
+  const work = { text: text.normalize('NFKC').replace(/[​-‍﻿]/g, '') };
   const out: GuardClaim[] = [];
-  const tail = (s: string | undefined) => (s === undefined ? '' : `.${s}`);
 
   scan(work, EMAIL, 'email', (m) => [{ kind: 'email', key: `mail:${m[0].toLowerCase()}` }], out);
   const link: Extract = (m) => [{ kind: 'link', key: normalizeLink(m[0]) }];
   scan(work, URL_SCHEME, 'link', link, out);
   scan(work, BARE_DOMAIN, 'link', link, out);
+  scan(work, BARE_PATH, 'link', link, out);
   scan(work, PHONE, 'phone', (m) => [{ kind: 'phone', key: normalizePhone(m[0]) }], out);
 
   scan(
@@ -157,7 +196,7 @@ export function extractClaims(text: string): GuardClaim[] {
     DATE_ISO,
     'date',
     (m) => {
-      const [d, mo] = [Number(m[3]), Number(m[2])];
+      const [d, mo] = [Number(m[4]), Number(m[3])];
       return validDay(d) && validMonth(mo) ? dateClaim(d, mo, Number(m[1])) : null;
     },
     out,
@@ -189,6 +228,73 @@ export function extractClaims(text: string): GuardClaim[] {
   );
   scan(
     work,
+    DATE_CONTEXT,
+    'date',
+    (m) =>
+      validDay(Number(m[1])) && validMonth(Number(m[3]))
+        ? dateClaim(Number(m[1]), Number(m[3]))
+        : null,
+    out,
+  );
+
+  scan(
+    work,
+    PERCENT_RANGE,
+    'percent',
+    (m) =>
+      [m[1], m[2]].map((n) => ({ kind: 'percent' as const, key: `pct:${toNumber(n as string)}` })),
+    out,
+  );
+  scan(
+    work,
+    PERCENT,
+    'percent',
+    (m) => [{ kind: 'percent', key: `pct:${toNumber(m[1] as string)}` }],
+    out,
+  );
+
+  scan(
+    work,
+    MONEY_RANGE,
+    'money',
+    (m) =>
+      moneyClaims(
+        unitAmount(m[1] as string, m[3] as string),
+        unitAmount(m[2] as string, m[3] as string),
+      ),
+    out,
+  );
+  scan(
+    work,
+    MONEY_UNIT,
+    'money',
+    (m) => {
+      const tail = m[3] ?? WORD_TAIL[(m[4] ?? '').toLowerCase()];
+      return moneyClaims(unitAmount(m[1] as string, m[2] as string, tail));
+    },
+    out,
+  );
+  scan(
+    work,
+    MONEY_CURRENCY,
+    'money',
+    (m) => moneyClaims(Number((m[1] as string).replace(/[.,]/g, ''))),
+    out,
+  );
+  scan(
+    work,
+    MONEY_GROUPED,
+    'money',
+    (m) => {
+      const value = Number(m[0].replace(/[.,]/g, ''));
+      return value >= 1000 ? moneyClaims(value) : null;
+    },
+    out,
+  );
+
+  // Ngày/tháng đơn lẻ quét SAU tiền để "ngày 30k"/"tháng 2 triệu" không bị nuốt mất số tiền.
+  scan(
+    work,
     DAY_ONLY,
     'date',
     (m) => (validDay(Number(m[1])) ? dateClaim(Number(m[1])) : null),
@@ -201,48 +307,7 @@ export function extractClaims(text: string): GuardClaim[] {
     (m) => (validMonth(Number(m[1])) ? dateClaim(undefined, Number(m[1])) : null),
     out,
   );
-
-  scan(work, PERCENT, 'percent', (m) => [{ kind: 'percent', key: `pct:${toNumber(m[1]!)}` }], out);
-
-  scan(
-    work,
-    MONEY_RANGE,
-    'money',
-    (m) => {
-      const mult = UNIT_MULTIPLIER[m[3]!.toLowerCase()]!;
-      return [m[1]!, m[2]!].map((n) => ({ kind: 'money' as const, key: vnd(toNumber(n) * mult) }));
-    },
-    out,
-  );
-  scan(
-    work,
-    MONEY_UNIT,
-    'money',
-    (m) => {
-      const mult = UNIT_MULTIPLIER[m[2]!.toLowerCase()]!;
-      // "2tr5" = 2,5 triệu; "2tr150" = 2,15 triệu
-      const num = m[3] === undefined ? m[1]! : `${m[1]!.replace(',', '.')}${tail(m[3])}`;
-      return [{ kind: 'money', key: vnd(toNumber(num) * mult) }];
-    },
-    out,
-  );
-  scan(
-    work,
-    MONEY_CURRENCY,
-    'money',
-    (m) => [{ kind: 'money', key: vnd(Number(m[1]!.replace(/[.,]/g, ''))) }],
-    out,
-  );
-  scan(
-    work,
-    MONEY_GROUPED,
-    'money',
-    (m) => {
-      const value = Number(m[0].replace(/[.,]/g, ''));
-      return value >= 1000 ? [{ kind: 'money', key: vnd(value) }] : null;
-    },
-    out,
-  );
+  scan(work, BARE_NUMBER, 'number', (m) => [{ kind: 'number', key: `num:${m[0]}` }], out);
 
   return out.sort((a, b) => a.index - b.index);
 }
@@ -250,7 +315,14 @@ export function extractClaims(text: string): GuardClaim[] {
 function displayOf(c: GuardClaim): string {
   if (c.kind === 'phone') return '[sđt]';
   if (c.kind === 'email') return '[email]';
-  return c.kind === 'link' ? c.key.slice('url:'.length) : c.raw.trim();
+  if (c.kind === 'link')
+    return (
+      c.key
+        .slice('url:'.length)
+        .split('?')[0]
+        ?.replace(/\d{8,}/g, '[sđt]') ?? ''
+    );
+  return c.raw.trim();
 }
 
 /** Mỗi trường câu nói đến phải được một ngày trong nguồn có CÙNG giá trị (nguồn thiếu trường → không đủ). */

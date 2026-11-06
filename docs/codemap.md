@@ -35,7 +35,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/log-on-behalf-of` · Gói 
 | `packages/shared/` | `AppError`, `parseEnv`, `brand.ts` (`loadBrandConfig`/`defaultMailFrom`: `APP_NAME`/`APP_LOGO_URL`/`APP_DOMAIN`/`APP_EMAIL_FROM`, FR-125; web: `server/brand.ts` `getBrand()` + `components/brand-logo.tsx`; thư: `renderEmail(..., {brandName})`; không còn khóa i18n `brand`), `maskPii`/`MaskedText`, locale + chuỗi vi/en (gói lá) |
 | `packages/db/` | Drizzle schema `core`/`cf`, `migrations/*.sql`, RLS, `createDb`, `check-rls`, CLI |
 | `packages/saas-core/` | `auth` (Better Auth + `flows`), `notify` (gửi thư), `tenancy`, `flags` — không biết gì về sản phẩm |
-| `packages/ai/` | `createLlmClient().call()` → LiteLLM + ghi `ai_usage` (chưa có pipeline) |
+| `packages/ai/` | `createLlmClient().call()` → LiteLLM + ghi `ai_usage` (chưa có pipeline); `guard-money.ts`: `checkGuardMoney`/`extractClaims` — guard FR-030 thuần (tiền/%/ngày/SĐT/email/link phải có trong nguồn) |
 | `packages/db/src/schema/cf/products.ts` · `queries/products.ts` · `migrations/0034_products_variants.sql` · `packages/shared/src/products.ts` | `cf.products`/`cf.product_variants` (PRODUCTS-VARIANTS, FR-129): RLS thành viên/hệ thống ghi, không DELETE, `rev` do trigger; `findActiveVariants` (`attrs_norm @>`); `normalizeAttrs`, `parseProductCard`, `productEmbeddingText` (giá/tồn không vào vector) |
 | `packages/db/src/schema/cf/kb.ts` | Kiến thức (KB-SCHEMA, migration 0031, QKB1): `kbSources`, `kbVersions` (bất biến), `kbChunks` (`halfvec(1024)` + `tsv`; chỉ hệ thống ghi; FK ghép theo `workspace_id`); `halfvec1024`/`tsvector` là `customType`. Test: `packages/db/tests/kb-schema.int.test.ts` |
 | `packages/db/src/schema/cf/` | Bảng sản phẩm (schema `cf`): `ai_usage`, `channels`, `posts`, `comments`, `webhook_events` (CH-SCHEMA, ADR 007): RLS + ghi theo vai trò/hệ thống, token Page ẩn khỏi `cf_app`, khóa ngoại ghép chống chéo workspace |
@@ -96,6 +96,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/log-on-behalf-of` · Gói 
 | Tạo workspace (thành viên chỉ vào qua lời mời) | `createTenancy` → `createWorkspace` (không còn `addMember`); test dựng thành viên bằng `seedMemberForTest` (`packages/saas-core/tests/helpers.ts`, chỉ test) | `packages/saas-core/src/tenancy/tenancy.ts:30,47,60` |
 | Hỏi flag | `createFlags` → `isEnabled` | `packages/saas-core/src/flags/flags.ts:37` |
 | Gọi LLM + ghi `ai_usage` | `createLlmClient` → `call` | `packages/ai/src/llm-client.ts:101` |
+| Guard số tiền/%/ngày/SĐT/link (FR-030) | `checkGuardMoney` | `packages/ai/src/guard-money.ts` |
 | Chạy job theo workspace / hệ thống | `workspaceJob` · `systemJob` | `apps/worker/src/jobs/run-job.ts:33` · `:48` |
 | Đăng ký handler hàng đợi | `boss.work(...)` | `apps/worker/src/main.ts:22` |
 | Nhận webhook / gửi trả lời bình luận | Chưa có | |

@@ -34,7 +34,7 @@ describe('FR-030 số tiền: chuẩn hóa về đồng', () => {
   });
 
   it('số không phải tiền không bị coi là tiền', () => {
-    expect(extractClaims('Size 38, mua 2 cái, mở cửa 10:30, mã SP 12345')).toEqual([]);
+    expect(extractClaims('Size 38, mua 2 cái, mở cửa 10:30')).toEqual([]);
   });
 
   it('số nhóm nghìn dưới 1.000 không tính (vd "0,500")', () => {
@@ -263,5 +263,89 @@ describe('FR-030 property-based', () => {
       }),
       { seed: 20261106, numRuns: 100 },
     );
+  });
+});
+
+describe('FR-030 lỗ hổng verifier-security (Chặn merge)', () => {
+  it('số trần ≥3 chữ số không đơn vị bị bắt trừ khi có trong nguồn', () => {
+    expect(kinds('Giá 199000 ạ', [])).toEqual(['number']);
+    expect(kinds('Áo này 250 ạ', ['còn 250 cái'])).toEqual([]);
+    expect(kinds('Áo này 250 ạ', ['giá 250k'])).toEqual(['number']);
+    expect(kinds('Size 38, 2 cái', [])).toEqual([]);
+  });
+
+  it('đơn vị viết không dấu / biến thể', () => {
+    expect(keys('1 trieu')).toEqual(['vnd:1000000']);
+    expect(keys('2 tỉ')).toEqual(['vnd:2000000000']);
+    expect(keys('3 nghin')).toEqual(['vnd:3000']);
+    expect(keys('150000d')).toEqual(['vnd:150000']);
+    expect(keys('150.000 dong')).toEqual(['vnd:150000']);
+  });
+
+  it('phần lẻ sau đơn vị (có khoảng trắng hoặc bằng chữ)', () => {
+    expect(keys('1 triệu 2 ạ')).toEqual(['vnd:1200000']);
+    expect(keys('1 triệu rưỡi')).toEqual(['vnd:1500000']);
+    expect(keys('2 triệu mốt')).toEqual(['vnd:2100000']);
+    expect(keys('2tr 5')).toEqual(['vnd:2500000']);
+    expect(kinds('1 triệu 2', ['giá 1 triệu'])).toEqual(['money']);
+  });
+
+  it('số đứng ngay sau dấu câu không dính khoảng trắng vẫn được kiểm', () => {
+    expect(kinds('Dạ...199k ạ', [])).toEqual(['money']);
+    expect(kinds('Dạ,199.000đ', [])).toEqual(['money']);
+    expect(kinds('giảm,30%', [])).toEqual(['percent']);
+    expect(keys('1.500.000')).toEqual(['vnd:1500000']);
+  });
+
+  it('ngày/tháng không nuốt số tiền đi sau', () => {
+    expect(keys('Ship trong ngày 30k ạ')).toEqual(['vnd:30000']);
+    expect(keys('mỗi tháng 2 triệu')).toEqual(['vnd:2000000']);
+    expect(kinds('Ship trong ngày 30k', ['đến 30/11'])).toEqual(['money']);
+  });
+
+  it('link: display không chứa SĐT thô và bỏ query', () => {
+    const r = checkGuardMoney({ reply: 'Chat https://zalo.me/0912345678?x=1', sources: [] });
+    expect(JSON.stringify(r)).not.toMatch(/\d{8}/);
+    expect(r.violations).toEqual([{ kind: 'link', display: 'zalo.me/[sđt]' }]);
+  });
+
+  it('SĐT có ngoặc/phân cách 2–3 ký tự', () => {
+    expect(keys('(+84) 912 345 678')).toEqual(['tel:0912345678']);
+    expect(keys('0912 - 345 - 678')).toEqual(['tel:0912345678']);
+  });
+
+  it('tên miền đuôi lạ có đường dẫn; đuôi mở rộng', () => {
+    expect(keys('Đặt tại muahang.online/sp1')).toEqual(['url:muahang.online/sp1']);
+    expect(keys('Xem sale.top')).toEqual(['url:sale.top']);
+    expect(keys('Xem abc.biz')).toEqual(['url:abc.biz']);
+  });
+
+  it('ngày dạng - . không năm sau từ chỉ hạn, mùng, yyyy/m/d', () => {
+    expect(keys('Khuyến mãi đến 30-11')).toEqual(['date:d=30;m=11']);
+    expect(keys('hết 30.11')).toEqual(['date:d=30;m=11']);
+    expect(keys('Mùng 5 nhé')).toEqual(['date:d=5']);
+    expect(keys('2026/11/15')).toEqual(['date:d=15;m=11;y=2026']);
+  });
+
+  it('khoảng phần trăm kiểm cả hai đầu', () => {
+    expect(kinds('giảm 15-20%', ['giảm 20%'])).toEqual(['percent']);
+    expect(kinds('giảm 15-20%', ['giảm 15% đến 20%'])).toEqual([]);
+  });
+
+  it('Unicode: NFD, full-width, ký tự rộng 0', () => {
+    expect(keys('1 triệu')).toEqual(['vnd:1000000']);
+    expect(keys('１９９ｋ')).toEqual(['vnd:199000']);
+    expect(keys('19​9k')).toEqual(['vnd:199000']);
+  });
+
+  it('"1.500k" = 1,5 triệu (dấu chấm là phân cách nghìn)', () => {
+    expect(keys('1.500k')).toEqual(['vnd:1500000']);
+    expect(keys('1,5k')).toEqual(['vnd:1500']);
+  });
+
+  it('EMAIL không bậc hai: chuỗi dài không @ chạy nhanh', () => {
+    const t0 = Date.now();
+    extractClaims('a'.repeat(60000));
+    expect(Date.now() - t0).toBeLessThan(1500);
   });
 });

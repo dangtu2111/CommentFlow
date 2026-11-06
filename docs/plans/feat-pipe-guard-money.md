@@ -55,6 +55,10 @@ PIPE-DRAFT chưa làm → hàm chưa được nối vào pipeline; nối khi PIP
 
 Không có.
 
+## Kết quả kiểm chứng
+
+verifier-security (1 lần): 4 mục Chặn merge (số trần không đơn vị; phần lẻ sau đơn vị; số đứng sau dấu câu; ngày/tháng nuốt tiền) + mục Nên sửa (PII trong link, SĐT/link/ngày biến thể, NFKC, EMAIL bậc hai, khoảng %, "1.500k") đã sửa kèm test hồi quy (mục "lỗ hổng verifier-security" trong guard-money.test.ts). Chưa sửa: dựng lại chuỗi O(n·k) (hiệu năng, nguồn dài); `extractClaims` vẫn export (đã ghi chú không log `raw`).
+
 ## Complexity tracking
 
 - Thêm `fast-check` 4.10.2 (MIT) vào `packages/ai` (devDependency): STANDARD §5 yêu cầu property-based cho guard; đã dùng ở `apps/web`, `packages/connectors` cùng phiên bản. Phương án loại: tự viết bộ sinh ngẫu nhiên — kém tái hiện.
