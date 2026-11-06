@@ -80,7 +80,7 @@ CREATE POLICY automation_settings_insert ON cf.automation_settings FOR INSERT
     workspace_id = (SELECT core.current_workspace_id())
     AND (
       ((SELECT core.is_workspace_owner()) AND updated_by = (SELECT core.current_user_id()))
-      OR ((SELECT core.is_system_context()) AND updated_by IS NULL)
+      OR ((SELECT core.is_system_context()) AND updated_by IS NOT DISTINCT FROM NULL)
     )
   );
 --> statement-breakpoint
@@ -93,7 +93,7 @@ CREATE POLICY automation_settings_update ON cf.automation_settings FOR UPDATE
     workspace_id = (SELECT core.current_workspace_id())
     AND (
       ((SELECT core.is_workspace_owner()) AND updated_by = (SELECT core.current_user_id()))
-      OR ((SELECT core.is_system_context()) AND updated_by IS NULL)
+      OR ((SELECT core.is_system_context()) AND updated_by IS NOT DISTINCT FROM NULL)
     )
   );
 --> statement-breakpoint

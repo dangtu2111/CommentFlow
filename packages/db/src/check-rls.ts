@@ -649,8 +649,6 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.automation_settings', 'r', 'is_workspace_member'],
   ['cf.automation_rules', 'a', 'is_workspace_owner'],
   ['cf.automation_rules', 'a', 'is_system_context'],
-  ['cf.automation_rules', 'w', 'is_workspace_owner'],
-  ['cf.automation_rules', 'w', 'is_system_context'],
   ['cf.automation_rules', 'r', 'is_workspace_member'],
   // DRAFTS (0046): INSERT chỉ hệ thống; UPDATE thành viên hoặc hệ thống; đọc: thành viên hoặc không người dùng
   ['cf.drafts', 'a', 'is_system_context'],

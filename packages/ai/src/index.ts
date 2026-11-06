@@ -1,4 +1,27 @@
 export {
+  type AutomationConfig,
+  type AutomationRule,
+  automationConfigSchema,
+  DAILY_CAP_MAX,
+  DEFAULT_AUTOMATION_CONFIG,
+  DELAY_SECONDS_OPTIONS,
+  MATRIX_LABELS,
+  MATRIX_TARGETS,
+  MAX_BLOCKED_KEYWORDS,
+  MAX_KEYWORD_LENGTH,
+  MAX_SIGNATURE_LENGTH,
+  type MatrixLabel,
+  type MatrixTarget,
+  modeFor,
+  parseAutomationConfig,
+  toGateSettings,
+} from './automation/settings';
+export {
+  type AutomationChange,
+  type AutomationSettingsStore,
+  createInMemoryAutomationSettingsStore,
+} from './automation/settings-store';
+export {
   buildExactCacheKey,
   type CachedAnswer,
   type CacheMissReason,
@@ -86,6 +109,18 @@ export {
   VARIANT_AXES,
   type VariantAxis,
 } from './decide/decide-action';
+export {
+  type BusinessHoursState,
+  detectOrderStatusIntent,
+  evaluateBusinessHours,
+  type Invitation,
+  type InvitationSource,
+  type NextOpening,
+  nextOpening,
+  promisesImmediateReply,
+  resolveInvitation,
+  withOrderStatusTopic,
+} from './decide/order-hours-rules';
 export {
   anyStockStale,
   DEFAULT_STOCK_STALE_DAYS,
@@ -446,26 +481,3 @@ export {
   REASON_VARIANTS_EXHAUSTED,
   replyFingerprint,
 } from './variation/variation';
-export {
-  type AutomationConfig,
-  type AutomationRule,
-  automationConfigSchema,
-  DAILY_CAP_MAX,
-  DEFAULT_AUTOMATION_CONFIG,
-  DELAY_SECONDS_OPTIONS,
-  MATRIX_LABELS,
-  MATRIX_TARGETS,
-  MAX_BLOCKED_KEYWORDS,
-  MAX_KEYWORD_LENGTH,
-  MAX_SIGNATURE_LENGTH,
-  type MatrixLabel,
-  type MatrixTarget,
-  modeFor,
-  parseAutomationConfig,
-  toGateSettings,
-} from './automation/settings';
-export {
-  type AutomationChange,
-  type AutomationSettingsStore,
-  createInMemoryAutomationSettingsStore,
-} from './automation/settings-store';
