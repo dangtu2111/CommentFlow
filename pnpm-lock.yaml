@@ -318,6 +318,9 @@ importers:
 
   tools/dev-seed:
     dependencies:
+      '@flow/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@flow/db':
         specifier: workspace:*
         version: link:../../packages/db
