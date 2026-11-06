@@ -1,0 +1,260 @@
+{
+  "automation": {
+    "stitch": [
+      {
+        "name": "thẻ-ma-trận",
+        "w": 1152,
+        "h": 362,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "bảng-ma-trận",
+        "w": 1120,
+        "h": 212,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "đầu-bảng",
+        "w": 329,
+        "h": 42,
+        "style": {
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(63, 72, 75)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "12px",
+          "paddingLeft": "16px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "viên-chế-độ",
+        "w": 86,
+        "h": 24,
+        "style": {
+          "fontSize": "11px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "4px",
+          "paddingLeft": "12px",
+          "borderRadius": "9999px"
+        }
+      },
+      {
+        "name": "khối-ngưỡng",
+        "w": 633,
+        "h": 148,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(234, 245, 255)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thanh-lưu",
+        "w": 1152,
+        "h": 54,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(234, 245, 255)",
+          "paddingTop": "6px",
+          "paddingLeft": "6px",
+          "borderRadius": "12px"
+        }
+      }
+    ],
+    "build": [
+      {
+        "name": "thẻ-ma-trận",
+        "w": 848,
+        "h": 502,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "paddingTop": "24px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "bảng-ma-trận",
+        "w": 798,
+        "h": 126,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "đầu-bảng",
+        "w": 320,
+        "h": 26,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "700",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(246, 248, 249)",
+          "paddingTop": "1px",
+          "paddingLeft": "1px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "viên-chế-độ",
+        "w": 112,
+        "h": 44,
+        "style": {
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "0px",
+          "paddingLeft": "12px",
+          "borderRadius": "999px"
+        }
+      },
+      {
+        "name": "khối-ngưỡng",
+        "w": 798,
+        "h": 142,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(246, 248, 249)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "thanh-lưu",
+        "w": 848,
+        "h": 76,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(246, 248, 249)",
+          "paddingTop": "16px",
+          "paddingLeft": "24px",
+          "borderRadius": "12px"
+        }
+      }
+    ],
+    "overflow1440": false,
+    "overflow390": false
+  },
+  "spam-rules": {
+    "stitch": [
+      {
+        "name": "tiêu-đề",
+        "w": 287,
+        "h": 28,
+        "style": {
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "paddingTop": "0px",
+          "paddingLeft": "0px",
+          "borderRadius": "0px"
+        }
+      },
+      {
+        "name": "khối-nền",
+        "w": 1136,
+        "h": 85,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(16, 29, 37)",
+          "backgroundColor": "rgb(234, 245, 255)",
+          "paddingTop": "12px",
+          "paddingLeft": "12px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "nút-chính",
+        "w": 163,
+        "h": 34,
+        "style": {
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "8px",
+          "paddingLeft": "0px",
+          "borderRadius": "8px"
+        }
+      }
+    ],
+    "build": [
+      {
+        "name": "tiêu-đề",
+        "missing": true
+      },
+      {
+        "name": "khối-nền",
+        "w": 469,
+        "h": 395,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "rgb(15, 28, 36)",
+          "backgroundColor": "rgb(246, 248, 249)",
+          "paddingTop": "16px",
+          "paddingLeft": "16px",
+          "borderRadius": "12px"
+        }
+      },
+      {
+        "name": "nút-chính",
+        "w": 143,
+        "h": 44,
+        "style": {
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "color": "rgb(255, 255, 255)",
+          "backgroundColor": "rgb(11, 114, 133)",
+          "paddingTop": "0px",
+          "paddingLeft": "24px",
+          "borderRadius": "8px"
+        }
+      }
+    ],
+    "overflow1440": false,
+    "overflow390": false
+  }
+}

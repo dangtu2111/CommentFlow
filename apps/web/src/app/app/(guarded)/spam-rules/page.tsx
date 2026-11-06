@@ -1,5 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { SpamRuleBuilder } from '../../../../components/spam-rules/spam-rule-builder';
+import { Banner } from '../../../../components/ui/banner';
+import { PageHeader } from '../../../../components/ui/page-header';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
@@ -14,13 +16,12 @@ export default async function SpamRulesPage() {
   return (
     <main className="app-page app-page-wide spam-page">
       <header className="spam-header">
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">{t('subtitle')}</p>
+        <PageHeader title={t('title')} subtitle={t('subtitle')} />
       </header>
-      <aside className="spam-principle" role="note">
+      <Banner variant="info">
         <strong>{t('principle.title')}</strong>
-        <p>{t('principle.body')}</p>
-      </aside>
+        <p className="spam-principle-body">{t('principle.body')}</p>
+      </Banner>
       <SpamRuleBuilder />
     </main>
   );
