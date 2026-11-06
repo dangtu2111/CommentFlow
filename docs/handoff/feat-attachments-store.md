@@ -4,7 +4,7 @@
 - `packages/connectors/src/attachments.ts` (+ test): kiểu `CommentAttachment`, `normalizeAttachments` (https ≤ 2048, ≤ 10, bỏ trùng, làm sạch), `webhookAttachments`, `facebookGraphAttachment`, `withAttachments`; export ở `index.ts`.
 - `NormalizedComment.attachments?`; webhook đọc `photo`/`video`, serialize/deserialize giữ tệp; Graph lấy `attachment{type,url,media,target}`.
 - Worker `ingest.ts` ghi `comments.attachments` (chỉ khi tạo; sửa bình luận không đổi tệp — Q-ATT1).
-- Migration `0036_comment_attachments_check.sql`: CHECK mảng ≤ 10 (`comments_attachments_shape_check`) + schema Drizzle + snapshot.
+- Migration `0037_comment_attachments_check.sql`: CHECK mảng ≤ 10 (`comments_attachments_shape_check`) + schema Drizzle + snapshot.
 - Docs: plan, Q-ATT1, docs/10, gap-matrix, MASTER, KT-023, codemap.
 
 ## File đã đọc + điều rút ra

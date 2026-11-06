@@ -1,5 +1,5 @@
 // Tệp đính kèm của bình luận (FR-143, docs/10 `comments.attachments`): chỉ LOẠI + link + mã ngoài. Link do khách/nền tảng
-// tạo → coi là dữ liệu không tin cậy: chỉ nhận https, giới hạn độ dài và số lượng (khớp CHECK ở migration 0035).
+// tạo → coi là dữ liệu không tin cậy: chỉ nhận https, giới hạn độ dài và số lượng (khớp CHECK ở migration 0037).
 
 export const ATTACHMENT_TYPES = ['photo', 'video', 'sticker', 'gif'] as const;
 export type AttachmentType = (typeof ATTACHMENT_TYPES)[number];

@@ -28,6 +28,16 @@
 | KT-022 | Bảng sản phẩm + biến thể (chỉ DB, chưa có giao diện) | feat-products-variants | chưa | chưa | — |
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
+| KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
+
+---
+
+## KT-030 — Phân loại + tách thông tin bằng LLM (PIPE-CLASSIFY-EXTRACT, FR-027/145/162)
+
+Chưa có giao diện/pipeline nối (việc `PIPE-ROUTE` trở đi); mục này chỉ kiểm cờ và test. Không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/classify`. — Mong đợi: tất cả test xanh.
+2. Mở `env.example`. — Mong đợi: có `CLASSIFY_LLM_ENABLED` (để trống = tắt) và `CLASSIFY_LLM_MODEL`.
+3. (Khi đã có khóa LLM, tùy chọn) đặt `CLASSIFY_LLM_ENABLED=true` + `CLASSIFY_LLM_MODEL` ở `.env.local`, gọi `createLlmExtractor` thử với một bình luận đã che PII. — Mong đợi: ra `labels[]` hợp lệ và có một dòng `ai_usage` bước `extract`.
 
 ---
 
@@ -550,3 +560,13 @@ Nếu hỏng: ghi số bước và ảnh chụp.
 | 4 | Đổi sắp xếp "Mới đăng nhất"; sang trang sau/trước | Thứ tự đúng; trang cuối ít bài; URL giữ bộ lọc |
 | 5 | Đổi ngôn ngữ sang English | Mọi chữ trên trang đổi sang tiếng Anh |
 | 6 | Đăng nhập tài khoản thuộc workspace khác | Không thấy bài của workspace này |
+
+## KT-023 — Thông tin shop, chính sách, FAQ, giọng văn (KB-SHOP-POLICY-FAQ, feat-kb-shop-policy-faq, migration 0036) · Shop info, policy, FAQ, brand voice tables
+
+Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB thử. / No UI yet; verify with commands on a test DB.
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-content.int.test.ts` xanh |
+| 2 | Chạy `CF_LANE=b pnpm db:check-rls` | Không vi phạm |
+| 3 | Dùng tài khoản Staff ghi thử FAQ (qua test) | Bị chặn (42501); Staff đọc được |
