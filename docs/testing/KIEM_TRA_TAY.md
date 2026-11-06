@@ -55,6 +55,7 @@
 | KT-OTE | Mã hóa token OAuth ở `accounts` (logic thuần, chưa có giao diện; chạy test) | feat-oauth-token-enc | chưa | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PGVECTOR-HYBRID | Tạo lại embedding khi đổi mô hình + độ chính xác tìm lai (chỉ DB + mã, không migration mới) | feat-pgvector-hybrid | chưa | chưa | — |
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
 | KT-PRP | Nhắn riêng từ bình luận (chờ nối DB + giao diện) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
@@ -68,6 +69,7 @@
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIHA | Tự động hóa + Quy tắc spam khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHC | Hộp thư Bình luận khớp HTML Stitch | — | có | chưa | — |
 | KT-UIHS | Khung Cài đặt khớp HTML Stitch | — | có | chưa | — |
 | KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
@@ -1044,6 +1046,19 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 
 Hàm thuần, chưa có giao diện/đường chạy → chưa có bước bấm tay. Kiểm tay khi `PIPE-DRAFT` nối guard: soạn câu có giá/ngày/SĐT/link không có trong kiến thức → bản nháp bị ép "Cần người", không tự gửi.
 
+## KT-PGVECTOR-HYBRID — Tạo lại embedding + tìm lai (PGVECTOR-HYBRID, FR-057/133) · Re-embedding and hybrid search
+
+Chưa có giao diện; kiểm bằng lệnh trên DB thử (`cf_dev`/`cf_test`, không migration mới). / No UI; verify on a test DB, no new migration.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/kb-reembed` và `pnpm --filter @flow/worker exec vitest run src/jobs/kb-reembed.test.ts src/config-kb-reembed.test.ts`. | Xanh (lô, chạy lại = 0, hash lệch bị bỏ qua, cờ TẮT mặc định). |
+| 2 | `pnpm --filter @flow/db run test:db tests/kb-reembed.int.test.ts`. | 6 test xanh (chỉ đoạn khác mô hình; nội dung/tsv/phiên bản không đổi; chéo workspace và ngoài `withJob` đều không ghi được; lọc mô hình ở nhánh vector). |
+| 3 | `pnpm --filter @flow/db run test:db tests/kb-hybrid-accuracy.int.test.ts`. | 2 test xanh (lai đúng cả truy vấn "ý nghĩa" và "mã chính xác", mỗi nhánh đơn chỉ đúng một). |
+| 4 | Kiểm `KB_REEMBED_ENABLED` trong `.env` của worker để trống. | Worker không đăng ký hàng đợi `kb-reembed` (nhật ký không có dòng "kb-reembed xong"). |
+
+Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: paste the failing test name and the first error line.
+
 ## KT-PLN — Gói cước, dùng thử, mua thêm lượt (PLANS-SCHEMA, FR-090, US-060, Q-PLN1) · Plans store
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
@@ -1329,6 +1344,15 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIHA — Tự động hóa + Quy tắc spam khớp HTML Stitch (UI-HTML-AUTOMATION, feat-ui-html-automation)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner mở `/app/automation` | Hai bảng Bình luận/Tin nhắn (kênh × Hỏi giá/Tư vấn/Mua hàng), ô chọn dạng viên đổi màu theo mức |
+| 2 | Đổi vài ô, chỉnh ngưỡng/giờ/từ khóa, bấm Lưu | Banner "Đã lưu"; tải lại thấy đúng giá trị (logic không đổi) |
+| 3 | Mở `/app/spam-rules`, điền quy tắc, Enter trong ô tên | Chỉ Xem trước, không lưu; bấm Lưu quy tắc mới lưu |
+| 4 | Thu cửa sổ 390px cả hai trang | Không cuộn ngang cả trang; bảng ma trận cuộn ngang trong khung |
 
 ## KT-UIHC — Hộp thư Bình luận khớp HTML Stitch (UI-HTML-COMMENTS, feat-ui-html-comments)
 

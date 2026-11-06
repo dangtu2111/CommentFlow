@@ -30,6 +30,11 @@ export type KbSearchInput = {
   queryText: string;
   /** Vector truy vấn 1024 chiều (halfvec); bỏ qua → chỉ toàn văn + trigram. */
   queryVector?: readonly number[];
+  /**
+   * Mô hình đã tạo `queryVector` (= `Embedder.model`). Có → nhánh vector chỉ so với đoạn cùng mô hình
+   * (vector khác mô hình không so được; FR-133, lúc đang tạo lại embedding). Toàn văn/trigram không bị ảnh hưởng.
+   */
+  embeddingModel?: string;
   /** Bài đã gắn sản phẩm: đoạn của sản phẩm khác bị bỏ; đoạn chung (`product_id` NULL) giữ. */
   productIds?: readonly string[];
   limit?: number;
@@ -89,11 +94,14 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
     await tx.execute(sql`SELECT set_config('hnsw.iterative_scan', 'strict_order', true)`);
   }
 
+  const modelFilter = input.embeddingModel
+    ? sql`AND c.embedding_model = ${input.embeddingModel}`
+    : sql``;
   const vectorBranch = input.queryVector
     ? sql`
       SELECT c.id, row_number() OVER (ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024), c.id) AS r
         FROM cf.kb_chunks c
-       WHERE ${filters} AND c.embedding IS NOT NULL
+       WHERE ${filters} AND c.embedding IS NOT NULL ${modelFilter}
        ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024)
        LIMIT ${BRANCH_LIMIT}`
     : sql`SELECT NULL::uuid AS id, NULL::bigint AS r WHERE false`;

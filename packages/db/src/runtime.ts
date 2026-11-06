@@ -183,6 +183,13 @@ export {
   lockKbPublish,
 } from './queries/kb-publish';
 export {
+  countChunksToReembed,
+  listChunksToReembed,
+  type ReembedChunk,
+  type ReembedWrite,
+  writeReembeddedChunks,
+} from './queries/kb-reembed';
+export {
   DEFAULT_KB_SEARCH_LIMIT,
   findProductMatch,
   getProductRevs,

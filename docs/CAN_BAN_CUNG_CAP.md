@@ -180,6 +180,10 @@ Trang "Câu hỏi AI chưa trả lời được" chỉ đọc/ghi `kb_gaps` và 
 
 Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phải dùng PostgreSQL 16 + pgvector >= 0.8 (hiện `pgvector/pgvector:0.8.7-pg16`). Migration 0042 báo lỗi rõ nếu thấp hơn. Chủ dự án chỉ cần nâng image khi dựng staging/production mới.
 
+## Mô hình embedding thật để tạo lại vector — `PGVECTOR-HYBRID` / `KB-EMBED-LITELLM`
+
+Job tạo lại embedding (`kb-reembed`, cờ `KB_REEMBED_ENABLED`, mặc định TẮT) hiện chỉ chạy với embedder **mock**. Cần chủ dự án cung cấp khi có: khóa/URL LiteLLM (hoặc nhà cung cấp embedding) + tên mô hình 1024 chiều. Chưa có thì giữ cờ TẮT ở staging/production. Không cần làm gì ở DB (không migration).
+
 ## 2l. `KB-TRYAI` (FR-059) — không cần tài nguyên ngoài mới
 Ô Thử AI có thể tìm trong KB thật của workspace (cờ `TRY_AI_KB_REAL`, mặc định TẮT; Xong-mock: embedding là fixture). Để vector có kết quả cần mô hình embedding ở 2g và worker điền `embedding` (`KB-CHUNKING`). Bạn **không** phải làm gì cho bản mock.
 
