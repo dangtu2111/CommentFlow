@@ -4,7 +4,14 @@ import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FlowDb } from '../src/client';
 import { applyProductSourceSync } from '../src/queries/product-source-sync';
-import { createAdminPool, createAppDb, seedMember, seedUser, seedWorkspace } from './helpers';
+import {
+  createAdminPool,
+  createAppDb,
+  expectRejectCode,
+  seedMember,
+  seedUser,
+  seedWorkspace,
+} from './helpers';
 
 /** SHOPIFY-IMPORT (FR-052, Q-SHI1): ghi nguồn ngoài qua withActor, ghi đè theo nguồn, idempotent, chéo workspace. */
 let admin: pg.Pool;
@@ -124,8 +131,10 @@ describe('FR-052 ghi đồng bộ nguồn Shopify', () => {
   });
 
   it('thành viên workspace A không ghi được vào workspace B (RLS)', async () => {
-    await expect(
-      db.withActor(wsA, owner, (tx) => applyProductSourceSync(tx, wsB, 'shopify', plan(2, 2))),
-    ).rejects.toMatchObject({ code: '42501' });
+    expect(
+      await expectRejectCode(
+        db.withActor(wsA, owner, (tx) => applyProductSourceSync(tx, wsB, 'shopify', plan(2, 2))),
+      ),
+    ).toBe('42501');
   });
 });
