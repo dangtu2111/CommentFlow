@@ -104,6 +104,12 @@ const instant = z
 
 const priceEntrySchema = z.object({
   productId: z.string().min(1),
+  /** Biến thể (nếu có): có ở cả hai phía thì so đúng biến thể; `null`/thiếu = giá cấp sản phẩm. */
+  variantId: z
+    .string()
+    .min(1)
+    .nullish()
+    .transform((v) => v ?? null),
   priceVnd: nonNegativeInt,
   /** `products.updated_from_source_at`; `null` = chưa đồng bộ từ nguồn. */
   updatedFromSourceAt: instant.nullable(),
@@ -237,7 +243,9 @@ const timeKey = (d: Date | null): number | null => (d === null ? null : d.getTim
 /** Một mục ảnh chụp còn khớp khi sản phẩm còn, giá bằng và mốc đồng bộ từ nguồn bằng (so cả `null`). */
 type PriceEntry = z.output<typeof priceEntrySchema>;
 function snapshotStillMatches(snapshot: PriceEntry, current: readonly PriceEntry[]): boolean {
-  const now = current.find((p) => p.productId === snapshot.productId);
+  const now = current.find(
+    (p) => p.productId === snapshot.productId && p.variantId === snapshot.variantId,
+  );
   if (now === undefined) return false;
   if (now.priceVnd !== snapshot.priceVnd) return false;
   return timeKey(now.updatedFromSourceAt) === timeKey(snapshot.updatedFromSourceAt);
