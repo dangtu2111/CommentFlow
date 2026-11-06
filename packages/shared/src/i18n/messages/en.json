@@ -58,7 +58,10 @@
       "members": "Members & Permissions",
       "security": "Account & Security",
       "channelsCount": "{connected}/{total} channels",
-      "membersCount": "{count, plural, one {# person} other {# people}}"
+      "membersCount": "{count, plural, one {# person} other {# people}}",
+      "billing": "Plan & Billing",
+      "notifications": "Notifications",
+      "privacy": "Data & Privacy"
     },
     "display": {
       "title": "Display & Language",
@@ -75,6 +78,125 @@
       "body": "Your identity details in this workspace.",
       "email": "Sign-in email address",
       "verified": "Verified"
+    },
+    "soon": "Coming soon",
+    "billing": {
+      "title": "Plan & Billing",
+      "subtitle": "See your plan, this month’s AI turns and the workspace invoice history.",
+      "current": {
+        "title": "Current plan",
+        "planLine": "{plan} plan",
+        "price": "{price}/month",
+        "active": "Active",
+        "unknownTitle": "Plan details not available yet",
+        "unknownBody": "Your current plan will show here once the plan system is switched on. The AI-turn limit below is the one currently applied.",
+        "change": "Change billing cycle",
+        "cancel": "Cancel auto-renewal"
+      },
+      "compare": {
+        "title": "Plan comparison & upgrade options",
+        "body": "Pick the plan that fits your operation. Payment and automatic upgrades open in a later release.",
+        "perMonth": "/month",
+        "perYear": "Or {price}/year (save 20%)",
+        "channels": "{count} connected channels",
+        "turns": "{count} AI turns/month",
+        "autoReplyYes": "AI auto-reply included",
+        "autoReplyNo": "Suggested drafts only (no auto-send)",
+        "currentBadge": "Current plan",
+        "choose": "Choose this plan",
+        "addonTitle": "Buy extra AI turns",
+        "addonBody": "+{turns} turns for sale season, so you never run dry. Shared by comments and messages.",
+        "addonPrice": "{price} per top-up",
+        "addonButton": "Buy extra turns",
+        "plan": {
+          "starter": {
+            "name": "Starter",
+            "tag": "Basic"
+          },
+          "growth": {
+            "name": "Growth",
+            "tag": "Growth"
+          },
+          "business": {
+            "name": "Business",
+            "tag": "Business"
+          }
+        }
+      },
+      "payment": {
+        "title": "VietQR bank transfer",
+        "body": "Scan the QR code with your banking app to pay an invoice. The QR code and transfer note will show here once the receiving account is configured.",
+        "soon": "Not open yet — receiving account not configured"
+      },
+      "invoices": {
+        "title": "Invoice & transaction history",
+        "body": "Renewal and top-up invoices for this workspace.",
+        "empty": "No invoices yet.",
+        "number": "Invoice no.",
+        "date": "Date",
+        "description": "Description",
+        "amount": "Amount",
+        "status": "Status",
+        "status_paid": "Paid",
+        "status_pending": "Pending",
+        "status_void": "Void",
+        "export": "Export statement",
+        "vatTitle": "VAT e-invoice",
+        "vatBody": "VAT invoicing details will be editable in a later release."
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Choose which events should notify you. Choosing delivery channels is still being finished.",
+      "note": "In-app notifications (the bell in the top bar) already work; per-type on/off options come in a later release.",
+      "items": {
+        "usage": {
+          "title": "AI turns running low",
+          "body": "Notify at 80% used and when the monthly turns run out."
+        },
+        "channel": {
+          "title": "Channel disconnected",
+          "body": "Notify when Facebook/Instagram needs reconnecting."
+        },
+        "handoff": {
+          "title": "Customer needs a person",
+          "body": "Notify when the AI hands a conversation to staff."
+        },
+        "pause": {
+          "title": "AI auto-paused",
+          "body": "Notify when the system detects anomalies and stops auto-sending."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Data & Privacy",
+      "subtitle": "Export data, see retention periods and send a workspace deletion request.",
+      "notices": {
+        "unavailable": "This feature is not open yet. Your request was not recorded and no data was changed.",
+        "mismatch": "The workspace name does not match. Nothing was sent."
+      },
+      "export": {
+        "title": "Export workspace data",
+        "body": "Download all workspace data (comments, messages, knowledge, settings). The download link is sent to the Owner’s email.",
+        "button": "Request data export"
+      },
+      "retention": {
+        "title": "Data retention",
+        "webhook": "Raw platform webhook data is deleted after 14 days.",
+        "deleted": "Customer comments deleted on the platform are blanked, keeping only what the audit log needs.",
+        "pii": "Phone numbers and emails are masked before being sent to the AI and monitoring systems."
+      },
+      "delete": {
+        "title": "Delete workspace",
+        "body": "Deleting the workspace removes channels, comments, messages, the knowledge base and members. This cannot be undone.",
+        "stepsTitle": "Confirmation steps",
+        "step1": "Type the exact workspace name below.",
+        "step2": "Submit the deletion request; the system emails the Owner to confirm.",
+        "step3": "Confirm by email to finish.",
+        "confirmLabel": "Type the workspace name “{name}” to confirm",
+        "button": "Send workspace deletion request",
+        "soon": "Not open yet — no real data is deleted"
+      }
     }
   },
   "auth": {
@@ -1142,7 +1264,10 @@
     "completenessReady": "Ready to turn on automatic replies",
     "completenessNotReady": "At least {min}% needed to turn on automatic replies",
     "completenessDetail": "View details",
-    "groups": { "structure": "Knowledge structure", "tuning": "Tuning & testing" },
+    "groups": {
+      "structure": "Knowledge structure",
+      "tuning": "Tuning & testing"
+    },
     "cards": {
       "productImport": {
         "title": "Products",
@@ -1164,7 +1289,10 @@
         "title": "Tests",
         "body": "Run sample questions to make sure the AI is still right before publishing."
       },
-      "kbPublish": { "title": "Versions", "body": "Publish or restore a knowledge version." }
+      "kbPublish": {
+        "title": "Versions",
+        "body": "Publish or restore a knowledge version."
+      }
     },
     "open": "Open",
     "error": {
@@ -1485,7 +1613,10 @@
       "content": "Content management",
       "current": "Posts"
     },
-    "tabs": { "label": "Filter by platform", "all": "All posts" },
+    "tabs": {
+      "label": "Filter by platform",
+      "all": "All posts"
+    },
     "range": "Showing {from} - {to} of {total} posts",
     "pageNumber": "Page {page}",
     "error": {

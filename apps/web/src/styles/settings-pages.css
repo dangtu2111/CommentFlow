@@ -1,0 +1,147 @@
+/* Trang con của Cài đặt: Gói & Thanh toán, Thông báo, Dữ liệu & Quyền riêng tư (UI-FIDELITY-SETTINGS-PAGES, Q-USP1). Chỉ dùng token. */
+.billing-price {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.plan-card[data-current] {
+  border: 2px solid var(--color-primary-600);
+  background: var(--selected-bg);
+}
+
+.plan-card-addon {
+  background: var(--color-ai-50);
+  border-color: var(--color-ai-300);
+}
+
+.plan-card .btn,
+.plan-card .badge {
+  margin-top: auto;
+  align-self: flex-start;
+  margin-left: 0;
+}
+
+.plan-tag {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.plan-features {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table thead th {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.data-table tbody th {
+  font-weight: var(--weight-semibold);
+}
+
+.invoice-status {
+  display: inline-block;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.invoice-status-success {
+  background: var(--selected-bg);
+  color: var(--color-success);
+}
+
+.invoice-status-warning {
+  background: var(--color-bg);
+  color: var(--color-warning);
+}
+
+.invoice-status-muted {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.billing-vat {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--selected-bg);
+}
+
+.notif-list {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notif-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.privacy-list {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-6);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.privacy-danger {
+  border-color: var(--color-danger);
+}

@@ -58,7 +58,10 @@
       "members": "Thành viên & Phân quyền",
       "security": "Tài khoản & Bảo mật",
       "channelsCount": "{connected}/{total} kênh",
-      "membersCount": "{count} người"
+      "membersCount": "{count} người",
+      "billing": "Gói & Thanh toán",
+      "notifications": "Thông báo",
+      "privacy": "Dữ liệu & Quyền riêng tư"
     },
     "display": {
       "title": "Tùy chọn hiển thị & Ngôn ngữ",
@@ -75,6 +78,125 @@
       "body": "Thông tin xác thực danh tính của bạn trong workspace này.",
       "email": "Địa chỉ email đăng nhập",
       "verified": "Đã xác thực"
+    },
+    "soon": "Sắp có",
+    "billing": {
+      "title": "Quản lý Gói & Cước phí",
+      "subtitle": "Xem gói, lượt AI trong tháng và lịch sử hóa đơn của workspace.",
+      "current": {
+        "title": "Gói hiện tại",
+        "planLine": "Gói {plan}",
+        "price": "{price}/tháng",
+        "active": "Đang hoạt động",
+        "unknownTitle": "Chưa có thông tin gói",
+        "unknownBody": "Thông tin gói đang dùng sẽ hiện ở đây khi hệ thống gói cước được bật. Hạn mức lượt AI bên dưới là hạn mức đang áp dụng.",
+        "change": "Thay đổi chu kỳ",
+        "cancel": "Hủy gói tự động"
+      },
+      "compare": {
+        "title": "Bảng so sánh gói & Tùy chọn nâng cấp",
+        "body": "Chọn gói phù hợp với quy mô vận hành. Thanh toán và nâng gói tự động sẽ mở ở bản sau.",
+        "perMonth": "/tháng",
+        "perYear": "Hoặc {price}/năm (tiết kiệm 20%)",
+        "channels": "{count} kênh kết nối",
+        "turns": "{count} lượt AI/tháng",
+        "autoReplyYes": "Có AI tự động trả lời",
+        "autoReplyNo": "Chỉ tạo bản nháp gợi ý (không tự gửi)",
+        "currentBadge": "Gói đang dùng",
+        "choose": "Chọn gói này",
+        "addonTitle": "Mua thêm lượt AI",
+        "addonBody": "+{turns} lượt cho mùa sale, chống cạn lượt đột xuất. Dùng chung cho bình luận và tin nhắn.",
+        "addonPrice": "{price}/lần nạp",
+        "addonButton": "Mua thêm lượt",
+        "plan": {
+          "starter": {
+            "name": "Starter",
+            "tag": "Cơ bản"
+          },
+          "growth": {
+            "name": "Growth",
+            "tag": "Tăng trưởng"
+          },
+          "business": {
+            "name": "Business",
+            "tag": "Doanh nghiệp"
+          }
+        }
+      },
+      "payment": {
+        "title": "Thanh toán chuyển khoản VietQR",
+        "body": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán hóa đơn. Mã QR và nội dung chuyển khoản sẽ hiện ở đây khi tài khoản nhận tiền được cấu hình.",
+        "soon": "Chưa mở — chờ cấu hình tài khoản nhận tiền"
+      },
+      "invoices": {
+        "title": "Lịch sử hóa đơn & Giao dịch",
+        "body": "Các hóa đơn gia hạn và nạp thêm lượt của workspace.",
+        "empty": "Chưa có hóa đơn nào.",
+        "number": "Mã hóa đơn",
+        "date": "Ngày",
+        "description": "Nội dung",
+        "amount": "Số tiền",
+        "status": "Trạng thái",
+        "status_paid": "Đã thanh toán",
+        "status_pending": "Chờ thanh toán",
+        "status_void": "Đã hủy",
+        "export": "Xuất bảng kê",
+        "vatTitle": "Hóa đơn điện tử VAT",
+        "vatBody": "Thông tin xuất hóa đơn VAT sẽ chỉnh sửa được ở bản sau."
+      }
+    },
+    "notifications": {
+      "title": "Thông báo",
+      "subtitle": "Chọn sự kiện nào cần báo cho bạn. Phần chọn kênh nhận thông báo đang được hoàn thiện.",
+      "note": "Hiện thông báo trong ứng dụng (chuông ở thanh trên) đã hoạt động; tùy chọn bật/tắt từng loại sẽ có ở bản sau.",
+      "items": {
+        "usage": {
+          "title": "Lượt AI sắp hết",
+          "body": "Báo khi dùng từ 80% và khi hết lượt trong tháng."
+        },
+        "channel": {
+          "title": "Kênh mất kết nối",
+          "body": "Báo khi Facebook/Instagram cần kết nối lại."
+        },
+        "handoff": {
+          "title": "Khách cần nhân viên",
+          "body": "Báo khi AI chuyển cuộc trò chuyện cho người."
+        },
+        "pause": {
+          "title": "AI tự tạm dừng",
+          "body": "Báo khi hệ thống phát hiện bất thường và dừng tự gửi."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Dữ liệu & Quyền riêng tư",
+      "subtitle": "Xuất dữ liệu, xem thời gian lưu và gửi yêu cầu xóa workspace.",
+      "notices": {
+        "unavailable": "Tính năng này chưa mở. Yêu cầu của bạn chưa được ghi nhận và không có dữ liệu nào bị thay đổi.",
+        "mismatch": "Tên workspace nhập chưa đúng. Chưa có gì được gửi đi."
+      },
+      "export": {
+        "title": "Xuất dữ liệu workspace",
+        "body": "Tải toàn bộ dữ liệu workspace (bình luận, tin nhắn, kiến thức, cài đặt). Liên kết tải sẽ được gửi qua email của Owner.",
+        "button": "Yêu cầu xuất dữ liệu"
+      },
+      "retention": {
+        "title": "Thời gian lưu dữ liệu",
+        "webhook": "Dữ liệu thô từ webhook của nền tảng được xóa sau 14 ngày.",
+        "deleted": "Bình luận khách đã xóa trên nền tảng được xóa trắng nội dung, chỉ giữ dấu vết cần thiết cho nhật ký.",
+        "pii": "Số điện thoại, email được che trước khi gửi cho AI và hệ thống giám sát."
+      },
+      "delete": {
+        "title": "Xóa workspace",
+        "body": "Xóa workspace sẽ xóa kênh, bình luận, tin nhắn, cơ sở kiến thức và thành viên. Hành động này không thể hoàn tác.",
+        "stepsTitle": "Các bước xác nhận",
+        "step1": "Gõ đúng tên workspace vào ô bên dưới.",
+        "step2": "Bấm gửi yêu cầu xóa; hệ thống gửi email xác nhận cho Owner.",
+        "step3": "Xác nhận qua email để hoàn tất.",
+        "confirmLabel": "Gõ tên workspace “{name}” để xác nhận",
+        "button": "Gửi yêu cầu xóa workspace",
+        "soon": "Chưa mở — chưa xóa dữ liệu thật"
+      }
     }
   },
   "auth": {
@@ -1142,7 +1264,10 @@
     "completenessReady": "Đủ điều kiện bật tự động",
     "completenessNotReady": "Cần tối thiểu {min}% để bật tự động",
     "completenessDetail": "Xem chi tiết",
-    "groups": { "structure": "Cấu trúc tri thức", "tuning": "Tinh chỉnh & kiểm thử" },
+    "groups": {
+      "structure": "Cấu trúc tri thức",
+      "tuning": "Tinh chỉnh & kiểm thử"
+    },
     "cards": {
       "productImport": {
         "title": "Sản phẩm",
@@ -1164,7 +1289,10 @@
         "title": "Kiểm thử",
         "body": "Chạy bộ câu hỏi mẫu để chắc AI vẫn đúng trước khi xuất bản."
       },
-      "kbPublish": { "title": "Phiên bản", "body": "Xuất bản hoặc khôi phục phiên bản kiến thức." }
+      "kbPublish": {
+        "title": "Phiên bản",
+        "body": "Xuất bản hoặc khôi phục phiên bản kiến thức."
+      }
     },
     "open": "Mở",
     "error": {
@@ -1485,7 +1613,10 @@
       "content": "Quản lý nội dung",
       "current": "Bài viết"
     },
-    "tabs": { "label": "Lọc theo nền tảng", "all": "Tất cả bài viết" },
+    "tabs": {
+      "label": "Lọc theo nền tảng",
+      "all": "Tất cả bài viết"
+    },
     "range": "Hiển thị {from} - {to} trên {total} bài đăng",
     "pageNumber": "Trang {page}",
     "error": {

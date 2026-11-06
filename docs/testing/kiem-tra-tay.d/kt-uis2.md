@@ -2,7 +2,7 @@
 
 | # | Bước / Step | Kết quả mong đợi / Expected |
 |---|---|---|
-| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); không có mục Gói/Thông báo/Quyền riêng tư |
+| 1 | Đăng nhập Owner, mở /app/settings ở 1440px | Đường dẫn "Cài đặt hệ thống › Tài khoản & Bảo mật"; cột trái có Kênh (n/n kênh), Thành viên (n người), Tài khoản & Bảo mật (nền màu chính); có thêm Gói & Thanh toán, Thông báo, Dữ liệu & Quyền riêng tư (xem KT-USP1) |
 | 2 | Bấm Kênh rồi Thành viên ở cột trái | Cùng khung, mục tương ứng được tô; không còn thanh tab phía trên |
 | 3 | Đăng nhập Staff, mở /app/settings | Cột trái chỉ có Tài khoản & Bảo mật |
 | 4 | Bật 2FA xong, bấm "Tôi đã lưu các mã này" | Hiện banner xanh "Kích hoạt xác thực 2 bước thành công"; tải lại trang → banner biến mất |
