@@ -279,7 +279,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | TIKTOK-CONNECTOR | FR-015 (đọc + trả lời bình luận; ẩn chỉ khi có API) | — | CONNECTOR-IFACE | S | **có** — quyền TikTok (Q5) | ✅ Xong-mock (`feat-tiktok-connector`, Q-TT1; còn `TIKTOK-CHANNEL-CONNECT`, `TIKTOK-POLLING`) |
 | MESSENGER-WEBHOOK | FR-014 (webhook `messages`, gửi trong cửa sổ) | UF-6 | FB-OAUTH | S | **có** — Meta App Review | ✅ Xong-mock (`feat-messenger-webhook`, Q-MSW1; còn `MESSENGER-INGEST` cần migration làn b) |
 | IG-DM | FR-013 (tin nhắn Instagram) | UF-6 | IG-CONNECTOR | S | **có** — Meta | ⛔ |
-| MSG-INBOX | FR-047 (hội thoại: cửa sổ 24 giờ/7 ngày, AI theo hội thoại, tối đa lượt AI, chuyển người) | US-020–023 | MESSENGER-WEBHOOK | S | không | ⏳ |
+| MSG-INBOX | FR-047 (hội thoại: cửa sổ 24 giờ/7 ngày, AI theo hội thoại, tối đa lượt AI, chuyển người) | US-020–023 | MESSENGER-WEBHOOK | S | không | 🟡 Nền dữ liệu xong (`feat-msg-store`, Q-MSS1: migration 0058, truy vấn danh sách/lọc, hàm cửa sổ); còn ghi từ webhook (`MESSENGER-INGEST`), giao diện hộp thư, AI theo hội thoại/chuyển người |
 | PRIVATE-REPLY | FR-046 (nhắn riêng từ bình luận, 1 tin ≤ 7 ngày) | US-017 | MESSENGER-WEBHOOK | S | không | ✅ Xong-mock (logic thuần; nối DB/giao diện → `PRIVATE-REPLY-WIRE`) |
 | MSG-GREETINGS | FR-074 (tin chào, ngoài giờ, báo chuyển nhân viên theo ngôn ngữ) | — | MSG-INBOX | — | không | ✅ Xong-mock (`feat-msg-greetings`, Q-MSG1; còn `MSG-GREETINGS-WIRE` cần migration làn b + `MSG-GREETINGS-UI`) |
 | REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ (logic chỉ số + CSV: Xong-mock `feat-reports-metrics`; còn `REPORTS-UI`, `REPORTS-WEEKLY-EMAIL`) |
