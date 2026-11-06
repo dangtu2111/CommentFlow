@@ -23,6 +23,10 @@ Kế hoạch: `docs/plans/feat-shopify-import.md`
 2. Chạy `CF_LANE=b pnpm test:db` cho `packages/db/tests/product-source-sync.int.test.ts` (chưa chạy được ở làn c).
 3. Route webhook + đối soát (`SHOPIFY-RECONCILE`); chính sách → `kb_chunks`; bulk operation cho shop lớn; kiểm với dev store thật (tên trường, phiên bản API).
 
+## Từ verifier-security (không chặn merge)
+- Đã sửa: chờ throttle tối đa 60 giây, vượt thì `RATE_LIMIT`.
+- Còn lại TRƯỚC khi bật cờ cho khách thật: `applyProductSourceSync` chưa lưu trữ biến thể/sản phẩm đã biến mất bên Shopify (giá/tồn cũ vẫn `active`) → thêm bước archive khi lần lấy đầy đủ thành công + test tích hợp (hoặc xong `SHOPIFY-RECONCILE`). Nơi gọi hàm ghi chỉ dùng `withJob`/kiểm Owner. Route webhook cần chống trùng theo `X-Shopify-Webhook-Id`.
+
 ## Lệnh test liên quan
 ```
 pnpm --filter @flow/connectors exec vitest run src/shopify

@@ -214,6 +214,17 @@ describe('FR-052 Shopify connector — giới hạn tốc độ và lỗi', () =
     }
   });
 
+  it('FR-052 phải chờ quá 60 giây → RATE_LIMIT thay vì ngủ', async () => {
+    const slow = productsPage([productNode(1)], 'c', 0);
+    slow.extensions.cost.throttleStatus.restoreRate = 1;
+    slow.extensions.cost.requestedQueryCost = 100;
+    const { connector, sleep } = harness([jsonResponse(slow)]);
+    const error = await failureOf(connector.fetchCatalog());
+    expect(error.code).toBe('RATE_LIMIT');
+    expect(error.retryAfterSeconds).toBe(100);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
   it('FR-052 không chờ khi còn đủ điểm', async () => {
     const { connector, sleep } = harness([
       jsonResponse(productsPage([productNode(1)], 'c', 1900)),

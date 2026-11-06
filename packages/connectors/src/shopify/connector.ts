@@ -27,6 +27,7 @@ const DEFAULT_MAX_PAGES = 200;
 const MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 const MAX_RETRY_AFTER_SECONDS = 86_400;
 const DEFAULT_THROTTLE_RETRY_SECONDS = 2;
+const MAX_BUDGET_WAIT_MS = 60_000;
 
 const VARIANT_FIELDS = `
   id
@@ -270,7 +271,12 @@ export function createShopifyConnector(options: ShopifyConnectorOptions): Shopif
   async function waitForBudget(): Promise<void> {
     if (throttle === null || throttle.available >= throttle.nextCost) return;
     const deficit = throttle.nextCost - throttle.available;
-    await sleep(Math.ceil((deficit * 1000) / Math.max(throttle.restoreRate, 1)));
+    const waitMs = Math.ceil((deficit * 1000) / Math.max(throttle.restoreRate, 1));
+    // Phản hồi bất thường không được giữ job quá lâu: vượt trần thì báo RATE_LIMIT để nơi gọi hẹn lại.
+    if (waitMs > MAX_BUDGET_WAIT_MS) {
+      throw fail('RATE_LIMIT', 'shopify_throttled', Math.ceil(waitMs / 1000));
+    }
+    await sleep(waitMs);
   }
 
   function rememberThrottle(envelope: Envelope): void {
