@@ -33,6 +33,20 @@ export type ConfidenceWeights = {
   askedBefore: number;
 };
 
+/** Trọng số phải hữu hạn; các hệ số tín hiệu ≥ 0 để giữ tính đơn điệu (tín hiệu tốt không làm điểm giảm). */
+const nonNegative = z.number().finite().min(0);
+export const confidenceWeightsSchema = z.object({
+  version: z.string().min(1),
+  bias: z.number().finite(),
+  pLabel: nonNegative,
+  sProduct: nonNegative,
+  sRetrievalTop1: nonNegative,
+  retrievalMargin: nonNegative,
+  factSourcedRatio: nonNegative,
+  actionAnswer: nonNegative,
+  askedBefore: nonNegative,
+});
+
 export const DEFAULT_CONFIDENCE_WEIGHTS: ConfidenceWeights = Object.freeze({
   version: CONFIDENCE_WEIGHTS_VERSION,
   bias: -10,
@@ -128,14 +142,19 @@ export function computeConfidence(
   weights: ConfidenceWeights = DEFAULT_CONFIDENCE_WEIGHTS,
 ): ConfidenceResult {
   const signals = readConfidenceSignals(raw);
-  if (signals === null) return unreadableConfidence();
+  // Trọng số hỏng (NaN/vô cực/âm — ví dụ đọc nhầm từ bảng hiệu chuẩn) → không tính được, về 0.
+  if (signals === null || !confidenceWeightsSchema.safeParse(weights).success) {
+    return unreadableConfidence();
+  }
 
   const pLabel = signals.pLabel ?? 0;
   const sProduct = signals.sProduct ?? 0;
   const sTop1 = signals.sRetrievalTop1 ?? 0;
-  // Không có top1 thì không có khoảng cách; top2 > top1 → 0 (không âm).
+  // Thiếu top1 HOẶC top2 → không có khoảng cách (thiếu tín hiệu không được cộng điểm); top2 > top1 → 0.
   const margin =
-    signals.sRetrievalTop1 === null ? 0 : Math.max(0, sTop1 - (signals.sRetrievalTop2 ?? 0));
+    signals.sRetrievalTop1 === null || signals.sRetrievalTop2 === null
+      ? 0
+      : Math.max(0, sTop1 - signals.sRetrievalTop2);
   const factRatio = signals.factSourcedRatio ?? 0;
   const actionAnswer = signals.action === 'answer' ? 1 : 0;
   const askedBefore = signals.askedBefore ? 1 : 0;

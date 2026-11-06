@@ -100,10 +100,29 @@ describe('FR-163 computeConfidence — công thức §6.0 với trọng số m�
     expect(result.components?.s_retrieval_margin).toBe(0);
   });
 
-  it('không có top1 thì không có khoảng cách dù có top2', () => {
-    const result = computeConfidence({ ...good, sRetrievalTop1: null, sRetrievalTop2: 0.9 });
-    expect(result.components?.s_retrieval_top1).toBe(0);
-    expect(result.components?.s_retrieval_margin).toBe(0);
+  it('thiếu top1 hoặc thiếu top2 → khoảng cách 0 (thiếu tín hiệu không được cộng điểm)', () => {
+    const noTop1 = computeConfidence({ ...good, sRetrievalTop1: null, sRetrievalTop2: 0.9 });
+    expect(noTop1.components?.s_retrieval_top1).toBe(0);
+    expect(noTop1.components?.s_retrieval_margin).toBe(0);
+    const noTop2 = computeConfidence({ ...good, sRetrievalTop2: null });
+    expect(noTop2.components?.s_retrieval_margin).toBe(0);
+    expect(noTop2.confidence).toBeLessThanOrEqual(computeConfidence(good).confidence);
+  });
+
+  it.each([
+    ['bias NaN', { bias: Number.NaN }],
+    ['pLabel vô cực', { pLabel: Number.POSITIVE_INFINITY }],
+    ['askedBefore âm (biến trừ thành cộng)', { askedBefore: -1 }],
+    ['factSourcedRatio âm', { factSourcedRatio: -2 }],
+    ['version rỗng', { version: '' }],
+  ])('trọng số hỏng (%s) → không tính được → 0, cần người', (_name, patch) => {
+    const result = computeConfidence(good, { ...DEFAULT_CONFIDENCE_WEIGHTS, ...patch });
+    expect(result).toEqual({
+      confidence: 0,
+      needsHuman: true,
+      reason: REASON_UNREADABLE,
+      components: null,
+    });
   });
 
   it('trọng số truyền vào ghi đè mặc định (hiệu chuẩn sau)', () => {
@@ -191,6 +210,7 @@ describe('FR-163 FR-032 property-based', () => {
         if (!terms) throw new Error('terms');
         const sum = Object.values(terms).reduce((acc, value) => acc + value, 0);
         expect(sum).toBeCloseTo(a.components?.z ?? Number.NaN, 9);
+        expect(Number.isFinite(a.components?.z)).toBe(true);
         expect(a.needsHuman).toBe(s.action === 'handoff');
       }),
       { seed: 20261106, numRuns: 400 },
@@ -215,13 +235,17 @@ describe('FR-163 FR-032 property-based', () => {
     );
   });
 
-  it('khoảng cách top1 − top2: top2 lớn hơn không bao giờ làm điểm tăng', () => {
+  it('khoảng cách top1 − top2: top2 lớn hơn hoặc thiếu top2 không bao giờ làm điểm tăng', () => {
     fc.assert(
       fc.property(signals, unit, unit, (s, a, b) => {
         const low = Math.min(a, b);
         const high = Math.max(a, b);
+        const withLow = computeConfidence({ ...s, sRetrievalTop2: low }).confidence;
         expect(computeConfidence({ ...s, sRetrievalTop2: high }).confidence).toBeLessThanOrEqual(
-          computeConfidence({ ...s, sRetrievalTop2: low }).confidence,
+          withLow,
+        );
+        expect(computeConfidence({ ...s, sRetrievalTop2: null }).confidence).toBeLessThanOrEqual(
+          withLow,
         );
       }),
       { seed: 20261106, numRuns: 300 },

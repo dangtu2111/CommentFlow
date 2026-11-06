@@ -27,6 +27,7 @@ export {
   assessDraft,
   type DraftOutcome,
   factSourcedRatio,
+  REASON_DRAFT_NEEDS_HUMAN,
   readDraftOutcome,
 } from './confidence/assess-draft';
 export {
@@ -39,6 +40,7 @@ export {
   type ConfidenceWeights,
   computeConfidence,
   confidenceSignalsSchema,
+  confidenceWeightsSchema,
   DEFAULT_CONFIDENCE_WEIGHTS,
   REASON_HANDOFF_ACTION,
   REASON_UNREADABLE,
