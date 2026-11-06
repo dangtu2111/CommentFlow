@@ -145,6 +145,17 @@ describe('FR-122 KiotViet fetchCatalog', () => {
     ]);
   });
 
+  it('tồn âm/lẻ ở một chi nhánh → null (không bù trừ giữa chi nhánh)', async () => {
+    const { connector } = harness([
+      page([
+        productNode(1, { inventories: [inventoryNode(-3, 1), inventoryNode(5, 2)] }),
+        productNode(2, { inventories: [inventoryNode(0.5, 1), inventoryNode(0.5, 2)] }),
+      ]),
+    ]);
+    const { products } = await connector.fetchCatalog();
+    expect(products.map((p) => p.variants[0]?.quantity)).toEqual([null, null]);
+  });
+
   it('sản phẩm không có inventories → tồn không biết (null)', async () => {
     const { connector } = harness([page([productNode(1, { inventories: [] })])]);
     expect((await connector.fetchCatalog()).products[0]?.variants[0]?.quantity).toBeNull();

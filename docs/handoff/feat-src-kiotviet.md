@@ -5,3 +5,5 @@
 **Đã đọc + rút ra:** copy cấu trúc `sapo/*`. Khác Sapo: máy chủ cố định (không SSRF) nhưng tên cửa hàng đi vào header `Retailer` → kiểm dạng; token xin riêng qua client credentials (`token.ts`, có đệm + gộp lời gọi đồng thời); biến thể là dòng riêng có `masterProductId` → gom ở connector; phân trang bằng offset `currentItem`; không có header bucket (chỉ 429); chữ ký webhook `X-Hub-Signature: sha256=<hex>`.
 
 **Còn lại:** `KIOTVIET-CONNECT-STORE` (bảng tên cửa hàng + Client ID/Secret mã hóa theo workspace, làn b), job worker, route webhook, đối soát, lọc tồn theo chi nhánh. Xác nhận tên trường/tham số/định dạng chữ ký với shop KiotViet thật.
+
+**Verifier-security:** không có mục chặn merge. Đã sửa: tồn âm/lẻ ở một chi nhánh → null. Để lại: token đệm không bị xóa khi gặp 401 (thêm `invalidate()` khi viết nơi dựng, KIOTVIET-CONNECT-STORE); mỗi workspace một token provider; route webhook sau này phải kiểm chữ ký trước khi xử lý + chống trùng theo `event_hash`.

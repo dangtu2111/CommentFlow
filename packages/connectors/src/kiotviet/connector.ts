@@ -166,7 +166,9 @@ function stockOf(row: Row): number | null {
   if (row.inventories.length === 0) return null;
   let sum = 0;
   for (const inventory of row.inventories) {
-    if (inventory.onHand === null) return null;
+    // Tồn lẻ/âm ở một chi nhánh không bù trừ được cho chi nhánh khác → không biết chắc.
+    if (inventory.onHand === null || !Number.isInteger(inventory.onHand) || inventory.onHand < 0)
+      return null;
     sum += inventory.onHand;
   }
   return sum;
