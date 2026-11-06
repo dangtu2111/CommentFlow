@@ -1,0 +1,1 @@
+- 06/11 (KB-CHUNKING, QKC1): `docs/10_Database_Design.md` §3.4 (đoạn "Văn bản đem đi lập chỉ mục" + "tsvector theo ngôn ngữ đoạn": tsv tiếng Việt bỏ dấu ở app bằng `foldText`; trần đoạn, `chunk_key`, `content_hash`).

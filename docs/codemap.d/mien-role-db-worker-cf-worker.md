@@ -1,0 +1,1 @@
+| Role DB worker (`cf_worker`) | `migrations/0030_worker_db_role.sql`, `infra/scripts/cf-dev-add-worker-role.sh`, `apps/worker/src/config.ts` (`DATABASE_WORKER_URL`), `packages/db/tests/worker-role.int.test.ts` | Chỉ role này là "hệ thống" + đọc ciphertext token; tạo role NGOÀI migration (init script / `pnpm cf:dev add-worker-role`) | ADR 011 |

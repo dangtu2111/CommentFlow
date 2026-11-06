@@ -1,0 +1,1 @@
+| Auth / phiên | `packages/saas-core/src/auth/` | Better Auth (adapter dùng pool role `cf_auth` từ `openAuthDb`): argon2id, phiên 14 ngày, cookie ký HMAC; hạn 8 giờ phiên Admin ép bằng trigger DB, `readSession` là lớp thứ hai | 13 §2 · ADR 003 |

@@ -1,0 +1,1 @@
+- 06/11 (PIPE-CLASSIFY-EXTRACT, Q-PCE1): `docs/05` FR-162 — ghi chú `order_intent.phone` do code điền từ số trước khi che PII.

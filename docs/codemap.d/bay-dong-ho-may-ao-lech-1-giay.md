@@ -1,0 +1,1 @@
+- **Đồng hồ máy ảo lệch ~1 giây** so với máy code làm test `admin-session-cap` ("created_at ở tương lai") đỏ — không liên quan mã; đồng bộ giờ máy ảo.

@@ -1,0 +1,1 @@
+- 06/11 (ATTACHMENTS-STORE, Q-ATT1): `docs/10_Database_Design.md` dòng `comments` — `attachments` ghi dạng `[{type, url?, externalId?}]`, CHECK mảng ≤ 10 (migration 0037).

@@ -44,7 +44,7 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - **Gói ngữ cảnh của việc:** kế hoạch của mỗi việc phải liệt kê "File sẽ đọc" và "File sẽ sửa". Khi code, chỉ đọc các file đó; cần thêm file → nói lý do.
 - **Không đọc lại:** file đã đọc trong phiên thì dùng lại nội dung đã có, chỉ đọc lại sau khi chính mình sửa hoặc có thay đổi từ bên ngoài. Đọc theo khoảng dòng khi file dài.
 - **Bàn giao giữa phiên:** cuối phiên ghi `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại). Phiên sau đọc file này thay vì đọc lại source.
-- **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → sửa dòng tương ứng trong `docs/codemap.md`; xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
+- **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → **thêm/sửa file riêng trong `docs/codemap.d/`** (tiền tố `lenh-`/`cay-`/`mien-`/`diem-vao-`/`bay-`, một hàng một file) rồi chạy `pnpm codemap:build`; **không sửa tay `docs/codemap.md`** (file sinh ra, CI chạy `pnpm codemap:check`); xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
 
 ## Thiết kế giao diện
 
@@ -79,7 +79,7 @@ Chủ dự án đọc TypeScript ở mức cơ bản. Mọi kế hoạch, báo c
 
 ## Quy tắc hỏi (chủ dự án chốt 05/11/2026)
 
-- Mặc định **tự chọn phương án khuyến nghị** (an toàn, ít quyền, đảo ngược được), ghi vào `docs/plans/QUYET_DINH_CHO_DUYET.md` (quyết định, lý do, cách đảo ngược) rồi làm tiếp. Được sửa `docs/01–16` cho khớp quyết định đó; ghi danh sách thay đổi vào cùng file.
+- Mặc định **tự chọn phương án khuyến nghị** (an toàn, ít quyền, đảo ngược được), ghi vào **file riêng `docs/plans/quyet-dinh/q<mã>.md`** (một hàng bảng: quyết định, lý do, cách đảo ngược; mục thay đổi docs/01–16 là `docs-<ngày>-<mã>.md`) rồi chạy `pnpm quyet:build` (sinh `docs/plans/QUYET_DINH_CHO_DUYET.md`, không sửa tay; CI chạy `pnpm quyet:check`) và làm tiếp. Được sửa `docs/01–16` cho khớp quyết định đó; ghi danh sách thay đổi vào cùng file.
 - **Chỉ hỏi** khi: cần việc/tài nguyên chỉ chủ dự án làm được; tốn tiền hoặc không đảo ngược được; đổi phạm vi/trải nghiệm lớn; không có phương án đủ an toàn.
 - Chỉ `git add` đúng file của việc đang làm; không bao giờ `git add -A`/`git add .` hay gom file ngoài việc.
 - Báo cáo ≤ 10 dòng, mỗi ngày một lần hoặc khi dừng; tách riêng mục "Việc chỉ bạn làm được".

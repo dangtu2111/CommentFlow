@@ -1,0 +1,1 @@
+| QW6 | 05/11 | WORKER-DB-ROLE: tạo role | Ngoài migration (cf_owner không có CREATEROLE): init script (volume mới), `pnpm cf:dev add-worker-role` (máy ảo), CI dùng init script; migration chỉ KIỂM role tồn tại | Cùng mẫu `cf_auth` (0010) | — |

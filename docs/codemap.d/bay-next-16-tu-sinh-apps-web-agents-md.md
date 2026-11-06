@@ -1,0 +1,1 @@
+- **Next 16 tự sinh `apps/web/AGENTS.md`** khi chạy dev; đã tắt bằng `agentRules: false` trong `next.config.ts`.
