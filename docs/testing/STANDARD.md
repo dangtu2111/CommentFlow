@@ -50,7 +50,7 @@ Công cụ: `fast-check` (TS, MIT), `hypothesis` (Python, MPL-2.0). **Chưa cài
 
 ## 6. Dữ liệu và fixture
 
-- Không dữ liệu khách giả làm số liệu; seed chỉ `plans` và từ điển viết tắt hệ thống (`AGENTS.md`).
+- Không dữ liệu khách giả làm số liệu; seed chỉ `plans` và từ điển viết tắt hệ thống (`AGENTS.md`). Ngoại lệ: dữ liệu mẫu `[MẪU]` của `pnpm dev:seed-demo` chỉ trên `cf_dev` để dựng giao diện (Q-UIF1) — test không được dựa vào nó.
 - Fixture tối thiểu, đặt tên/chú thích rõ là fixture (`*.fixture.ts`/`fixtures/`), không giống dữ liệu thật.
 - Bình luận thật chỉ dùng bản **đã che PII**; không dán bình luận thật chưa che vào test, issue, hay phiên Codex.
 - Không đọc/in `.env*`; test tích hợp lấy biến qua `scripts/lib/load-env.mjs`.
@@ -83,7 +83,7 @@ Công cụ: `fast-check` (TS, MIT), `hypothesis` (Python, MPL-2.0). **Chưa cài
 
 ## 9. Kiểm tra tay
 
-Sau mỗi tính năng agent thêm mục vào đầu `docs/testing/KIEM_TRA_TAY.md` (≤ 10 bước, vi + en, kết quả mong đợi từng bước); chủ dự án thử rồi ghi kết quả. Mục chưa thử ở trạng thái "chưa" là **kiểm tra tay dồn**; việc này không thay thế test tự động, chỉ bổ sung phần máy khó kiểm (giao diện, thư thật, nền tảng thật).
+Sau mỗi tính năng agent thêm mục bằng **hai file riêng** `docs/testing/kiem-tra-tay.d/kt-<mã>.md` (cả mục) + `tt-<mã>.md` (một hàng bảng "Trạng thái"), rồi chạy `pnpm kt:build` — không sửa tay `docs/testing/KIEM_TRA_TAY.md` (file sinh ra; mã KT duy nhất; mục ≤ 10 bước, vi + en, kết quả mong đợi từng bước); chủ dự án thử rồi ghi kết quả. Mục chưa thử ở trạng thái "chưa" là **kiểm tra tay dồn**; việc này không thay thế test tự động, chỉ bổ sung phần máy khó kiểm (giao diện, thư thật, nền tảng thật).
 
 ## 10. Trước khi báo xong một tính năng
 

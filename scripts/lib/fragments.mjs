@@ -11,7 +11,9 @@ const normalize = (text) => text.replace(/\r\n/g, '\n');
 
 /**
  * @param {Record<string, string>} files  tên file → nội dung
- * @param {{ head: string, prefix?: string }[]} sections  thứ tự mục; `prefix` bỏ trống = mục chỉ có phần đầu
+ * @param {{ head: string, prefix?: string, separator?: string }[]} sections  thứ tự mục; `prefix` không khai báo = mục chỉ có phần đầu,
+ *   `''` = nhận mọi file không bắt đầu bằng `_`; `separator` = chuỗi nối các file trong mục (mặc định một dòng mới;
+ *   `'\n\n'` khi mỗi file là cả một đoạn/mục dài)
  * @returns {{ text: string, problems: string[] }}
  */
 export function assemble(files, sections) {
@@ -28,7 +30,7 @@ export function assemble(files, sections) {
     claimed.add(section.head);
     const head = normalize(files[section.head]);
     const rows = [];
-    if (section.prefix) {
+    if (section.prefix !== undefined) {
       for (const name of names) {
         if (name.startsWith('_') || !name.startsWith(section.prefix)) continue;
         claimed.add(name);
@@ -37,7 +39,7 @@ export function assemble(files, sections) {
         else rows.push(row);
       }
     }
-    parts.push(rows.length > 0 ? head + rows.join('\n') : head.trimEnd());
+    parts.push(rows.length > 0 ? head + rows.join(section.separator ?? '\n') : head.trimEnd());
   }
 
   for (const name of names) {

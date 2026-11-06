@@ -46,11 +46,22 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - **Không đọc lại:** file đã đọc trong phiên thì dùng lại nội dung đã có, chỉ đọc lại sau khi chính mình sửa hoặc có thay đổi từ bên ngoài. Đọc theo khoảng dòng khi file dài.
 - **Bàn giao giữa phiên:** cuối phiên ghi `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại). Phiên sau đọc file này thay vì đọc lại source.
 - **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → **thêm/sửa file riêng trong `docs/codemap.d/`** (tiền tố `lenh-`/`cay-`/`mien-`/`diem-vao-`/`bay-`, một hàng một file) rồi chạy `pnpm codemap:build`; **không sửa tay `docs/codemap.md`** (file sinh ra, CI chạy `pnpm codemap:check`); xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
+- **Thêm FILE RIÊNG, không sửa file chung** (để nhánh song song không xung đột; mỗi cái có script ghép + `--check` trong CI):
+
+  | Cần ghi | Thêm file riêng | Rồi chạy |
+  |---|---|---|
+  | Bản đồ code | `docs/codemap.d/<tiền-tố>-….md` | `pnpm codemap:build` |
+  | Quyết định tự chọn | `docs/plans/quyet-dinh/q<mã>.md` | `pnpm quyet:build` |
+  | Tài nguyên cần chủ dự án cung cấp | `docs/can-ban-cung-cap.d/<mã-gap>.md` (cả mục `## …`) — **không** sửa `docs/CAN_BAN_CUNG_CAP.md` | `pnpm cbcc:build` |
+  | Kiểm tra tay | `docs/testing/kiem-tra-tay.d/kt-<mã>.md` (cả mục `## KT-<MÃ> — …`) **và** `tt-<mã>.md` (một hàng bảng "Trạng thái") — **không** sửa `docs/testing/KIEM_TRA_TAY.md`; mã KT phải duy nhất | `pnpm kt:build` |
+  | Export công khai của `@flow/ai` | thêm vào `packages/ai/src/<module>/index.ts` của module đó; **không** sửa `packages/ai/src/index.ts` (chỉ thêm một dòng `export * from './<module>';` khi tạo thư mục module mới) | `pnpm --filter @flow/ai typecheck` |
 
 ## Thiết kế giao diện
 
 - Bố cục từng trang: `design/stitch/<slug>.png` (+ `.html` khi cần class chi tiết) — chỉ trang đang làm. Danh sách: `design/stitch/README.md`.
-- **Không gọi Stitch khi code tính năng.** Thiết kế chỉ được tải qua quy trình `docs/workflows/stitch-sync.md` (trong Claude Code: `/stitch-sync`); thiếu màn hình → báo người dùng.
+- **UI-FIRST (chủ dự án chốt 06/11/2026, Q-UIF1):** hoàn thiện GIAO DIỆN khớp thiết kế Stitch TRƯỚC khi gắn chức năng. Mỗi màn: chụp trang thật (Playwright, 1440px và 390px nếu thiết kế có mobile) → so với `design/stitch/<slug>.png` → liệt kê điểm lệch → sửa bằng component/token của repo → nộp ảnh trước/sau ở `docs/plans/ui-fidelity/<mã>/`. Không đổi logic nghiệp vụ, không migration. Huy hiệu/số liệu/cam kết trong thiết kế mà không có thật (chứng nhận, "500+ shop", logo đối tác…) → thay bằng nội dung trung thực hoặc bỏ, ghi vào QUYET_DINH.
+- **Stitch:** không gọi Stitch khi code tính năng thường. Được dùng Stitch **chỉ qua** `docs/workflows/stitch-sync.md` (`/stitch-sync`, máy có MCP stitch) cho giai đoạn UI-first; thiếu màn hình thiết kế → KHÔNG tự bịa: ghi tên màn vào `docs/plans/ui-thieu-thiet-ke.md` (một dòng/màn) để người điều phối tạo bằng Stitch.
+- **Dữ liệu mẫu để dựng giao diện (chỉ DEV):** `pnpm dev:seed-demo` (`--reset` để tạo lại) tạo workspace "[MẪU] Demo Shop" — chỉ chạy khi `APP_ENV=dev` và DB `cf_dev` (từ chối staging/production/`cf_test`/DB có dấu `cf.env`). Mọi dữ liệu mẫu mang nhãn `[MẪU]`, **không bao giờ hiển thị như số liệu thật**, không dữ liệu khách thật. Chưa merge/chưa chạy được → dùng fixture cục bộ ở route `/dev/ui` chỉ bật khi `NODE_ENV !== 'production'`.
 - HTML Stitch là tham chiếu bố cục; dựng bằng component của repo, màu/chữ từ token (`docs/08_UI_UX_Specification.md` §2).
 
 ## Không làm trùng việc
@@ -94,7 +105,7 @@ Không chờ khóa/tài nguyên của chủ dự án. Việc cần Meta OAuth/we
 - Đọc `.env*` hoặc bất kỳ file bí mật nào; in biến môi trường.
 - Chạy migration hoặc lệnh ghi lên database production/staging từ máy dev.
 - Sửa `docs/01–16` ngoài phạm vi § Quy tắc hỏi (chỉ được sửa để khớp một quyết định đã ghi vào `QUYET_DINH_CHO_DUYET.md`).
-- Tạo dữ liệu khách giả làm số liệu; seed chỉ `plans` và từ điển viết tắt hệ thống.
+- Tạo dữ liệu khách giả làm số liệu. Seed trên mọi môi trường chỉ `plans` và từ điển viết tắt hệ thống; ngoại lệ DUY NHẤT: dữ liệu mẫu có nhãn `[MẪU]` trên DEV (`cf_dev`) do `pnpm dev:seed-demo` tạo, để dựng giao diện (§ Thiết kế giao diện) — không bao giờ ở staging/production/`cf_test`, không bao giờ làm số liệu hay đưa vào test.
 - Thêm thư viện mới mà không nêu lý do và giấy phép.
 
 ## Phối hợp nhiều agent (Claude Code + Codex)

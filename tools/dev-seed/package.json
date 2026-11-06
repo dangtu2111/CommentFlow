@@ -1,0 +1,25 @@
+{
+  "name": "@flow/dev-seed",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Dữ liệu mẫu có nhãn [MẪU] CHỈ cho DB dev (cf_dev). Không dùng cho staging/production.",
+  "scripts": {
+    "seed": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@flow/db": "workspace:*",
+    "@flow/saas-core": "workspace:*",
+    "@flow/shared": "workspace:*",
+    "pg": "8.23.1",
+    "tsx": "4.23.15",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/pg": "8.23.1",
+    "vitest": "5.0.5"
+  }
+}

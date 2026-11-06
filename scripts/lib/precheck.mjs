@@ -7,6 +7,8 @@ export const PRECHECK_STEPS = [
   { script: 'check:plans' },
   { script: 'codemap:check' },
   { script: 'quyet:check' },
+  { script: 'cbcc:check' },
+  { script: 'kt:check' },
 ];
 
 /** Chạy tuần tự; `run(step)` trả mã thoát. Dừng ngay ở bước lỗi đầu tiên. */

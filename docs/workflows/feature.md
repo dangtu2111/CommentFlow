@@ -25,4 +25,6 @@ Việc: `<mã gap matrix>` (người dùng cung cấp)
 5. **Dừng và chờ duyệt. Chưa sửa code.** Còn thẻ `[CẦN LÀM RÕ]` chưa được trả lời thì không được bắt đầu code, kể cả khi phần còn lại đã rõ.
 6. Chủ dự án trả lời: thay từng thẻ bằng quyết định ("Quyết định: …"), ghi điều chỉnh vào plan, đổi **Trạng thái duyệt** thành "Đã duyệt", chạy `pnpm check:plans` (phải đạt: không còn thẻ, không còn ô trống trong Checklist plan, Tiêu chí nghiệm thu không rỗng) rồi mới code.
 
+**Việc giao diện (UI-FIRST, Q-UIF1):** làm phần giao diện khớp thiết kế Stitch trước khi gắn chức năng. Lấy thiết kế từ `design/stitch/<slug>.png` (+ `.html`), `DESIGN.md`, `docs/08` §2; thiếu màn → ghi `docs/plans/ui-thieu-thiet-ke.md`, không tự bịa (Stitch chỉ qua `docs/workflows/stitch-sync.md`). Dữ liệu mẫu dev: `pnpm dev:seed-demo` (nhãn `[MẪU]`, chỉ `cf_dev`, `APP_ENV=dev`). Mỗi màn: chụp 1440px (+390px) → so thiết kế → liệt kê điểm lệch → sửa bằng component/token → nộp ảnh trước/sau ở `docs/plans/ui-fidelity/<mã>/`; mô tả PR nêu điểm đã khớp/chưa khớp. Không đổi logic nghiệp vụ, không migration.
+
 Nếu `docs/plans/<nhánh>.md` đã có và đã duyệt → **không lập lại**; đọc nó + handoff rồi làm tiếp từ "Còn lại".
