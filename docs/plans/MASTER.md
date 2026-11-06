@@ -178,7 +178,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| USAGE-COUNTERS | FR-090 (`usage_counters`, hạn mức, chặn 100%) | US-060 | GĐ0-AI-WRAPPER | S+DB | không | ⏳ |
+| USAGE-COUNTERS | FR-090 (`usage_counters`, hạn mức, chặn 100%) | US-060 | GĐ0-AI-WRAPPER | S+DB | không | ✅ (feat-usage-counters, migration 0039; chưa nối pipeline AI → `USAGE-GATE-PIPE`; `test:db` chạy ở CI) |
 | USAGE-METER-UI | FR-090 (đồng hồ lượt, cảnh báo 80%) | US-060 | USAGE-COUNTERS | — | không | ⏳ |
 | AI-VIRTUALKEY | FR-034 (khóa ảo LiteLLM theo workspace, ngân sách riêng) | — | USAGE-COUNTERS | S | **có** — khóa LLM | ⛔ |
 | AI-TRY-BOX-UI | FR-059 + FR-029 (Thử AI chạy cả pipeline, không trừ lượt) | US-034 | PIPE-DRAFT | — | không | ⏳ |

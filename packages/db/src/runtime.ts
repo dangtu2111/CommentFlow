@@ -140,6 +140,14 @@ export {
   type StuckRequest,
 } from './stuck-outbox';
 export {
+  type ConsumeUsageInput,
+  type ConsumeUsageResult,
+  consumeUsage,
+  getUsageCounter,
+  type UsageCounter,
+  type UsageCounterKey,
+} from './usage-counters';
+export {
   type RecordedWebhookEvent,
   type RecordWebhookEventInput,
   recordWebhookEvent,
