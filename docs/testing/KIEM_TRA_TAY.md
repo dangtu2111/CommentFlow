@@ -37,6 +37,7 @@
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
+| KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
@@ -807,6 +808,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/shared exec vitest run src/lead-contact.test.ts` và `pnpm --filter @flow/db exec vitest run src/lead-vault.test.ts src/lead-sink.test.ts`. | Xanh: chuẩn hóa SĐT/email, tối đa 3 lead/lần, mã hóa khứ hồi (sai workspace/lead/trường/khóa thì không giải mã), băm ổn định, khóa băm không trùng khóa mã hóa, cờ tắt mặc định, bật mà thiếu khóa thì báo lỗi cấu hình. |
 | 2 | CI job `database` chạy `tests/leads.int.test.ts` và `pnpm db:check-rls`. | Chỉ hệ thống ghi lead; DB không chứa SĐT/email thô; trùng số không tạo lead mới; Staff đổi giai đoạn/giao người (chỉ cho thành viên đang hoạt động); Staff không xóa; workspace khác không thấy bản mã. |
 | 3 | (Khi có khóa trên staging) đặt `LEADS_CAPTURE_ENABLED=true`, `LEADS_ENC_KEYS`, `LEADS_HASH_KEY` rồi chờ việc nối pipeline. | Chưa áp dụng — việc nối pipeline và giao diện Kanban là việc sau (`LEADS-KANBAN`). |
+
+## KT-OBW — Trình hướng dẫn thiết lập (ONBOARDING-WIZARD, FR-146)
+
+Không cần khóa ngoài. Đăng nhập Owner; Facebook để TẮT (mặc định) thì nút Kết nối bị khóa.
+1. Tạo workspace mới ở `/app/onboarding/workspace`. Kết quả: chuyển tới `/app/onboarding/setup` (bước "Kết nối nền tảng"), thanh 5 bước tô bước 2.
+2. Bước Kênh: nút "Kết nối Facebook" xám + dòng giải thích khi chưa bật cờ; có kênh thì hiện trong danh sách.
+3. Bấm Tiếp tục → "Chọn Page", rồi → "Nhập kiến thức": thanh Độ sẵn sàng khớp `/app/readiness`; nút Nhập sản phẩm mở `/app/products/import`.
+4. Bước cuối "Mời nhân viên" mở trang Thành viên; "Hoàn tất" về `/app`. "Quay lại" ở bước đầu về trang tạo workspace.
+5. Đăng nhập Staff, mở `/app/onboarding/setup`. Kết quả: 404.
 
 ## KT-PBF — Quét bù bình luận + banner webhook im lặng (POLLING-BACKFILL, FR-023)
 
