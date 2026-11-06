@@ -816,3 +816,12 @@ Chưa có giao diện; kiểm trên DB thử (`cf_dev`/`cf_test`). / No UI; veri
 | 3 | Bật cờ, workspace có phiên bản chứa đoạn về phí ship, thử "ship Cà Mau bao nhiêu" | Dòng "kiến thức đã xuất bản của shop"; đoạn thật hiện kèm điểm 0–1 giảm dần, đoạn dùng để soạn được đánh dấu |
 | 4 | Câu hỏi không liên quan kiến thức nào | Không có nguồn; không tự gửi (thiếu nguồn) |
 | 5 | Đổi giao diện sang English | Dòng nguồn + nhãn đổi sang tiếng Anh |
+
+## KT-PCX — Cache khớp chính xác (PIPE-CACHE-EXACT, FR-026/135) · Exact cache
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
+| 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
