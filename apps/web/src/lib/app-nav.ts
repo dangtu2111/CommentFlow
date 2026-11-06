@@ -10,6 +10,7 @@ export type NavGroupKey = 'operations' | 'settings';
 export type NavItemKey =
   | 'comments'
   | 'posts'
+  | 'aiSent'
   | 'tryAi'
   | 'readiness'
   | 'productImport'
@@ -30,6 +31,8 @@ const ENTRIES: readonly Entry[] = [
   { key: 'comments', href: '/app/comments', group: 'operations', roles: ['owner', 'staff'] },
   // Bài viết (FR-060): xem được với mọi vai trò (RLS theo thành viên workspace).
   { key: 'posts', href: '/app/posts', group: 'operations', roles: ['owner', 'staff'] },
+  // AI đã gửi + Đánh dấu sai (FR-075): Owner và Staff đều xem và đánh dấu được (docs/13 §3).
+  { key: 'aiSent', href: '/app/ai-sent', group: 'operations', roles: ['owner', 'staff'] },
   // Trang Kênh (kết nối Facebook, FR-010) chỉ Owner; Staff nhận 404 nên không hiện liên kết.
   // Thử AI (FR-059, US-034): Owner thử trước khi bật tự gửi; không trừ lượt, chạy bằng mock.
   { key: 'tryAi', href: '/app/try-ai', group: 'settings', roles: ['owner'] },
