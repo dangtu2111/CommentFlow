@@ -19,6 +19,7 @@ export * from './examples';
 export * from './gate';
 export * from './greetings';
 export * from './history';
+export * from './inbox';
 export * from './injection';
 export * from './kb-reembed';
 export * from './normalize';

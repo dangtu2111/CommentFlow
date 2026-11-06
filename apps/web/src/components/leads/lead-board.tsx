@@ -2,7 +2,7 @@ import type { LeadRow } from '@flow/db/runtime';
 import { isLocale, type LeadStage } from '@flow/shared';
 import { Mail, Phone, StickyNote } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { formatRelativeTime } from '../../lib/inbox-format';
+import { formatRelativeTime, toIsoString } from '../../lib/inbox-format';
 import { groupLeadsByStage, LEAD_STAGES, leadInitials, maskedPhone } from '../../lib/lead-view';
 import { Avatar } from '../ui/avatar';
 import { Chip } from '../ui/chip';
@@ -50,7 +50,7 @@ function LeadCard({
         </p>
       ) : null}
       <footer className="lead-card-foot">
-        <time dateTime={lead.createdAt.toISOString()}>
+        <time dateTime={toIsoString(lead.createdAt)}>
           {formatRelativeTime(lead.createdAt, now, locale)}
         </time>
         {lead.assignedTo ? <Chip tone="success">{t('card.assigned')}</Chip> : null}
