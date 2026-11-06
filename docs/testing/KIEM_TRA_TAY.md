@@ -85,6 +85,16 @@ Nếu hỏng: dán tên test đỏ + dòng lỗi đầu tiên. / If it fails: pa
 
 ---
 
+## KT-033 — Chuẩn hóa + nhận ngôn ngữ (PIPE-NORMALIZE-LANG, FR-025/120/159; chỉ lõi hàm thuần, chưa nối pipeline)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/normalize/normalize-lang.test.ts` | Xanh; không gọi mạng/DB/LLM |
+| 2 | Đọc nhanh test quy tắc §5: "áo này còn size M không" → vi; "How much is this shirt…" → en; chữ Hán/Thái/Hàn/Nga → other | Khớp ý bạn (muốn đổi ngưỡng/từ khóa → nói để sửa Q-PNL1) |
+| 3 | Khi ABBREV-DICT + pipeline được nối: bình luận "ib giá sz M bn" | Chuẩn hóa thành "inbox giá size m bao nhiêu", lang = vi |
+
+---
+
 ## KT-031 — Soạn trả lời bằng LLM (PIPE-DRAFT, FR-029/138/140/142)
 
 Chưa có giao diện/pipeline nối (cần `PIPE-RETRIEVE`, `PIPE-GUARD-MONEY`); mục này chỉ kiểm cờ và test. Không cần tiếng Việt/Anh.
