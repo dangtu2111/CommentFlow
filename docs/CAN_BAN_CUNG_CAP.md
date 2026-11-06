@@ -198,11 +198,11 @@ Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_ru
 ## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
 Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
 
+## 2v. `LEADS-STORE` (FR-082, FR-033) — chỉ cần khóa mã hóa khi bật ghi khách tiềm năng
+Bảng `cf.leads` (migration 0051) và `ContactSink` thật đã xong nhưng chưa nối vào pipeline; cờ `LEADS_CAPTURE_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật). Khi bật bạn cần: (1) tự sinh `LEADS_ENC_KEYS=v1:<openssl rand -hex 32>` (xoay khóa: thêm `v2:…`, giữ khóa cũ để giải mã) và `LEADS_HASH_KEY=<openssl rand -hex 32>` — **khác** `TOKEN_ENC_KEYS` và khác nhau, chỉ đặt ở máy staging/production (worker + web đều cần để ghi/xem), KHÔNG đặt trên máy ảo dev dùng chung; (2) **sao lưu khóa an toàn**: mất `LEADS_ENC_KEYS` = không đọc lại được số/email đã lưu; đổi `LEADS_HASH_KEY` = mất khả năng chống trùng cho lead cũ; (3) quyết định chính sách lưu giữ/xóa dữ liệu khách tiềm năng (hiện chỉ Owner xóa tay). Kiểm tay mã KT-LDS.
+
 ## 2s. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
 Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm dựng `cache` theo workspace; cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi dịch vụ thật. Để bật thật (`SEMANTIC-CACHE`, GĐ5) bạn cần: (1) một model embedding đăng ký trong LiteLLM, tên đặt ở `SEMANTIC_CACHE_EMBEDDING_MODEL` (đặt trong `config.yaml` trên máy ảo); (2) Redis có module RediSearch (Redis Stack) cho `redis-semantic`; (3) tự gộp khối `litellm_settings` của file mẫu vào cấu hình LiteLLM trên máy ảo.
-
-## 2v. `LEADS-STORE` (FR-082, FR-033) — chỉ cần khóa mã hóa khi bật ghi khách tiềm năng
-Bảng `cf.leads` (migration 0051) và `ContactSink` thật đã xong nhưng chưa nối vào pipeline; cờ `LEADS_CAPTURE_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật). Khi bật bạn cần: (1) tự sinh `LEADS_ENC_KEYS=v1:<openssl rand -hex 32>` (xoay khóa: thêm `v2:…`, giữ khóa cũ để giải mã) và `LEADS_HASH_KEY=<openssl rand -hex 32>` — **khác** `TOKEN_ENC_KEYS`, chỉ đặt ở máy staging/production (worker + web đều cần để ghi/xem), KHÔNG đặt trên máy ảo dev dùng chung; (2) **sao lưu khóa an toàn**: mất `LEADS_ENC_KEYS` = không đọc lại được số/email đã lưu; đổi `LEADS_HASH_KEY` = mất khả năng chống trùng cho lead cũ; (3) quyết định chính sách lưu giữ/xóa dữ liệu khách tiềm năng (hiện chỉ Owner xóa tay). Kiểm tay mã KT-LDS.
 
 ## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
 Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
