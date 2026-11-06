@@ -1,0 +1,34 @@
+{
+  "repo": "chu-so-huu/ten-repo",
+  "baseBranch": "main",
+  "branchPrefix": "feat/",
+  "stateDir": ".orchestrator",
+  "promptDir": "orchestrator/prompts",
+  "verifyCommands": ["pnpm lint", "pnpm typecheck", "pnpm test"],
+  "maxFixesPerPr": 2,
+  "merge": { "method": "squash" },
+  "ci": {
+    "pollSeconds": 30,
+    "timeoutMinutes": 45,
+    "noChecksGraceSeconds": 120,
+    "requireChecks": true,
+    "ignoreChecks": []
+  },
+  "agent": {
+    "command": "claude",
+    "defaultModel": "sonnet",
+    "allowedTools": ["Read", "Edit", "Write", "Glob", "Grep", "Bash"],
+    "maxMinutes": 120
+  },
+  "log": { "format": "text" },
+  "lanes": {
+    "a": {
+      "dir": "../ten-repo-lane-a",
+      "model": "sonnet",
+      "testDb": "app_test_a",
+      "migration": true
+    },
+    "b": { "dir": "../ten-repo-lane-b", "model": "sonnet" },
+    "c": { "dir": "../ten-repo-lane-c", "model": "opusplan" }
+  }
+}
