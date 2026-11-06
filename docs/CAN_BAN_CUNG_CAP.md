@@ -235,6 +235,9 @@ Bảng `core.plans` (migration 0054) đã nạp sẵn 5 gói CommentFlow theo `d
 ## 2x. `PRIVATE-REPLY` (FR-046) — cần Page Facebook thử + quyền Meta để thử thật
 Logic kiểm tra (1 tin, ≤ 7 ngày, chỉ nhân viên bấm Gửi) đã xong với fixture, CHƯA gọi Meta thật. Để thử thật bạn cần: Page Facebook thử đã kết nối, app Meta có quyền `pages_messaging` (cần App Review khi chạy thật) và một bình luận thử của tài khoản ngoài. Chưa có nơi gọi trong web/worker nên chưa ảnh hưởng người dùng. Kiểm tay mã KT-PRP.
 
+## 2y. `QR-PAYMENT` (FR-091, US-061) — cần tài khoản ngân hàng nhận tiền
+Mã QR chuyển khoản (VietQR) và nút "Tôi đã chuyển khoản" đã xong dạng mock, chạy sau cờ `QR_PAYMENT_ENABLED` (web) mặc định TẮT. Bạn cần cung cấp: (1) tài khoản ngân hàng nhận tiền của công ty: **mã BIN ngân hàng** (6 chữ số, tra theo danh mục NAPAS), **số tài khoản**, **tên chủ tài khoản** → đặt vào biến `PAYMENT_BANK_BIN`, `PAYMENT_ACCOUNT_NUMBER`, `PAYMENT_ACCOUNT_NAME` (chỉ tên biến nằm trong `env.example`; giá trị đặt ở máy chạy thật, không commit); (2) chỉ bật cờ khi đã thử quét QR bằng app ngân hàng thật với số tiền nhỏ và đối chiếu số tiền/nội dung hiện đúng; (3) quyết định tài khoản cá nhân hay doanh nghiệp (ảnh hưởng xuất hóa đơn, ngoài phạm vi việc này). Chưa có đường Admin xác nhận (`ADMIN-PAYMENTS`) nên hóa đơn "chờ xác nhận" tạm chỉ chuyển `paid` bằng hàm hệ thống. Kiểm tay mã KT-QRP.
+
 ## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
 Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
 

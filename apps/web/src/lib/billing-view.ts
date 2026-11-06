@@ -10,6 +10,8 @@ export type InvoiceListRow = {
   description: string;
   amountVnd: number;
   status: InvoiceRow['status'];
+  /** Khóa nhãn hiển thị: `awaiting` = hóa đơn pending mà Owner đã báo chuyển khoản (chờ xác nhận, QR-PAYMENT). */
+  statusKey: InvoiceRow['status'] | 'awaiting';
   tone: InvoiceTone;
 };
 
@@ -44,6 +46,8 @@ export function buildInvoiceRows(rows: readonly InvoiceRow[]): InvoiceListRow[] 
     description: describeItems(row.items),
     amountVnd: row.amountVnd,
     status: row.status,
+    statusKey:
+      row.status === 'pending' && row.transferReportedAt !== null ? 'awaiting' : row.status,
     tone: invoiceStatusTone(row.status),
   }));
 }

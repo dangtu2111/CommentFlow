@@ -13,6 +13,7 @@ const INVOICES: InvoiceListRow[] = [
     description: '[MẪU] Gói Growth (tháng 10)',
     amountVnd: 699_000,
     status: 'paid',
+    statusKey: 'paid',
     tone: 'success',
   },
   {
@@ -22,6 +23,7 @@ const INVOICES: InvoiceListRow[] = [
     description: '[MẪU] +1.000 lượt AI (add-on)',
     amountVnd: 149_000,
     status: 'pending',
+    statusKey: 'awaiting',
     tone: 'warning',
   },
   {
@@ -31,6 +33,7 @@ const INVOICES: InvoiceListRow[] = [
     description: '[MẪU] Gói Growth (tháng 9)',
     amountVnd: 699_000,
     status: 'void',
+    statusKey: 'void',
     tone: 'muted',
   },
 ];
