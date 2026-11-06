@@ -9,10 +9,18 @@ import { ICON_PATHS } from './icon-paths';
 export type IconName = keyof typeof ICON_PATHS;
 
 /** Icon SVG nội tuyến, tô theo `currentColor`. Trang trí (`aria-hidden`); nghĩa nằm ở chữ bên cạnh. `size` tính bằng px (mặc định 14 = `text-sm` của Stitch). */
-export function Icon({ name, size = 14 }: { name: IconName; size?: number }) {
+export function Icon({
+  name,
+  size = 14,
+  className,
+}: {
+  name: IconName;
+  size?: number;
+  className?: string;
+}) {
   return (
     <svg
-      className="icon"
+      className={className ? `icon ${className}` : 'icon'}
       width={size}
       height={size}
       viewBox="0 -960 960 960"

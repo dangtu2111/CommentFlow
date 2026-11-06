@@ -22,8 +22,6 @@ import '../styles/spam-rules.css';
 import '../styles/reports-legal.css';
 import '../styles/settings-pages.css';
 import '../styles/messages.css';
-import '../styles/inbox.css';
-import '../styles/inbox-parts.css';
 import '../styles/tailwind.css';
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
