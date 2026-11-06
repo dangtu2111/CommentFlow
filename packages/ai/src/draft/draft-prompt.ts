@@ -111,9 +111,15 @@ function buildShopContext(input: DraftInput): MaskedText {
   return unsafeMarkMasked(lines.filter((line) => line !== '').join('\n'));
 }
 
-/** Chặn văn bản nguồn tự đóng/mở thẻ để chèn nguồn giả. */
+/**
+ * Chặn văn bản nguồn tự đóng/mở thẻ để chèn nguồn giả (FR-164): mọi dấu `<`/`>` (kể cả dạng toàn chiều rộng)
+ * thành `‹`/`›`, nên không biến thể nào (khoảng trắng, hoa/thường, xuống dòng) dựng được thẻ thật.
+ */
 function escapeSource(text: string): string {
-  return text.replace(/<(\/?)source/gi, '‹$1source');
+  return text
+    .normalize('NFKC')
+    .replace(/[<＜﹤〈〈]/g, '‹')
+    .replace(/[>＞﹥〉〉]/g, '›');
 }
 
 function renderSource(source: DraftSource): string {

@@ -131,7 +131,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | ⏳ |
 | KB-EMBED-COL | FR-133 (cột `embedding_model`; job tạo lại làm ở GĐ5), FR-139 (cột `halfvec(1024)` + HNSW) | — | KB-SCHEMA | DB | không | ⏳ |
 | GSHEETS-LINK | FR-121 (Google Sheets liên kết + đồng bộ định kỳ) | US-003 | KB-IMPORT-EXCEL | S (OAuth) | **có** — Google Cloud | ⛔ |
-| KB-INJECTION-GUARD | FR-164 (chống cài lệnh qua kiến thức nhập vào) | — | KB-CHUNKING | S | không | ⏳ |
+| KB-INJECTION-GUARD | FR-164 (chống cài lệnh qua kiến thức nhập vào) | — | KB-CHUNKING | S | không | ✅ Xong-mock (feat-kb-injection-guard; duyệt/xuất bản → KB-INJECTION-REVIEW, KB-PUBLISH) |
 
 ### 2B. Bài viết, gợi ý, giao diện
 
