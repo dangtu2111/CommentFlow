@@ -97,6 +97,19 @@ export {
   type ShopPronoun,
 } from './reply-style';
 export {
+  isProductCacheStale,
+  normalizeSearchText,
+  PRODUCT_MATCH_MARGIN,
+  PRODUCT_MATCH_THRESHOLD,
+  type ProductMatch,
+  type ProductSearchInput,
+  pickProductMatch,
+  productSearchText,
+  type RankedScore,
+  RRF_K,
+  reciprocalRankFusion,
+} from './search';
+export {
   type RuleFilterInput,
   type RuleFilterReason,
   type RuleFilterResult,
