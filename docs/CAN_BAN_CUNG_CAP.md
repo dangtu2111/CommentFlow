@@ -135,5 +135,9 @@ Tìm kiếm toàn văn + trigram chạy hoàn toàn trong Postgres (không cần
 
 Không cần khóa hay dịch vụ ngoài: `normalizeAndDetectLang` chạy bằng heuristic từ khóa mặc định. Muốn độ chính xác cao hơn cho câu không dấu/ngôn ngữ Latin khác (Pháp, Tây Ban Nha…), bạn **quyết định** có thêm thư viện lingua (MIT) hay không — khi đó sẽ cắm qua interface `LangDetector`, kèm bộ đánh giá 4 nhóm (FR-120). Từ điển viết tắt lấy từ bảng `abbreviations` (việc ABBREV-DICT).
 
+## 2i. `AUTO-SEND-GATE` (FR-031, FR-141) — không cần tài nguyên ngoài
+
+Hàm thuần `decideAutoSend` (`packages/ai/src/gate/`), không khóa/dịch vụ/cờ; kiểm tay mã KT-ASG. Không có gì để chủ dự án cung cấp. Mutation testing (Stryker) chưa cài — xem gap `MUTATION-STRYKER`, cần bạn đồng ý thêm thư viện dev (Apache-2.0) ở một nhánh riêng.
+
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").

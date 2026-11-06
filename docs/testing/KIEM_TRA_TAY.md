@@ -36,6 +36,7 @@
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 
 ---
@@ -65,6 +66,13 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 3. (Tùy chọn, vi + en) Khi `USAGE-METER-UI` xong: đồng hồ lượt hiện "80%" màu cảnh báo, "100%" chặn AI và đề xuất mua thêm/nâng gói.
 
 ---
+
+## KT-ASG — Cổng tự gửi (AUTO-SEND-GATE, FR-031/141)
+
+Hàm thuần, chưa nối pipeline/DB → chưa có bước bấm tay; không cần khóa LLM, không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/gate`. — Mong đợi: tất cả test xanh (mỗi cổng 1–11 có test riêng; test property-based `fast-check`, seed cố định, kiểm thứ tự cổng và tính đơn điệu).
+2. Mở `packages/ai/src/gate/auto-send-gate.ts`, xem mảng `GATES`. — Mong đợi: đúng 11 hàm theo thứ tự `docs/09` §6 (công tắc → mức kênh×nhãn → ghi đè bài → nhãn chặn → ngưỡng → cần người → từ khóa → giới hạn/ngày → trần chi phí → giờ hoạt động → cửa sổ 24 giờ); `draft.needsHuman` chỉ xuất hiện ở chỗ CHẶN (`gate6NeedsHuman`), không có chỗ nào đọc trường AI để mở cổng; không có chữ `hide`.
+3. Kiểm tay khi nối pipeline (AUTO-MATRIX-UI + pipeline): bật Tự động cho kênh × Hỏi giá, bình luận "giá bao nhiêu" có nguồn → bản nháp hiện "Sẽ tự gửi sau N phút"; đổi sang Chạy thử → chỉ ghi "sẽ gửi"; thêm từ khóa chặn có trong câu → về Chờ duyệt với lý do "Từ khóa chặn" (`gate:7`).
 
 ## KT-DA — Thang xử lý khi AI không chắc (PIPE-DECIDE-ACTION, FR-147/141)
 
