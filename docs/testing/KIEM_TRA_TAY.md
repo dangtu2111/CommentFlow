@@ -34,6 +34,7 @@
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
+| KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
@@ -606,6 +607,16 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 2. Mở `packages/ai/src/decide/decide-action.ts`, xem hàm `riskReason` và `decideAction`. — Mong đợi: rủi ro (ngôn ngữ khác, khiếu nại, mạo danh, lệch giá, pháp lý, hỏi lại ≥ 3) được xét TRƯỚC mọi thứ; không có chỗ nào đọc trường `action`/`needs_human` do AI tự ghi.
 3. Mở `packages/ai/src/draft/draft-prompt.ts`, xem `SYSTEM_PROMPT`. — Mong đợi: có câu "chỉ viết câu cho đúng hành động đó" và "Không tự tính tổng tiền, giảm giá, phí ship".
 4. Kiểm tay khi nối pipeline: bình luận "giá bao nhiêu, ship về Hà Nội bao nhiêu" với kiến thức chỉ có giá → câu gợi ý nêu giá + mời ib về phí ship, bình luận có tag Cần hỗ trợ thêm, không tự gửi khi `allow_partial` tắt.
+
+## KT-DH — Nhân viên đang giữ chuỗi thì AI không tự gửi (DA-HOLDER, FR-154, feat-da-holder)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-HOLDER-WIRE`. / Core + automated tests only; manual checks deferred to `DA-HOLDER-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/human-hold-rules.test.ts` | Mọi test xanh |
+| 2 | (Sau khi nối) Nhân viên trả lời một bình luận, 10 phút sau khách hỏi tiếp, AI đang bật Tự động | AI chỉ gợi ý, không tự gửi; lý do "Nhân viên đang giữ chuỗi" |
+| 3 | (Sau khi nối) Chờ quá thời gian giữ (mặc định 2 giờ) rồi khách hỏi tiếp | AI được tự gửi bình thường (nếu qua các cổng khác) |
 
 ## KT-DHR — Chuyển người khi có ảnh/video chưa rõ sản phẩm (DA-HANDOFF-RULES, FR-143, feat-da-handoff-rules)
 
