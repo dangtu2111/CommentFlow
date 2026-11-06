@@ -153,6 +153,12 @@ async function prepare(
     return { kind: 'done' };
   }
 
+  // Trần số lần gọi nền tảng (job quét/lượt chạy lại không được thử vô hạn).
+  if (row.attempts >= MAX_HIDE_ATTEMPTS) {
+    await finish('failed', 'UNKNOWN');
+    return { kind: 'done' };
+  }
+
   await tx.execute(sql`
     UPDATE cf.comment_hides
        SET status = 'sending', attempts = attempts + 1, updated_at = now(),

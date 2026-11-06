@@ -14,7 +14,7 @@ Không có. Quyết định tự chọn Q-LANG-1 (xem `QUYET_DINH_CHO_DUYET.md`)
 
 1. `tenancy.setUserLocale(userId, locale)` ghi `users.locale` của đúng người đó qua `withUser`, không đổi người khác; locale ngoài vi/en → `VALIDATION_FAILED` — kiểm bằng: `tenancy.int.test.ts` (DB thật) + `tenancy-locale.test.ts` (unit).
 2. `applyLocaleChoice`: giá trị không hợp lệ → không làm gì; luôn đặt cookie; có phiên → lưu DB; không phiên → không gọi DB; lưu DB lỗi → cookie vẫn đặt, không ném lỗi, log không chứa dữ liệu thô — kiểm bằng: `locale-choice.test.ts`.
-3. Trang Cài đặt (`/app/security`) có bộ chọn ngôn ngữ, chuỗi qua i18n vi/en — kiểm bằng: `pnpm lint:i18n`, test khớp khóa, KT-016 thủ công.
+3. Trang Cài đặt (`/app/security`) có bộ chọn ngôn ngữ, chuỗi qua i18n vi/en — kiểm bằng: `pnpm lint:i18n`, test khớp khóa, KT-017 thủ công.
 4. Công cụ xanh: lint, lint:i18n, typecheck, depcruise, check:plans, test:trace, test phạm vi, coverage `saas-core`/`shared` không giảm.
 
 ## File sẽ đọc
@@ -28,7 +28,7 @@ Không có. Quyết định tự chọn Q-LANG-1 (xem `QUYET_DINH_CHO_DUYET.md`)
 - `apps/web/src/server/locale-choice.ts` (+ `.test.ts`) — logic chọn ngôn ngữ (cookie + lưu DB).
 - `apps/web/src/app/actions.ts` — `setLocale` gọi `applyLocaleChoice`.
 - `apps/web/src/app/app/security/page.tsx` — thêm thẻ ngôn ngữ; `vi.json`/`en.json` — khóa `language.settings*`.
-- Docs: codemap, gap-matrix, MASTER, handoff, KIEM_TRA_TAY (KT-016), QUYET_DINH_CHO_DUYET.
+- Docs: codemap, gap-matrix, MASTER, handoff, KIEM_TRA_TAY (KT-017), QUYET_DINH_CHO_DUYET.
 
 ## Migration
 

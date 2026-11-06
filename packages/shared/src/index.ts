@@ -1,3 +1,4 @@
+export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
 export {

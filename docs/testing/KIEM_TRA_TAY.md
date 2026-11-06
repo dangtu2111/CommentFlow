@@ -21,6 +21,7 @@
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 
 ---
 
@@ -304,7 +305,7 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 
 ---
 
-## KT-016 — Lưu ngôn ngữ theo người dùng (AUTH-LANG-PREF, FR-119)
+## KT-017 — Lưu ngôn ngữ theo người dùng (AUTH-LANG-PREF, FR-119)
 
 Điều kiện: nhánh `feat-auth-lang-pref`; máy ảo bật; một tài khoản đã đăng nhập.
 
@@ -318,6 +319,24 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 6 | Đăng xuất, ở trang đăng nhập bấm đổi ngôn ngữ. | Giao diện đổi (cookie), không lỗi; DB không đổi vì chưa có phiên. |
 
 Nếu hỏng: ghi số bước, ảnh chụp.
+
+---
+
+## KT-016 — Quét yêu cầu gửi/ẩn kẹt (SEND-SWEEP + HIDE-SWEEP, ADR 008/009)
+
+Điều kiện: nhánh `feat-send-hide-sweep`; máy ảo `cf` bật; đã `pnpm db:migrate` (0031) và chạy worker bản mới. Sổ connector của worker còn RỖNG (chưa có connector thật) nên bước gửi/ẩn kết thúc `connector_unavailable` — đủ để thấy quét hoạt động.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` rồi `pnpm db:check-rls`. | Áp 0031; 0 vi phạm. |
+| 2 | Chạy worker (`pnpm --filter @flow/worker dev`) và để mở. | Sẵn sàng; không lỗi `42501` về `list_stuck_outbox`. |
+| 3 | Trên máy ảo, `psql` vào `cf_dev`: tạo yêu cầu kẹt bằng cách sửa một yêu cầu `queued` mới: `UPDATE cf.comment_replies SET updated_at = now() - interval '10 minutes' WHERE id = '<id yêu cầu queued>';` (chỉ dữ liệu thử). | — |
+| 4 | Chờ ≤ 60 giây rồi xem lại dòng đó. | Yêu cầu không còn `queued` (hiện `failed`/`connector_unavailable` vì chưa có connector thật); bình luận hiện lỗi gửi + nút Thử lại. Log worker có dòng "đã quét yêu cầu gửi/ẩn kẹt", không có nội dung bình luận. |
+| 5 | Lặp bước 3–4 với một yêu cầu ẩn (`cf.comment_hides`). | Tương tự: hết `queued`, ghi `failed`. |
+| 6 | Tạo yêu cầu `queued` mới (không sửa giờ), chờ 60 giây. | KHÔNG bị quét (còn mới < 5 phút) — vẫn do job thường xử lý. |
+| 7 | Trên máy ảo, `psql` bằng web (`cf_app`): `SELECT * FROM cf.list_stuck_outbox('reply', 300, 150, 10);` | Lỗi `permission denied` (chỉ `cf_worker` gọi được). |
+
+Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
 
 ---
 
@@ -339,6 +358,23 @@ Nếu hỏng: ghi số bước, ảnh chụp.
 | 10 | Bỏ `FB_OAUTH_ENABLED` (hoặc đặt `false`), khởi động lại web, mở `/app/channels` và `/api/channels/facebook/start`. | Trang hiện "chưa được bật", không có nút; đường `start` trả 404. Đổi sang **English** + ~390px: chữ và bố cục đúng. |
 
 Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ mã lỗi, không có token).
+
+---
+
+## KT-016 — Trang Cài đặt (SETTINGS-PAGE, feat-settings-page)
+
+Điều kiện: đã đăng nhập, có workspace. Làm bằng cả Owner và Staff.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở menu **Cài đặt** (cả Owner và Staff). | Vào `/app/settings`; không còn mục "Bảo mật" riêng; mục Cài đặt được tô đậm. |
+| 2 | Xem trang. | Có thẻ xác thực 2 bước, danh sách phiên đăng nhập, thẻ ngôn ngữ. |
+| 3 | Đăng nhập thêm trên trình duyệt khác rồi tải lại trang. | Thấy 2 phiên; phiên hiện tại có nhãn "Hiện tại", không có nút đăng xuất. |
+| 4 | Bấm **Đăng xuất** ở phiên kia. | Phiên kia biến mất; trình duyệt kia bị đăng xuất. |
+| 5 | Owner chưa bật 2FA mở `/app/settings`. | Bị chuyển tới `/app/security` có biểu ngữ bắt buộc; bật được 2FA ở đó. |
+| 6 | Ở thẻ ngôn ngữ bấm **English**. | Toàn giao diện đổi sang tiếng Anh ngay; nút English khóa; lặp lại với Tiếng Việt. |
+
+Nếu hỏng: ghi số bước và ảnh chụp.
 
 ---
 
