@@ -2,6 +2,7 @@
 // Cần: APP_ENV=staging, DATABASE_ADMIN_URL, CF_STAGING_DB_HOSTS, và (khi áp thật) CF_CONFIRM_STAGING_MIGRATE=<tên-db>@<số-migration-cuối>.
 // `--dry-run`: chỉ đọc, liệt kê migration chờ. Production luôn bị từ chối.
 import { isAppError } from '@flow/shared';
+import { parseStagingCliEnv } from '../cli-env';
 import { runStagingMigrate } from '../staging-migrate';
 
 const args = process.argv.slice(2);
@@ -13,7 +14,7 @@ if (unknown.length > 0) {
 
 try {
   const result = await runStagingMigrate({
-    env: process.env,
+    env: parseStagingCliEnv(),
     dryRun: args.includes('--dry-run'),
     log: (line) => console.log(line),
   });

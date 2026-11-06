@@ -85,7 +85,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/log-on-behalf-of` · Gói 
 | Kết nối DB / mở giao dịch có ngữ cảnh | `createDb` · `withWorkspace` | `packages/db/src/client.ts:93` · `:96` |
 | Pool role `cf_auth` cho bảng xác thực (chỉ module auth import) | `createAuthDb` · `openAuthDb` | `packages/db/src/auth-db.ts:24` · `packages/saas-core/src/auth/auth-db.ts:9` |
 | Chặn migration nhầm môi trường | `assertMigrationAllowed` | `packages/db/src/migration-guard.ts:41` |
-| Cổng + logic migrate staging (hàm thuần: host, mã xác nhận, journal, migration chờ) · chạy (trước/sau, dry-run READ ONLY) | `assertStagingMigrateAllowed` · `runStagingMigrate` | `packages/db/src/staging-migrate-guard.ts` · `staging-migrate.ts` (CLI `src/cli/migrate-staging.ts`; worker: `installQueueSchemaStaging` ở `apps/worker/src/queue/install.ts`) |
+| Cổng + logic migrate staging (hàm thuần: host, mã xác nhận, journal, migration chờ) · chạy (trước/sau, dry-run READ ONLY) | `assertStagingMigrateAllowed` · `runStagingMigrate` | `packages/db/src/staging-migrate-guard.ts` · `staging-migrate.ts` (CLI `src/cli/migrate-staging.ts`; mọi CLI db/worker đọc env qua `src/cli-env.ts` `parse*CliEnv` = `parseEnv` Zod; worker: `installQueueSchemaStaging` ở `apps/worker/src/queue/install.ts`) |
 | Kiểm RLS | `checkRls` | `packages/db/src/check-rls.ts:204` |
 | Luồng đăng ký/đăng nhập/quên mật khẩu (kết quả trung tính) | `createAuthFlows` | `packages/saas-core/src/auth/flows.ts:76` |
 | Gửi thư theo ngôn ngữ người nhận | `createNotifier` · `createSmtpTransport` · `renderEmail` | `packages/saas-core/src/notify/notifier.ts:17` · `smtp.ts:36` · `templates.ts:106` |
