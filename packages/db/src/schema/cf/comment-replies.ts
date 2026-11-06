@@ -54,6 +54,10 @@ export const commentReplies = cf.table(
       .where(sql`${t.status} in ('queued', 'sending')`),
     index('comment_replies_workspace_comment_idx').on(t.workspaceId, t.commentId),
     index('comment_replies_workspace_channel_idx').on(t.workspaceId, t.channelId),
+    // SEND-SWEEP: quét yêu cầu kẹt theo `updated_at` (chỉ dòng đang hoạt động → chỉ mục nhỏ).
+    index('comment_replies_stuck_idx')
+      .on(t.updatedAt)
+      .where(sql`${t.status} in ('queued', 'sending')`),
     // Mã trả lời của nền tảng chỉ gắn với MỘT yêu cầu trong một kênh.
     uniqueIndex('comment_replies_external_reply_unique')
       .on(t.channelId, t.externalReplyId)

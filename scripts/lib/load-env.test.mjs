@@ -14,6 +14,7 @@ const KEYS = [
   'TEST_DATABASE_URL',
   'TEST_DATABASE_ADMIN_URL',
   'TEST_DATABASE_AUTH_URL',
+  'TEST_DATABASE_WORKER_URL',
   'DATABASE_URL',
 ];
 afterEach(() => {
@@ -68,6 +69,7 @@ describe('CF_LANE (DB test riêng cho mỗi làn)', () => {
     TEST_DATABASE_URL: 'postgresql://cf_app:p@h:5433/cf_test',
     TEST_DATABASE_ADMIN_URL: 'postgresql://cf_owner:p@h:5433/cf_test',
     TEST_DATABASE_AUTH_URL: 'postgresql://cf_auth:p@h:5433/cf_test',
+    TEST_DATABASE_WORKER_URL: 'postgresql://cf_worker:p@h:5433/cf_test',
     DATABASE_URL: 'postgresql://cf_app:p@h:5433/cf_dev',
   };
   const envText = Object.entries(urls)
@@ -87,11 +89,12 @@ describe('CF_LANE (DB test riêng cho mỗi làn)', () => {
     }
   }
 
-  it('CF_LANE=b đổi cả ba URL test sang cf_test_b, giữ DATABASE_URL (dev)', () => {
+  it('CF_LANE=b đổi cả bốn URL test sang cf_test_b, giữ DATABASE_URL (dev)', () => {
     load('b');
     expect(process.env.TEST_DATABASE_URL).toBe('postgresql://cf_app:p@h:5433/cf_test_b');
     expect(process.env.TEST_DATABASE_ADMIN_URL).toBe('postgresql://cf_owner:p@h:5433/cf_test_b');
     expect(process.env.TEST_DATABASE_AUTH_URL).toBe('postgresql://cf_auth:p@h:5433/cf_test_b');
+    expect(process.env.TEST_DATABASE_WORKER_URL).toBe('postgresql://cf_worker:p@h:5433/cf_test_b');
     expect(process.env.DATABASE_URL).toBe(urls.DATABASE_URL);
   });
 

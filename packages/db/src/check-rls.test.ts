@@ -14,6 +14,9 @@ function fakeDb(parts: {
   publicGrants?: Row[];
   functions?: Row[];
   authRole?: Row | null;
+  workerRole?: Row | null;
+  workerMembership?: Row[];
+  workerDirect?: Row[];
   authPrivileges?: Row[];
   definerFunctions?: Row[];
   lastOwnerTrigger?: Row[];
@@ -22,6 +25,7 @@ function fakeDb(parts: {
   noDelete?: Row[];
   tokenFunctions?: Row[];
   webhookFn?: Row[];
+  stuckOutboxFn?: Row[];
   leaveFn?: Row[];
   actionLogsCheck?: Row[];
   guards?: Row[];
@@ -59,6 +63,19 @@ function fakeDb(parts: {
         };
         return { rows: parts.authRole === null ? [] : [parts.authRole ?? ok] };
       }
+      if (text.includes('/* worker-role */')) {
+        const ok = {
+          rolsuper: false,
+          rolbypassrls: false,
+          rolcreatedb: false,
+          rolcreaterole: false,
+        };
+        return { rows: parts.workerRole === null ? [] : [parts.workerRole ?? ok] };
+      }
+      if (text.includes('/* worker-create-privileges */')) return { rows: [noCreate] };
+      if (text.includes('/* worker-membership */')) return { rows: parts.workerMembership ?? [] };
+      if (text.includes('/* worker-direct-privileges */'))
+        return { rows: parts.workerDirect ?? [] };
       if (text.includes('/* sensitive-columns */')) return { rows: parts.sensitive ?? [] };
       if (text.includes('/* users-columns */')) return { rows: parts.usersColumns ?? [] };
       if (text.includes('/* admin-insert-guard */')) {
@@ -78,6 +95,7 @@ function fakeDb(parts: {
       if (text.includes('/* is-system-context-body */')) return { rows: parts.systemFn ?? [] };
       if (text.includes('/* channels-no-insert */')) return { rows: parts.channelInsert ?? [] };
       if (text.includes('/* webhook-function */')) return { rows: parts.webhookFn ?? [] };
+      if (text.includes('/* stuck-outbox-function */')) return { rows: parts.stuckOutboxFn ?? [] };
       if (text.includes('/* action-logs-check */')) return { rows: parts.actionLogsCheck ?? [] };
       if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
@@ -679,6 +697,11 @@ describe('checkRls — danh sách cho phép cột users và chốt chặn tạo 
       [],
       [{ polname: 'x', withcheck: '(true)' }],
       [{ polname: 'x', withcheck: '(NOT is_admin)' }],
+      [{ polname: 'x', withcheck: '(NOT (is_admin AND (admin_role IS NULL)))' }],
+      // Chỉ nhắc tên cột nhưng không phải điều kiện chặn → đỏ (so khớp chính xác, không regex)
+      [{ polname: 'x', withcheck: '((NOT is_admin) OR (admin_role IS NULL))' }],
+      [{ polname: 'x', withcheck: '((is_admin OR true) AND (admin_role IS NOT NULL))' }],
+      [{ polname: 'x', withcheck: '((NOT is_admin) AND (admin_role IS NULL) OR true)' }],
     ]) {
       const v = await checkRls(fakeDb({ ...base, adminGuard }));
       expect(v, JSON.stringify(adminGuard)).toContainEqual(
@@ -801,6 +824,112 @@ describe('checkRls: hàm token Page', () => {
   });
 });
 
+describe('checkRls: role worker cf_worker (WORKER-DB-ROLE, 0030)', () => {
+  it('báo khi role cf_worker không tồn tại, là superuser hoặc có BYPASSRLS', async () => {
+    const missing = await checkRls(fakeDb({ workerRole: null }));
+    expect(missing).toContainEqual({ subject: 'cf_worker', message: 'role không tồn tại' });
+    const bad = await checkRls(
+      fakeDb({
+        workerRole: {
+          rolsuper: true,
+          rolbypassrls: true,
+          rolcreatedb: false,
+          rolcreaterole: false,
+        },
+      }),
+    );
+    expect(bad).toContainEqual({ subject: 'cf_worker', message: 'là superuser' });
+    expect(bad).toContainEqual({ subject: 'cf_worker', message: 'có BYPASSRLS' });
+  });
+
+  it('báo khi cf_worker là thành viên cf_owner (test tích hợp không dựng được: cf_owner không có ADMIN option)', async () => {
+    const v = await checkRls(
+      fakeDb({
+        workerRole: {
+          rolsuper: false,
+          rolbypassrls: false,
+          rolcreatedb: false,
+          rolcreaterole: false,
+          owner_member: true,
+        },
+      }),
+    );
+    expect(v).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf_worker',
+        message: expect.stringContaining('cf_owner'),
+      }),
+    );
+  });
+
+  it('báo khi cf_app là thành viên cf_worker hoặc cf_worker không kế thừa cf_app', async () => {
+    const v = await checkRls(
+      fakeDb({
+        workerMembership: [
+          {
+            name: 'cf_worker',
+            problem: 'cf_app là thành viên cf_worker (web nâng quyền thành worker được)',
+          },
+        ],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf_worker',
+      message: expect.stringContaining('web nâng quyền'),
+    });
+  });
+
+  it('báo quyền TRỰC TIẾP của cf_worker trên bảng/cột/sequence/hàm ngoài read_channel_token', async () => {
+    const v = await checkRls(
+      fakeDb({
+        workerDirect: [
+          { name: 'cf.channels', problem: 'có quyền SELECT trực tiếp trên bảng/sequence' },
+        ],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.channels',
+      message: expect.stringContaining('cf_worker không được có quyền trực tiếp'),
+    });
+  });
+
+  it('SQL quyền trực tiếp quét bảng, cột, sequence và hàm; thân is_system_context so OR không phân biệt hoa thường', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({});
+    await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
+    expect(direct).toContain('relacl');
+    expect(direct).toContain('attacl');
+    expect(direct).toContain('proacl');
+    expect(direct).toContain('read_channel_token');
+    const system = queries.find((q) => q.includes('/* is-system-context-body */')) ?? '';
+    expect(system).toContain("NOT ILIKE '% OR %'");
+  });
+
+  it('SQL kiểm thân is_system_context đòi session_user và cf_worker; read_channel_token chặn cf_app', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({});
+    await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    const system = queries.find((q) => q.includes('/* is-system-context-body */')) ?? '';
+    expect(system).toContain('session_user');
+    expect(system).toContain('cf_worker');
+    const token = queries.find((q) => q.includes('/* token-functions */')) ?? '';
+    expect(token).toMatch(
+      /has_function_privilege\('cf_app', p\.oid, 'EXECUTE'\)\s+OR NOT has_function_privilege\('cf_worker'/,
+    );
+  });
+});
+
 describe('checkRls: trigger giới hạn cột, thân is_system_context, INSERT kênh', () => {
   it('báo từng loại vi phạm', async () => {
     const v = await checkRls(
@@ -822,6 +951,41 @@ describe('checkRls: trigger giới hạn cột, thân is_system_context, INSERT 
       subject: 'cf.channels',
       message: expect.stringContaining('INSERT'),
     });
+  });
+});
+
+describe('checkRls: hàm liệt kê yêu cầu gửi/ẩn kẹt (SEND-SWEEP/HIDE-SWEEP)', () => {
+  it('báo khi hàm thiếu, mở cho cf_app/PUBLIC hoặc bỏ kiểm ngữ cảnh', async () => {
+    const v = await checkRls(
+      fakeDb({
+        stuckOutboxFn: [{ name: 'cf.list_stuck_outbox', problem: 'cf_app (web) có EXECUTE' }],
+      }),
+    );
+    expect(v).toContainEqual({
+      subject: 'cf.list_stuck_outbox',
+      message: expect.stringContaining('cf_app (web) có EXECUTE'),
+    });
+  });
+
+  it('SQL đòi SECURITY DEFINER, chặn PUBLIC/cf_app/cf_auth, cấp cf_worker và kiểm thân (ngữ cảnh trần + session_user)', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({});
+    await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    const sqlText = queries.find((q) => q.includes('/* stuck-outbox-function */')) ?? '';
+    expect(sqlText).toContain('prosecdef');
+    expect(sqlText).toContain("has_function_privilege('public'");
+    expect(sqlText).toContain("has_function_privilege('cf_app'");
+    expect(sqlText).toContain("has_function_privilege('cf_worker'");
+    expect(sqlText).toContain('is_system_context() IS NOT FALSE');
+    expect(sqlText).toContain("session_user <> ''cf_worker''");
+    // cf_worker được EXECUTE trực tiếp ĐÚNG hai hàm này (không hàm nào khác).
+    const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
+    expect(direct).toContain("'read_channel_token', 'list_stuck_outbox'");
   });
 });
 

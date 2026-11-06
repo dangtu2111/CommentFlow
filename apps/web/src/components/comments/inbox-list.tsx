@@ -1,8 +1,10 @@
-import { isLocale } from '@flow/shared';
+import { COMMENT_LABELS, isCommentLabel, isLocale } from '@flow/shared';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { BULK_MAX } from '../../lib/bulk-input';
 import { buildInboxHref, type InboxCursorValue, type InboxView } from '../../lib/inbox-filters';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
+import { BulkCheckbox, type BulkLabels, BulkProvider } from './bulk-selection';
 
 export type InboxListItem = {
   id: string;
@@ -54,11 +56,39 @@ export async function InboxList({
       'spam_suspected',
       'hidden',
     ].includes(status);
+  const bulkLabels: BulkLabels = {
+    select: t.raw('bulk.select'),
+    toolbar: t.raw('bulk.toolbar'),
+    selected: t.raw('bulk.selected'),
+    clear: t('bulk.clear'),
+    skip: t('bulk.skip'),
+    hide: t('bulk.hide'),
+    relabel: t('bulk.relabel'),
+    labelPick: t('bulk.labelPick'),
+    apply: t('bulk.apply'),
+    working: t('bulk.working'),
+    shortcuts: t('bulk.shortcuts'),
+    confirmTitle: t.raw('bulk.confirmTitle'),
+    confirmBody: t('bulk.confirmBody'),
+    confirmYes: t.raw('bulk.confirmYes'),
+    confirmNo: t('bulk.confirmNo'),
+    result: t.raw('bulk.result'),
+    reasons: t.raw('bulk.reasons'),
+    rejections: t.raw('bulk.rejections'),
+  };
+  const labelOptions = COMMENT_LABELS.map((value) => ({ value, text: t(`labels.${value}`) }));
+  const labelText = (label: string) => (isCommentLabel(label) ? t(`labels.${label}`) : label);
   return (
-    <>
+    <BulkProvider
+      ids={items.map((i) => i.id)}
+      max={BULK_MAX}
+      labelOptions={labelOptions}
+      labels={bulkLabels}
+    >
       <ul className="inbox-items" aria-label={t('list.label')}>
         {items.map((item) => (
-          <li key={item.id} className="inbox-item">
+          <li key={item.id} className="inbox-item" data-comment-id={item.id}>
+            <BulkCheckbox id={item.id} name={item.authorName ?? t('list.anonymous')} />
             <Link
               href={buildInboxHref(view, { selected: item.id })}
               className="inbox-item-link"
@@ -90,7 +120,7 @@ export async function InboxList({
                 </span>
                 {item.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
                 {item.isAd ? <span className="chip">{t('list.ad')}</span> : null}
-                {item.label ? <span className="chip">{item.label}</span> : null}
+                {item.label ? <span className="chip">{labelText(item.label)}</span> : null}
                 {item.lockedByName ? (
                   <span className="chip chip-lock">
                     {t('list.lockedBy', { name: item.lockedByName })}
@@ -112,6 +142,6 @@ export async function InboxList({
           ) : null}
         </span>
       </footer>
-    </>
+    </BulkProvider>
   );
 }

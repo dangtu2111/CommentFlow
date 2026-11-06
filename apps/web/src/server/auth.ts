@@ -67,10 +67,11 @@ function createRuntime(): AuthRuntime {
   const env = loadServerEnv();
   const authHandle = openAuthDb({ connectionString: env.DATABASE_AUTH_URL });
   const notifier = createNotifier({
+    brandName: env.brand.name,
     transport: createSmtpTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
-      from: env.SMTP_FROM,
+      from: env.mailFrom,
       secure: env.SMTP_SECURE,
       ...(env.SMTP_USER && env.SMTP_PASS ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : {}),
     }),
@@ -101,6 +102,7 @@ function createRuntime(): AuthRuntime {
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
     appEnv: env.APP_ENV,
+    appName: env.brand.name,
   });
   const twoFactor = createTwoFactorFlows({
     auth,

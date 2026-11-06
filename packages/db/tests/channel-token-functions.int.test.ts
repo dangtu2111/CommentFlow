@@ -369,7 +369,8 @@ describe('FR-010 cô lập workspace và hành vi từng hàm', () => {
     for (const p of perms) {
       expect(p.prosecdef, p.proname).toBe(true);
       expect(p.public_exec, p.proname).toBe(false);
-      expect(p.app_exec, p.proname).toBe(true);
+      // 0030: read_channel_token chỉ cf_worker; ba hàm ghi token vẫn cho cf_app (Owner ghi ở callback OAuth, web).
+      expect(p.app_exec, p.proname).toBe(p.proname !== 'read_channel_token');
       expect(p.config, p.proname).toContain('search_path=pg_catalog, core, cf, pg_temp');
     }
     const noWs = await db

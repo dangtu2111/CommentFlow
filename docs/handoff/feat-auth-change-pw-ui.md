@@ -3,7 +3,7 @@
 ## Đã làm
 - Plan tự duyệt `docs/plans/feat-auth-change-pw-ui.md`; quyết định QPW1.
 - `createChangePasswordFlow` (saas-core) + test; `changePasswordAction`, `lib/change-password-form.ts` (Zod), `ChangePasswordCard`; chuỗi vi/en; gỡ FR-001 khỏi `trace-baseline.json`.
-- Docs: gap-matrix, MASTER, codemap, KIEM_TRA_TAY KT-015.
+- Docs: gap-matrix, MASTER, codemap, KIEM_TRA_TAY KT-019.
 
 ## Đã đọc và rút ra
 - `revoke.ts`: `changePasswordAndRevokeAll` cần cookie phiên; Better Auth tự kiểm mật khẩu hiện tại.

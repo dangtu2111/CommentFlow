@@ -62,7 +62,7 @@ Khi `ml` hoặc Postgres thành nút cổ chai → tách sang máy riêng trư�
 | Nhóm | Ví dụ |
 |---|---|
 | App | `APP_URL`, `SESSION_SECRET`, `ENCRYPTION_KEYS` (theo version) |
-| DB | `DATABASE_URL` (role app, không BYPASSRLS), `DATABASE_ADMIN_URL` (chỉ migration) |
+| DB | `DATABASE_URL` (role app `cf_app`, không BYPASSRLS; web), `DATABASE_WORKER_URL` (role `cf_worker`, CHỈ worker — đường hệ thống + đọc token, ADR 011), `DATABASE_ADMIN_URL` (chỉ migration) |
 | Meta | `META_APP_ID`, `META_APP_SECRET`, `META_VERIFY_TOKEN`, `META_GRAPH_VERSION` |
 | Shopify | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`, `SHOPIFY_API_VERSION` |
 | TikTok | `TIKTOK_APP_ID`, `TIKTOK_APP_SECRET`, `TIKTOK_API_VERSION` (khi được cấp quyền) |
@@ -90,7 +90,7 @@ flowchart LR
 - Migration production chỉ chạy trong job CI có **duyệt tay**; migration phải tương thích ngược (expand → migrate → contract).
 - Deploy: `docker compose pull && up -d` theo thứ tự `migrate` → `worker` → `web`; healthcheck; lỗi → rollback về tag trước.
 - Registry: GHCR (private).
-- **Migration staging (đường đã chốt):** chỉ qua workflow `migrate-staging.yml` (environment `staging-migrate`, người duyệt: chủ dự án, runner `cf-staging`): `pnpm db:migrate:staging` rồi `queue:install:staging`, mỗi bước có `--dry-run` trước; CLI chỉ chạy khi `APP_ENV=staging`, DB có dấu `cf.env=staging`, `CF_STAGING_DB_HOSTS` khớp và `CF_CONFIRM_STAGING_MIGRATE` đúng. Runner nối Postgres staging qua cổng **chỉ `127.0.0.1`** trên máy ảo (publish `127.0.0.1:<cổng>:5432`, không bao giờ `0.0.0.0`). Không chạy migration staging/production từ máy dev.
+- **Migration staging (đường đã chốt):** chỉ qua workflow `migrate-staging.yml` (environment `staging-migrate`, người duyệt: chủ dự án, runner `cf-staging`): `pnpm db:migrate:staging` rồi `queue:install:staging`, mỗi bước có `--dry-run` trước; CLI chỉ chạy khi `APP_ENV=staging`, DB có dấu `cf.env=staging`, `CF_STAGING_DB_HOSTS` khớp và `CF_CONFIRM_STAGING_MIGRATE` đúng. Runner nối Postgres staging qua cổng **chỉ `127.0.0.1`** trên máy ảo (publish `127.0.0.1:<cổng>:5432`, không bao giờ `0.0.0.0`). Không chạy migration staging/production từ máy dev. **Role `cf_worker` (ADR 011, migration 0030) phải có TRƯỚC khi migrate** (migration dừng nếu thiếu): volume mới do script khởi tạo tạo; volume đã có làm theo `docs/staging/H5-CHECKLIST.md` mục "Role cf_worker trên staging". Worker nhận `DATABASE_WORKER_URL` (role `cf_worker`); web chỉ có `DATABASE_URL` (`cf_app`).
 
 ## 7. Sao lưu & khôi phục
 

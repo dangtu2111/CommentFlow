@@ -1,5 +1,5 @@
 import { and, eq, type FlowDb } from '@flow/db';
-import { actionLogs, members, workspaces } from '@flow/db/schema/core';
+import { actionLogs, members, users, workspaces } from '@flow/db/schema/core';
 import { isAppError } from '@flow/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTenancy } from '../src/tenancy';
@@ -198,5 +198,29 @@ describe('listMembers (HARDEN-3: chỉ trả cột cần cho danh sách)', () =>
 
   it('workspaceId không hợp lệ → VALIDATION_FAILED', async () => {
     expect(await codeOf(tenancy.listMembers('khong-phai-uuid'))).toBe('VALIDATION_FAILED');
+  });
+});
+
+describe('FR-119 setUserLocale (DB thật)', () => {
+  const readLocale = async (userId: string) =>
+    (
+      await db.withUser(userId, (tx) =>
+        tx.select({ locale: users.locale }).from(users).where(eq(users.id, userId)),
+      )
+    )[0]?.locale;
+
+  it('ghi users.locale của đúng người, không đổi người khác', async () => {
+    const a = await createTestUser('Lan');
+    const b = await createTestUser('Minh');
+    await tenancy.setUserLocale(a, 'en');
+    expect(await readLocale(a)).toBe('en');
+    expect(await readLocale(b)).toBe('vi');
+    await tenancy.setUserLocale(a, 'vi');
+    expect(await readLocale(a)).toBe('vi');
+  });
+
+  it('locale ngoài vi/en → VALIDATION_FAILED', async () => {
+    const a = await createTestUser('Lan');
+    expect(await codeOf(tenancy.setUserLocale(a, 'fr' as never))).toBe('VALIDATION_FAILED');
   });
 });

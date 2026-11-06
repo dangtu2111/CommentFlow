@@ -1,4 +1,4 @@
-import type { Locale } from '@flow/shared';
+import { DEFAULT_BRAND, type Locale } from '@flow/shared';
 import type { MailMessage } from './transport';
 
 type StaticEmailKind = 'verify-email' | 'reset-password' | 'account-exists';
@@ -40,7 +40,6 @@ type Copy = {
   footer: string;
 };
 
-const BRAND = 'CommentFlow AI';
 // Màu thương hiệu (docs/08 §2.1: primary-600 / text / text-muted / border). Email không dùng được biến CSS.
 const COLORS = { primary: '#0B7285', text: '#0F1C24', muted: '#4A5A66', border: '#DDE3E7' };
 
@@ -48,55 +47,55 @@ const COLORS = { primary: '#0B7285', text: '#0F1C24', muted: '#4A5A66', border: 
 export const VERIFY_EMAIL_HOURS = 24;
 export const RESET_PASSWORD_HOURS = 1;
 
-const COPY: Record<Locale, Record<StaticEmailKind, Copy>> = {
+const buildCopy = (brand: string): Record<Locale, Record<StaticEmailKind, Copy>> => ({
   vi: {
     'verify-email': {
-      subject: `Xác minh email của bạn — ${BRAND}`,
+      subject: `Xác minh email của bạn — ${brand}`,
       greeting: (name) => `Chào ${name},`,
-      intro: `Cảm ơn bạn đã đăng ký ${BRAND}. Bấm nút bên dưới để xác minh email. Liên kết hết hạn sau ${VERIFY_EMAIL_HOURS} giờ.`,
+      intro: `Cảm ơn bạn đã đăng ký ${brand}. Bấm nút bên dưới để xác minh email. Liên kết hết hạn sau ${VERIFY_EMAIL_HOURS} giờ.`,
       action: 'Xác minh email',
       footer:
         'Nếu bạn không đăng ký, hãy bỏ qua thư này — không có gì thay đổi với địa chỉ của bạn.',
     },
     'reset-password': {
-      subject: `Đặt lại mật khẩu — ${BRAND}`,
+      subject: `Đặt lại mật khẩu — ${brand}`,
       greeting: (name) => `Chào ${name},`,
       intro: `Chúng tôi nhận được yêu cầu đặt lại mật khẩu. Bấm nút bên dưới để đặt mật khẩu mới. Liên kết dùng một lần và hết hạn sau ${RESET_PASSWORD_HOURS} giờ.`,
       action: 'Đặt lại mật khẩu',
       footer: 'Nếu bạn không yêu cầu, hãy bỏ qua thư này — mật khẩu của bạn vẫn như cũ.',
     },
     'account-exists': {
-      subject: `Bạn đã có tài khoản — ${BRAND}`,
+      subject: `Bạn đã có tài khoản — ${brand}`,
       greeting: (name) => `Chào ${name},`,
-      intro: `Có người vừa đăng ký ${BRAND} bằng email này, nhưng email đã có tài khoản. Nếu là bạn, hãy đăng nhập; nếu quên mật khẩu, bạn có thể đặt lại.`,
+      intro: `Có người vừa đăng ký ${brand} bằng email này, nhưng email đã có tài khoản. Nếu là bạn, hãy đăng nhập; nếu quên mật khẩu, bạn có thể đặt lại.`,
       action: 'Đăng nhập',
       footer: 'Nếu không phải bạn, hãy bỏ qua thư này — không có tài khoản mới nào được tạo.',
     },
   },
   en: {
     'verify-email': {
-      subject: `Verify your email — ${BRAND}`,
+      subject: `Verify your email — ${brand}`,
       greeting: (name) => `Hi ${name},`,
-      intro: `Thanks for signing up for ${BRAND}. Select the button below to verify your email. The link expires in ${VERIFY_EMAIL_HOURS} hours.`,
+      intro: `Thanks for signing up for ${brand}. Select the button below to verify your email. The link expires in ${VERIFY_EMAIL_HOURS} hours.`,
       action: 'Verify email',
       footer: "If you didn't sign up, ignore this email — nothing changes for your address.",
     },
     'reset-password': {
-      subject: `Reset your password — ${BRAND}`,
+      subject: `Reset your password — ${brand}`,
       greeting: (name) => `Hi ${name},`,
       intro: `We received a request to reset your password. Select the button below to choose a new one. The link works once and expires in ${RESET_PASSWORD_HOURS} hour.`,
       action: 'Reset password',
       footer: "If you didn't ask for this, ignore this email — your password stays the same.",
     },
     'account-exists': {
-      subject: `You already have an account — ${BRAND}`,
+      subject: `You already have an account — ${brand}`,
       greeting: (name) => `Hi ${name},`,
-      intro: `Someone just tried to sign up for ${BRAND} with this email, but it already has an account. If that was you, sign in; if you forgot your password, you can reset it.`,
+      intro: `Someone just tried to sign up for ${brand} with this email, but it already has an account. If that was you, sign in; if you forgot your password, you can reset it.`,
       action: 'Sign in',
       footer: "If that wasn't you, ignore this email — no new account was created.",
     },
   },
-};
+});
 
 export function escapeHtml(value: string): string {
   return value
@@ -155,6 +154,7 @@ const ROLE_LABEL: Record<Locale, Record<WorkspaceRole, string>> = {
 function dynamicCopy(
   input: Extract<EmailInput, { kind: 'workspace-invite' | 'owner-change' }>,
   locale: Locale,
+  brand: string,
 ): Copy {
   const workspace = displayName(input.workspaceName);
   if (input.kind === 'workspace-invite') {
@@ -162,16 +162,16 @@ function dynamicCopy(
     const role = ROLE_LABEL[locale][input.role];
     return locale === 'vi'
       ? {
-          subject: `${inviter} mời bạn vào workspace "${workspace}" — ${BRAND}`,
+          subject: `${inviter} mời bạn vào workspace "${workspace}" — ${brand}`,
           greeting: (name) => `Chào ${name},`,
-          intro: `${inviter} mời bạn tham gia workspace "${workspace}" trên ${BRAND} với vai trò ${role}. Liên kết dùng một lần và hết hạn sau ${input.days} ngày. Bạn cần đăng nhập (hoặc đăng ký) bằng đúng email nhận thư này.`,
+          intro: `${inviter} mời bạn tham gia workspace "${workspace}" trên ${brand} với vai trò ${role}. Liên kết dùng một lần và hết hạn sau ${input.days} ngày. Bạn cần đăng nhập (hoặc đăng ký) bằng đúng email nhận thư này.`,
           action: 'Xem lời mời',
           footer: 'Nếu bạn không mong đợi lời mời này, hãy bỏ qua thư — không có gì thay đổi.',
         }
       : {
-          subject: `${inviter} invited you to "${workspace}" — ${BRAND}`,
+          subject: `${inviter} invited you to "${workspace}" — ${brand}`,
           greeting: (name) => `Hi ${name},`,
-          intro: `${inviter} invited you to join the workspace "${workspace}" on ${BRAND} as ${role}. The link works once and expires in ${input.days} days. Sign in (or sign up) with the exact email that received this message.`,
+          intro: `${inviter} invited you to join the workspace "${workspace}" on ${brand} as ${role}. The link works once and expires in ${input.days} days. Sign in (or sign up) with the exact email that received this message.`,
           action: 'View invitation',
           footer: "If you weren't expecting this invitation, ignore this email — nothing changes.",
         };
@@ -200,8 +200,8 @@ function dynamicCopy(
     ? {
         subject:
           input.change === 'left'
-            ? `Có thành viên rời "${workspace}" — ${BRAND}`
-            : `Thay đổi Owner ở "${workspace}" — ${BRAND}`,
+            ? `Có thành viên rời "${workspace}" — ${brand}`
+            : `Thay đổi Owner ở "${workspace}" — ${brand}`,
         greeting: (name) => `Chào ${name},`,
         intro: `${what} ${input.change === 'left' ? '' : 'trong '}workspace "${workspace}". Bạn nhận thư này vì bạn là Owner của workspace.`,
         action: 'Xem thành viên',
@@ -210,8 +210,8 @@ function dynamicCopy(
     : {
         subject:
           input.change === 'left'
-            ? `A member left "${workspace}" — ${BRAND}`
-            : `Owner change in "${workspace}" — ${BRAND}`,
+            ? `A member left "${workspace}" — ${brand}`
+            : `Owner change in "${workspace}" — ${brand}`,
         greeting: (name) => `Hi ${name},`,
         intro: `${what} ${input.change === 'left' ? '' : 'in '}the workspace "${workspace}". You receive this because you are an Owner of the workspace.`,
         action: 'View members',
@@ -219,18 +219,26 @@ function dynamicCopy(
       };
 }
 
-function copyFor(input: EmailInput, locale: Locale): Copy {
+function copyFor(input: EmailInput, locale: Locale, brand: string): Copy {
   return input.kind === 'workspace-invite' || input.kind === 'owner-change'
-    ? dynamicCopy(input, locale)
-    : COPY[locale][input.kind];
+    ? dynamicCopy(input, locale, brand)
+    : buildCopy(brand)[locale][input.kind];
 }
+
+export type RenderOptions = {
+  /** Tên thương hiệu (FR-125); mặc định là giá trị tạm `DEFAULT_BRAND.name`. */
+  brandName?: string;
+};
 
 export function renderEmail(
   input: EmailInput,
   locale: Locale,
   recipient: { name: string; email: string },
+  options: RenderOptions = {},
 ): MailMessage {
-  const copy = copyFor(input, locale);
+  // Chuẩn hóa như tên hiển thị để cấu hình không chèn được dòng/ký tự đảo chiều vào chủ đề thư.
+  const brand = displayName(options.brandName ?? DEFAULT_BRAND.name);
+  const copy = copyFor(input, locale, brand);
   const name = displayName(recipient.name);
   const url = primaryAction(input);
   const resetUrl = input.kind === 'account-exists' ? assertHttpUrl(input.resetUrl) : null;
@@ -246,7 +254,7 @@ export function renderEmail(
     '',
     copy.footer,
     '',
-    `— ${BRAND}`,
+    `— ${brand}`,
   ].join('\n');
 
   const html = `<!doctype html>
@@ -259,7 +267,7 @@ export function renderEmail(
       <p style="margin:0 0 24px"><a href="${escapeHtml(url)}" style="display:inline-block;padding:12px 24px;background:${COLORS.primary};color:#FFFFFF;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">${escapeHtml(copy.action)}</a></p>
       ${resetUrl ? `<p style="margin:0 0 24px;font-size:14px"><a href="${escapeHtml(resetUrl)}" style="color:${COLORS.primary}">${escapeHtml(resetLabel)}</a></p>` : ''}
       <p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:${COLORS.muted}">${escapeHtml(copy.footer)}</p>
-      <p style="margin:0;font-size:12px;color:${COLORS.muted}">— ${BRAND}</p>
+      <p style="margin:0;font-size:12px;color:${COLORS.muted}">— ${escapeHtml(brand)}</p>
     </td></tr>
   </table>
 </body>

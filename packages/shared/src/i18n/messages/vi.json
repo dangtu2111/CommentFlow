@@ -8,8 +8,16 @@
     "vi": "Tiếng Việt",
     "en": "English"
   },
+  "settings": {
+    "pageTitle": "Cài đặt",
+    "title": "Tài khoản & Bảo mật",
+    "subtitle": "Quản lý xác thực 2 bước, các phiên đăng nhập và ngôn ngữ giao diện của riêng bạn.",
+    "language": {
+      "title": "Ngôn ngữ giao diện",
+      "body": "Áp dụng cho toàn bộ giao diện của bạn trên thiết bị này."
+    }
+  },
   "auth": {
-    "brand": "CommentFlow AI",
     "tabs": {
       "label": "Chọn thao tác",
       "login": "Đăng nhập",
@@ -108,7 +116,7 @@
       "bilingual": "Giao diện tiếng Việt và tiếng Anh."
     },
     "footer": {
-      "rights": "© {year} CommentFlow AI. Bảo lưu mọi quyền."
+      "rights": "© {year} {appName}. Bảo lưu mọi quyền."
     },
     "twoFactor": {
       "title": "Xác thực 2 bước",
@@ -131,11 +139,15 @@
       "changePassword": {
         "title": "Đổi mật khẩu",
         "body": "Sau khi đổi, bạn sẽ bị đăng xuất khỏi mọi thiết bị và cần đăng nhập lại bằng mật khẩu mới.",
-        "currentLabel": "Mật khẩu hiện tại",
+        "currentLabel": "Mật khẩu đang dùng",
         "newLabel": "Mật khẩu mới",
         "newHint": "Từ 10 đến 128 ký tự, không quá phổ biến hay đã bị lộ.",
         "confirmLabel": "Nhập lại mật khẩu mới",
         "submit": "Đổi mật khẩu"
+      },
+      "language": {
+        "title": "Ngôn ngữ giao diện",
+        "body": "Lựa chọn được lưu cho tài khoản của bạn: giao diện, email và lần đăng nhập sau trên thiết bị khác sẽ dùng ngôn ngữ này."
       },
       "twoFactor": {
         "title": "Xác thực 2 bước (TOTP)",
@@ -223,7 +235,6 @@
       }
     },
     "header": {
-      "brand": "CommentFlow AI",
       "nav": "Điều hướng chính"
     }
   },
@@ -380,6 +391,49 @@
       "first": "Về trang đầu",
       "lockedBy": "{name} đang xử lý"
     },
+    "labels": {
+      "price": "Hỏi giá",
+      "advice": "Tư vấn",
+      "purchase": "Mua hàng",
+      "complaint": "Khiếu nại",
+      "spam": "Spam",
+      "other": "Khác"
+    },
+    "bulk": {
+      "select": "Chọn bình luận của {name}",
+      "toolbar": "Hành động hàng loạt",
+      "selected": "Đã chọn {count}",
+      "clear": "Bỏ chọn",
+      "skip": "Bỏ qua",
+      "hide": "Ẩn",
+      "relabel": "Đổi nhãn",
+      "labelPick": "Chọn nhãn mới",
+      "apply": "Áp dụng",
+      "working": "Đang xử lý…",
+      "shortcuts": "Phím tắt: X chọn dòng · J/K di chuyển · H ẩn · Esc bỏ chọn",
+      "confirmTitle": "Ẩn {count} bình luận?",
+      "confirmBody": "Các bình luận sẽ bị ẩn với khách trên nền tảng; bỏ ẩn được từng bình luận. AI không bao giờ tự ẩn.",
+      "confirmYes": "Ẩn {count} bình luận",
+      "confirmNo": "Hủy",
+      "result": "Đã xử lý {done}/{requested} bình luận.",
+      "reasons": {
+        "not_applicable": "{count} bình luận không áp dụng được (đã xử lý, đang có người khác xử lý hoặc không còn).",
+        "not_found": "{count} bình luận không tìm thấy.",
+        "not_hideable": "{count} bình luận không ẩn được ở trạng thái hiện tại.",
+        "locked_by_other": "{count} bình luận đang được đồng nghiệp xử lý.",
+        "channel_not_connected": "{count} bình luận thuộc kênh chưa kết nối.",
+        "forbidden": "{count} bình luận bạn không có quyền xử lý.",
+        "queue_unavailable": "{count} bình luận chưa gửi được lệnh ẩn, vui lòng thử lại.",
+        "unavailable": "{count} bình luận gặp lỗi tạm thời, vui lòng thử lại."
+      },
+      "rejections": {
+        "invalid_input": "Danh sách bình luận không hợp lệ.",
+        "too_many": "Chọn tối đa {max} bình luận mỗi lần.",
+        "invalid_label": "Nhãn không hợp lệ.",
+        "confirm_required": "Cần xác nhận trước khi ẩn.",
+        "unavailable": "Hệ thống tạm thời gặp lỗi, vui lòng thử lại."
+      }
+    },
     "empty": {
       "title": "Chưa có bình luận",
       "body": "Bình luận mới từ Fanpage đã kết nối sẽ xuất hiện ở đây.",
@@ -396,7 +450,8 @@
       "noText": "(Không có nội dung chữ)",
       "redacted": "Khách đã xóa bình luận này; nội dung và thông tin người bình luận đã được xóa khỏi hệ thống.",
       "notFoundTitle": "Không tìm thấy bình luận",
-      "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này."
+      "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này.",
+      "back": "← Quay lại danh sách"
     },
     "error": {
       "title": "Không tải được danh sách bình luận",
@@ -511,10 +566,9 @@
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
-      "security": "Bảo mật"
+      "settings": "Cài đặt"
     },
     "logout": "Đăng xuất",
-    "brand": "CommentFlow AI",
     "navLabel": "Điều hướng chính"
   },
   "banners": {

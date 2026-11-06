@@ -7,7 +7,7 @@
  */
 export type NavRole = 'owner' | 'staff';
 export type NavGroupKey = 'operations' | 'settings';
-export type NavItemKey = 'comments' | 'channels' | 'members' | 'activity' | 'security';
+export type NavItemKey = 'comments' | 'channels' | 'members' | 'activity' | 'settings';
 
 export type NavItem = { key: NavItemKey; href: string };
 export type NavGroup = { key: NavGroupKey; items: NavItem[] };
@@ -22,7 +22,8 @@ const ENTRIES: readonly Entry[] = [
   { key: 'members', href: '/app/members', group: 'settings', roles: ['owner'] },
   // Nhật ký (FR-092): Owner thấy tất cả, Staff chỉ dòng của mình (lọc ở truy vấn `listActionLogs`).
   { key: 'activity', href: '/app/activity', group: 'settings', roles: ['owner', 'staff'] },
-  { key: 'security', href: '/app/security', group: 'settings', roles: ['owner', 'staff'] },
+  // Cài đặt (FR-001, FR-119): bảo mật (2FA, phiên) + ngôn ngữ. `/app/security` chỉ còn là trang bắt buộc bật 2FA ngoài khung.
+  { key: 'settings', href: '/app/settings', group: 'settings', roles: ['owner', 'staff'] },
 ];
 
 const GROUP_ORDER: readonly NavGroupKey[] = ['operations', 'settings'];

@@ -251,6 +251,64 @@ describe('check-rls', () => {
     );
   });
 
+  it('WORKER-DB-ROLE: bắt được khi cf_app lại có EXECUTE read_channel_token, cf_worker mất EXECUTE, hoặc is_system_context bỏ session_user', async () => {
+    const app = await violationsAfter(
+      'GRANT EXECUTE ON FUNCTION cf.read_channel_token(uuid) TO cf_app',
+    );
+    expect(app).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.read_channel_token',
+        message: expect.stringContaining('cf_app (web) không được có quyền EXECUTE'),
+      }),
+    );
+    const worker = await violationsAfter(
+      'REVOKE EXECUTE ON FUNCTION cf.read_channel_token(uuid) FROM cf_worker',
+    );
+    expect(worker).toContainEqual(
+      expect.objectContaining({
+        subject: 'cf.read_channel_token',
+        message: expect.stringContaining('cf_worker thiếu quyền EXECUTE'),
+      }),
+    );
+    const ctx = await violationsAfter(
+      "CREATE OR REPLACE FUNCTION core.is_system_context() RETURNS boolean LANGUAGE sql STABLE SET search_path = pg_catalog, core, pg_temp AS $$ SELECT COALESCE(current_setting('app.ctx', true) = 'system' AND core.current_user_id() IS NULL, false) $$",
+    );
+    expect(ctx).toContainEqual(
+      expect.objectContaining({
+        subject: 'core.is_system_context',
+        message: expect.stringContaining('session_user'),
+      }),
+    );
+  });
+
+  it('WORKER-DB-ROLE: bắt được quyền TRỰC TIẾP của cf_worker (bảng, cột, sequence, hàm) và OR viết thường', async () => {
+    const direct = (ddl: string, name: string) =>
+      violationsAfter(ddl).then((v) =>
+        expect(v).toContainEqual(
+          expect.objectContaining({
+            subject: name,
+            message: expect.stringContaining('cf_worker không được có quyền trực tiếp'),
+          }),
+        ),
+      );
+    await direct('GRANT SELECT ON cf.channels TO cf_worker', 'cf.channels');
+    await direct('GRANT UPDATE (name) ON cf.channels TO cf_worker', 'cf.channels');
+    await direct(
+      'CREATE SEQUENCE cf.tmp_worker_seq; GRANT USAGE ON SEQUENCE cf.tmp_worker_seq TO cf_worker',
+      'cf.tmp_worker_seq',
+    );
+    await direct(
+      'GRANT EXECUTE ON FUNCTION cf.set_channel_token(uuid, bytea, integer, timestamptz) TO cf_worker',
+      'cf.set_channel_token',
+    );
+    // "cf_worker là thành viên cf_owner": GRANT cf_owner TO cf_worker cần ADMIN option/superuser (PG16+), kết nối quản trị
+    // cf_owner không có → ca này được phủ bằng unit test (src/check-rls.test.ts) thay vì dựng thật.
+    const lower = await violationsAfter(
+      "CREATE OR REPLACE FUNCTION core.is_system_context() RETURNS boolean LANGUAGE sql STABLE SET search_path = pg_catalog, core, pg_temp AS $$ SELECT COALESCE(current_setting('app.ctx', true) = 'system' AND core.current_user_id() IS NULL AND session_user = 'cf_worker' or true, false) $$",
+    );
+    expect(lower).toContainEqual(expect.objectContaining({ subject: 'core.is_system_context' }));
+  });
+
   it('TOKEN-ENC: bắt được khi tắt trigger giới hạn cột, nới thân is_system_context, cấp key_version/INSERT kênh, nới policy comments', async () => {
     const trg = await violationsAfter(
       'ALTER TABLE cf.channels DISABLE TRIGGER channels_guard_user_update',

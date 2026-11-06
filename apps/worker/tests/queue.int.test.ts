@@ -16,8 +16,8 @@ let boss: PgBoss;
 const quiet = { error: () => {}, info: () => {} };
 
 beforeAll(async () => {
-  const url = process.env.TEST_DATABASE_URL;
-  if (!url) throw new Error('Thiếu TEST_DATABASE_URL');
+  const url = process.env.TEST_DATABASE_WORKER_URL;
+  if (!url) throw new Error('Thiếu TEST_DATABASE_WORKER_URL');
   db = createDb({ connectionString: url, max: 5 });
   boss = createBoss(url, quiet); // role cf_app: migrate=false, createSchema=false
   await boss.start();

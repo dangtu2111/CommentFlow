@@ -18,8 +18,11 @@
 | KT-008 | Khách sửa/xóa bình luận | COMMENT-EDIT-DELETE | chưa | chưa | — |
 | KT-009 | Trang Nhật ký (Owner thấy tất cả, Staff chỉ của mình) | LOG-PAGE | chưa | chưa | — |
 | KT-010 | Ẩn / Bỏ ẩn bình luận | FB-HIDE | chưa | chưa | — |
+| KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
+| KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 
 ---
 
@@ -283,6 +286,61 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 
 ---
 
+## KT-015 — Role DB riêng cho worker (WORKER-DB-ROLE, ADR 011)
+
+Điều kiện: nhánh `feat/worker-db-role`; máy ảo `cf` bật. Thứ tự BẮT BUỘC: tạo role → sinh lại `.env` → migrate.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm cf:dev add-worker-role` (máy ảo, không in mật khẩu). Chạy lại lần hai. | Cả hai lần báo "Đã đảm bảo role cf_worker…"; không lỗi (idempotent). |
+| 2 | Sinh lại `.env`: `ssh cf "~/CommentFlow/infra/scripts/print-dev-env.sh" > .env`. Mở `.env` kiểm có thêm `DATABASE_WORKER_URL` và `TEST_DATABASE_WORKER_URL` (người dùng `cf_worker`). | Có hai biến mới; `env.example` có đúng tên đó. |
+| 3 | `pnpm db:migrate` (cf_dev). | Áp migration 0030, không lỗi. Chạy khi CHƯA có role → dừng với thông báo "Thiếu role cf_worker…". |
+| 4 | `pnpm db:check-rls`. | 0 vi phạm. |
+| 5 | `CF_LANE=b pnpm test:db` (hoặc làn của bạn). | Xanh, gồm `worker-role.int.test.ts`. |
+| 6 | `pnpm --filter @flow/worker dev`; mở `http://localhost:3001/health`. | Báo sẵn sàng; log không có lỗi `42501`. |
+| 7 | Tắt worker, xóa `DATABASE_WORKER_URL` (hoặc đặt URL dùng `cf_app`) rồi chạy lại worker. | Worker KHÔNG khởi động, thông báo nêu tên biến `DATABASE_WORKER_URL`, không in mật khẩu. Khôi phục sau đó. |
+| 8 | Thử đường nghiệp vụ: gửi webhook thử (`pnpm webhook:send`) khi worker chạy, hoặc gửi một trả lời (KT-007). | Worker xử lý như trước (job `ingest`/`send` xong). |
+| 9 | Trên máy ảo, trong `psql` vào `cf_dev`: `SELECT has_function_privilege('cf_app','cf.read_channel_token(uuid)','execute'), has_function_privilege('cf_worker','cf.read_channel_token(uuid)','execute');` | `f` và `t`. |
+
+Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
+## KT-017 — Lưu ngôn ngữ theo người dùng (AUTH-LANG-PREF, FR-119)
+
+Điều kiện: nhánh `feat-auth-lang-pref`; máy ảo bật; một tài khoản đã đăng nhập.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/app/security` (mục Bảo mật trong điều hướng). | Có thẻ "Ngôn ngữ giao diện" với hai nút Tiếng Việt / English; nút ngôn ngữ đang dùng bị mờ. |
+| 2 | Bấm "English". | Trang đổi sang tiếng Anh ngay (tiêu đề thẻ: "Interface language"). |
+| 3 | Trong `psql` (máy ảo, `cf_dev`): `SELECT locale FROM core.users WHERE email = '<email của bạn>';` | `en`. |
+| 4 | Đăng xuất, xóa cookie `NEXT_LOCALE` của trang, đăng nhập lại. | Giao diện vẫn tiếng Anh (lấy từ tài khoản). |
+| 5 | Bấm "Tiếng Việt" ở thanh trên (hoặc ở Cài đặt). | Giao diện tiếng Việt; bước 3 cho `vi`. |
+| 6 | Đăng xuất, ở trang đăng nhập bấm đổi ngôn ngữ. | Giao diện đổi (cookie), không lỗi; DB không đổi vì chưa có phiên. |
+
+Nếu hỏng: ghi số bước, ảnh chụp.
+
+---
+
+## KT-016 — Quét yêu cầu gửi/ẩn kẹt (SEND-SWEEP + HIDE-SWEEP, ADR 008/009)
+
+Điều kiện: nhánh `feat-send-hide-sweep`; máy ảo `cf` bật; đã `pnpm db:migrate` (0031) và chạy worker bản mới. Sổ connector của worker còn RỖNG (chưa có connector thật) nên bước gửi/ẩn kết thúc `connector_unavailable` — đủ để thấy quét hoạt động.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` rồi `pnpm db:check-rls`. | Áp 0031; 0 vi phạm. |
+| 2 | Chạy worker (`pnpm --filter @flow/worker dev`) và để mở. | Sẵn sàng; không lỗi `42501` về `list_stuck_outbox`. |
+| 3 | Trên máy ảo, `psql` vào `cf_dev`: tạo yêu cầu kẹt bằng cách sửa một yêu cầu `queued` mới: `UPDATE cf.comment_replies SET updated_at = now() - interval '10 minutes' WHERE id = '<id yêu cầu queued>';` (chỉ dữ liệu thử). | — |
+| 4 | Chờ ≤ 60 giây rồi xem lại dòng đó. | Yêu cầu không còn `queued` (hiện `failed`/`connector_unavailable` vì chưa có connector thật); bình luận hiện lỗi gửi + nút Thử lại. Log worker có dòng "đã quét yêu cầu gửi/ẩn kẹt", không có nội dung bình luận. |
+| 5 | Lặp bước 3–4 với một yêu cầu ẩn (`cf.comment_hides`). | Tương tự: hết `queued`, ghi `failed`. |
+| 6 | Tạo yêu cầu `queued` mới (không sửa giờ), chờ 60 giây. | KHÔNG bị quét (còn mới < 5 phút) — vẫn do job thường xử lý. |
+| 7 | Trên máy ảo, `psql` bằng web (`cf_app`): `SELECT * FROM cf.list_stuck_outbox('reply', 300, 150, 10);` | Lỗi `permission denied` (chỉ `cf_worker` gọi được). |
+
+Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn hình.
+
+---
+
 ## KT-014 — Kết nối Facebook (OAuth) + Kết nối lại (FB-OAUTH, feat/fb-oauth)
 
 Điều kiện: làm xong `docs/CAN_BAN_CUNG_CAP.md` mục 1 + mục "Meta OAuth + Page thử" (Meta App dev, Page thử, `.env.local` có `META_APP_ID`, `META_APP_SECRET`, `META_OAUTH_REDIRECT_URL`, `TOKEN_ENC_KEYS`, **`FB_OAUTH_ENABLED=true`**; tùy chọn `CHANNELS_LIMIT_DEFAULT`, `FB_LOGIN_CONFIG_ID`); khởi động lại web. Đăng nhập bằng **Owner** (tài khoản Facebook của bạn là Admin/Tester của App và quản lý Page thử). Có thêm một tài khoản **Staff**.
@@ -304,7 +362,7 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 
 ---
 
-## KT-015 — Đổi mật khẩu (AUTH-CHANGE-PW-UI, feat-auth-change-pw-ui)
+## KT-019 — Đổi mật khẩu (AUTH-CHANGE-PW-UI, feat-auth-change-pw-ui)
 
 Điều kiện: đăng nhập một tài khoản thử; mở `/app/security` ở **hai trình duyệt** (A và B, cùng tài khoản). Có thể đặt `PWNED_CHECK=on` để thử bước 4 (cần mạng).
 
@@ -324,9 +382,54 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (không d
 
 ---
 
+## KT-018 — Tên sản phẩm, logo, tên miền, email gửi cấu hình được (CFG-APPNAME, FR-125)
+
+Điều kiện: web dev chạy; máy ảo (Mailpit) bật. Đặt trong `.env.local` (tên tạm, không cần chốt Q6): `APP_NAME=Tên Thử`, `APP_LOGO_URL=https://picsum.photos/64` (hoặc để trống), `APP_DOMAIN=thu.example.com`; xóa dòng `SMTP_FROM` để thử địa chỉ gửi tự dựng. Khởi động lại web sau mỗi lần đổi biến.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/login`, `/register`, `/app` (đã đăng nhập) ở cả `vi` và `en`. | Tên "Tên Thử" ở đầu trang, tab trình duyệt và chân trang ("© năm Tên Thử"); không còn chữ "CommentFlow AI". |
+| 2 | Có `APP_LOGO_URL` → nhìn đầu trang; bỏ biến rồi khởi động lại. | Có biến: ảnh logo nằm trong ô vuông. Không có: biểu tượng tin nhắn mặc định. |
+| 3 | Đăng ký tài khoản mới, mở thư xác minh trong Mailpit. | Chủ đề, nội dung, chân thư mang "Tên Thử"; người gửi `Tên Thử <no-reply@thu.example.com>`. |
+| 4 | Bật 2FA (`/app/security`), nhìn mục trong ứng dụng xác thực. | Tên nhà phát hành là "Tên Thử". |
+| 5 | Đặt `APP_DOMAIN=https://sai` rồi khởi động web. | Web không chạy, lỗi chỉ nêu tên biến `APP_DOMAIN` (không nêu giá trị). |
+
+Nếu hỏng: ghi số bước và ảnh chụp.
+
+---
+
+## KT-016 — Trang Cài đặt (SETTINGS-PAGE, feat-settings-page)
+
+Điều kiện: đã đăng nhập, có workspace. Làm bằng cả Owner và Staff.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở menu **Cài đặt** (cả Owner và Staff). | Vào `/app/settings`; không còn mục "Bảo mật" riêng; mục Cài đặt được tô đậm. |
+| 2 | Xem trang. | Có thẻ xác thực 2 bước, danh sách phiên đăng nhập, thẻ ngôn ngữ. |
+| 3 | Đăng nhập thêm trên trình duyệt khác rồi tải lại trang. | Thấy 2 phiên; phiên hiện tại có nhãn "Hiện tại", không có nút đăng xuất. |
+| 4 | Bấm **Đăng xuất** ở phiên kia. | Phiên kia biến mất; trình duyệt kia bị đăng xuất. |
+| 5 | Owner chưa bật 2FA mở `/app/settings`. | Bị chuyển tới `/app/security` có biểu ngữ bắt buộc; bật được 2FA ở đó. |
+| 6 | Ở thẻ ngôn ngữ bấm **English**. | Toàn giao diện đổi sang tiếng Anh ngay; nút English khóa; lặp lại với Tiếng Việt. |
+
+Nếu hỏng: ghi số bước và ảnh chụp.
+
+---
+
 ## Mẫu cho mục mới
 
 ```
+## KT-016 — Bình luận trên mobile 390px (INBOX-MOBILE, feat-inbox-mobile)
+Điều kiện: workspace có ≥ 1 bình luận; trình duyệt giả lập 390px (DevTools).
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/app/comments` ở 390px | Chỉ thấy tab (cuộn ngang) + bộ lọc + danh sách; không có khung chi tiết; không cuộn ngang cả trang |
+| 2 | Chạm một bình luận | Chi tiết toàn màn hình, có "← Quay lại danh sách" (en: "← Back to list") |
+| 3 | Chạm Quay lại | Về danh sách, tab/lọc/tìm giữ nguyên |
+| 4 | Nút Back của trình duyệt ở bước 2 | Cũng về danh sách |
+| 5 | Các tab, ô lọc, nút Quay lại | Chạm được dễ (cao ≥ 44px); ô lọc rộng hết dòng |
+| 6 | Nới cửa sổ ≥ 900px | Bố cục desktop như cũ; không thấy nút Quay lại |
+| 7 | Lặp bước 1–3 ở tiếng Anh | Chuỗi đúng ngôn ngữ |
+
 ## KT-00N — <tên tính năng> (PR #...)
 Điều kiện: ...
 | # | Bước | Kết quả mong đợi |   (≤ 10 bước, cả vi và en)
