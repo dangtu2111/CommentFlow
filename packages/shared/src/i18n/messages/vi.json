@@ -16,6 +16,19 @@
       "title": "Ngôn ngữ giao diện",
       "body": "Áp dụng cho toàn bộ giao diện của bạn trên thiết bị này."
     },
+    "usage": {
+      "title": "Lượt AI trong tháng",
+      "body": "Mỗi bình luận hoặc tin nhắn được AI xử lý tính là một lượt. Số lượt được đặt lại đầu mỗi tháng.",
+      "summary": "Đã dùng {used}/{capacity} lượt · còn {remaining} lượt",
+      "warning": {
+        "title": "Sắp hết lượt AI",
+        "body": "Bạn đã dùng {percent}% lượt của tháng. Hãy cân nhắc mua thêm lượt hoặc nâng gói trước khi hết."
+      },
+      "blocked": {
+        "title": "Đã hết lượt AI",
+        "body": "AI đã dừng xử lý bình luận mới cho đến kỳ sau. Hãy mua thêm lượt hoặc nâng gói để AI chạy tiếp."
+      }
+    },
     "replyLanguage": {
       "title": "Ngôn ngữ trả lời của AI",
       "body": "Chọn ngôn ngữ AI dùng khi soạn trả lời cho từng kênh. \"Theo khách\" là trả lời cùng ngôn ngữ với khách.",

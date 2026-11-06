@@ -64,7 +64,7 @@ Chỉ phần máy (chưa có giao diện — `KB-GAPS-UI`/`KB-TRYAI`; chưa có 
 Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate` (DB dev/test của bạn) rồi chạy test.
 1. `CF_LANE=<làn> pnpm test:db` → file `usage-counters.int.test.ts` xanh (đua 20 lệnh song song chỉ cho đúng 10 lượt). Kết quả mong đợi: không test đỏ.
 2. `pnpm db:check-rls` → không báo vi phạm `core.usage_counters`/`core.consume_usage`. Kết quả mong đợi: "đạt".
-3. (Tùy chọn, vi + en) Khi `USAGE-METER-UI` xong: đồng hồ lượt hiện "80%" màu cảnh báo, "100%" chặn AI và đề xuất mua thêm/nâng gói.
+3. (vi + en, USAGE-METER-UI, Q-UMU1) Owner mở Cài đặt → thẻ "Lượt AI trong tháng" có thanh tiến độ. Đặt `AI_TURNS_PLAN_LIMIT` nhỏ và sửa số đã dùng ở DB dev: từ 80% hiện banner vàng "Sắp hết lượt AI", 100% banner đỏ "Đã hết lượt AI" kèm gợi ý mua thêm/nâng gói. Staff không thấy thẻ này.
 
 ---
 
@@ -710,6 +710,17 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 | 1 | `pnpm --filter @flow/shared exec vitest run src/rule-filter.test.ts src/merge-burst.test.ts` | Xanh; không gọi mạng/DB/LLM |
 | 2 | Đọc nhanh `rule-filter.test.ts`: emoji/tag/dấu chấm → bỏ qua; "giá?", "1", "+", ảnh đính kèm → không bỏ qua | Khớp ý bạn muốn (nếu muốn nới/thắt, nói để đổi Q-PRF1) |
 | 3 | Khi pipeline được nối: gõ 3 bình luận ngắn liên tiếp dưới một bài | Một câu trả lời gộp vào bình luận cuối (US-109) |
+
+## KT-RT — Tìm kiến thức cho nhãn cần trả lời (PIPE-RETRIEVE, FR-028, feat-pipe-retrieve)
+
+Hàm thuần + cổng (embedder là bản mock), chưa có giao diện/đường chạy → kiểm bằng lệnh. Kiểm tay thật khi pipeline được nối. / Pure core with mock embedder; verify by command.
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/retrieve` | Xanh (ví dụ + property-based), không gọi mạng/LLM/DB |
+| 2 | Khi nối pipeline: bình luận khiếu nại ("hàng lỗi, đòi hoàn tiền") | Không tìm kiến thức, không có bản nháp AI; chuyển người |
+| 3 | Bình luận "giá sao shop" dưới bài gắn sản phẩm | Nguồn chỉ là biến thể từ `product_variants` (giá/tồn đúng kho), không có đoạn kiến thức |
+| 4 | Bình luận "đổi trả thế nào" | Nguồn là đoạn FAQ/chính sách liên quan nhất, tổng ≤ ~3.000 token |
 
 ## KT-ATB — Ô Thử AI chạy cả pipeline, không trừ lượt (AI-TRY-BOX-UI, FR-059, FR-029, US-034, feat-ai-try-box-ui)
 
