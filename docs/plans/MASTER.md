@@ -128,7 +128,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | KB-SEARCH-FTS | FR-057 (toàn văn `simple`+`unaccent`/`english`, `pg_trgm`), FR-127 (gần đúng), FR-135 (cache không trả giá cũ: `product_revs`) | US-100 | KB-CHUNKING, PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-kb-search-fts, migration 0037; embedding bản fixture, còn bí danh/rerank/ngưỡng/trần token → PIPE-RETRIEVE) |
 | RETRIEVAL-LOG | FR-134 (`retrieval_logs`, kb_gaps) | US-106, UF-11 | KB-SEARCH-FTS | DB | không | ✅ Xong (feat-retrieval-log, migration 0040; chưa có nơi ghi → `RETRIEVAL-LOG-WIRE`; `test:db` chạy ở CI) |
 | KB-TRYAI | FR-059 (ô Thử AI hiện đoạn tìm được + điểm) | US-034 | KB-SEARCH-FTS | — | không | ✅ Xong-mock (feat-kb-tryai, Q-KTA1; cờ `TRY_AI_KB_REAL` TẮT; còn `TRY-AI-REAL`) |
-| KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | ⏳ |
+| KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | 🟡 Xong-mock (`feat-kb-samples`; lõi + kho bộ nhớ, bảng/API/UI → `KB-SAMPLES-PERSIST` cần migration làn b; KT-KSM) |
 | KB-EMBED-COL | FR-133 (cột `embedding_model`; job tạo lại làm ở GĐ5), FR-139 (cột `halfvec(1024)` + HNSW) | — | KB-SCHEMA | DB | không | ✅ (feat-kb-embed-col, migration 0042; job tạo lại → GĐ5) |
 | GSHEETS-LINK | FR-121 (Google Sheets liên kết + đồng bộ định kỳ) | US-003 | KB-IMPORT-EXCEL | S (OAuth) | **có** — Google Cloud | ⛔ |
 | KB-INJECTION-GUARD | FR-164 (chống cài lệnh qua kiến thức nhập vào) | — | KB-CHUNKING | S | không | ✅ Xong-mock (feat-kb-injection-guard; duyệt/xuất bản → KB-INJECTION-REVIEW, KB-PUBLISH) |
@@ -138,10 +138,10 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | POSTS-LIST | FR-060 (danh sách bài, lọc, gắn/chưa gắn) | US-032, UF-7 | CH-SCHEMA | — | không | ✅ (danh sách + lọc nền tảng/kênh/loại + tìm + sắp xếp + phân trang; còn lọc gắn/chưa gắn — cần `post_products`, xem gap `POSTS-LIST-LINK-FILTER`) |
-| POSTS-LINK-PRODUCT | FR-061 (gắn nhiều sản phẩm, sản phẩm chính, gắn hàng loạt; AI gợi ý cần xác nhận) | US-032 | POSTS-LIST, PRODUCTS-VARIANTS | — | không | ⏳ |
-| POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | — | không | ⏳ |
+| POSTS-LINK-PRODUCT | FR-061 (gắn nhiều sản phẩm, sản phẩm chính, gắn hàng loạt; AI gợi ý cần xác nhận) | US-032 | POSTS-LIST, PRODUCTS-VARIANTS | — | có (0049) | ✅ Xong phần dữ liệu (UI: `POSTS-LINK-PRODUCT-UI`) |
+| POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | DB | không | Xong-mock (feat-post-notes, migration 0045, Q-PN1; còn API/UI, nối `DATA-PRIORITY` và cổng tự gửi) |
 | DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | ⏳ |
-| SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | ⏳ |
+| SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | 🟡 Xong-mock phần không cần cột mới (`feat-suggest-ui`; còn `SUGGEST-UI-PERSIST` cần bảng `drafts` — làn b; KT-SUI) |
 | BULK-ACTIONS | FR-045 (Bỏ qua, Ẩn có xác nhận, Đổi nhãn; không gửi hàng loạt) + phím tắt | US-010 | INBOX-LIST, FB-HIDE | — | không | ✅ (feat/bulk-actions) |
 | INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ✅ (feat-inbox-mobile; còn Playwright 390px, KT-016) |
 | REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | 🟡 (`feat-reply-lang-ui`: `reply_language` theo kênh xong; xưng hô chờ `brand_voice` → gap `REPLY-ADDRESS-UI`) |
@@ -162,12 +162,12 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PIPE-RETRIEVE | FR-028 (tìm kiến thức cho nhãn cần trả lời; Khiếu nại không soạn) | — | KB-SEARCH-FTS, PIPE-ROUTE | — | không | 🟡 Xong-mock (lõi + cổng `retrieveKnowledge`, `feat-pipe-retrieve`; embedder fixture; còn rerank/ghi chú bài/`retrieval_logs`/nối pipeline; KT-RT) |
 | PIPE-DRAFT | FR-029 (JSON `{reply, lang, sources[], needs_human, reason}`), FR-138 (prompt caching), FR-140 (`claims[]` trích nguồn từng ý), FR-142 (xưng hô) | US-011, 012 | PIPE-RETRIEVE | — | **có** — khóa LLM | 🟡 Xong-mock (`feat-pipe-draft`; cờ `DRAFT_LLM_ENABLED` tắt; nguồn là đầu vào, chờ PIPE-RETRIEVE nối; KT-031) |
 | PIPE-GUARD-MONEY | FR-030 (mọi số tiền/%/ngày/SĐT/link phải có trong nguồn — kiểm bằng code) | US-103 | PIPE-DRAFT | S | không | ✅ (lõi; nối pipeline ở PIPE-DRAFT) |
-| PRICE-SNAPSHOT | FR-111 (lưu `drafts.price_snapshot` khi soạn) | US-045 | PIPE-GUARD-MONEY | S+DB | không | ⏳ |
+| PRICE-SNAPSHOT | FR-111 (lưu `drafts.price_snapshot` khi soạn) | US-045 | PIPE-GUARD-MONEY | S+DB | không | Xong-mock (feat-price-snapshot, migration 0046, Q-PS1; còn nối pipeline soạn + job gửi) |
 | PIPE-CONFIDENCE | FR-163 (độ tin cậy do code tính), FR-032 (kết quả không đọc được → 0, chuyển người) | US-041 | PIPE-DRAFT | S | không | ✅ (lõi hàm thuần, `feat-pipe-confidence`; nối cổng 5 ở AUTO-SEND-GATE; KT-PC) |
 | PIPE-DECIDE-ACTION | FR-147 (`decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người), FR-141 (gợi ý một phần, không tự tính) | UF-2b | PIPE-CONFIDENCE | S | không | ✅ (lõi hàm thuần, `feat-pipe-decide-action`; cờ rủi ro chờ `DA-RULES-*`; nối pipeline/cổng ở AUTO-SEND-GATE; KT-DA) |
 | DA-RULES-PRICE | FR-150 (lệch giá quảng cáo ↔ kho → chuyển người), FR-158 (khoảng giá khi chưa rõ biến thể) | US-108 | PIPE-DECIDE-ACTION | S | không | ✅ lõi thuần (feat-da-rules-price); lưu DB → `DA-RULES-PRICE-DB` |
-| DA-RULES-STOCK | FR-151 (độ tươi tồn kho), FR-157 mẫu ngưng/hết hàng (phần gợi ý; tự gửi ở GĐ4) | — | PIPE-DECIDE-ACTION | — | không | ⏳ |
-| DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ⏳ |
+| DA-RULES-STOCK | FR-151 (độ tươi tồn kho), FR-157 mẫu ngưng/hết hàng (phần gợi ý; tự gửi ở GĐ4) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-stock); nối DB/pipeline → `DA-RULES-STOCK-WIRE` |
+| DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-order-hours, Q-DROH1; nối giờ làm việc DB/pipeline → `DA-RULES-ORDER-HOURS-WIRE`; KT-DROH) |
 | DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ⏳ |
 | DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ⏳ |
 | PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ✅ Xong-mock (lõi hàm thuần, `feat-pipe-variation`; còn `VARIATION-WIRE`: Redis `…:recent` + ghi `drafts.variants`, và `VARIATION-NAME`: chèn tên khách) |
@@ -231,7 +231,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 |---|---|---|---|---|---|---|
 | AUTO-SEND-GATE | FR-031 (11 cổng theo `09` §6, AI chỉ thêm điều kiện "cần duyệt"), FR-141 (tự gửi một phần) | US-040, UF-5 | PIPE-DECIDE-ACTION | S | không | ✅ (lõi hàm thuần `decideAutoSend`, `feat-auto-send-gate`; nối pipeline/`automation_settings`/`automation_events` ở AUTO-MATRIX-UI + PIPE-ROUTE; Stryker → `MUTATION-STRYKER`; KT-ASG) |
 | SEND-RECHECK | FR-110 (R1–R9 ngay trước khi gọi API; bị chặn → lý do hiển thị) | US-045 | AUTO-SEND-GATE, FB-REPLY | S | không | ✅ (lõi hàm thuần `sendRecheck` + job `send` gọi R1–R3/R9, lý do `recheck:R1–R9` vi/en, Stryker 95,2% — `feat-send-recheck`; dữ liệu thật R4–R8 cho tự gửi → `SEND-RECHECK-WIRE`; KT-SR) |
-| AUTO-MATRIX-UI | FR-070 (Tắt/Chạy thử/Tự động theo kênh × nhãn), FR-071 (ngưỡng, khoảng trễ, giới hạn/ngày, giờ hoạt động, từ khóa chặn, chữ ký) | US-040, UF-5 | AUTO-SEND-GATE | S | không | ⏳ |
+| AUTO-MATRIX-UI | FR-070 (Tắt/Chạy thử/Tự động theo kênh × nhãn), FR-071 (ngưỡng, khoảng trễ, giới hạn/ngày, giờ hoạt động, từ khóa chặn, chữ ký) | US-040, UF-5 | AUTO-SEND-GATE | S | không | ✅ Xong-mock (`feat-auto-matrix-ui`, Q-AMU1: schema Zod + store bộ nhớ + trang `/app/automation` chỉ Owner; bảng DB → `AUTO-MATRIX-DB` làn b — phần lưu ✅ ở `feat-auto-config-store` (Q-ACS1, migration 0047, KT-ACS), còn `AUTO-CONFIG-WIRE`; hạn mức tháng/tự tạm dừng → `AUTO-SETTINGS-COST`; KT-AMU) |
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ⏳ |
 | AUTO-CALIBRATION | FR-072 (50/10%/15/0,80; đề xuất kèm lý do), FR-163 (hiệu chuẩn độ tin cậy) | US-041 | AUTO-MATRIX-UI | S | không | ⏳ |
 | EMERGENCY-STOP | FR-073 (dừng khẩn cấp toàn workspace) | US-043 | AUTO-MATRIX-UI | S | không | ⏳ |

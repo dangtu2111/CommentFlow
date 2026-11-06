@@ -1,5 +1,35 @@
 # Kiểm tra tay — danh sách dồn
 
+## KT-DROH — Hỏi đơn hàng + câu mời theo giờ làm việc (DA-RULES-ORDER-HOURS, FR-153/152, feat-da-rules-order-hours)
+
+> Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/decide/order-hours-rules.test.ts` | Mọi test xanh: "đơn đến đâu", "sao chưa giao", "where is my order" → hỏi đơn → `decideAction` chuyển hướng + chuyển người; "chốt đơn", "đơn giá" không bị nhầm. |
+| 2 | Xem nhóm "FR-152 resolveInvitation" trong cùng file | Trong giờ dùng mẫu `inHours`; ngoài giờ/chưa rõ giờ dùng `outHours`; mẫu ngoài giờ có "gọi ngay" bị thay bằng câu "từ 08:00 ngày mai". |
+| 3 | `pnpm --filter @flow/ai test:coverage` | Đạt ngưỡng; `src/decide/*.ts` ≥ 95% nhánh. |
+
+## KT-KSM — Câu mẫu của shop (KB-SAMPLES, FR-132, feat-kb-samples)
+
+> Chưa có giao diện/DB: chỉ có lõi + test tự động; kiểm tay dồn cho `KB-SAMPLES-PERSIST`. / Core + automated tests only; manual UI checks deferred to `KB-SAMPLES-PERSIST`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/examples` | 22 test xanh |
+| 2 | (Sau khi có bảng) Nhân viên gửi câu có SĐT khách + giá | Mẫu lưu `[sđt]` và `{price:…}`, không còn số thật |
+| 3 | (Sau khi có bảng) Owner tắt một mẫu | Mẫu không xuất hiện trong ví dụ giọng văn khi soạn |
+
+## KT-DRS — Quy tắc tồn kho của decideAction (DA-RULES-STOCK, FR-151/157, feat-da-rules-stock)
+
+> Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/decide/stock-rules.test.ts` | Mọi test xanh: tồn cũ hơn 3 ngày (nhập tay/Excel) → không nói còn/hết hàng; đúng ngưỡng vẫn tươi. |
+| 2 | Xem nhóm "FR-157 gợi ý thay thế" trong cùng file | Chỉ gợi ý khi bật; tối đa 2 mẫu cùng danh mục, đang bán, còn hàng, kèm giá từ biến thể. |
+| 3 | `pnpm --filter @flow/ai test:coverage` | Đạt ngưỡng; `src/decide/*.ts` ≥ 95% nhánh. |
+
 ## KT-DRP — Quy tắc giá của decideAction (DA-RULES-PRICE, FR-150/158, feat-da-rules-price)
 
 > Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verified by command.
@@ -48,6 +78,21 @@
 | 6 | Bấm **Lưu quy tắc** | Báo chưa khả dụng (chờ bảng `rules`); không bình luận nào bị đổi |
 | 7 | Đổi ngôn ngữ en | Mọi chuỗi trang đã dịch |
 
+## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
+
+> Cấu hình lưu bền trong DB (migration 0047, feat-auto-config-store; cần DB đã migrate) nhưng chưa áp dụng cho việc gửi thật. Cần ≥ 1 kênh để thấy ma trận.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Đăng nhập Owner, mở menu **Cài đặt tự gửi** (vi) | Trang `/app/automation`; dòng lưu ý "chưa áp dụng…"; mọi ô ma trận là **Tắt**; ngưỡng 85, trễ 1 phút, 50 câu/ngày |
+| 2 | Đặt Hỏi giá × Bình luận = **Tự động**, Hỏi giá × Tin nhắn = **Chạy thử**, bấm **Lưu cài đặt** | Về trang với "Đã lưu cài đặt."; hai ô giữ giá trị vừa chọn |
+| 3 | Nhập ngưỡng 79 rồi lưu | Báo lỗi "Ngưỡng tin cậy phải từ 80 đến 100.", không đổi gì đã lưu |
+| 4 | Bật giờ hoạt động, bỏ hết ngày, lưu | Báo lỗi giờ hoạt động |
+| 5 | Nhập từ khóa chặn "ship" và "giảm giá" (mỗi dòng một từ), chữ ký "— Trợ lý AI", lưu | Đã lưu; tải lại trang vẫn thấy hai từ khóa và chữ ký |
+| 6 | Đổi sang English | Menu "Auto-send settings", mọi nhãn/lỗi bằng tiếng Anh |
+| 7 | Đăng nhập Staff, mở `/app/automation` | 404; menu không có mục này |
+| 8 | (KT-ACS, feat-auto-config-store) Khởi động lại máy chủ web rồi mở lại trang bằng Owner | Mọi giá trị đã lưu ở bước 2–5 vẫn còn; dòng "lần sửa cuối" hiện đúng người + giờ |
+| 9 | Với hai workspace khác nhau, lưu hai cấu hình khác nhau | Mỗi workspace chỉ thấy cấu hình của mình |
 ## KT-ASH — AI đã gửi + Đánh dấu sai (AI-SENT-HISTORY, FR-075, feat-ai-sent-history)
 
 > Chưa có bảng `drafts`/`automation_events` (`AI-SENT-HISTORY-DB`) nên danh sách luôn trống; chỉ kiểm được giao diện trống + menu + 2 ngôn ngữ. Nút Đánh dấu sai kiểm bằng test tự động (store bộ nhớ).
@@ -901,6 +946,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
 | 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
 
+## KT-PN — Ghi chú theo bài có hạn (POST-NOTES, FR-062, US-033) · Post notes
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/post-notes.test.ts`. | Test xanh: nội dung chuẩn hóa, hạn phải sau ngày bắt đầu, đúng biên hết hạn, ghi đè chỉ nhận `off`/`shadow`, `effectiveAutoMode` không bao giờ nâng chế độ. |
+| 2 | CI job `database` chạy `tests/post-notes.int.test.ts` và `pnpm db:check-rls`. | Owner ghi được, Staff chỉ đọc, workspace khác không thấy; ghi chú hết hạn không được trả; DB từ chối ghi đè `auto`; xóa bài xóa luôn ghi chú. |
+
 ## KT-ST — Bảng size có cấu trúc (SIZE-TABLE, FR-149, US-102) · Size chart
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
@@ -909,3 +963,30 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/shared exec vitest run src/size-chart.test.ts`. | 14 test xanh: cao 160 + nặng 53 → M; thiếu số đo → hỏi lại; hai size cùng khớp / ngoài bảng → mời ib; không có bảng → mời ib + ghi khoảng trống. |
 | 2 | CI job `database` chạy `tests/size-charts.int.test.ts`. | Owner ghi được, Staff chỉ đọc, workspace khác không thấy; bảng riêng của sản phẩm thắng bảng danh mục. |
+
+## KT-PS — Ảnh chụp giá lúc soạn (PRICE-SNAPSHOT, FR-111, US-045) · Price snapshot
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/price-snapshot.test.ts` và `pnpm --filter @flow/ai exec vitest run src/recheck`. | Test xanh: bỏ mục không giá, loại trùng, đọc lại JSON; giá/biến thể đổi → `price_changed`, không có ảnh chụp → `price_snapshot_missing`. |
+| 2 | CI job `database` chạy `tests/drafts.int.test.ts` và `pnpm db:check-rls`. | Hệ thống ghi được bản nháp + ảnh chụp; Staff/withWorkspace trần không INSERT; không ai sửa được `price_snapshot`/`text`; Staff không đặt/sửa trạng thái `auto_sent`; workspace khác không thấy. |
+
+## KT-SUI — Gợi ý AI + đổi nhãn (SUGGEST-UI, FR-043, US-011/012/014) · AI suggestion + relabel
+
+Ô gợi ý chưa có dữ liệu thật (chờ bảng `drafts`); phần đổi nhãn kiểm được trên staging. / Suggestion box has no real data yet (awaits `drafts`); relabel is checkable on staging.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared test` và `pnpm --filter @flow/web exec vitest run src/lib/suggestion.test.ts`. | Xanh: gửi nguyên văn → `sent_as_is`; sửa → `edited` + khoảng cách; chip nguồn ≤ 5 (+N); ô gợi ý ẩn khi không có gợi ý. |
+| 2 | Mở một bình luận → ô "Đổi nhãn" → chọn nhãn khác → "Lưu nhãn". | Trang làm tươi, chip nhãn đổi; bình luận đã xóa không có ô đổi nhãn; đổi sang en vẫn đủ chữ. |
+
+## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/post-products.test.ts`. | 14 test xanh: loại trùng, sản phẩm chính phải nằm trong danh sách, trần 200 bài × 20 sản phẩm, đề xuất AI chưa xác nhận không được dùng để trả lời. |
+| 2 | CI job `database` chạy `tests/post-products.int.test.ts` và `pnpm db:check-rls`. | Gắn nhiều sản phẩm, tối đa một chính/bài, gắn hàng loạt không trùng; worker chỉ tạo được đề xuất, không tự xác nhận; workspace khác không thấy. |

@@ -1,4 +1,27 @@
 export {
+  type AutomationConfig,
+  type AutomationRule,
+  automationConfigSchema,
+  DAILY_CAP_MAX,
+  DEFAULT_AUTOMATION_CONFIG,
+  DELAY_SECONDS_OPTIONS,
+  MATRIX_LABELS,
+  MATRIX_TARGETS,
+  MAX_BLOCKED_KEYWORDS,
+  MAX_KEYWORD_LENGTH,
+  MAX_SIGNATURE_LENGTH,
+  type MatrixLabel,
+  type MatrixTarget,
+  modeFor,
+  parseAutomationConfig,
+  toGateSettings,
+} from './automation/settings';
+export {
+  type AutomationChange,
+  type AutomationSettingsStore,
+  createInMemoryAutomationSettingsStore,
+} from './automation/settings-store';
+export {
   buildExactCacheKey,
   type CachedAnswer,
   type CacheMissReason,
@@ -87,6 +110,28 @@ export {
   type VariantAxis,
 } from './decide/decide-action';
 export {
+  type BusinessHoursState,
+  detectOrderStatusIntent,
+  evaluateBusinessHours,
+  type Invitation,
+  type InvitationSource,
+  type NextOpening,
+  nextOpening,
+  promisesImmediateReply,
+  resolveInvitation,
+  withOrderStatusTopic,
+} from './decide/order-hours-rules';
+export {
+  anyStockStale,
+  DEFAULT_STOCK_STALE_DAYS,
+  evaluateStockRules,
+  MAX_ALTERNATIVES,
+  type StockAlternative,
+  type StockAvailability,
+  type StockFreshness,
+  type StockOutcome,
+} from './decide/stock-rules';
+export {
   DEFAULT_DRAFT_MODEL,
   type DraftConfig,
   loadDraftConfig,
@@ -121,6 +166,32 @@ export {
   FIXTURE_DRAFT_DEFAULT,
 } from './draft/fixture-drafter';
 export { createFixtureEmbedder, FIXTURE_EMBEDDING_MODEL } from './embedding/fixture-embedder';
+export {
+  type CaptureInput,
+  type CaptureResult,
+  captureAnswerExample,
+  EXAMPLE_CAP,
+  EXAMPLE_PICK_LIMIT,
+  type ExamplesDeps,
+  type PickQuery,
+  pickVoiceExamples,
+  setExampleStatus,
+  type VoiceExample,
+} from './examples/answer-examples';
+export {
+  type AnswerExample,
+  createInMemoryExampleStore,
+  type ExampleStatus,
+  type ExampleStore,
+} from './examples/example-store';
+export {
+  type BuildTemplateResult,
+  buildExampleTemplate,
+  EXAMPLE_REJECT,
+  type ExampleRejectCode,
+  type ExampleVariant,
+  fillExampleTemplate,
+} from './examples/example-template';
 export {
   type ActiveHours,
   ALWAYS_BLOCKED_LABELS,
@@ -249,6 +320,7 @@ export {
   type ReadinessResult,
   type ReadinessTopic,
 } from './readiness/readiness';
+export { priceEntriesFromSnapshot, priceEntriesFromSources } from './recheck/price-snapshot';
 export {
   AUTO_MESSAGE_WINDOW_MS,
   HUMAN_AGENT_WINDOW_MS,

@@ -123,6 +123,14 @@ Code đã có bước `rewrite` (`packages/ai/src/rewrite/`): phần ghép `sear
 - Khóa ảo LiteLLM (`LITELLM_API_KEY`) được cấp quyền cho **model rẻ** (có thể dùng chung model phân loại).
 - Đặt `REWRITE_LLM_MODEL=<tên model trong LiteLLM>` và `REWRITE_LLM_ENABLED=true` (chỉ staging/thử).
 
+## 2h0a. `DA-RULES-ORDER-HOURS` (FR-153, FR-152) — không cần tài nguyên ngoài
+
+Hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-DROH. Chủ dự án chỉ cần quyết định sau này (khi nối DB): giờ làm việc từng workspace (múi giờ + khung giờ theo thứ) nhập ở đâu trong Cài đặt, và soạn mẫu câu mời trong giờ/ngoài giờ cho từng chủ đề (đã có ở Cơ sở kiến thức → Giọng văn).
+
+## 2h0. `DA-RULES-STOCK` (FR-151, FR-157) — không cần tài nguyên ngoài
+
+Hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-DRS. Chủ dự án chỉ cần quyết định sau này (khi nối DB): `stock_stale_days` mặc định 3 có phù hợp, và có bật gợi ý mẫu thay thế (`suggest_alternatives`, mặc định TẮT) cho shop nào.
+
 ## 2h. `PIPE-RULE-FILTER` + `PIPE-MERGE-BURST` (FR-024, FR-148) — không cần tài nguyên ngoài
 
 Hai hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-032. Không có gì để chủ dự án cung cấp.
@@ -174,3 +182,14 @@ Xem trước quy tắc spam đọc `cf.comments` của chính workspace, không 
 
 ## 2n. `KB-TESTSET` (FR-054) — không cần tài nguyên ngoài
 Bộ câu kiểm thử chạy qua pipeline Thử AI bằng mô phỏng (không LLM, không khóa, không DB). Dùng KB thật khi cờ `TRY_AI_KB_REAL` bật (cùng cờ KB-TRYAI, mặc định TẮT). Lưu bộ câu và chặn nút Xuất bản cần bảng mới (migration làn b, `KB-TESTSET-PERSIST`). Bạn **không** phải làm gì cho bản mock.
+
+## 2o. `KB-SAMPLES` (FR-132) — không cần tài nguyên ngoài
+Câu mẫu của shop chỉ là mã thuần + kho trong bộ nhớ, không khóa/LLM/dịch vụ ngoài. Lưu thật cần bảng `kb_answer_examples` (migration làn b, `KB-SAMPLES-PERSIST`) và embedding ở 2g. Bạn không phải làm gì.
+
+## 2p. `AUTO-MATRIX-UI` (FR-070/071) — không cần tài nguyên ngoài
+Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, không cần khóa hay dịch vụ ngoài. Cấu hình chưa áp dụng cho việc tự gửi thật (chờ nối pipeline). Bạn **không** phải làm gì.
+
+## 2q. `AUTO-CONFIG-STORE` (FR-070/071) — không cần tài nguyên ngoài
+Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_rules`, migration 0047). Chỉ cần **chủ dự án duyệt và chạy migration 0047 lên staging/production qua CI có duyệt** (agent không chạy lệnh ghi lên các DB đó). Không cần khóa hay dịch vụ ngoài.
+## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
+Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
