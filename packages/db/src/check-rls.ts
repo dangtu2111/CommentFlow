@@ -282,7 +282,7 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.automation_rules', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.automation_rules', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.automation_rules', 'mode', 'UPDATE'],
-  // POSTS-LINK-PRODUCT (0048): định danh + trạng thái xác nhận bất biến sau INSERT; chỉ is_primary đổi được
+  // POSTS-LINK-PRODUCT (0049): định danh + trạng thái xác nhận bất biến sau INSERT; chỉ is_primary đổi được
   ['cf_app', 'cf.post_products', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_products', 'post_id', 'UPDATE'],
   ['cf_app', 'cf.post_products', 'product_id', 'UPDATE'],
@@ -657,7 +657,7 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.automation_rules', 'a', 'is_workspace_owner'],
   ['cf.automation_rules', 'a', 'is_system_context'],
   ['cf.automation_rules', 'r', 'is_workspace_member'],
-  // POSTS-LINK-PRODUCT (0048): INSERT/UPDATE thành viên (đề xuất: + hệ thống); DELETE thành viên hoặc hệ thống
+  // POSTS-LINK-PRODUCT (0049): INSERT/UPDATE thành viên (đề xuất: + hệ thống); DELETE thành viên hoặc hệ thống
   ['cf.post_products', 'a', 'is_workspace_member'],
   ['cf.post_products', 'a', 'is_system_context'],
   ['cf.post_products', 'a', 'current_user_id'],
@@ -696,7 +696,7 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['core.members', 'a', 'is_workspace_owner'],
   // Chỉ-hệ thống: không được mở thêm nhánh thành viên/Owner/"không người dùng" trong CÙNG policy (OR)
   ['cf.webhook_events', 'w', 'is_workspace_member'],
-  // POSTS-LINK-PRODUCT (0048): UPDATE (đổi chính) chỉ thành viên thật — hệ thống/AI không được thêm nhánh vào
+  // POSTS-LINK-PRODUCT (0049): UPDATE (đổi chính) chỉ thành viên thật — hệ thống/AI không được thêm nhánh vào
   ['cf.post_products', 'w', 'is_system_context'],
   ['cf.comment_replies', 'w', 'is_workspace_member'],
   ['cf.comment_replies', 'w', 'is_workspace_owner'],

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Database } from '../client';
 
 /**
- * Liên kết bài ↔ sản phẩm (FR-061, migration 0048, Q-PLP1). Ghi của người dùng: `withActor` (Owner/Staff);
+ * Liên kết bài ↔ sản phẩm (FR-061, migration 0049, Q-PLP1). Ghi của người dùng: `withActor` (Owner/Staff);
  * đề xuất của AI/hệ thống: `withJob` (chỉ tạo được `suggested`). RLS chặn chéo workspace; bài/sản phẩm không
  * thuộc workspace → lỗi khóa ngoại 23503. Đầu vào hàng loạt PHẢI đã qua `parseLinkPostProducts`.
  */
