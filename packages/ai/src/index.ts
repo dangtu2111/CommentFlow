@@ -179,6 +179,16 @@ export {
   normalizeText,
 } from './normalize/normalize-lang';
 export {
+  computeReadiness,
+  READINESS_REQUIRED_ITEMS,
+  READINESS_SAMPLE_QUESTIONS,
+  type ReadinessInput,
+  type ReadinessLang,
+  type ReadinessRequiredItem,
+  type ReadinessResult,
+  type ReadinessTopic,
+} from './readiness/readiness';
+export {
   type CustomerContext,
   MAX_OTHER_POST_QUESTIONS,
   MAX_THREAD_TURNS,

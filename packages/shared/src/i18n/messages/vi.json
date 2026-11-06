@@ -574,6 +574,82 @@
       }
     }
   },
+  "readiness": {
+    "pageTitle": "Độ sẵn sàng của AI",
+    "title": "Độ sẵn sàng của AI",
+    "subtitle": "AI cần đủ thông tin shop thì mới trả lời đúng. Điểm dưới {min}% hoặc thiếu mục bắt buộc thì chưa bật được chế độ Tự động.",
+    "basisNote": "Điểm tính từ dữ liệu bạn đã nhập (sản phẩm, chính sách, FAQ, thông tin shop) theo ngôn ngữ đang dùng; chưa đo bằng AI thật.",
+    "scoreLabel": "Độ sẵn sàng",
+    "meterLabel": "Độ sẵn sàng của AI: {score}%",
+    "statusReady": "Đủ điều kiện bật chế độ Tự động.",
+    "statusNotReady": "Chưa đủ điều kiện bật chế độ Tự động (cần đủ mục bắt buộc và từ {min}%).",
+    "requiredTitle": "Mục bắt buộc ({done}/{total})",
+    "requiredDone": "Đã có",
+    "requiredMissing": "Còn thiếu",
+    "required": {
+      "product_price": {
+        "label": "Ít nhất 1 sản phẩm có giá",
+        "hint": "Thêm sản phẩm kèm giá để AI báo giá đúng."
+      },
+      "shipping_policy": {
+        "label": "Chính sách giao hàng",
+        "hint": "Ghi khu vực/thời gian giao; phí ship có thể ghi \"ib shop\"."
+      },
+      "return_policy": {
+        "label": "Chính sách đổi trả",
+        "hint": "Ghi điều kiện và thời hạn đổi trả."
+      },
+      "contact_hours": {
+        "label": "Cách liên hệ hoặc giờ làm việc",
+        "hint": "Điền số điện thoại/kênh liên hệ hoặc giờ làm việc trong thông tin shop."
+      }
+    },
+    "samplesTitle": "Câu hỏi mẫu AI trả lời được: {passed}/{total} ({rate}%)",
+    "answerable": "Trả lời được",
+    "unanswerable": "Chưa trả lời được",
+    "missingTitle": "Gợi ý bổ sung",
+    "missingNone": "Không còn gợi ý nào.",
+    "missing": {
+      "price": "Thêm giá cho sản phẩm.",
+      "size": "Thêm size cho biến thể hoặc một FAQ về size.",
+      "color": "Thêm màu cho biến thể.",
+      "stock": "Nhập tồn kho cho sản phẩm.",
+      "shipping": "Thêm chính sách giao hàng.",
+      "return": "Thêm chính sách đổi trả.",
+      "warranty": "Thêm chính sách bảo hành hoặc một FAQ về bảo hành.",
+      "payment": "Thêm chính sách thanh toán hoặc một FAQ về thanh toán.",
+      "hours": "Điền giờ làm việc trong thông tin shop.",
+      "contact": "Điền cách liên hệ trong thông tin shop.",
+      "address": "Điền địa chỉ trong thông tin shop.",
+      "promo": "Thêm một FAQ về khuyến mãi."
+    },
+    "sample": {
+      "price_item": "Áo này giá bao nhiêu?",
+      "price_variant": "Size M màu đen giá bao nhiêu?",
+      "price_total": "Mua 2 cái hết bao nhiêu?",
+      "size_available": "Có size L không?",
+      "size_advice": "Cao 1m65 nặng 55kg mặc size nào?",
+      "color_available": "Có màu trắng không?",
+      "stock_item": "Còn hàng không?",
+      "stock_variant": "Size M màu đen còn không?",
+      "ship_fee": "Phí ship bao nhiêu?",
+      "ship_time": "Bao lâu thì nhận được hàng?",
+      "ship_area": "Shop có giao tỉnh không?",
+      "return_policy": "Shop có cho đổi trả không?",
+      "return_condition": "Đổi trả cần điều kiện gì?",
+      "warranty": "Bảo hành bao lâu?",
+      "payment_method": "Thanh toán bằng cách nào?",
+      "payment_cod": "Có nhận COD không?",
+      "opening_hours": "Shop mở cửa mấy giờ?",
+      "contact": "Liên hệ shop bằng cách nào?",
+      "address": "Shop ở đâu?",
+      "promo": "Hiện có khuyến mãi không?"
+    },
+    "error": {
+      "title": "Không tải được độ sẵn sàng",
+      "body": "Đã có lỗi khi đọc dữ liệu. Hãy thử lại sau."
+    }
+  },
   "tryAi": {
     "pageTitle": "Thử AI",
     "title": "Thử AI",
@@ -649,6 +725,7 @@
       "comments": "Bình luận",
       "posts": "Bài viết",
       "tryAi": "Thử AI",
+      "readiness": "Độ sẵn sàng AI",
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
