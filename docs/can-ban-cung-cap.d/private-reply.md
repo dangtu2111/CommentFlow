@@ -1,0 +1,2 @@
+## 2x. `PRIVATE-REPLY` (FR-046) — cần Page Facebook thử + quyền Meta để thử thật
+Logic kiểm tra (1 tin, ≤ 7 ngày, chỉ nhân viên bấm Gửi) đã xong với fixture, CHƯA gọi Meta thật. Để thử thật bạn cần: Page Facebook thử đã kết nối, app Meta có quyền `pages_messaging` (cần App Review khi chạy thật) và một bình luận thử của tài khoản ngoài. Chưa có nơi gọi trong web/worker nên chưa ảnh hưởng người dùng. Kiểm tay mã KT-PRP.
