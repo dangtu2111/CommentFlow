@@ -225,13 +225,14 @@
 }
 
 .leads-kpi-value {
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   font-weight: var(--weight-bold);
 }
 
 .leads-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  /* Khung nội dung chỉ ~850px nên xếp dọc: bảng Kanban rộng đủ 4 cột, thẻ chi tiết nằm dưới. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   align-items: start;
 }
@@ -308,7 +309,6 @@
 }
 
 @media (max-width: 960px) {
-  .leads-layout,
   .auto-general {
     grid-template-columns: minmax(0, 1fr);
   }
