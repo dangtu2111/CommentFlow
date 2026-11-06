@@ -1,0 +1,1 @@
+| `packages/shared/src/size-chart.ts` · `packages/db/src/schema/cf/size-charts.ts` · `queries/size-charts.ts` · `migrations/0044_size_charts.sql` | Bảng size (SIZE-TABLE, FR-149, Q-ST1): `parseSizeChartRow`, `decideSize` (code quyết định tra size), `cf.size_charts` (RLS Owner/hệ thống ghi), `findSizeChartRows`/`lookupSize` (bảng sản phẩm thắng danh mục) |

@@ -16,6 +16,7 @@ export type NavItemKey =
   | 'productImport'
   | 'kbGaps'
   | 'kbPublish'
+  | 'kbTestset'
   | 'spamRules'
   | 'channels'
   | 'members'
@@ -44,6 +45,8 @@ const ENTRIES: readonly Entry[] = [
   { key: 'kbGaps', href: '/app/kb-gaps', group: 'settings', roles: ['owner'] },
   // Phiên bản kiến thức (FR-054, UF-8): Owner xuất bản/khôi phục.
   { key: 'kbPublish', href: '/app/kb-publish', group: 'settings', roles: ['owner'] },
+  // Câu kiểm thử kiến thức (FR-054, US-034): Owner chạy thử trước khi xuất bản.
+  { key: 'kbTestset', href: '/app/kb-testset', group: 'settings', roles: ['owner'] },
   // Quy tắc spam (FR-080, US-050): Owner tạo quy tắc + xem trước 7 ngày.
   { key: 'spamRules', href: '/app/spam-rules', group: 'settings', roles: ['owner'] },
   { key: 'channels', href: '/app/channels', group: 'settings', roles: ['owner'] },

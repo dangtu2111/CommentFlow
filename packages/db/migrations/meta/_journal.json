@@ -309,6 +309,13 @@
       "when": 1793946016164,
       "tag": "0043_product_aliases",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1793946955996,
+      "tag": "0044_size_charts",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,39 @@
 # Kiểm tra tay — danh sách dồn
 
+## KT-DRP — Quy tắc giá của decideAction (DA-RULES-PRICE, FR-150/158, feat-da-rules-price)
+
+> Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verified by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/rules` | 32 test xanh: caption lệch giá kho → conflict kèm hai con số; khách nhắc giá khác → chuyển người; khoảng giá "từ X đến Y" + trục cần hỏi lại. |
+| 2 | `pnpm --filter @flow/ai test:coverage` | Đạt ngưỡng; `src/rules/*.ts` ≥ 95% nhánh. |
+
+## KT-KTS — Bộ câu kiểm thử kiến thức (KB-TESTSET, FR-054, US-034, feat-kb-testset)
+
+> Chạy bằng mô phỏng, không cần khóa/DB. Bộ câu chưa được lưu và chưa chặn nút Xuất bản. / Runs on the simulation; the set is not saved and does not block Publish.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner → menu **Câu kiểm thử**; Staff gõ thẳng `/app/kb-testset` | Owner thấy trang với 3 dòng mẫu; Staff nhận 404 và không có mục menu |
+| 2 | Bấm **Chạy bộ câu kiểm thử** với dòng mẫu | "Đạt 3/3", thông báo cổng Đạt, mỗi câu hiện Mong đợi/Thực tế |
+| 3 | Đổi dòng đầu thành `ship về Hà Nội bao nhiêu \| handoff` → chạy | Câu 1 "Không đạt — Hành động khác mong đợi"; cổng "Chưa đạt" |
+| 4 | Thêm từ khóa không có (`... \| redirect \| abcxyz`) → chạy | Câu báo "Thiếu từ khóa: abcxyz" |
+| 5 | Xóa hết chữ rồi chạy; nhập dòng không có `\|`; nhập hành động `hide` | Báo lỗi tiếng Việt, dòng sai được nêu số dòng; không tốn số lần chạy |
+| 6 | Nhập 21 dòng hợp lệ | Báo "Quá nhiều câu (tối đa 20 dòng…)" |
+| 7 | Chạy 11 lần trong một ngày | Lần 11 báo hết số lần chạy hôm nay |
+| 8 | Đổi ngôn ngữ en | Mọi chuỗi trang, menu "Test questions" đã dịch |
+
+## KT-PMP — Che SĐT/email trước LLM/Langfuse (PII-MASK-PIPE, FR-033, feat-pii-mask-pipe)
+
+> Hàm thuần, chưa nối pipeline/DB (cần `PIPE-ROUTE…` + `LEADS-KANBAN`) nên chưa bấm thử trên giao diện được. Hiện kiểm gián tiếp qua ô Thử AI.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Vào Thử AI, nhập "ib em 0912 345 678 hoặc a@b.co nhé" | Kết quả/nhật ký không hiện số hay email thật (chỉ `[sđt]`, `[email]`) |
+| 2 | Nhập câu không có số/email ("Áo còn size M không?") | Câu giữ nguyên, không bị che |
+| 3 | Khi `PIPE-ROUTE…` + `LEADS-KANBAN` xong: bình luận có SĐT → mở Khách tiềm năng | Có đúng số đã chuẩn hóa `0912345678`, câu gửi LLM đã che (chưa kiểm được) |
+
 ## KT-SPR — Quy tắc spam + xem trước 7 ngày (SPAM-RULES, FR-080, US-050, feat-spam-rules)
 
 > Cần có vài bình luận trong 7 ngày qua (từ Page thử). / Needs a few comments from the last 7 days (test Page).
@@ -866,3 +900,12 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
 | 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
+
+## KT-ST — Bảng size có cấu trúc (SIZE-TABLE, FR-149, US-102) · Size chart
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/size-chart.test.ts`. | 14 test xanh: cao 160 + nặng 53 → M; thiếu số đo → hỏi lại; hai size cùng khớp / ngoài bảng → mời ib; không có bảng → mời ib + ghi khoảng trống. |
+| 2 | CI job `database` chạy `tests/size-charts.int.test.ts`. | Owner ghi được, Staff chỉ đọc, workspace khác không thấy; bảng riêng của sản phẩm thắng bảng danh mục. |
