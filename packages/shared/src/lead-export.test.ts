@@ -353,7 +353,10 @@ describe('FR-082 che email', () => {
     fc.assert(
       fc.property(fc.stringMatching(/^[a-z]{4,12}$/), (local) => {
         const masked = maskLeadEmail(`${local}@mien.test`);
-        expect(masked.includes(local.slice(1))).toBe(false);
+        // Chỉ xét phần cục bộ đã che (trước '@'): tên miền cố ý được giữ nguyên
+        // và có thể trùng ngẫu nhiên với đuôi của `local` (vd. "ates" vs "mien.test").
+        const maskedLocal = masked.slice(0, masked.indexOf('@'));
+        expect(maskedLocal.includes(local.slice(1))).toBe(false);
       }),
     );
   });
