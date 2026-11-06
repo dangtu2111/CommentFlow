@@ -2,6 +2,8 @@
 
 Dự án Stitch: https://stitch.withgoogle.com/projects/15298527895734533184
 
+> **Nguồn dựng giao diện là HTML của Stitch (chủ dự án chốt 06/11/2026), không dựa vào ảnh PNG.** Tiến độ tải HTML: xem mục "Tiến độ tải HTML" cuối file.
+
 ## Tải về (tự động qua MCP)
 
 Chạy `/stitch-sync` trong Claude Code ở GĐ0 (MCP Stitch đã cấu hình sẵn trên máy). Lệnh ghi HTML + ảnh từng màn hình vào thư mục này, tạo `manifest.json`, điền bảng bên dưới. Thiết kế đổi → chạy lại `/stitch-sync` (chỉ tải màn hình mới/đổi) hoặc `/stitch-sync <slug>`.
@@ -82,3 +84,8 @@ Dựng tối giản, không chờ Stitch; các nội dung dưới đây trong `s
 - Nhận lời mời: huy hiệu "Meta Tech Partner • ISO/IEC 27001", "Gateway SSL Active", "Bảo mật cấp doanh nghiệp Meta API Partner", hiển thị token mời, danh sách kênh/phạm vi quyền bịa, ô "Kích hoạt 2FA (Khuyên dùng)" trong form nhận lời mời (2FA làm ở trang bảo mật; Owner bắt buộc), quy tắc mật khẩu "8 ký tự" (thật: **tối thiểu 10**), đặt mật khẩu ngay trên trang mời (người chưa có tài khoản đăng ký ở trang đăng ký thường).
 - Onboarding: chỉ dựng bước 1 (tạo workspace) — chưa có thiết kế Stitch riêng cho bước này; các bước 2–5 (kênh, kiến thức...) làm ở nhánh sau.
 - Bộ chuyển workspace trong Stitch có tìm kiếm + số cần xử lý: bản này chỉ liệt kê (gap matrix `FR-005-SEARCH`).
+
+## Tiến độ tải HTML (chore/stitch-html-sync)
+
+Đã tải nguyên văn từ Stitch: settings-security, settings-workspace-members, settings-billing.
+Chưa tải (còn lại): settings-2fa-setup-modal, settings-change-password-modal, settings-2fa-disable-modal, settings-password-changed, comments, auth-login-register, knowledge-base, automation, leads, posts, spam-rules, onboarding, messages, reports, activity-log, email-*, error-403/404, landing-pricing, privacy-data-deletion, terms-dpa, brand-guideline, staff-welcome, accept-invite, channel-disconnected. Lý do: công cụ MCP trả HTML qua ngữ cảnh, ghi lại tốn rất nhiều token mỗi màn; chạy tiếp bằng `/stitch-sync`.

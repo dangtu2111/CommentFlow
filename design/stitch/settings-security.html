@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "background": "#f5faff", "on-error-container": "#93000a", "on-tertiary-fixed": "#2e1500", "surface-dim": "#cedce7", "surface-container-lowest": "#ffffff", "tertiary-container": "#945b23", "primary-container": "#0b7285", "error-container": "#ffdad6", "on-secondary-container": "#fffbff", "inverse-surface": "#25323b", "tertiary": "#77440b", "secondary": "#633cd5", "surface-container-low": "#eaf5ff", "surface": "#f5faff", "on-secondary-fixed": "#1f0060", "on-primary": "#ffffff", "surface-tint": "#00687a", "on-tertiary-container": "#ffe3cf", "inverse-on-surface": "#e5f3fe", "surface-container-high": "#dceaf5", "error": "#ba1a1a", "surface-container": "#e2f0fb", "on-primary-container": "#bdf0ff", "on-error": "#ffffff", "on-tertiary": "#ffffff", "on-tertiary-fixed-variant": "#6c3a02", "secondary-container": "#7c59ef", "primary-fixed": "#abedff", "surface-container-highest": "#d7e4f0", "on-surface-variant": "#3f484b", "surface-variant": "#d7e4f0", "primary-fixed-dim": "#82d2e7", "on-background": "#101d25", "on-secondary-fixed-variant": "#4d1ebf", "secondary-fixed-dim": "#ccbdff", "tertiary-fixed-dim": "#ffb779", "outline-variant": "#bec8cc", "tertiary-fixed": "#ffdcc1", "on-primary-fixed-variant": "#004e5c", "on-secondary": "#ffffff", "secondary-fixed": "#e7deff", "on-primary-fixed": "#001f26", "outline": "#6f797c", "surface-bright": "#f5faff", "inverse-primary": "#82d2e7", "primary": "#005868", "on-surface": "#101d25" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin": "1.5rem", "space-xs": "0.25rem", "space-md": "0.75rem", "gutter-mobile": "0.75rem", "space-sm": "0.5rem", "gutter": "1rem", "space-xl": "1.5rem", "space-lg": "1rem", "margin-mobile": "1rem" }, "fontFamily": { "headline-sm": ["Be Vietnam Pro"], "title-sm": ["Be Vietnam Pro"], "body-lg": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "headline-md": ["Be Vietnam Pro"], "headline-lg-mobile": ["Be Vietnam Pro"], "code-sm": ["Be Vietnam Pro"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "title-sm": ["13px", { "lineHeight": "18px", "fontWeight": "600" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-md": ["15px", { "lineHeight": "20px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "body-md": ["13px", { "lineHeight": "19px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "code-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }] } } } }</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-16"><div class="flex-1 overflow-y-auto px-space-sm py-space-md"><div class="px-space-sm mb-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Điều hướng vận hành</div><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary font-title-sm shadow-sm"><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="binh-luan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">chat</span><span class="font-title-sm text-title-sm">Bình luận</span></div><span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm">24</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tin-nhan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">send</span><span class="font-title-sm text-title-sm">Tin nhắn</span></div><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-error animate-pulse"></span><span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">8</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="khach-tiem-nang" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">person_search</span><span class="font-title-sm text-title-sm">Khách tiềm năng</span></div><span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">+5</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bai-viet" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">feed</span><span class="font-title-sm text-title-sm">Bài viết</span></div><span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">3</span></a><div class="my-space-md border-t border-surface-container"></div><div class="px-space-sm mb-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Hệ thống &amp; Trí tuệ</div><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="co-so-kien-thuc" href="#"><span class="material-symbols-outlined text-lg">menu_book</span><span class="font-title-sm text-title-sm">Cơ sở kiến thức</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tu-dong-hoa" href="#"><span class="material-symbols-outlined text-lg">smart_toy</span><span class="font-title-sm text-title-sm">Tự động hóa</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bao-cao" href="#"><span class="material-symbols-outlined text-lg">bar_chart</span><span class="font-title-sm text-title-sm">Báo cáo</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="quy-tac-spam" href="#"><span class="material-symbols-outlined text-lg">gshield</span><span class="font-title-sm text-title-sm">Quy tắc spam</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="nhat-ky-hoat-dong" href="#"><span class="material-symbols-outlined text-lg">history</span><span class="font-title-sm text-title-sm">Nhật ký hoạt động</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded bg-primary-container text-on-primary font-title-sm shadow-sm transition-colors" data-path="cai-dat" href="#"><span class="material-symbols-outlined text-lg">settings</span><span class="font-title-sm text-title-sm">Cài đặt</span></a></nav></div><div class="p-space-sm space-y-space-sm bg-surface-container-lowest"><div class="bg-surface-container-low rounded-lg p-space-sm space-y-space-xs"><div class="flex items-center justify-between text-on-surface"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm text-secondary">bolt</span><span class="font-title-sm text-title-sm">Hạn mức AI</span></div><span class="font-label-sm text-label-sm text-primary">71%</span></div><div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden"><div class="bg-primary-container h-full rounded-full" style="width: 71%"></div></div><div class="flex items-center justify-between pt-0.5"><span class="text-on-surface-variant font-label-sm text-label-sm">2.140 / 3.000 lượt</span><button class="text-primary hover:text-on-primary-fixed-variant font-label-sm text-label-sm" type="button">Nâng gói</button></div></div><div class="flex items-center justify-between p-1.5 rounded-lg bg-surface-container-low"><div class="flex items-center gap-2 overflow-hidden"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwcZm3TMSiHkNQ4B250GrpqU8pEMkD38dPVp_ia3bg6FubRiQrgxOsTzAJOFdK7zIybRwltPDjurEazKTciRbEjnOrhTrB0p6XM_Ins-mAV8Ask9nhwjwvafun5f33_IKTDZlsozTIVyasgH5_XxVS5ogOcaTtonJ_lyLTQGHzTotLv2BdwwmoNPf52faRZLJRcTm15y4SWuehdxkWdukk1j3vucIC2qqKsRxc9iCZ"/><div class="min-w-0"><div class="font-title-sm text-title-sm text-on-surface truncate">Nguyễn Mai Linh</div><div class="font-label-sm text-label-sm text-on-surface-variant truncate">CSKH • Trực tuyến</div></div></div><button class="p-1 text-on-surface-variant hover:text-on-surface" type="button"><span class="material-symbols-outlined text-base">expand_more</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-0 right-0 h-16 bg-surface-container-lowest z-50 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-space-md flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-2 pr-space-md"><img alt="CommentFlow AI Logo Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VC7X4t51CinIpB3O45rpY-WErdfe1lXwcDO9-tJeUTAyi404rV2qeGWEexZXXSptgB-nhH8GEtH7IoDdbkEEjfY0_mueCjR1BUcFJk7Sk_XlYNN3_naqsZflesw6BioCzeVyuKVJePv6tEZwY_2koLbrIynVMNm_J5bZjD8RAi2ws3Sm9SdQ7zun4kHQ5ALEoiR0BeTZjqAz47KbvIJ0NzXAjd9o_nngVVAtfR38Wf5w"/><div class="flex items-center gap-1.5"><span class="font-headline-sm text-headline-sm text-on-surface">Comment</span><span class="font-headline-sm text-headline-sm text-primary-container">Flow</span><span class="px-1.5 py-0.5 rounded bg-secondary text-on-secondary font-label-sm text-label-sm uppercase tracking-wider">AI</span></div></div><div class="h-6 w-px bg-surface-container-high"></div><button class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors text-left" type="button"><div class="flex flex-col"><div class="flex items-center gap-1"><span class="font-title-sm text-title-sm text-on-surface">Thời Trang Mẫu An Nhiên</span><span class="material-symbols-outlined text-sm text-on-surface-variant">unfold_more</span></div><span class="font-label-sm text-label-sm text-primary font-medium">18 chờ duyệt</span></div></button><div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg"><button class="px-2 py-1 rounded bg-surface-container-lowest shadow-sm text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-primary-container"></span><span>FB: An Nhiên Store</span></button><button class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>IG: @annhien.official</span></button><button class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-outline"></span><span>TikTok: An Nhiên</span></button></div></div><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low"><div class="flex items-center gap-1.5"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span></span><span class="font-label-md text-label-md text-on-surface">AI tự động: <span class="font-semibold text-primary">Bật (2 kênh)</span></span></div><button class="flex items-center gap-1 px-2 py-1 rounded bg-error text-on-error hover:bg-on-error-container font-label-sm text-label-sm transition-colors" type="button"><span class="material-symbols-outlined text-sm">gpp_maybe</span><span>Dừng khẩn cấp</span></button></div><div class="h-6 w-px bg-surface-container-high"></div><div class="flex items-center gap-1"><button class="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Trợ giúp (Phím tắt ?)" type="button"><span class="font-title-sm text-title-sm font-semibold">?</span></button><button class="relative flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-lg">notifications</span><span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span></button></div><div class="flex items-center gap-2 pl-1"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwcZm3TMSiHkNQ4B250GrpqU8pEMkD38dPVp_ia3bg6FubRiQrgxOsTzAJOFdK7zIybRwltPDjurEazKTciRbEjnOrhTrB0p6XM_Ins-mAV8Ask9nhwjwvafun5f33_IKTDZlsozTIVyasgH5_XxVS5ogOcaTtonJ_lyLTQGHzTotLv2BdwwmoNPf52faRZLJRcTm15y4SWuehdxkWdukk1j3vucIC2qqKsRxc9iCZ"/><div class="hidden xl:block text-left"><div class="font-title-sm text-title-sm text-on-surface leading-none">Nguyễn Mai Linh</div><div class="font-label-sm text-label-sm text-on-surface-variant mt-1 leading-none">Nhân viên CSKH</div></div></div></div></div></header><main class="w-full pt-16 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Top Success Status Banner / Alert (Toast Confirmation) -->
+<div class="mb-space-lg mx-space-margin bg-surface-container-lowest shadow-md rounded-xl p-space-lg flex items-start justify-between gap-space-md transition-all duration-300" id="statusToast">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-full bg-[#EBF7ED] text-[#237A36] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-title-md text-title-md text-[#237A36]">Kích hoạt Xác thực 2 bước (2FA) thành công!</span>
+<span class="px-2 py-0.5 rounded-full bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm">Đạt chuẩn Meta Partner</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+          Tài khoản của bạn hiện đã được bảo vệ tuyệt đối bằng lớp xác thực thứ hai qua ứng dụng TOTP (Google Authenticator / Microsoft Authenticator). Mọi yêu cầu truy cập từ thiết bị mới đều sẽ cần mã bảo mật 6 số.
+        </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-title-sm text-title-sm transition-colors flex items-center gap-1" onclick="document.getElementById('backupModal').classList.remove('hidden')" type="button">
+<span class="material-symbols-outlined text-base">key</span>
+<span>Lưu 8 mã dự phòng</span>
+</button>
+<button class="w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container flex items-center justify-center transition-colors" onclick="document.getElementById('statusToast').style.display='none'" type="button">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+</div>
+<!-- Settings Breadcrumb & Header Title -->
+<div class="px-space-margin mb-space-lg flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md mb-1">
+<span>Cài đặt hệ thống</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-primary font-medium">Tài khoản &amp; Bảo mật</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Tài khoản &amp; Bảo mật</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-0.5">
+        Quản lý thông tin đăng nhập cá nhân, bảo mật 2 lớp và giám sát các phiên truy cập vào Workspace của bạn.
+      </p>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low">
+<span class="w-2.5 h-2.5 rounded-full bg-[#237A36] animate-pulse"></span>
+<span class="font-label-md text-label-md text-on-surface">Điểm bảo mật: <span class="text-[#237A36] font-bold">100/100 (Tối ưu)</span></span>
+</div>
+</div>
+</div>
+<!-- Main Grid Layout: Sub-navigation & Settings Stage -->
+<div class="px-space-margin pb-space-xl grid grid-cols-1 xl:grid-cols-12 gap-space-lg">
+<!-- Left Settings Sub-navigation Bar (3 Cols on Desktop) -->
+<div class="xl:col-span-3 space-y-space-md">
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm space-y-1">
+<div class="px-3 py-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+          Cấu hình Workspace
+        </div>
+<a class="flex items-center justify-between px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-lg">hub</span>
+<span class="font-title-sm text-title-sm">Kênh đã kết nối</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">3/3 kênh</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-lg">group</span>
+<span class="font-title-sm text-title-sm">Thành viên &amp; Phân quyền</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">5 người</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-lg">credit_card</span>
+<span class="font-title-sm text-title-sm">Gói &amp; Thanh toán</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">Growth</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-lg">notifications_active</span>
+<span class="font-title-sm text-title-sm">Thông báo</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">Tùy chỉnh</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-lg">policy</span>
+<span class="font-title-sm text-title-sm">Dữ liệu &amp; Quyền riêng tư</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm">Meta Compliant</span>
+</a>
+<!-- Active Sub-tab -->
+<a class="flex items-center justify-between px-3 py-2.5 rounded-lg bg-primary-container text-on-primary shadow-sm transition-colors" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">shield_person</span>
+<span class="font-title-sm text-title-sm">Tài khoản &amp; Bảo mật</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-[#abedff]"></span>
+</a>
+</div>
+<!-- Compliance Mini Badge Box -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm space-y-2">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-base">verified</span>
+<span class="font-title-sm text-title-sm">Meta Tech Partner Tier 1</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Chính sách bảo mật dữ liệu Facebook Graph API &amp; TikTok Business yêu cầu chủ sở hữu Workspace kích hoạt xác thực hai yếu tố bắt buộc.
+        </p>
+<div class="pt-1 flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>Tiêu chuẩn: ISO 27001</span>
+<span class="text-[#237A36] font-semibold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-xs">check_circle</span> Hợp lệ
+          </span>
+</div>
+</div>
+</div>
+<!-- Right Settings Stage (9 Cols on Desktop) -->
+<div class="xl:col-span-9 space-y-space-lg">
+<!-- SECTION 1: Two-Factor Authentication Feature Hero Card (ACTIVE / ENABLED) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl space-y-space-lg">
+<!-- Status Header Row -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-container to-secondary flex items-center justify-center text-on-primary shadow-sm shrink-0">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">lock_person</span>
+</div>
+<div>
+<div class="flex items-center gap-space-sm flex-wrap">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Xác thực 2 bước (Two-Factor Authentication - 2FA)</h2>
+<!-- Active Success Badge -->
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-[#237A36]"></span>
+                  Đang hoạt động • Được bảo vệ
+                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+                Lớp bảo vệ nâng cao ngăn chặn việc chiếm đoạt tài khoản ngay cả khi mật khẩu của bạn bị lộ.
+              </p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm transition-colors flex items-center gap-1.5" onclick="alert('Đang tạo quy trình thiết lập chuyển đổi sang ứng dụng Authenticator mới...')" type="button">
+<span class="material-symbols-outlined text-base">phonelink_setup</span>
+<span>Đổi thiết bị</span>
+</button>
+<button class="px-3.5 py-2 rounded-lg text-error hover:bg-error-container/40 font-title-sm text-title-sm transition-colors flex items-center gap-1" onclick="document.getElementById('disableModal').classList.remove('hidden')" title="Lưu ý: Tắt 2FA có thể khiến Workspace không thể đồng bộ Meta Webhooks theo chính sách bảo mật" type="button">
+<span class="material-symbols-outlined text-base">power_settings_new</span>
+<span>Tắt 2FA</span>
+</button>
+</div>
+</div>
+<!-- 2FA Details Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Phương thức chính</span>
+<span class="material-symbols-outlined text-base text-primary">smartphone</span>
+</div>
+<div class="font-title-md text-title-md text-on-surface">Ứng dụng TOTP Authenticator</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Google / Microsoft / 1Password</div>
+</div>
+<div class="pt-3 flex items-center gap-1 text-[#237A36] font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">security_update_good</span>
+<span>Mã thay đổi mỗi 30 giây</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Thiết bị đã đồng bộ</span>
+<span class="material-symbols-outlined text-base text-secondary">devices</span>
+</div>
+<div class="font-title-md text-title-md text-on-surface">Apple iPhone 15 Pro</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Google Authenticator v6.2</div>
+</div>
+<div class="pt-3 flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>Kích hoạt lúc 10:45 hôm nay</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Chính sách bảo mật Meta</span>
+<span class="material-symbols-outlined text-base text-primary">gshield</span>
+</div>
+<div class="font-title-md text-title-md text-on-surface">Đạt chuẩn Meta Tech</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Áp dụng cho Workspace Owner</div>
+</div>
+<div class="pt-3 flex items-center gap-1 text-[#237A36] font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>Đồng bộ Webhook An toàn</span>
+</div>
+</div>
+</div>
+<!-- Dedicated Section: Backup Recovery Codes Management -->
+<div class="bg-surface-container rounded-xl p-space-lg space-y-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-2xl text-tertiary shrink-0 mt-0.5">key_visualizer</span>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-title-md text-title-md text-on-surface">Mã khôi phục dự phòng (Backup Recovery Codes)</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-lowest font-label-sm text-label-sm text-primary font-bold">
+                    Còn 8/8 mã chưa dùng
+                  </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 max-w-2xl">
+                  Mã dự phòng dùng một lần để đăng nhập khi bạn không mang theo điện thoại, mất quyền truy cập ứng dụng Authenticator hoặc thiết bị bị hỏng.
+                </p>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm transition-colors flex items-center gap-1" onclick="document.getElementById('backupModal').classList.remove('hidden')" type="button">
+<span class="material-symbols-outlined text-base">visibility</span>
+<span>Xem lại mã</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm transition-colors flex items-center gap-1" onclick="downloadBackupCodes()" type="button">
+<span class="material-symbols-outlined text-base">download</span>
+<span>Tải file .txt</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm transition-colors flex items-center gap-1" onclick="regenerateCodes()" title="Tạo bộ mã mới sẽ hủy toàn bộ các mã cũ" type="button">
+<span class="material-symbols-outlined text-base">refresh</span>
+<span>Tạo lại 8 mã mới</span>
+</button>
+</div>
+</div>
+<!-- Code Preview Strip -->
+<div class="bg-surface-container-lowest rounded-lg p-space-md grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-center">
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">CF9A-24X1</div>
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">M82K-98P3</div>
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">77YQ-50L1</div>
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">N31B-66C8</div>
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">PL09-11ZZ</div>
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">KV54-82RR</div>
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">90QW-14TA</div>
+<div class="py-1 px-2 rounded bg-surface-container-low text-on-surface font-label-md text-label-md tracking-wider">44XC-77MN</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Profile & Account Credentials -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl space-y-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-2xl text-primary">badge</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Thông tin đăng nhập &amp; Tài khoản</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Thông tin xác thực danh tính quản trị viên chính của cửa hàng</p>
+</div>
+</div>
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm transition-colors" type="button">
+            Chỉnh sửa thông tin
+          </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg pt-2">
+<!-- User Profile Brief -->
+<div class="flex items-center gap-space-md md:col-span-1">
+<div class="relative">
+<img class="w-16 h-16 rounded-full object-cover shadow-sm" data-alt="Chân dung quản lý cửa hàng thời trang trực tuyến Việt Nam, Nguyễn Mai Linh, nụ cười thanh lịch, phong thái chuyên nghiệp B2B SaaS, tông màu ánh sáng tự nhiên studio văn phòng" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe1SZWjJxYXwabYAo4F-oRKSVHb9p6YJjg1TFvPDeyswEwDSWFntWu6d5nUq4EOj-YJLUs-lD3CaL_8cwUGN9fUu3KQY9-2BhG-3DhuqSWKP4ZaINHUfamZv-5GiLt6j9O7_7lcdiBl8LJC4hXFdIJFZC4mrje1R54aw-X9IElsR_BrEO9XiWtNZzohwYAsbiW4R9moO9xw-wXHyQNiaJjUtNoBC1p50inDN0V-Dh6"/>
+<div class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#237A36] ring-2 ring-surface-container-lowest"></div>
+</div>
+<div>
+<div class="font-title-md text-title-md text-on-surface">Nguyễn Mai Linh</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">Workspace Owner</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">ID: CF-882910</span>
+</div>
+</div>
+<!-- Email & Phone Details -->
+<div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div class="p-space-md rounded-lg bg-surface-container-low space-y-1">
+<div class="text-on-surface-variant font-label-sm text-label-sm">Địa chỉ Email đăng nhập</div>
+<div class="font-title-sm text-title-sm text-on-surface truncate">linh.sales@annhienstore.vn</div>
+<div class="flex items-center gap-1 text-[#237A36] font-label-sm text-label-sm pt-0.5">
+<span class="material-symbols-outlined text-xs">verified</span> Đã xác thực
+              </div>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low space-y-1">
+<div class="text-on-surface-variant font-label-sm text-label-sm">Số điện thoại liên hệ</div>
+<div class="font-title-sm text-title-sm text-on-surface">0982 ••• 789</div>
+<div class="flex items-center gap-1 text-primary font-label-sm text-label-sm pt-0.5">
+<span class="material-symbols-outlined text-xs">phone_iphone</span> Nhận cảnh báo SMS
+              </div>
+</div>
+</div>
+</div>
+<!-- Password Status Row -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-xl">password</span>
+</div>
+<div>
+<div class="font-title-sm text-title-sm text-on-surface">Mật khẩu tài khoản</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Lần đổi gần nhất: 14 ngày trước (Ngày 10/10/2024)</div>
+</div>
+</div>
+<button class="px-3.5 py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm shadow-sm transition-colors flex items-center gap-1" onclick="alert('Mở hộp thoại đổi mật khẩu')" type="button">
+<span class="material-symbols-outlined text-base">edit_square</span>
+<span>Đổi mật khẩu</span>
+</button>
+</div>
+</div>
+<!-- SECTION 3: Active Sessions Management -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl space-y-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-2xl text-primary">devices_other</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Phiên đăng nhập đang hoạt động (Active Sessions)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Theo dõi và quản lý mọi thiết bị đang mở phiên làm việc CommentFlow AI</p>
+</div>
+</div>
+<button class="px-3.5 py-2 rounded-lg bg-error-container text-on-error-container hover:bg-error/20 font-title-sm text-title-sm transition-colors flex items-center gap-1.5 self-start sm:self-center" onclick="alert('Đã đăng xuất thành công khỏi tất cả các thiết bị khác!')" type="button">
+<span class="material-symbols-outlined text-base">logout</span>
+<span>Đăng xuất tất cả thiết bị khác</span>
+</button>
+</div>
+<div class="space-y-space-sm">
+<!-- Session 1: Current Session -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl">laptop_mac</span>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-title-md text-title-md text-on-surface">Google Chrome 129 trên macOS Sequoia</span>
+<span class="px-2 py-0.5 rounded-full bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm font-semibold">
+                    Phiên hiện tại • Đang hoạt động
+                  </span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-3 flex-wrap">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">location_on</span> Hà Nội, Việt Nam</span>
+<span>•</span>
+<span>IP: 14.162.184.22</span>
+<span>•</span>
+<span class="text-primary font-medium">Bảo vệ bởi 2FA TOTP</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<span class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm">
+                Đăng nhập lúc 08:30 sáng nay
+              </span>
+</div>
+</div>
+<!-- Session 2: Mobile Safari -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl">phone_iphone</span>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-on-surface">CommentFlow Web App trên iPhone 15 Pro</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+                    Safari Mobile
+                  </span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-3 flex-wrap">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">location_on</span> Hà Nội, Việt Nam</span>
+<span>•</span>
+<span>IP: 113.190.22.84</span>
+<span>•</span>
+<span>Hoạt động 32 phút trước</span>
+</div>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-lg text-error hover:bg-error-container/40 font-title-sm text-title-sm transition-colors self-start md:self-auto" onclick="alert('Đã thu hồi phiên trên iPhone 15 Pro!')" type="button">
+              Thu hồi quyền
+            </button>
+</div>
+</div>
+</div>
+<!-- SECTION 4: Preferences & Language -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl space-y-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-2xl text-primary">tune</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Tùy chọn hiển thị &amp; Ngôn ngữ</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tùy chỉnh không gian làm việc CommentFlow AI cá nhân của bạn</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg pt-1">
+<!-- Language Selection -->
+<div class="space-y-2">
+<label class="block font-title-sm text-title-sm text-on-surface">Ngôn ngữ giao diện</label>
+<div class="relative">
+<select class="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md appearance-none cursor-pointer focus:outline-none focus:bg-surface-container">
+<option selected="">Tiếng Việt (Mặc định)</option>
+<option>English (US)</option>
+<option>Bahasa Indonesia</option>
+<option>ไทย (Thai)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 text-on-surface-variant pointer-events-none text-base">unfold_more</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Bao gồm toàn bộ thuật ngữ hỗ trợ khách hàng và nhãn phân loại bình luận.</p>
+</div>
+<!-- Color Mode / Theme -->
+<div class="space-y-2">
+<label class="block font-title-sm text-title-sm text-on-surface">Chế độ giao diện (Appearance)</label>
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2.5 rounded-lg bg-primary-container text-on-primary flex items-center justify-between cursor-pointer shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-base">light_mode</span>
+<span class="font-title-sm text-title-sm">Giao diện Sáng</span>
+</div>
+<span class="material-symbols-outlined text-base">check</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container flex items-center justify-between cursor-pointer transition-colors opacity-70">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-base">dark_mode</span>
+<span class="font-title-sm text-title-sm">Giao diện Tối</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-medium">Sắp ra mắt</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tối ưu cho ca làm việc ban ngày độ tập trung cao.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal: View Backup Codes Detail -->
+<div class="hidden fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-4" id="backupModal">
+<div class="bg-surface-container-lowest rounded-xl max-w-lg w-full p-space-xl shadow-xl space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">key</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface">Mã khôi phục 2FA dự phòng</h3>
+</div>
+<button class="w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container flex items-center justify-center" onclick="document.getElementById('backupModal').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<div class="p-space-md rounded-lg bg-[#FFF4E5] text-[#77440B] text-body-sm font-body-sm flex items-start gap-2">
+<span class="material-symbols-outlined text-base shrink-0 mt-0.5">warning</span>
+<span>Lưu trữ các mã này ở nơi an toàn (ví dụ: trình quản lý mật khẩu). Mỗi mã chỉ có thể sử dụng một lần duy nhất khi bạn không có điện thoại.</span>
+</div>
+<div class="bg-surface-container-low p-space-lg rounded-xl grid grid-cols-2 gap-3 text-center font-mono font-bold text-on-surface">
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">CF9A-24X1</div>
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">M82K-98P3</div>
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">77YQ-50L1</div>
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">N31B-66C8</div>
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">PL09-11ZZ</div>
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">KV54-82RR</div>
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">90QW-14TA</div>
+<div class="bg-surface-container-lowest p-2 rounded shadow-sm">44XC-77MN</div>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm flex items-center gap-1.5" onclick="downloadBackupCodes()" type="button">
+<span class="material-symbols-outlined text-base">download</span>
+<span>Tải file .txt</span>
+</button>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm flex items-center gap-1.5" onclick="navigator.clipboard.writeText('CF9A-24X1\nM82K-98P3\n77YQ-50L1\nN31B-66C8\nPL09-11ZZ\nKV54-82RR\n90QW-14TA\n44XC-77MN'); alert('Đã sao chép 8 mã dự phòng vào bộ nhớ tạm!')" type="button">
+<span class="material-symbols-outlined text-base">content_copy</span>
+<span>Sao chép tất cả</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Modal: Confirmation to Disable 2FA -->
+<div class="hidden fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-4" id="disableModal">
+<div class="bg-surface-container-lowest rounded-xl max-w-md w-full p-space-xl shadow-xl space-y-space-md">
+<div class="w-12 h-12 rounded-full bg-error-container text-error flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">gpp_maybe</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Bạn có chắc muốn tắt 2FA?</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">
+          Theo tiêu chuẩn bảo mật Meta Tech Partner, việc tắt 2FA có thể khiến Workspace này tạm thời bị gián đoạn tính năng tự động phản hồi Comment &amp; Tin nhắn Facebook/Instagram.
+        </p>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm" onclick="document.getElementById('disableModal').classList.add('hidden')" type="button">
+          Giữ bảo vệ (Hủy)
+        </button>
+<button class="px-4 py-2 rounded-lg bg-error text-on-error hover:bg-on-error-container font-title-sm text-title-sm" onclick="alert('Thao tác yêu cầu xác nhận của chủ Workspace.'); document.getElementById('disableModal').classList.add('hidden')" type="button">
+          Tôi vẫn muốn tắt
+        </button>
+</div>
+</div>
+</div>
+<!-- Inline Script Helper for Mock Interaction -->
+<script>
+    function downloadBackupCodes() {
+      const codes = "COMMENTFLOW AI - 2FA BACKUP CODES\nWorkspace: Thoi Trang Mau An Nhien\nOwner: linh.sales@annhienstore.vn\nCreated: 10:45 Today\n\n1. CF9A-24X1\n2. M82K-98P3\n3. 77YQ-50L1\n4. N31B-66C8\n5. PL09-11ZZ\n6. KV54-82RR\n7. 90QW-14TA\n8. 44XC-77MN\n\n* Keep these codes secret and store them safely.";
+      const blob = new Blob([codes], { type: 'text/plain' });
+      const anchor = document.createElement('a');
+      anchor.download = 'commentflow-2fa-backup-codes.txt';
+      anchor.href = window.URL.createObjectURL(blob);
+      anchor.click();
+      window.URL.revokeObjectURL(anchor.href);
+    }
+
+    function regenerateCodes() {
+      if (confirm('Tạo lại 8 mã dự phòng mới sẽ ngay lập tức vô hiệu hóa 8 mã cũ. Bạn có chắc chắn muốn tạo mới không?')) {
+        alert('Đã làm mới thành công 8 mã dự phòng mới! Vui lòng tải về lưu trữ lại.');
+      }
+    }
+  </script>
+</div></main></div></body></html>
