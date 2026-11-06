@@ -36,6 +36,7 @@
 | KT-AIH | Sức khỏe tích hợp & dead letter (chỉ logic + DB + test, chưa có giao diện; không cần khóa/dịch vụ ngoài) | feat-integration-health | chưa | chưa | — |
 | KT-ALP1 | Tự gửi theo ngôn ngữ + hỏi lại/chuyển hướng (lõi thuần, chưa nối) | — | không | chưa | — |
 | KT-AP | AI tự tạm dừng khi bất thường (chỉ logic + test, chưa có job/DB/banner; không cần khóa/dịch vụ ngoài) | feat-auto-pause | chưa | chưa | — |
+| KT-APC | Xác nhận thanh toán tự động SePay/Casso (chờ tài khoản + migration làn b) | — | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-ASL | Admin tạm khóa gửi (chỉ logic + test, chưa có bảng/giao diện; không cần khóa/dịch vụ ngoài) | feat-admin-send-lock | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
@@ -47,6 +48,7 @@
 | KT-DSD2 | Dữ liệu mẫu DEV v2 (--refresh, --into) | — | có | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
+| KT-HRV | Nhập sản phẩm từ Haravan (chỉ đọc, fixture) | feat-src-haravan | có | chưa | — |
 | KT-IG | Connector Instagram (`IG_CONNECTOR_ENABLED`, **cần tài khoản IG Business thử**; sau `IG-WEBHOOK-ROUTE` + `IG-CHANNEL-CONNECT`) | feat-ig-connector | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
@@ -616,6 +618,18 @@ Chỉ phần máy (chưa có job/banner, chưa ghi DB): người thử chạy te
 
 ---
 
+## KT-APC — Xác nhận thanh toán tự động (AUTO-PAYMENT-CONFIRM, feat-auto-payment-confirm) — chỉ làm được khi đã có tài khoản SePay/Casso và migration làn b
+
+> Kiểm tự động đã phủ khóa sai, lệch tiền, gửi lại, mã mơ hồ: `pnpm test`. Các bước dưới cần tài khoản thật ở staging.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Cờ `BANK_WEBHOOK_ENABLED` tắt, gọi thử webhook | Trả 503, hóa đơn không đổi |
+| 2 | Bật cờ ở staging; tạo hóa đơn thử, chuyển ĐÚNG số tiền kèm nội dung `CF…` | Hóa đơn thành "Đã thanh toán", lượt AI được cộng đúng một lần |
+| 3 | Nhà cung cấp gửi lại cùng giao dịch | Không cộng lượt lần hai |
+| 4 | Chuyển thiếu hoặc thừa 1 đồng | Hóa đơn vẫn "Chờ xác nhận", không cộng lượt; có dòng log "amount_mismatch" |
+| 5 | Chuyển không kèm nội dung hoặc sai mã | Không hóa đơn nào đổi |
+
 ## KT-AR — Độ sẵn sàng của AI (AI-READINESS, FR-146, US-107)
 
 Không cần khóa/dịch vụ ngoài; chỉ đọc dữ liệu workspace. Đăng nhập bằng tài khoản Owner (có workspace).
@@ -817,6 +831,18 @@ Chỉ phần máy (chưa có nút/giao diện, chưa ghi DB): người thử ch�
 1. `pnpm --filter @flow/ai exec vitest run src/emergency` → 2 file xanh. Kết quả mong đợi: không test đỏ (Owner+Staff Dừng được, Staff không Bật lại được, Dừng hủy hẹn giờ của đúng workspace).
 
 ---
+
+## KT-HRV — Nhập sản phẩm từ Haravan (SRC-HARAVAN, FR-122, feat-src-haravan)
+
+> Chưa có giao diện/job; kiểm bằng test + (khi có tài khoản dev Haravan) một script thử. / No UI yet; verify via tests and, once a Haravan dev account exists, a one-off script.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/connectors exec vitest run src/haravan` | Mọi test xanh (phân trang, bucket, lỗi 401/403/429, chuẩn hóa, chữ ký webhook). |
+| 2 | Không đặt `HARAVAN_ENABLED` trong `.env` | Cờ tắt; không có lệnh gọi mạng nào tới Haravan. |
+| 3 | (Có tài khoản dev) Dựng connector với token chỉ đọc, chạy `fetchCatalog()` | Trả đủ sản phẩm đã xuất bản kèm biến thể; giá là số nguyên đồng; tồn chỉ có với biến thể có quản lý tồn. |
+| 4 | Đặt giá lẻ (ví dụ 12.5) cho một biến thể rồi chạy lại | Giá biến thể đó trống (không làm tròn). |
+| 5 | Dùng token sai/hết hạn | Lỗi `TOKEN_EXPIRED`, thông báo không chứa token. |
 
 ## KT-IG — Connector Instagram với tài khoản thật (IG-CONNECTOR, FR-013)
 
