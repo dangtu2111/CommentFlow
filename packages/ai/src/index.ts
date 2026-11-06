@@ -144,6 +144,32 @@ export {
 } from './draft/fixture-drafter';
 export { createFixtureEmbedder, FIXTURE_EMBEDDING_MODEL } from './embedding/fixture-embedder';
 export {
+  type CaptureInput,
+  type CaptureResult,
+  captureAnswerExample,
+  EXAMPLE_CAP,
+  EXAMPLE_PICK_LIMIT,
+  type ExamplesDeps,
+  type PickQuery,
+  pickVoiceExamples,
+  setExampleStatus,
+  type VoiceExample,
+} from './examples/answer-examples';
+export {
+  type AnswerExample,
+  createInMemoryExampleStore,
+  type ExampleStatus,
+  type ExampleStore,
+} from './examples/example-store';
+export {
+  type BuildTemplateResult,
+  buildExampleTemplate,
+  EXAMPLE_REJECT,
+  type ExampleRejectCode,
+  type ExampleVariant,
+  fillExampleTemplate,
+} from './examples/example-template';
+export {
   type ActiveHours,
   ALWAYS_BLOCKED_LABELS,
   AUTO_SEND_OUTCOMES,
