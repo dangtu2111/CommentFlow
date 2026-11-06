@@ -33,6 +33,11 @@ const envShape = z.object({
     .string()
     .optional()
     .transform((value) => value === 'true'),
+  /** FR-094: job xóa vĩnh viễn workspace đã tới hạn — cờ MẶC ĐỊNH TẮT; chỉ đúng chữ `true` mới bật. */
+  WORKSPACE_DELETE_ENABLED: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true'),
   META_APP_ID: z.string().optional(),
   META_APP_SECRET: z.string().optional(),
 });
@@ -79,6 +84,7 @@ export type WorkerConfig = {
   metaAppId: string | undefined;
   metaAppSecret: string | undefined;
   facebook: FacebookConnectorConfig;
+  workspaceDeleteEnabled: boolean;
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -92,5 +98,6 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     metaAppId: env.META_APP_ID,
     metaAppSecret: env.META_APP_SECRET,
     facebook: loadFacebookConfig(source),
+    workspaceDeleteEnabled: env.WORKSPACE_DELETE_ENABLED,
   };
 }

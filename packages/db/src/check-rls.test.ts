@@ -32,6 +32,9 @@ function fakeDb(parts: {
   invoiceFn?: Row[];
   planTables?: Row[];
   planFn?: Row[];
+  deletionTable?: Row[];
+  deletionOwnerFn?: Row[];
+  deletionWorkerFn?: Row[];
   leaveFn?: Row[];
   actionLogsCheck?: Row[];
   guards?: Row[];
@@ -108,6 +111,11 @@ function fakeDb(parts: {
       if (text.includes('/* invoice-functions */')) return { rows: parts.invoiceFn ?? [] };
       if (text.includes('/* plan-tables */')) return { rows: parts.planTables ?? [] };
       if (text.includes('/* plan-functions */')) return { rows: parts.planFn ?? [] };
+      if (text.includes('/* deletion-table */')) return { rows: parts.deletionTable ?? [] };
+      if (text.includes('/* deletion-owner-functions */'))
+        return { rows: parts.deletionOwnerFn ?? [] };
+      if (text.includes('/* deletion-worker-functions */'))
+        return { rows: parts.deletionWorkerFn ?? [] };
       if (text.includes('/* action-logs-check */')) return { rows: parts.actionLogsCheck ?? [] };
       if (text.includes('/* leave-function */')) return { rows: parts.leaveFn ?? [] };
       if (text.includes('/* token-functions */')) return { rows: parts.tokenFunctions ?? [] };
@@ -1085,6 +1093,51 @@ describe('checkRls: gói cước (PLANS-SCHEMA, FR-090)', () => {
     const fn = queries.find((q) => q.includes('/* plan-functions */')) ?? '';
     expect(fn).toContain('is_system_context() IS NOT TRUE');
     expect(fn).toContain("session_user <> ''cf_worker''");
+  });
+});
+
+describe('checkRls: xóa workspace (WORKSPACE-DELETE, FR-094)', () => {
+  it('báo bảng yêu cầu xóa mở ghi/có FK và hàm Owner/worker mở quyền; whitelist hàm cf_worker có 2 hàm xóa', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({
+      deletionTable: [
+        { name: 'core.workspace_deletion_requests', problem: 'không được có khóa ngoại' },
+      ],
+      deletionOwnerFn: [
+        { name: 'core.cancel_workspace_deletion', problem: 'PUBLIC có quyền EXECUTE' },
+      ],
+      deletionWorkerFn: [
+        {
+          name: 'core.execute_workspace_deletion',
+          problem: 'cf_app (web) không được có quyền EXECUTE',
+        },
+      ],
+    });
+    const v = await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    expect(v).toContainEqual({
+      subject: 'core.workspace_deletion_requests',
+      message: expect.stringContaining('không được có khóa ngoại'),
+    });
+    expect(v).toContainEqual({
+      subject: 'core.cancel_workspace_deletion',
+      message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
+    });
+    expect(v).toContainEqual({
+      subject: 'core.execute_workspace_deletion',
+      message: expect.stringContaining('cf_app (web)'),
+    });
+    const direct = queries.find((q) => q.includes('/* worker-direct-privileges */')) ?? '';
+    expect(direct).toContain("'list_due_workspace_deletions', 'execute_workspace_deletion'");
+    const owner = queries.find((q) => q.includes('/* deletion-owner-functions */')) ?? '';
+    expect(owner).toContain('core.is_workspace_owner()');
+    expect(owner).toContain('current_workspace_id() IS DISTINCT FROM p_workspace_id');
+    const worker = queries.find((q) => q.includes('/* deletion-worker-functions */')) ?? '';
+    expect(worker).toContain("session_user <> ''cf_worker''");
   });
 });
 

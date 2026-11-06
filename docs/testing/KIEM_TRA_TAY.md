@@ -59,6 +59,7 @@
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 | KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
+| KT-WSD | Xóa workspace nhiều bước (chờ nối giao diện) | — | chưa | chưa | — |
 
 ---
 
@@ -1226,6 +1227,19 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Mở "Thông báo" | Danh sách loại sự kiện, mỗi mục "Sắp có" |
 | 6 | Đăng nhập Staff | Cột trái chỉ có Thông báo + Tài khoản & Bảo mật; mở thẳng /app/settings/billing hoặc /privacy → 404 |
 | 7 | Chuyển English | Mọi chữ ở 3 trang đổi sang tiếng Anh, không còn khóa thô |
+
+## KT-WSD — Xóa workspace nhiều bước (WORKSPACE-DELETE, feat-workspace-delete) — chỉ làm được khi đã nối giao diện
+
+> Hiện chưa có giao diện (nút ở "Dữ liệu & Quyền riêng tư" vẫn "Sắp có"); các bước dưới dành cho lúc đã nối. Kiểm tự động đã phủ phần dữ liệu: `pnpm test:db` (workspace-deletion.int.test.ts).
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner ở workspace THỬ bấm "Xóa workspace" (bước 1) | Hiện ô gõ lại mã workspace; chưa xóa gì |
+| 2 | Gõ sai mã rồi gửi | Báo mã chưa đúng; yêu cầu vẫn chờ xác nhận |
+| 3 | Gõ đúng mã rồi gửi (bước 2) | Báo "sẽ xóa sau 7 ngày", có nút Hủy; workspace vẫn dùng bình thường |
+| 4 | Staff mở cùng trang | Không thấy khối xóa; gọi trực tiếp bị từ chối |
+| 5 | Một Owner khác bấm Hủy | Yêu cầu bị hủy, có thể yêu cầu lại |
+| 6 | (Staging, cờ bật) lùi hạn xóa bằng tay trên DB thử rồi chờ worker | Workspace thử biến mất cùng dữ liệu; dòng nhật ký tối thiểu còn lại |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 
