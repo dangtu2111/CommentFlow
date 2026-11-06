@@ -993,7 +993,7 @@ async function checkWorkerDirectPrivileges(
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('start_trial', 'activate_plan', 'grant_usage_addon')
                AND a.privilege_type = 'EXECUTE')
-      AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage')
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage', 'fail_stale_data_exports', 'expire_data_exports')
                AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({

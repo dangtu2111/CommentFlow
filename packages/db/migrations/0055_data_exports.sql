@@ -30,7 +30,9 @@ CREATE INDEX "data_exports_expiry_idx" ON "core"."data_exports" USING btree ("ex
 --    (Owner, requested_by = người dùng hiện tại; status mặc định 'pending'), UPDATE chỉ đường hệ thống (worker withJob).
 --    KHÔNG có DELETE cho cf_app (lịch sử yêu cầu giữ lại; tệp hết hạn thì status = 'expired').
 --  * Tối đa một yêu cầu pending/running mỗi workspace (chỉ mục duy nhất một phần). Giới hạn 5 yêu cầu/24 giờ do tầng truy vấn.
---  * Không có hàm DEFINER; chưa có nơi gọi trong runtime trước nhánh này nên không cần phối hợp bản chạy.
+--  * Job dọn ở ngữ cảnh trần (hết hạn/kẹt) đi qua hai hàm DEFINER chỉ cf_worker (cf.expire_data_exports, cf.fail_stale_data_exports),
+--    cùng mẫu retention 0053: withSystem đặt app.ctx rỗng nên policy không dựa vào is_system_context() ở ngữ cảnh trần được.
+--  * Chưa có nơi gọi trong runtime trước nhánh này nên không cần phối hợp bản chạy.
 -- Đường lùi: DROP TABLE core.data_exports (+ lùi check-rls.ts). Mất lịch sử yêu cầu; tệp trong kho tự hết hạn.
 -- ===================================================================================================
 ALTER TABLE core.data_exports ENABLE ROW LEVEL SECURITY;
@@ -45,8 +47,6 @@ CREATE POLICY data_exports_select ON core.data_exports FOR SELECT
   USING (
     (workspace_id = (SELECT core.current_workspace_id())
       AND ((SELECT core.is_system_context()) OR (SELECT core.is_workspace_owner())))
-    -- Job dọn (hết hạn/kẹt) chạy ở ngữ cảnh hệ thống TRẦN (không workspace) trên kết nối cf_worker.
-    OR ((SELECT core.current_workspace_id()) IS NULL AND (SELECT core.is_system_context()))
   );
 --> statement-breakpoint
 CREATE POLICY data_exports_insert ON core.data_exports FOR INSERT
@@ -59,9 +59,62 @@ CREATE POLICY data_exports_insert ON core.data_exports FOR INSERT
 CREATE POLICY data_exports_update ON core.data_exports FOR UPDATE
   USING (
     (SELECT core.is_system_context())
-    AND (workspace_id = (SELECT core.current_workspace_id()) OR (SELECT core.current_workspace_id()) IS NULL)
+    AND workspace_id = (SELECT core.current_workspace_id())
   )
   WITH CHECK (
     (SELECT core.is_system_context())
-    AND (workspace_id = (SELECT core.current_workspace_id()) OR (SELECT core.current_workspace_id()) IS NULL)
+    AND workspace_id = (SELECT core.current_workspace_id())
   );
+--> statement-breakpoint
+
+CREATE FUNCTION cf.fail_stale_data_exports(p_minutes integer)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, core, cf, pg_temp
+AS $$
+DECLARE
+  v_n integer;
+BEGIN
+  IF session_user <> 'cf_worker'
+     OR core.current_workspace_id() IS NOT NULL
+     OR core.current_user_id() IS NOT NULL
+     OR core.is_system_context() IS NOT FALSE THEN
+    RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
+  END IF;
+  UPDATE core.data_exports SET status = 'failed', error_code = 'timeout', updated_at = now()
+   WHERE status IN ('pending', 'running')
+     AND updated_at < now() - make_interval(mins => p_minutes);
+  GET DIAGNOSTICS v_n = ROW_COUNT;
+  RETURN v_n;
+END;
+$$;
+--> statement-breakpoint
+CREATE FUNCTION cf.expire_data_exports(p_limit integer)
+RETURNS TABLE (id uuid, workspace_id uuid, file_key text)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, core, cf, pg_temp
+AS $$
+BEGIN
+  IF session_user <> 'cf_worker'
+     OR core.current_workspace_id() IS NOT NULL
+     OR core.current_user_id() IS NOT NULL
+     OR core.is_system_context() IS NOT FALSE THEN
+    RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
+  END IF;
+  RETURN QUERY
+  UPDATE core.data_exports d SET status = 'expired', updated_at = now()
+   WHERE d.id IN (SELECT x.id FROM core.data_exports x WHERE x.status = 'ready' AND x.expires_at <= now()
+                   ORDER BY x.expires_at LIMIT p_limit FOR UPDATE SKIP LOCKED)
+  RETURNING d.id, d.workspace_id, d.file_key;
+END;
+$$;
+--> statement-breakpoint
+REVOKE EXECUTE ON FUNCTION cf.fail_stale_data_exports(integer) FROM PUBLIC;
+--> statement-breakpoint
+REVOKE EXECUTE ON FUNCTION cf.expire_data_exports(integer) FROM PUBLIC;
+--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION cf.fail_stale_data_exports(integer) TO cf_worker;
+--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION cf.expire_data_exports(integer) TO cf_worker;

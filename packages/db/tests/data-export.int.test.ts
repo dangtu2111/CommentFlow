@@ -170,8 +170,9 @@ describe('FR-094 vòng đời yêu cầu (đường hệ thống)', () => {
     expect((await request(ws, owner)).outcome).toBe('already_active');
     // withSystem chỉ là "hệ thống" khi chạy trên kết nối cf_worker (migration 0030).
     expect(await workerDb.withSystem((tx) => failStaleDataExports(tx))).toBeGreaterThanOrEqual(1);
-    // cf_app (web) có withSystem nhưng KHÔNG đổi được trạng thái
-    expect(await db.withSystem((tx) => failStaleDataExports(tx))).toBe(0);
+    // cf_app (web) có withSystem nhưng hàm DEFINER chỉ cho kết nối cf_worker → bị từ chối
+    expect(await expectRejectCode(db.withSystem((tx) => failStaleDataExports(tx)))).toBe('42501');
+    expect(await expectRejectCode(db.withSystem((tx) => expireDataExports(tx)))).toBe('42501');
     expect((await request(ws, owner)).outcome).toBe('created');
     await reset(ws);
   });

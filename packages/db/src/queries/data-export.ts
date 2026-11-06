@@ -143,12 +143,10 @@ export async function failDataExport(
  * Owner yêu cầu lại được (chỉ mục duy nhất chặn khi còn yêu cầu hoạt động). Hệ thống, ngữ cảnh trần; trả số dòng đổi.
  */
 export async function failStaleDataExports(tx: Database, staleMinutes = 60): Promise<number> {
-  const r = await tx.execute(sql`
-    UPDATE core.data_exports SET status = 'failed', error_code = 'timeout', updated_at = now()
-    WHERE status IN ('pending', 'running')
-      AND updated_at < now() - make_interval(mins => ${staleMinutes}::integer)
-    RETURNING id`);
-  return r.rows.length;
+  const r = await tx.execute<{ n: number }>(
+    sql`SELECT cf.fail_stale_data_exports(${staleMinutes}::integer) AS n`,
+  );
+  return Number(r.rows[0]?.n ?? 0);
 }
 
 export type ExpiredExport = { id: string; workspaceId: string; fileKey: string };
@@ -158,12 +156,9 @@ export type ExpiredExport = { id: string; workspaceId: string; fileKey: string }
  * Tối đa `limit` dòng/lần; idempotent.
  */
 export async function expireDataExports(tx: Database, limit = 200): Promise<ExpiredExport[]> {
-  const r = await tx.execute<{ id: string; workspace_id: string; file_key: string | null }>(sql`
-    UPDATE core.data_exports SET status = 'expired', updated_at = now()
-    WHERE id IN (
-      SELECT id FROM core.data_exports WHERE status = 'ready' AND expires_at <= now()
-      ORDER BY expires_at LIMIT ${limit}::integer FOR UPDATE SKIP LOCKED)
-    RETURNING id, workspace_id, file_key`);
+  const r = await tx.execute<{ id: string; workspace_id: string; file_key: string | null }>(
+    sql`SELECT id, workspace_id, file_key FROM cf.expire_data_exports(${limit}::integer)`,
+  );
   return r.rows.flatMap((x) =>
     x.file_key ? [{ id: x.id, workspaceId: x.workspace_id, fileKey: x.file_key }] : [],
   );
