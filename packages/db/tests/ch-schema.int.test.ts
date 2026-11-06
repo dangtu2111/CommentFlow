@@ -293,6 +293,27 @@ describe('posts và comments', () => {
   });
 });
 
+describe('FR-143 comments.attachments — ràng buộc hình dạng (migration 0035)', () => {
+  it('chấp nhận mảng ≤ 10 phần tử; từ chối không-phải-mảng và > 10 phần tử', async () => {
+    const id = (await insertComment(wsA, channelA, postA)).rows[0].id;
+    const setTo = (json: string) =>
+      admin.query('UPDATE cf.comments SET attachments = $2::jsonb WHERE id = $1', [id, json]);
+    const items = (n: number) =>
+      JSON.stringify(
+        Array.from({ length: n }, () => ({ type: 'photo', url: 'https://e.invalid/a' })),
+      );
+    await expect(setTo(items(10))).resolves.toBeTruthy();
+    expect(await code(setTo(items(11)))).toBe(CHECK);
+    expect(await code(setTo('{"type":"photo"}'))).toBe(CHECK);
+    expect(await code(setTo('"photo"'))).toBe(CHECK);
+    expect(await code(setTo('null'))).toBe(CHECK);
+    expect(
+      await code(admin.query('UPDATE cf.comments SET attachments = NULL WHERE id = $1', [id])),
+    ).toBe('23502');
+    await expect(setTo('[]')).resolves.toBeTruthy();
+  });
+});
+
 describe('FR-021 webhook_events', () => {
   it('event_hash duy nhất THEO workspace (idempotency; một Page ở hai workspace → hai dòng); dòng chưa map (NULL) cũng chỉ một; status/platform có CHECK', async () => {
     const hash = `h-${newId()}`;

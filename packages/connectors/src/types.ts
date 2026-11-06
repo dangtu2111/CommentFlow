@@ -1,3 +1,4 @@
+import type { CommentAttachment } from './attachments';
 import type { ConnectorCapabilities } from './capabilities';
 import type { PlatformError } from './errors';
 
@@ -37,6 +38,8 @@ export type NormalizedComment = {
   authorExternalId: string;
   authorName?: string;
   text: string;
+  /** Ảnh/video/sticker/gif khách gửi kèm (FR-143); thiếu = không có. */
+  attachments?: CommentAttachment[];
   createdAt: Date;
   /** Do chính Page/tài khoản viết (chống vòng lặp, nguyên tắc #5): pipeline bỏ qua. */
   isFromPage: boolean;
