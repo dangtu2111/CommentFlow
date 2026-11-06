@@ -174,11 +174,16 @@ describe('UI-KIT Workbench + Kbd', () => {
         <WorkbenchDetail>c</WorkbenchDetail>
       </Workbench>,
     );
+    expect(html.startsWith('<div class="tw">')).toBe(true);
     expect(html).toContain('data-pane="detail"');
-    expect(html).toContain('class="wb-strip"');
-    expect(html).toContain('<div class="wb-pane wb-pane-filters">a</div>');
-    expect(html).toContain('wb-pane-list');
-    expect(html).toContain('<aside class="wb-pane wb-pane-detail">');
+    expect(html).toContain('Tiêu đề');
+    // Cột lọc 224px, danh sách 384px, chi tiết co giãn: class Tailwind của HTML Stitch.
+    expect(html).toContain('min-[900px]:w-56');
+    expect(html).toContain('min-[1100px]:w-96');
+    expect(html).toContain('<aside class="');
+    // Mobile: ngăn không dùng bị ẩn theo data-pane của <main>.
+    expect(html).toContain('group-data-[pane=detail]/wb:max-[899px]:hidden');
+    expect(html).toContain('group-data-[pane=list]/wb:max-[899px]:hidden');
   });
 
   it('Icon vẽ SVG nội tuyến tô theo currentColor, trang trí', () => {

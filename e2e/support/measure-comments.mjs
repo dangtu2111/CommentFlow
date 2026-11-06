@@ -14,17 +14,18 @@ mkdirSync(out, { recursive: true });
 const TARGETS = [
   ['thanh-bên', 'aside.fixed', '.shell-nav'],
   ['thanh-trên', 'header.fixed', '.shell-top'],
-  ['dải-phụ', 'main .h-11', '.wb-strip'],
-  ['cột-1', 'main .w-56', '.wb-pane-filters'],
-  ['cột-2', 'main .w-96', '.wb-pane-list'],
-  ['cột-3', 'main .flex-1.bg-surface-container-lowest', '.wb-pane-detail'],
-  ['tab-đang-chọn', 'main .w-56 button.bg-primary-container', '.inbox-tab[aria-current="page"]'],
+  // Bản dựng Tailwind (ADR 013) giữ cấu trúc của Stitch: main > [dải phụ, hàng cột].
+  ['dải-phụ', 'main .h-11', 'main > div:first-child'],
+  ['cột-1', 'main .w-56', 'main > div:nth-child(2) > :nth-child(1)'],
+  ['cột-2', 'main .w-96', 'main > div:nth-child(2) > :nth-child(2)'],
+  ['cột-3', 'main .flex-1.bg-surface-container-lowest', 'main > div:nth-child(2) > :nth-child(3)'],
+  ['tab-đang-chọn', 'main .w-56 button.bg-primary-container', 'a[data-tab][aria-current="page"]'],
   [
     'thẻ-bình-luận-1',
     'main .w-96 .divide-y > div:nth-child(1)',
-    '.inbox-item:nth-child(1) .inbox-item-link',
+    'li[data-comment-id]:nth-child(1) > a',
   ],
-  ['nút-gửi', 'main button.h-10', '.reply-send'],
+  ['nút-gửi', 'main button.h-10', 'form button[type="submit"]'],
 ];
 const PROPS = [
   'fontSize',

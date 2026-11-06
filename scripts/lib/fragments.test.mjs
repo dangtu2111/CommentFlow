@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assemble, diffAgainst, splitRows } from './fragments.mjs';
+import { assemble, splitRows } from './fragments.mjs';
 
 const sections = [
   { head: '_a.md' },
@@ -91,13 +91,6 @@ describe('assemble', () => {
   it('phần đầu `_x.md` không bị coi là hàng của mục có tiền tố trùng', () => {
     const { problems } = assemble(base, sections);
     expect(problems).toEqual([]);
-  });
-});
-
-describe('diffAgainst', () => {
-  it('khớp sau khi chuẩn hóa CRLF; lệch thì báo', () => {
-    expect(diffAgainst('a\nb\n', 'a\r\nb\r\n')).toBeNull();
-    expect(diffAgainst('a\nb\n', 'a\nc\n')).not.toBeNull();
   });
 });
 
