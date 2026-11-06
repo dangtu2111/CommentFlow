@@ -12,6 +12,7 @@ const base = {
   dueAt: new Date('2026-11-10T00:00:00Z'),
   paidAt: new Date('2026-11-02T00:00:00Z'),
   voidedAt: null,
+  transferReportedAt: null,
   createdAt: new Date('2026-11-01T00:00:00Z'),
 };
 
@@ -20,6 +21,18 @@ describe('FR-091 US-061 dòng lịch sử hóa đơn', () => {
     expect(invoiceStatusTone('paid')).toBe('success');
     expect(invoiceStatusTone('pending')).toBe('warning');
     expect(invoiceStatusTone('void')).toBe('muted');
+  });
+  it('FR-091 chờ xác nhận: chỉ hóa đơn pending đã báo chuyển khoản; paid/void không bao giờ "chờ xác nhận"', () => {
+    const reported = new Date('2026-11-03T00:00:00Z');
+    const pick = (over: object) => buildInvoiceRows([{ ...base, ...over }])[0]?.statusKey;
+    expect(pick({ status: 'pending', paidAt: null })).toBe('pending');
+    expect(pick({ status: 'pending', paidAt: null, transferReportedAt: reported })).toBe(
+      'awaiting',
+    );
+    expect(pick({ status: 'paid', transferReportedAt: reported })).toBe('paid');
+    expect(
+      pick({ status: 'void', paidAt: null, voidedAt: reported, transferReportedAt: reported }),
+    ).toBe('void');
   });
   it('mô tả lấy từ các dòng hàng, nối bằng dấu phẩy', () => {
     const [row] = buildInvoiceRows([

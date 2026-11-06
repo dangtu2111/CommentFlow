@@ -126,7 +126,22 @@
       "payment": {
         "title": "VietQR bank transfer",
         "body": "Scan the QR code with your banking app to pay an invoice. The QR code and transfer note will show here once the receiving account is configured.",
-        "soon": "Not open yet — receiving account not configured"
+        "soon": "Not open yet — receiving account not configured",
+        "unavailable": "The QR code cannot be shown right now. Please try again later or contact support.",
+        "none": "There are no invoices awaiting payment.",
+        "invoiceLine": "Invoice {number}",
+        "qrAlt": "Bank transfer QR code for invoice {number}",
+        "amount": "Amount",
+        "bank": "Bank code (BIN)",
+        "account": "Account number",
+        "accountName": "Account holder",
+        "transferCode": "Transfer note",
+        "transferHint": "Enter the exact transfer note and the exact amount so the payment can be matched. A wrong amount has to be handled manually.",
+        "report": "I have transferred",
+        "reportedBadge": "Awaiting confirmation",
+        "reportedBody": "We have noted that you transferred the money. The invoice becomes “Paid” once we confirm we received it.",
+        "reportError": "Could not record this. Please try again.",
+        "reportDone": "Recorded. The invoice is awaiting confirmation."
       },
       "invoices": {
         "title": "Invoice & transaction history",
@@ -139,6 +154,7 @@
         "status": "Status",
         "status_paid": "Paid",
         "status_pending": "Pending",
+        "status_awaiting": "Awaiting confirmation",
         "status_void": "Void",
         "export": "Export statement",
         "vatTitle": "VAT e-invoice",

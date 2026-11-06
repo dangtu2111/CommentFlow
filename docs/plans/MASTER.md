@@ -208,7 +208,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 |---|---|---|---|---|---|---|
 | PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ✅ Xong-mock (feat-plans-schema, Q-PLN1, migration 0054; giá seed chờ chủ dự án xác nhận) |
 | TRIAL-UPGRADE-UI | FR-090 (dùng thử, nâng gói, mua thêm) | US-060 | PLANS-SCHEMA | S | không | ⏳ |
-| QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ⛔ |
+| QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ✅ Xong-mock (`feat-qr-payment`, Q-QRP1, migration 0057; cờ `QR_PAYMENT_ENABLED` TẮT; chờ tài khoản nhận tiền thật) |
 | INVOICES | FR-091 (lịch sử hóa đơn, thông tin xuất hóa đơn) — nền dữ liệu ✅ Xong-mock (feat-invoices, Q-INV1, migration 0052: `core.invoices`/`core.payments`, hàm DEFINER chỉ hệ thống); còn giao diện lịch sử + thông tin xuất hóa đơn, QR, đường Admin | US-061 | QR-PAYMENT | S | không | 🔧 (nền dữ liệu xong; UI chờ `QR-PAYMENT`) |
 | ADMIN-SHELL | FR-100 khung, FR-118; `AUTH-ADMIN-SESSION` (phiên 8 giờ, role DB Admin) | US-081 | AUTH-2FA | S+DB | không | ⏳ |
 | ADMIN-OVERVIEW | FR-100 (MRR, workspace theo trạng thái, chi phí AI, lãi gộp) | US-081 | ADMIN-SHELL | — | không | ⏳ |

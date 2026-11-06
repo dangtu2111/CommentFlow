@@ -33,6 +33,8 @@ export {
   getInvoicePayment,
   type InvoiceRow,
   listInvoices,
+  type ReportTransferResult,
+  reportInvoiceTransfer,
   voidInvoice,
 } from './invoices';
 export {

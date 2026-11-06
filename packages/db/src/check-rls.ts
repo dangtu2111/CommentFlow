@@ -1210,6 +1210,42 @@ async function checkInvoiceTablesAndFunctions(
 }
 
 /**
+ * Hàm báo chuyển khoản của Owner (0057, QR-PAYMENT, FR-091): SECURITY DEFINER, cf_app CÓ EXECUTE (cf_worker kế thừa, vô hại
+ * vì hàm đòi người dùng), PUBLIC/cf_auth KHÔNG; thân hàm đòi người dùng từ current_user_id(), workspace khớp tham số,
+ * không phải đường hệ thống và is_workspace_owner() (nếu không, Staff/workspace khác tự đánh dấu hóa đơn). Logic kiểm
+ * bằng invoices.int.test.ts.
+ */
+async function checkInvoiceOwnerFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* invoice-owner-function */
+    SELECT 'core.report_invoice_transfer' AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} thiếu quyền EXECUTE'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        ELSE 'thân hàm phải đòi người dùng, workspace khớp tham số, không phải đường hệ thống và is_workspace_owner()'
+      END AS problem
+    FROM (VALUES ('report_invoice_transfer')) AS v(f)
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = v.f
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%core.current_user_id()%'
+      OR p.prosrc NOT LIKE '%current_workspace_id() IS DISTINCT FROM p_workspace_id%'
+      OR p.prosrc NOT LIKE '%is_system_context() IS NOT FALSE%'
+      OR p.prosrc NOT LIKE '%core.is_workspace_owner()%'`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm hóa đơn (Owner): ${String(row.problem)}`,
+    });
+  }
+}
+
+/**
  * Gói cước (0054, PLANS-SCHEMA, FR-090): `core.subscriptions` RLS bật và `cf_app` KHÔNG có quyền ghi; `core.plans` (bảng
  * hệ thống, không RLS) `cf_app` không có quyền ghi (đã kiểm ở SYSTEM_TABLES, đây kiểm thêm cột/TRUNCATE). Ba hàm ghi
  * (start_trial, activate_plan, grant_usage_addon): SECURITY DEFINER, PUBLIC/cf_app/cf_auth KHÔNG có EXECUTE, cf_worker có,
@@ -1606,6 +1642,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkStuckOutboxFunction(db, violations);
   await checkUsageFunction(db, violations);
   await checkInvoiceTablesAndFunctions(db, violations);
+  await checkInvoiceOwnerFunction(db, violations);
   await checkPlanTablesAndFunctions(db, violations);
   await checkWorkspaceDeletion(db, violations);
   await checkLeaveFunction(db, violations);

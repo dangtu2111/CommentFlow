@@ -400,6 +400,13 @@
       "when": 1793964088943,
       "tag": "0056_data_exports",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793969276668,
+      "tag": "0057_qr_payment",
+      "breakpoints": true
     }
   ]
 }

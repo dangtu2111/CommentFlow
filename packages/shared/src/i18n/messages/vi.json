@@ -126,7 +126,22 @@
       "payment": {
         "title": "Thanh toán chuyển khoản VietQR",
         "body": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán hóa đơn. Mã QR và nội dung chuyển khoản sẽ hiện ở đây khi tài khoản nhận tiền được cấu hình.",
-        "soon": "Chưa mở — chờ cấu hình tài khoản nhận tiền"
+        "soon": "Chưa mở — chờ cấu hình tài khoản nhận tiền",
+        "unavailable": "Chưa thể hiển thị mã QR lúc này. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.",
+        "none": "Hiện không có hóa đơn nào đang chờ thanh toán.",
+        "invoiceLine": "Hóa đơn {number}",
+        "qrAlt": "Mã QR chuyển khoản cho hóa đơn {number}",
+        "amount": "Số tiền",
+        "bank": "Mã ngân hàng (BIN)",
+        "account": "Số tài khoản",
+        "accountName": "Chủ tài khoản",
+        "transferCode": "Nội dung chuyển khoản",
+        "transferHint": "Nhập đúng nội dung chuyển khoản và đúng số tiền để hệ thống đối soát được. Chuyển sai số tiền sẽ phải xử lý thủ công.",
+        "report": "Tôi đã chuyển khoản",
+        "reportedBadge": "Chờ xác nhận",
+        "reportedBody": "Đã ghi nhận bạn đã chuyển khoản. Hóa đơn sẽ chuyển sang “Đã thanh toán” sau khi chúng tôi xác nhận đã nhận tiền.",
+        "reportError": "Không ghi nhận được. Vui lòng thử lại.",
+        "reportDone": "Đã ghi nhận. Hóa đơn đang chờ xác nhận."
       },
       "invoices": {
         "title": "Lịch sử hóa đơn & Giao dịch",
@@ -139,6 +154,7 @@
         "status": "Trạng thái",
         "status_paid": "Đã thanh toán",
         "status_pending": "Chờ thanh toán",
+        "status_awaiting": "Chờ xác nhận",
         "status_void": "Đã hủy",
         "export": "Xuất bảng kê",
         "vatTitle": "Hóa đơn điện tử VAT",

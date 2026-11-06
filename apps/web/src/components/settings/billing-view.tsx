@@ -11,7 +11,9 @@ import {
   yearlyPriceVnd,
 } from '../../lib/plan-catalog';
 import type { UsageMeterView } from '../../lib/usage-meter-view';
+import type { PaymentCard } from '../../server/invoice-payment';
 import { SectionHead } from '../ui/section-head';
+import { PaymentQrCard } from './payment-qr-card';
 import { UsageMeterCard } from './usage-meter-card';
 
 /**
@@ -23,10 +25,15 @@ export async function BillingView({
   currentPlan,
   usage,
   invoices,
+  payment = null,
+  paymentNotice = null,
 }: {
   currentPlan: PlanCode | null;
   usage: UsageMeterView | null;
   invoices: InvoiceListRow[];
+  /** Thẻ QR chuyển khoản (QR-PAYMENT); `null`/`disabled` = khối "Sắp có" như cũ. */
+  payment?: PaymentCard | null;
+  paymentNotice?: 'reported' | 'error' | null;
 }) {
   const t = await getTranslations('settings');
   const current = currentPlan ? planByCode(currentPlan) : undefined;
@@ -146,8 +153,26 @@ export async function BillingView({
           icon={<QrCode size={20} />}
           title={t('billing.payment.title')}
           description={t('billing.payment.body')}
-          end={<span className="badge badge-off">{t('billing.payment.soon')}</span>}
+          end={
+            payment?.state === 'ready' ? null : (
+              <span className="badge badge-off">{t('billing.payment.soon')}</span>
+            )
+          }
         />
+        {paymentNotice ? (
+          <p role={paymentNotice === 'reported' ? 'status' : 'alert'}>
+            {t(
+              paymentNotice === 'reported'
+                ? 'billing.payment.reportDone'
+                : 'billing.payment.reportError',
+            )}
+          </p>
+        ) : null}
+        {payment?.state === 'ready' ? <PaymentQrCard card={payment} /> : null}
+        {payment?.state === 'unavailable' ? (
+          <p className="muted">{t('billing.payment.unavailable')}</p>
+        ) : null}
+        {payment?.state === 'none' ? <p className="muted">{t('billing.payment.none')}</p> : null}
       </section>
 
       <section className="card stack" aria-labelledby="billing-invoices">
@@ -185,7 +210,7 @@ export async function BillingView({
                     <td>{formatVnd(row.amountVnd)}</td>
                     <td>
                       <span className={`invoice-status invoice-status-${row.tone}`}>
-                        {t(`billing.invoices.status_${row.status}`)}
+                        {t(`billing.invoices.status_${row.statusKey}`)}
                       </span>
                     </td>
                   </tr>

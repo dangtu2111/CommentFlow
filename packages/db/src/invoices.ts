@@ -31,10 +31,14 @@ export type InvoiceRow = {
   status: InvoiceStatus;
   transferCode: string;
   dueAt: Date;
+  /** Owner đã báo chuyển khoản (QR-PAYMENT, 0057); chỉ có ý nghĩa khi `status = 'pending'` ("chờ xác nhận"). */
+  transferReportedAt: Date | null;
   paidAt: Date | null;
   voidedAt: Date | null;
   createdAt: Date;
 };
+
+export type ReportTransferResult = 'ok' | 'already_reported' | 'paid' | 'void';
 
 export type ConfirmPaymentInput = {
   workspaceId: string;
@@ -132,6 +136,24 @@ export async function voidInvoice(
 }
 
 /**
+ * Owner báo "đã chuyển khoản" (QR-PAYMENT, FR-091, migration 0057) qua `core.report_invoice_transfer`. CHỈ gọi trong
+ * `db.withActor(workspaceId, userId, ...)` trên kết nối `cf_app`: hàm tự kiểm Owner của đúng workspace (Staff/đường
+ * hệ thống → 42501; hóa đơn workspace khác → P0002). KHÔNG đổi trạng thái `paid` — chỉ đánh dấu "chờ xác nhận".
+ */
+export async function reportInvoiceTransfer(
+  tx: Database,
+  workspaceId: string,
+  invoiceId: string,
+): Promise<ReportTransferResult> {
+  const result = await tx.execute<{ report_invoice_transfer: ReportTransferResult }>(
+    sql`SELECT core.report_invoice_transfer(${workspaceId}::uuid, ${invoiceId}::uuid) AS report_invoice_transfer`,
+  );
+  const row = result.rows[0];
+  if (!row) throw new AppError('INTERNAL', 'core.report_invoice_transfer không trả dòng nào');
+  return row.report_invoice_transfer;
+}
+
+/**
  * Lịch sử hóa đơn của workspace, mới nhất trước (FR-091, US-061). Chỉ đọc; RLS: Owner của workspace (đường web dùng
  * `withActor`; `withWorkspace` trần và Staff thấy 0 dòng) hoặc job hệ thống (`withJob`). Tối đa `limit` dòng (mặc định 100).
  */
@@ -150,6 +172,7 @@ export async function listInvoices(
       status: invoices.status,
       transferCode: invoices.transferCode,
       dueAt: invoices.dueAt,
+      transferReportedAt: invoices.transferReportedAt,
       paidAt: invoices.paidAt,
       voidedAt: invoices.voidedAt,
       createdAt: invoices.createdAt,

@@ -30,6 +30,7 @@ function fakeDb(parts: {
   invoiceTables?: Row[];
   paymentsPii?: Row[];
   invoiceFn?: Row[];
+  invoiceOwnerFn?: Row[];
   planTables?: Row[];
   planFn?: Row[];
   deletionTable?: Row[];
@@ -109,6 +110,8 @@ function fakeDb(parts: {
       if (text.includes('/* invoice-tables */')) return { rows: parts.invoiceTables ?? [] };
       if (text.includes('/* payments-pii-columns */')) return { rows: parts.paymentsPii ?? [] };
       if (text.includes('/* invoice-functions */')) return { rows: parts.invoiceFn ?? [] };
+      if (text.includes('/* invoice-owner-function */'))
+        return { rows: parts.invoiceOwnerFn ?? [] };
       if (text.includes('/* plan-tables */')) return { rows: parts.planTables ?? [] };
       if (text.includes('/* plan-functions */')) return { rows: parts.planFn ?? [] };
       if (text.includes('/* deletion-table */')) return { rows: parts.deletionTable ?? [] };

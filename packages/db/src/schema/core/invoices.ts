@@ -26,6 +26,8 @@ export const invoices = core.table(
     status: text('status').notNull().default('pending'),
     transferCode: text('transfer_code').notNull(),
     dueAt: timestamptz('due_at').notNull(),
+    /** Owner báo "đã chuyển khoản" (QR-PAYMENT, 0057): hóa đơn `pending` hiển thị "chờ xác nhận"; KHÔNG phải bằng chứng đã nhận tiền. */
+    transferReportedAt: timestamptz('transfer_reported_at'),
     paidAt: timestamptz('paid_at'),
     voidedAt: timestamptz('voided_at'),
     createdAt: createdAt(),

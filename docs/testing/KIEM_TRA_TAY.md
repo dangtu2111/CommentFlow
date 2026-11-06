@@ -56,6 +56,7 @@
 | KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
 | KT-PRP | Nhắn riêng từ bình luận (chờ nối DB + giao diện) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
+| KT-QRP | QR chuyển khoản + chờ xác nhận (chờ tài khoản nhận tiền) | — | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
@@ -1124,6 +1125,19 @@ Chưa có giao diện/pipeline nối (còn `VARIATION-WIRE`); mục này chỉ k
 2. (Khi đã có khóa LLM, tùy chọn) gọi `createLlmDrafter` với `DRAFT_LLM_ENABLED=true` cho cùng một câu hỏi vài lần. — Mong đợi: `variants` 3–5 câu khác chữ, cùng giá/link; không có câu đổi số tiền (câu đổi số bị loại).
 
 ---
+
+## KT-QRP — QR chuyển khoản + chờ xác nhận (QR-PAYMENT, feat-qr-payment) — chỉ làm được khi đã có tài khoản nhận tiền thật
+
+> Cần: cờ `QR_PAYMENT_ENABLED=true` và ba biến `PAYMENT_*` trên máy thử (staging), một hóa đơn `pending` của workspace thử. Kiểm tự động đã phủ: `pnpm test` (vietqr, payment-qr, invoice-payment) và `pnpm test:db` (invoices.int.test.ts).
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Owner mở Cài đặt → Gói & Thanh toán khi cờ TẮT | Khối thanh toán ghi "Sắp có", không có QR |
+| 2 | Bật cờ, mở lại trang với hóa đơn đang chờ | Hiện QR, tên chủ tài khoản, số tài khoản, số tiền, nội dung chuyển khoản dạng `CF` + 8 ký tự |
+| 3 | Quét QR bằng app ngân hàng | App điền sẵn đúng số tiền và nội dung; tên người nhận trùng chủ tài khoản |
+| 4 | Bấm "Tôi đã chuyển khoản" | Hóa đơn hiện "Chờ xác nhận"; nút biến mất; bấm lại không tạo thêm gì |
+| 5 | Staff mở cùng trang | Không thấy khối thanh toán; gọi trực tiếp bị từ chối |
+| 6 | Xóa một biến `PAYMENT_*` rồi tải lại trang | Không có QR, báo chưa sẵn sàng (không lộ lỗi kỹ thuật) |
 
 ## KT-RET — Job retention dữ liệu 12 tháng (RETENTION-JOB, feat-retention-job)
 

@@ -7,6 +7,7 @@ import {
   createInvoice,
   getInvoicePayment,
   listInvoices,
+  reportInvoiceTransfer,
   voidInvoice,
 } from '../src/invoices';
 import {
@@ -327,5 +328,90 @@ describe('RLS và quyền ghi', () => {
         admin.query("UPDATE core.invoices SET status = 'paid' WHERE id = $1", [inv.id]),
       ),
     ).toBe('23514');
+  });
+});
+
+describe('FR-091 báo chuyển khoản → chờ xác nhận (QR-PAYMENT, migration 0057)', () => {
+  const report = (ws: string, user: string, invoiceId: string) =>
+    web.withActor(ws, user, (tx) => reportInvoiceTransfer(tx, ws, invoiceId));
+  const reportedAt = async (id: string) =>
+    (await admin.query('SELECT transfer_reported_at FROM core.invoices WHERE id = $1', [id]))
+      .rows[0]?.transfer_reported_at as Date | null;
+  const logCount = async (id: string) =>
+    (
+      await admin.query(
+        "SELECT actor_id FROM core.action_logs WHERE action = 'invoice.transfer_reported' AND target_id = $1",
+        [id],
+      )
+    ).rows;
+
+  it('Owner báo lần đầu → ok, có mốc, hóa đơn vẫn pending; ghi action_logs', async () => {
+    const inv = await make(wsA);
+    expect(await reportedAt(inv.id)).toBeNull();
+    expect(await report(wsA, ownerA, inv.id)).toBe('ok');
+    expect(await reportedAt(inv.id)).toBeInstanceOf(Date);
+    expect((await statusOf(inv.id)).status).toBe('pending');
+    expect((await logCount(inv.id)).map((r) => r.actor_id)).toEqual([ownerA]);
+    const list = await web.withActor(wsA, ownerA, (tx) => listInvoices(tx, wsA));
+    expect(list.find((r) => r.id === inv.id)?.transferReportedAt).toBeInstanceOf(Date);
+  });
+
+  it('báo lần hai → already_reported, giữ mốc đầu, không ghi log thứ hai', async () => {
+    const inv = await make(wsA);
+    await report(wsA, ownerA, inv.id);
+    const first = await reportedAt(inv.id);
+    expect(await report(wsA, ownerA, inv.id)).toBe('already_reported');
+    expect(await reportedAt(inv.id)).toEqual(first);
+    expect(await logCount(inv.id)).toHaveLength(1);
+  });
+
+  it('ba lần bấm đồng thời → đúng một ok', async () => {
+    const inv = await make(wsA);
+    const results = await Promise.all([
+      report(wsA, ownerA, inv.id),
+      report(wsA, ownerA, inv.id),
+      report(wsA, ownerA, inv.id),
+    ]);
+    expect(results.filter((r) => r === 'ok')).toHaveLength(1);
+    expect(results.filter((r) => r === 'already_reported')).toHaveLength(2);
+  });
+
+  it('đã trả hoặc đã hủy → trả trạng thái, không đặt mốc', async () => {
+    const paid = await make(wsA);
+    await confirm(wsA, paid.id, 299_000);
+    expect(await report(wsA, ownerA, paid.id)).toBe('paid');
+    expect(await reportedAt(paid.id)).toBeNull();
+    const voided = await make(wsA);
+    await worker.withJob(wsA, (tx) => voidInvoice(tx, wsA, voided.id));
+    expect(await report(wsA, ownerA, voided.id)).toBe('void');
+    expect(await reportedAt(voided.id)).toBeNull();
+  });
+
+  it('Staff → 42501; Owner workspace khác → P0002 (không lộ tồn tại); hóa đơn không đổi', async () => {
+    const inv = await make(wsA);
+    expect(await expectRejectCode(report(wsA, staffA, inv.id))).toBe('42501');
+    expect(await expectRejectCode(report(wsB, ownerB, inv.id))).toBe('P0002');
+    expect(await reportedAt(inv.id)).toBeNull();
+  });
+
+  it('không người dùng (withWorkspace), job hệ thống, workspace ngữ cảnh sai → 42501', async () => {
+    const inv = await make(wsA);
+    const bare = web.withWorkspace(wsA, (tx) => reportInvoiceTransfer(tx, wsA, inv.id));
+    expect(await expectRejectCode(bare)).toBe('42501');
+    const job = worker.withJob(wsA, (tx) => reportInvoiceTransfer(tx, wsA, inv.id));
+    expect(await expectRejectCode(job)).toBe('42501');
+    const wrongWs = web.withActor(wsB, ownerB, (tx) => reportInvoiceTransfer(tx, wsA, inv.id));
+    expect(await expectRejectCode(wrongWs)).toBe('42501');
+    expect(await reportedAt(inv.id)).toBeNull();
+  });
+
+  it('cf_app vẫn không UPDATE trực tiếp transfer_reported_at (42501)', async () => {
+    const inv = await make(wsA);
+    const direct = web.withActor(wsA, ownerA, (tx) =>
+      tx.execute(
+        sql`UPDATE core.invoices SET transfer_reported_at = now() WHERE id = ${inv.id}::uuid`,
+      ),
+    );
+    expect(await expectRejectCode(direct)).toBe('42501');
   });
 });
