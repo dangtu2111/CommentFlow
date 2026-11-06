@@ -216,6 +216,9 @@ Code đã có chuẩn hóa webhook + bộ gửi + cửa sổ 24 giờ nhưng c�
 ## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
 Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
 
+## 2y. `AUTO-PAYMENT-CONFIRM` (FR-124) — tài khoản SePay hoặc Casso
+Code webhook xác nhận thanh toán tự động đã xong ở dạng mock, cờ `BANK_WEBHOOK_ENABLED` TẮT, chưa nối DB (cần migration làn b). Bạn cần: (1) đăng ký SePay hoặc Casso, liên kết tài khoản ngân hàng nhận tiền (cùng tài khoản `PAYMENT_ACCOUNT_NUMBER` của QR); (2) tạo webhook trỏ về `https://<tên-miền>/api/webhooks/payments/sepay` (hoặc `/casso`) và lấy khóa: SePay → đặt `SEPAY_WEBHOOK_API_KEY` (kiểu xác thực "API Key"); Casso → đặt `CASSO_WEBHOOK_SECURE_TOKEN`; (3) đối chiếu tiêu đề/payload với tài liệu hiện hành của nhà cung cấp (Casso bản mới có thể dùng chữ ký HMAC — báo để chỉnh); (4) chỉ bật `BANK_WEBHOOK_ENABLED=true` ở staging sau khi migration làn b xong và đã thử chuyển khoản số nhỏ. Kiểm tay mã KT-APC.
+
 ## 2t. `AUTO-HIDE` (FR-081) — chưa cần ngay, cần khi bật Tự ẩn thật
 Hiện chỉ có logic thuần + interface; cờ `AUTO_HIDE_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi Facebook. Để bật thật bạn cần: (1) kênh Facebook đã kết nối thật có quyền ẩn bình luận (`FB-OAUTH`, `feat/fb-connector` với `setHidden`); (2) bật `LEADS_CAPTURE_ENABLED` + khóa `LEADS_ENC_KEYS`/`LEADS_HASH_KEY` (khách được lưu TRƯỚC khi ẩn); (3) sau khi có migration `AUTO-HIDE-DB`, đặt `AUTO_HIDE_ENABLED=true` và bật quy tắc Tự ẩn có `shadow_until` vài ngày để xem số "sẽ ẩn" trước khi ẩn thật.
 
