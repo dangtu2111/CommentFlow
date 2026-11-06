@@ -32,7 +32,7 @@ Cập nhật lần cuối: 2026-11-05 · nhánh `feat/log-on-behalf-of` · Gói 
 | `apps/web/` | Webhook Meta: `src/app/api/webhooks/meta/route.ts` → `src/server/meta-webhook.ts` (`createMetaWebhookHandlers`: GET bắt tay verify token, POST kiểm `X-Hub-Signature-256` trên thân thô, giới hạn 256 KB, ghi `cf.record_webhook_event` trong `withSystem`, `boss.send('ingest')`) nối ở `src/server/webhook-runtime.ts`. Next.js 16 + next-intl (cookie `NEXT_LOCALE`, mặc định theo Accept-Language): trang xác thực `app/(auth)/`, `/app` tạm, `server/` (gốc lắp ráp auth), `components/{ui,auth}`, `styles/tokens.css`, `/api/health` |
 | `apps/worker/` | Worker pg-boss + `/health`; `src/jobs` (+ `ingest.ts`: job `ingest` → bài + bình luận idempotent, bỏ bình luận của Page, failed/dead), `src/queue`, `src/cli`, `src/channels/token-provider.ts` (`createWorkerTokenProvider`: đọc ciphertext bằng `withJob` rồi giải mã; lỗi → kênh `expired`) |
 | `services/ml/` | FastAPI chỉ `/health` (chưa nạp model) |
-| `packages/shared/` | `AppError`, `parseEnv`, `maskPii`/`MaskedText`, locale + chuỗi vi/en (gói lá) |
+| `packages/shared/` | `AppError`, `parseEnv`, `brand.ts` (`loadBrandConfig`/`defaultMailFrom`: `APP_NAME`/`APP_LOGO_URL`/`APP_DOMAIN`/`APP_EMAIL_FROM`, FR-125; web: `server/brand.ts` `getBrand()` + `components/brand-logo.tsx`; thư: `renderEmail(..., {brandName})`; không còn khóa i18n `brand`), `maskPii`/`MaskedText`, locale + chuỗi vi/en (gói lá) |
 | `packages/db/` | Drizzle schema `core`/`cf`, `migrations/*.sql`, RLS, `createDb`, `check-rls`, CLI |
 | `packages/saas-core/` | `auth` (Better Auth + `flows`), `notify` (gửi thư), `tenancy`, `flags` — không biết gì về sản phẩm |
 | `packages/ai/` | `createLlmClient().call()` → LiteLLM + ghi `ai_usage` (chưa có pipeline) |

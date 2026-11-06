@@ -6,12 +6,13 @@ import { SessionsCard } from '../../../components/security/sessions-card';
 import { TwoFactorCard } from '../../../components/security/two-factor-card';
 import { Banner } from '../../../components/ui/banner';
 import { getAuthRuntime } from '../../../server/auth';
+import { getBrand } from '../../../server/brand';
 import { requestContext } from '../../../server/request-context';
 import { requireAppUser } from '../../../server/require-app-user';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('security.pageTitle')} · ${t('brand')}` };
+  return { title: `${t('security.pageTitle')} · ${getBrand().name}` };
 }
 
 /**

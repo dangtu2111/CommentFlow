@@ -1,5 +1,5 @@
 import { accounts, sessions, twoFactors, users, verifications } from '@flow/db/schema/core';
-import { AppError, isLocale, type Locale, maskPii } from '@flow/shared';
+import { AppError, DEFAULT_BRAND, isLocale, type Locale, maskPii } from '@flow/shared';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { twoFactor } from 'better-auth/plugins';
@@ -37,6 +37,8 @@ export type AuthOptions = {
   secureCookies?: boolean;
   /** APP_ENV hiện tại — BẮT BUỘC: chỉ dev/test/ci được tắt cookie Secure; giá trị khác (kể cả lạ) phải Secure. */
   appEnv: AppEnv;
+  /** Tên thương hiệu làm issuer 2FA trong app xác thực (FR-125, từ `loadBrandConfig`); bỏ trống → giá trị tạm mặc định. */
+  appName?: string;
 };
 
 export type AppEnv = 'dev' | 'test' | 'ci' | 'staging' | 'production';
@@ -83,7 +85,7 @@ export function createAuth(options: AuthOptions) {
     plugins: [
       // 2FA TOTP (ADR 004 §4): 10 mã dự phòng (13 §2), secret và mã dự phòng được plugin MÃ HÓA khi lưu (ADR 003).
       twoFactor({
-        issuer: 'CommentFlow AI',
+        issuer: options.appName ?? DEFAULT_BRAND.name,
         totpOptions: { digits: 6, period: 30 },
         backupCodeOptions: { amount: 10, storeBackupCodes: 'encrypted' },
       }),

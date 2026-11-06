@@ -21,6 +21,7 @@
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
+| KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
 
 ---
@@ -358,6 +359,22 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 | 10 | Bỏ `FB_OAUTH_ENABLED` (hoặc đặt `false`), khởi động lại web, mở `/app/channels` và `/api/channels/facebook/start`. | Trang hiện "chưa được bật", không có nút; đường `start` trả 404. Đổi sang **English** + ~390px: chữ và bố cục đúng. |
 
 Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ mã lỗi, không có token).
+
+---
+
+## KT-018 — Tên sản phẩm, logo, tên miền, email gửi cấu hình được (CFG-APPNAME, FR-125)
+
+Điều kiện: web dev chạy; máy ảo (Mailpit) bật. Đặt trong `.env.local` (tên tạm, không cần chốt Q6): `APP_NAME=Tên Thử`, `APP_LOGO_URL=https://picsum.photos/64` (hoặc để trống), `APP_DOMAIN=thu.example.com`; xóa dòng `SMTP_FROM` để thử địa chỉ gửi tự dựng. Khởi động lại web sau mỗi lần đổi biến.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/login`, `/register`, `/app` (đã đăng nhập) ở cả `vi` và `en`. | Tên "Tên Thử" ở đầu trang, tab trình duyệt và chân trang ("© năm Tên Thử"); không còn chữ "CommentFlow AI". |
+| 2 | Có `APP_LOGO_URL` → nhìn đầu trang; bỏ biến rồi khởi động lại. | Có biến: ảnh logo nằm trong ô vuông. Không có: biểu tượng tin nhắn mặc định. |
+| 3 | Đăng ký tài khoản mới, mở thư xác minh trong Mailpit. | Chủ đề, nội dung, chân thư mang "Tên Thử"; người gửi `Tên Thử <no-reply@thu.example.com>`. |
+| 4 | Bật 2FA (`/app/security`), nhìn mục trong ứng dụng xác thực. | Tên nhà phát hành là "Tên Thử". |
+| 5 | Đặt `APP_DOMAIN=https://sai` rồi khởi động web. | Web không chạy, lỗi chỉ nêu tên biến `APP_DOMAIN` (không nêu giá trị). |
+
+Nếu hỏng: ghi số bước và ảnh chụp.
 
 ---
 

@@ -1,4 +1,10 @@
-import { parseEnv } from '@flow/shared';
+import {
+  AppError,
+  type BrandConfig,
+  defaultMailFrom,
+  loadBrandConfig,
+  parseEnv,
+} from '@flow/shared';
 import { z } from 'zod';
 
 const envSchema = z
@@ -25,7 +31,8 @@ const envSchema = z
     PWNED_CHECK: z.enum(['on', 'off']).default('on'),
     SMTP_HOST: z.string().min(1),
     SMTP_PORT: z.coerce.number().int().min(1).max(65535),
-    SMTP_FROM: z.string().min(3),
+    /** Người gửi thư; bỏ trống → dựng từ `APP_EMAIL_FROM`/`APP_NAME`+`APP_DOMAIN` (FR-125). */
+    SMTP_FROM: z.string().min(3).optional(),
     SMTP_SECURE: z
       .enum(['true', 'false'])
       .default('false')
@@ -59,10 +66,24 @@ const envSchema = z
     }
   });
 
-export type ServerEnv = z.infer<typeof envSchema>;
+export type ServerEnv = z.infer<typeof envSchema> & {
+  /** Thương hiệu cấu hình được (FR-125): `APP_NAME`, `APP_LOGO_URL`, `APP_DOMAIN`, `APP_EMAIL_FROM`. */
+  brand: BrandConfig;
+  /** Địa chỉ gửi thư: `SMTP_FROM` nếu có, không thì `APP_EMAIL_FROM` / `Tên <no-reply@APP_DOMAIN>`. */
+  mailFrom: string;
+};
 
 export function loadServerEnv(source: Record<string, string | undefined> = process.env): ServerEnv {
-  return parseEnv(envSchema, source);
+  const brand = loadBrandConfig(source);
+  const env = parseEnv(envSchema, source);
+  const mailFrom = env.SMTP_FROM ?? defaultMailFrom(brand);
+  if (!mailFrom) {
+    throw new AppError(
+      'CONFIG_INVALID',
+      'Cấu hình môi trường không hợp lệ: SMTP_FROM (hoặc APP_EMAIL_FROM / APP_DOMAIN)',
+    );
+  }
+  return { ...env, brand, mailFrom };
 }
 
 const webhookEnvSchema = z.object({
