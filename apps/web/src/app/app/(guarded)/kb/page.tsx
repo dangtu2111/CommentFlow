@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
+import { buttonClass } from '../../../../components/ui/button';
+import { Card } from '../../../../components/ui/card';
+import { PageHeader } from '../../../../components/ui/page-header';
 import { kbSubnavFor } from '../../../../lib/kb-structure';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -35,38 +38,29 @@ export default async function KbHubPage() {
 
   return (
     <main className="app-page app-page-wide">
-      <KbFrame active="kb">
+      <KbFrame
+        active="kb"
+        completeness={{
+          score: readiness.score,
+          ready: readiness.ready,
+          minPercent: readiness.minPercent,
+        }}
+      >
         <header className="kb-head">
-          <h1 className="auth-title">{t('title')}</h1>
-          <p className="auth-subtitle">{t('subtitle')}</p>
+          <PageHeader title={t('overviewTitle')} subtitle={t('subtitle')} />
         </header>
-        <section className="kb-completeness" aria-labelledby="kb-completeness-title">
-          <div className="kb-completeness-row">
-            <h2 id="kb-completeness-title">{t('completeness')}</h2>
-            <strong>{readiness.score}%</strong>
-          </div>
-          <progress
-            value={readiness.score}
-            max={100}
-            aria-label={t('completenessAria', { score: readiness.score })}
-          >
-            {readiness.score}%
-          </progress>
-          <p className="muted">
-            {readiness.ready
-              ? t('completenessReady')
-              : t('completenessNotReady', { min: readiness.minPercent })}{' '}
-            · <Link href="/app/readiness">{t('completenessDetail')}</Link>
-          </p>
-        </section>
         <ul className="kb-cards">
           {kbSubnavFor().map((item) => (
-            <li key={item.key} className="kb-card">
-              <h2>{t(`cards.${item.key as 'productImport'}.title`)}</h2>
-              <p className="muted">{t(`cards.${item.key as 'productImport'}.body`)}</p>
-              <Link href={item.href} className="btn btn-secondary">
-                {t('open')}
-              </Link>
+            <li key={item.key}>
+              <Card className="kb-card" aria-labelledby={`kb-card-${item.key}`}>
+                <h2 id={`kb-card-${item.key}`}>
+                  {t(`cards.${item.key as 'productImport'}.title`)}
+                </h2>
+                <p className="muted">{t(`cards.${item.key as 'productImport'}.body`)}</p>
+                <Link href={item.href} className={buttonClass({ variant: 'secondary' })}>
+                  {t('open')}
+                </Link>
+              </Card>
             </li>
           ))}
         </ul>

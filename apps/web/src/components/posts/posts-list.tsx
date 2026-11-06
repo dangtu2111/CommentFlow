@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { formatAbsoluteTime } from '../../lib/inbox-format';
 import { buildPostsHref, POSTS_PAGE_SIZE, type PostsView } from '../../lib/posts-filters';
 import { postsPageWindow } from '../../lib/posts-pagination';
+import { Chip } from '../ui/chip';
 
 export type PostsListItem = {
   id: string;
@@ -62,15 +63,19 @@ export async function PostsList({
         {items.map((post) => {
           const original = safeHref(post.permalink);
           return (
-            <li key={post.id} className="posts-item">
+            <li
+              key={post.id}
+              className="posts-item"
+              data-pending={post.pendingCount > 0 ? 'true' : undefined}
+            >
               <div className="posts-meta">
-                <span className="posts-badge posts-badge-platform" data-platform={post.platform}>
+                <Chip tone="info">
                   {t(`platforms.${post.platform as 'facebook' | 'instagram' | 'tiktok'}`)}:{' '}
                   {post.channelName}
-                </span>
-                <span className="posts-badge" data-kind={post.isAd ? 'ads' : 'organic'}>
+                </Chip>
+                <Chip tone={post.isAd ? 'warning' : 'muted'}>
                   {t(post.isAd ? 'kind.ads' : 'kind.organic')}
-                </span>
+                </Chip>
                 <span className="posts-time">
                   {post.createdTime
                     ? formatAbsoluteTime(post.createdTime, locale, timeZone)
