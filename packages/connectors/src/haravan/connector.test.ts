@@ -84,6 +84,28 @@ describe('FR-122 Haravan fetchCatalog', () => {
     expect(calls[0]?.url.searchParams.get('limit')).toBe('2');
   });
 
+  it('chuẩn hóa trường vắng/null: loại sản phẩm, xuất bản, vị trí tùy chọn, tồn kho không quản lý', async () => {
+    const node = productNode(8, {
+      product_type: null,
+      published_at: null,
+      options: [{ name: 'Size' }, { name: 'Màu', position: 1 }, { name: 'Chất liệu' }],
+      variants: [
+        variantNode(81, {
+          inventory_management: null,
+          inventory_quantity: null,
+          compare_at_price: null,
+        }),
+      ],
+    });
+    const { connector } = harness([page([node])]);
+    const product = (await connector.fetchCatalog()).products[0];
+    expect(product?.productType).toBe('');
+    expect(product?.published).toBe(false);
+    expect(product?.optionNames).toEqual(['Size', 'Chất liệu', 'Màu']);
+    expect(product?.variants[0]?.quantity).toBeNull();
+    expect(product?.variants[0]?.managed).toBe(false);
+  });
+
   it('chuẩn hóa hình dạng sản phẩm/biến thể (giá số hoặc chuỗi, tùy chọn)', async () => {
     const node = productNode(7, {
       variants: [
