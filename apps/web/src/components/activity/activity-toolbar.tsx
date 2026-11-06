@@ -45,7 +45,7 @@ export async function ActivityToolbar({
             const key = actionLabelKey(action);
             return (
               <option key={action} value={action}>
-                {key ? t(`actions.${key as 'workspace.created'}`) : action}
+                {key ? t(`actions.${key as 'workspace_created'}`) : action}
               </option>
             );
           })}

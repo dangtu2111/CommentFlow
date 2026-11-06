@@ -200,3 +200,6 @@ Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/
 
 ## 2s. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
 Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm dựng `cache` theo workspace; cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi dịch vụ thật. Để bật thật (`SEMANTIC-CACHE`, GĐ5) bạn cần: (1) một model embedding đăng ký trong LiteLLM, tên đặt ở `SEMANTIC_CACHE_EMBEDDING_MODEL` (đặt trong `config.yaml` trên máy ảo); (2) Redis có module RediSearch (Redis Stack) cho `redis-semantic`; (3) tự gộp khối `litellm_settings` của file mẫu vào cấu hình LiteLLM trên máy ảo.
+
+## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
+Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.

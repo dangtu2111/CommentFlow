@@ -143,6 +143,36 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
         </section>
       ) : null}
 
+      {channels
+        .filter((channel) => channel.status !== 'connected')
+        .map((channel) => (
+          <section
+            key={channel.id}
+            className="card stack recovery-card"
+            aria-labelledby={`recovery-${channel.id}`}
+          >
+            <div className="row row-between">
+              <h2 id={`recovery-${channel.id}`} className="section-title">
+                {t('recovery.title')}: {channel.name}
+              </h2>
+              <span className="badge badge-danger">{t(`status.${channel.status}`)}</span>
+            </div>
+            <p className="recovery-cause">{t(`recovery.cause.${channel.status}`)}</p>
+            <h3 className="section-subtitle">{t('recovery.stepsTitle')}</h3>
+            <ol className="recovery-steps">
+              <li>{t('recovery.step1')}</li>
+              <li>{t('recovery.step2')}</li>
+            </ol>
+            {reconnectable.has(channel.id) ? (
+              <a href={FB_START_PATH} className="btn btn-primary">
+                {t('reconnect')}
+              </a>
+            ) : (
+              <p className="muted">{t('recovery.ownerOnly')}</p>
+            )}
+          </section>
+        ))}
+
       <section className="card stack" aria-labelledby="channels-title">
         <h2 id="channels-title" className="section-title">
           {t('list.title')}

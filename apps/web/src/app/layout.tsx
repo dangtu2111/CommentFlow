@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import '../styles/globals.css';
+import '../styles/frames.css';
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
