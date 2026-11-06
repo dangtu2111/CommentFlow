@@ -39,6 +39,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-TW-COMMENTS | docs/08 §7.1 (comments.html), ADR 013 | UF-3 | UI-GATE-COMMENTS | — | không | 🟡 Dựng bằng Tailwind từ HTML Stitch, xóa CSS riêng trang (`feat-tw-comments`, Q-TWC1); còn đo `ui:fidelity` khi máy xem trước chạy |
 | UI-TW-SETTINGS | docs/08 §7, ADR 013 (settings-*.html) | UF-1 | UI-HTML-SETTINGS | — | không | 🟡 Cài đặt/Bảo mật/Thành viên/Gói dựng bằng Tailwind từ HTML Stitch (`feat-tw-settings`, Q-TWS1); còn đo `ui:fidelity` khi máy xem trước chạy |
 | UI-HTML-LEADS-REPORTS | docs/08 (leads.html, reports.html, activity-log.html) | UF-4 | LEADS-KANBAN, REPORTS, LOG-PAGE | — | không | ✅ Xong-UI: `/app/leads` + `/app/reports` chỉ đọc (dùng hàm đã có), Nhật ký thành bảng, kit `DataTable` (`feat-ui-html-leads-reports`, Q-UIHLR1) |
+| UI-TW-AUTOMATION-LEGAL | docs/08 + ADR 013 (automation.html, spam-rules.html, landing-pricing.html, privacy-data-deletion.html, terms-dpa.html) | UF-4 | UI-TW-LEADS-REPORTS | — | không | ✅ Xong-UI (Tailwind, đủ thành phần): 5 màn dựng lại bằng class Tailwind của HTML; trang công khai chỉ bản mẫu `[MẪU]`, bỏ cam kết/chứng nhận không có thật (`feat-tw-automation-legal`, QTWAL1) |
 | UI-TW-LEADS-REPORTS | docs/08 + ADR 013 (leads.html, reports.html, activity-log.html) | UF-4 | UI-HTML-LEADS-REPORTS | — | không | ✅ Xong-UI (Tailwind, đủ thành phần): 3 màn dựng lại bằng class Tailwind của HTML, khối thiếu nguồn `[MẪU]`/"Sắp có" (`feat-tw-leads-reports`, QTWLR1) |
 | UI-HTML-AUTOMATION | docs/08 (automation.html, spam-rules.html) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | ✅ Dựng lại từ HTML Stitch: kit `Inset`, bảng kênh × nhãn, spam điều kiện / hành động; không tràn 390px (`feat-ui-html-automation`, Q-UIHA1) |
 | UI-COMPLETE-AUTO-SPAM | docs/08 (automation.html, spam-rules.html) | UF-4 | UI-HTML-AUTOMATION | — | không | ✅ Công cụ đối chiếu chữ + đủ thành phần: automation 96,5%, spam-rules 98,3%; kit +Switch/Progress/MetricCard/PlatformBadge; kiểm kê trang khác ở `docs/plans/ui-thieu-thanh-phan.md` (`feat-ui-complete-automation-spam`, Q-UIC1) |
@@ -203,7 +204,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | EVAL-SET-REAL | FR-165 (~300 bình luận thật đã che PII; mỗi mẫu có hành động đúng) | — | — | S (PII) | **có** — chủ dự án cung cấp | ⛔ |
 | EVAL-RUNNER | FR-120 (bộ đánh giá 4 nhóm ngôn ngữ), FR-165, `14` §4 (promptfoo, chạy CI) | — | EVAL-SET-REAL, PIPE-DECIDE-ACTION | — | **có** — khóa LLM; cài promptfoo (nêu giấy phép) | ⛔ |
 | COST-GATE | — (đo ≤ $2/1.000 lượt từ `ai_usage`) | — | EVAL-RUNNER | — | không | 🟡 Xong-mock phần cổng chặn trần chi phí (`feat-cost-gate`, Q-CG1, FR-071: `packages/ai/src/cost-gate/`; còn nối `COST-GATE-WIRE`/`-PERSIST`/`-PLAN-DEFAULT`); phép đo ≤ $2/1.000 lượt vẫn chờ EVAL-RUNNER |
-| AUTH-2FA-RECOVERY | FR-001 (khôi phục khi mất điện thoại + mã dự phòng) | US-005 | AUTH-2FA | S | **có** — quyết định sản phẩm | ⛔ |
+| AUTH-2FA-RECOVERY | FR-001 (khôi phục khi mất điện thoại + mã dự phòng) | US-005 | AUTH-2FA | S | không (QRCV1) | Xong-mock (logic; chờ bảng DB + giao diện) |
 | **CỔNG 2** | xem đầu mục GĐ2 | | tất cả 2A–2D | | chủ dự án xác nhận | ⏳ |
 
 ---
@@ -296,11 +297,11 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | ML-SERVICE | FR-027 (bộ phân loại tự host), FR-025 (chuẩn hóa/nhận ngôn ngữ ở `ml`) | — | COST-GATE | — | không | ⏳ |
 | PGVECTOR-HYBRID | FR-055, 057 (vector + hybrid), FR-133 (job tạo lại embedding), FR-139 | — | ML-SERVICE, KB-EMBED-COL | DB | không | 🟡 Xong-mock (`feat-pgvector-hybrid`, Q-PVH1, không migration; chờ CI; embedder thật → `KB-EMBED-LITELLM`) |
 | SEMANTIC-CACHE | FR-026 (semantic cache LiteLLM đầy đủ) | — | PIPE-CACHE-SEMANTIC-STUB | S | không | ✅ Xong-mock (`feat-semantic-cache`, không migration; chưa nối Redis/pipeline; KT-SC) |
-| LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | ⛔ |
+| LITELLM-LANGFUSE | — (LiteLLM nhiều nhà cung cấp, Langfuse trace) | — | AI-VIRTUALKEY | S | **có** — thêm nhà cung cấp | 🟡 Xong-mock (`feat-litellm-langfuse`, Q-LLF1, không migration; cờ TẮT; chưa nối `llm-client`; KT-LLF) |
 | SRC-HARAVAN | FR-122 (Haravan) | — | SHOPIFY-IMPORT | S | **có** — tài khoản dev | ✅ Xong-mock (`feat-src-haravan`, Q-HRV1; không migration; còn `HARAVAN-CONNECT-STORE` (OAuth + bảng token, làn b); KT-HRV) |
 | SRC-SAPO | FR-122 (Sapo) | — | SRC-HARAVAN | S | **có** — shop dev Sapo | ✅ Xong-mock (`feat-src-sapo`, Q-SAP1; không migration; còn `SAPO-CONNECT-STORE` (OAuth + bảng token, làn b); KT-SAP) |
 | SRC-KIOTVIET | FR-122 (KiotViet) | — | SRC-SAPO | S | **có** | ✅ Xong-mock (`feat-src-kiotviet`, Q-KIO1; không migration; còn `KIOTVIET-CONNECT-STORE` (bảng Client ID/Secret, làn b); KT-KIO) |
-| SRC-PANCAKE | FR-122 (Pancake POS) | — | SRC-KIOTVIET | S | **có** | ⛔ |
+| SRC-PANCAKE | FR-122 (Pancake POS) | — | SRC-KIOTVIET | S | **có** | ✅ Xong-mock (`feat-src-pancake`, Q-PAN1; không migration; còn `PANCAKE-CONNECT-STORE` (bảng mã shop + API key, làn b); KT-PAN) |
 | AUTO-PAYMENT-CONFIRM | FR-124 (xác nhận thanh toán tự động: SePay/Casso…) | — | QR-PAYMENT | S+DB | **có** — nhà cung cấp | ✅ Xong-mock phần code (`feat-auto-payment-confirm`, Q-APC1, không migration; cờ TẮT; chưa nối DB: gap `AUTO-PAYMENT-CONFIRM-DB` làn b; KT-APC) |
 | ATTACH-VISION | FR-143 (đọc ảnh, tùy chọn) | — | ATTACHMENTS-STORE | S (PII) | **có** — khóa LLM đa phương thức | ⛔ |
 

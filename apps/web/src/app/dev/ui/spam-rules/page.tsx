@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { parseSpamView, SpamRulesView } from '../../../../components/spam-rules/spam-rules-view';
-import { Banner } from '../../../../components/ui/banner';
+import { Notice } from '../../../../components/ui/tw-form';
+import { TwPage } from '../../../../components/ui/tw-parts';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -14,13 +15,13 @@ export default async function DevSpamRulesPage({ searchParams }: { searchParams:
   if (process.env.NODE_ENV === 'production') notFound();
   const [t, params] = await Promise.all([getTranslations('spamRules'), searchParams]);
   return (
-    <main className="app-page app-page-wide spam-page stack">
+    <TwPage>
       <SpamRulesView
         view={parseSpamView(params.view)}
         sample
         basePath="/dev/ui/spam-rules"
-        notices={<Banner variant="info">{t('sampleBanner')}</Banner>}
+        notices={<Notice tone="info">{t('sampleBanner')}</Notice>}
       />
-    </main>
+    </TwPage>
   );
 }

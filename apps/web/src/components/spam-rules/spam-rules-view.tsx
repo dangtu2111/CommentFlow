@@ -1,4 +1,3 @@
-import { Download, Filter, History, SlidersHorizontal } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import {
@@ -6,7 +5,8 @@ import {
   SPAM_SAMPLE_METRICS,
   SPAM_SAMPLE_RULES,
 } from '../../lib/spam-rules-sample';
-import { type TabItem, Tabs } from '../ui/tabs';
+import { Icon, type IconName } from '../ui/icon';
+import { Badge } from '../ui/tw-parts';
 import { SpamHiddenLog } from './spam-hidden-log';
 import { SpamRuleBuilder } from './spam-rule-builder';
 import { SpamRuleList } from './spam-rule-list';
@@ -20,10 +20,47 @@ export function parseSpamView(value: string | string[] | undefined): SpamView {
   return value === 'logs' ? 'logs' : 'rules';
 }
 
+const TAB_BASE =
+  'flex items-center gap-2 rounded-lg px-4 py-2 font-title-sm text-title-sm transition-all';
+const SOON_BTN =
+  'flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-surface-container-lowest px-3 py-1.5 font-label-sm text-label-sm text-on-surface opacity-70 shadow-sm';
+
+function TabLink({
+  href,
+  current,
+  icon,
+  label,
+  count,
+}: {
+  href: string;
+  current: boolean;
+  icon: IconName;
+  label: string;
+  count?: number;
+}) {
+  return (
+    <a
+      href={href}
+      aria-current={current ? 'page' : undefined}
+      className={`${TAB_BASE} ${
+        current
+          ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+          : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+      }`}
+    >
+      <span className={current ? 'text-primary-container' : ''}>
+        <Icon name={icon} size={16} />
+      </span>
+      <span>{label}</span>
+      {count === undefined ? null : <Badge tone={current ? 'primary' : 'strong'}>{count}</Badge>}
+    </a>
+  );
+}
+
 /**
- * Cả màn Quy tắc spam dùng chung cho trang thật `/app/spam-rules` và trang mẫu `/dev/ui/spam-rules`.
- * `sample` = hiện dữ liệu mẫu `[MẪU]` (số liệu, danh sách quy tắc, nhật ký ẩn); false = "—"/trạng thái trống.
- * `basePath` dùng cho liên kết tab (`?view=logs`).
+ * Cả màn Quy tắc spam (Tailwind, design/stitch/spam-rules.html) dùng chung cho trang thật `/app/spam-rules` và trang
+ * mẫu `/dev/ui/spam-rules`. `sample` = hiện dữ liệu mẫu `[MẪU]` (số liệu, danh sách quy tắc, nhật ký ẩn); false =
+ * "—"/trạng thái trống. `basePath` dùng cho liên kết tab (`?view=logs`).
  */
 export async function SpamRulesView({
   view,
@@ -38,24 +75,6 @@ export async function SpamRulesView({
 }) {
   const t = await getTranslations('spamRules');
   const metrics = sample ? SPAM_SAMPLE_METRICS : null;
-  const tabs: TabItem[] = [
-    {
-      key: 'rules',
-      href: basePath,
-      label: t('tabs.rules'),
-      current: view === 'rules',
-      icon: <SlidersHorizontal size={16} />,
-      badge: metrics?.activeRules,
-    },
-    {
-      key: 'logs',
-      href: `${basePath}?view=logs`,
-      label: t('tabs.logs'),
-      current: view === 'logs',
-      icon: <History size={16} />,
-      badge: metrics?.logsTotal,
-    },
-  ];
   return (
     <>
       <SpamRulesHeader
@@ -64,16 +83,46 @@ export async function SpamRulesView({
       />
       {notices}
       <SpamRulesMetrics data={metrics} />
-      <div className="spam-tabs-row">
-        <Tabs items={tabs} label={t('tabs.label')} variant="toolbar" />
-        <div className="spam-tabs-actions">
-          <button type="button" className="btn btn-secondary" disabled title={t('soonTitle')}>
-            <Filter size={14} aria-hidden="true" />
-            {t('tabs.filter')}
+      <div className="flex flex-wrap items-center justify-between gap-space-sm">
+        <nav
+          aria-label={t('tabs.label')}
+          className="flex items-center gap-2 rounded-xl bg-surface-container-low p-1 shadow-inner"
+        >
+          <TabLink
+            href={basePath}
+            current={view === 'rules'}
+            icon="tune"
+            label={t('tabs.rules')}
+            count={metrics?.activeRules}
+          />
+          <TabLink
+            href={`${basePath}?view=logs`}
+            current={view === 'logs'}
+            icon="restore_page"
+            label={t('tabs.logs')}
+            count={metrics?.logsTotal}
+          />
+        </nav>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-disabled="true"
+            tabIndex={-1}
+            title={t('soonTitle')}
+            className={SOON_BTN}
+          >
+            <Icon name="filter_list" size={14} />
+            <span>{t('tabs.filter')}</span>
           </button>
-          <button type="button" className="btn btn-secondary" disabled title={t('soonTitle')}>
-            <Download size={14} aria-hidden="true" />
-            {t('tabs.export')}
+          <button
+            type="button"
+            aria-disabled="true"
+            tabIndex={-1}
+            title={t('soonTitle')}
+            className={SOON_BTN}
+          >
+            <Icon name="download" size={14} />
+            <span>{t('tabs.export')}</span>
           </button>
         </div>
       </div>

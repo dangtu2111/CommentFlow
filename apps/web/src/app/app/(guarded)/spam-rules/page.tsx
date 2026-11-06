@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { parseSpamView, SpamRulesView } from '../../../../components/spam-rules/spam-rules-view';
-import { Banner } from '../../../../components/ui/banner';
+import { Notice } from '../../../../components/ui/tw-form';
+import { TwPage } from '../../../../components/ui/tw-parts';
 import { showSampleData } from '../../../../lib/sample-data';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -25,13 +26,13 @@ export default async function SpamRulesPage({ searchParams }: { searchParams: Se
   ]);
   const sample = showSampleData();
   return (
-    <main className="app-page app-page-wide spam-page stack">
+    <TwPage>
       <SpamRulesView
         view={parseSpamView(params.view)}
         sample={sample}
         basePath={BASE_PATH}
-        notices={sample ? <Banner variant="info">{t('sampleBanner')}</Banner> : null}
+        notices={sample ? <Notice tone="info">{t('sampleBanner')}</Notice> : null}
       />
-    </main>
+    </TwPage>
   );
 }

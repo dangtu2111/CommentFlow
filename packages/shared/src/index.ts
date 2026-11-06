@@ -226,6 +226,7 @@ export {
 export * from './notification-channels';
 export * from './notification-digest';
 export * from './notification-prefs';
+export { type PancakeConfig, readPancakeConfig } from './pancake-config';
 export {
   type ExtractedContacts,
   extractPii,

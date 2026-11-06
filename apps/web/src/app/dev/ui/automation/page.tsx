@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { AutomationView } from '../../../../components/automation/automation-view';
-import { Banner } from '../../../../components/ui/banner';
+import { Notice } from '../../../../components/ui/tw-form';
+import { TwPage } from '../../../../components/ui/tw-parts';
 import {
   AUTOMATION_SAMPLE_CHANNELS,
   AUTOMATION_SAMPLE_DEFAULTS,
@@ -17,13 +18,13 @@ export default async function DevAutomationPage() {
   if (process.env.NODE_ENV === 'production') notFound();
   const t = await getTranslations('automation');
   return (
-    <main className="app-page app-page-wide stack">
+    <TwPage>
       <AutomationView
         channels={AUTOMATION_SAMPLE_CHANNELS}
         defaults={AUTOMATION_SAMPLE_DEFAULTS}
         metrics={AUTOMATION_SAMPLE_METRICS}
-        notices={<Banner variant="info">{t('sampleBanner')}</Banner>}
+        notices={<Notice tone="info">{t('sampleBanner')}</Notice>}
       />
-    </main>
+    </TwPage>
   );
 }

@@ -7,8 +7,9 @@ import { AutomationHeader, countAutoChannels } from './automation-header';
 import { AutomationMetrics } from './automation-metrics';
 
 /**
- * Cả màn Tự động hóa dùng chung cho trang thật `/app/automation` và trang mẫu `/dev/ui/automation`, để hai nơi
- * không lệch nhau. `metrics` null = chưa có số liệu thật. `notices` (banner lưu/lỗi) đứng giữa đầu trang và thẻ số liệu.
+ * Cả màn Tự động hóa (Tailwind, design/stitch/automation.html) dùng chung cho trang thật `/app/automation` và trang
+ * mẫu `/dev/ui/automation`, để hai nơi không lệch nhau. `metrics` null = chưa có số liệu thật. `notices` (banner
+ * lưu/lỗi) đứng giữa đầu trang và thẻ số liệu.
  */
 export async function AutomationView({
   channels,
