@@ -22,7 +22,7 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - Test một file: `pnpm --filter <gói> exec vitest run <đường-dẫn-file>`; ml: `cd services/ml && uv run pytest tests/<file>`
 - Test toàn bộ: `pnpm test` (ml: `cd services/ml && uv run pytest`)
 - Lint / typecheck: `pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm depcruise` (ml: `uv run ruff check .`)
-- **Trước mỗi lần push:** `pnpm precheck` (lint, format check, typecheck, check:migrations, check:plans, codemap:check, quyet:check; dừng ở lỗi đầu). Agent tự chạy tay — không hook. CI chỉ chạy ở PR và push vào `main`, nên lỗi rẻ phải bắt trước khi push.
+- **Trước mỗi lần push:** `pnpm precheck` (docs:build, lint, format check, typecheck, check:migrations, check:plans, check:gitleaks-allowlist; dừng ở lỗi đầu). Agent tự chạy tay — không hook. CI chỉ chạy ở PR và push vào `main`, nên lỗi rẻ phải bắt trước khi push.
 - Test tích hợp (DB thật `cf_test` trên máy phụ): `pnpm test:db` (cần `.env` + máy phụ bật)
 - Migration (dev/test/ci): `pnpm db:migrate` · kiểm RLS: `pnpm db:check-rls` · hàng đợi: `pnpm --filter @flow/worker queue:install`. Chỉ DB `cf_dev`/`cf_test`/`cf_ci`; staging/production chỉ qua CI có duyệt
 - Mẫu biến môi trường **đặt tên không có dấu chấm đầu, vĩnh viễn**: `env.example` (máy code) và `infra/env.cf-dev.example` (máy ảo); chỉ có tên biến + mô tả. File thật `.env` (máy code) và `.env.cf-dev` (máy ảo) không bao giờ commit. Chủ dự án tạo `.env` bằng `ssh cf "~/CommentFlow/infra/scripts/print-dev-env.sh" > .env` — **agent không chạy script này**.
@@ -41,12 +41,13 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 
 ## Đọc source tiết kiệm (bắt buộc)
 
+- **Đầu phiên chạy `pnpm docs:build`** để có `docs/codemap.md`, `docs/plans/QUYET_DINH_CHO_DUYET.md`, `docs/CAN_BAN_CUNG_CAP.md`, `docs/testing/KIEM_TRA_TAY.md`. Bốn file này là **file ghép tự sinh, `.gitignore`, KHÔNG commit**; chỉ thêm FILE RIÊNG vào các thư mục `*.d` (bảng bên dưới). Lỗi định dạng/trùng mã của file nhỏ làm `docs:build` đỏ.
 - **Bắt đầu từ bản đồ, không quét repo:** đọc `docs/codemap.md` và dòng liên quan trong `docs/gap-matrix.md` trước. Chỉ mở file được bản đồ/gap matrix chỉ tới. Không chạy Glob/Grep toàn repo nếu bản đồ đã trả lời được.
 - **Gói ngữ cảnh của việc:** kế hoạch của mỗi việc phải liệt kê "File sẽ đọc" và "File sẽ sửa". Khi code, chỉ đọc các file đó; cần thêm file → nói lý do.
 - **Không đọc lại:** file đã đọc trong phiên thì dùng lại nội dung đã có, chỉ đọc lại sau khi chính mình sửa hoặc có thay đổi từ bên ngoài. Đọc theo khoảng dòng khi file dài.
 - **Bàn giao giữa phiên:** cuối phiên ghi `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại). Phiên sau đọc file này thay vì đọc lại source.
-- **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → **thêm/sửa file riêng trong `docs/codemap.d/`** (tiền tố `lenh-`/`cay-`/`mien-`/`diem-vao-`/`bay-`, một hàng một file) rồi chạy `pnpm codemap:build`; **không sửa tay `docs/codemap.md`** (file sinh ra, CI chạy `pnpm codemap:check`); xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
-- **Thêm FILE RIÊNG, không sửa file chung** (để nhánh song song không xung đột; mỗi cái có script ghép + `--check` trong CI):
+- **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → **thêm/sửa file riêng trong `docs/codemap.d/`** (tiền tố `lenh-`/`cay-`/`mien-`/`diem-vao-`/`bay-`, một hàng một file) rồi chạy `pnpm docs:build`; **không sửa tay, không commit `docs/codemap.md`** (file sinh ra, đã `.gitignore`); xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
+- **Thêm FILE RIÊNG, không sửa file chung** (để nhánh song song không xung đột; file ghép tự sinh bằng `pnpm docs:build`, không commit; CI cũng chạy `pnpm docs:build` để kiểm định dạng/trùng mã). Nhánh cũ còn xung đột "sửa/xóa" với file ghép đã gỡ: `git rm <file>` rồi `pnpm docs:build`:
 
   | Cần ghi | Thêm file riêng | Rồi chạy |
   |---|---|---|
@@ -91,7 +92,7 @@ Chủ dự án đọc TypeScript ở mức cơ bản. Mọi kế hoạch, báo c
 
 ## Quy tắc hỏi (chủ dự án chốt 05/11/2026)
 
-- Mặc định **tự chọn phương án khuyến nghị** (an toàn, ít quyền, đảo ngược được), ghi vào **file riêng `docs/plans/quyet-dinh/q<mã>.md`** (một hàng bảng: quyết định, lý do, cách đảo ngược; mục thay đổi docs/01–16 là `docs-<ngày>-<mã>.md`) rồi chạy `pnpm quyet:build` (sinh `docs/plans/QUYET_DINH_CHO_DUYET.md`, không sửa tay; CI chạy `pnpm quyet:check`) và làm tiếp. Được sửa `docs/01–16` cho khớp quyết định đó; ghi danh sách thay đổi vào cùng file.
+- Mặc định **tự chọn phương án khuyến nghị** (an toàn, ít quyền, đảo ngược được), ghi vào **file riêng `docs/plans/quyet-dinh/q<mã>.md`** (một hàng bảng: quyết định, lý do, cách đảo ngược; mục thay đổi docs/01–16 là `docs-<ngày>-<mã>.md`) rồi chạy `pnpm docs:build` (sinh `docs/plans/QUYET_DINH_CHO_DUYET.md`, không sửa tay, không commit) và làm tiếp. Được sửa `docs/01–16` cho khớp quyết định đó; ghi danh sách thay đổi vào cùng file.
 - **Chỉ hỏi** khi: cần việc/tài nguyên chỉ chủ dự án làm được; tốn tiền hoặc không đảo ngược được; đổi phạm vi/trải nghiệm lớn; không có phương án đủ an toàn.
 - Chỉ `git add` đúng file của việc đang làm; không bao giờ `git add -A`/`git add .` hay gom file ngoài việc.
 - Báo cáo ≤ 10 dòng, mỗi ngày một lần hoặc khi dừng; tách riêng mục "Việc chỉ bạn làm được".
