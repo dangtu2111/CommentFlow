@@ -10,6 +10,8 @@ import { LocaleSwitcher } from '../../../components/locale-switcher';
 import { navGroupsFor } from '../../../lib/app-nav';
 import { buildNotifications } from '../../../lib/notification-model';
 
+const SAMPLE_WORKSPACE = '[MẪU] Cửa hàng mẫu';
+
 /**
  * Trang xem giao diện với DỮ LIỆU MẪU — CHỈ khi `NODE_ENV !== 'production'` (UI-first 06/11/2026). Không đọc DB, không
  * phiên. Mọi thứ hiện ra đều là mẫu và được gắn nhãn "[MẪU]"; không bao giờ coi là số liệu thật.
@@ -39,7 +41,7 @@ export default async function DevUiPage() {
     <div className="shell">
       <header className="shell-top">
         <BrandLogo href="/dev/ui" />
-        <span className="chip-live">[MẪU] Cửa hàng mẫu</span>
+        <span className="chip-live">{SAMPLE_WORKSPACE}</span>
         <div className="shell-top-end">
           <LocaleSwitcher />
           <NotificationBell
