@@ -9,6 +9,8 @@ import { Card } from '../ui/card';
 import { Inset } from '../ui/inset';
 import { SectionHead } from '../ui/section-head';
 
+const MATRIX_ID = 'automation-matrix-title';
+const GENERAL_ID = 'automation-general-title';
 const DAYS = [1, 2, 3, 4, 5, 6, 0] as const;
 
 /** Chữ cái đầu của tên kênh (bỏ nhãn "[MẪU]") cho ô đại diện. */
@@ -37,9 +39,9 @@ export async function AutomationForm({
 
   return (
     <form action={saveAutomationAction} className="stack auto-form">
-      <Card stack className="auto-card" aria-labelledby="automation-matrix-title">
+      <Card stack className="auto-card" aria-labelledby={MATRIX_ID}>
         <SectionHead
-          id="automation-matrix-title"
+          id={MATRIX_ID}
           icon={<LayoutGrid size={22} aria-hidden="true" />}
           title={t('matrix.title')}
           description={t('matrix.body')}
@@ -117,9 +119,9 @@ export async function AutomationForm({
         </p>
       </Card>
 
-      <Card stack className="auto-card" aria-labelledby="automation-general-title">
+      <Card stack className="auto-card" aria-labelledby={GENERAL_ID}>
         <SectionHead
-          id="automation-general-title"
+          id={GENERAL_ID}
           icon={<ShieldCheck size={22} aria-hidden="true" />}
           title={t('general.title')}
           description={t('general.body')}
@@ -202,7 +204,12 @@ export async function AutomationForm({
               </label>
               <label className="field">
                 <span>{t('general.hoursTo')}</span>
-                <input name="hoursTo" type="time" defaultValue={defaults.hoursTo} className="input" />
+                <input
+                  name="hoursTo"
+                  type="time"
+                  defaultValue={defaults.hoursTo}
+                  className="input"
+                />
               </label>
             </div>
             <small className="muted">{t('general.hoursHint')}</small>

@@ -10,6 +10,7 @@ import { Card } from '../ui/card';
 import { Inset } from '../ui/inset';
 import { SectionHead } from '../ui/section-head';
 
+const TITLE_ID = 'spam-builder-title';
 const IDLE: SpamRuleState = { status: 'idle' };
 
 /**
@@ -22,9 +23,9 @@ export function SpamRuleBuilder() {
 
   return (
     <form action={action}>
-      <Card stack className="spam-builder" aria-labelledby="spam-builder-title">
+      <Card stack className="spam-builder" aria-labelledby={TITLE_ID}>
         <SectionHead
-          id="spam-builder-title"
+          id={TITLE_ID}
           icon={<ShieldAlert size={22} aria-hidden="true" />}
           title={t('builderTitle')}
           description={t('builderBody')}
