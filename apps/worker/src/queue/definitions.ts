@@ -2,7 +2,9 @@
 export const QUEUE_SCHEMA = 'pgboss';
 
 export const SYSTEM_PING_QUEUE = 'system.ping';
-export { HIDE_QUEUE, INGEST_QUEUE, SEND_QUEUE } from '@flow/shared';
+import { KB_PUBLISH_QUEUE } from '@flow/shared';
+
+export { HIDE_QUEUE, INGEST_QUEUE, KB_PUBLISH_QUEUE, SEND_QUEUE } from '@flow/shared';
 
 export type QueueDefinition = { name: string; retryLimit?: number; retryBackoff?: boolean };
 
@@ -27,4 +29,6 @@ export const QUEUES: QueueDefinition[] = [
   { name: 'send', retryLimit: SEND_RETRY_LIMIT, retryBackoff: true },
   // FR-044: hide — thử lại 3 lần, backoff mũ; kiểm lại trước khi gọi nền tảng, ẩn lặp lại là idempotent.
   { name: 'hide', retryLimit: HIDE_RETRY_LIMIT, retryBackoff: true },
+  // FR-054: kb-publish — xuất bản/khôi phục phiên bản kiến thức; một giao dịch, chạy lại → no_changes nên thử lại an toàn.
+  { name: KB_PUBLISH_QUEUE, retryLimit: 2, retryBackoff: true },
 ];

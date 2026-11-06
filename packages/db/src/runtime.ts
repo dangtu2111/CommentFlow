@@ -102,6 +102,19 @@ export {
   upsertShopProfile,
 } from './queries/kb-content';
 export {
+  type ChunkScope,
+  type CreateKbVersionInput,
+  createKbVersionFromChunks,
+  getCurrentVersion,
+  getVersionByNumber,
+  isActiveOwner,
+  type KbVersionRef,
+  type KbVersionRow,
+  listChunkSummaries,
+  listKbVersions,
+  lockKbPublish,
+} from './queries/kb-publish';
+export {
   DEFAULT_KB_SEARCH_LIMIT,
   findProductMatch,
   getProductRevs,
