@@ -130,7 +130,7 @@ describe('hàm nhận lời mời: cấu hình bảo mật', () => {
   });
 });
 
-describe('hàm nhận lời mời: hành vi', () => {
+describe('FR-003 hàm nhận lời mời: hành vi', () => {
   it('không có app.user_id hoặc có app.workspace_id → không có dòng nào, dù token và email đúng', async () => {
     const ws = await seedWorkspace(admin);
     const user = await verifiedUser();

@@ -53,7 +53,7 @@ const flagRow = (over: Partial<FlagData> = {}): FlagData => ({
   ...over,
 });
 
-describe('createFlags — bộ nhớ đệm 30 giây', () => {
+describe('FR-117 createFlags — bộ nhớ đệm 30 giây', () => {
   it('đọc DB một lần rồi dùng cache trong TTL, đọc lại sau khi hết TTL', async () => {
     const state = { flags: [flagRow()], overrides: [] };
     const { db, calls } = fakeDb(state);
