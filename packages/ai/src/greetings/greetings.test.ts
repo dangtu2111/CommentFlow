@@ -241,6 +241,19 @@ describe('FR-074 báo chuyển nhân viên', () => {
     expect(result.text).toContain('team member');
   });
 
+  it('ngoài giờ, khách nói tiếng Anh → câu báo ngoài giờ mặc định tiếng Anh', () => {
+    const result = sent(
+      handoff({
+        now: OUT_HOURS,
+        conversation: conv({ humanActive: true, lastCustomerMessageAt: OUT_HOURS }),
+        lang: { detected: 'en', channelReplyLanguage: 'auto' },
+      }),
+    );
+    expect(result.lang).toBe('en');
+    expect(result.text).toContain('currently closed');
+    expect(promisesImmediateReply(result.text)).toBe(false);
+  });
+
   it('chưa rõ giờ làm việc → dùng câu ngoài giờ (không hứa ngay)', () => {
     const result = sent(handoff({ hours: null }));
     expect(result.hoursState).toBe('unknown');
