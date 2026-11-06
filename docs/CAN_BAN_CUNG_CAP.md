@@ -195,3 +195,6 @@ Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, kh�
 Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_rules`, migration 0047). Chỉ cần **chủ dự án duyệt và chạy migration 0047 lên staging/production qua CI có duyệt** (agent không chạy lệnh ghi lên các DB đó). Không cần khóa hay dịch vụ ngoài.
 ## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
 Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
+
+## 2s. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
+Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm dựng `cache` theo workspace; cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi dịch vụ thật. Để bật thật (`SEMANTIC-CACHE`, GĐ5) bạn cần: (1) một model embedding đăng ký trong LiteLLM, tên đặt ở `SEMANTIC_CACHE_EMBEDDING_MODEL` (đặt trong `config.yaml` trên máy ảo); (2) Redis có module RediSearch (Redis Stack) cho `redis-semantic`; (3) tự gộp khối `litellm_settings` của file mẫu vào cấu hình LiteLLM trên máy ảo.
