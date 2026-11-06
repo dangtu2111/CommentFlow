@@ -154,6 +154,29 @@ describe('FR-071 resolve / dispatch', () => {
   });
 });
 
+describe('FR-071 dữ liệu hẹn giờ đọc từ nơi lưu bị hỏng', () => {
+  it('runAt hỏng hoặc trạng thái lạ → không giao, coi như còn chờ', () => {
+    const t = plan(60);
+    const bad = [
+      { ...t, runAt: Number.NaN },
+      { ...t, runAt: undefined as never },
+      { ...t, runAt: null as never },
+      { ...t, status: 'weird' as never },
+    ];
+    for (const b of bad) {
+      expect(dispatchAutoSendTimer(b, NOW + 10 ** 9)).toEqual({ ok: false, reason: 'not_due' });
+      expect(resolveAutoSendTimer(b, NOW + 10 ** 9)).toEqual({
+        state: 'wait',
+        remainingMs: 60_000,
+      });
+    }
+    expect(resolveAutoSendTimer({ ...t, delaySeconds: 7, runAt: Number.NaN }, NOW)).toEqual({
+      state: 'wait',
+      remainingMs: 0,
+    });
+  });
+});
+
 describe('FR-071 US-042 property-based', () => {
   const action = fc.oneof(
     fc.record({ kind: fc.constant('advance' as const), ms: fc.integer({ min: 0, max: 400_000 }) }),

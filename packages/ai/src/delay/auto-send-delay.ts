@@ -124,17 +124,28 @@ export function cancelAutoSendTimer(timer: AutoSendTimer, input: CancelInput): C
 export function resolveAutoSendTimer(timer: AutoSendTimer, nowMs: number): ResolveResult {
   if (timer.status === 'cancelled') return { state: 'cancelled' };
   if (timer.status === 'dispatched') return { state: 'dispatched' };
-  // Mốc hỏng → coi như còn chờ (không bao giờ giao khi không chắc).
-  if (!isTime(nowMs) || nowMs < timer.runAt) {
-    return { state: 'wait', remainingMs: isTime(nowMs) ? timer.runAt - nowMs : timer.runAt };
+  // Hỏng ở bất kỳ đâu → coi như còn chờ (không bao giờ giao khi không chắc).
+  if (!isReadable(timer) || !isTime(nowMs)) {
+    return {
+      state: 'wait',
+      remainingMs: isDelay(timer.delaySeconds) ? timer.delaySeconds * 1000 : 0,
+    };
   }
+  if (nowMs < timer.runAt) return { state: 'wait', remainingMs: timer.runAt - nowMs };
   return { state: 'due' };
+}
+
+/** Hẹn giờ đọc từ nơi lưu có thể hỏng (thiếu `runAt`, trạng thái lạ): chỉ `pending` + `runAt` hợp lệ mới đáng tin. */
+function isReadable(timer: AutoSendTimer): boolean {
+  return timer.status === 'pending' && isTime(timer.runAt);
 }
 
 /** Đến hạn → đánh dấu đã giao cho job `send` (một lần). Job `send` vẫn phải chạy `sendRecheck`. */
 export function dispatchAutoSendTimer(timer: AutoSendTimer, nowMs: number): DispatchResult {
   if (timer.status === 'cancelled') return { ok: false, reason: 'cancelled' };
   if (timer.status === 'dispatched') return { ok: false, reason: 'already_dispatched' };
-  if (!isTime(nowMs) || nowMs < timer.runAt) return { ok: false, reason: 'not_due' };
+  if (!isReadable(timer) || !isTime(nowMs) || nowMs < timer.runAt) {
+    return { ok: false, reason: 'not_due' };
+  }
   return { ok: true, timer: { ...timer, status: 'dispatched', settledAt: nowMs } };
 }

@@ -40,6 +40,10 @@ export interface AutoSendDelayScheduler {
 
 const keyOf = (workspaceId: string, draftId: string) => `${workspaceId}\u0000${draftId}`;
 
+/**
+ * CHỈ cho test/mock, một tiến trình. KHÔNG dùng ở môi trường nhiều tiến trình (web + worker): lệnh hủy gửi tới tiến
+ * trình khác sẽ không thấy hẹn giờ. Bản thật: `AUTO-DELAY-WIRE` (so giờ bằng `now()` của DB trong một câu lệnh nguyên tử).
+ */
 export function createInMemoryAutoSendDelayScheduler(
   now: () => number = () => Date.now(),
 ): AutoSendDelayScheduler {
@@ -63,6 +67,10 @@ export function createInMemoryAutoSendDelayScheduler(
     async cancelAllForWorkspace(workspaceId, reason) {
       if (!isSystemCancelReason(reason)) {
         throw new Error('cancelAllForWorkspace chỉ nhận lý do hệ thống');
+      }
+      // Dừng khẩn cấp không được "thành công giả": đầu vào/đồng hồ hỏng → ném, không trả 0 lặng lẽ.
+      if (typeof workspaceId !== 'string' || workspaceId.trim() === '' || !Number.isFinite(now())) {
+        throw new Error('cancelAllForWorkspace: workspaceId hoặc đồng hồ không hợp lệ');
       }
       let cancelled = 0;
       for (const [key, timer] of timers) {

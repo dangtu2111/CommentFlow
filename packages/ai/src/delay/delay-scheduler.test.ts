@@ -107,6 +107,13 @@ describe('FR-071 AutoSendDelayScheduler', () => {
     await expect(scheduler.cancelAllForWorkspace('a', 'staff_cancel' as never)).rejects.toThrow();
   });
 
+  it('Dừng khẩn cấp với workspaceId rỗng hoặc đồng hồ hỏng → ném, không trả 0 lặng lẽ', async () => {
+    const { scheduler } = setup();
+    await expect(scheduler.cancelAllForWorkspace(' ', 'emergency_stop')).rejects.toThrow();
+    const broken = createInMemoryAutoSendDelayScheduler(() => Number.NaN);
+    await expect(broken.cancelAllForWorkspace('a', 'emergency_stop')).rejects.toThrow();
+  });
+
   it('property: mỗi câu giao tối đa một lần và không giao câu đã hủy', async () => {
     const op = fc.oneof(
       fc.record({
