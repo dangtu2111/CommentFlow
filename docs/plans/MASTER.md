@@ -121,7 +121,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PRODUCT-ALIAS | FR-128 (bí danh sản phẩm) | US-100 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ⏳ |
-| KB-IMPORT-EXCEL | FR-051 (Excel/CSV: tải → khớp cột → xem lỗi → xác nhận) | US-003 | PRODUCTS-VARIANTS | — | không | ⏳ |
+| KB-IMPORT-EXCEL | FR-051 (Excel/CSV: tải → khớp cột → xem lỗi → xác nhận) | US-003 | PRODUCTS-VARIANTS | — | không | ✅ Xong (feat-kb-import-excel, Q-KBIX1, không migration; parse đồng bộ trong web → KB-IMPORT-EXCEL-WORKER; KT-KBIX) |
 | KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
 | KB-TESTSET | FR-054 (bộ câu kiểm thử trước khi xuất bản) | US-034 | KB-PUBLISH-VERSION | — | không | ⏳ |
 | KB-CHUNKING | FR-055, 130 (cắt đoạn, `context_header`, `content_hash`), FR-131 (hạn hiệu lực) | — | KB-SCHEMA | DB | không | ✅ Xong-mock (feat-kb-chunking; embedding thật → KB-EMBED-LITELLM) |

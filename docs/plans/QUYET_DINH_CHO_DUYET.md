@@ -37,6 +37,8 @@
 
 ## Thay đổi `docs/01–16`
 
+- 06/11 (KB-IMPORT-EXCEL, Q-KBIX1): `docs/13_Security_Design.md` §6 dòng "Upload Excel/CSV" — ghi thêm: tạm thời parse đồng bộ trong web với giới hạn cứng (10 MB/5.000 dòng/50 cột, giải nén ≤ 50 MB, đuôi + chữ ký file, ô công thức bị từ chối), chuyển worker ở `KB-IMPORT-EXCEL-WORKER`.
+
 - 06/11 (RETRIEVAL-LOG, Q-RL1): `docs/10_Database_Design.md` dòng `retrieval_logs` (thêm `comment_id`, ghi quyền ghi/giữ 90 ngày, migration 0040) và `kb_gaps` (thêm `id`, `created_at`, `updated_at`, quyền, quy tắc gộp/mở lại).
 
 - 06/11 (USAGE-COUNTERS, Q-UC1): `docs/10_Database_Design.md` §3.6 dòng `usage_counters` — cột `limit` → `limit_amount`, ghi PK, quyền (chỉ đọc với `cf_app`, ghi qua hàm `core.consume_usage`, migration 0039).
