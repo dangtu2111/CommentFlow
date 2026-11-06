@@ -1,0 +1,100 @@
+import { strToU8, zipSync } from 'fflate';
+import { describe, expect, it } from 'vitest';
+import { IMPORT_MAX_ROWS, ImportFileError } from './limits';
+import { readXlsx } from './xlsx';
+
+// Fixture: file .xlsx dựng tay từ XML tối thiểu (không phải dữ liệu thật).
+function buildXlsx(files: Record<string, string>): Uint8Array {
+  const entries: Record<string, Uint8Array> = {};
+  for (const [name, xml] of Object.entries(files)) entries[name] = strToU8(xml);
+  return zipSync(entries);
+}
+
+const sheet = (rows: string) => `<worksheet><sheetData>${rows}</sheetData></worksheet>`;
+
+describe('FR-051 đọc XLSX an toàn', () => {
+  it('đọc chuỗi dùng chung, chuỗi nội tuyến, số, boolean, ô trống và dòng bị thiếu', () => {
+    const bytes = buildXlsx({
+      'xl/sharedStrings.xml':
+        '<sst><si><t>Tên</t></si><si><r><t>Áo </t></r><r><t>thun &amp; nón</t></r><rPh><t>x</t></rPh></si><si><t xml:space="preserve"> Giá </t></si></sst>',
+      'xl/worksheets/sheet1.xml': sheet(
+        '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="C1" t="s"><v>2</v></c></row>' +
+          '<row r="3"><c r="A3" t="s"><v>1</v></c><c r="B3"><v>150000</v></c><c r="C3" t="inlineStr"><is><t>a&lt;b</t><t>&#65;&#x42;</t></is></c><c r="D3" t="b"><v>1</v></c><c r="E3" t="b"><v>0</v></c></row>' +
+          '<row r="4"><c r="A4"/><c r="B4" t="e"><v>#N/A</v></c><c r="C4" t="str"><v>văn bản</v></c></row>',
+      ),
+    });
+    expect(readXlsx(bytes)).toEqual([
+      ['Tên', '', ' Giá '],
+      [],
+      ['Áo thun & nón', '150000', 'a<bAB', 'TRUE', 'FALSE'],
+      ['', '', 'văn bản'],
+    ]);
+  });
+
+  it('ô công thức bị đánh dấu bằng dấu "=" đầu, KHÔNG dùng giá trị đã tính', () => {
+    const bytes = buildXlsx({
+      'xl/worksheets/sheet1.xml': sheet(
+        '<row r="1"><c r="A1"><f>SUM(B1:B2)</f><v>999</v></c><c r="B1"><f/><v>5</v></c></row>',
+      ),
+    });
+    const [row] = readXlsx(bytes);
+    expect(row?.[0]).toBe('=SUM(B1:B2)');
+    expect(row?.[1]).toBe('=');
+  });
+
+  it('thiếu sharedStrings hoặc chỉ số hỏng → ô rỗng', () => {
+    const bytes = buildXlsx({
+      'xl/worksheets/sheet1.xml': sheet(
+        '<row r="1"><c r="A1" t="s"><v>7</v></c><c r="B1" t="s"><v>abc</v></c><c r="C1" t="s"></c></row>',
+      ),
+    });
+    expect(readXlsx(bytes)).toEqual([['', '', '']]);
+  });
+
+  it('chọn trang tính đầu theo tên khi không có sheet1', () => {
+    const bytes = buildXlsx({
+      'xl/worksheets/sheet3.xml': sheet(
+        '<row r="1"><c r="A1" t="inlineStr"><is><t>ba</t></is></c></row>',
+      ),
+      'xl/worksheets/sheet2.xml': sheet(
+        '<row r="1"><c r="A1" t="inlineStr"><is><t>hai</t></is></c></row>',
+      ),
+    });
+    expect(readXlsx(bytes)).toEqual([['hai']]);
+  });
+
+  it('không có trang tính hoặc không phải zip → XLSX_INVALID', () => {
+    expect(() => readXlsx(buildXlsx({ 'readme.txt': 'x' }))).toThrowError(/XLSX_INVALID/);
+    expect(() => readXlsx(strToU8('không phải zip'))).toThrowError(ImportFileError);
+  });
+
+  it('zip khai báo giải nén quá lớn bị từ chối trước khi giải nén', () => {
+    const big = new Uint8Array(51 * 1024 * 1024); // nén rất nhỏ nhưng khai báo 51 MB
+    const bytes = zipSync({ 'xl/worksheets/sheet1.xml': big });
+    expect(bytes.length).toBeLessThan(1024 * 1024);
+    expect(() => readXlsx(bytes)).toThrowError(/XLSX_TOO_LARGE_UNZIPPED/);
+  });
+
+  it('quá nhiều dòng hoặc cột bị từ chối', () => {
+    const manyRows = Array.from(
+      { length: IMPORT_MAX_ROWS + 2 },
+      (_, i) => `<row r="${i + 1}"><c r="A${i + 1}"><v>1</v></c></row>`,
+    ).join('');
+    expect(() => readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(manyRows) }))).toThrowError(
+      /TOO_MANY_ROWS/,
+    );
+    const wide = '<row r="1"><c r="A1"><v>1</v></c><c r="BA1"><v>1</v></c></row>';
+    expect(() => readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(wide) }))).toThrowError(
+      /TOO_MANY_COLUMNS/,
+    );
+  });
+
+  it('ô thiếu tham chiếu r dùng vị trí liền sau; dòng thiếu r dùng số dòng liền sau', () => {
+    const bytes = buildXlsx({
+      'xl/worksheets/sheet1.xml': sheet(
+        '<row><c><v>1</v></c><c><v>2</v></c></row><row><c><v>3</v></c></row>',
+      ),
+    });
+    expect(readXlsx(bytes)).toEqual([['1', '2'], ['3']]);
+  });
+});
