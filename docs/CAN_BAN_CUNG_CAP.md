@@ -155,6 +155,9 @@ Hàm thuần `sendRecheck` (`packages/ai/src/recheck/`) + job `send` của worke
 
 Độ sẵn sàng của AI tính hoàn toàn từ dữ liệu trong DB (sản phẩm, chính sách, FAQ, thông tin shop) bằng mã; không gọi LLM, không biến môi trường mới, không cờ. Khi muốn đo "câu mẫu trả lời được" bằng LLM thật → việc `AI-EVAL-*` (cần khóa LLM, sẽ ghi ở mục riêng).
 
+## Redis cho cache câu trả lời — `PIPE-CACHE-EXACT` (FR-026, Xong-mock, mã KT-PCX)
+Cache khớp chính xác chạy sau interface `ExactCacheStore` với bản bộ nhớ; chưa có biến môi trường/Redis mới. Khi nối pipeline (`PIPE-ORCHESTRATOR`) cần Redis 7 đã có trong hạ tầng (docs/09 §2, dùng lại URL Redis của hệ thống) và cờ `cf.cache.answers` (docs/09 §10; mặc định TẮT cho đường thật). Không cần khóa/tài khoản mới.
+
 ## 2k. `KB-GAPS-UI` (FR-134, UF-11) — không cần tài nguyên ngoài
 
 Trang "Câu hỏi AI chưa trả lời được" chỉ đọc/ghi `kb_gaps` và `faq_items` trong DB; không gọi LLM, không biến môi trường mới, không cờ. Dữ liệu chỉ xuất hiện khi pipeline ghi `kb_gaps` (việc `RETRIEVAL-LOG-WIRE`); trước đó trang hiển thị "chưa có câu hỏi nào".
@@ -162,3 +165,6 @@ Trang "Câu hỏi AI chưa trả lời được" chỉ đọc/ghi `kb_gaps` và 
 ## pgvector >= 0.8 cho chỉ mục HNSW — `KB-EMBED-COL`
 
 Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phải dùng PostgreSQL 16 + pgvector >= 0.8 (hiện `pgvector/pgvector:0.8.7-pg16`). Migration 0042 báo lỗi rõ nếu thấp hơn. Chủ dự án chỉ cần nâng image khi dựng staging/production mới.
+
+## 2l. `KB-TRYAI` (FR-059) — không cần tài nguyên ngoài mới
+Ô Thử AI có thể tìm trong KB thật của workspace (cờ `TRY_AI_KB_REAL`, mặc định TẮT; Xong-mock: embedding là fixture). Để vector có kết quả cần mô hình embedding ở 2g và worker điền `embedding` (`KB-CHUNKING`). Bạn **không** phải làm gì cho bản mock.

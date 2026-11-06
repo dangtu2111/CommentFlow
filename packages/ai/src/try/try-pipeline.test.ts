@@ -173,6 +173,16 @@ describe('FR-059 FR-029 US-034 runTryPipeline', () => {
     expect(r.guard.ok).toBe(true);
   });
 
+  it('truyền lang + productIds cho searchKb', async () => {
+    const knowledge = createDemoKnowledge();
+    const searchKb = vi.fn(knowledge.searchKb);
+    await runTryPipeline(base, { ...deps(), knowledge: { ...knowledge, searchKb } });
+    expect(searchKb).toHaveBeenCalledWith(expect.stringContaining('ship'), {
+      lang: 'vi',
+      productIds: [],
+    });
+  });
+
   it('không có import usage-meter / consume (không trừ lượt)', async () => {
     const { readFileSync } = await import('node:fs');
     const src = readFileSync(new URL('./try-pipeline.ts', import.meta.url), 'utf8');

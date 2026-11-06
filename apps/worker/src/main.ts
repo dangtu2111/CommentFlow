@@ -5,13 +5,20 @@ import { loadConfig } from './config';
 import { startHealthServer } from './health';
 import { createHideHandler } from './jobs/hide';
 import { createIngestHandler } from './jobs/ingest';
+import { createKbPublishHandler } from './jobs/kb-publish';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
 import { startSweep } from './jobs/sweep';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
-import { HIDE_QUEUE, INGEST_QUEUE, SEND_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
+import {
+  HIDE_QUEUE,
+  INGEST_QUEUE,
+  KB_PUBLISH_QUEUE,
+  SEND_QUEUE,
+  SYSTEM_PING_QUEUE,
+} from './queue/definitions';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -53,6 +60,12 @@ async function main(): Promise<void> {
     HIDE_QUEUE,
     { batchSize: 1, localConcurrency: 3 },
     createHideHandler({ db, registry, logger }),
+  );
+  // FR-054: kb-publish — xuất bản/khôi phục phiên bản kiến thức (Owner kiểm lại ở worker). Một job một lúc.
+  await boss.work(
+    KB_PUBLISH_QUEUE,
+    { batchSize: 1, localConcurrency: 1 },
+    createKbPublishHandler({ db, logger }),
   );
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
   const stopRetention = startRetention({ db, logger });

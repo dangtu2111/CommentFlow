@@ -102,6 +102,19 @@ export {
   upsertShopProfile,
 } from './queries/kb-content';
 export {
+  type ChunkScope,
+  type CreateKbVersionInput,
+  createKbVersionFromChunks,
+  getCurrentVersion,
+  getVersionByNumber,
+  isActiveOwner,
+  type KbVersionRef,
+  type KbVersionRow,
+  listChunkSummaries,
+  listKbVersions,
+  lockKbPublish,
+} from './queries/kb-publish';
+export {
   DEFAULT_KB_SEARCH_LIMIT,
   findProductMatch,
   getProductRevs,
@@ -126,6 +139,7 @@ export {
   type PostsPage,
   type PostsSort,
 } from './queries/posts';
+export { applyProductImport, type ProductImportResult } from './queries/product-import';
 export { type ActiveVariant, findActiveVariants } from './queries/products';
 export { loadReadinessSource, type ReadinessSourceData } from './queries/readiness';
 export {

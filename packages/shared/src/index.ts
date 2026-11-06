@@ -61,6 +61,19 @@ export {
   VOICE_LANGS,
 } from './kb-content';
 export {
+  categoryOfSource,
+  KB_PUBLISH_NOTE_MAX,
+  KB_PUBLISH_QUEUE,
+  type KbChangeCategory,
+  type KbPublishJob,
+  type KbVersionPlan,
+  kbPublishJobSchema,
+  nextVersionNumber,
+  type PlanChunk,
+  parsePublishNote,
+  planKbVersion,
+} from './kb-publish';
+export {
   type BurstComment,
   type BurstGroup,
   burstKey,
@@ -80,6 +93,42 @@ export {
   maskPii,
   unsafeMarkMasked,
 } from './pii';
+export { parseCsv } from './product-import/csv';
+export {
+  assertImportFileBytes,
+  IMPORT_MAX_BYTES,
+  IMPORT_MAX_CELL_CHARS,
+  IMPORT_MAX_COLUMNS,
+  IMPORT_MAX_ROWS,
+  ImportFileError,
+  type ImportFileKind,
+  type ImportFileReason,
+  sniffImportFileKind,
+} from './product-import/limits';
+export {
+  type ColumnMapping,
+  type ColumnTarget,
+  checkMapping,
+  columnMappingSchema,
+  IMPORT_FIELDS,
+  type ImportField,
+  type MappingCheck,
+  suggestMapping,
+} from './product-import/mapping';
+export {
+  buildImportPlan,
+  type ImportProductPlan,
+  type ImportVariantPlan,
+} from './product-import/plan';
+export {
+  type ImportRecord,
+  type ImportRowError,
+  type ImportRowErrorCode,
+  type ImportValidation,
+  parseStock,
+  parseVndAmount,
+  validateImportTable,
+} from './product-import/validate';
 export {
   CARD_VALUE_MAX,
   foldText,

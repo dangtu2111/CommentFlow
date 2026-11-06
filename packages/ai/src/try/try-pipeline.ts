@@ -46,6 +46,9 @@ export type TryCandidate = {
   topics: KbGapTopic[];
 };
 
+/** Ngữ cảnh lọc khi tìm kiến thức. */
+export type TrySearchContext = { lang: 'vi' | 'en'; productIds: string[] };
+
 /** Cổng kiến thức của ô Thử AI: bản mock (`createDemoKnowledge`) hoặc, sau này, bản nối KB/DB thật. */
 export interface TryKnowledge {
   matchProducts(
@@ -53,8 +56,8 @@ export interface TryKnowledge {
   ): Promise<{ ids: string[]; names: string[]; missingAxes: VariantAxis[] }>;
   /** Nhánh `sql`: giá/tồn đọc từ bảng sản phẩm (không vector). */
   lookupProductFacts(ids: readonly string[]): Promise<TryCandidate[]>;
-  /** Nhánh `hybrid`: tìm kiến thức. */
-  searchKb(query: string): Promise<TryCandidate[]>;
+  /** Nhánh `hybrid`: tìm kiến thức (đã biết ngôn ngữ + sản phẩm của bài để lọc, FR-057). */
+  searchKb(query: string, context: TrySearchContext): Promise<TryCandidate[]>;
 }
 
 export type TryInput = {
@@ -91,7 +94,8 @@ export type TryResult =
       autoSend: AutoSendPreview;
     };
 
-function topicOf(ask: string): KbGapTopic {
+/** Chủ đề của một câu/đoạn chữ (dùng cho ý hỏi và cho đoạn kiến thức tìm được). */
+export function topicOf(ask: string): KbGapTopic {
   const kind = classifyAsk(ask);
   if (kind === 'size') return 'size';
   if (kind !== 'other') return 'product_info';
@@ -125,7 +129,11 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
 
   const outcome = await executeRoute(routed.route, {
     sql: () => deps.knowledge.lookupProductFacts(products.ids),
-    hybrid: () => deps.knowledge.searchKb(masked),
+    hybrid: () =>
+      deps.knowledge.searchKb(masked, {
+        lang: lang === 'other' ? 'vi' : lang,
+        productIds: products.ids,
+      }),
   });
   const found = [...(outcome.sql ?? []), ...(outcome.hybrid ?? [])].sort(
     (a, b) => b.score - a.score,
