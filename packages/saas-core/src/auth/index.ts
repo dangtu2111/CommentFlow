@@ -23,6 +23,15 @@ export {
   type ResetResult,
   type SignInResult,
 } from './flows';
+export {
+  createAccountTokenHooks,
+  createOAuthTokenVault,
+  type OAuthTokenCipher,
+  OAuthTokenOpenError,
+  type OAuthTokenScope,
+  OAuthTokenScopeError,
+  type OAuthTokenVault,
+} from './oauth-token-vault';
 export { hashPassword, verifyPassword } from './password';
 export {
   createPasswordPolicy,
