@@ -277,6 +277,20 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.post_notes', 'post_id', 'UPDATE'],
   ['cf_app', 'cf.post_auto_overrides', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_auto_overrides', 'post_id', 'UPDATE'],
+  // DRAFTS (0046): nội dung soạn + ảnh chụp giá (R5) bất biến sau INSERT; chỉ cột xử lý được sửa
+  ['cf_app', 'cf.drafts', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'target_type', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'target_id', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'text', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'sources', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'claims', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'price_snapshot', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'lang', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'variants', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'action', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'confidence', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'context_refs', 'UPDATE'],
+  ['cf_app', 'cf.drafts', 'created_at', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'kind', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'lang', 'UPDATE'],
@@ -622,6 +636,11 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.post_auto_overrides', 'w', 'is_workspace_owner'],
   ['cf.post_auto_overrides', 'w', 'is_system_context'],
   ['cf.post_auto_overrides', 'r', 'is_workspace_member'],
+  // DRAFTS (0046): INSERT chỉ hệ thống; UPDATE thành viên hoặc hệ thống; đọc: thành viên hoặc không người dùng
+  ['cf.drafts', 'a', 'is_system_context'],
+  ['cf.drafts', 'w', 'is_workspace_member'],
+  ['cf.drafts', 'w', 'is_system_context'],
+  ['cf.drafts', 'r', 'is_workspace_member'],
   ['cf.comments', 'a', 'is_system_context'],
   ['cf.comments', 'w', 'is_workspace_member'], // + is_system_context (trigger chặn sửa dữ liệu nền tảng ở đường người dùng)
   ['cf.comments', 'r', 'is_workspace_member'],
@@ -683,6 +702,11 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.post_auto_overrides', 'w', 'IS NULL'],
   ['cf.product_variants', 'a', 'IS NULL'],
   ['cf.product_variants', 'w', 'IS NULL'],
+  // bản nháp AI: INSERT chỉ hệ thống (không nhánh thành viên/Owner/"không người dùng"); withWorkspace trần không sửa được
+  ['cf.drafts', 'a', 'is_workspace_member'],
+  ['cf.drafts', 'a', 'is_workspace_owner'],
+  ['cf.drafts', 'a', 'IS NULL'],
+  ['cf.drafts', 'w', 'IS NULL'],
   ['cf.channels', 'w', 'is_workspace_member'], // Staff không ghi kênh
   ['cf.channels', 'r', 'is_workspace_owner'], // đọc kênh không riêng Owner
   ['cf.webhook_events', 'r', 'is_workspace_member'], // Staff không đọc payload

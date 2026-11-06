@@ -949,6 +949,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/shared exec vitest run src/size-chart.test.ts`. | 14 test xanh: cao 160 + nặng 53 → M; thiếu số đo → hỏi lại; hai size cùng khớp / ngoài bảng → mời ib; không có bảng → mời ib + ghi khoảng trống. |
 | 2 | CI job `database` chạy `tests/size-charts.int.test.ts`. | Owner ghi được, Staff chỉ đọc, workspace khác không thấy; bảng riêng của sản phẩm thắng bảng danh mục. |
 
+## KT-PS — Ảnh chụp giá lúc soạn (PRICE-SNAPSHOT, FR-111, US-045) · Price snapshot
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/price-snapshot.test.ts` và `pnpm --filter @flow/ai exec vitest run src/recheck`. | Test xanh: bỏ mục không giá, loại trùng, đọc lại JSON; giá/biến thể đổi → `price_changed`, không có ảnh chụp → `price_snapshot_missing`. |
+| 2 | CI job `database` chạy `tests/drafts.int.test.ts` và `pnpm db:check-rls`. | Hệ thống ghi được bản nháp + ảnh chụp; Staff/withWorkspace trần không INSERT; không ai sửa được `price_snapshot`/`text`; Staff không đặt/sửa trạng thái `auto_sent`; workspace khác không thấy. |
+
 ## KT-SUI — Gợi ý AI + đổi nhãn (SUGGEST-UI, FR-043, US-011/012/014) · AI suggestion + relabel
 
 Ô gợi ý chưa có dữ liệu thật (chờ bảng `drafts`); phần đổi nhãn kiểm được trên staging. / Suggestion box has no real data yet (awaits `drafts`); relabel is checkable on staging.
