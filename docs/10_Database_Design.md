@@ -97,7 +97,7 @@ erDiagram
 |---|---|---|
 | `kb_sources` | workspace_id, type (`manual`/`faq`/`excel`/`shopify`/`url`/`policy`), title, origin_url, external_key (ổn định), status, last_synced_at, sync_error, deleted_at | |
 | `kb_chunks` | workspace_id, source_id, version_id, chunk_key, injection_suspected bool + injection_reason (FR-164; true → không xuất bản tự động), content, lang, content_hash, embedding halfvec(1024), tsv tsvector, metadata jsonb, is_draft, **context_header** text (nguồn › mục › tên sản phẩm — FR-130), **product_id** (null = kiến thức chung), **valid_from**, **valid_until** (FR-131), **embedding_model** text (tên + revision — FR-133) | Index B-tree (workspace_id, version_id); GIN (tsv); HNSW (embedding) khi lớn; B-tree (workspace_id, product_id); B-tree (workspace_id, embedding_model) |
-| `kb_versions` | workspace_id, number, published_by, published_at, note, changed_categories text[] | |
+| `kb_versions` | workspace_id, number, published_by, published_at, note, changed_categories text[] | **Migration 0031 (KB-SCHEMA, QKB1).** `unique (workspace_id, number)`, `number >= 1`; bất biến (cf_app chỉ SELECT + INSERT) |
 | `kb_tests` | workspace_id, question, lang, expected_label, expected_contains, last_result jsonb | |
 | `kb_connections` | workspace_id, provider (`google_sheets` / `shopify` / `haravan` / `sapo` / `kiotviet` / `pancake`), shop_domain (hoặc mã sheet / mã cửa hàng), sync_interval, access_token_enc, scopes, status, webhook_ok_at, last_reconciled_at | |
 | `reconcile_runs` | workspace_id, connection_id, started_at, finished_at, products_checked, diffs_count, webhooks_reregistered, status, error | Đối soát Shopify (09 §7.3) |
@@ -198,6 +198,16 @@ create policy ws_isolation on comments
   | `webhook_events` | Owner đang hoạt động hoặc hệ thống | **không INSERT trực tiếp** — chỉ qua hàm DEFINER `cf.record_webhook_event` (ngữ cảnh trần của route webhook, sau khi kiểm chữ ký) | chỉ hệ thống (`status`, `attempts`, `error`, `processed_at`); `payload` chỉ bị xóa (→ `{}`) qua hàm DEFINER `cf.mark_comment_deleted` / `cf.purge_expired_webhook_payloads` | không |
   | `comment_replies` | thành viên đang hoạt động hoặc hệ thống | **không INSERT trực tiếp** — chỉ qua hàm DEFINER `cf.request_comment_reply` | chỉ hệ thống (worker, job `send`), chỉ các cột `status`, `attempts`, `external_reply_id`, `error_code`, `sent_at`, `updated_at` (`text`, `requested_by`, `workspace_id`, `comment_id`, `channel_id`, `previous_status` không sửa được) | không |
   | `comment_hides` | thành viên đang hoạt động hoặc hệ thống | **không INSERT trực tiếp** — chỉ qua hàm DEFINER `cf.request_comment_hide` | chỉ hệ thống (worker, job `hide`), chỉ các cột `status`, `attempts`, `error_code`, `previous_status`, `updated_at`, `done_at` (`action`, `requested_by`, `workspace_id`, `comment_id`, `channel_id` không sửa được) | không |
+
+  **Kiến thức (migration 0031, KB-SCHEMA, QKB1):** `kb_sources`, `kb_versions`, `kb_chunks` — cùng ba đường (người dùng / hệ thống `cf_worker` / `withWorkspace` trần chỉ đọc); SELECT: thành viên đang hoạt động, hệ thống hoặc ngữ cảnh trần.
+
+  | Bảng | INSERT | UPDATE | DELETE |
+  |---|---|---|---|
+  | `kb_sources` | Owner đang hoạt động hoặc hệ thống | Owner hoặc hệ thống, chỉ cột `title`, `origin_url`, `status`, `last_synced_at`, `sync_error`, `deleted_at`, `updated_at` (không `workspace_id`/`type`/`external_key`) | không (xóa mềm `deleted_at`) |
+  | `kb_versions` | Owner hoặc hệ thống | không (bất biến) | không |
+  | `kb_chunks` | chỉ hệ thống (worker lập chỉ mục) | chỉ hệ thống, theo cột (không `workspace_id`, `source_id`, `version_id`, `chunk_key`) | chỉ hệ thống |
+
+  Ràng buộc `kb_chunks`: khóa ngoại ghép `(workspace_id, source_id)` → `kb_sources`, `(workspace_id, version_id)` → `kb_versions` (không gắn chéo workspace); `version_id` rỗng chỉ khi `is_draft` (CHECK); `valid_until > valid_from`; `lang ∈ {vi,en}`; `unique nulls not distinct (workspace_id, source_id, version_id, chunk_key)`; `embedding halfvec(1024)` (FR-139) và `tsv` do worker điền (không cột sinh vì `unaccent` không IMMUTABLE); `product_id` chưa khóa ngoại (chờ `products`); HNSW `embedding` và chỉ mục `embedding_model` thuộc `KB-EMBED-COL`. `kb_sources.status ∈ {active, syncing, error}`, `type ∈ {manual, faq, excel, shopify, url, policy}`; `external_key` duy nhất theo `(workspace_id, type)` khi chưa xóa mềm.
 
   Hàm token Page (SECURITY DEFINER, `search_path = pg_catalog, core, cf, pg_temp`, `EXECUTE` cho `cf_app`, riêng `read_channel_token` chỉ cho `cf_worker`): `cf.create_channel`, `cf.set_channel_token`, `cf.clear_channel_token` — Owner đang hoạt động hoặc hệ thống; `cf.read_channel_token` — **chỉ hệ thống, chỉ `cf_worker` có EXECUTE** (worker giải mã; web không đọc được ciphertext). Mã hóa AES-256-GCM chạy trong mã ứng dụng, AAD = `workspace_id|channel_id|key_version`.
 

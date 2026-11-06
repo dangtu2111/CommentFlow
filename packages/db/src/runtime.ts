@@ -74,6 +74,11 @@ export {
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
 export {
+  listWebhookSilentChannels,
+  WEBHOOK_SILENT_WINDOW_HOURS,
+  type WebhookSilentChannel,
+} from './queries/webhook-silent';
+export {
   cancelCommentReply,
   REPLY_REJECTIONS,
   ReplyRejectedError,

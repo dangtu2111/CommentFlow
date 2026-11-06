@@ -232,6 +232,13 @@
       "when": 1793897304384,
       "tag": "0032_action_logs_actor_index",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793929878440,
+      "tag": "0033_kb_schema",
+      "breakpoints": true
     }
   ]
 }

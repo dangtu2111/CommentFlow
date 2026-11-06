@@ -109,3 +109,33 @@ export const SUBSCRIBED_APPS = {
   ],
 };
 export const SUBSCRIBED_APPS_NONE = { data: [] };
+
+/**
+ * Nguồn: reference/page/feed (mảng Post: `id`, `updated_time`). Viết tay theo tài liệu v27.0 (FR-023).
+ * Bài 1 và 2 có hoạt động gần đây; bài 3 cũ.
+ */
+export const FEED_PAGE = {
+  data: [
+    { id: `${PAGE_ID}_3000000000101`, updated_time: '2026-11-05T09:00:00+0000' },
+    { id: `${PAGE_ID}_3000000000102`, updated_time: '2026-11-04T09:00:00+0000' },
+    { id: `${PAGE_ID}_3000000000103`, updated_time: '2026-10-01T09:00:00+0000' },
+  ],
+};
+
+/** Bình luận của bài 1: một mới, một cũ hơn mốc `since` dùng trong test. */
+export const POST_COMMENTS_MIXED = {
+  data: [
+    {
+      id: `${PAGE_ID}_3000000000101_4000000000201`,
+      message: 'Còn hàng không shop?',
+      created_time: '2026-11-05T08:00:00+0000',
+      from: { id: '5000000000005', name: 'Khách Mẫu' },
+    },
+    {
+      id: `${PAGE_ID}_3000000000101_4000000000200`,
+      message: 'Bình luận cũ hơn mốc',
+      created_time: '2026-10-20T08:00:00+0000',
+      from: { id: '5000000000005', name: 'Khách Mẫu' },
+    },
+  ],
+};
