@@ -4,6 +4,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { BULK_MAX } from '../../lib/bulk-input';
 import { buildInboxHref, type InboxCursorValue, type InboxView } from '../../lib/inbox-filters';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
+import { labelTone, platformBadgeText } from '../../lib/inbox-visual';
+import { userInitials } from '../../lib/user-initials';
 import { BulkCheckbox, type BulkLabels, BulkProvider } from './bulk-selection';
 
 export type InboxListItem = {
@@ -94,38 +96,48 @@ export async function InboxList({
               className="inbox-item-link"
               aria-current={view.selected === item.id ? 'true' : undefined}
             >
-              <div className="inbox-item-head">
-                <span className="inbox-author">{item.authorName ?? t('list.anonymous')}</span>
-                <time
-                  className="inbox-time"
-                  dateTime={item.createdTime?.toISOString()}
-                  title={formatAbsoluteTime(item.createdTime, locale, timeZone)}
-                >
-                  {formatRelativeTime(item.createdTime, now, locale)}
-                </time>
-              </div>
-              <div className="inbox-source">
-                {item.platform === 'facebook' ||
-                item.platform === 'instagram' ||
-                item.platform === 'tiktok'
-                  ? t(`platforms.${item.platform}`)
-                  : item.platform}
-                {' · '}
-                {item.channelName}
-              </div>
-              <p className="inbox-text">{item.text}</p>
-              <div className="inbox-chips">
-                <span className={`chip chip-status chip-${item.status}`}>
-                  {knownStatus(item.status) ? t(`status.${item.status as 'new'}`) : item.status}
-                </span>
-                {item.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
-                {item.isAd ? <span className="chip">{t('list.ad')}</span> : null}
-                {item.label ? <span className="chip">{labelText(item.label)}</span> : null}
-                {item.lockedByName ? (
-                  <span className="chip chip-lock">
-                    {t('list.lockedBy', { name: item.lockedByName })}
+              <span className="inbox-avatar" aria-hidden="true">
+                {userInitials(item.authorName ?? t('list.anonymous'))}
+                <span className="inbox-avatar-platform">{platformBadgeText(item.platform)}</span>
+              </span>
+              <div className="inbox-item-body">
+                <div className="inbox-item-head">
+                  <span className="inbox-author">{item.authorName ?? t('list.anonymous')}</span>
+                  <time
+                    className="inbox-time"
+                    dateTime={item.createdTime?.toISOString()}
+                    title={formatAbsoluteTime(item.createdTime, locale, timeZone)}
+                  >
+                    {formatRelativeTime(item.createdTime, now, locale)}
+                  </time>
+                </div>
+                <div className="inbox-source">
+                  {item.platform === 'facebook' ||
+                  item.platform === 'instagram' ||
+                  item.platform === 'tiktok'
+                    ? t(`platforms.${item.platform}`)
+                    : item.platform}
+                  {' · '}
+                  {item.channelName}
+                </div>
+                <p className="inbox-text">{item.text}</p>
+                <div className="inbox-chips">
+                  {item.label ? (
+                    <span className={`chip chip-label chip-tone-${labelTone(item.label)}`}>
+                      {labelText(item.label)}
+                    </span>
+                  ) : null}
+                  {item.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
+                  {item.isAd ? <span className="chip">{t('list.ad')}</span> : null}
+                  {item.lockedByName ? (
+                    <span className="chip chip-lock">
+                      {t('list.lockedBy', { name: item.lockedByName })}
+                    </span>
+                  ) : null}
+                  <span className={`chip chip-status chip-${item.status} inbox-chip-end`}>
+                    {knownStatus(item.status) ? t(`status.${item.status as 'new'}`) : item.status}
                   </span>
-                ) : null}
+                </div>
               </div>
             </Link>
           </li>
