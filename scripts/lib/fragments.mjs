@@ -51,11 +51,6 @@ export function assemble(files, sections) {
   return { text, problems };
 }
 
-/** Kiểm tệp ghép đã commit có khớp bản ghép từ các file nhỏ không. */
-export function diffAgainst(expected, actual) {
-  return normalize(expected) === normalize(actual) ? null : 'lệch bản ghép';
-}
-
 /** Chia nội dung một mục thành các hàng (dùng khi tách lần đầu và trong test). */
 export function splitRows(block) {
   const rows = [];

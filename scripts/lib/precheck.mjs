@@ -1,15 +1,13 @@
 // Các bước kiểm nhanh trước khi push (docs/workflows/finish.md). Rẻ → đắt, dừng ở lỗi đầu.
+// `docs:build` đứng đầu: ghép tài liệu sinh tự động (không commit) và kiểm định dạng/độc nhất mã của file nhỏ.
 export const PRECHECK_STEPS = [
+  { script: 'docs:build' },
   { script: 'lint' },
   { script: 'format:check' },
   { script: 'typecheck' },
   { script: 'check:migrations' },
   { script: 'check:plans' },
   { script: 'check:gitleaks-allowlist' },
-  { script: 'codemap:check' },
-  { script: 'quyet:check' },
-  { script: 'cbcc:check' },
-  { script: 'kt:check' },
 ];
 
 /** Chạy tuần tự; `run(step)` trả mã thoát. Dừng ngay ở bước lỗi đầu tiên. */
