@@ -73,6 +73,7 @@ export {
   MAX_INBOX_LIMIT,
   MAX_SEARCH_LENGTH,
 } from './queries/inbox';
+export { type ActiveVariant, findActiveVariants } from './queries/products';
 export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,

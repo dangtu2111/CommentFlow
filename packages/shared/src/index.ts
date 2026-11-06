@@ -14,6 +14,15 @@ export {
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
 export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
 export {
+  CARD_VALUE_MAX,
+  normalizeAttrs,
+  type ProductCard,
+  type ProductEmbeddingInput,
+  parseProductCard,
+  productCardSchema,
+  productEmbeddingText,
+} from './products';
+export {
   HIDE_QUEUE,
   type HideJob,
   hideJobSchema,
