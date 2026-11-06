@@ -1,4 +1,5 @@
 import {
+  ALIAS_MATCH_THRESHOLD,
   normalizeSearchText,
   type ProductMatch,
   pickProductMatch,
@@ -6,6 +7,7 @@ import {
 } from '@flow/shared';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
+import { searchProductsByAlias } from './product-aliases';
 
 /**
  * Tìm kiếm (KB-SEARCH-FTS, docs/10 §5): MỌI truy vấn lọc `workspace_id`; gọi trong `withWorkspace`/`withActor`/`withJob`
@@ -216,6 +218,12 @@ export async function findProductMatch(
   tx: Database,
   input: ProductSearchQuery,
 ): Promise<ProductMatch> {
+  const aliasHits = await searchProductsByAlias(tx, input);
+  const byAlias = pickProductMatch(
+    aliasHits.map((hit) => ({ id: hit.id, score: hit.similarity })),
+    { threshold: ALIAS_MATCH_THRESHOLD },
+  );
+  if (byAlias.status !== 'none') return byAlias;
   const hits = await searchProducts(tx, input);
   return pickProductMatch(hits.map((hit) => ({ id: hit.id, score: hit.similarity })));
 }

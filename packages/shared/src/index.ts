@@ -88,6 +88,14 @@ export {
 } from './merge-burst';
 export { type MaskedText, maskPii, unsafeMarkMasked } from './pii';
 export {
+  ALIAS_MATCH_THRESHOLD,
+  PRODUCT_ALIAS_MAX,
+  PRODUCT_ALIAS_SOURCES,
+  type ProductAliasInput,
+  type ProductAliasSource,
+  parseProductAlias,
+} from './product-alias';
+export {
   CARD_VALUE_MAX,
   foldText,
   normalizeAttrs,

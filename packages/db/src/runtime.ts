@@ -139,6 +139,14 @@ export {
   type PostsPage,
   type PostsSort,
 } from './queries/posts';
+export {
+  type AliasHit,
+  createProductAlias,
+  deleteProductAlias,
+  listProductAliases,
+  type ProductAliasRow,
+  searchProductsByAlias,
+} from './queries/product-aliases';
 export { type ActiveVariant, findActiveVariants } from './queries/products';
 export { loadReadinessSource, type ReadinessSourceData } from './queries/readiness';
 export {
