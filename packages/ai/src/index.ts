@@ -37,3 +37,4 @@ export * from './rules';
 export * from './send-lock';
 export * from './try';
 export * from './variation';
+export * from './virtual-key';

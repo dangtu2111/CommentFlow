@@ -199,7 +199,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 |---|---|---|---|---|---|---|
 | USAGE-COUNTERS | FR-090 (`usage_counters`, hạn mức, chặn 100%) | US-060 | GĐ0-AI-WRAPPER | S+DB | không | ✅ (feat-usage-counters, migration 0039; chưa nối pipeline AI → `USAGE-GATE-PIPE`; `test:db` chạy ở CI) |
 | USAGE-METER-UI | FR-090 (đồng hồ lượt, cảnh báo 80%) | US-060 | USAGE-COUNTERS | — | không | ✅ (feat-usage-meter-ui, Q-UMU1; hạn mức tạm env `AI_TURNS_PLAN_LIMIT`, múi giờ cố định — gói thật + timezone ở `PLANS-SCHEMA`, nút mua/nâng gói ở `TRIAL-UPGRADE-UI`) |
-| AI-VIRTUALKEY | FR-034 (khóa ảo LiteLLM theo workspace, ngân sách riêng) | — | USAGE-COUNTERS | S | **có** — khóa LLM | ⛔ |
+| AI-VIRTUALKEY | FR-034 (khóa ảo LiteLLM theo workspace, ngân sách riêng) | — | USAGE-COUNTERS | S | **có** — khóa LLM | ✅ Xong-mock (feat-ai-virtualkey, Q-AVK1; cờ tắt; lưu khóa DB → `AI-VIRTUALKEY-DB` làn b) |
 | AI-TRY-BOX-UI | FR-059 + FR-029 (Thử AI chạy cả pipeline, không trừ lượt) | US-034 | PIPE-DRAFT | — | không | ✅ Xong-mock (`feat-ai-try-box-ui`; còn `TRY-AI-REAL`: KB/LLM thật, bộ đếm bền, E2E; KT-ATB) |
 | EVAL-SET-REAL | FR-165 (~300 bình luận thật đã che PII; mỗi mẫu có hành động đúng) | — | — | S (PII) | **có** — chủ dự án cung cấp | ⛔ |
 | EVAL-RUNNER | FR-120 (bộ đánh giá 4 nhóm ngôn ngữ), FR-165, `14` §4 (promptfoo, chạy CI) | — | EVAL-SET-REAL, PIPE-DECIDE-ACTION | — | **có** — khóa LLM; cài promptfoo (nêu giấy phép) | ⛔ |
