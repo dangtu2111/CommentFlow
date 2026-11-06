@@ -24,6 +24,15 @@ export {
   requestCommentHide,
 } from './hides';
 export {
+  createAbbreviation,
+  deleteAbbreviation,
+  listAbbreviations,
+  listSystemAbbreviations,
+  loadAbbreviationEntries,
+  updateAbbreviation,
+  type WorkspaceAbbreviation,
+} from './queries/abbreviations';
+export {
   ACTION_LOG_ACTOR_TYPES,
   type ActionLogActorType,
   type ActionLogCursor,
