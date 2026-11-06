@@ -1,0 +1,26 @@
+/*
+ * Bố cục ngoài của khung Cơ sở kiến thức (ADR 013, ngoại lệ có lý do): nội dung các tab con (Thử AI, Độ sẵn sàng,
+ * Lỗ hổng, Xuất bản, Bộ kiểm thử, Nhập Excel) vẫn dùng CSS cũ, mà `.tw` reset đè lên CSS cũ (`.tw button`, `.tw h1`…).
+ * Nên thanh lệnh và rail là hai "đảo" `.tw`; phần chứa và ô nội dung nằm NGOÀI `.tw` và lấy kiểu bằng `@apply`
+ * (4 lớp, không CSS tự do). Gỡ file này khi các tab con đã port sang Tailwind.
+ */
+.kb-shell {
+  @apply overflow-hidden rounded-xl bg-background;
+}
+
+.kb-split {
+  @apply flex flex-col gap-space-xl p-space-xl lg:flex-row;
+}
+
+.kb-rail {
+  @apply w-full shrink-0 lg:w-56;
+}
+
+.kb-slot {
+  @apply min-w-0 flex-1;
+}
+
+/* Các tab con (kb-gaps, kb-testset, kb-publish) còn dùng tiêu đề này. */
+.kb-head h1 {
+  margin: 0;
+}
