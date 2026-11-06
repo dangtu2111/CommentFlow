@@ -114,5 +114,9 @@ Code đã có bước `draft` (`packages/ai/src/draft/`) gọi LLM qua LiteLLM s
 - Khóa ảo LiteLLM (`LITELLM_API_KEY`) được cấp quyền cho **model soạn câu** (nên là model hỗ trợ prompt caching, ví dụ dòng Claude/GPT/Gemini); khóa nhà cung cấp đặt trong cấu hình LiteLLM trên máy ảo, không vào repo.
 - Đặt `DRAFT_LLM_MODEL=<tên model trong LiteLLM>` và `DRAFT_LLM_ENABLED=true` (chỉ staging/thử; chưa đo chất lượng và tỉ lệ trúng cache — chờ `EVAL-RUNNER`).
 
+## 2g. `PIPE-RULE-FILTER` + `PIPE-MERGE-BURST` (FR-024, FR-148) — không cần tài nguyên ngoài
+
+Hai hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-032. Không có gì để chủ dự án cung cấp.
+
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").

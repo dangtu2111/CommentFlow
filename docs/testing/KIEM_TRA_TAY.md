@@ -608,3 +608,11 @@ Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB 
 |---|---|---|
 | 1 | Chạy `CF_LANE=b pnpm test:db` (hoặc xem job `database` của CI) | `kb-chunks.int.test.ts` xanh (ghi nháp qua worker, tsv bỏ dấu, lọc hạn hiệu lực) |
 | 2 | `pnpm --filter @flow/shared exec vitest run src/kb-chunking.test.ts` và `pnpm --filter @flow/ai exec vitest run src/kb-indexing.test.ts` | Xanh; embedding chỉ là mock, không gọi mạng |
+
+### PIPE-RULE-FILTER + PIPE-MERGE-BURST (FR-024, FR-148; chỉ lõi hàm thuần, chưa nối pipeline — KT-032)
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/rule-filter.test.ts src/merge-burst.test.ts` | Xanh; không gọi mạng/DB/LLM |
+| 2 | Đọc nhanh `rule-filter.test.ts`: emoji/tag/dấu chấm → bỏ qua; "giá?", "1", "+", ảnh đính kèm → không bỏ qua | Khớp ý bạn muốn (nếu muốn nới/thắt, nói để đổi Q-PRF1) |
+| 3 | Khi pipeline được nối: gõ 3 bình luận ngắn liên tiếp dưới một bài | Một câu trả lời gộp vào bình luận cuối (US-109) |
