@@ -125,11 +125,19 @@ export default async function DevSettingsPage({
             email={SAMPLE_EMAIL}
             emailVerified
             memberRole={SAMPLE_ROLE}
+            profile={{
+              image: null,
+              timezone: 'Asia/Ho_Chi_Minh',
+              phone: null,
+              phoneVerified: false,
+            }}
+            phoneVerifyEnabled={false}
+            avatarEnabled={false}
           >
             <ChangePasswordCard />
           </AccountCard>
           <SessionsCard sessions={SESSIONS} />
-          <LanguageCard />
+          <LanguageCard theme="system" />
         </SettingsFrame>
       </main>
     </DevShell>

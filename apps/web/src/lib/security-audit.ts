@@ -35,7 +35,9 @@ export function securityAuditEntry(
   }
   const fields = input.detail?.fields;
   if (event === 'profile_updated' && Array.isArray(fields)) {
-    const names = fields.filter((f): f is string => typeof f === 'string' && PROFILE_FIELDS.includes(f));
+    const names = fields.filter(
+      (f): f is string => typeof f === 'string' && PROFILE_FIELDS.includes(f),
+    );
     if (names.length > 0) after.fields = names;
   }
   return {

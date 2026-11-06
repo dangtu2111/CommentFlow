@@ -76,7 +76,9 @@ describe('hồ sơ người dùng qua cf_app (RLS)', () => {
       ),
     ).rejects.toThrow();
     await expect(
-      db.withUser(me, (tx) => tx.execute(sql`UPDATE core.users SET timezone = '' WHERE id = ${me}`)),
+      db.withUser(me, (tx) =>
+        tx.execute(sql`UPDATE core.users SET timezone = '' WHERE id = ${me}`),
+      ),
     ).rejects.toThrow();
   });
 

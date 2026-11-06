@@ -21,7 +21,7 @@ import { Icon } from '../ui/icon';
 const SETUP_ID = 'two-factor-setup-dialog';
 const REGEN_ID = 'two-factor-regen-dialog';
 const DISABLE_ID = 'two-factor-disable-dialog';
-const MASKED_SLOTS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8'] as const;
+const MASKED_SLOTS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10'] as const;
 
 const TITLE_ID = 'two-factor-title';
 const MASKED_CODE = '••••-••••';
@@ -362,7 +362,18 @@ function InfoTile({
   );
 }
 
-export function TwoFactorCard({ enabled, required }: { enabled: boolean; required: boolean }) {
+export function TwoFactorCard({
+  enabled,
+  required,
+  backupRemaining = 0,
+  backupTotal = 10,
+}: {
+  enabled: boolean;
+  required: boolean;
+  /** Số mã dự phòng chưa dùng (đếm phía server, không lộ mã). */
+  backupRemaining?: number;
+  backupTotal?: number;
+}) {
   const t = useTranslations('auth.security.twoFactor');
   const [enrolling, setEnrolling] = useState(false);
   const startEnrolling = useCallback(() => setEnrolling(true), []);
@@ -449,13 +460,26 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
             noteOk
           />
           <InfoTile
-            title={t('tiles.deviceTitle')}
-            icon={<Icon name="devices" size={16} />}
+            title={t('tiles.codesTitle')}
+            icon={<Icon name="key" size={16} />}
             tone={TONE_SECONDARY}
-            value={t('tiles.deviceValue')}
-            hint={t('tiles.deviceHint')}
-            note={t('soon')}
-            noteIcon={<Icon name="schedule" size={14} />}
+            value={
+              enabled
+                ? t('tiles.codesValue', { remaining: backupRemaining, total: backupTotal })
+                : '—'
+            }
+            hint={t('tiles.codesHint')}
+            note={
+              enabled
+                ? backupRemaining === 0
+                  ? t('tiles.codesEmpty')
+                  : backupRemaining <= 3
+                    ? t('tiles.codesLow')
+                    : t('tiles.codesOk')
+                : undefined
+            }
+            noteIcon={<Icon name={backupRemaining <= 3 ? 'warning' : 'check'} size={14} />}
+            noteOk={backupRemaining > 3}
           />
           <InfoTile
             title={t('tiles.policyTitle')}
@@ -485,14 +509,6 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <TwSoonButton tone="primary" size="sm" soon={t('soon')}>
-                  <Icon name="visibility" size={16} />
-                  {t('viewCodes')}
-                </TwSoonButton>
-                <TwSoonButton tone="plain" size="sm" soon={t('soon')}>
-                  <Icon name="download" size={16} />
-                  {t('downloadTxt')}
-                </TwSoonButton>
                 <TwDialogTrigger
                   dialogId={REGEN_ID}
                   className={twBtn({ tone: 'plain', size: 'sm' })}
@@ -506,10 +522,14 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
               aria-label={t('maskedLabel')}
               className="bg-surface-container-lowest rounded-lg p-space-md grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-center"
             >
-              {MASKED_SLOTS.map((slot) => (
+              {MASKED_SLOTS.slice(0, backupTotal).map((slot, index) => (
                 <li
                   key={slot}
-                  className="py-1 px-2 rounded bg-surface-container-low text-on-surface-variant font-label-md text-label-md tracking-wider"
+                  data-used={index >= backupRemaining ? 'true' : undefined}
+                  className={cn(
+                    'py-1 px-2 rounded bg-surface-container-low text-on-surface-variant font-label-md text-label-md tracking-wider',
+                    index >= backupRemaining && 'line-through opacity-40',
+                  )}
                 >
                   {MASKED_CODE}
                 </li>

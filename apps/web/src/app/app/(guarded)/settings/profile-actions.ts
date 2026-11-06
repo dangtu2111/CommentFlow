@@ -4,7 +4,7 @@ import type { StartPhoneVerifyResult, VerifyPhoneResult } from '@flow/saas-core'
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { AVATAR_MAX_BYTES, createMockAvatarStore, validateAvatar } from '../../../../lib/avatar';
-import { parseProfileForm, type ProfileState } from '../../../../lib/profile-form';
+import { type ProfileState, parseProfileForm } from '../../../../lib/profile-form';
 import { THEME_COOKIE, THEME_COOKIE_MAX_AGE } from '../../../../lib/theme';
 import { getAuthRuntime } from '../../../../server/auth';
 import { isAvatarUploadEnabled } from '../../../../server/profile-config';

@@ -67,7 +67,10 @@ const safeEqualHex = (a: string, b: string): boolean => {
   return left.length === right.length && left.length > 0 && timingSafeEqual(left, right);
 };
 
-const defaultCode = (): string => randomInt(0, 10 ** OTP_LENGTH).toString().padStart(OTP_LENGTH, '0');
+const defaultCode = (): string =>
+  randomInt(0, 10 ** OTP_LENGTH)
+    .toString()
+    .padStart(OTP_LENGTH, '0');
 
 export function createPhoneVerifyFlows(options: {
   store: PhoneChallengeStore;
@@ -98,7 +101,8 @@ export function createPhoneVerifyFlows(options: {
         }
       }
       const gate = await limiter.check('phoneOtpSend', { userId: input.userId, phone });
-      if (!gate.allowed) return { status: 'rate_limited', retryAfterSeconds: gate.retryAfterSeconds };
+      if (!gate.allowed)
+        return { status: 'rate_limited', retryAfterSeconds: gate.retryAfterSeconds };
 
       const code = generateCode();
       const sentAt = new Date(now());
@@ -136,7 +140,8 @@ export function createPhoneVerifyFlows(options: {
         // Không có thử thách vẫn đếm theo một giá trị cố định để không lộ "có/không có mã đang chờ".
         phone: challenge?.phone ?? 'none',
       });
-      if (!gate.allowed) return { status: 'rate_limited', retryAfterSeconds: gate.retryAfterSeconds };
+      if (!gate.allowed)
+        return { status: 'rate_limited', retryAfterSeconds: gate.retryAfterSeconds };
       if (!challenge) return { status: 'invalid' };
 
       if (challenge.expiresAt.getTime() <= now() || challenge.attempts >= OTP_MAX_ATTEMPTS) {
@@ -146,10 +151,7 @@ export function createPhoneVerifyFlows(options: {
       const code = input.code.replace(/[\s-]/g, '');
       const matches =
         /^\d{6}$/.test(code) &&
-        safeEqualHex(
-          challenge.codeHash,
-          hashOtp(secret, input.userId, challenge.phone, code),
-        );
+        safeEqualHex(challenge.codeHash, hashOtp(secret, input.userId, challenge.phone, code));
       if (!matches) {
         const attempts = await store.addAttempt(input.userId);
         if (attempts >= OTP_MAX_ATTEMPTS) await store.remove(input.userId);

@@ -11,6 +11,8 @@ export type AuthProfile = {
   /** E.164 thô — chỉ dùng phía server để che trước khi đưa xuống giao diện. */
   phone: string | null;
   phoneVerifiedAt: Date | null;
+  /** Đường dẫn ảnh đại diện (`users.image`). */
+  image: string | null;
 };
 
 const asTheme = (value: string): AuthProfile['theme'] =>
@@ -31,6 +33,7 @@ export function createAuthProfileStore(authDb: AuthHandle) {
           theme: users.theme,
           phone: users.phone,
           phoneVerifiedAt: users.phoneVerifiedAt,
+          image: users.image,
         })
         .from(users)
         .where(eq(users.id, userId)),
@@ -80,10 +83,7 @@ export function createAuthProfileStore(authDb: AuthHandle) {
     },
     async markVerified(userId, phone, at) {
       await db().transaction(async (tx) => {
-        await tx
-          .update(users)
-          .set({ phone, phoneVerifiedAt: at })
-          .where(eq(users.id, userId));
+        await tx.update(users).set({ phone, phoneVerifiedAt: at }).where(eq(users.id, userId));
         await tx
           .delete(phoneVerifications)
           .where(and(eq(phoneVerifications.userId, userId), eq(phoneVerifications.phone, phone)));

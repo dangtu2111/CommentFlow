@@ -1,7 +1,9 @@
+import { appendFile } from 'node:fs/promises';
 import {
   type Auth,
   type AuthFlows,
   type AuthHandle,
+  type AuthProfileStore,
   type ChangePasswordFlow,
   createAuth,
   createAuthFlows,
@@ -9,8 +11,8 @@ import {
   createChangePasswordFlow,
   createMockSmsProvider,
   createNotifier,
-  createPhoneVerifyFlows,
   createPasswordPolicy,
+  createPhoneVerifyFlows,
   createSealedValueCodec,
   createSignedValueCodec,
   createSmtpTransport,
@@ -18,7 +20,6 @@ import {
   createValkeyRateLimiter,
   openAuthDb,
   openWorkspaceServices,
-  type AuthProfileStore,
   type PhoneVerifyFlows,
   type RateLimiter,
   type SealedValueCodec,
@@ -28,16 +29,15 @@ import {
   type WorkspaceAdmin,
 } from '@flow/saas-core';
 import { isLocale } from '@flow/shared';
-import { appendFile } from 'node:fs/promises';
 import type { ClientIpSource } from '../lib/client-ip';
 import { INVITE_COOKIE_LABEL, INVITE_COOKIE_TTL_SECONDS } from '../lib/invite-token';
 import { loadServerEnv } from './env';
-import { resolvePhoneVerify } from './profile-config';
 import {
   FB_SESSION_COOKIE_LABEL,
   FB_STATE_COOKIE_LABEL,
   FB_STATE_TTL_SECONDS,
 } from './fb-oauth-state';
+import { resolvePhoneVerify } from './profile-config';
 import { WORKSPACE_COOKIE_LABEL, WORKSPACE_COOKIE_TTL_SECONDS } from './workspace-selection';
 
 /**
@@ -136,8 +136,10 @@ function createRuntime(): AuthRuntime {
     }),
     limiter,
     secret: env.BETTER_AUTH_SECRET,
-    enabled: resolvePhoneVerify({ APP_ENV: env.APP_ENV, PHONE_VERIFY_ENABLED: process.env.PHONE_VERIFY_ENABLED })
-      .enabled,
+    enabled: resolvePhoneVerify({
+      APP_ENV: env.APP_ENV,
+      PHONE_VERIFY_ENABLED: process.env.PHONE_VERIFY_ENABLED,
+    }).enabled,
   });
   return {
     auth,

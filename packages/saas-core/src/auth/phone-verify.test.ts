@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryStore, createRateLimiter } from '../ratelimit';
 import {
+  createPhoneVerifyFlows,
+  hashOtp,
   OTP_MAX_ATTEMPTS,
   OTP_TTL_SECONDS,
   type PhoneChallenge,
   type PhoneChallengeStore,
-  createPhoneVerifyFlows,
-  hashOtp,
 } from './phone-verify';
 
 const USER = '11111111-1111-4111-8111-111111111111';
@@ -109,7 +109,7 @@ describe('start', () => {
     const row = t.challenges.get(USER);
     expect(row?.codeHash).toBe(hashOtp(SECRET, USER, '+84912345678', '123456'));
     expect(Object.values(row ?? {}).map(String)).not.toContain('123456');
-    expect(row?.expiresAt.getTime()).toBe(row!.sentAt.getTime() + OTP_TTL_SECONDS * 1000);
+    expect(row?.expiresAt.getTime()).toBe((row?.sentAt.getTime() ?? 0) + OTP_TTL_SECONDS * 1000);
     expect(OTP_TTL_SECONDS).toBe(300);
   });
 

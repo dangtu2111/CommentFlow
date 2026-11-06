@@ -71,7 +71,8 @@
       "themeLabel": "Appearance",
       "light": "Light theme",
       "dark": "Dark theme",
-      "soon": "Coming soon"
+      "system": "Follow system",
+      "themeHint": "Dark mode currently applies to the Settings area."
     },
     "account": {
       "title": "Sign-in & account details",
@@ -81,7 +82,12 @@
       "edit": "Edit profile",
       "phone": "Contact phone number",
       "phoneEmpty": "Not set",
-      "soon": "Coming soon"
+      "soon": "Coming soon",
+      "phoneVerified": "Verified",
+      "phoneUnverified": "Not verified",
+      "verifyPhone": "Verify phone number",
+      "verifyPhoneOff": "Phone verification is not enabled",
+      "timezone": "Working time zone"
     },
     "soon": "Coming soon",
     "billing": {
@@ -236,6 +242,78 @@
     "securityNote": {
       "title": "Account security",
       "body": "Workspace owners and admins must turn on two-factor authentication (2FA) to protect access to connected channels."
+    },
+    "profile": {
+      "title": "Edit profile",
+      "body": "Update your personal account details and contact information in this workspace.",
+      "avatarChange": "Change photo",
+      "avatarRemove": "Remove photo",
+      "avatarHint": "JPG or PNG, up to 2 MB.",
+      "avatarOff": "Profile photo upload is not enabled in this environment.",
+      "avatarSaved": "Profile photo updated.",
+      "avatarRemoved": "Profile photo removed.",
+      "avatarErrors": {
+        "too_large": "The photo is larger than 2 MB.",
+        "type": "Only JPG or PNG photos are supported.",
+        "empty": "No photo selected.",
+        "failed": "Could not save the photo, please try again.",
+        "disabled": "Profile photo upload is not enabled in this environment."
+      },
+      "nameLabel": "Full name",
+      "nameCount": "({count}/{max} characters)",
+      "nameRequired": "Please enter your name",
+      "nameTooLong": "Name can be at most {max} characters",
+      "emailLabel": "Sign-in email",
+      "emailVerified": "Verified",
+      "emailHint": "To change your email, please contact support.",
+      "phoneLabel": "Contact phone number",
+      "phoneEmpty": "No phone number yet",
+      "phoneHint": "A phone number is only saved after you verify it with an OTP code.",
+      "phoneVerify": "Verify",
+      "phoneChange": "Change number",
+      "timezoneLabel": "Working time zone",
+      "timezoneInvalid": "Invalid time zone",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving changes...",
+      "saved": "Changes saved.",
+      "failed": "Could not save, please try again."
+    },
+    "phone": {
+      "title": "Verify phone number",
+      "body": "Link a Vietnamese phone number to receive account recovery codes and important security alerts.",
+      "steps": {
+        "label": "Verification steps",
+        "one": "Step 1: Enter phone number",
+        "two": "Step 2: Enter the 6-digit OTP",
+        "three": "Step 3: Finish verification"
+      },
+      "numberLabel": "Mobile phone number (Vietnam)",
+      "numberPlaceholder": "Enter your phone number...",
+      "numberHint": "The OTP code will be sent by SMS to this number.",
+      "send": "Send verification code",
+      "sentTo": "A 6-digit verification code was sent to",
+      "changeNumber": "Use another number",
+      "otpLabel": "6-digit OTP",
+      "otpDigit": "Digit {n}",
+      "expiresHint": "The code is valid for 5 minutes, up to 5 wrong attempts.",
+      "resendIn": "Resend in {seconds}s",
+      "resend": "Resend code",
+      "back": "Back",
+      "verify": "Verify now",
+      "successTitle": "Phone number verified!",
+      "successBody": "The phone number {phone} is now linked to your account.",
+      "done": "Done & Close",
+      "off": "Phone verification is not enabled in this environment.",
+      "errors": {
+        "invalid_phone": "Invalid phone number. Please enter a Vietnamese mobile number.",
+        "invalid_code": "The code is wrong or has expired.",
+        "rate_limited": "You are going too fast, please try again in {seconds} seconds.",
+        "cooldown": "Please wait {seconds} seconds before resending the code.",
+        "send_failed": "Could not send the code, please try again later.",
+        "disabled": "Phone verification is not enabled in this environment.",
+        "generic": "Something went wrong, please try again."
+      }
     }
   },
   "auth": {
@@ -456,7 +534,13 @@
           "policyRequired": "Required for your role",
           "policyOptional": "Optional for your role",
           "policyHint": "Applies by role in the workspace",
-          "policyMet": "Met"
+          "policyMet": "Met",
+          "codesTitle": "Backup codes left",
+          "codesValue": "{remaining}/{total} codes",
+          "codesHint": "Each code can be used only once",
+          "codesLow": "Running low — regenerate a new set",
+          "codesEmpty": "No codes left — regenerate a new set",
+          "codesOk": "Enough to recover access"
         },
         "switchDevice": "Change device",
         "viewCodes": "View codes",
@@ -491,7 +575,9 @@
           "chromeos": "ChromeOS",
           "linux": "Linux",
           "other": "another system"
-        }
+        },
+        "ip": "IP: {ip}",
+        "ipUnknown": "IP: unknown"
       }
     },
     "demo": {

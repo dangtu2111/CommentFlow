@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseProfileForm, PROFILE_NAME_MAX, timezoneLabel } from './profile-form';
+import { PROFILE_NAME_MAX, parseProfileForm, timezoneLabel } from './profile-form';
 
 const form = (entries: Record<string, string>) => {
   const data = new FormData();
@@ -9,7 +9,9 @@ const form = (entries: Record<string, string>) => {
 
 describe('parseProfileForm', () => {
   it('nhận tên + múi giờ hợp lệ, cắt khoảng trắng', () => {
-    expect(parseProfileForm(form({ name: '  Nguyễn Mai Linh ', timezone: 'Asia/Ho_Chi_Minh' }))).toEqual({
+    expect(
+      parseProfileForm(form({ name: '  Nguyễn Mai Linh ', timezone: 'Asia/Ho_Chi_Minh' })),
+    ).toEqual({
       ok: true,
       value: { name: 'Nguyễn Mai Linh', timezone: 'Asia/Ho_Chi_Minh' },
     });

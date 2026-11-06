@@ -5,7 +5,9 @@ import { createTenancy } from './tenancy';
 const USER = '11111111-1111-4111-8111-111111111111';
 
 function fakeDb() {
-  const set = vi.fn((_values: Record<string, unknown>) => ({ where: vi.fn(async () => undefined) }));
+  const set = vi.fn((_values: Record<string, unknown>) => ({
+    where: vi.fn(async () => undefined),
+  }));
   const update = vi.fn(() => ({ set }));
   const withUser = vi.fn(async (_uid: string, fn: (tx: unknown) => unknown) => fn({ update }));
   return { db: { withUser } as unknown as FlowDb, withUser, set };

@@ -32,6 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     // `data-theme` được script trong <head> đặt lại trước khi vẽ (chế độ "theo hệ thống") nên cần bỏ qua cảnh báo hydrate.
     <html lang={locale} data-theme={theme} suppressHydrationWarning>
       <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: hằng số tĩnh, không ghép dữ liệu người dùng nào */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body>

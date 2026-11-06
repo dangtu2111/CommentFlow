@@ -182,7 +182,11 @@ export function createTenancy(db: FlowDb) {
         values.timezone = input.timezone;
       }
       if (input.theme !== undefined) {
-        values.theme = parse(themeSchema, input.theme, 'Giao diện phải là sáng, tối hoặc theo hệ thống.');
+        values.theme = parse(
+          themeSchema,
+          input.theme,
+          'Giao diện phải là sáng, tối hoặc theo hệ thống.',
+        );
       }
       if (Object.keys(values).length === 0) {
         throw new AppError('VALIDATION_FAILED', 'Không có thay đổi nào để lưu.');

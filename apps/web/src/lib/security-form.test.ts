@@ -99,10 +99,13 @@ describe('chuỗi trang bảo mật', () => {
     }
   });
 
-  it('không hứa về vị trí hay địa chỉ IP của thiết bị (chỉ có trình duyệt, hệ điều hành, lần dùng gần nhất)', () => {
+  it('không hứa về vị trí; IP chỉ hiện dạng ĐÃ CHE qua chỗ giữ chỗ {ip} (SETTINGS-PROFILE-WIRE)', () => {
     for (const messages of [vi, en]) {
-      const text = JSON.stringify(messages.auth.security.sessions);
-      expect(text).not.toMatch(/IP|vị trí|location/i);
+      const sessions = messages.auth.security.sessions;
+      const { ip, ipUnknown, ...rest } = sessions;
+      expect(JSON.stringify(rest)).not.toMatch(/IP|vị trí|location/i);
+      expect(ip).toContain('{ip}');
+      expect(ipUnknown).not.toContain('{ip}');
     }
   });
 });

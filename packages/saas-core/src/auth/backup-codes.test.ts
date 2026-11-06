@@ -18,9 +18,12 @@ describe('countRemainingBackupCodes', () => {
     expect(await countRemainingBackupCodes(SECRET, stored)).toBe(0);
   });
 
-  it.each([null, undefined, '', 'không-phải-bản-mã'])('dữ liệu hỏng (%j) → 0, không ném lỗi', async (bad) => {
-    expect(await countRemainingBackupCodes(SECRET, bad)).toBe(0);
-  });
+  it.each([null, undefined, '', 'không-phải-bản-mã'])(
+    'dữ liệu hỏng (%j) → 0, không ném lỗi',
+    async (bad) => {
+      expect(await countRemainingBackupCodes(SECRET, bad)).toBe(0);
+    },
+  );
 
   it('sai khóa → 0', async () => {
     const stored = await symmetricEncrypt({ key: SECRET, data: '["x"]' });

@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createMockSmsProvider } from './sms-mock';
 
-const message = { to: '+84912345678', text: 'CommentFlow: ma xac minh cua ban la 482913. Het han sau 5 phut.' };
+const message = {
+  to: '+84912345678',
+  text: 'CommentFlow: ma xac minh cua ban la 482913. Het han sau 5 phut.',
+};
 
 describe('createMockSmsProvider', () => {
   it('dev/test: ghi log với SĐT đã che (mã OTP nằm trong log dev để thử), không gửi gì ra ngoài', async () => {
@@ -25,10 +28,13 @@ describe('createMockSmsProvider', () => {
     expect(line).not.toContain('912345678');
   });
 
-  it.each(['staging', 'production'])('từ chối chạy ở %s (không bao giờ ghi mã vào log thật)', async (env) => {
-    const log = vi.fn();
-    const sms = createMockSmsProvider({ appEnv: env, log });
-    await expect(sms.send(message)).rejects.toThrow();
-    expect(log).not.toHaveBeenCalled();
-  });
+  it.each(['staging', 'production'])(
+    'từ chối chạy ở %s (không bao giờ ghi mã vào log thật)',
+    async (env) => {
+      const log = vi.fn();
+      const sms = createMockSmsProvider({ appEnv: env, log });
+      await expect(sms.send(message)).rejects.toThrow();
+      expect(log).not.toHaveBeenCalled();
+    },
+  );
 });

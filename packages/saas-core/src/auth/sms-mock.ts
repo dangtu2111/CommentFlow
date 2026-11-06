@@ -20,7 +20,9 @@ export function createMockSmsProvider(options: {
       const to = maskPhone(message.to);
       options.log(`[sms-mock] gửi tới ${to}: mã ${code}`);
       if (options.outbox) {
-        await options.outbox.append(`${JSON.stringify({ at: new Date().toISOString(), to, code })}\n`);
+        await options.outbox.append(
+          `${JSON.stringify({ at: new Date().toISOString(), to, code })}\n`,
+        );
       }
     },
   };
