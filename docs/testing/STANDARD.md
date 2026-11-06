@@ -79,7 +79,7 @@ Công cụ: `fast-check` (TS, MIT), `hypothesis` (Python, MPL-2.0). **Chưa cài
 - Nhánh nâng ngưỡng: đo lại (`pnpm test:coverage`), sửa số trong config + bảng trên + dòng `TEST-COVERAGE-GAP`.
 - Module logic quy tắc (§4) nằm trong `saas-core`/`ai`/`shared` sẽ được ép ngưỡng 95% nhánh theo file ngay khi file đó tồn tại (thêm vào `coverage.thresholds` dạng glob).
 
-**Mutation testing (Stryker, Apache-2.0) — chỉ mô tả, chưa cài.** Phạm vi: cổng tự gửi, `sendRecheck`, guard, `decideAction`. Ngưỡng: ≥ **80%** mutant bị diệt; chạy **trước khi merge** nhánh chạm các module này (không chạy mọi commit — chậm). Cài ở nhánh `feat/auto-send-gate` (hoặc nhánh đầu tiên tạo các module đó), nêu giấy phép ở plan.
+**Mutation testing (Stryker 10, Apache-2.0) — đã cài ở `packages/ai` (feat-send-recheck, 06/11/2026).** Lệnh: `pnpm --filter @flow/ai test:mutation` (cấu hình `packages/ai/stryker.config.mjs`; plugin `@stryker-mutator/vitest-runner` khai báo rõ vì pnpm cô lập `node_modules`). Phạm vi `mutate`: `src/recheck/send-recheck.ts`, `src/gate/auto-send-gate.ts`, `src/guard-money.ts` (thêm `src/decide` — gap `MUTATION-STRYKER`). Ngưỡng: ≥ **80%** mutant bị diệt (`thresholds.break = 80`, lệnh đỏ khi thấp hơn); chạy **trước khi merge** nhánh chạm các module này (không chạy mọi commit, chưa ở CI — chậm). Đo 06/11/2026: `send-recheck.ts` 95,2 %, `auto-send-gate.ts` 87,7 %, `guard-money.ts` 80,7 % (sát ngưỡng — nhánh chạm guard nên thêm test diệt mutant), tổng 86,4 %. Mutant sống chấp nhận được: chuỗi nhãn hiển thị, thông điệp lỗi Zod.
 
 ## 9. Kiểm tra tay
 

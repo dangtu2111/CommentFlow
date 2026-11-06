@@ -199,6 +199,26 @@ export {
   type ReadinessTopic,
 } from './readiness/readiness';
 export {
+  AUTO_MESSAGE_WINDOW_MS,
+  HUMAN_AGENT_WINDOW_MS,
+  RECHECK_ACTIONS,
+  RECHECK_CLOCK_SKEW_MS,
+  RECHECK_COUNT,
+  RECHECK_LABELS,
+  RECHECK_MODES,
+  RECHECK_REASONS,
+  RECHECK_SENDABLE_STATUSES,
+  type RecheckAction,
+  type RecheckMode,
+  type RecheckPriceEntry,
+  type RecheckReason,
+  readSendRecheckInput,
+  type SendRecheckInput,
+  type SendRecheckResult,
+  sendRecheck,
+  sendRecheckInputSchema,
+} from './recheck/send-recheck';
+export {
   createDbKbSearcher,
   type KbSearcher,
   type KbSearchQuery,

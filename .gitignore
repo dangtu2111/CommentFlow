@@ -11,6 +11,8 @@ dist/
 build/
 coverage/
 test-results/
+.stryker-tmp/
+reports/
 playwright-report/
 .turbo/
 *.tsbuildinfo
