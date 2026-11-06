@@ -535,6 +535,13 @@
         "recheckR1": "Bình luận đã được trả lời hoặc đổi trạng thái nên không gửi nữa.",
         "recheckR2": "Bình luận đã bị ẩn hoặc gộp nên không gửi nữa.",
         "recheckR3": "Kênh đang không kết nối hoặc đang bị tạm khóa gửi.",
+        "recheckR4": "Workspace đã dừng khẩn cấp, AI đang tạm dừng hoặc mức tự động đã đổi nên câu này chờ duyệt.",
+        "recheckR5": "Giá hoặc tồn kho đã đổi sau khi soạn. Hãy kiểm tra lại rồi gửi.",
+        "recheckR6": "Cơ sở kiến thức đã đổi sau khi soạn nên câu này chờ duyệt.",
+        "recheckR7": "Đã hết lượt, vượt trần chi phí AI hoặc vượt giới hạn tự gửi trong ngày.",
+        "recheckR8": "Đã quá cửa sổ được phép nhắn tin cho khách này.",
+        "recheckR9": "Kênh đang gửi quá nhanh; hệ thống sẽ tự gửi lại sau ít phút.",
+        "recheckInput": "Không đọc được dữ liệu kiểm tra trước khi gửi nên hệ thống không gửi. Hãy thử lại.",
         "connectorUnavailable": "Chưa kết nối được tới nền tảng để gửi. Hãy thử lại sau.",
         "actionUnsupported": "Nền tảng này chưa hỗ trợ trả lời bình luận.",
         "windowExpired": "Đã quá thời hạn được phép trả lời bình luận này.",
@@ -585,6 +592,41 @@
         "retriesExhausted": "Đã thử nhiều lần nhưng chưa thực hiện được. Hãy thử lại sau.",
         "generic": "Thao tác không thành công. Hãy thử lại sau."
       }
+    }
+  },
+  "kbGaps": {
+    "pageTitle": "Câu hỏi AI chưa trả lời được",
+    "title": "Câu hỏi AI chưa trả lời được",
+    "subtitle": "Những câu khách hỏi mà AI chưa có kiến thức để trả lời, gom theo chủ đề. Viết câu trả lời để bổ sung vào FAQ, hoặc bỏ qua nếu bạn muốn nhân viên tự xử lý chủ đề đó. Câu ví dụ đã được che thông tin cá nhân.",
+    "filterLabel": "Lọc câu hỏi",
+    "allTopics": "Mọi chủ đề",
+    "empty": "Chưa có câu hỏi nào trong mục này.",
+    "groupTitle": "{topic} · {total} lượt hỏi",
+    "seen": "Hỏi {count} lần · gần nhất {date}",
+    "questionLabel": "Câu hỏi (FAQ)",
+    "answerLabel": "Câu trả lời",
+    "langLabel": "Áp dụng cho ngôn ngữ",
+    "add": "Bổ sung",
+    "ignore": "Bỏ qua",
+    "reopen": "Mở lại",
+    "lang": { "vi": "Tiếng Việt", "en": "English", "all": "Cả hai" },
+    "status": { "open": "Đang mở", "resolved": "Đã bổ sung", "ignored": "Đã bỏ qua" },
+    "topic": {
+      "shipping": "Phí ship & giao hàng",
+      "discount": "Giảm giá & khuyến mãi",
+      "product_info": "Thông tin sản phẩm",
+      "policy": "Chính sách",
+      "order_status": "Tình trạng đơn hàng",
+      "size": "Size",
+      "other": "Khác"
+    },
+    "error": {
+      "invalid_faq": "Cần nhập đủ câu hỏi và câu trả lời hợp lệ.",
+      "unavailable": "Chưa lưu được, vui lòng thử lại."
+    },
+    "loadError": {
+      "title": "Chưa tải được danh sách",
+      "body": "Vui lòng tải lại trang sau ít phút."
     }
   },
   "readiness": {
@@ -739,6 +781,7 @@
       "posts": "Bài viết",
       "tryAi": "Thử AI",
       "readiness": "Độ sẵn sàng AI",
+      "kbGaps": "Câu hỏi chưa trả lời",
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",

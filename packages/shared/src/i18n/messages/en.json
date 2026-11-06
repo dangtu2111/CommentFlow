@@ -535,6 +535,13 @@
         "recheckR1": "The comment was already replied to or changed status, so it was not sent.",
         "recheckR2": "The comment was hidden or merged, so it was not sent.",
         "recheckR3": "The channel is disconnected or temporarily blocked from sending.",
+        "recheckR4": "The workspace was emergency-stopped, AI is paused, or the automation level changed, so this reply is waiting for review.",
+        "recheckR5": "The price or stock changed after drafting. Please check it again before sending.",
+        "recheckR6": "The knowledge base changed after drafting, so this reply is waiting for review.",
+        "recheckR7": "Out of AI turns, over the AI cost cap, or over the daily auto-send limit.",
+        "recheckR8": "The messaging window for this customer has closed.",
+        "recheckR9": "The channel is sending too fast; the system will retry in a few minutes.",
+        "recheckInput": "The pre-send check could not read its data, so nothing was sent. Please try again.",
         "connectorUnavailable": "Could not reach the platform to send. Please try again later.",
         "actionUnsupported": "This platform does not support replying to comments yet.",
         "windowExpired": "The allowed time to reply to this comment has passed.",
@@ -585,6 +592,41 @@
         "retriesExhausted": "Tried several times but could not complete it. Please try again later.",
         "generic": "The action failed. Please try again later."
       }
+    }
+  },
+  "kbGaps": {
+    "pageTitle": "Unanswered AI questions",
+    "title": "Questions the AI could not answer",
+    "subtitle": "Customer questions the AI had no knowledge for, grouped by topic. Write an answer to add it to your FAQ, or ignore it if staff should handle that topic. Sample questions have personal data masked.",
+    "filterLabel": "Filter questions",
+    "allTopics": "All topics",
+    "empty": "No questions in this view yet.",
+    "groupTitle": "{topic} · asked {total} times",
+    "seen": "Asked {count} times · last {date}",
+    "questionLabel": "Question (FAQ)",
+    "answerLabel": "Answer",
+    "langLabel": "Applies to language",
+    "add": "Add knowledge",
+    "ignore": "Ignore",
+    "reopen": "Reopen",
+    "lang": { "vi": "Vietnamese", "en": "English", "all": "Both" },
+    "status": { "open": "Open", "resolved": "Added", "ignored": "Ignored" },
+    "topic": {
+      "shipping": "Shipping & delivery",
+      "discount": "Discounts & promotions",
+      "product_info": "Product information",
+      "policy": "Policy",
+      "order_status": "Order status",
+      "size": "Size",
+      "other": "Other"
+    },
+    "error": {
+      "invalid_faq": "Enter both a question and a valid answer.",
+      "unavailable": "Could not save, please try again."
+    },
+    "loadError": {
+      "title": "Could not load the list",
+      "body": "Please reload the page in a few minutes."
     }
   },
   "readiness": {
@@ -739,6 +781,7 @@
       "posts": "Posts",
       "tryAi": "Try AI",
       "readiness": "AI readiness",
+      "kbGaps": "Unanswered questions",
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",

@@ -146,7 +146,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | INBOX-MOBILE | FR-040 (Bình luận trên mobile 390px) | US-010 | INBOX-LIST | — | không | ✅ (feat-inbox-mobile; còn Playwright 390px, KT-016) |
 | REPLY-LANG-SETTING | FR-120 (cài `reply_language`/xưng hô), FR-142 (xưng hô shop/khách) | US-104, 036 | KB-SHOP-POLICY-FAQ | — | không | 🟡 (`feat-reply-lang-ui`: `reply_language` theo kênh xong; xưng hô chờ `brand_voice` → gap `REPLY-ADDRESS-UI`) |
 | AI-READINESS | FR-146 (thanh Độ sẵn sàng của AI, yêu cầu tối thiểu onboarding) | US-107 | KB-SHOP-POLICY-FAQ, PRODUCTS-VARIANTS | — | không | Xong-mock (feat-ai-readiness, không migration; lưu `readiness_checks` → AI-READINESS-PERSIST làn b; KT-AR) |
-| KB-GAPS-UI | FR-134 (danh sách câu AI chưa trả lời + bổ sung kiến thức), UF-11 | US-106 | RETRIEVAL-LOG | — | không | ⏳ |
+| KB-GAPS-UI | FR-134 (danh sách câu AI chưa trả lời + bổ sung kiến thức), UF-11 | US-106 | RETRIEVAL-LOG | — | không | ✅ Xong-UI (feat-kb-gaps-ui, Q-KG1; còn mở đúng mục KB → KB-CONTENT-UI) |
 
 ### 2C. Pipeline AI (lọc → nhận ngôn ngữ → cache → phân loại → tìm → soạn → kiểm)
 
@@ -230,7 +230,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | AUTO-SEND-GATE | FR-031 (11 cổng theo `09` §6, AI chỉ thêm điều kiện "cần duyệt"), FR-141 (tự gửi một phần) | US-040, UF-5 | PIPE-DECIDE-ACTION | S | không | ✅ (lõi hàm thuần `decideAutoSend`, `feat-auto-send-gate`; nối pipeline/`automation_settings`/`automation_events` ở AUTO-MATRIX-UI + PIPE-ROUTE; Stryker → `MUTATION-STRYKER`; KT-ASG) |
-| SEND-RECHECK | FR-110 (R1–R9 ngay trước khi gọi API; bị chặn → lý do hiển thị) | US-045 | AUTO-SEND-GATE, FB-REPLY | S | không | ⏳ |
+| SEND-RECHECK | FR-110 (R1–R9 ngay trước khi gọi API; bị chặn → lý do hiển thị) | US-045 | AUTO-SEND-GATE, FB-REPLY | S | không | ✅ (lõi hàm thuần `sendRecheck` + job `send` gọi R1–R3/R9, lý do `recheck:R1–R9` vi/en, Stryker 95,2% — `feat-send-recheck`; dữ liệu thật R4–R8 cho tự gửi → `SEND-RECHECK-WIRE`; KT-SR) |
 | AUTO-MATRIX-UI | FR-070 (Tắt/Chạy thử/Tự động theo kênh × nhãn), FR-071 (ngưỡng, khoảng trễ, giới hạn/ngày, giờ hoạt động, từ khóa chặn, chữ ký) | US-040, UF-5 | AUTO-SEND-GATE | S | không | ⏳ |
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ⏳ |
 | AUTO-CALIBRATION | FR-072 (50/10%/15/0,80; đề xuất kèm lý do), FR-163 (hiệu chuẩn độ tin cậy) | US-041 | AUTO-MATRIX-UI | S | không | ⏳ |

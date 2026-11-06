@@ -139,6 +139,10 @@ Không cần khóa hay dịch vụ ngoài: `normalizeAndDetectLang` chạy bằn
 
 Hàm thuần `decideAutoSend` (`packages/ai/src/gate/`), không khóa/dịch vụ/cờ; kiểm tay mã KT-ASG. Không có gì để chủ dự án cung cấp. Mutation testing (Stryker) chưa cài — xem gap `MUTATION-STRYKER`, cần bạn đồng ý thêm thư viện dev (Apache-2.0) ở một nhánh riêng.
 
+## 2j. `SEND-RECHECK` (FR-110) — không cần tài nguyên ngoài
+
+Hàm thuần `sendRecheck` (`packages/ai/src/recheck/`) + job `send` của worker gọi nó; không khóa/dịch vụ/cờ mới; kiểm tay mã KT-SR. Đã thêm thư viện dev Stryker (Apache-2.0) để đo mutation — không cần bạn cung cấp gì. Khi nối tự gửi (`SEND-RECHECK-WIRE`), R5–R7 đọc `drafts`/`products`/`usage_counters` (bảng do làn b).
+
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").
 
@@ -151,6 +155,10 @@ Hàm thuần `decideAutoSend` (`packages/ai/src/gate/`), không khóa/dịch v�
 
 ## Redis cho cache câu trả lời — `PIPE-CACHE-EXACT` (FR-026, Xong-mock, mã KT-PCX)
 Cache khớp chính xác chạy sau interface `ExactCacheStore` với bản bộ nhớ; chưa có biến môi trường/Redis mới. Khi nối pipeline (`PIPE-ORCHESTRATOR`) cần Redis 7 đã có trong hạ tầng (docs/09 §2, dùng lại URL Redis của hệ thống) và cờ `cf.cache.answers` (docs/09 §10; mặc định TẮT cho đường thật). Không cần khóa/tài khoản mới.
+
+## 2k. `KB-GAPS-UI` (FR-134, UF-11) — không cần tài nguyên ngoài
+
+Trang "Câu hỏi AI chưa trả lời được" chỉ đọc/ghi `kb_gaps` và `faq_items` trong DB; không gọi LLM, không biến môi trường mới, không cờ. Dữ liệu chỉ xuất hiện khi pipeline ghi `kb_gaps` (việc `RETRIEVAL-LOG-WIRE`); trước đó trang hiển thị "chưa có câu hỏi nào".
 
 ## pgvector >= 0.8 cho chỉ mục HNSW — `KB-EMBED-COL`
 
