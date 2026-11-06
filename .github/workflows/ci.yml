@@ -41,6 +41,8 @@ jobs:
         run: pnpm depcruise
       - name: Cổng kế hoạch (plan đã duyệt hết điểm chưa rõ; nhánh feat/*, chore/* có plan)
         run: pnpm check:plans
+      - name: Bản ghép codemap + QUYET_DINH khớp các file nhỏ (docs/codemap.d, docs/plans/quyet-dinh)
+        run: pnpm codemap:check && pnpm quyet:check
       - name: Cổng số migration (liên tục, không trùng, khớp journal)
         run: pnpm check:migrations
       - run: pnpm build

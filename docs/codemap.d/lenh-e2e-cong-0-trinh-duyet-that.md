@@ -1,0 +1,1 @@
+| E2E cổng 0 (trình duyệt thật) | `pnpm e2e [tham số playwright]` | Playwright (`e2e/`), cần máy ảo + Mailpit + Valkey bật và Chromium cài một lần (`pnpm --filter @flow/e2e exec playwright install chromium`); DB `cf_test` (hoặc `cf_test_<CF_LANE>`); `scripts/e2e.mjs` + `scripts/lib/e2e-env.mjs`; KHÔNG nằm trong `pnpm test`; trên CI chạy ở job `e2e` của `ci.yml` |

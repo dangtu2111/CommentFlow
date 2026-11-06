@@ -1,0 +1,17 @@
+# Semantic cache LiteLLM — MẪU TỐI THIỂU, KHÔNG được nạp mặc định (PIPE-CACHE-SEMANTIC-STUB, FR-026).
+# Chưa dùng: cần model embedding đăng ký trong LiteLLM + Redis có RediSearch (xem docs/CAN_BAN_CUNG_CAP.md §2s).
+# Muốn thử: gộp khối `litellm_settings` dưới đây vào config.yaml TRÊN MÁY ẢO (không commit giá trị thật);
+# phần đầy đủ (loại câu có số tiền, đo tỉ lệ trúng) ở GĐ5 — `SEMANTIC-CACHE`.
+# Mỗi lần gọi phải kèm `cache` do `buildSemanticCacheControl` (packages/ai/src/cache/semantic-cache.ts)
+# để namespace chứa workspace_id + kb_version; cờ `cf.cache.semantic` tắt → no-cache/no-store.
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis-semantic
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
+    namespace: os.environ/CACHE_NAMESPACE
+    similarity_threshold: 0.92
+    redis_semantic_cache_embedding_model: os.environ/SEMANTIC_CACHE_EMBEDDING_MODEL
+    ttl: 21600

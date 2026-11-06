@@ -44,7 +44,7 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - **Gói ngữ cảnh của việc:** kế hoạch của mỗi việc phải liệt kê "File sẽ đọc" và "File sẽ sửa". Khi code, chỉ đọc các file đó; cần thêm file → nói lý do.
 - **Không đọc lại:** file đã đọc trong phiên thì dùng lại nội dung đã có, chỉ đọc lại sau khi chính mình sửa hoặc có thay đổi từ bên ngoài. Đọc theo khoảng dòng khi file dài.
 - **Bàn giao giữa phiên:** cuối phiên ghi `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại). Phiên sau đọc file này thay vì đọc lại source.
-- **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → sửa dòng tương ứng trong `docs/codemap.md`; xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
+- **Cập nhật bản đồ cùng commit:** thêm/xóa/đổi vai trò file → **thêm/sửa file riêng trong `docs/codemap.d/`** (tiền tố `lenh-`/`cay-`/`mien-`/`diem-vao-`/`bay-`, một hàng một file) rồi chạy `pnpm codemap:build`; **không sửa tay `docs/codemap.md`** (file sinh ra, CI chạy `pnpm codemap:check`); xong một mục → sửa dòng trong `docs/gap-matrix.md`. Không lập lại gap matrix từ đầu.
 
 ## Thiết kế giao diện
 
@@ -81,7 +81,7 @@ Chủ dự án đọc TypeScript ở mức cơ bản. Mọi kế hoạch, báo c
 
 ## Quy tắc hỏi (chủ dự án chốt 05/11/2026)
 
-- Mặc định **tự chọn phương án khuyến nghị** (an toàn, ít quyền, đảo ngược được), ghi vào `docs/plans/QUYET_DINH_CHO_DUYET.md` (quyết định, lý do, cách đảo ngược) rồi làm tiếp. Được sửa `docs/01–16` cho khớp quyết định đó; ghi danh sách thay đổi vào cùng file.
+- Mặc định **tự chọn phương án khuyến nghị** (an toàn, ít quyền, đảo ngược được), ghi vào **file riêng `docs/plans/quyet-dinh/q<mã>.md`** (một hàng bảng: quyết định, lý do, cách đảo ngược; mục thay đổi docs/01–16 là `docs-<ngày>-<mã>.md`) rồi chạy `pnpm quyet:build` (sinh `docs/plans/QUYET_DINH_CHO_DUYET.md`, không sửa tay; CI chạy `pnpm quyet:check`) và làm tiếp. Được sửa `docs/01–16` cho khớp quyết định đó; ghi danh sách thay đổi vào cùng file.
 - **Chỉ hỏi** khi: cần việc/tài nguyên chỉ chủ dự án làm được; tốn tiền hoặc không đảo ngược được; đổi phạm vi/trải nghiệm lớn; không có phương án đủ an toàn.
 - Chỉ `git add` đúng file của việc đang làm; không bao giờ `git add -A`/`git add .` hay gom file ngoài việc.
 - Báo cáo ≤ 10 dòng, mỗi ngày một lần hoặc khi dừng; tách riêng mục "Việc chỉ bạn làm được".
@@ -103,7 +103,7 @@ Không chờ khóa/tài nguyên của chủ dự án. Việc cần Meta OAuth/we
 - **Một nhánh, một agent tại một thời điểm.** Không để hai agent cùng sửa một nhánh. Đổi agent chỉ ở điểm dừng: sau khi commit và ghi `docs/handoff/<nhánh>.md`.
 - **Trạng thái nằm trong repo, không trong trí nhớ phiên:** `docs/plans/<nhánh>.md` (kế hoạch đã duyệt), `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại, agent vừa làm), `docs/codemap.md`, `docs/gap-matrix.md`. Agent nhận việc đọc các file này trước, không đọc lại source đã được ghi.
 - **Không lập lại kế hoạch, không làm lại việc đã commit.** Thấy kế hoạch sai → ghi đề xuất sửa vào `docs/plans/<nhánh>.md` mục "Đề xuất thay đổi" và dừng chờ chủ dự án.
-- **Chạy song song nhiều nhánh:** xem `docs/workflows/parallel.md` (mỗi làn một worktree + `CF_LANE`).
+- **Chạy song song nhiều nhánh:** xem `docs/workflows/parallel.md` (mỗi làn một worktree + `CF_LANE`). Tự động hóa hàng đợi việc/PR/CI/merge: `tools/orchestrator` — `docs/workflows/orchestrator.md`, ADR 012.
 - **Kiểm chứng chéo chỉ cho diff nhạy cảm** (auth, phiên, token, chữ ký webhook, RLS/`withWorkspace`, thanh toán, cổng tự gửi, `sendRecheck`, che PII, migration): agent **không viết** đoạn đó kiểm chứng theo `docs/workflows/verify.md`, chỉ nhận diff + mục spec. Diff thường không cần agent thứ hai.
 - Ghi agent đã làm vào cột "Nhánh" của gap matrix, ví dụ `feat/ai-usage (codex)`.
 

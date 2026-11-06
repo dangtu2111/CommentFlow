@@ -1,0 +1,1 @@
+- 06/11 (FLAGS-RECONNECT, Q-FR1): `docs/09` §10 — thêm dòng "Mất LISTEN" (tự nối lại lùi dần + cảnh báo).

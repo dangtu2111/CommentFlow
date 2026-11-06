@@ -1,0 +1,1 @@
+- **Server Component không đặt được cookie:** cookie `cf-workspace`/`cf-invite` chỉ ghi trong Server Action/route handler (`/invite/<token>/start`, `/invite/clear`).

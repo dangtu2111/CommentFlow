@@ -1,0 +1,1 @@
+| `docs/testing/` | `STANDARD.md` (chuẩn test), `KIEM_TRA_TAY.md` (kiểm tra tay dồn), `trace-baseline.json` (nợ truy vết), `ALLOWLIST_DE_XUAT.md` (đề xuất allow, chưa áp); thứ tự toàn bộ tính năng: `docs/plans/MASTER.md` |

@@ -1,0 +1,1 @@
+| Chạy song song (làn) | `CF_LANE=a pnpm test:db` · `pnpm cf:dev add-test-db a` | DB test riêng `cf_test_<làn>` (`scripts/lib/load-env.mjs`, `infra/scripts/cf-dev-add-test-db.sh`); quy trình: `docs/workflows/parallel.md` |

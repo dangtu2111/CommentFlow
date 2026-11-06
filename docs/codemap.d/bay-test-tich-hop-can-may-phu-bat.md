@@ -1,0 +1,1 @@
+- **Test tích hợp cần máy phụ bật** và `.env` do chủ dự án sinh bằng `infra/scripts/print-dev-env.sh`; agent không chạy script đó.

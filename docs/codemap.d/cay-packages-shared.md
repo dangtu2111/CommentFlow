@@ -1,0 +1,1 @@
+| `packages/shared/` | `AppError`, `parseEnv`, `brand.ts` (`loadBrandConfig`/`defaultMailFrom`: `APP_NAME`/`APP_LOGO_URL`/`APP_DOMAIN`/`APP_EMAIL_FROM`, FR-125; web: `server/brand.ts` `getBrand()` + `components/brand-logo.tsx`; thư: `renderEmail(..., {brandName})`; không còn khóa i18n `brand`), `maskPii`/`MaskedText`, locale + chuỗi vi/en (gói lá) |
