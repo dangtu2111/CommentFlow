@@ -13,6 +13,7 @@
     "test:db": "vitest run --config vitest.int.config.ts"
   },
   "dependencies": {
+    "@flow/ai": "workspace:*",
     "@flow/connectors": "workspace:*",
     "@flow/db": "workspace:*",
     "@flow/shared": "workspace:*",

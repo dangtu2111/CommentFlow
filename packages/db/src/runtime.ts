@@ -153,6 +153,7 @@ export {
   recordKbGap,
   setKbGapStatus,
 } from './retrieval-logs';
+export { type RawTimestamp, timestampFromRow } from './row-timestamp';
 export { schema } from './schema';
 export {
   listStuckOutbox,
