@@ -1,5 +1,5 @@
-import type { FlowDb } from '@flow/db';
-import { eq, sql } from '@flow/db';
+import type { FlowDb } from '@flow/db/runtime';
+import { eq, sql } from '@flow/db/runtime';
 import { aiUsage } from '@flow/db/schema/cf';
 import { workspaces } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
