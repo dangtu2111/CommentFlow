@@ -5,6 +5,7 @@ import {
   MembersView,
 } from '../../../../components/app/members-view';
 import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
+import { SettingsFrame } from '../../../../components/settings/settings-frame';
 
 const NOW = new Date('2026-11-06T10:30:00Z');
 const DAY = 86_400_000;
@@ -63,12 +64,16 @@ export default function DevMembersPage() {
       <p className="inbox-sample-note" role="note">
         {DEV_SAMPLE_NOTE}
       </p>
-      <MembersView
-        currentUserId={VIEWER}
-        workspaceName={WORKSPACE}
-        members={MEMBERS}
-        invitations={INVITATIONS}
-      />
+      <main className="app-page app-page-settings">
+        <SettingsFrame viewerRole="owner" active="members" counts={null}>
+          <MembersView
+            currentUserId={VIEWER}
+            workspaceName={WORKSPACE}
+            members={MEMBERS}
+            invitations={INVITATIONS}
+          />
+        </SettingsFrame>
+      </main>
     </DevShell>
   );
 }

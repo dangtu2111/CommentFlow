@@ -1,6 +1,16 @@
 'use client';
 
-import { Check, LockKeyhole, Power, RefreshCw, Smartphone } from 'lucide-react';
+import {
+  Check,
+  Download,
+  KeyRound,
+  LockKeyhole,
+  Power,
+  RefreshCw,
+  ShieldCheck,
+  Smartphone,
+  X,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useActionState, useCallback, useEffect, useState } from 'react';
@@ -54,6 +64,16 @@ export function Stepper({ step }: { step: 1 | 2 | 3 }) {
   );
 }
 
+/** Tải mã dự phòng thành file .txt ngay trong trình duyệt (không gửi đi đâu; Blob chỉ tồn tại ở máy người dùng). */
+function downloadCodes(codes: string[]) {
+  const url = URL.createObjectURL(new Blob([`${codes.join('\n')}\n`], { type: 'text/plain' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'commentflow-backup-codes.txt';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 /** Danh sách mã dự phòng: hiện một lần, có nút sao chép (không lưu ở đâu khác ngoài màn hình này). */
 function BackupCodes({ codes, onSaved }: { codes: string[]; onSaved?: () => void }) {
   const t = useTranslations('auth.security.twoFactor');
@@ -88,6 +108,10 @@ function BackupCodes({ codes, onSaved }: { codes: string[]; onSaved?: () => void
       <div className="row">
         <button type="button" className="btn btn-secondary" onClick={copy}>
           {copied ? t('copied') : t('copy')}
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={() => downloadCodes(codes)}>
+          <Download size={16} aria-hidden="true" />
+          {t('downloadTxt')}
         </button>
         {onSaved ? (
           <button type="button" className="btn btn-primary" onClick={onSaved}>
@@ -218,74 +242,109 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
   const t = useTranslations('auth.security.twoFactor');
   const [enrolling, setEnrolling] = useState(false);
   const startEnrolling = useCallback(() => setEnrolling(true), []);
-  const finishEnrolling = useCallback(() => setEnrolling(false), []);
+  // Banner xanh chỉ hiện NGAY SAU khi bật (state của phiên trang này — tải lại trang là mất).
+  const [justEnabled, setJustEnabled] = useState(false);
+  const finishEnrolling = useCallback(() => {
+    setEnrolling(false);
+    setJustEnabled(true);
+  }, []);
   const enableFlow = showEnableFlow({ enabled, enrolling });
   return (
-    <section className="card stack" aria-labelledby="two-factor-title">
-      <SectionHead
-        id="two-factor-title"
-        icon={<LockKeyhole size={22} />}
-        title={t('title')}
-        description={enabled ? t('onBody') : t('offBody')}
-        end={
-          <div className="row">
-            {enableFlow ? (
-              // Cả khi 2FA vừa bật nhưng còn đang hiện mã dự phòng: nút phải mở lại đúng hộp thoại này.
-              <DialogTrigger dialogId={SETUP_ID} className="btn btn-primary">
-                {t('start')}
-              </DialogTrigger>
-            ) : (
-              <DialogTrigger dialogId={REGEN_ID} className="btn btn-secondary">
-                <RefreshCw size={16} aria-hidden="true" />
-                {t('regenTitle')}
-              </DialogTrigger>
-            )}
-            {!enableFlow && !required ? (
-              <DialogTrigger dialogId={DISABLE_ID} className="btn btn-danger-ghost">
-                <Power size={16} aria-hidden="true" />
-                {t('disableTitle')}
-              </DialogTrigger>
-            ) : null}
+    <>
+      {justEnabled && enabled ? (
+        <div className="banner banner-success two-factor-just-enabled" role="status">
+          <ShieldCheck size={22} aria-hidden="true" />
+          <div className="stack-tight">
+            <p className="section-subtitle">{t('justEnabledTitle')}</p>
+            <p>{t('justEnabledBody')}</p>
           </div>
-        }
-      />
-      <p>
-        <span className={`chip ${enabled ? 'chip-success' : 'chip-muted'}`}>
-          {enabled ? t('statusOn') : t('statusOff')}
-        </span>
-      </p>
-      <dl className="info-tiles">
-        <div className="info-tile">
-          <dt>
-            {t('tiles.method')}
-            <Smartphone size={16} aria-hidden="true" />
-          </dt>
-          <dd>{t('tiles.methodValue')}</dd>
-          <dd className="muted">{t('tiles.methodHint')}</dd>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            aria-label={t('dismiss')}
+            onClick={() => setJustEnabled(false)}
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
         </div>
-      </dl>
-      {enableFlow ? (
-        <Dialog
-          dialogId={SETUP_ID}
-          title={t('setupTitle')}
-          description={t('setupBody')}
+      ) : null}
+      <section className="card stack" aria-labelledby="two-factor-title">
+        <SectionHead
+          id="two-factor-title"
           icon={<LockKeyhole size={22} />}
-          defaultOpen={required && !enabled}
-        >
-          <EnableFlow onEnrolling={startEnrolling} onFinished={finishEnrolling} />
-        </Dialog>
-      ) : (
-        <>
-          <Dialog dialogId={REGEN_ID} title={t('regenTitle')} icon={<RefreshCw size={22} />}>
-            <RegenFlow />
+          title={t('title')}
+          description={enabled ? t('onBody') : t('offBody')}
+          end={
+            <div className="row">
+              {enableFlow ? (
+                // Cả khi 2FA vừa bật nhưng còn đang hiện mã dự phòng: nút phải mở lại đúng hộp thoại này.
+                <DialogTrigger dialogId={SETUP_ID} className="btn btn-primary">
+                  {t('start')}
+                </DialogTrigger>
+              ) : null}
+              {!enableFlow && !required ? (
+                <DialogTrigger dialogId={DISABLE_ID} className="btn btn-danger-ghost">
+                  <Power size={16} aria-hidden="true" />
+                  {t('disableTitle')}
+                </DialogTrigger>
+              ) : null}
+            </div>
+          }
+        />
+        <p>
+          <span className={`chip ${enabled ? 'chip-success' : 'chip-muted'}`}>
+            {enabled ? t('statusOn') : t('statusOff')}
+          </span>
+        </p>
+        <dl className="info-tiles">
+          <div className="info-tile">
+            <dt>
+              {t('tiles.method')}
+              <Smartphone size={16} aria-hidden="true" />
+            </dt>
+            <dd>{t('tiles.methodValue')}</dd>
+            <dd className="muted">{t('tiles.methodHint')}</dd>
+            {enabled ? <dd className="info-tile-note is-ok">{t('tiles.rotation')}</dd> : null}
+          </div>
+        </dl>
+        {enabled && !enableFlow ? (
+          <div className="backup-block">
+            <span className="section-head-icon" aria-hidden="true">
+              <KeyRound size={22} />
+            </span>
+            <div className="backup-block-text">
+              <h3 className="section-subtitle">{t('backupBlockTitle')}</h3>
+              <p className="muted">{t('backupBlockBody')}</p>
+            </div>
+            <DialogTrigger dialogId={REGEN_ID} className="btn btn-secondary">
+              <RefreshCw size={16} aria-hidden="true" />
+              {t('regenTitle')}
+            </DialogTrigger>
+          </div>
+        ) : null}
+        {enableFlow ? (
+          <Dialog
+            dialogId={SETUP_ID}
+            title={t('setupTitle')}
+            description={t('setupBody')}
+            icon={<LockKeyhole size={22} />}
+            defaultOpen={required && !enabled}
+          >
+            <EnableFlow onEnrolling={startEnrolling} onFinished={finishEnrolling} />
           </Dialog>
-          {required ? null : (
-            <Dialog dialogId={DISABLE_ID} title={t('disableTitle')} icon={<Power size={22} />}>
-              <DisableFlow />
+        ) : (
+          <>
+            <Dialog dialogId={REGEN_ID} title={t('regenTitle')} icon={<RefreshCw size={22} />}>
+              <RegenFlow />
             </Dialog>
-          )}
-        </>
-      )}
-    </section>
+            {required ? null : (
+              <Dialog dialogId={DISABLE_ID} title={t('disableTitle')} icon={<Power size={22} />}>
+                <DisableFlow />
+              </Dialog>
+            )}
+          </>
+        )}
+      </section>
+    </>
   );
 }

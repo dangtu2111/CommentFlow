@@ -1,4 +1,4 @@
-import { eq } from '@flow/db/runtime';
+import { and, eq, ne } from '@flow/db/runtime';
 import { sessions } from '@flow/db/schema/core';
 import { AppError } from '@flow/shared';
 import type { Auth } from './auth';
@@ -8,6 +8,21 @@ import { type AuthHandle, unwrapAuthDb } from './auth-db';
 export async function revokeAllSessionsOfUser(authDb: AuthHandle, userId: string): Promise<number> {
   const removed = await unwrapAuthDb(authDb).transaction((tx) =>
     tx.delete(sessions).where(eq(sessions.userId, userId)).returning({ id: sessions.id }),
+  );
+  return removed.length;
+}
+
+/** Xóa mọi phiên của người dùng TRỪ phiên đang dùng ("Đăng xuất tất cả thiết bị khác"). Không đụng người dùng khác. */
+export async function revokeOtherSessionsOfUser(
+  authDb: AuthHandle,
+  userId: string,
+  currentSessionId: string,
+): Promise<number> {
+  const removed = await unwrapAuthDb(authDb).transaction((tx) =>
+    tx
+      .delete(sessions)
+      .where(and(eq(sessions.userId, userId), ne(sessions.id, currentSessionId)))
+      .returning({ id: sessions.id }),
   );
   return removed.length;
 }

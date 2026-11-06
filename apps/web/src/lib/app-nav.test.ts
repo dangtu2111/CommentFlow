@@ -99,11 +99,11 @@ describe('FR-040 trang con gom vào trang cha', () => {
     expect(item('owner', 'posts')?.matchHrefs).toEqual(['/app/posts']);
   });
 
-  it('FR-040 thanh tab: Bình luận ⟵ AI đã gửi; Cài đặt ⟵ Kênh, Thành viên (chỉ Owner); trang khác không có tab', () => {
+  it('FR-040 thanh tab: Bình luận ⟵ AI đã gửi; Cài đặt dùng cột trái (SettingsFrame) nên không có tab; trang khác không có tab', () => {
     const tabKeys = (role: 'owner' | 'staff', path: string) =>
       sectionTabsFor(role, path)?.map((t) => t.key);
     expect(tabKeys('owner', '/app/ai-sent')).toEqual(['comments', 'aiSent']);
-    expect(tabKeys('owner', '/app/channels')).toEqual(['settings', 'channels', 'members']);
+    expect(tabKeys('owner', '/app/channels')).toBeUndefined();
     expect(tabKeys('staff', '/app/ai-sent')).toEqual(['comments', 'aiSent']);
     expect(sectionTabsFor('staff', '/app/settings')).toBeNull();
     expect(sectionTabsFor('owner', '/app/posts')).toBeNull();
