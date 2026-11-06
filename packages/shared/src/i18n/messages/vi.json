@@ -640,7 +640,7 @@
     "pageTitle": "Cài đặt tự gửi",
     "title": "Cài đặt tự gửi",
     "subtitle": "Chọn AI được làm gì với từng loại bình luận/tin nhắn: Tắt (chỉ gợi ý cho nhân viên), Chạy thử (ghi lại câu sẽ gửi nhưng không gửi) hoặc Tự động (AI tự gửi khi qua mọi cổng kiểm tra). Mặc định mọi ô là Tắt.",
-    "notWired": "Lưu ý: cấu hình đang lưu tạm trong bộ nhớ máy chủ và chưa áp dụng cho việc tự gửi thật (sẽ nối khi có kho lưu bền và đường gửi tự động). Khởi động lại máy chủ sẽ về mặc định.",
+    "notWired": "Lưu ý: cấu hình được lưu bền nhưng chưa áp dụng cho việc tự gửi thật (sẽ nối khi có đường gửi tự động).",
     "save": "Lưu cài đặt",
     "matrix": {
       "title": "Mức tự gửi theo kênh và nhãn",

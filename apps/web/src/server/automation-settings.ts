@@ -1,22 +1,23 @@
+import type { AutomationChange, AutomationConfig, AutomationSettingsStore } from '@flow/ai';
 import {
-  type AutomationChange,
-  type AutomationConfig,
-  type AutomationSettingsStore,
-  createInMemoryAutomationSettingsStore,
-} from '@flow/ai';
-import { type InboxChannel, listInboxChannels } from '@flow/db/runtime';
+  getAutomationSettings,
+  type InboxChannel,
+  listInboxChannels,
+  saveAutomationSettings,
+} from '@flow/db/runtime';
 import {
   type AutomationFormField,
   type FormSource,
   parseAutomationForm,
 } from '../lib/automation-form';
+import { createDbAutomationSettingsStore } from './automation-settings-store';
 import { getDb } from './db';
 
 /**
  * Cài đặt tự gửi (FR-070/071). `workspaceId`/`userId` lấy từ `requireAppUser({role:'owner'})`, không từ client.
  * Danh sách kênh luôn đọc từ DB của workspace (qua `withActor`/RLS) rồi mới dùng để đọc form → kênh của
- * workspace khác không thể lọt vào cấu hình. Q-AMU1: store hiện là bản bộ nhớ (chưa có bảng `automation_settings`,
- * migration làn b); bản DB cắm vào ở `AUTO-MATRIX-DB` bằng cách đổi `store` trong `automationSettings()`.
+ * workspace khác không thể lọt vào cấu hình. Q-ACS1: store là bản DB (`cf.automation_settings`/`automation_rules`,
+ * migration 0047): đọc qua `withWorkspace`, ghi qua `withActor` nên RLS chỉ cho Owner của đúng workspace ghi.
  */
 type Ctx = { workspaceId: string; userId: string };
 export type AutomationView = {
@@ -58,7 +59,14 @@ export function createAutomationSettingsService({ store, listChannels }: Deps) {
 let service: ReturnType<typeof createAutomationSettingsService> | undefined;
 export const automationSettings = () => {
   service ??= createAutomationSettingsService({
-    store: createInMemoryAutomationSettingsStore(),
+    store: createDbAutomationSettingsStore({
+      read: (workspaceId) =>
+        getDb().withWorkspace(workspaceId, (tx) => getAutomationSettings(tx, workspaceId)),
+      write: (workspaceId, userId, input) =>
+        getDb().withActor(workspaceId, userId, (tx) =>
+          saveAutomationSettings(tx, workspaceId, userId, input),
+        ),
+    }),
     listChannels: ({ workspaceId, userId }) =>
       getDb().withActor(workspaceId, userId, (tx) => listInboxChannels(tx, workspaceId)),
   });

@@ -640,7 +640,7 @@
     "pageTitle": "Auto-send settings",
     "title": "Auto-send settings",
     "subtitle": "Choose what the AI may do for each kind of comment/message: Off (suggestions for staff only), Trial run (records the reply it would send, without sending) or Auto (AI sends by itself once every safety check passes). Everything is Off by default.",
-    "notWired": "Note: settings are currently kept temporarily in server memory and do not yet drive real auto-sending (this will be connected once durable storage and the auto-send path exist). Restarting the server resets them to defaults.",
+    "notWired": "Note: settings are saved durably but do not yet drive real auto-sending (this will be connected once the auto-send path exists).",
     "save": "Save settings",
     "matrix": {
       "title": "Auto-send level by channel and label",
