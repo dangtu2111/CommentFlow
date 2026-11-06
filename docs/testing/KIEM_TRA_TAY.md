@@ -35,6 +35,7 @@
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-DH | Nhân viên giữ chuỗi → AI không tự gửi (lõi, chờ nối) | — | không | chưa | — |
+| KT-DIM | Mạo danh → chuyển người, gợi ý Ẩn (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
@@ -628,6 +629,16 @@ Hàm thuần, chưa nối pipeline → chưa có bước bấm tay; không cần
 | 2 | (Sau khi nối) Khách bình luận ảnh + "mẫu này giá sao" trên bài chưa gắn sản phẩm | Bình luận vào "Cần người", lý do "Có ảnh, chưa nhận ra sản phẩm", không tự gửi |
 | 3 | (Sau khi nối) Cùng bình luận trên bài đã gắn đúng 1 sản phẩm | AI trả lời bình thường |
 | 4 | (Sau khi nối) Chỉ gửi sticker kèm chữ | Không bị coi là hỏi về ảnh |
+
+## KT-DIM — Bình luận mạo danh chuyển người, không tự gửi/ẩn (DA-IMPERSONATION, FR-155, feat-da-impersonation)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-IMPERSONATION-WIRE`. / Core + automated tests only; manual checks deferred to `DA-IMPERSONATION-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide/impersonation-rules.test.ts` | Mọi test xanh |
+| 2 | (Sau khi nối) Tài khoản tên giống Page bình luận kèm link/"nhận quà" | Nhãn đỏ "Nghi mạo danh", báo ngay, AI không tự gửi; nút Ẩn chỉ hiện để người bấm |
+| 3 | (Sau khi nối) Khách trùng tên Page hỏi giá bình thường | Không bị gắn nhãn mạo danh |
 
 ## KT-DRL — Cam kết pháp lý/uy tín (DA-RULES-LEGAL, FR-160) · Legal/trust commitments
 

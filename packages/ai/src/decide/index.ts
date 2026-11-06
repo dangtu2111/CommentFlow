@@ -37,6 +37,13 @@ export {
   MAX_HUMAN_HOLD_MINUTES,
 } from './human-hold-rules';
 export {
+  evaluateImpersonation,
+  IMPERSONATION_REASONS,
+  type ImpersonationReason,
+  type ImpersonationResult,
+  MAX_COMMENT_LENGTH,
+} from './impersonation-rules';
+export {
   checkDraftLegal,
   type DraftLegalCheck,
   evaluateLegalRules,
