@@ -362,6 +362,21 @@ Nếu hỏng: ghi số bước, ảnh chụp, và dòng nhật ký web (chỉ m�
 
 ---
 
+## KT-019 — Chỉ mục Nhật ký của Staff (ACTION-LOGS-ACTOR-INDEX, migration 0032)
+
+Điều kiện: nhánh `feat-action-logs-actor-index`; máy ảo `cf` bật; đã có `.env`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm db:migrate` (cf_dev). | Áp migration 0032, không lỗi; chạy lại lần hai cũng không lỗi. |
+| 2 | Trên máy ảo, `psql` vào `cf_dev`: `\d core.action_logs`. | Thấy hai chỉ mục `action_logs_ws_actor_created_idx` và `action_logs_ws_on_behalf_created_idx` (có `WHERE`). |
+| 3 | `pnpm db:check-rls`. | 0 vi phạm. |
+| 4 | Đăng nhập Staff, mở **Nhật ký**. | Vẫn chỉ thấy dòng của mình + dòng hệ thống do mình yêu cầu (hành vi không đổi). |
+
+Nếu hỏng: ghi số bước và nội dung hiện trên màn hình.
+
+---
+
 ## KT-018 — Tên sản phẩm, logo, tên miền, email gửi cấu hình được (CFG-APPNAME, FR-125)
 
 Điều kiện: web dev chạy; máy ảo (Mailpit) bật. Đặt trong `.env.local` (tên tạm, không cần chốt Q6): `APP_NAME=Tên Thử`, `APP_LOGO_URL=https://picsum.photos/64` (hoặc để trống), `APP_DOMAIN=thu.example.com`; xóa dòng `SMTP_FROM` để thử địa chỉ gửi tự dựng. Khởi động lại web sau mỗi lần đổi biến.

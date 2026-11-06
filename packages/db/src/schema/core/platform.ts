@@ -82,5 +82,12 @@ export const actionLogs = core.table(
       sql`${t.onBehalfOf} is null or ${t.actorType} = 'system'`,
     ),
     index('action_logs_workspace_created_idx').on(t.workspaceId, t.createdAt),
+    // Truy vấn Nhật ký của Staff (migration 0031): dòng của mình / dòng hệ thống do mình yêu cầu.
+    index('action_logs_ws_actor_created_idx')
+      .on(t.workspaceId, t.actorId, t.createdAt.desc().nullsFirst())
+      .where(sql`${t.actorType} = 'user'`),
+    index('action_logs_ws_on_behalf_created_idx')
+      .on(t.workspaceId, t.onBehalfOf, t.createdAt.desc().nullsFirst())
+      .where(sql`${t.onBehalfOf} is not null`),
   ],
 );
