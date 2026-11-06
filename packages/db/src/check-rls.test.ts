@@ -33,6 +33,7 @@ function fakeDb(parts: {
   invoiceOwnerFn?: Row[];
   planTables?: Row[];
   planFn?: Row[];
+  billingAdminFn?: Row[];
   deletionTable?: Row[];
   deletionOwnerFn?: Row[];
   deletionWorkerFn?: Row[];
@@ -114,6 +115,8 @@ function fakeDb(parts: {
         return { rows: parts.invoiceOwnerFn ?? [] };
       if (text.includes('/* plan-tables */')) return { rows: parts.planTables ?? [] };
       if (text.includes('/* plan-functions */')) return { rows: parts.planFn ?? [] };
+      if (text.includes('/* billing-admin-functions */'))
+        return { rows: parts.billingAdminFn ?? [] };
       if (text.includes('/* deletion-table */')) return { rows: parts.deletionTable ?? [] };
       if (text.includes('/* deletion-owner-functions */'))
         return { rows: parts.deletionOwnerFn ?? [] };
@@ -1096,6 +1099,36 @@ describe('checkRls: gói cước (PLANS-SCHEMA, FR-090)', () => {
     const fn = queries.find((q) => q.includes('/* plan-functions */')) ?? '';
     expect(fn).toContain('is_system_context() IS NOT TRUE');
     expect(fn).toContain("session_user <> ''cf_worker''");
+  });
+});
+
+describe('checkRls: quản trị gói/mã giảm giá (ADMIN-REST, 0060)', () => {
+  it('báo hàm quản trị mở quyền; truy vấn kiểm đủ 6 hàm DEFINER', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({
+      billingAdminFn: [{ name: 'core.apply_coupon', problem: 'PUBLIC có quyền EXECUTE' }],
+    });
+    const v = await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    expect(v).toContainEqual({
+      subject: 'core.apply_coupon',
+      message: expect.stringContaining('PUBLIC có quyền EXECUTE'),
+    });
+    const fn = queries.find((q) => q.includes('/* billing-admin-functions */')) ?? '';
+    for (const name of [
+      'assert_billing_admin',
+      'admin_update_plan',
+      'admin_create_coupon',
+      'admin_update_coupon',
+      'admin_list_coupons',
+      'apply_coupon',
+    ]) {
+      expect(fn).toContain(`('${name}')`);
+    }
   });
 });
 

@@ -630,7 +630,7 @@
     },
     "toolbar": {
       "label": "Tìm và lọc bình luận",
-      "search": "Tìm theo tên khách, nội dung…",
+      "search": "Tìm theo tên khách, nội dung...",
       "searchLabel": "Tìm kiếm",
       "platform": "Nền tảng",
       "allPlatforms": "Tất cả nền tảng",
@@ -661,7 +661,13 @@
       "shown": "Hiển thị {shown} / {total}",
       "next": "Xem trang kế tiếp",
       "first": "Về trang đầu",
-      "lockedBy": "{name} đang xử lý"
+      "lockedBy": "{name} đang xử lý",
+      "newBanner": "{count} bình luận mới",
+      "loadNew": "Bấm để tải",
+      "hasAi": "Có AI",
+      "hasAiTitle": "AI đã soạn sẵn câu trả lời cực chuẩn",
+      "shownIn": "Hiển thị {shown} / {total} {scope}",
+      "turn": "Lượt {count}"
     },
     "labels": {
       "price": "Hỏi giá",
@@ -724,15 +730,24 @@
       "notFoundTitle": "Không tìm thấy bình luận",
       "notFoundBody": "Bình luận không còn hoặc không thuộc workspace này.",
       "back": "← Quay lại danh sách",
-      "postContext": "Bối cảnh bài viết",
-      "aiTitle": "Phân tích ý định tự động"
+      "postContext": "Bối cảnh bài viết & Sản phẩm đính kèm",
+      "aiTitle": "Phân tích ý định tự động bởi CommentFlow AI",
+      "openOn": "Mở trên {platform}",
+      "addNote": "Thêm ghi chú khách",
+      "openCrm": "Xem hồ sơ CRM",
+      "reason": "Lý do AI suy luận:"
     },
     "strip": {
       "shortcuts": "Phím tắt",
-      "send": "Gửi",
+      "send": "Duyệt gửi",
       "move": "Dòng trước/sau",
       "select": "Chọn",
-      "hide": "Ẩn hàng loạt"
+      "hide": "Ẩn",
+      "flow": "Luồng quản lý bình luận",
+      "session": "Phiên làm việc",
+      "sla": "SLA còn lại",
+      "layoutStandard": "3 cột chuẩn",
+      "layoutFocus": "Tập trung"
     },
     "error": {
       "title": "Không tải được danh sách bình luận",
@@ -761,11 +776,11 @@
     "reply": {
       "field": "Câu trả lời",
       "placeholder": "Nhập câu trả lời gửi cho khách…",
-      "send": "Gửi",
+      "send": "Duyệt & gửi trả lời",
       "retry": "Thử lại",
       "sending": "Đang gửi…",
       "hint": "Ctrl/⌘ + Enter để gửi",
-      "counter": "{count} / {max}",
+      "counter": "{count} / {max} ký tự",
       "stateSending": "Đang gửi câu trả lời…",
       "stateSlow": "Đang chờ xử lý lâu. Hãy tải lại trang sau ít phút.",
       "yourReply": "Câu trả lời của bạn",
@@ -813,11 +828,19 @@
         "textTooLong": "Câu trả lời dài hơn giới hạn của nền tảng.",
         "retriesExhausted": "Đã thử nhiều lần nhưng chưa gửi được. Hãy thử lại sau.",
         "generic": "Gửi không thành công. Hãy thử lại sau."
-      }
+      },
+      "suggestedTitle": "Câu trả lời đề xuất bởi AI (Đã sẵn sàng duyệt)",
+      "rewrite": "Viết lại câu khác",
+      "emoji": "Thêm biểu tượng cảm xúc",
+      "sourcesLabel": "Nguồn kiến thức nạp vào:",
+      "skip": "Bỏ qua",
+      "privateReply": "Nhắn riêng (Private Reply)",
+      "moreActions": "Thêm hành động",
+      "shortcutSoon": "Phím tắt: {key} · Sắp có"
     },
     "hide": {
       "section": "Ẩn bình luận",
-      "hide": "Ẩn",
+      "hide": "Ẩn bình luận",
       "unhide": "Bỏ ẩn",
       "retry": "Thử lại",
       "working": "Đang xử lý…",
@@ -857,6 +880,11 @@
         "retriesExhausted": "Đã thử nhiều lần nhưng chưa thực hiện được. Hãy thử lại sau.",
         "generic": "Thao tác không thành công. Hãy thử lại sau."
       }
+    },
+    "soon": "Sắp có",
+    "tabsExtra": {
+      "assignedToMe": "Giao cho tôi",
+      "aiHealth": "Độ chính xác AI"
     }
   },
   "aiSent": {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, Send } from 'lucide-react';
+import { Bot, RefreshCw, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
@@ -15,7 +15,7 @@ import { replyCommentAction } from '../../app/app/(guarded)/comments/actions';
 import { MAX_REPLY_LENGTH, REPLY_SEND_KEYS } from '../../lib/reply-input';
 import { deriveSuggestionUi, type SuggestionView } from '../../lib/suggestion';
 import type { ReplyFailure } from '../../server/reply-action';
-import { type SuggestionLabels, SuggestionPanel } from './suggestion-panel';
+import { type SuggestionLabels, SuggestionPanel, SuggestionSources } from './suggestion-panel';
 
 type Labels = {
   field: string;
@@ -26,6 +26,12 @@ type Labels = {
   hint: string;
   /** Có `{count}` và `{max}` (được thay ở client). */
   counter: string;
+  /** Tiêu đề khi có gợi ý AI + nút công cụ (chưa có chức năng) + nhãn chip nguồn + chú thích "Sắp có". */
+  suggestedTitle: string;
+  rewrite: string;
+  emoji: string;
+  sourcesLabel: string;
+  soon: string;
   failures: Record<ReplyFailure, string>;
 };
 
@@ -95,21 +101,24 @@ export function ReplyComposer({
   return (
     <form className="reply-composer" onSubmit={onSubmit}>
       <div className="detail-card reply-card">
-        <label className="reply-label" htmlFor={`reply-${commentId}`}>
-          <Bot size={16} aria-hidden="true" />
-          {labels.field}
-        </label>
-        {suggestion && suggestionLabels && suggestionUi.show ? (
-          <SuggestionPanel
-            text={suggestion.text}
-            ui={suggestionUi}
-            labels={suggestionLabels}
-            onUse={() => {
-              setText(suggestion.text);
-              textareaRef.current?.focus();
-            }}
-          />
-        ) : null}
+        <div className="reply-card-head">
+          <label className="reply-label" htmlFor={`reply-${commentId}`}>
+            <Bot size={16} aria-hidden="true" />
+            {suggestionUi.show ? labels.suggestedTitle : labels.field}
+          </label>
+          {suggestionUi.show ? (
+            <div className="reply-tools">
+              {/* Viết lại / thêm emoji chưa có chức năng → hiện đúng thiết kế nhưng vô hiệu (UI-first). */}
+              <button type="button" className="reply-tool" aria-disabled="true" title={labels.soon}>
+                <RefreshCw size={12} aria-hidden="true" />
+                {labels.rewrite}
+              </button>
+              <button type="button" className="reply-tool" aria-disabled="true" title={labels.soon}>
+                {labels.emoji}
+              </button>
+            </div>
+          ) : null}
+        </div>
         <textarea
           id={`reply-${commentId}`}
           ref={textareaRef}
@@ -123,10 +132,27 @@ export function ReplyComposer({
           aria-describedby={error ? `reply-error-${commentId}` : undefined}
         />
         <div className="reply-meta">
+          {suggestion && suggestionLabels && suggestionUi.show ? (
+            <SuggestionSources
+              ui={suggestionUi}
+              labels={suggestionLabels}
+              caption={labels.sourcesLabel}
+            />
+          ) : null}
           <span className="reply-counter" aria-live="polite">
             {counterText}
           </span>
         </div>
+        {suggestion && suggestionLabels && suggestionUi.show ? (
+          <SuggestionPanel
+            ui={suggestionUi}
+            labels={suggestionLabels}
+            onUse={() => {
+              setText(suggestion.text);
+              textareaRef.current?.focus();
+            }}
+          />
+        ) : null}
         {error ? (
           <p className="reply-error" role="alert" id={`reply-error-${commentId}`}>
             {labels.failures[error]}

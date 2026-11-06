@@ -630,7 +630,7 @@
     },
     "toolbar": {
       "label": "Search and filter comments",
-      "search": "Search by customer name, text…",
+      "search": "Search by customer name, content...",
       "searchLabel": "Search",
       "platform": "Platform",
       "allPlatforms": "All platforms",
@@ -661,7 +661,13 @@
       "shown": "Showing {shown} / {total}",
       "next": "Next page",
       "first": "Back to first page",
-      "lockedBy": "{name} is handling"
+      "lockedBy": "{name} is handling",
+      "newBanner": "{count} new comments",
+      "loadNew": "Click to load",
+      "hasAi": "AI draft",
+      "hasAiTitle": "AI has drafted a ready-to-send reply",
+      "shownIn": "Showing {shown} / {total} {scope}",
+      "turn": "Turn {count}"
     },
     "labels": {
       "price": "Price question",
@@ -724,15 +730,24 @@
       "notFoundTitle": "Comment not found",
       "notFoundBody": "The comment no longer exists or is not in this workspace.",
       "back": "← Back to list",
-      "postContext": "Post context",
-      "aiTitle": "Automatic intent analysis"
+      "postContext": "Post context & attached product",
+      "aiTitle": "Automatic intent analysis by CommentFlow AI",
+      "openOn": "Open on {platform}",
+      "addNote": "Add customer note",
+      "openCrm": "View CRM profile",
+      "reason": "AI reasoning:"
     },
     "strip": {
       "shortcuts": "Shortcuts",
-      "send": "Send",
+      "send": "Review & send",
       "move": "Previous/next row",
       "select": "Select",
-      "hide": "Bulk hide"
+      "hide": "Hide",
+      "flow": "Comment workflow",
+      "session": "Work session",
+      "sla": "SLA remaining",
+      "layoutStandard": "3 standard columns",
+      "layoutFocus": "Focus"
     },
     "error": {
       "title": "Could not load the comment list",
@@ -761,11 +776,11 @@
     "reply": {
       "field": "Reply",
       "placeholder": "Type the reply to send to the customer…",
-      "send": "Send",
+      "send": "Review & send reply",
       "retry": "Try again",
       "sending": "Sending…",
       "hint": "Ctrl/⌘ + Enter to send",
-      "counter": "{count} / {max}",
+      "counter": "{count} / {max} characters",
       "stateSending": "Sending your reply…",
       "stateSlow": "This is taking a while. Please reload the page in a few minutes.",
       "yourReply": "Your reply",
@@ -813,11 +828,19 @@
         "textTooLong": "The reply is longer than the platform allows.",
         "retriesExhausted": "Tried several times but could not send. Please try again later.",
         "generic": "Sending failed. Please try again later."
-      }
+      },
+      "suggestedTitle": "Reply suggested by AI (ready for review)",
+      "rewrite": "Rewrite differently",
+      "emoji": "Add emoji",
+      "sourcesLabel": "Knowledge sources used:",
+      "skip": "Skip",
+      "privateReply": "Private reply",
+      "moreActions": "More actions",
+      "shortcutSoon": "Shortcut: {key} · Coming soon"
     },
     "hide": {
       "section": "Hide comment",
-      "hide": "Hide",
+      "hide": "Hide comment",
       "unhide": "Unhide",
       "retry": "Try again",
       "working": "Working…",
@@ -857,6 +880,11 @@
         "retriesExhausted": "Tried several times but could not complete it. Please try again later.",
         "generic": "The action failed. Please try again later."
       }
+    },
+    "soon": "Coming soon",
+    "tabsExtra": {
+      "assignedToMe": "Assigned to me",
+      "aiHealth": "AI accuracy"
     }
   },
   "aiSent": {

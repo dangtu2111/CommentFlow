@@ -1,4 +1,5 @@
 import { COMMENT_LABELS, isCommentLabel, isLocale } from '@flow/shared';
+import { Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BULK_MAX } from '../../lib/bulk-input';
@@ -21,7 +22,16 @@ export type InboxListItem = {
   platform: string;
   isAd: boolean;
   lockedByName: string | null;
+  /** Chỉ dữ liệu mẫu (chưa có nguồn thật): đã có gợi ý AI · lượt trao đổi · ghi chú phụ · hậu tố nhãn. */
+  extras?: { hasAiDraft?: boolean; turn?: number; sideNote?: string; labelSuffix?: string };
 };
+
+const PLATFORM_SHORT: Record<string, string> = {
+  facebook: 'FB',
+  instagram: 'IG',
+  tiktok: 'TikTok',
+};
+const platformShort = (platform: string) => PLATFORM_SHORT[platform] ?? platform;
 
 /**
  * Cột giữa: danh sách bình luận. Chỉ hiển thị dữ liệu thật; nội dung là văn bản thuần (React tự thoát HTML), cắt 3 dòng
@@ -112,23 +122,35 @@ export async function InboxList({
                   </time>
                 </div>
                 <div className="inbox-source">
-                  {item.platform === 'facebook' ||
-                  item.platform === 'instagram' ||
-                  item.platform === 'tiktok'
-                    ? t(`platforms.${item.platform}`)
-                    : item.platform}
-                  {' · '}
-                  {item.channelName}
+                  <span>{`${platformShort(item.platform)}: ${item.channelName}`}</span>
+                  {item.extras?.hasAiDraft ? (
+                    <span className="inbox-ai-flag" title={t('list.hasAiTitle')}>
+                      <Sparkles size={12} aria-hidden="true" />
+                      {t('list.hasAi')}
+                    </span>
+                  ) : null}
                 </div>
                 <p className="inbox-text">{item.text}</p>
                 <div className="inbox-chips">
                   {item.label ? (
                     <span className={`chip chip-label chip-tone-${labelTone(item.label)}`}>
-                      {labelText(item.label)}
+                      {`${labelText(item.label)}${item.extras?.labelSuffix ?? ''}`}
                     </span>
                   ) : null}
+                  {item.extras?.turn ? (
+                    <span className="inbox-turn">
+                      {t('list.turn', { count: item.extras.turn })}
+                    </span>
+                  ) : null}
+                  {item.extras?.sideNote ? (
+                    <span className="inbox-side-note">{item.extras.sideNote}</span>
+                  ) : null}
                   {item.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
-                  {item.isAd ? <span className="chip">{t('list.ad')}</span> : null}
+                  {item.isAd ? (
+                    <span className="chip chip-ads" title={t('list.ad')}>
+                      ADS
+                    </span>
+                  ) : null}
                   {item.lockedByName ? (
                     <span className="chip chip-lock">
                       {t('list.lockedBy', { name: item.lockedByName })}
@@ -144,7 +166,15 @@ export async function InboxList({
         ))}
       </ul>
       <footer className="inbox-footer">
-        <span>{t('list.shown', { shown: items.length, total })}</span>
+        <span>
+          {view.tab === 'all'
+            ? t('list.shown', { shown: items.length, total })
+            : t('list.shownIn', {
+                shown: items.length,
+                total,
+                scope: t(`tabs.${view.tab}`).toLocaleLowerCase(locale),
+              })}
+        </span>
         <span className="inbox-pager">
           {view.cursor ? (
             <Link href={buildInboxHref(view, { cursor: null })}>{t('list.first')}</Link>
@@ -152,6 +182,11 @@ export async function InboxList({
           {nextCursor ? (
             <Link href={buildInboxHref(view, { cursor: nextCursor })}>{t('list.next')}</Link>
           ) : null}
+          {nextCursor ? null : (
+            <span className="inbox-pager-off" aria-disabled="true">
+              {t('list.next')}
+            </span>
+          )}
         </span>
       </footer>
     </BulkProvider>
