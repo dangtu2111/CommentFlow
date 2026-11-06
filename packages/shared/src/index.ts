@@ -222,6 +222,9 @@ export {
   mergeBurstText,
   planMergeBurst,
 } from './merge-burst';
+export * from './notification-channels';
+export * from './notification-digest';
+export * from './notification-prefs';
 export {
   type ExtractedContacts,
   extractPii,
