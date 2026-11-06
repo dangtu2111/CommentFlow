@@ -657,6 +657,17 @@ Chưa có giao diện (làm ở `KB-CONTENT-UI`). Kiểm bằng lệnh trên DB 
 | 2 | Chạy `CF_LANE=b pnpm db:check-rls` | Không vi phạm |
 | 3 | Dùng tài khoản Staff ghi thử FAQ (qua test) | Bị chặn (42501); Staff đọc được |
 
+## KT-PR — Định tuyến theo ý định (PIPE-ROUTE, FR-136, feat-pipe-route)
+
+Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. Kiểm tay thật khi `PIPE-RETRIEVE` nối `route`. / Pure function, no UI yet; verify by command.
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/route` | Xanh (ví dụ + property-based) |
+| 2 | Khi nối pipeline: dưới bài gắn sản phẩm, bình luận "giá sao shop" | `retrieval_logs.route = sql`; không có lượt gọi rerank/vector |
+| 3 | Bình luận "lấy 2 cái size M ship về Cà Mau bao nhiêu" | `route = both` (có ý ship), câu trả lời có đơn giá biến thể M từ DB |
+| 4 | Bình luận "giá sao" dưới bài không gắn sản phẩm, tên sản phẩm không nhận ra | `route = both` (không bao giờ `sql`) |
+
 ### KB-CHUNKING (FR-055/130/131; chưa có giao diện)
 
 | # | Việc | Kết quả mong đợi |
