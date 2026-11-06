@@ -12,6 +12,8 @@ export type NavGroupKey = 'operations' | 'system';
 export type NavItemKey =
   | 'comments'
   | 'posts'
+  | 'leads'
+  | 'reports'
   | 'aiSent'
   | 'kb'
   | 'tryAi'
@@ -44,6 +46,9 @@ const ENTRIES: readonly Entry[] = [
   { key: 'aiSent', href: '/app/ai-sent', group: 'operations', roles: BOTH, parent: 'comments' },
   // Bài viết (FR-060): xem được với mọi vai trò (RLS theo thành viên workspace).
   { key: 'posts', href: '/app/posts', group: 'operations', roles: BOTH },
+  // Khách tiềm năng (FR-082) và Báo cáo (FR-083): chỉ đọc; Staff thấy Kanban của workspace (RLS) và số liệu cá nhân.
+  { key: 'leads', href: '/app/leads', group: 'operations', roles: BOTH },
+  { key: 'reports', href: '/app/reports', group: 'operations', roles: BOTH },
   // Cơ sở kiến thức (trang trung tâm, QUKP1) + các trang con (khung `KbFrame`); chỉ Owner.
   { key: 'kb', href: '/app/kb', group: 'system', roles: OWNER },
   { key: 'tryAi', href: '/app/try-ai', group: 'system', roles: OWNER, parent: 'kb' },

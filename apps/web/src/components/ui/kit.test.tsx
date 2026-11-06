@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Avatar } from './avatar';
 import { Button, buttonClass, IconButton } from './button';
 import { Chip } from './chip';
+import { DataTable } from './data-table';
 import { Icon } from './icon';
 import { Inset } from './inset';
 import { Kbd } from './kbd';
@@ -193,5 +194,22 @@ describe('UI-KIT SectionHead + PageHeader (Cài đặt, HTML-first)', () => {
     const html = renderToStaticMarkup(<PageHeader title="T" subtitle="S" />);
     expect(html.startsWith('<header')).toBe(true);
     expect(html).toContain('<h1 class="page-title">T</h1>');
+  });
+});
+
+describe('UI-KIT DataTable', () => {
+  it('bảng có nhãn truy cập, tiêu đề cột scope=col, cột căn phải có lớp riêng', () => {
+    const html = renderToStaticMarkup(
+      <DataTable label="Nhật ký" columns={[{ label: 'Thời gian' }, { label: 'Số', end: true }]}>
+        <tr>
+          <td>x</td>
+          <td>1</td>
+        </tr>
+      </DataTable>,
+    );
+    expect(html).toContain('aria-label="Nhật ký"');
+    expect(html).toContain('<th scope="col" class="data-table-end">Số</th>');
+    expect(html).toContain('<th scope="col">Thời gian</th>');
+    expect(html).toContain('<td>x</td>');
   });
 });

@@ -6,6 +6,8 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: var(--space-6);
+  /* Thẻ là ô của lưới `.stack`: không để nội dung rộng (bảng) kéo cả trang tràn ngang. */
+  min-width: 0;
 }
 
 .section-title {

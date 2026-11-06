@@ -1,9 +1,11 @@
 'use client';
 
 import {
+  BarChart3,
   BookOpen,
   Bot,
   CircleHelp,
+  Contact,
   FileText,
   FlaskConical,
   Gauge,
@@ -33,6 +35,8 @@ type Group = {
 const ICONS: Record<NavItemKey, LucideIcon> = {
   comments: MessageSquareText,
   posts: FileText,
+  leads: Contact,
+  reports: BarChart3,
   aiSent: Bot,
   kb: Library,
   tryAi: FlaskConical,
