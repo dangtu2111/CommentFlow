@@ -10,6 +10,7 @@ export * from './decide';
 export * from './delay';
 export * from './draft';
 export * from './embedding';
+export * from './emergency';
 export * from './examples';
 export * from './gate';
 export * from './history';
