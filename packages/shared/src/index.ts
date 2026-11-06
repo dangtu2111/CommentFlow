@@ -347,3 +347,16 @@ export {
   usagePeriodStart,
   usageStatus,
 } from './usage';
+export {
+  type ConfirmDeletionInput,
+  DELETION_CONFIRM_WINDOW_MINUTES,
+  DELETION_GRACE_DAYS,
+  DELETION_STATUSES,
+  type DeletionPhase,
+  type DeletionRequestInfo,
+  type DeletionStatus,
+  deletionExecuteAfter,
+  deletionPhase,
+  matchesDeletionConfirmation,
+  parseConfirmDeletion,
+} from './workspace-deletion';
