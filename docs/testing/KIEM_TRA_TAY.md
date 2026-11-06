@@ -33,6 +33,7 @@
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
+| KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
@@ -655,6 +656,13 @@ Chưa có giao diện (lõi hàm thuần, chưa nối pipeline). / No UI yet (pu
 | 4 | Đăng nhập Owner bằng email/mật khẩu vừa in | Vào được `/app`, thấy "[MẪU] Demo Shop", 2 kênh, 4 bài, 42 bình luận; trang Sản phẩm/Kiến thức/Tự động hóa có dữ liệu |
 | 5 | `pnpm dev:seed-demo --reset` | Tạo lại, mật khẩu mới; mật khẩu cũ không còn đăng nhập được |
 | 6 | Mọi tên kênh/sản phẩm/tác giả | Bắt đầu bằng "[MẪU]"; không SĐT/email thật |
+
+## KT-ES — Dừng khẩn cấp tự gửi (EMERGENCY-STOP, FR-073)
+
+Chỉ phần máy (chưa có nút/giao diện, chưa ghi DB): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/emergency` → 2 file xanh. Kết quả mong đợi: không test đỏ (Owner+Staff Dừng được, Staff không Bật lại được, Dừng hủy hẹn giờ của đúng workspace).
+
+---
 
 ## KT-KB-EMBED-COL — Chỉ mục embedding của `kb_chunks` (KB-EMBED-COL, FR-133/139, migration 0042) · Embedding indexes
 
