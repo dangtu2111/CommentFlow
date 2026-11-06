@@ -316,6 +316,48 @@
       "when": 1793946955996,
       "tag": "0044_size_charts",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793948344174,
+      "tag": "0045_post_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793950085737,
+      "tag": "0046_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793950854931,
+      "tag": "0047_auto_config_store",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793952386506,
+      "tag": "0048_automation_settings_rls_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1793952883098,
+      "tag": "0049_post_products",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1793954186401,
+      "tag": "0050_spam_rules_store",
+      "breakpoints": true
     }
   ]
 }

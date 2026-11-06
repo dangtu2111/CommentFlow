@@ -1,0 +1,1 @@
+- **`@flow/db` có hai cửa:** `@flow/db/runtime` (truy vấn, `createDb`, schema — dùng trong web/worker/saas-core) và `@flow/db` (thêm `runMigrations`, `checkRls`... cho CLI/test). Web/saas-core KHÔNG import `@flow/db` gốc: mã migration kéo vào bundle Next và làm build lỗi.

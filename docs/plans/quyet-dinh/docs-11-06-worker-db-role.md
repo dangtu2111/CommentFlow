@@ -1,0 +1,1 @@
+- 06/11 (WORKER-DB-ROLE, sửa sau kiểm chứng): `docs/10_Database_Design.md` §4 (dòng ~191, ~202) — `cf.read_channel_token` chỉ `EXECUTE` cho `cf_worker` (không còn `cf_app`); ngữ cảnh hệ thống = `app.ctx = 'system'` + `session_user = 'cf_worker'` (migration 0030).

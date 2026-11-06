@@ -1,0 +1,1 @@
+| QW4 | 05/11 | WORKER-DB-ROLE: `read_channel_token` | Thu hồi EXECUTE khỏi `cf_app`, cấp riêng `cf_worker` (lớp hai ngoài kiểm `is_system_context`) | Web mất quyền gọi hàm ngay cả khi lớp một lỗi | `GRANT EXECUTE … TO cf_app` |

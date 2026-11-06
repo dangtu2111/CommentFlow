@@ -13,9 +13,11 @@ export type NavItemKey =
   | 'aiSent'
   | 'tryAi'
   | 'readiness'
+  | 'automation'
   | 'productImport'
   | 'kbGaps'
   | 'kbPublish'
+  | 'kbTestset'
   | 'spamRules'
   | 'channels'
   | 'members'
@@ -38,12 +40,16 @@ const ENTRIES: readonly Entry[] = [
   { key: 'tryAi', href: '/app/try-ai', group: 'settings', roles: ['owner'] },
   // Độ sẵn sàng của AI (FR-146, US-107): Owner xem thiếu gì trước khi bật Tự động.
   { key: 'readiness', href: '/app/readiness', group: 'settings', roles: ['owner'] },
+  // Cài đặt tự gửi (FR-070/071): ma trận kênh × nhãn + cài đặt chung; chỉ Owner, Staff nhận 404.
+  { key: 'automation', href: '/app/automation', group: 'settings', roles: ['owner'] },
   // Nhập sản phẩm Excel/CSV (FR-051, US-003): chỉ Owner; Staff nhận 404.
   { key: 'productImport', href: '/app/products/import', group: 'settings', roles: ['owner'] },
   // Câu hỏi AI chưa trả lời được (FR-134, UF-11): Owner bổ sung kiến thức nhanh.
   { key: 'kbGaps', href: '/app/kb-gaps', group: 'settings', roles: ['owner'] },
   // Phiên bản kiến thức (FR-054, UF-8): Owner xuất bản/khôi phục.
   { key: 'kbPublish', href: '/app/kb-publish', group: 'settings', roles: ['owner'] },
+  // Câu kiểm thử kiến thức (FR-054, US-034): Owner chạy thử trước khi xuất bản.
+  { key: 'kbTestset', href: '/app/kb-testset', group: 'settings', roles: ['owner'] },
   // Quy tắc spam (FR-080, US-050): Owner tạo quy tắc + xem trước 7 ngày.
   { key: 'spamRules', href: '/app/spam-rules', group: 'settings', roles: ['owner'] },
   { key: 'channels', href: '/app/channels', group: 'settings', roles: ['owner'] },

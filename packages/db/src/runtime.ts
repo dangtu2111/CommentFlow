@@ -49,6 +49,13 @@ export {
   MAX_ACTION_LOG_LIMIT,
 } from './queries/action-logs';
 export {
+  type AutomationRuleRow,
+  type AutomationSettingsInput,
+  type AutomationSettingsRow,
+  getAutomationSettings,
+  saveAutomationSettings,
+} from './queries/automation-settings';
+export {
   type ChannelAlert,
   type ChannelAlertStatus,
   listChannelAlerts,
@@ -165,6 +172,16 @@ export {
   SPAM_PREVIEW_MAX_ROWS,
   type SpamPreviewRow,
 } from './queries/spam-preview';
+export {
+  createSpamRule,
+  deleteSpamRule,
+  listSpamRules,
+  SPAM_RULES_MAX_PER_WORKSPACE,
+  type SpamRuleInput,
+  SpamRuleLimitError,
+  type SpamRuleRow,
+  setSpamRuleEnabled,
+} from './queries/spam-rules';
 export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,

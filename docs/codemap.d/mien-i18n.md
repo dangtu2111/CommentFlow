@@ -1,0 +1,1 @@
+| i18n | `packages/shared/src/i18n/`, `apps/web/src/i18n/` | Chuỗi `vi.json`/`en.json`, test khớp khóa, cookie `NEXT_LOCALE`; `setLocale` (`app/actions.ts`) → `server/locale-choice.ts` (`applyLocaleChoice`: cookie + `tenancy.setUserLocale` → `users.locale`, FR-119); bộ chọn ở thanh trên và `/app/security` | 08 §8 |

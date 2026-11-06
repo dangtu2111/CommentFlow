@@ -1,0 +1,1 @@
+- **Phiên Admin:** trigger `core.cap_admin_session` ép hạn 8 giờ (INSERT + UPDATE), chỉ user `is_admin` mới có phiên Admin; `cf_app` không UPDATE `sessions`. Gieo dữ liệu thử cho các cột đó và tạo người dùng thử phải dùng pool chủ sở hữu (`TEST_DATABASE_ADMIN_URL`); test cần pool xác thực dùng `TEST_DATABASE_AUTH_URL`.

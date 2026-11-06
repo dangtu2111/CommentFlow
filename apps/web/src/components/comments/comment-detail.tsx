@@ -6,9 +6,11 @@ import { deriveHideUi, type HideUiDetail } from '../../lib/hide-state';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
 import { replyErrorKey } from '../../lib/reply-errors';
 import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
+import type { SuggestionView } from '../../lib/suggestion';
 import { CommentLock } from './comment-lock';
 import { HideButton } from './hide-button';
 import { HideProgress } from './hide-progress';
+import { RelabelSelect } from './relabel-select';
 import { ReplyComposer } from './reply-composer';
 import { ReplyProgress } from './reply-progress';
 
@@ -32,6 +34,8 @@ export type CommentDetailView = {
   latestHide: HideUiDetail['latestHide'];
   latestReply: ReplyUiDetail['latestReply'];
   lock: { holderName: string | null; heldByMe: boolean } | null;
+  /** Gợi ý AI (FR-043). Chưa có nguồn dữ liệu (bảng `drafts`, SUGGEST-UI-PERSIST) → không truyền. */
+  suggestion?: SuggestionView | null;
 };
 
 const STATUSES = [
@@ -124,6 +128,30 @@ export async function CommentDetailPanel({
       unavailable: t('reply.failures.unavailable'),
     },
   };
+  const suggestionLabels = {
+    title: t('suggestion.title'),
+    use: t('suggestion.use'),
+    edited: t('suggestion.edited'),
+    needsHuman: t('suggestion.needsHuman'),
+    sources: t('suggestion.sources'),
+    sourceFallback: t('suggestion.sourceFallback'),
+    // Chỗ giữ chỗ {count} được client thay (ICU không phân tích lại giá trị tham số).
+    more: t('suggestion.more', { count: '{count}' }),
+  };
+  const relabelLabels = {
+    field: t('relabel.field'),
+    apply: t('relabel.apply'),
+    working: t('relabel.working'),
+    failed: t('relabel.failed'),
+    options: {
+      price: t('labels.price'),
+      advice: t('labels.advice'),
+      purchase: t('labels.purchase'),
+      complaint: t('labels.complaint'),
+      spam: t('labels.spam'),
+      other: t('labels.other'),
+    },
+  };
   return (
     <article className="comment-detail" aria-label={t('detail.title')}>
       <CommentLock
@@ -174,6 +202,9 @@ export async function CommentDetailPanel({
         {comment.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
         {comment.label ? <span className="chip">{comment.label}</span> : null}
       </div>
+      {isDeleted ? null : (
+        <RelabelSelect commentId={comment.id} current={comment.label} labels={relabelLabels} />
+      )}
       <section className="reply-section" aria-label={t('reply.field')}>
         {reply.mode === 'compose' ? (
           <ReplyComposer
@@ -181,6 +212,8 @@ export async function CommentDetailPanel({
             prefill={reply.prefill}
             labels={composerLabels}
             isRetry={false}
+            suggestion={comment.suggestion ?? null}
+            suggestionLabels={suggestionLabels}
           />
         ) : null}
         {reply.mode === 'sending' ? (

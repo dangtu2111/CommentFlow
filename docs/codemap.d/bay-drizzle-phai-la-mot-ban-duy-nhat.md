@@ -1,0 +1,1 @@
+- **Drizzle phải là một bản duy nhất:** gói khác lấy toán tử (`eq`, `and`…) từ `@flow/db`, không import `drizzle-orm` trực tiếp (hai bản làm kiểu không khớp).

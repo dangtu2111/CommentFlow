@@ -493,6 +493,21 @@
       "heldNamed": "{name} is handling this comment (about {seconds}s left). View only.",
       "heldAnonymous": "A teammate is handling this comment (about {seconds}s left). View only."
     },
+    "suggestion": {
+      "title": "AI suggestion",
+      "use": "Use suggestion",
+      "edited": "Edited from the suggestion",
+      "needsHuman": "The AI suggests a person reviews this reply before sending.",
+      "sources": "Suggestion sources",
+      "sourceFallback": "Knowledge source",
+      "more": "+{count} sources"
+    },
+    "relabel": {
+      "field": "Change label",
+      "apply": "Save label",
+      "working": "Saving…",
+      "failed": "Could not change the label. Please try again."
+    },
     "reply": {
       "field": "Reply",
       "placeholder": "Type the reply to send to the customer…",
@@ -621,6 +636,62 @@
       "body": "Please reload the page in a few minutes."
     }
   },
+  "automation": {
+    "pageTitle": "Auto-send settings",
+    "title": "Auto-send settings",
+    "subtitle": "Choose what the AI may do for each kind of comment/message: Off (suggestions for staff only), Trial run (records the reply it would send, without sending) or Auto (AI sends by itself once every safety check passes). Everything is Off by default.",
+    "notWired": "Note: settings are saved durably but do not yet drive real auto-sending (this will be connected once the auto-send path exists).",
+    "save": "Save settings",
+    "matrix": {
+      "title": "Auto-send level by channel and label",
+      "body": "Each cell is a separate level for comments and for messages of that channel.",
+      "label": "Label",
+      "empty": "No channel yet. Connect a channel on the Channels page first.",
+      "complaintNote": "Complaint and Spam comments are never auto-sent; they always go to staff."
+    },
+    "target": { "comment": "Comments", "message": "Messages" },
+    "labels": { "price": "Price question", "advice": "Advice", "purchase": "Purchase" },
+    "mode": { "off": "Off", "shadow": "Trial run", "auto": "Auto" },
+    "general": {
+      "title": "General settings",
+      "threshold": "Confidence threshold (%)",
+      "thresholdHint": "The AI only auto-sends when confidence is at or above this value. Minimum 80%, default 85%.",
+      "delay": "Delay before sending",
+      "delayOption": {
+        "0": "Send immediately",
+        "60": "1 minute",
+        "120": "2 minutes",
+        "300": "5 minutes"
+      },
+      "dailyCap": "Daily limit of auto-sent replies",
+      "hours": "Active hours",
+      "hoursEnabled": "Only auto-send within this window (workspace time zone)",
+      "hoursFrom": "From",
+      "hoursTo": "To",
+      "hoursHint": "Untick to auto-send all day. Pick at least one day when enabled.",
+      "day": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+      "keywords": "Blocked keywords",
+      "keywordsHint": "One word or phrase per line (up to 50, each ≤ 60 characters). AI replies containing any of them are not auto-sent.",
+      "signature": "Disclosure signature",
+      "signatureHint": "A short single line (≤ 120 characters) saying the reply was written by AI, e.g. “— The shop's AI assistant”. Leave empty to skip."
+    },
+    "notice": { "saved": "Settings saved." },
+    "error": {
+      "rules": "A level selection is invalid. Please choose again.",
+      "threshold": "The confidence threshold must be between 80 and 100.",
+      "delaySeconds": "The delay is not valid.",
+      "dailyCap": "The daily limit must be a whole number from 1 to 1000.",
+      "activeHours": "Active hours are not valid: pick at least one day and different start and end times.",
+      "blockedKeywords": "Blocked keywords are not valid (up to 50, each ≤ 60 characters).",
+      "signature": "The signature is at most 120 characters and a single line.",
+      "form": "Invalid data. Please check and try again.",
+      "unavailable": "Cannot save right now. Please try again."
+    },
+    "loadError": {
+      "title": "Could not load settings",
+      "body": "Please reload the page in a few minutes."
+    }
+  },
   "productImport": {
     "pageTitle": "Import products from Excel/CSV",
     "title": "Import products from Excel/CSV",
@@ -715,7 +786,8 @@
     "saved": "Rule saved.",
     "error": {
       "invalid_rule": "The rule is not valid: check the name, pattern (regex must not use nested repetition) and action.",
-      "unavailable": "Could not complete this now (saving rules is not available yet). Please try again later."
+      "limit_reached": "You have reached 50 rules. Delete an old rule before adding a new one.",
+      "unavailable": "Could not complete this now. Please try again later."
     }
   },
   "kbGaps": {
@@ -869,6 +941,56 @@
       "body": "Something went wrong reading the data. Please try again later."
     }
   },
+  "kbTestset": {
+    "pageTitle": "Knowledge test questions",
+    "title": "Test questions before publishing",
+    "subtitle": "Write a few sample customer questions with the expected outcome and run them to check the AI handles them correctly before you publish knowledge. Does not use your plan's AI quota.",
+    "mockNote": "Running the simulation (no real AI call). The set is not saved and does not yet block the Publish button; run it again each time.",
+    "label": "Test question list",
+    "hint": "One per line: question | expected action | words the reply must contain (optional, separated by ;). Actions: answer, clarify, redirect, handoff, skip (ignored). Up to {max} lines.",
+    "sample": "ship về Hà Nội bao nhiêu | redirect | 20.000đ\náo thun basic size M màu đen giá bao nhiêu? | answer\n😀😀 | skip",
+    "submit": "Run test questions",
+    "quota": "Ran {used}/{limit} times today",
+    "knowledge": {
+      "demo": "Source: sample knowledge (your shop's real knowledge is not connected yet)",
+      "kb": "Source: your shop's published knowledge"
+    },
+    "errors": {
+      "empty": "Enter at least one test question.",
+      "too_many": "Too many questions (up to {max} lines per run).",
+      "invalid_line": "Line {line} is malformed: use \"question | action\" with a valid action, at most 5 keywords of up to 100 characters each.",
+      "limit_reached": "You have used today's runs. Come back tomorrow.",
+      "unavailable": "Cannot run right now. Please try again later."
+    },
+    "summary": "Passed {passed}/{total} · failed {failed} · errors {errored}",
+    "gate": {
+      "pass": "Passed: every question produced the expected outcome.",
+      "fail": "Not passed: fix the knowledge or the expectations and run again before publishing."
+    },
+    "result": {
+      "pass": "Passed",
+      "fail": "Failed",
+      "error": "Error while running",
+      "line": "Question {n}",
+      "expected": "Expected",
+      "actual": "Actual",
+      "reply": "Suggested reply",
+      "missing": "Missing keywords: {words}",
+      "errorName": "Error code: {name}"
+    },
+    "failures": {
+      "action_mismatch": "Action differs from expected",
+      "reply_missing": "Reply is missing expected keywords",
+      "guard_failed": "Reply contains an amount that is not in the sources"
+    },
+    "actions": {
+      "answer": "Answer",
+      "clarify": "Ask the customer",
+      "redirect": "Redirect (invite to message the shop)",
+      "handoff": "Hand off to staff",
+      "skip": "Skip (not processed)"
+    }
+  },
   "tryAi": {
     "pageTitle": "Try AI",
     "title": "Try AI",
@@ -949,10 +1071,12 @@
       "posts": "Posts",
       "tryAi": "Try AI",
       "readiness": "AI readiness",
+      "automation": "Auto-send settings",
       "aiSent": "AI sent",
       "productImport": "Import products",
       "kbGaps": "Unanswered questions",
       "kbPublish": "Knowledge versions",
+      "kbTestset": "Test questions",
       "spamRules": "Spam rules",
       "channels": "Channels",
       "members": "Members",

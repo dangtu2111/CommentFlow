@@ -1,0 +1,1 @@
+| Gửi thư (notify) | `packages/saas-core/src/notify/` | `MailTransport` (SMTP bằng nodemailer; bộ nhớ cho test), mẫu thư vi/en (xác minh, đặt lại, đã có tài khoản), gửi nền không chờ | FR-119 · 08 §6 |

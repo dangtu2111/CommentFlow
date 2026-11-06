@@ -1,0 +1,1 @@
+| Mật khẩu lộ / phổ biến | `packages/saas-core/src/auth/password-policy.ts` | `createPasswordPolicy`: danh sách cục bộ + HIBP k-anonymity (cho qua + log khi lỗi); `createAuthFlows` BẮT BUỘC có `passwordPolicy` (đăng ký, đặt lại) | 13 §2 · ADR 004 §3 |

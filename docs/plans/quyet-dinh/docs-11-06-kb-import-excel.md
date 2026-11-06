@@ -1,0 +1,1 @@
+- 06/11 (KB-IMPORT-EXCEL, Q-KBIX1): `docs/13_Security_Design.md` §6 dòng "Upload Excel/CSV" — ghi thêm: tạm thời parse đồng bộ trong web với giới hạn cứng (10 MB/5.000 dòng/50 cột, giải nén ≤ 50 MB, đuôi + chữ ký file, ô công thức bị từ chối), chuyển worker ở `KB-IMPORT-EXCEL-WORKER`.

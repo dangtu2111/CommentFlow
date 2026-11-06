@@ -10,6 +10,15 @@ export {
 } from './abbreviation';
 export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } from './brand';
 export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
+export {
+  buildSourceChips,
+  classifyDraftOutcome,
+  type DraftOutcome,
+  editDistance,
+  normalizeReplyText,
+  SOURCE_CHIP_MAX,
+  type SourceChip,
+} from './draft-feedback';
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
 export {
@@ -93,6 +102,38 @@ export {
   maskPii,
   unsafeMarkMasked,
 } from './pii';
+export {
+  type AutoMode,
+  effectiveAutoMode,
+  POST_NOTE_MAX,
+  type PostAutoOverride,
+  type PostNoteInput,
+  type PostNoteStatus,
+  parsePostAutoOverride,
+  parsePostNoteInput,
+  postNoteStatus,
+} from './post-notes';
+export {
+  BULK_MAX_POSTS,
+  BULK_MAX_PRODUCTS,
+  confirmedProductIds,
+  effectivePrimary,
+  type LinkPostProductsInput,
+  POST_PRODUCT_STATUSES,
+  type PostProductLink,
+  type PostProductStatus,
+  parseLinkPostProducts,
+  summarizePostLinks,
+} from './post-products';
+export {
+  buildPriceSnapshot,
+  type PriceSnapshot,
+  type PriceSnapshotEntry,
+  type PriceSource,
+  parsePriceSnapshot,
+  priceSnapshotEntrySchema,
+  priceSnapshotSchema,
+} from './price-snapshot';
 export {
   ALIAS_MATCH_THRESHOLD,
   PRODUCT_ALIAS_MAX,
