@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { NotificationBell } from '../../../../components/app/notification-bell';
@@ -11,6 +10,7 @@ import {
   CommentDetailPanel,
   type CommentDetailView,
 } from '../../../../components/comments/comment-detail';
+import { BackLink } from '../../../../components/comments/empty-note';
 import { InboxList, type InboxListItem } from '../../../../components/comments/inbox-list';
 import { InboxStrip } from '../../../../components/comments/inbox-strip';
 import { InboxTabs } from '../../../../components/comments/inbox-tabs';
@@ -243,7 +243,10 @@ export default async function DevCommentsPage({
                 channels={[]}
                 sample={{ priorityNote: 'Ưu tiên: Mua & Khiếu nại', newCount: 2 }}
               />
-              <p className="inbox-sample-note" role="note">
+              <p
+                className="bg-tertiary-fixed px-3 py-1 text-center font-label-sm text-label-sm text-on-tertiary-fixed-variant"
+                role="note"
+              >
                 {SAMPLE_NOTE}
               </p>
               <InboxList
@@ -256,9 +259,7 @@ export default async function DevCommentsPage({
               />
             </WorkbenchList>
             <WorkbenchDetail label={t('comments.detail.title')}>
-              <Link href="/dev/ui/comments" className="inbox-back">
-                {t('comments.detail.back')}
-              </Link>
+              <BackLink href="/dev/ui/comments">{t('comments.detail.back')}</BackLink>
               <CommentDetailPanel
                 key={selected.id}
                 comment={sampleDetail(selected)}

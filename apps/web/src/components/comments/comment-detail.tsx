@@ -1,36 +1,32 @@
 import { DECLARED_CAPABILITIES } from '@flow/connectors';
 import { isCommentLabel, isLocale } from '@flow/shared';
-import {
-  Archive,
-  Ellipsis,
-  ExternalLink,
-  History,
-  Lightbulb,
-  Mail,
-  Newspaper,
-  NotebookPen,
-  Sparkles,
-  Tag,
-  User,
-} from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { hideErrorKey } from '../../lib/hide-errors';
 import { deriveHideUi, type HideUiDetail } from '../../lib/hide-state';
 import { formatAbsoluteTime, formatRelativeTime, toIsoString } from '../../lib/inbox-format';
-import { labelTone, platformBadgeText } from '../../lib/inbox-visual';
+import { platformBadgeText } from '../../lib/inbox-visual';
 import { replyErrorKey } from '../../lib/reply-errors';
 import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
 import type { SuggestionView } from '../../lib/suggestion';
 import { userInitials } from '../../lib/user-initials';
 import { Avatar } from '../ui/avatar';
-import { Card } from '../ui/card';
+import { Icon } from '../ui/icon';
 import { Kbd } from '../ui/kbd';
 import { CommentLock } from './comment-lock';
+import { DOCK_BUTTON, DOCK_BUTTON_AI } from './dock-styles';
 import { HideButton } from './hide-button';
 import { HideProgress } from './hide-progress';
+import { LabelChip, StatusChip } from './label-chip';
 import { RelabelSelect } from './relabel-select';
 import { ReplyComposer } from './reply-composer';
 import { ReplyProgress } from './reply-progress';
+import { QuoteBlock, StateNote } from './state-note';
+
+/** Thẻ trong cột chi tiết (Stitch: `rounded-xl bg-surface-container-lowest p-4 shadow-sm space-y-3`). */
+const CARD = 'space-y-3 rounded-xl bg-surface-container-lowest p-4 shadow-sm';
+const CARD_TITLE = 'flex items-center gap-2 font-title-sm text-title-sm font-bold text-on-surface';
+const ICON_BTN =
+  'rounded p-1 text-on-surface-variant transition-colors hover:bg-surface-container aria-[disabled=true]:opacity-60 aria-[disabled=true]:hover:bg-transparent';
 
 export type CommentDetailView = {
   id: string;
@@ -203,7 +199,7 @@ export async function CommentDetailPanel({
     },
   };
   return (
-    <article className="comment-detail" aria-label={t('detail.title')}>
+    <article className="flex min-h-full flex-1 flex-col" aria-label={t('detail.title')}>
       {preview ? null : (
         <CommentLock
           commentId={comment.id}
@@ -215,135 +211,198 @@ export async function CommentDetailPanel({
           }}
         />
       )}
-      <div className="comment-detail-body">
-        <Card className="detail-card">
-          <header className="detail-card-head">
-            <span className="detail-card-title">
-              <Newspaper size={16} aria-hidden="true" />
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-5 pt-5">
+        <div className="space-y-2.5 rounded-xl bg-surface-container-low p-3.5 shadow-sm">
+          <header className="flex flex-wrap items-center justify-between gap-2">
+            <span className="flex items-center gap-2 font-label-md text-label-md font-semibold uppercase tracking-wider text-on-surface-variant">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-container text-on-primary">
+                <Icon name="feed" size={12} />
+              </span>
               {t('detail.postContext')}
             </span>
-            <span className="detail-card-end">
-              {comment.isAd ? <span className="chip">{t('list.ad')}</span> : null}
+            <span className="flex items-center gap-2">
+              {comment.isAd ? (
+                <span className="rounded bg-tertiary/10 px-1.5 py-0.5 font-label-sm text-label-sm font-bold text-tertiary">
+                  {t('list.ad')}
+                </span>
+              ) : null}
               {/* Chưa lưu đường dẫn bài viết → liên kết vô hiệu (UI-first). */}
-              <span className="detail-link" aria-disabled="true" title={t('soon')}>
+              <span
+                className="inline-flex items-center gap-1 font-label-md text-label-md text-primary aria-[disabled=true]:opacity-60"
+                aria-disabled="true"
+                title={t('soon')}
+              >
                 {t('detail.openOn', { platform })}
-                <ExternalLink size={12} aria-hidden="true" />
+                <Icon name="open_in_new" size={14} />
               </span>
             </span>
           </header>
           {extras?.post ? (
-            <div className="detail-post">
-              <h3 className="detail-post-title">{extras.post.title}</h3>
-              <p className="detail-post-meta">
-                <span className="detail-post-product">
-                  <Tag size={12} aria-hidden="true" />
-                  {extras.post.product}
-                </span>
-                <span>{extras.post.stock}</span>
-              </p>
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 space-y-1.5">
+                <h3 className="line-clamp-1 font-title-md text-title-md font-bold leading-snug text-on-surface">
+                  {extras.post.title}
+                </h3>
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded bg-surface-container-highest px-2.5 py-1 font-label-sm text-label-sm font-semibold text-on-surface">
+                    <span className="text-primary-container">
+                      <Icon name="sell" size={12} />
+                    </span>
+                    {extras.post.product}
+                  </span>
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">
+                    {extras.post.stock}
+                  </span>
+                </p>
+              </div>
             </div>
           ) : (
-            <dl className="comment-detail-meta">
+            <dl className="grid gap-1.5 font-body-sm text-body-sm sm:grid-cols-2">
               <div>
-                <dt>{t('detail.source')}</dt>
-                <dd>
+                <dt className="font-label-sm text-label-sm text-on-surface-variant">
+                  {t('detail.source')}
+                </dt>
+                <dd className="text-on-surface">
                   {platform} · {comment.channelName}
                 </dd>
               </div>
               <div>
-                <dt>{t('detail.post')}</dt>
-                <dd className="comment-detail-code">{comment.postExternalId}</dd>
+                <dt className="font-label-sm text-label-sm text-on-surface-variant">
+                  {t('detail.post')}
+                </dt>
+                <dd className="break-all font-code-sm text-code-sm text-on-surface">
+                  {comment.postExternalId}
+                </dd>
               </div>
             </dl>
           )}
-        </Card>
-        <Card className="detail-card">
-          <header className="comment-detail-head">
-            <Avatar badge={platformBadgeText(comment.platform)}>
-              {userInitials(comment.authorName ?? t('list.anonymous'))}
-            </Avatar>
-            <div className="comment-detail-author">
-              <h2>
-                {comment.authorName ?? t('list.anonymous')}
-                {extras?.customer ? (
-                  <span className="chip chip-ai detail-vip">{extras.customer.badge}</span>
-                ) : null}
-              </h2>
-              <p>
-                {extras?.customer ? (
-                  extras.customer.meta
-                ) : (
-                  <>
-                    <time
-                      dateTime={toIsoString(comment.createdTime)}
-                      title={formatAbsoluteTime(comment.createdTime, locale, timeZone)}
-                    >
-                      {formatRelativeTime(comment.createdTime, now, locale)}
-                    </time>
-                    {isDeleted ? null : (
-                      <>
-                        {' · '}
-                        <span className="comment-detail-code">{comment.authorExternalId}</span>
-                      </>
-                    )}
-                  </>
-                )}
-              </p>
+        </div>
+        <div className={CARD}>
+          <header className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar badge={platformBadgeText(comment.platform)}>
+                {userInitials(comment.authorName ?? t('list.anonymous'))}
+              </Avatar>
+              <div className="min-w-0">
+                <h2 className="flex flex-wrap items-center gap-2 font-headline-sm text-headline-sm text-on-surface">
+                  {comment.authorName ?? t('list.anonymous')}
+                  {extras?.customer ? (
+                    <span className="rounded-full bg-secondary-fixed px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-secondary-fixed">
+                      {extras.customer.badge}
+                    </span>
+                  ) : null}
+                </h2>
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
+                  {extras?.customer ? (
+                    extras.customer.meta
+                  ) : (
+                    <>
+                      <time
+                        dateTime={toIsoString(comment.createdTime)}
+                        title={formatAbsoluteTime(comment.createdTime, locale, timeZone)}
+                      >
+                        {formatRelativeTime(comment.createdTime, now, locale)}
+                      </time>
+                      {isDeleted ? null : (
+                        <>
+                          {' · '}
+                          <span className="font-code-sm text-code-sm">
+                            {comment.authorExternalId}
+                          </span>
+                        </>
+                      )}
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="detail-icon-btns">
-              <button type="button" aria-disabled="true" title={t('detail.addNote')}>
-                <NotebookPen size={16} aria-hidden="true" />
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                className={ICON_BTN}
+                aria-disabled="true"
+                title={t('detail.addNote')}
+              >
+                <Icon name="note_add" size={16} />
               </button>
-              <button type="button" aria-disabled="true" title={t('detail.openCrm')}>
-                <User size={16} aria-hidden="true" />
+              <button
+                type="button"
+                className={ICON_BTN}
+                aria-disabled="true"
+                title={t('detail.openCrm')}
+              >
+                <Icon name="person" size={16} />
               </button>
             </div>
           </header>
           {comment.parentExternalId ? (
-            <p className="comment-detail-reply">{t('detail.isReply')}</p>
-          ) : null}
-          <blockquote className="comment-detail-text">{bodyText}</blockquote>
-          {extras?.customer ? (
-            <p className="detail-history">
-              <History size={14} aria-hidden="true" />
-              <strong>{extras.customer.history}</strong>
-              <span aria-hidden="true">•</span>
-              <em>{extras.customer.purchase}</em>
+            <p className="font-label-md text-label-md text-on-surface-variant">
+              {t('detail.isReply')}
             </p>
           ) : null}
-        </Card>
-        <Card className="detail-card detail-ai">
-          <header className="detail-card-head">
-            <span className="detail-card-title">
-              <Sparkles size={16} aria-hidden="true" />
-              {t('detail.aiTitle')}
-            </span>
-          </header>
-          <div className="inbox-chips">
-            {comment.label ? (
-              <span className={`chip chip-label chip-tone-${labelTone(comment.label)}`}>
-                {isCommentLabel(comment.label) ? t(`labels.${comment.label}`) : comment.label}
+          <blockquote className="whitespace-pre-wrap break-words rounded-lg bg-surface-container p-3.5 font-body-lg text-body-lg text-on-surface">
+            {bodyText}
+          </blockquote>
+          {extras?.customer ? (
+            <p className="flex flex-wrap items-center gap-2 px-1 font-label-sm text-label-sm text-on-surface-variant">
+              <span className="text-primary">
+                <Icon name="history" size={14} />
               </span>
-            ) : null}
-            <span className={`chip chip-status chip-${comment.status}`}>{status}</span>
-            {comment.needsFollowup ? <span className="chip">{t('list.followup')}</span> : null}
-            {extras?.ai ? (
-              <span className="chip chip-confidence">{extras.ai.confidence}</span>
-            ) : null}
-          </div>
+              <strong className="font-medium">{extras.customer.history}</strong>
+              <span aria-hidden="true">•</span>
+              <em className="font-semibold not-italic text-primary">{extras.customer.purchase}</em>
+            </p>
+          ) : null}
+        </div>
+        <div className="space-y-3 rounded-xl bg-secondary-fixed/30 p-4 shadow-sm">
+          <header className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-on-secondary">
+                <Icon name="psychology" size={16} />
+              </span>
+              <div>
+                <span className={CARD_TITLE}>{t('detail.aiTitle')}</span>
+                <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                  {comment.label ? (
+                    <LabelChip label={comment.label} lead={false}>
+                      {isCommentLabel(comment.label) ? t(`labels.${comment.label}`) : comment.label}
+                    </LabelChip>
+                  ) : null}
+                  <StatusChip status={comment.status}>{status}</StatusChip>
+                  {comment.needsFollowup ? (
+                    <span className="rounded-full bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                      {t('list.followup')}
+                    </span>
+                  ) : null}
+                  {extras?.ai ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-surface-container-lowest px-2 py-0.5 font-label-sm text-label-sm font-bold text-secondary shadow-sm">
+                      <Icon name="verified" size={12} />
+                      {extras.ai.confidence}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            {isDeleted ? null : (
+              <RelabelSelect
+                commentId={comment.id}
+                current={comment.label}
+                labels={relabelLabels}
+              />
+            )}
+          </header>
           {extras?.ai ? (
-            <p className="detail-reason">
-              <Lightbulb size={16} aria-hidden="true" />
+            <p className="flex items-center gap-2 rounded bg-surface-container-lowest/80 p-2.5 font-body-sm text-body-sm text-on-surface shadow-sm">
+              <span className="shrink-0 text-secondary">
+                <Icon name="lightbulb" size={16} />
+              </span>
               <span>
                 <strong>{t('detail.reason')}</strong> {extras.ai.reason}
               </span>
             </p>
           ) : null}
-          {isDeleted ? null : (
-            <RelabelSelect commentId={comment.id} current={comment.label} labels={relabelLabels} />
-          )}
-        </Card>
-        <section className="reply-section" aria-label={t('reply.field')}>
+        </div>
+        <section className="flex flex-1 flex-col gap-3" aria-label={t('reply.field')}>
           {reply.mode === 'compose' ? (
             <ReplyComposer
               commentId={comment.id}
@@ -354,39 +413,37 @@ export async function CommentDetailPanel({
               suggestionLabels={suggestionLabels}
               dockStart={
                 <>
-                  {hideInDock ? (
-                    <span className="dock-slot" title={soonKey('H')}>
-                      {hideButton}
-                    </span>
-                  ) : null}
+                  {hideInDock ? <span title={soonKey('H')}>{hideButton}</span> : null}
                   {/* Bỏ qua/Nhắn riêng/Thêm hành động cho MỘT bình luận chưa có (chỉ hàng loạt) → vô hiệu. */}
                   <button
                     type="button"
-                    className="dock-btn"
+                    className={DOCK_BUTTON}
                     aria-disabled="true"
                     title={soonKey('E')}
                   >
-                    <Archive size={16} aria-hidden="true" />
+                    <Icon name="archive" size={16} />
                     <span>{t('reply.skip')}</span>
                     <Kbd>E</Kbd>
                   </button>
                   <button
                     type="button"
-                    className="dock-btn dock-btn-ai"
+                    className={`${DOCK_BUTTON} ${DOCK_BUTTON_AI}`}
                     aria-disabled="true"
                     title={soonKey('M')}
                   >
-                    <Mail size={16} aria-hidden="true" />
+                    <span className="text-secondary">
+                      <Icon name="mail" size={16} />
+                    </span>
                     <span>{t('reply.privateReply')}</span>
                     <Kbd>M</Kbd>
                   </button>
                   <button
                     type="button"
-                    className="dock-btn dock-btn-icon"
+                    className={`${DOCK_BUTTON} w-9 justify-center px-0`}
                     aria-disabled="true"
                     title={t('reply.moreActions')}
                   >
-                    <Ellipsis size={16} aria-hidden="true" />
+                    <Icon name="more_horiz" size={16} />
                   </button>
                 </>
               }
@@ -403,19 +460,17 @@ export async function CommentDetailPanel({
             />
           ) : null}
           {reply.mode === 'sent' ? (
-            <div className="reply-state reply-sent" role="status">
-              <p className="reply-state-title">{t('reply.sentTitle')}</p>
-              {reply.text ? <blockquote className="reply-quote">{reply.text}</blockquote> : null}
-            </div>
+            <StateNote tone="success" role="status" title={t('reply.sentTitle')}>
+              {reply.text ? <QuoteBlock>{reply.text}</QuoteBlock> : null}
+            </StateNote>
           ) : null}
           {reply.mode === 'failed' ? (
             <>
-              <div className="reply-state reply-failed" role="alert">
-                <p className="reply-state-title">{t('reply.failedTitle')}</p>
+              <StateNote tone="danger" role="alert" title={t('reply.failedTitle')}>
                 <p>
                   {t('reply.failedWhy')} {t(`reply.errors.${replyErrorKey(reply.errorCode)}`)}
                 </p>
-              </div>
+              </StateNote>
               {reply.canRetry ? (
                 <ReplyComposer
                   commentId={comment.id}
@@ -427,7 +482,7 @@ export async function CommentDetailPanel({
             </>
           ) : null}
           {reply.mode === 'blocked' ? (
-            <p className="reply-state reply-blocked" role="status">
+            <StateNote tone="muted" role="status">
               {reply.reason === 'locked_by_other'
                 ? reply.holderName
                   ? t('reply.blocked.lockedNamed', { name: reply.holderName })
@@ -437,11 +492,11 @@ export async function CommentDetailPanel({
                   : reply.reason === 'deleted'
                     ? t('reply.blocked.deleted')
                     : t('reply.blocked.notReplyable')}
-            </p>
+            </StateNote>
           ) : null}
         </section>
         {hideUi.mode === 'none' || hideInDock ? null : (
-          <section className="hide-section" aria-label={t('hide.section')}>
+          <section className="mb-5 flex flex-col gap-3" aria-label={t('hide.section')}>
             {hideUi.mode === 'can' ? (
               <HideButton
                 commentId={comment.id}
@@ -461,14 +516,15 @@ export async function CommentDetailPanel({
             ) : null}
             {hideUi.mode === 'failed' ? (
               <>
-                <div className="reply-state reply-failed" role="alert">
-                  <p className="reply-state-title">
-                    {hideUi.action === 'hide' ? t('hide.failedHide') : t('hide.failedUnhide')}
-                  </p>
+                <StateNote
+                  tone="danger"
+                  role="alert"
+                  title={hideUi.action === 'hide' ? t('hide.failedHide') : t('hide.failedUnhide')}
+                >
                   <p>
                     {t('hide.failedWhy')} {t(`hide.errors.${hideErrorKey(hideUi.errorCode)}`)}
                   </p>
-                </div>
+                </StateNote>
                 {hideUi.canRetry ? (
                   <HideButton
                     commentId={comment.id}
@@ -480,7 +536,7 @@ export async function CommentDetailPanel({
               </>
             ) : null}
             {hideUi.mode === 'blocked' ? (
-              <p className="reply-state reply-blocked" role="status">
+              <StateNote tone="muted" role="status">
                 {hideUi.reason === 'locked_by_other'
                   ? hideUi.holderName
                     ? t('hide.blocked.lockedNamed', { name: hideUi.holderName })
@@ -488,7 +544,7 @@ export async function CommentDetailPanel({
                   : hideUi.reason === 'channel_unavailable'
                     ? t('hide.blocked.channelUnavailable')
                     : t('hide.blocked.notHideable')}
-              </p>
+              </StateNote>
             ) : null}
           </section>
         )}

@@ -43,13 +43,19 @@ export function CommentLock({ commentId, labels }: { commentId: string; labels: 
   if (!state || state.kind === 'missing') return null;
   if (state.kind === 'mine') {
     return (
-      <p className="comment-lock comment-lock-mine" role="status">
+      <p
+        className="bg-primary-fixed/40 px-5 py-2 font-label-md text-label-md text-on-primary-fixed-variant"
+        role="status"
+      >
         {labels.mine}
       </p>
     );
   }
   return (
-    <p className="comment-lock comment-lock-held" role="status">
+    <p
+      className="bg-tertiary-fixed px-5 py-2 font-label-md text-label-md text-on-tertiary-fixed-variant"
+      role="status"
+    >
       {state.holderName
         ? formatHeld(labels.heldNamed, state.holderName, state.secondsLeft)
         : formatHeld(labels.heldAnonymous, null, state.secondsLeft)}
