@@ -153,6 +153,9 @@ Hàm thuần `sendRecheck` (`packages/ai/src/recheck/`) + job `send` của worke
 
 Độ sẵn sàng của AI tính hoàn toàn từ dữ liệu trong DB (sản phẩm, chính sách, FAQ, thông tin shop) bằng mã; không gọi LLM, không biến môi trường mới, không cờ. Khi muốn đo "câu mẫu trả lời được" bằng LLM thật → việc `AI-EVAL-*` (cần khóa LLM, sẽ ghi ở mục riêng).
 
+## Redis cho cache câu trả lời — `PIPE-CACHE-EXACT` (FR-026, Xong-mock, mã KT-PCX)
+Cache khớp chính xác chạy sau interface `ExactCacheStore` với bản bộ nhớ; chưa có biến môi trường/Redis mới. Khi nối pipeline (`PIPE-ORCHESTRATOR`) cần Redis 7 đã có trong hạ tầng (docs/09 §2, dùng lại URL Redis của hệ thống) và cờ `cf.cache.answers` (docs/09 §10; mặc định TẮT cho đường thật). Không cần khóa/tài khoản mới.
+
 ## 2k. `KB-GAPS-UI` (FR-134, UF-11) — không cần tài nguyên ngoài
 
 Trang "Câu hỏi AI chưa trả lời được" chỉ đọc/ghi `kb_gaps` và `faq_items` trong DB; không gọi LLM, không biến môi trường mới, không cờ. Dữ liệu chỉ xuất hiện khi pipeline ghi `kb_gaps` (việc `RETRIEVAL-LOG-WIRE`); trước đó trang hiển thị "chưa có câu hỏi nào".
