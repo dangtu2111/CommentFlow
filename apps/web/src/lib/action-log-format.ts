@@ -20,8 +20,9 @@ const KNOWN_ACTIONS = [
   'comment.unhidden',
 ] as const;
 
+/** Khóa nhãn dịch: next-intl cấm dấu chấm trong tên khóa nên `member.left` → `member_left`. */
 export function actionLabelKey(action: string): string | null {
-  return (KNOWN_ACTIONS as readonly string[]).includes(action) ? action : null;
+  return (KNOWN_ACTIONS as readonly string[]).includes(action) ? action.replace('.', '_') : null;
 }
 
 /** Giá trị trước/sau thành chuỗi hiển thị (React tự thoát ký tự; log không chứa token/PII theo thiết kế). */

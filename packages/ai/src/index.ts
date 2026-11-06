@@ -94,6 +94,34 @@ export {
   unreadableConfidence,
 } from './confidence/confidence';
 export {
+  COST_NEAR_CAP_RATIO,
+  type CostGateBlockReason,
+  type CostGateDecision,
+  type CostGateInput,
+  evaluateCostGate,
+} from './cost-gate/cost-gate';
+export {
+  DEFAULT_MAX_OUTPUT_TOKENS,
+  estimateCallCostUsd,
+  FALLBACK_PRICING,
+  type ModelPricing,
+  type PricingTable,
+} from './cost-gate/estimate';
+export {
+  type CostGatedClientOptions,
+  createCostGatedLlmClient,
+  type LlmCaller,
+} from './cost-gate/gated-llm-client';
+export {
+  type CostLedger,
+  type CostSnapshot,
+  createDbCostLedger,
+  createMemoryCostLedger,
+  type MemoryCostLedger,
+  monthStartUtc,
+} from './cost-gate/ledger';
+export { createReservationBook, type ReservationBook } from './cost-gate/reservations';
+export {
   type ActionDecision,
   AUTO_SEND_POLICIES,
   type AutoSendPolicy,
@@ -123,6 +151,15 @@ export {
   type ImageDependenceSource,
   MAX_SHORT_TEXT_WORDS,
 } from './decide/handoff-rules';
+export {
+  checkDraftLegal,
+  type DraftLegalCheck,
+  evaluateLegalRules,
+  LEGAL_TOPICS,
+  type LegalEvaluation,
+  type LegalSource,
+  type LegalTopic,
+} from './decide/legal-rules';
 export {
   type BusinessHoursState,
   detectOrderStatusIntent,

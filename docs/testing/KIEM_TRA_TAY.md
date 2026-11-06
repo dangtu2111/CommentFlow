@@ -13,6 +13,31 @@
 | 5 | `pnpm dev:seed-demo --reset` | Tạo lại, mật khẩu mới; mật khẩu cũ không còn đăng nhập được |
 | 6 | Mọi tên kênh/sản phẩm/tác giả | Bắt đầu bằng "[MẪU]"; không SĐT/email thật |
 
+## KT-CG — Cổng chi phí AI (COST-GATE, FR-071, feat-cost-gate)
+
+> Chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Not wired to UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cost-gate` | Mọi test xanh (gồm property-based: cho gọi ⇒ tổng ≤ trần; chi tiêu tăng không bao giờ mở lại cổng). / All green. |
+| 2 | Xem test "sẽ vượt trần → KHÔNG gọi LLM" trong `gated-llm-client.test.ts` | Client thật không được gọi; lỗi `COST_CAP_REACHED`. / Inner client never called. |
+| 3 | Xem test "gọi song song cùng workspace" | 5 lần gọi cùng lúc, trần $0,05, ước tính $0,02 → đúng 2 lần được gọi. / Exactly 2 allowed. |
+| 4 | Trên DB dev có quyền: `pnpm --filter @flow/ai test:db` (chạy `tests/cost-ledger.int.test.ts`) | Tổng chi tính từ 00:00 UTC ngày 1, bỏ tháng trước, không lẫn workspace. / Month-to-date sum per workspace. |
+
+## KT-UIA — Giao diện xác thực khớp thiết kế (UI-AUTH, feat-ui-auth)
+
+> Chỉ đổi giao diện, không đổi logic. / UI only, no logic change.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Mở /login ở 1440px | Panel trái có 3 huy hiệu, tiêu đề, thẻ minh họa nhãn [MẪU], ghi chú bảo mật; thẻ phải có tab, nút Facebook MỜ (tắt) + chú thích, đường kẻ "Hoặc tiếp tục bằng email", nút "Đăng nhập →". Không có huy hiệu/số liệu bịa, không có nút Google. |
+| 2 | Mở /register | Cùng bố cục, tab "Đăng ký" đang chọn, nút "Tạo tài khoản →". |
+| 3 | Thu cửa sổ còn 390px | Panel trái ẩn, thẻ đăng nhập vừa màn hình, không cuộn ngang. |
+| 4 | Đổi ngôn ngữ sang English | Mọi chữ mới (nút Facebook, thẻ [SAMPLE], ghi chú) đã dịch. |
+| 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
+| 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
+| 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
 ## KT-DHR — Chuyển người khi có ảnh/video chưa rõ sản phẩm (DA-HANDOFF-RULES, FR-143, feat-da-handoff-rules)
 
 > Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-HANDOFF-WIRE`. / Core + automated tests only; manual checks deferred to `DA-HANDOFF-WIRE`.
@@ -1015,6 +1040,14 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/shared test` và `pnpm --filter @flow/web exec vitest run src/lib/suggestion.test.ts`. | Xanh: gửi nguyên văn → `sent_as_is`; sửa → `edited` + khoảng cách; chip nguồn ≤ 5 (+N); ô gợi ý ẩn khi không có gợi ý. |
 | 2 | Mở một bình luận → ô "Đổi nhãn" → chọn nhãn khác → "Lưu nhãn". | Trang làm tươi, chip nhãn đổi; bình luận đã xóa không có ô đổi nhãn; đổi sang en vẫn đủ chữ. |
+
+## KT-DRL — Cam kết pháp lý/uy tín (DA-RULES-LEGAL, FR-160) · Legal/trust commitments
+
+Chưa có giao diện (lõi hàm thuần, chưa nối pipeline). / No UI yet (pure core, not wired).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/decide/legal-rules.test.ts` | Xanh: hỏi chính hãng/VAT/bảo hành/nguồn gốc/hoàn tiền mà kho không nhắc → cờ `legalUnsourced`; nháp khẳng định không nguồn hoặc thời hạn lạ → bị chặn. |
 
 ## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
 

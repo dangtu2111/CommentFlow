@@ -45,6 +45,18 @@ Quyết định merge/sửa/kẹt (`src/decide.mjs`): CI xanh + không xung đ�
 
 Không bao giờ (bộ điều phối tự giữ, `src/safe-git.mjs`): `git push`, `rebase`, `reset`, `add`, `--force`. Agent bị cấm bằng `disallowedTools` và prompt.
 
+## Janitor, nhịp tim, khóa merge
+
+```
+node tools/orchestrator/bin/orchestrator.mjs janitor          # quét mỗi 10 phút (vòng lặp)
+node tools/orchestrator/bin/orchestrator.mjs janitor --once   # một lượt
+```
+
+- **Janitor** (cần `janitor.lane` = làn rảnh làm worktree gỡ kẹt): liệt kê PR mở; PR mở > `minAgeMinutes` (30), không nháp, không có dấu `pr-<n>.tracking` còn hạn (`trackTtlMinutes` 15; driver ghi dấu mỗi vòng) → đưa qua `driveToMerge` (chờ CI đủ → sửa ≤ 2 lần → merge). KẸT thì ghi `pr-<n>.janitor-stuck` = commit hiện tại, không thử lại tới khi có commit mới. Khóa merge bật → bỏ qua lượt land.
+- **Nhịp tim**: mỗi driver (và janitor) ghi `<làn>.heartbeat` + một dòng log mỗi `heartbeat.intervalMinutes` (5). Janitor báo `IM LẶNG` (vào `alerts.txt`, một lần cho mỗi nhịp cũ) khi làn chưa `.done/.stuck` mà nhịp cuối cũ hơn `silentMinutes` (15) — driver nhiều khả năng đã chết; chạy lại bằng `start` hoặc `fix:<pr>`.
+- **Khóa merge**: tạo file `.orchestrator/merge-freeze` (nội dung tùy ý) → driver và janitor **không merge** (vẫn sửa lỗi, vẫn chờ CI); xóa file để mở. Dùng khi đang sửa `main`, đổi hạ tầng CI, hoặc cần gom merge theo thứ tự.
+- **Kiểm lại ngay trước merge**: sau khi quyết định merge, đọc lại check lần nữa; không còn xanh (đỏ/pending) → vòng lại thay vì merge.
+
 ## Chia làn
 
 | Làn | Vai trò | Ghi chú |
@@ -72,6 +84,18 @@ Gợi ý: để mặc định rẻ ở `lanes.<làn>.model`, chỉ nâng bằng 
 Prompt khung đã nhúng sẵn: agent chạy không có người trả lời nên **không hỏi** — tự chọn phương án an toàn/đảo ngược được và ghi quyết định (theo `AGENTS.md` § Quy tắc hỏi). Việc cần khóa/dịch vụ ngoài: viết code thật sau interface + mock/fixture, cờ mặc định TẮT, ghi vào danh sách "cần chủ dự án cung cấp" (`AGENTS.md` § Tài nguyên ngoài). Dự án khác: sửa các đoạn này trong `templates/HEAD.md` (hoặc đặt bản riêng ở `<promptDir>/_templates/HEAD.md` — bản của dự án được ưu tiên).
 
 ## Bài học (lỗi đã gặp → cách tránh)
+
+### Phân tích nguyên nhân: vì sao #108/#111/#117 kẹt lâu (06/11/2026)
+
+| Nguyên nhân gốc | Biểu hiện | Cách chặn nay |
+|---|---|---|
+| **Xung đột file chung** (codemap, QUYẾT_ĐỊNH, gap matrix, MASTER) | Mỗi merge của PR khác làm PR còn lại `CONFLICTING`; sửa xong lại xung đột | Fragment riêng (`docs/codemap.d/`, `docs/plans/quyet-dinh/`); prompt gỡ xung đột giữ cả hai phía; khóa merge để gom thứ tự khi cần |
+| **CI chậm hơn tốc độ `main` đổi** | PR vừa xanh thì `main` đã đổi → cần cập nhật → chạy CI lại → vòng lặp | Chờ CI đủ rồi mới tính; kiểm lại trước merge; khóa merge khi dồn nhiều PR; giảm số job CI |
+| **PR mồ côi** (driver xong/chết, PR còn mở) | Không ai chờ CI hay merge, nằm hàng giờ | `janitor` mỗi 10 phút nhặt PR > 30 phút không có dấu theo dõi |
+| **Báo KẸT giả** | Tìm PR sai nhánh (`/` vs `-`), `--watch` trả sớm, đọc kết quả CI cũ | Tìm theo `headRefName` chính xác + biến thể; tự thăm dò; chờ commit đầu PR đổi (mục 1–2 dưới) |
+| **Driver chết không ai biết** | Lệnh nền "đã xong" chỉ là đã khởi chạy; không có tín hiệu | Nhịp tim 5 phút; `IM LẶNG` khi > 15 phút; đọc `alerts.txt` |
+| **Merge khi check đỏ/đang chạy** | Đọc check lúc chưa đủ, hoặc có commit mới sau khi quyết định | Chỉ đếm đỏ khi **không còn pending**; `isSafeToMerge` kiểm lại ngay trước merge; khóa merge |
+| **Thiếu test DB cục bộ** | Lỗi test DB chỉ lộ ở CI → thêm một vòng sửa + chờ CI | Mỗi làn có DB test riêng và chạy `CF_LANE=<làn> pnpm test:db` trước khi đẩy (`parallel.md`); prompt `verifyCommands` |
 
 1. **Tìm PR theo nhánh sai dấu `/` và `-`** (`feat/x` ≠ `feat-x`) → báo KẸT giả. Nay: nhánh = tiền tố + tên task, tìm theo `headRefName` chính xác, thử thêm biến thể (`src/branches.mjs`); agent phải mở PR đúng tên nhánh (prompt nói rõ).
 2. **`gh pr checks --watch` trả sớm** (khi CI chưa kịp tạo check, hoặc sau push chưa chạy lại) → đếm đỏ/kẹt giả. Nay: tự thăm dò, chỉ kết luận khi **không còn check pending**; sau bản sửa chờ tới khi commit đầu PR đổi (tránh đọc kết quả cũ) (`src/checks.mjs`).

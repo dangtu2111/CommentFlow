@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { AuthTabs } from '../../../components/auth/auth-shell';
+import { SocialLogin } from '../../../components/auth/auth-social';
 import { LoginForm } from '../../../components/auth/forms';
 import { Banner } from '../../../components/ui/banner';
 import { getBrand } from '../../../server/brand';
@@ -28,6 +29,7 @@ export default async function LoginPage({
       {params.verified ? <Banner variant="success">{t('banners.verified')}</Banner> : null}
       {params.reset ? <Banner variant="success">{t('banners.resetDone')}</Banner> : null}
       {params.loggedOut ? <Banner variant="info">{t('banners.loggedOut')}</Banner> : null}
+      <SocialLogin />
       <LoginForm />
     </>
   );

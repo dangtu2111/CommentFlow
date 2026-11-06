@@ -1,8 +1,9 @@
 // Chạy một làn: các bước tuần tự. Mọi I/O (gh, git, agent, file) đi qua `deps` để test bằng giả lập.
 import { branchCandidates, branchFor } from './branches.mjs';
-import { failedCheckNames, waitForChecks } from './checks.mjs';
+import { classifyChecks, failedCheckNames, waitForChecks } from './checks.mjs';
 import { modelFor } from './config.mjs';
-import { decidePr } from './decide.mjs';
+import { decidePr, isSafeToMerge } from './decide.mjs';
+import { FREEZE_MARKER, trackingMarker } from './markers.mjs';
 import { extractRootCause, isRepeatedCause } from './root-cause.mjs';
 import { bullets, renderTemplate } from './templates.mjs';
 
@@ -59,13 +60,25 @@ async function findPr(config, branchName, name, deps) {
 }
 
 // Đưa một PR tới merge: chờ CI thật → sửa tối đa maxFixes lần → merge hoặc KẸT.
-export async function driveToMerge({ config, laneName, pr, branch, model, deps, startFixes = 0 }) {
+// Ghi dấu "đang theo dõi" mỗi vòng để janitor không giành PR đang có driver.
+export async function driveToMerge(args) {
+  const { deps, pr } = args;
+  try {
+    return await driveLoop(args);
+  } finally {
+    deps.clearMarker(trackingMarker(pr));
+  }
+}
+
+async function driveLoop({ config, laneName, pr, branch, model, deps, startFixes = 0 }) {
   const { gh, logger } = deps;
   let fixes = startFixes;
   const causes = [];
   let sinceSha;
   let repeatedCause = false;
+  let freezeLogged = false;
   for (;;) {
+    deps.setMarker(trackingMarker(pr), new Date(deps.now()).toISOString());
     const view = await gh.prView(pr);
     const waited =
       view.state === 'OPEN' && view.mergeable !== 'CONFLICTING'
@@ -88,18 +101,31 @@ export async function driveToMerge({ config, laneName, pr, branch, model, deps, 
       maxFixes: config.maxFixesPerPr,
       repeatedCause,
       requireChecks: config.ci.requireChecks,
+      frozen: deps.hasMarker(FREEZE_MARKER),
     });
-    logger.log(`PR #${pr}: ${decision.action}`, {
-      checks: waited.status,
-      fixes,
-      kind: decision.kind,
-    });
+    if (decision.reason === 'merge-freeze') {
+      if (!freezeLogged) logger.log(`PR #${pr}: khóa merge đang bật, chờ gỡ khóa`);
+      freezeLogged = true;
+    } else {
+      logger.log(`PR #${pr}: ${decision.action}`, {
+        checks: waited.status,
+        fixes,
+        kind: decision.kind,
+      });
+    }
     if (decision.action === 'done') {
       logger.alert('MERGED', `PR #${pr} đã merge (${branch})`);
       return { status: 'merged' };
     }
     if (decision.action === 'stuck') return { status: 'stuck', reason: decision.reason, pr };
     if (decision.action === 'merge') {
+      // Kiểm lại CI ngay trước khi merge: có thể vừa có commit/check mới (đỏ hoặc lại pending).
+      const recheck = classifyChecks(await gh.prChecks(pr), config.ci.ignoreChecks);
+      if (!isSafeToMerge(recheck, config.ci.requireChecks)) {
+        logger.log(`PR #${pr}: CI đổi trạng thái (${recheck}) ngay trước khi merge, vòng lại`);
+        if (recheck === 'pending') await deps.sleep(config.ci.pollSeconds * 1000);
+        continue;
+      }
       const done = await gh.merge(pr, config.merge.method);
       if (!done.ok) return { status: 'stuck', reason: `merge thất bại: ${done.message}`, pr };
       logger.alert('MERGED', `PR #${pr} đã merge (${branch})`);
