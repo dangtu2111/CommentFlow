@@ -26,7 +26,8 @@
     "db:migrate": "pnpm --filter @flow/db run db:migrate",
     "db:migrate:staging": "pnpm --filter @flow/db run db:migrate:staging",
     "db:check-rls": "pnpm --filter @flow/db run db:check-rls",
-    "webhook:send": "node scripts/webhook-send.mjs"
+    "webhook:send": "node scripts/webhook-send.mjs",
+    "dev:seed-demo": "pnpm --filter @flow/dev-seed run seed"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",

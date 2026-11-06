@@ -69,6 +69,8 @@ export {
   type CommentLockResult,
   releaseCommentLock,
 } from './queries/comment-lock';
+// DEV-SEED-DEMO: dữ liệu mẫu dev dùng đúng hàm truy vấn có sẵn (không viết SQL riêng cho bản nháp/liên kết bài).
+export { insertDraft, type NewDraft } from './queries/drafts';
 export {
   ACTIONABLE_COMMENT_STATUSES,
   countActionableComments,
@@ -134,6 +136,7 @@ export {
   searchProducts,
   setProductNameEmbedding,
 } from './queries/kb-search';
+export { linkProductsToPosts } from './queries/post-products';
 export {
   DEFAULT_POSTS_LIMIT,
   listPosts,
