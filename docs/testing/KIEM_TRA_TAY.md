@@ -59,6 +59,7 @@
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-UIKIT | Kit giao diện dùng chung | — | có | chưa | — |
 | KT-UIS2 | Cài đặt khớp thiết kế 2 cột | — | có | chưa | — |
 | KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 | KT-USP1 | Trang con Cài đặt: Gói/Thông báo/Quyền riêng tư | — | có | chưa | — |
@@ -1215,6 +1216,17 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 5 | Bật chế độ tối của hệ điều hành | Thẻ minh họa và panel vẫn đọc được (chữ không chìm). |
 | 6 | Gõ sai mật khẩu rồi Enter | Vẫn hiện lỗi chung trên form như trước (logic không đổi). |
 | 7 | Mở trang Nhật ký hoạt động (/app/activity) | Nhãn hành động hiện tiếng Việt ("Gửi lời mời"...) thay vì làm vỡ trang. |
+
+## KT-UIKIT — Bộ thành phần dùng chung (UI-KIT, feat-ui-kit-foundation)
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy dev, mở /dev/ui/kit | Thấy nút, chip, avatar, ô nhập (có gợi ý + lỗi), tab, banner, hộp thoại, bố cục 2 cột; mọi chữ mang nhãn [MẪU] |
+| 2 | Bấm "Mở hộp thoại", nhấn Esc | Hộp thoại mở/đóng |
+| 3 | Mở /login, /app/settings, /app/members (đã đăng nhập), /app/activity | Giao diện giống trước khi tách kit (tab đăng nhập, cột trái Cài đặt, danh sách thành viên) |
+| 4 | Nút "Tiếp tục với Facebook" ở /login | Có viền xám nhạt quanh nút (trước đây viền trong suốt) |
+| 5 | Thu cửa sổ còn 390px ở /app/settings | Cột trái thành dải cuộn ngang, không cuộn ngang cả trang |
+| 6 | Chạy production build, mở /dev/ui/kit | 404 |
 
 ## KT-UIS2 — Cài đặt khớp thiết kế (UI-FIDELITY-SETTINGS-V2, feat-ui-settings-v2)
 
