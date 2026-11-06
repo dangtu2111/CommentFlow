@@ -12,6 +12,35 @@ const base = {
   '_c.md': '## C\n\n',
 };
 
+describe('assemble — mục gồm nhiều đoạn (separator) và prefix rỗng', () => {
+  it('separator ngăn các mục bằng dòng trống; prefix rỗng nhận mọi file không bắt đầu bằng _', () => {
+    const { text, problems } = assemble(
+      {
+        '_a.md': '# T\n\n',
+        '02-x.md': '## X\nx1\n',
+        '01-y.md': '## Y\ny1\n\ny2\n',
+      },
+      [{ head: '_a.md', prefix: '', separator: '\n\n' }],
+    );
+    expect(problems).toEqual([]);
+    expect(text).toBe('# T\n\n## Y\ny1\n\ny2\n\n## X\nx1\n');
+  });
+
+  it('mặc định vẫn nối hàng bằng một dòng mới', () => {
+    const { text } = assemble({ '_a.md': '| h |\n', 'r-1.md': '| 1 |\n', 'r-2.md': '| 2 |\n' }, [
+      { head: '_a.md', prefix: 'r-' },
+    ]);
+    expect(text).toBe('| h |\n| 1 |\n| 2 |\n');
+  });
+
+  it('file rỗng trong mục prefix rỗng bị báo', () => {
+    const { problems } = assemble({ '_a.md': 'h\n', 'x.md': '\n' }, [
+      { head: '_a.md', prefix: '' },
+    ]);
+    expect(problems).toEqual(['x.md: file rỗng']);
+  });
+});
+
 describe('assemble', () => {
   it('ghép đầu mục + hàng theo tên file, xác định, không phụ thuộc thứ tự khóa', () => {
     const files = {
