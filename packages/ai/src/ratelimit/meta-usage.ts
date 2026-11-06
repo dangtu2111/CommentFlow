@@ -33,7 +33,7 @@ function collect(entry: unknown, into: number[]): void {
   if (!isRecord(entry)) return;
   for (const field of USAGE_FIELDS) {
     const v = entry[field];
-    if (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100) into.push(v);
+    if (typeof v === 'number' && Number.isFinite(v) && v >= 0) into.push(Math.min(v, 100));
   }
 }
 

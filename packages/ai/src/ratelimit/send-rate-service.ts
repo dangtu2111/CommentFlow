@@ -101,7 +101,15 @@ export function createSendRateService(deps: SendRateServiceDeps): SendRateServic
   async function record(raw: SendRateTarget): Promise<void> {
     if (!config.enabled) return;
     const parsed = targetSchema.safeParse(raw);
-    if (!parsed.success) return;
+    if (!parsed.success) {
+      // Chỉ báo tên trường lỗi, không kèm nội dung câu (PII).
+      report(
+        new Error(
+          `send-rate record: đầu vào hỏng (${parsed.error.issues.map((i) => i.path.join('.')).join(',')})`,
+        ),
+      );
+      return;
+    }
     const t = parsed.data;
     try {
       const k = keysFor(t);

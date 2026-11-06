@@ -124,6 +124,17 @@ describe('FR-114 createSendRateService.snapshot — dựng `rate` cho R9', () =>
   it('đầu vào hỏng (workspaceId rỗng) → snapshot đóng, record không ném', async () => {
     const s = createSendRateService({ counter: createInMemorySendRateCounter(), config: on });
     expect(await s.snapshot(target({ workspaceId: '' }))).toEqual({ remaining: 0 });
+    const errors: unknown[] = [];
+    const s2 = createSendRateService({
+      counter: createInMemorySendRateCounter(),
+      config: on,
+      onError: (e) => errors.push(e),
+    });
+    await expect(
+      s2.record(target({ workspaceId: '', replyText: 'SĐT 0912345678' })),
+    ).resolves.toBeUndefined();
+    expect(errors).toHaveLength(1);
+    expect(String((errors[0] as Error).message)).not.toContain('0912345678');
     await expect(s.record(target({ workspaceId: '' }))).resolves.toBeUndefined();
   });
 });

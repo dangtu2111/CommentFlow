@@ -15,4 +15,5 @@
 - Job `send` (`apps/worker/src/jobs/send.ts`): gọi `snapshot` → `recheckInputFromRow(..., rate)`, `record` sau khi gửi; kết quả `hold_review` → Chờ duyệt.
 - Connector Graph đọc header → `parseMetaUsagePercent` → `appUsage`.
 - UI Chờ duyệt: hiện lý do `rate_limited_*` (vi/en) — chưa có khóa i18n (chỉ `recheckR9` cũ).
+- Từ verifier-security (không chặn merge; đã sửa: header >100 kẹp về 100, `record` báo lỗi): (a) thêm `reserve()` nguyên tử (kiểm+trừ một bước, hoàn lượt nếu gửi lỗi) thay vì `count`→`record`; (b) thêm `target: comment|message`, tự gửi bình luận thiếu `postId` → `remaining: 0`; (c) lấy `mode` cho dịch vụ và `sendRecheck` từ cùng một biến + test lệch; (d) không dùng `createInMemorySendRateCounter` ở production; (e) bật tự gửi thật phải buộc `SEND_RATE_LIMIT_ENABLED`; (f) xác nhận một Page chỉ thuộc một workspace, nếu không thêm khóa toàn hệ theo Page.
 - 3 job đồng thời/kênh (phần còn lại của `SEND-RATE-LIMIT`).

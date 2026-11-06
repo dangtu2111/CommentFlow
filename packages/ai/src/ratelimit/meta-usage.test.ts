@@ -35,7 +35,9 @@ describe('FR-114 parseMetaUsagePercent — header mức dùng Meta App', () => {
     expect(parseMetaUsagePercent({})).toBeNull();
     expect(parseMetaUsagePercent({ 'x-app-usage': 'not json' })).toBeNull();
     expect(parseMetaUsagePercent({ 'x-app-usage': '{"call_count":"90"}' })).toBeNull();
-    expect(parseMetaUsagePercent({ 'x-app-usage': '{"call_count":150}' })).toBeNull();
+    expect(parseMetaUsagePercent({ 'x-app-usage': '{"call_count":-5}' })).toBeNull();
+    // Meta đang bóp tốc độ có thể báo >100: kẹp về 100 (giảm tốc), không bỏ qua (verifier-security).
+    expect(parseMetaUsagePercent({ 'x-app-usage': '{"call_count":150}' })).toBe(100);
     expect(parseMetaUsagePercent({ 'x-app-usage': '[1,2]' })).toBeNull();
   });
   it('một header hỏng: vẫn dùng header đọc được', () => {
