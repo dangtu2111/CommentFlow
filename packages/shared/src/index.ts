@@ -142,6 +142,21 @@ export {
   unsafeMarkMasked,
 } from './pii';
 export {
+  type ActivatePlanInput,
+  type GrantAddonInput,
+  PLAN_KINDS,
+  type PlanCatalogEntry,
+  type PlanKind,
+  type PlanState,
+  type PlanStateCode,
+  parseActivatePlan,
+  parseGrantAddon,
+  resolvePlanState,
+  SUBSCRIPTION_STATUSES,
+  type SubscriptionInfo,
+  type SubscriptionStatus,
+} from './plan';
+export {
   type AutoMode,
   effectiveAutoMode,
   POST_NOTE_MAX,

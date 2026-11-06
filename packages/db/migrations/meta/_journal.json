@@ -379,6 +379,13 @@
       "when": 1793961530995,
       "tag": "0053_retention_job",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793962751320,
+      "tag": "0054_plans_subscriptions",
+      "breakpoints": true
     }
   ]
 }

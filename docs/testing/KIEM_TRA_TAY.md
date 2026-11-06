@@ -48,6 +48,7 @@
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
@@ -945,6 +946,17 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 ## KT-PGM — Guard số tiền (PIPE-GUARD-MONEY, FR-030, feat-pipe-guard-money)
 
 Hàm thuần, chưa có giao diện/đường chạy → chưa có bước bấm tay. Kiểm tay khi `PIPE-DRAFT` nối guard: soạn câu có giá/ngày/SĐT/link không có trong kiến thức → bản nháp bị ép "Cần người", không tự gửi.
+
+## KT-PLN — Gói cước, dùng thử, mua thêm lượt (PLANS-SCHEMA, FR-090, US-060, Q-PLN1) · Plans store
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/plan.test.ts`. | Xanh: hết dùng thử/hết kỳ/đã hủy → hạn mức 0; `past_due` còn kỳ giữ hạn mức nhưng không tự gửi; thiếu gói → không cho dùng. / Green: expired, canceled or missing plans grant nothing. |
+| 2 | CI job `database` chạy `tests/plans.int.test.ts` và `pnpm db:check-rls`. | Bảng giá có đúng 5 gói; web không ghi được bảng giá hay gói; workspace khác không thấy gói của mình; chỉ job hệ thống đúng workspace bắt đầu dùng thử/đặt gói/cộng lượt mua thêm; dùng thử chỉ một lần; lượt mua thêm dùng được ngay và không mất khi mua đồng thời. / Web cannot write plans; cross-workspace isolation; trial once; add-on turns counted. |
+| 3 | Mở bảng giá trong DB dev: `SELECT code, price_vnd, monthly_turns FROM core.plans ORDER BY price_vnd;` (máy ảo). | Giá khớp mục CAN_BAN_CUNG_CAP `PLANS-SCHEMA`; báo lại nếu cần đổi. |
+| 4 | (Sau khi có `TRIAL-UPGRADE-UI`) đăng ký, xem thẻ gói, nâng gói, mua thêm lượt. | Chưa áp dụng — giao diện là việc sau. |
 
 ## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
 

@@ -207,6 +207,9 @@ Bảng `cf.leads` (migration 0051) và `ContactSink` thật đã xong nhưng ch�
 ## 2s. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
 Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm dựng `cache` theo workspace; cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi dịch vụ thật. Để bật thật (`SEMANTIC-CACHE`, GĐ5) bạn cần: (1) một model embedding đăng ký trong LiteLLM, tên đặt ở `SEMANTIC_CACHE_EMBEDDING_MODEL` (đặt trong `config.yaml` trên máy ảo); (2) Redis có module RediSearch (Redis Stack) cho `redis-semantic`; (3) tự gộp khối `litellm_settings` của file mẫu vào cấu hình LiteLLM trên máy ảo.
 
+## 2w. `PLANS-SCHEMA` (FR-090, US-060) — chỉ cần xác nhận bảng giá trước khi bán
+Bảng `core.plans` (migration 0054) đã nạp sẵn 5 gói CommentFlow theo `docs/10` §3.6: Dùng thử (14 ngày, 300 lượt), Starter 299.000đ (1 kênh, 1.000 lượt, không tự gửi), Growth 699.000đ (3 kênh, 3.000 lượt, tự gửi), Business 1.490.000đ (10 kênh, 7.500 lượt, tự gửi), Mua thêm 1.000 lượt 149.000đ. Chưa có nơi gọi trong web/worker nên chưa ảnh hưởng người dùng. Bạn cần: (1) xác nhận giá/hạn mức/quyền tự gửi từng gói (muốn đổi thì báo — sửa bằng migration mới, không sửa tay DB); (2) quyết định chính sách dùng thử (hiện: một lần/workspace, không gia hạn, hết hạn → AI dừng) và gói quá hạn thanh toán (hiện: `past_due` còn kỳ vẫn soạn nhưng không tự gửi). Tài khoản nhận tiền thuộc mục `QR-PAYMENT`. Kiểm tay mã KT-PLN.
+
 ## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
 Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
 

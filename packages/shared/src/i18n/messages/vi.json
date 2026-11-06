@@ -410,6 +410,7 @@
         "body": "Các phiên đăng nhập của riêng bạn. Nếu thấy thiết bị lạ, hãy đăng xuất nó và đổi mật khẩu.",
         "current": "Thiết bị này",
         "lastUsed": "Hoạt động gần nhất: {date}",
+        "signedInAt": "Đăng nhập: {date} · Mã phiên …{code}",
         "signOut": "Đăng xuất thiết bị này",
         "revoke": "Thu hồi",
         "signOutOthers": "Đăng xuất tất cả thiết bị khác",
