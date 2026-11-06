@@ -3,6 +3,8 @@ export { priceEntriesFromSnapshot, priceEntriesFromSources } from './price-snaps
 export {
   AUTO_MESSAGE_WINDOW_MS,
   HUMAN_AGENT_WINDOW_MS,
+  RATE_HOLD_REASONS,
+  type RateHoldReason,
   RECHECK_ACTIONS,
   RECHECK_CLOCK_SKEW_MS,
   RECHECK_COUNT,

@@ -42,15 +42,18 @@
 | KT-DOC | Chốt đơn trong bình luận → lưu khách, trả lời không lặp PII (lõi, chờ nối) | — | không | chưa | — |
 | KT-ES | Dừng khẩn cấp tự gửi (chỉ logic + test, chưa có giao diện/DB; không cần khóa/dịch vụ ngoài) | feat-emergency-stop | chưa | chưa | — |
 | KT-FCR | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
+| KT-IG | Connector Instagram (`IG_CONNECTOR_ENABLED`, **cần tài khoản IG Business thử**; sau `IG-WEBHOOK-ROUTE` + `IG-CHANNEL-CONNECT`) | feat-ig-connector | chưa | chưa | — |
 | KT-INV | Hóa đơn + xác nhận thanh toán thủ công (nền dữ liệu) | — | có | chưa | — |
 | KT-KB-SEARCH | Tìm kiếm kiến thức/sản phẩm: toàn văn + trigram + RRF, cache theo `product_revs` (chỉ DB + mã, **cần migrate 0037**) | feat-kb-search-fts | chưa | chưa | — |
 | KT-LDS | Lưu khách tiềm năng (mã hóa SĐT/email) | — | có | chưa | — |
 | KT-OBW | Trình hướng dẫn thiết lập khớp thiết kế onboarding | — | có | chưa | — |
 | KT-PBF | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PLN | Gói cước, dùng thử, mua thêm lượt (nền dữ liệu) | — | có | chưa | — |
 | KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
 | KT-RET | Job retention xóa dữ liệu quá 12 tháng và gộp ai_usage (chỉ DEV `cf_dev`) | — | không | chưa | — |
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
+| KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
@@ -741,6 +744,18 @@ Chỉ phần máy (chưa có nút/giao diện, chưa ghi DB): người thử ch�
 
 ---
 
+## KT-IG — Connector Instagram với tài khoản thật (IG-CONNECTOR, FR-013)
+
+Điều kiện: tài khoản IG Business thử liên kết Page thử; kênh Instagram đã lưu (sau `IG-CHANNEL-CONNECT`); worker chạy với `IG_CONNECTOR_ENABLED=true` trên môi trường thử. **Chưa chạy được ở thời điểm Xong-mock.**
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Dùng tài khoản khác bình luận vào một bài của tài khoản thử | Webhook `comments` tới; bình luận hiện ở hộp thư với đúng bài, tác giả, nội dung |
+| 2 | Trả lời bình luận đó từ ứng dụng | Câu trả lời hiện dưới bình luận trên Instagram; hệ thống ghi nhận đã gửi |
+| 3 | Ẩn bình luận từ ứng dụng, rồi bỏ ẩn | Bình luận ẩn/hiện trên Instagram tương ứng (ghi lại nếu bỏ ẩn bị từ chối) |
+| 4 | Bình luận do chính tài khoản thử viết | Không vào pipeline (chống vòng lặp) |
+| 5 | Trả lời lồng (trả lời vào một bình luận đã có trả lời) | Ghi lại hành vi thật (Instagram chỉ nhận trả lời cấp 1?) để chỉnh khai báo `reply` |
+
 ## KT-INV — Hóa đơn + xác nhận thanh toán thủ công (INVOICES, FR-091/FR-102, Q-INV1) · Invoices store
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
@@ -946,6 +961,17 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 
 Hàm thuần, chưa có giao diện/đường chạy → chưa có bước bấm tay. Kiểm tay khi `PIPE-DRAFT` nối guard: soạn câu có giá/ngày/SĐT/link không có trong kiến thức → bản nháp bị ép "Cần người", không tự gửi.
 
+## KT-PLN — Gói cước, dùng thử, mua thêm lượt (PLANS-SCHEMA, FR-090, US-060, Q-PLN1) · Plans store
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/plan.test.ts`. | Xanh: hết dùng thử/hết kỳ/đã hủy → hạn mức 0; `past_due` còn kỳ giữ hạn mức nhưng không tự gửi; thiếu gói → không cho dùng. / Green: expired, canceled or missing plans grant nothing. |
+| 2 | CI job `database` chạy `tests/plans.int.test.ts` và `pnpm db:check-rls`. | Bảng giá có đúng 5 gói; web không ghi được bảng giá hay gói; workspace khác không thấy gói của mình; chỉ job hệ thống đúng workspace bắt đầu dùng thử/đặt gói/cộng lượt mua thêm; dùng thử chỉ một lần; lượt mua thêm dùng được ngay và không mất khi mua đồng thời. / Web cannot write plans; cross-workspace isolation; trial once; add-on turns counted. |
+| 3 | Mở bảng giá trong DB dev: `SELECT code, price_vnd, monthly_turns FROM core.plans ORDER BY price_vnd;` (máy ảo). | Giá khớp mục CAN_BAN_CUNG_CAP `PLANS-SCHEMA`; báo lại nếu cần đổi. |
+| 4 | (Sau khi có `TRIAL-UPGRADE-UI`) đăng ký, xem thẻ gói, nâng gói, mua thêm lượt. | Chưa áp dụng — giao diện là việc sau. |
+
 ## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
@@ -1052,6 +1078,13 @@ Chỉ phần máy (chưa có giao diện — `KB-GAPS-UI`/`KB-TRYAI`; chưa có 
 1. `CF_LANE=<làn> pnpm test:db` → file `retrieval-log.int.test.ts` xanh (đua 20 lệnh song song cho đúng một dòng `kb_gaps` count = 20). Kết quả mong đợi: không test đỏ.
 2. `pnpm db:check-rls` → không báo vi phạm `cf.retrieval_logs`/`cf.kb_gaps`. Kết quả mong đợi: "đạt".
 3. (Tùy chọn, vi + en) Khi `KB-GAPS-UI` xong: câu AI chưa trả lời hiện gộp theo chủ đề/sản phẩm kèm số lần; "Đã bổ sung"/"Bỏ qua" đổi trạng thái; khách hỏi lại điều đã bổ sung thì mục mở lại.
+
+---
+
+## KT-RLP — Giới hạn tốc độ gửi theo Page/bài/nội dung lặp (RATE-LIMIT-PAGE, FR-114)
+
+Chỉ phần máy (chưa nối job `send`, chưa có Redis): người thử chạy test.
+1. `pnpm --filter @flow/ai exec vitest run src/ratelimit src/recheck` → xanh. Kết quả mong đợi: không test đỏ (vượt 30/phút hoặc 600/giờ → hoãn; tự gửi vượt 60/giờ, 20/10 phút/bài hoặc 5 câu giống hệt/giờ → Chờ duyệt; mức dùng Meta App ≥90% chặn tự gửi nhưng không chặn người bấm).
 
 ---
 

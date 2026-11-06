@@ -205,7 +205,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ⛔ |
+| PLANS-SCHEMA | FR-090 (gói cước, dùng thử, mua thêm lượt: bảng `plans`/`subscriptions`) | US-060, UF-9 | USAGE-COUNTERS | S+DB | **có** — bảng giá | ✅ Xong-mock (feat-plans-schema, Q-PLN1, migration 0054; giá seed chờ chủ dự án xác nhận) |
 | TRIAL-UPGRADE-UI | FR-090 (dùng thử, nâng gói, mua thêm) | US-060 | PLANS-SCHEMA | S | không | ⏳ |
 | QR-PAYMENT | FR-091 (QR + nội dung định danh; chờ xác nhận) | US-061, UF-9 | PLANS-SCHEMA | S+DB | **có** — tài khoản nhận tiền | ⛔ |
 | INVOICES | FR-091 (lịch sử hóa đơn, thông tin xuất hóa đơn) — nền dữ liệu ✅ Xong-mock (feat-invoices, Q-INV1, migration 0052: `core.invoices`/`core.payments`, hàm DEFINER chỉ hệ thống); còn giao diện lịch sử + thông tin xuất hóa đơn, QR, đường Admin | US-061 | QR-PAYMENT | S | không | 🔧 (nền dữ liệu xong; UI chờ `QR-PAYMENT`) |
@@ -247,7 +247,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ✅ Xong-mock (`feat-auto-pause`, Q-AP1: `packages/ai/src/autopause/` `evaluateAutoPause` thuần + store + dịch vụ hủy hẹn giờ `ai_paused`; DB/job/banner → `AUTO-PAUSE-WIRE`; KT-AP) |
 | AI-SENT-HISTORY | FR-075 (lịch sử AI đã gửi + Đánh dấu sai) | US-040 | AUTO-SEND-GATE | — | không | ✅ Xong-mock (feat-ai-sent-history; phần DB ở AI-SENT-HISTORY-DB) |
 | AUTOSEND-LANG-PARTIAL | FR-120 (tự gửi theo ngôn ngữ), FR-147 (tự gửi hỏi lại/chuyển hướng) | — | AUTO-SEND-GATE | S | không | ✅ Xong-mock (lõi thuần, feat-autosend-lang-partial; còn nối pipeline/DB) |
-| RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | ⏳ |
+| RATE-LIMIT-PAGE | FR-114 (giới hạn gửi theo Page/bài/nội dung lặp; mức dùng Meta App) | — | SEND-RECHECK | S | không | 🧪 Xong-mock (feat-rate-limit-page; nối job/Redis → `RATE-LIMIT-PAGE-WIRE`) |
 | ABUSE-JOB | FR-115 (phát hiện lạm dụng: Đánh dấu sai, câu bị xóa, lỗi 368, tăng đột biến) | — | AI-SENT-HISTORY | S | không | ✅ Xong-mock (`feat-abuse-job`, Q-ABJ1: `evaluateAbuse` thuần + handler `withJob` + `AbuseSink`; DB/đăng ký/lịch → `ABUSE-JOB-WIRE`; KT-ABJ) |
 | ADMIN-SEND-LOCK | FR-116 (Admin tạm khóa gửi; trang Sức khỏe Meta App) | US-084 | ADMIN-SHELL, ABUSE-JOB | S | không | ⏳ |
 | DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ✅ lõi thuần (`feat-da-holder`, Q-DH1; nối pipeline → `DA-HOLDER-WIRE`; KT-DH) |
@@ -257,7 +257,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | AUTO-HIDE | FR-081 (Tự ẩn SĐT/link sau khi chạy đánh dấu; lưu khách trước khi ẩn); **AI không tự ẩn** | US-050, UF-4 | SPAM-RULES, FB-HIDE | S | không | 🟡 Xong-mock phần thuần (`feat-auto-hide`, Q-AH1; còn `AUTO-HIDE-DB`/`AUTO-HIDE-WIRE`, KT-AH) |
 | LEADS-KANBAN | FR-082 (Khách tiềm năng: trích SĐT/địa chỉ/sản phẩm, Kanban, giao người) — phần dữ liệu `LEADS-STORE` ✅ Xong-mock (feat-leads-store, migration 0051); còn giao diện Kanban + nối pipeline | US-051 | PII-MASK-PIPE | S (PII) | không | ⏳ (một phần) |
 | LEADS-EXPORT | FR-082 (xuất Excel/CSV) | US-051 | LEADS-KANBAN | S (PII) | không | ⏳ |
-| IG-CONNECTOR | FR-013 (bình luận Instagram: đọc, trả lời, ẩn; cùng Meta App) | UF-2 | CONNECTOR-IFACE, FB-OAUTH | S | **có** — IG Business thử | ⛔ |
+| IG-CONNECTOR | FR-013 (bình luận Instagram: đọc, trả lời, ẩn; cùng Meta App) | UF-2 | CONNECTOR-IFACE, FB-OAUTH | S | **có** — IG Business thử | ✅ Xong-mock (`feat-ig-connector`, Q-IG1; còn `IG-WEBHOOK-ROUTE`, `IG-CHANNEL-CONNECT`) |
 | SHOPIFY-IMPORT | FR-052 (chỉ đọc sản phẩm/biến thể/giá/tồn/chính sách), FR-122 (nguồn Shopify) | US-030 | PRODUCTS-VARIANTS | S (OAuth) | **có** — Shopify dev store | ⛔ |
 | SHOPIFY-RECONCILE | FR-112 (đối soát hằng đêm + Đối soát ngay), FR-113 (kiểm/đăng ký lại webhook) | US-046 | SHOPIFY-IMPORT | S | **có** — Shopify dev store | ⛔ |
 | POLICY-URL-IMPORT | FR-053 (nhập link website, tôn trọng robots.txt), FR-055 (đồng bộ nguồn, `content_hash`) | US-031 | KB-CHUNKING | S (chống SSRF) | không | ⏳ |

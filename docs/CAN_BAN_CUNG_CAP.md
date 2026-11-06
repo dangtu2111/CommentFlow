@@ -127,6 +127,12 @@ Code đã có bước `rewrite` (`packages/ai/src/rewrite/`): phần ghép `sear
 
 Hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-DROH. Chủ dự án chỉ cần quyết định sau này (khi nối DB): giờ làm việc từng workspace (múi giờ + khung giờ theo thứ) nhập ở đâu trong Cài đặt, và soạn mẫu câu mời trong giờ/ngoài giờ cho từng chủ đề (đã có ở Cơ sở kiến thức → Giọng văn).
 
+## 2j. Bộ đếm Redis + header mức dùng Meta App — `RATE-LIMIT-PAGE` (FR-114, Xong-mock, mã KT-RLP)
+
+Code đã có quy tắc giới hạn gửi theo Page/bài/nội dung lặp (`packages/ai/src/ratelimit/`) chạy bằng bộ đếm bộ nhớ; cờ `SEND_RATE_LIMIT_ENABLED` **tắt mặc định**, chưa nối job `send`. Chỉ khi muốn chạy thật (nhánh nối `RATE-LIMIT-PAGE-WIRE`), bạn cần cung cấp:
+- Valkey/Redis (`REDIS_URL`) — đã có ở dev; staging dùng chung.
+- Meta App thật để Graph API trả header `X-App-Usage` / `X-Business-Use-Case-Usage` (không cần khóa mới).
+
 ## 2h0. `DA-RULES-STOCK` (FR-151, FR-157) — không cần tài nguyên ngoài
 
 Hàm thuần, không khóa/dịch vụ/cờ; kiểm tay mã KT-DRS. Chủ dự án chỉ cần quyết định sau này (khi nối DB): `stock_stale_days` mặc định 3 có phù hợp, và có bật gợi ý mẫu thay thế (`suggest_alternatives`, mặc định TẮT) cho shop nào.
@@ -201,11 +207,22 @@ Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/
 ## 2t. `AUTO-HIDE` (FR-081) — chưa cần ngay, cần khi bật Tự ẩn thật
 Hiện chỉ có logic thuần + interface; cờ `AUTO_HIDE_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi Facebook. Để bật thật bạn cần: (1) kênh Facebook đã kết nối thật có quyền ẩn bình luận (`FB-OAUTH`, `feat/fb-connector` với `setHidden`); (2) bật `LEADS_CAPTURE_ENABLED` + khóa `LEADS_ENC_KEYS`/`LEADS_HASH_KEY` (khách được lưu TRƯỚC khi ẩn); (3) sau khi có migration `AUTO-HIDE-DB`, đặt `AUTO_HIDE_ENABLED=true` và bật quy tắc Tự ẩn có `shadow_until` vài ngày để xem số "sẽ ẩn" trước khi ẩn thật.
 
+## 2v. Connector Instagram — `IG-CONNECTOR` (FR-013, Xong-mock)
+
+Code connector Instagram đã nối vào worker nhưng cờ **tắt mặc định**, chưa từng gọi Meta thật (chỉ fixture theo tài liệu Meta). Để bật thật bạn cần cung cấp (dùng tài khoản thử, không dùng tài khoản khách):
+- Một tài khoản **Instagram Business/Creator thử** liên kết với Page thử (mục 1, `FB-OAUTH`).
+- Thêm quyền `instagram_basic` + `instagram_manage_comments` vào Meta App (cần App Review để dùng ngoài tài khoản Tester) và đăng ký webhook `instagram` → field `comments`.
+- Trên **máy chạy worker** đặt `IG_CONNECTOR_ENABLED=true` cùng `META_APP_ID`, `META_APP_SECRET`, `TOKEN_ENC_KEYS` (cùng giá trị với mục 1). Không commit giá trị.
+- Chưa bật được đường thật cho tới khi xong gap `IG-WEBHOOK-ROUTE` (route web nhận webhook Instagram) và `IG-CHANNEL-CONNECT` (lưu IG Business ID làm kênh) — cả hai cần migration/route do làn khác làm. Kiểm tay: KT-IG.
+
 ## 2v. `LEADS-STORE` (FR-082, FR-033) — chỉ cần khóa mã hóa khi bật ghi khách tiềm năng
 Bảng `cf.leads` (migration 0051) và `ContactSink` thật đã xong nhưng chưa nối vào pipeline; cờ `LEADS_CAPTURE_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true` mới bật). Khi bật bạn cần: (1) tự sinh `LEADS_ENC_KEYS=v1:<openssl rand -hex 32>` (xoay khóa: thêm `v2:…`, giữ khóa cũ để giải mã) và `LEADS_HASH_KEY=<openssl rand -hex 32>` — **khác** `TOKEN_ENC_KEYS` và khác nhau, chỉ đặt ở máy staging/production (worker + web đều cần để ghi/xem), KHÔNG đặt trên máy ảo dev dùng chung; (2) **sao lưu khóa an toàn**: mất `LEADS_ENC_KEYS` = không đọc lại được số/email đã lưu; đổi `LEADS_HASH_KEY` = mất khả năng chống trùng cho lead cũ; (3) quyết định chính sách lưu giữ/xóa dữ liệu khách tiềm năng (hiện chỉ Owner xóa tay). Kiểm tay mã KT-LDS.
 
 ## 2s. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
 Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm dựng `cache` theo workspace; cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi dịch vụ thật. Để bật thật (`SEMANTIC-CACHE`, GĐ5) bạn cần: (1) một model embedding đăng ký trong LiteLLM, tên đặt ở `SEMANTIC_CACHE_EMBEDDING_MODEL` (đặt trong `config.yaml` trên máy ảo); (2) Redis có module RediSearch (Redis Stack) cho `redis-semantic`; (3) tự gộp khối `litellm_settings` của file mẫu vào cấu hình LiteLLM trên máy ảo.
+
+## 2w. `PLANS-SCHEMA` (FR-090, US-060) — chỉ cần xác nhận bảng giá trước khi bán
+Bảng `core.plans` (migration 0054) đã nạp sẵn 5 gói CommentFlow theo `docs/10` §3.6: Dùng thử (14 ngày, 300 lượt), Starter 299.000đ (1 kênh, 1.000 lượt, không tự gửi), Growth 699.000đ (3 kênh, 3.000 lượt, tự gửi), Business 1.490.000đ (10 kênh, 7.500 lượt, tự gửi), Mua thêm 1.000 lượt 149.000đ. Chưa có nơi gọi trong web/worker nên chưa ảnh hưởng người dùng. Bạn cần: (1) xác nhận giá/hạn mức/quyền tự gửi từng gói (muốn đổi thì báo — sửa bằng migration mới, không sửa tay DB); (2) quyết định chính sách dùng thử (hiện: một lần/workspace, không gia hạn, hết hạn → AI dừng) và gói quá hạn thanh toán (hiện: `past_due` còn kỳ vẫn soạn nhưng không tự gửi). Tài khoản nhận tiền thuộc mục `QR-PAYMENT`. Kiểm tay mã KT-PLN.
 
 ## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
 Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.

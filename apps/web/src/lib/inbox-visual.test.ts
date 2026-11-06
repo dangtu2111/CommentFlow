@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { INBOX_TAB_KEYS } from './inbox-filters';
-import { inboxTabGroup, labelTone, platformBadgeText } from './inbox-visual';
+import { avatarInitial, inboxTabGroup, labelTone, platformBadgeText } from './inbox-visual';
+
+describe('avatarInitial', () => {
+  it('lấy chữ cái đầu in hoa, bỏ tiền tố [MẪU], rỗng → ?', () => {
+    expect(avatarInitial('[MẪU] đặng Tú')).toBe('Đ');
+    expect(avatarInitial('  hoàng')).toBe('H');
+    expect(avatarInitial('')).toBe('?');
+  });
+});
 
 describe('platformBadgeText', () => {
   it('rút gọn nền tảng đã biết', () => {

@@ -46,6 +46,7 @@ async function main(): Promise<void> {
   const registry = buildConnectorRegistry({
     db,
     facebook: config.facebook,
+    instagram: config.instagram,
     tokenEncKeys: config.tokenEncKeys,
     logger,
   });

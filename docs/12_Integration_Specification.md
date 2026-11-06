@@ -33,9 +33,9 @@
 
 | Mục | Chi tiết |
 |---|---|
-| Kết nối | Tài khoản Instagram Business/Creator liên kết Page, hoặc Instagram Login **(chọn 1, cần kiểm)** |
-| Quyền | `instagram_business_basic`, `instagram_business_manage_comments`; tin nhắn: `instagram_business_manage_messages` |
-| Webhook | `comments`, `messages` |
+| Kết nối | Tài khoản Instagram Business/Creator liên kết Page, đăng nhập qua Facebook (token Page, `graph.facebook.com`, cùng Meta App) — chốt Q-IG1; Instagram Login (`graph.instagram.com`) để sau |
+| Quyền | `instagram_basic`, `instagram_manage_comments`; tin nhắn: `instagram_manage_messages` (đường Instagram Login dùng `instagram_business_*`) |
+| Webhook | `comments`, `messages`. `comments` không có giờ tạo (dùng `entry.time`) và không báo sửa/xóa; chữ ký `X-Hub-Signature-256` như Facebook |
 | Trả lời | `POST /{ig-comment-id}/replies {message}` |
 | Ẩn | `POST /{ig-comment-id} {hide: true}` |
 | Giới hạn | Không trả lời được bình luận trên quảng cáo dạng dark post theo một số trường hợp **(cần kiểm)** |
