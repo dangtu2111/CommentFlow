@@ -28,6 +28,7 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
@@ -489,6 +490,14 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 3. (Khi đã có khóa LLM, tùy chọn) đặt `REWRITE_LLM_ENABLED=true` + `REWRITE_LLM_MODEL`, gọi `createLlmRewriter` với "còn không shop" + bình luận cha "áo này giá sao". — Mong đợi: `source: 'llm'`, câu tìm kiếm nêu rõ sản phẩm, không có SĐT/email; dòng `ai_usage` bước `rewrite`.
 
 ---
+
+## KT-AC — Hiệu chuẩn ngưỡng tự gửi + độ tin cậy (AUTO-CALIBRATION, FR-072, FR-163, feat-auto-calibration)
+
+> Chưa nối DB/giao diện nên kiểm bằng lệnh. / Not wired to DB/UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/calibration` | Mọi test xanh (gồm property-based: đề xuất luôn trong [0,80; 0,99]; < 50 mẫu không đề xuất; trọng số hồi quy luôn hợp lệ). / All green. |
 
 ## KT-ADC — Khoảng trễ tự gửi có hủy (AUTO-DELAY-CANCEL, FR-071, US-042, feat-auto-delay-cancel)
 
