@@ -73,7 +73,7 @@ export async function ActivityList({
               >
                 <div className="inbox-item-head">
                   <span className="inbox-author">
-                    {key ? t(`actions.${key as 'workspace.created'}`) : item.action}
+                    {key ? t(`actions.${key as 'workspace_created'}`) : item.action}
                   </span>
                   <time className="inbox-time" dateTime={item.createdAt.toISOString()}>
                     {formatAbsoluteTime(item.createdAt, locale, timeZone)}
