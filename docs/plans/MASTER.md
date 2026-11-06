@@ -74,7 +74,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | AUTH-HARDEN-4b | FR-001 (`UNIQUE(user_id)` two_factors, test tự seed, cập nhật `docs/10` §3.1 — chờ duyệt spec) | — | — | S+DB | không | ⏳ |
 | FLAGS-RECONNECT | FR-117 (LISTEN lùi dần + cảnh báo) | — | FLAGS | — | không | ⏳ |
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ⏳ |
-| E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | 🟡 job viết xong, đỏ do lỗi 2FA thật (xem gap matrix) |
+| E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ✅ xanh 6/6 trên CI (nguyên nhân gốc: cookie phiên cũ sau xoay phiên — đã sửa ở fix/2fa-backup-codes) |
 | FR-005-SEARCH | FR-005 (ô tìm kiếm của bộ chuyển workspace; số việc cần xử lý tách thành `FR-005-COUNT`) | US-006 | INBOX-LIST | — | không | ✅ (tìm kiếm) |
 | TEST-COVERAGE-GAP | — (nâng coverage `saas-core` 41% → 85%, ratchet) | — | — | — | không | ⏳ (liên tục) |
 | TRACE-DEBT | — (xóa dần `trace-baseline.json`: 10 mã FR cần test mang mã) | — | — | — | không | ⏳ (liên tục) |
