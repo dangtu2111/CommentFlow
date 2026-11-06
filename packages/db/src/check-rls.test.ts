@@ -34,6 +34,7 @@ function fakeDb(parts: {
   planTables?: Row[];
   planFn?: Row[];
   billingAdminFn?: Row[];
+  adminAuditTriggers?: Row[];
   deletionTable?: Row[];
   deletionOwnerFn?: Row[];
   deletionWorkerFn?: Row[];
@@ -117,6 +118,8 @@ function fakeDb(parts: {
       if (text.includes('/* plan-functions */')) return { rows: parts.planFn ?? [] };
       if (text.includes('/* billing-admin-functions */'))
         return { rows: parts.billingAdminFn ?? [] };
+      if (text.includes('/* admin-audit-triggers */'))
+        return { rows: parts.adminAuditTriggers ?? [] };
       if (text.includes('/* deletion-table */')) return { rows: parts.deletionTable ?? [] };
       if (text.includes('/* deletion-owner-functions */'))
         return { rows: parts.deletionOwnerFn ?? [] };
@@ -1126,9 +1129,37 @@ describe('checkRls: quản trị gói/mã giảm giá (ADMIN-REST, 0060)', () =>
       'admin_update_coupon',
       'admin_list_coupons',
       'apply_coupon',
+      'require_admin_session',
+      'admin_session_status',
+      'record_admin_action',
+      'admin_list_audit',
     ]) {
       expect(fn).toContain(`('${name}')`);
     }
+  });
+});
+
+describe('checkRls: nhật ký Admin chỉ thêm (ADMIN-SHELL, FR-100, 0061)', () => {
+  it('báo thiếu trigger chặn sửa/xóa; truy vấn kiểm đúng bảng', async () => {
+    const queries: string[] = [];
+    const base = fakeDb({
+      adminAuditTriggers: [
+        { name: 'core.admin_audit_log', problem: 'thiếu trigger chặn TRUNCATE' },
+      ],
+    });
+    const v = await checkRls({
+      query: async (text) => {
+        queries.push(text);
+        return base.query(text);
+      },
+    });
+    expect(v).toContainEqual({
+      subject: 'core.admin_audit_log',
+      message: expect.stringContaining('thiếu trigger chặn TRUNCATE'),
+    });
+    expect(queries.find((q) => q.includes('/* admin-audit-triggers */')) ?? '').toContain(
+      'admin_audit_log',
+    );
   });
 });
 
