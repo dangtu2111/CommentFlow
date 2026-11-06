@@ -32,8 +32,27 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-033 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-033 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-DA | `decideAction`: trả lời/hỏi lại/chuyển hướng/chuyển người do code chọn (chỉ mã/test, không cần khóa; xem mục KT-DA bên dưới) | feat-pipe-decide-action | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
+
+---
+
+## KT-PV — Đa dạng diễn đạt (PIPE-VARIATION, FR-161)
+
+Chưa có giao diện/pipeline nối (còn `VARIATION-WIRE`); mục này chỉ kiểm test. Không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/variation src/draft`. — Mong đợi: tất cả test xanh.
+2. (Khi đã có khóa LLM, tùy chọn) gọi `createLlmDrafter` với `DRAFT_LLM_ENABLED=true` cho cùng một câu hỏi vài lần. — Mong đợi: `variants` 3–5 câu khác chữ, cùng giá/link; không có câu đổi số tiền (câu đổi số bị loại).
+
+---
+
+## KT-UC — Bộ đếm lượt AI (USAGE-COUNTERS, FR-090)
+
+Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate` (DB dev/test của bạn) rồi chạy test.
+1. `CF_LANE=<làn> pnpm test:db` → file `usage-counters.int.test.ts` xanh (đua 20 lệnh song song chỉ cho đúng 10 lượt). Kết quả mong đợi: không test đỏ.
+2. `pnpm db:check-rls` → không báo vi phạm `core.usage_counters`/`core.consume_usage`. Kết quả mong đợi: "đạt".
+3. (Tùy chọn, vi + en) Khi `USAGE-METER-UI` xong: đồng hồ lượt hiện "80%" màu cảnh báo, "100%" chặn AI và đề xuất mua thêm/nâng gói.
 
 ---
 

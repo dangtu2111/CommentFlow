@@ -169,3 +169,13 @@ export {
   type RewriteResult,
   type Rewriter,
 } from './rewrite/rewriter';
+export {
+  type GuardVariantsInput,
+  type GuardVariantsResult,
+  guardVariants,
+  MAX_VARIANTS,
+  type PickedVariant,
+  pickVariant,
+  REASON_VARIANTS_EXHAUSTED,
+  replyFingerprint,
+} from './variation/variation';

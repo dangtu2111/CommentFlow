@@ -33,6 +33,8 @@ export const draftResultSchema = z
     unanswered_topics: cleanList,
     needs_human: z.boolean(),
     reason: z.string().default(''),
+    /** Cách diễn đạt khác của cùng nội dung (FR-161); chưa kiểm — `guardVariants` lọc ở `drafter.ts`. */
+    variants: cleanList.default([]),
   })
   .refine((value) => value.needs_human || value.reply.trim() !== '')
   .transform((value) => ({
@@ -79,6 +81,7 @@ export function needsHumanResult(reason: string, lang: DraftLang = 'vi'): DraftR
     unanswered_topics: [],
     needs_human: true,
     reason,
+    variants: [],
   };
 }
 
@@ -96,5 +99,5 @@ export function enforceClaimSources(
     (claim) => claim.kind !== 'fact' || (claim.source_ids.length > 0 && known(claim.source_ids)),
   );
   if (factsOk && known(result.sources)) return result;
-  return { ...result, reply: '', needs_human: true, reason: REASON_MISSING_SOURCE };
+  return { ...result, reply: '', needs_human: true, reason: REASON_MISSING_SOURCE, variants: [] };
 }

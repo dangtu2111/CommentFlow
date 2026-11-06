@@ -282,6 +282,25 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.product_variants', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.product_variants', 'product_id', 'UPDATE'],
   ['cf_app', 'cf.product_variants', 'external_id', 'UPDATE'],
+  // USAGE-COUNTERS (0039): cf_app chỉ ĐỌC bộ đếm; mọi cột ghi chỉ qua hàm DEFINER core.consume_usage
+  ['cf_app', 'core.usage_counters', 'workspace_id', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'product', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'product', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'meter', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'meter', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'period_start', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'period_start', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'used', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'used', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'limit_amount', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'limit_amount', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'addon', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'addon', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'warned_80_at', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'warned_80_at', 'UPDATE'],
+  ['cf_app', 'core.usage_counters', 'blocked_at', 'INSERT'],
+  ['cf_app', 'core.usage_counters', 'blocked_at', 'UPDATE'],
   ['cf_app', 'cf.comments', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.comments', 'channel_id', 'UPDATE'],
   ['cf_app', 'cf.comments', 'post_id', 'UPDATE'],
@@ -672,6 +691,7 @@ const NO_DELETE_TABLES = [
   'core.invitations',
   'core.action_logs',
   'core.workspaces',
+  'core.usage_counters',
 ];
 
 async function checkNoDelete(db: Queryable, violations: RlsViolation[]): Promise<void> {
@@ -739,12 +759,13 @@ async function checkWorkerDirectPrivileges(
          LATERAL aclexplode(t.attacl) a, w
     WHERE t.attacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
     UNION ALL
-    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox)'
+    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox, core.consume_usage)'
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
       AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox')
-               AND a.privilege_type = 'EXECUTE')`);
+               AND a.privilege_type = 'EXECUTE')
+      AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({
       subject: String(row.name),
@@ -847,6 +868,44 @@ async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[
     violations.push({
       subject: String(row.name),
       message: `hàm liệt kê yêu cầu kẹt: ${String(row.problem)}`,
+    });
+  }
+}
+
+/**
+ * Hàm trừ lượt AI (0039, USAGE-COUNTERS, FR-090): phải tồn tại, SECURITY DEFINER, PUBLIC/cf_app/cf_auth KHÔNG có EXECUTE
+ * (chỉ cf_worker), và thân hàm chỉ cho ngữ cảnh job HỆ THỐNG không người dùng, khớp workspace tham số, kết nối cf_worker —
+ * nếu không, web (hoặc job workspace khác) trừ/đặt hạn mức của workspace bất kỳ. Thân hàm kiểm bằng chuỗi con của prosrc;
+ * logic kiểm bằng test tích hợp usage-counters.int.test.ts.
+ */
+async function checkUsageFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  const found = await db.query(`/* usage-function */
+    SELECT 'core.consume_usage' AS name,
+      CASE
+        WHEN p.oid IS NULL THEN 'hàm không tồn tại'
+        WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
+        WHEN has_function_privilege('public', p.oid, 'EXECUTE') THEN 'PUBLIC có quyền EXECUTE'
+        WHEN has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE') THEN '${APP_ROLE} (web) không được có quyền EXECUTE (chỉ ${WORKER_ROLE})'
+        WHEN has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE') THEN '${AUTH_ROLE} không được có quyền EXECUTE'
+        WHEN NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE') THEN '${WORKER_ROLE} thiếu quyền EXECUTE'
+        ELSE 'thân hàm phải đòi ngữ cảnh job hệ thống, không người dùng, workspace khớp tham số và session_user = ${WORKER_ROLE}'
+      END AS problem
+    FROM (SELECT 1) AS one
+    LEFT JOIN pg_proc p ON p.pronamespace = 'core'::regnamespace AND p.proname = 'consume_usage'
+    WHERE p.oid IS NULL
+      OR NOT p.prosecdef
+      OR has_function_privilege('public', p.oid, 'EXECUTE')
+      OR has_function_privilege('${APP_ROLE}', p.oid, 'EXECUTE')
+      OR has_function_privilege('${AUTH_ROLE}', p.oid, 'EXECUTE')
+      OR NOT has_function_privilege('${WORKER_ROLE}', p.oid, 'EXECUTE')
+      OR p.prosrc NOT LIKE '%is_system_context() IS NOT TRUE%'
+      OR p.prosrc NOT LIKE '%current_user_id() IS NOT NULL%'
+      OR p.prosrc NOT LIKE '%current_workspace_id() IS DISTINCT FROM p_workspace_id%'
+      OR p.prosrc NOT LIKE '%session_user <> ''${WORKER_ROLE}''%'`);
+  for (const row of found.rows) {
+    violations.push({
+      subject: String(row.name),
+      message: `hàm trừ lượt AI: ${String(row.problem)}`,
     });
   }
 }
@@ -1091,6 +1150,7 @@ export async function checkRls(db: Queryable): Promise<RlsViolation[]> {
   await checkTokenFunctions(db, violations);
   await checkWebhookFunction(db, violations);
   await checkStuckOutboxFunction(db, violations);
+  await checkUsageFunction(db, violations);
   await checkLeaveFunction(db, violations);
   await checkActionLogsOnBehalfCheck(db, violations);
 
