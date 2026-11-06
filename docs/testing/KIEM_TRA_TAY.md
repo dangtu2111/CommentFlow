@@ -10,6 +10,15 @@
 | 2 | (Sau khi có bảng) Nhân viên gửi câu có SĐT khách + giá | Mẫu lưu `[sđt]` và `{price:…}`, không còn số thật |
 | 3 | (Sau khi có bảng) Owner tắt một mẫu | Mẫu không xuất hiện trong ví dụ giọng văn khi soạn |
 
+## KT-DRP — Quy tắc giá của decideAction (DA-RULES-PRICE, FR-150/158, feat-da-rules-price)
+
+> Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verified by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/rules` | 32 test xanh: caption lệch giá kho → conflict kèm hai con số; khách nhắc giá khác → chuyển người; khoảng giá "từ X đến Y" + trục cần hỏi lại. |
+| 2 | `pnpm --filter @flow/ai test:coverage` | Đạt ngưỡng; `src/rules/*.ts` ≥ 95% nhánh. |
+
 ## KT-KTS — Bộ câu kiểm thử kiến thức (KB-TESTSET, FR-054, US-034, feat-kb-testset)
 
 > Chạy bằng mô phỏng, không cần khóa/DB. Bộ câu chưa được lưu và chưa chặn nút Xuất bản. / Runs on the simulation; the set is not saved and does not block Publish.
