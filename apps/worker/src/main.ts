@@ -3,6 +3,8 @@ import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
 import { startHealthServer } from './health';
+import { createLocalExportStore } from './export-store';
+import { createDataExportHandler } from './jobs/data-export';
 import { createHideHandler } from './jobs/hide';
 import { createIngestHandler } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
@@ -13,6 +15,7 @@ import { startSweep } from './jobs/sweep';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
 import {
+  DATA_EXPORT_QUEUE,
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
@@ -68,8 +71,20 @@ async function main(): Promise<void> {
     { batchSize: 1, localConcurrency: 1 },
     createKbPublishHandler({ db, logger }),
   );
+  // FR-094: xuất dữ liệu workspace — cờ DATA_EXPORT_ENABLED mặc định TẮT: tắt thì không đăng ký hàng đợi, không dọn tệp.
+  const exportStore = config.dataExport.enabled
+    ? createLocalExportStore(config.dataExport.dir)
+    : undefined;
+  if (exportStore) {
+    await boss.work(
+      DATA_EXPORT_QUEUE,
+      { batchSize: 1, localConcurrency: 1 },
+      createDataExportHandler({ db, logger, store: exportStore }),
+    );
+  }
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
-  const stopRetention = startRetention({ db, logger });
+  // Có kho tệp xuất thì dọn thêm yêu cầu xuất kẹt/hết hạn (xóa tệp).
+  const stopRetention = startRetention({ db, logger, exportStore });
   // FR-023 quét bù: cờ POLLING_ENABLED mặc định TẮT (đường gọi Meta thật). Lõi job đã sẵn (`jobs/polling.ts`) nhưng chưa
   // có bản DB của `ChannelLister` (cần hàm DEFINER liệt kê kênh xuyên workspace = migration của làn b; gap
   // `POLLING-CHANNEL-LIST`, QP4) → bật cờ mà thiếu thì báo lỗi rõ và KHÔNG chạy, không đoán đường vòng.

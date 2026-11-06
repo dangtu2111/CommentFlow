@@ -137,7 +137,20 @@ export async function failDataExport(
     WHERE workspace_id = ${workspaceId}::uuid AND id = ${exportId}::uuid AND status IN ('pending', 'running')`);
 }
 
-export type ExpiredExport = { id: string; workspaceId: string; fileKey: string };
+/**
+ * Yêu cầu kẹt (pending/running quá `staleMinutes` phút, ví dụ worker chết giữa chừng) → `failed` mã `timeout` để
+ * Owner yêu cầu lại được (chỉ mục duy nhất chặn khi còn yêu cầu hoạt động). Hệ thống, ngữ cảnh trần; trả số dòng đổi.
+ */
+export async function failStaleDataExports(tx: Database, staleMinutes = 60): Promise<number> {
+  const r = await tx.execute(sql`
+    UPDATE core.data_exports SET status = 'failed', error_code = 'timeout', updated_at = now()
+    WHERE status IN ('pending', 'running')
+      AND updated_at < now() - make_interval(mins => ${staleMinutes}::integer)
+    RETURNING id`);
+  return r.rows.length;
+}
+
+export type ExpiredExport ={ id: string; workspaceId: string; fileKey: string };
 
 /**
  * Đánh dấu `expired` các yêu cầu `ready` quá hạn (hệ thống, ngữ cảnh trần) và trả khóa tệp để nơi gọi xóa khỏi kho.

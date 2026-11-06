@@ -7,6 +7,7 @@ import {
   completeDataExport,
   expireDataExports,
   failDataExport,
+  failStaleDataExports,
   listDataExports,
   readCommentsPage,
   readLeadsPage,
@@ -15,6 +16,7 @@ import {
 import {
   createAdminPool,
   createAppDb,
+  createWorkerDb,
   expectRejectCode,
   seedMember,
   seedUser,
@@ -29,6 +31,7 @@ const RLS = '42501';
 
 let admin: pg.Pool;
 let db: FlowDb;
+let workerDb: FlowDb;
 let ws: string;
 let other: string;
 let owner: string;
@@ -44,6 +47,7 @@ async function reset(workspace: string): Promise<void> {
 beforeAll(async () => {
   admin = createAdminPool();
   db = createAppDb(3);
+  workerDb = createWorkerDb(2);
   ws = await seedWorkspace(admin);
   other = await seedWorkspace(admin);
   owner = await seedUser(admin, 'expOwner');
@@ -56,6 +60,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.close();
+  await workerDb.close();
   await admin.end();
 });
 
@@ -149,10 +154,25 @@ describe('FR-094 vòng đời yêu cầu (đường hệ thống)', () => {
     );
     const [row] = await db.withActor(ws, owner, (tx) => listDataExports(tx, ws));
     expect(row).toMatchObject({ status: 'ready', sizeBytes: 10, rowCounts: { comments: 1 } });
-    const expired = await db.withSystem((tx) => expireDataExports(tx));
+    const expired = await workerDb.withSystem((tx) => expireDataExports(tx));
     expect(expired.some((e) => e.id === id && e.fileKey.endsWith('.jsonl'))).toBe(true);
     const after = await admin.query('SELECT status FROM core.data_exports WHERE id = $1', [id]);
     expect(after.rows[0].status).toBe('expired');
+    await reset(ws);
+  });
+
+  it('FR-094 yêu cầu kẹt quá hạn → failed timeout, cho yêu cầu mới', async () => {
+    await reset(ws);
+    await admin.query(
+      "INSERT INTO core.data_exports (workspace_id, requested_by, status, updated_at) VALUES ($1, $2, 'running', now() - interval '2 hours')",
+      [ws, owner],
+    );
+    expect((await request(ws, owner)).outcome).toBe('already_active');
+    // withSystem chỉ là "hệ thống" khi chạy trên kết nối cf_worker (migration 0030).
+    expect(await workerDb.withSystem((tx) => failStaleDataExports(tx))).toBeGreaterThanOrEqual(1);
+    // cf_app (web) có withSystem nhưng KHÔNG đổi được trạng thái
+    expect(await db.withSystem((tx) => failStaleDataExports(tx))).toBe(0);
+    expect((await request(ws, owner)).outcome).toBe('created');
     await reset(ws);
   });
 

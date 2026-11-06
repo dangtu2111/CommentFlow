@@ -39,8 +39,10 @@ GRANT INSERT (workspace_id, requested_by) ON core.data_exports TO cf_app;
 --> statement-breakpoint
 CREATE POLICY data_exports_select ON core.data_exports FOR SELECT
   USING (
-    workspace_id = (SELECT core.current_workspace_id())
-    AND ((SELECT core.is_system_context()) OR (SELECT core.is_workspace_owner()))
+    (workspace_id = (SELECT core.current_workspace_id())
+      AND ((SELECT core.is_system_context()) OR (SELECT core.is_workspace_owner())))
+    -- Job dọn (hết hạn/kẹt) chạy ở ngữ cảnh hệ thống TRẦN (không workspace) trên kết nối cf_worker.
+    OR ((SELECT core.current_workspace_id()) IS NULL AND (SELECT core.is_system_context()))
   );
 --> statement-breakpoint
 CREATE POLICY data_exports_insert ON core.data_exports FOR INSERT
@@ -52,10 +54,10 @@ CREATE POLICY data_exports_insert ON core.data_exports FOR INSERT
 --> statement-breakpoint
 CREATE POLICY data_exports_update ON core.data_exports FOR UPDATE
   USING (
-    workspace_id = (SELECT core.current_workspace_id())
-    AND (SELECT core.is_system_context())
+    (SELECT core.is_system_context())
+    AND (workspace_id = (SELECT core.current_workspace_id()) OR (SELECT core.current_workspace_id()) IS NULL)
   )
   WITH CHECK (
-    workspace_id = (SELECT core.current_workspace_id())
-    AND (SELECT core.is_system_context())
+    (SELECT core.is_system_context())
+    AND (workspace_id = (SELECT core.current_workspace_id()) OR (SELECT core.current_workspace_id()) IS NULL)
   );

@@ -197,6 +197,7 @@ export {
   type ExpiredExport,
   expireDataExports,
   failDataExport,
+  failStaleDataExports,
   listDataExports,
   readAutomationSettings,
   readCommentsPage,

@@ -16,6 +16,7 @@ describe('loadConfig', () => {
       metaAppSecret: undefined,
       facebook: { enabled: false },
       instagram: { enabled: false },
+      dataExport: { enabled: false },
     });
   });
 
