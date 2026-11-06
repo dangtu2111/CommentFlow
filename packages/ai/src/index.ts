@@ -106,6 +106,7 @@ export {
   type DraftFixture,
   FIXTURE_DRAFT_DEFAULT,
 } from './draft/fixture-drafter';
+export { createFixtureEmbedder, FIXTURE_EMBEDDING_MODEL } from './embedding/fixture-embedder';
 export {
   checkGuardMoney,
   extractClaims,

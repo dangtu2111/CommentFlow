@@ -83,3 +83,16 @@ export {
   SHOP_PRONOUNS,
   type ShopPronoun,
 } from './reply-style';
+export {
+  isProductCacheStale,
+  normalizeSearchText,
+  PRODUCT_MATCH_MARGIN,
+  PRODUCT_MATCH_THRESHOLD,
+  type ProductMatch,
+  type ProductSearchInput,
+  pickProductMatch,
+  productSearchText,
+  type RankedScore,
+  RRF_K,
+  reciprocalRankFusion,
+} from './search';
