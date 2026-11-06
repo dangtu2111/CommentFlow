@@ -145,6 +145,34 @@ export {
   type GuardViolation,
 } from './guard-money';
 export {
+  AUTO_SENT_STATUSES,
+  type AutoSentRecord,
+  AutoSentRecordSchema,
+  MARK_WRONG_ROLES,
+  type MarkWrongRole,
+} from './history/auto-sent-record';
+export {
+  decideMarkWrong,
+  MAX_WRONG_REASON_LENGTH,
+  type MarkWrongActor,
+  type MarkWrongDecision,
+  type MarkWrongErrorCode,
+} from './history/mark-wrong';
+export {
+  evaluateMarkedWrongSignal,
+  MARKED_WRONG_MIN_SENT,
+  MARKED_WRONG_RATE_THRESHOLD,
+  MARKED_WRONG_WINDOW_MS,
+  type MarkedWrongSignal,
+} from './history/marked-wrong-signal';
+export {
+  type AutoSentHistoryStore,
+  createInMemoryHistoryStore,
+  type HistoryPage,
+  type HistoryQuery,
+  type MarkWrongOutcome,
+} from './history/memory-store';
+export {
   annotateInjection,
   describeInjectionReasons,
   INJECTION_REASONS,

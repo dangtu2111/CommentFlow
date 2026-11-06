@@ -10,6 +10,7 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
     expect(keys('owner')).toEqual([
       'comments',
       'posts',
+      'aiSent',
       'tryAi',
       'readiness',
       'kbGaps',
@@ -18,7 +19,7 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
       'activity',
       'settings',
     ]);
-    expect(keys('staff')).toEqual(['comments', 'posts', 'activity', 'settings']);
+    expect(keys('staff')).toEqual(['comments', 'posts', 'aiSent', 'activity', 'settings']);
   });
 
   it('FR-001 FR-119 mục Cài đặt (bảo mật + ngôn ngữ) có cho mọi vai trò, trỏ /app/settings; không còn mục Bảo mật riêng', () => {
