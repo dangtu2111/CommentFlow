@@ -139,7 +139,7 @@ describe('FR-028 kbHitsToSources — lọc ngưỡng, ưu tiên, cắt trần to
   });
 
   it('không có hit → rỗng', () => {
-    expect(kbHitsToSources([], base)).toEqual({ sources: [], truncated: false });
+    expect(kbHitsToSources([], base)).toEqual({ sources: [], truncated: false, quarantined: [] });
   });
 });
 

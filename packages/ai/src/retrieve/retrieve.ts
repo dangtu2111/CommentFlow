@@ -27,6 +27,8 @@ export type RetrieveInput = {
   resolvedProductIds: readonly string[];
   minRelevance?: number;
   maxTokens?: number;
+  /** Miền của shop: link tới đó không bị cách ly khi quét cài lệnh (FR-164). */
+  allowedDomains?: readonly string[];
 };
 
 export type SkipReason = 'complaint' | 'spam';
@@ -42,6 +44,8 @@ export type RetrieveResult =
       sources: DraftSource[];
       /** Có đoạn kiến thức bị bỏ vì trần token. */
       truncated: boolean;
+      /** Mã đoạn kiến thức bị loại vì nghi cài lệnh (FR-164); để ghi log/báo hàng chờ duyệt. */
+      quarantined: string[];
     };
 
 /**
@@ -98,6 +102,7 @@ export async function retrieveKnowledge(
     productIds: input.resolvedProductIds,
     minRelevance: input.minRelevance,
     maxTokens: input.maxTokens,
+    allowedDomains: input.allowedDomains,
   });
   return {
     status: 'retrieved',
@@ -106,5 +111,6 @@ export async function retrieveKnowledge(
     variants,
     sources: [...variantsToSources(variants), ...kb.sources],
     truncated: kb.truncated,
+    quarantined: kb.quarantined,
   };
 }

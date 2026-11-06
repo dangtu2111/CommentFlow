@@ -120,7 +120,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PRODUCTS-VARIANTS | FR-129 (`products`, `product_variants`, `products.rev`), FR-056 (giá/tồn không vào vector), FR-058 (thẻ sản phẩm) | US-101 | KB-SCHEMA | DB | không | ✅ (feat-products-variants, migration 0034) |
 | PRODUCT-ALIAS | FR-128 (bí danh sản phẩm) | US-100 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
-| ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ⏳ |
+| ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ✅ Xong-mock (feat-abbrev-dict, migration 0041; chưa nối pipeline/giao diện) |
 | KB-IMPORT-EXCEL | FR-051 (Excel/CSV: tải → khớp cột → xem lỗi → xác nhận) | US-003 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ⏳ |
 | KB-TESTSET | FR-054 (bộ câu kiểm thử trước khi xuất bản) | US-034 | KB-PUBLISH-VERSION | — | không | ⏳ |
@@ -131,7 +131,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | ⏳ |
 | KB-EMBED-COL | FR-133 (cột `embedding_model`; job tạo lại làm ở GĐ5), FR-139 (cột `halfvec(1024)` + HNSW) | — | KB-SCHEMA | DB | không | ✅ (feat-kb-embed-col, migration 0041; job tạo lại → GĐ5) |
 | GSHEETS-LINK | FR-121 (Google Sheets liên kết + đồng bộ định kỳ) | US-003 | KB-IMPORT-EXCEL | S (OAuth) | **có** — Google Cloud | ⛔ |
-| KB-INJECTION-GUARD | FR-164 (chống cài lệnh qua kiến thức nhập vào) | — | KB-CHUNKING | S | không | ⏳ |
+| KB-INJECTION-GUARD | FR-164 (chống cài lệnh qua kiến thức nhập vào) | — | KB-CHUNKING | S | không | ✅ Xong-mock (feat-kb-injection-guard; duyệt/xuất bản → KB-INJECTION-REVIEW, KB-PUBLISH) |
 
 ### 2B. Bài viết, gợi ý, giao diện
 

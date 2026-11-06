@@ -23,6 +23,7 @@ export default defineConfig({
         'src/retrieve/*.ts': { branches: 95 },
         'src/decide/*.ts': { branches: 95 },
         'src/gate/*.ts': { branches: 95 },
+        'src/injection/*.ts': { branches: 95 },
       },
     },
   },
