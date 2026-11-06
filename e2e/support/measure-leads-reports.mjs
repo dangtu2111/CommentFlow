@@ -24,7 +24,11 @@ const SCREENS = {
         'div[class*="bg-surface-container-low/60"] > div.bg-surface-container-lowest',
         '.lead-card',
       ],
-      ['ô-SĐT', 'div.bg-surface-container-lowest > div.rounded-lg.bg-surface-container-low', '.lead-card-contact'],
+      [
+        'ô-SĐT',
+        'div.bg-surface-container-lowest > div.rounded-lg.bg-surface-container-low',
+        '.lead-card-contact',
+      ],
     ],
   },
   reports: {
