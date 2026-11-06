@@ -45,6 +45,8 @@ describe('FR-149 parseSizeChartRow', () => {
 
   it('bắt buộc đúng một trong sản phẩm / danh mục', () => {
     expect(parseSizeChartRow({ size: 'M', heightMinCm: 150 }).success).toBe(false);
+    // Danh mục chỉ có ký tự đặc biệt → chuẩn hóa rỗng → từ chối.
+    expect(parseSizeChartRow({ size: 'M', category: '!!!', heightMinCm: 150 }).success).toBe(false);
     expect(parseSizeChartRow({ ...base, category: 'Áo' }).success).toBe(false);
   });
 
@@ -52,6 +54,8 @@ describe('FR-149 parseSizeChartRow', () => {
     expect(parseSizeChartRow({ size: 'M', productId: base.productId }).success).toBe(false);
     expect(parseSizeChartRow({ ...base, heightMinCm: 170, heightMaxCm: 160 }).success).toBe(false);
     expect(parseSizeChartRow({ ...base, heightMinCm: 160, heightMaxCm: 160 }).success).toBe(true);
+    expect(parseSizeChartRow({ ...base, weightMinKg: 60, weightMaxKg: 50 }).success).toBe(false);
+    expect(parseSizeChartRow({ ...base, weightMinKg: 50, weightMaxKg: 50 }).success).toBe(true);
     expect(parseSizeChartRow({ ...base, weightMinKg: -1 }).success).toBe(false);
     expect(parseSizeChartRow({ ...base, weightMinKg: 0 }).success).toBe(false);
   });
@@ -151,6 +155,33 @@ describe('FR-149 decideSize', () => {
     ];
     expect(decideSize(open, { weightKg: 90 })).toMatchObject({ kind: 'size', size: 'XL' });
     expect(decideSize(open, { weightKg: 30 })).toMatchObject({
+      kind: 'handoff',
+      reason: 'out_of_range',
+    });
+  });
+
+  it('cận mở phía dưới ("XS dưới 45 kg"): kẽ hở giữa hai size vẫn là between_sizes, không phải ngoài bảng', () => {
+    const open = [
+      range('XS', { weightMaxKg: 45 }),
+      range('L', { weightMinKg: 50, weightMaxKg: 60 }),
+    ];
+    expect(decideSize(open, { weightKg: 30 })).toMatchObject({ kind: 'size', size: 'XS' });
+    expect(decideSize(open, { weightKg: 47 })).toMatchObject({
+      kind: 'handoff',
+      reason: 'between_sizes',
+    });
+    expect(decideSize(open, { weightKg: 70 })).toMatchObject({
+      kind: 'handoff',
+      reason: 'out_of_range',
+    });
+  });
+
+  it('dòng không ràng buộc một chiều không làm lệch khoảng bao của chiều đó', () => {
+    const mixed = [
+      range('A', { heightMinCm: 150, heightMaxCm: 160, weightMinKg: 40, weightMaxKg: 50 }),
+      range('B', { weightMinKg: 51, weightMaxKg: 60 }),
+    ];
+    expect(decideSize(mixed, { heightCm: 155, weightKg: 70 })).toMatchObject({
       kind: 'handoff',
       reason: 'out_of_range',
     });

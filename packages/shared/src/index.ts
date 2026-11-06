@@ -215,6 +215,23 @@ export {
   type SizeMeasurements,
 } from './size-chart';
 export {
+  isSafeRegex,
+  matchSpamRule,
+  PREVIEW_MAX_SAMPLES,
+  PREVIEW_WINDOW_DAYS,
+  parseSpamRule,
+  previewSpamRule,
+  SPAM_PATTERN_MAX,
+  SPAM_RULE_ACTIONS,
+  SPAM_RULE_TYPES,
+  SPAM_TEXT_SCAN_MAX,
+  type SpamPreview,
+  type SpamRule,
+  type SpamRuleAction,
+  type SpamRuleType,
+  type SpamSample,
+} from './spam-rules';
+export {
   type ConsumeInput,
   canConsume,
   parseConsumeInput,

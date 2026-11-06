@@ -161,6 +161,11 @@ export {
   updateSizeChartRow,
 } from './queries/size-charts';
 export {
+  listRecentCommentTexts,
+  SPAM_PREVIEW_MAX_ROWS,
+  type SpamPreviewRow,
+} from './queries/spam-preview';
+export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,
   type WebhookSilentChannel,
