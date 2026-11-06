@@ -1,0 +1,1 @@
+- 06/11 (PRODUCTS-VARIANTS, QPV3–QPV4): `docs/10_Database_Design.md` dòng `products` — thêm cột `card jsonb` (thẻ sản phẩm FR-058) và ghi chú `name_embedding`/chỉ mục tìm kiếm thêm ở KB-SEARCH-FTS.

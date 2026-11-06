@@ -1,0 +1,1 @@
+| QPV3 | 06/11 | `feat-products-variants`: cột chưa làm | Bỏ `name_embedding` (halfvec) và chỉ mục GIN trigram/HNSW — làm ở KB-SEARCH-FTS (cần pgvector/pg_trgm, KB-SCHEMA chưa có); giữ cột `search_text` | Tránh phụ thuộc extension chưa bảo đảm có ở mọi môi trường; thêm cột là migration cộng thêm | Thêm bằng migration ở KB-SEARCH-FTS |

@@ -1,0 +1,1 @@
+| Mutation testing | `pnpm --filter @flow/ai test:mutation` | Stryker 10 (`packages/ai/stryker.config.mjs`, plugin `vitest-runner` khai báo rõ vì pnpm cô lập); phạm vi `src/recheck`, `src/gate`, `src/guard-money.ts`; ngưỡng break 80%; chạy TRƯỚC KHI MERGE nhánh chạm các file đó (chưa ở CI — gap `MUTATION-STRYKER`); thư mục tạm `.stryker-tmp/`, `reports/` đã ignore |

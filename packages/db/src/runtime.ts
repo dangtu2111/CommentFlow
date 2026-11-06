@@ -173,6 +173,16 @@ export {
   type SpamPreviewRow,
 } from './queries/spam-preview';
 export {
+  createSpamRule,
+  deleteSpamRule,
+  listSpamRules,
+  SPAM_RULES_MAX_PER_WORKSPACE,
+  type SpamRuleInput,
+  SpamRuleLimitError,
+  type SpamRuleRow,
+  setSpamRuleEnabled,
+} from './queries/spam-rules';
+export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,
   type WebhookSilentChannel,

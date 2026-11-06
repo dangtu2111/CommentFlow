@@ -1,5 +1,16 @@
 # Kiểm tra tay — danh sách dồn
 
+## KT-DHR — Chuyển người khi có ảnh/video chưa rõ sản phẩm (DA-HANDOFF-RULES, FR-143, feat-da-handoff-rules)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-HANDOFF-WIRE`. / Core + automated tests only; manual checks deferred to `DA-HANDOFF-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide` | Mọi test xanh |
+| 2 | (Sau khi nối) Khách bình luận ảnh + "mẫu này giá sao" trên bài chưa gắn sản phẩm | Bình luận vào "Cần người", lý do "Có ảnh, chưa nhận ra sản phẩm", không tự gửi |
+| 3 | (Sau khi nối) Cùng bình luận trên bài đã gắn đúng 1 sản phẩm | AI trả lời bình thường |
+| 4 | (Sau khi nối) Chỉ gửi sticker kèm chữ | Không bị coi là hỏi về ảnh |
+
 ## KT-DROH — Hỏi đơn hàng + câu mời theo giờ làm việc (DA-RULES-ORDER-HOURS, FR-153/152, feat-da-rules-order-hours)
 
 > Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verify by command.
@@ -75,8 +86,9 @@
 | 3 | Loại **Số điện thoại** (mẫu trống) → Xem trước | Chỉ bình luận có SĐT di động VN được đếm; bình luận của chính Page không tính |
 | 4 | Loại **Regex**, mẫu `(a+)+$` | Báo "Quy tắc chưa hợp lệ" (regex lặp lồng nhau bị từ chối) |
 | 5 | Mở danh sách Hành động | Chỉ có "Chỉ đánh dấu" và "Bỏ qua"; không có Tự ẩn |
-| 6 | Bấm **Lưu quy tắc** | Báo chưa khả dụng (chờ bảng `rules`); không bình luận nào bị đổi |
+| 6 | Bấm **Lưu quy tắc** (cần DB đã migrate 0050, feat-spam-rules-store) | Báo "Đã lưu"; hàng mới ở `cf.rules` (`enabled` = true, `created_by` = Owner); không bình luận nào bị đổi |
 | 7 | Đổi ngôn ngữ en | Mọi chuỗi trang đã dịch |
+| 8 | Lưu thêm cho đủ 50 quy tắc rồi lưu quy tắc thứ 51 | Báo "Đã đủ 50 quy tắc…"; không có hàng thứ 51 |
 
 ## KT-AMU — Cài đặt tự gửi (AUTO-MATRIX-UI, FR-070/071, feat-auto-matrix-ui)
 
@@ -946,6 +958,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 | 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
 | 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
 
+## KT-PCS — Semantic cache LiteLLM (stub) (PIPE-CACHE-SEMANTIC-STUB, FR-026) · Semantic cache stub
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cache/semantic-cache.test.ts`. | Test xanh: cờ tắt → no-cache/no-store; bật → namespace chứa workspace_id + kb_version; hai shop không chung namespace. |
+| 2 | Mở `infra/litellm/semantic-cache.example.yaml`. | Chỉ là file mẫu (không nằm trong `config.yaml`); không có khóa/giá trị thật. |
+
 ## KT-PN — Ghi chú theo bài có hạn (POST-NOTES, FR-062, US-033) · Post notes
 
 Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
@@ -989,3 +1010,12 @@ Chưa có giao diện (lõi hàm thuần, chưa nối pipeline). / No UI yet (pu
 | # | Bước | Kết quả mong đợi |
 |---|---|---|
 | 1 | `pnpm --filter @flow/ai exec vitest run src/decide/legal-rules.test.ts` | Xanh: hỏi chính hãng/VAT/bảo hành/nguồn gốc/hoàn tiền mà kho không nhắc → cờ `legalUnsourced`; nháp khẳng định không nguồn hoặc thời hạn lạ → bị chặn. |
+
+## KT-PLP — Gắn sản phẩm vào bài (POSTS-LINK-PRODUCT, FR-061, US-032) · Link products to posts
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/shared exec vitest run src/post-products.test.ts`. | 14 test xanh: loại trùng, sản phẩm chính phải nằm trong danh sách, trần 200 bài × 20 sản phẩm, đề xuất AI chưa xác nhận không được dùng để trả lời. |
+| 2 | CI job `database` chạy `tests/post-products.int.test.ts` và `pnpm db:check-rls`. | Gắn nhiều sản phẩm, tối đa một chính/bài, gắn hàng loạt không trùng; worker chỉ tạo được đề xuất, không tự xác nhận; workspace khác không thấy. |

@@ -138,7 +138,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
 | POSTS-LIST | FR-060 (danh sách bài, lọc, gắn/chưa gắn) | US-032, UF-7 | CH-SCHEMA | — | không | ✅ (danh sách + lọc nền tảng/kênh/loại + tìm + sắp xếp + phân trang; còn lọc gắn/chưa gắn — cần `post_products`, xem gap `POSTS-LIST-LINK-FILTER`) |
-| POSTS-LINK-PRODUCT | FR-061 (gắn nhiều sản phẩm, sản phẩm chính, gắn hàng loạt; AI gợi ý cần xác nhận) | US-032 | POSTS-LIST, PRODUCTS-VARIANTS | — | không | ⏳ |
+| POSTS-LINK-PRODUCT | FR-061 (gắn nhiều sản phẩm, sản phẩm chính, gắn hàng loạt; AI gợi ý cần xác nhận) | US-032 | POSTS-LIST, PRODUCTS-VARIANTS | — | có (0049) | ✅ Xong phần dữ liệu (UI: `POSTS-LINK-PRODUCT-UI`) |
 | POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | DB | không | Xong-mock (feat-post-notes, migration 0045, Q-PN1; còn API/UI, nối `DATA-PRIORITY` và cổng tự gửi) |
 | DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | ⏳ |
 | SUGGEST-UI | FR-043 (lưu bản AI và bản gửi; đổi nhãn ghi lại), chip nguồn | US-011, 012, 014 | PIPE-DRAFT, INBOX-DETAIL-LOCK | — | không | 🟡 Xong-mock phần không cần cột mới (`feat-suggest-ui`; còn `SUGGEST-UI-PERSIST` cần bảng `drafts` — làn b; KT-SUI) |
@@ -169,10 +169,10 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | DA-RULES-STOCK | FR-151 (độ tươi tồn kho), FR-157 mẫu ngưng/hết hàng (phần gợi ý; tự gửi ở GĐ4) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-stock); nối DB/pipeline → `DA-RULES-STOCK-WIRE` |
 | DA-RULES-ORDER-HOURS | FR-153 (hỏi đơn hàng → chuyển hướng + chuyển người), FR-152 (câu mời theo giờ làm việc) | — | PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-rules-order-hours, Q-DROH1; nối giờ làm việc DB/pipeline → `DA-RULES-ORDER-HOURS-WIRE`; KT-DROH) |
 | DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ✅ lõi thuần (feat-da-rules-legal); nối pipeline → `DA-RULES-LEGAL-WIRE` |
-| DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ⏳ |
+| DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ✅ lõi thuần (feat-da-handoff-rules); nối pipeline → `DA-HANDOFF-WIRE` |
 | PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ✅ Xong-mock (lõi hàm thuần, `feat-pipe-variation`; còn `VARIATION-WIRE`: Redis `…:recent` + ghi `drafts.variants`, và `VARIATION-NAME`: chèn tên khách) |
 | PIPE-MERGE-BURST | FR-148 (gộp bình luận liên tiếp < 30 giây) | US-109 | WH-INGEST | — | không | ✅ Xong (lõi hàm thuần; ghi `merged_into_id` chờ migration làn b) |
-| PIPE-CACHE-SEMANTIC-STUB | FR-026 (semantic cache LiteLLM — cấu hình tối thiểu; phần đầy đủ ở GĐ5) | — | PIPE-CACHE-EXACT | — | không | ⏳ |
+| PIPE-CACHE-SEMANTIC-STUB | FR-026 (semantic cache LiteLLM — cấu hình tối thiểu; phần đầy đủ ở GĐ5) | — | PIPE-CACHE-EXACT | — | không | ✅ Xong-mock (`feat-pipe-cache-semantic-stub`, không migration; chưa nối pipeline; KT-PCS) |
 
 ### 2D. Hạn mức, chi phí, đánh giá
 
@@ -244,7 +244,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | DA-HOLDER | FR-154 (người đang giữ chuỗi — AI không chen) | US-110 | AUTO-SEND-GATE | S | không | ⏳ |
 | DA-IMPERSONATION | FR-155 (chống mạo danh Page/shop) | US-111 | AUTO-SEND-GATE | S | không | ⏳ |
 | DA-ORDER-IN-COMMENT | FR-156 (đặt hàng trong bình luận → Khách tiềm năng), FR-157 (mẫu ngưng/hết hàng khi tự gửi) | US-112 | LEADS-KANBAN | S (PII) | không | ⏳ |
-| SPAM-RULES | FR-080 (quy tắc spam, xem trước số bình luận khớp 7 ngày) | US-050 | INBOX-LIST | — | không | ✅ Xong-mock (feat-spam-rules, Q-SPR1: xem trước thật; Lưu chờ bảng `rules` — làn b, `SPAM-RULES-DB`) |
+| SPAM-RULES | FR-080 (quy tắc spam, xem trước số bình luận khớp 7 ngày) | US-050 | INBOX-LIST | — | không | ✅ Xong-mock (feat-spam-rules, Q-SPR1: xem trước thật; Lưu: bảng `cf.rules` 0050, feat-spam-rules-store, Q-SRS1 — còn UI danh sách/bật-tắt `SPAM-RULES-LIST-UI`) |
 | AUTO-HIDE | FR-081 (Tự ẩn SĐT/link sau khi chạy đánh dấu; lưu khách trước khi ẩn); **AI không tự ẩn** | US-050, UF-4 | SPAM-RULES, FB-HIDE | S | không | ⏳ |
 | LEADS-KANBAN | FR-082 (Khách tiềm năng: trích SĐT/địa chỉ/sản phẩm, Kanban, giao người) | US-051 | PII-MASK-PIPE | S (PII) | không | ⏳ |
 | LEADS-EXPORT | FR-082 (xuất Excel/CSV) | US-051 | LEADS-KANBAN | S (PII) | không | ⏳ |
