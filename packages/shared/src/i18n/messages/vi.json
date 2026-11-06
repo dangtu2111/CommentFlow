@@ -627,6 +627,7 @@
       "STOCK_INVALID": "tồn kho không hợp lệ (cần số nguyên không âm)",
       "FORMULA_BLOCKED": "ô chứa công thức hoặc bắt đầu bằng = + - @ nên bị chặn; hãy dán giá trị",
       "CELL_TOO_LONG": "ô quá dài (tối đa 600 ký tự)",
+      "URL_INVALID": "link không hợp lệ (chỉ nhận http:// hoặc https://)",
       "DUPLICATE_VARIANT": "trùng SKU hoặc trùng thuộc tính với một dòng phía trên"
     },
     "confirmTitle": "3. Xác nhận",

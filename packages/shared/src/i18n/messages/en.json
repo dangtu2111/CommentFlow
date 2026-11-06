@@ -627,6 +627,7 @@
       "STOCK_INVALID": "invalid stock (use a non-negative whole number)",
       "FORMULA_BLOCKED": "cell contains a formula or starts with = + - @ and was blocked; paste the value instead",
       "CELL_TOO_LONG": "cell is too long (max 600 characters)",
+      "URL_INVALID": "invalid link (only http:// or https:// are accepted)",
       "DUPLICATE_VARIANT": "same SKU or same attributes as a row above"
     },
     "confirmTitle": "3. Confirm",

@@ -184,6 +184,50 @@ describe('FR-051 kiểm từng dòng', () => {
     expect(result.records.map((r) => r.row)).toEqual([2, 4, 6]);
   });
 
+  it('link sản phẩm chỉ nhận http/https và không vượt trần ô 600 ký tự', () => {
+    const map: ColumnTarget[] = ['productName', 'url'];
+    const long = `https://shop.example/${'a'.repeat(600)}`;
+    const result = validateImportTable(
+      [
+        ['a', 'b'],
+        ['A', 'javascript:alert(1)'],
+        ['B', 'không phải link'],
+        ['C', long],
+        ['D', 'https://shop.example/d'],
+        ['E', 'http://shop.example/e'],
+      ],
+      map,
+    );
+    expect(result.errors.map((e) => [e.row, e.code])).toEqual([
+      [2, 'URL_INVALID'],
+      [3, 'URL_INVALID'],
+      [4, 'CELL_TOO_LONG'],
+    ]);
+    expect(result.records.map((r) => r.row)).toEqual([5, 6]);
+  });
+
+  it('tiêu đề cột thuộc tính (khóa của attrs) cũng bị chặn công thức / quá dài khi dòng có giá trị', () => {
+    const map: ColumnTarget[] = ['productName', 'attribute'];
+    const result = validateImportTable(
+      [
+        ['Tên', '=HYPERLINK("x")'],
+        ['A', 'Đen'],
+        ['B', ''],
+      ],
+      map,
+    );
+    expect(result.errors).toEqual([{ row: 2, column: 1, code: 'FORMULA_BLOCKED' }]);
+    expect(result.records.map((r) => r.row)).toEqual([3]);
+    const longHeader = validateImportTable(
+      [
+        ['Tên', 'x'.repeat(601)],
+        ['A', 'Đen'],
+      ],
+      map,
+    );
+    expect(longHeader.errors).toEqual([{ row: 2, column: 1, code: 'CELL_TOO_LONG' }]);
+  });
+
   it('chỉ có tiêu đề hoặc bảng rỗng → không bản ghi', () => {
     expect(validateImportTable([], MAP)).toEqual({ records: [], errors: [], totalRows: 0 });
     expect(validateImportTable([HEAD], MAP).totalRows).toBe(0);

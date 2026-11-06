@@ -49,7 +49,8 @@ export async function applyProductImport(
         url = CASE WHEN 'url' = ANY(p.locked_fields) THEN p.url ELSE COALESCE(EXCLUDED.url, p.url) END,
         category = CASE WHEN 'category' = ANY(p.locked_fields) THEN p.category
                         ELSE COALESCE(EXCLUDED.category, p.category) END,
-        variants = EXCLUDED.variants,
+        variants = CASE WHEN p.locked_fields && ARRAY['price_vnd', 'compare_at_vnd', 'stock']::text[]
+                        THEN p.variants ELSE EXCLUDED.variants END,
         updated_from_source_at = EXCLUDED.updated_from_source_at,
         updated_at = now()
       RETURNING p.id, (xmax = 0) AS inserted, p.locked_fields`);

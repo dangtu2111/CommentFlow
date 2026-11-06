@@ -1,6 +1,6 @@
 import { strToU8, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { IMPORT_MAX_ROWS, ImportFileError } from './limits';
+import { IMPORT_MAX_COLUMNS, IMPORT_MAX_ROWS, ImportFileError } from './limits';
 import { readXlsx } from './xlsx';
 
 // Fixture: file .xlsx dựng tay từ XML tối thiểu (không phải dữ liệu thật).
@@ -87,6 +87,82 @@ describe('FR-051 đọc XLSX an toàn', () => {
     expect(() => readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(wide) }))).toThrowError(
       /TOO_MANY_COLUMNS/,
     );
+  });
+
+  it('hồi quy ReDoS: thẻ mở lặp mà thiếu thẻ đóng bị từ chối nhanh (tuyến tính), không treo', () => {
+    const started = Date.now();
+    const rowsNoClose = '<row>'.repeat(300_000);
+    expect(() =>
+      readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(rowsNoClose) })),
+    ).toThrowError(/XLSX_INVALID/);
+    const cellsNoClose = `<row r="1">${'<c>'.repeat(300_000)}</row>`;
+    expect(() =>
+      readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(cellsNoClose) })),
+    ).toThrowError(/XLSX_INVALID/);
+    const textNoClose = `<sst><si>${'<t>'.repeat(300_000)}</si></sst>`;
+    expect(() =>
+      readXlsx(
+        buildXlsx({
+          'xl/sharedStrings.xml': textNoClose,
+          'xl/worksheets/sheet1.xml': sheet('<row r="1"><c r="A1" t="s"><v>0</v></c></row>'),
+        }),
+      ),
+    ).toThrowError(/XLSX_INVALID/);
+    const phoneticNoClose = `<sst><si>${'<rPh>'.repeat(300_000)}</si></sst>`;
+    expect(() =>
+      readXlsx(
+        buildXlsx({
+          'xl/sharedStrings.xml': phoneticNoClose,
+          'xl/worksheets/sheet1.xml': sheet('<row r="1"/>'),
+        }),
+      ),
+    ).toThrowError(/XLSX_INVALID/);
+    expect(() =>
+      readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': '<sheetData><row r="1" ' })),
+    ).toThrowError(/XLSX_INVALID/);
+    expect(Date.now() - started).toBeLessThan(5000);
+  });
+
+  it('chặn số phần tử lạm phát: quá nhiều <row>, <c> lặp cùng ô, <si> rỗng', () => {
+    const repeatedRows = '<row r="1"/>'.repeat(IMPORT_MAX_ROWS + 2);
+    expect(() =>
+      readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(repeatedRows) })),
+    ).toThrowError(/TOO_MANY_ROWS/);
+    const repeatedCells = `<row r="1">${'<c r="A1"/>'.repeat(60)}</row>`;
+    expect(() =>
+      readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(repeatedCells) })),
+    ).toThrowError(/TOO_MANY_COLUMNS/);
+    const manyStrings = `<sst>${'<si/>'.repeat((IMPORT_MAX_ROWS + 1) * IMPORT_MAX_COLUMNS + 1)}</sst>`;
+    expect(() =>
+      readXlsx(
+        buildXlsx({
+          'xl/sharedStrings.xml': manyStrings,
+          'xl/worksheets/sheet1.xml': sheet('<row r="1"/>'),
+        }),
+      ),
+    ).toThrowError(/XLSX_INVALID/);
+  });
+
+  it('một dòng khai báo số dòng quá lớn (r="99999") bị từ chối, không cấp phát mảng khổng lồ', () => {
+    const sparse = '<row r="99999"><c r="A99999"><v>1</v></c></row>';
+    expect(() => readXlsx(buildXlsx({ 'xl/worksheets/sheet1.xml': sheet(sparse) }))).toThrowError(
+      /TOO_MANY_ROWS/,
+    );
+  });
+
+  it('chỉ nhận đúng tên thẻ: <cx>, <rowBreaks> không bị nhầm với <c>, <row>', () => {
+    const bytes = buildXlsx({
+      'xl/worksheets/sheet1.xml': sheet(
+        '<rowBreaks><brk/></rowBreaks><row r="1"><cx><v>9</v></cx><c r="A1"><v>1</v></c></row>',
+      ),
+    });
+    expect(readXlsx(bytes)).toEqual([['1']]);
+  });
+
+  it('tổng kích thước giải nén khai báo của trang tính + chuỗi dùng chung được cộng dồn', () => {
+    const half = new Uint8Array(26 * 1024 * 1024);
+    const bytes = zipSync({ 'xl/worksheets/sheet1.xml': half, 'xl/sharedStrings.xml': half });
+    expect(() => readXlsx(bytes)).toThrowError(/XLSX_TOO_LARGE_UNZIPPED/);
   });
 
   it('ô thiếu tham chiếu r dùng vị trí liền sau; dòng thiếu r dùng số dòng liền sau', () => {

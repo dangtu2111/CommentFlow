@@ -9,6 +9,7 @@ export type ImportRowErrorCode =
   | 'STOCK_INVALID'
   | 'FORMULA_BLOCKED'
   | 'CELL_TOO_LONG'
+  | 'URL_INVALID'
   | 'DUPLICATE_VARIANT';
 
 /** `row` = số dòng trong file (tiêu đề là dòng 1); `column` = chỉ số cột 0-based, `null` nếu lỗi của cả dòng. */
@@ -75,6 +76,16 @@ function looksLikeFormula(text: string): boolean {
   return /^[+-]./.test(text) && !/^[+-]\d+([.,]\d+)?$/.test(text);
 }
 
+/** Link sản phẩm: chỉ `http:`/`https:` (chặn `javascript:`, `data:`, `file:`…); độ dài đã bị giới hạn bởi trần ô. */
+function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 type Cell = { index: number; target: ColumnTarget; header: string; text: string };
 
 const text = (cell: Cell | undefined): string | null =>
@@ -116,7 +127,17 @@ export function validateImportTable(
         fail(index, 'FORMULA_BLOCKED');
         return;
       }
-      cells.push({ index, target, header: (header[index] ?? '').trim(), text: value });
+      const headerText = (header[index] ?? '').trim();
+      // Tiêu đề cột thuộc tính thành KHÓA của `attrs`: cùng luật chống công thức/độ dài như ô dữ liệu.
+      if (target === 'attribute' && value !== '' && headerText.length > IMPORT_MAX_CELL_CHARS) {
+        fail(index, 'CELL_TOO_LONG');
+        return;
+      }
+      if (target === 'attribute' && value !== '' && looksLikeFormula(headerText)) {
+        fail(index, 'FORMULA_BLOCKED');
+        return;
+      }
+      cells.push({ index, target, header: headerText, text: value });
     });
     const byTarget = (target: ColumnTarget) => cells.find((cell) => cell.target === target);
 
@@ -143,6 +164,9 @@ export function validateImportTable(
         attrs[cell.header] = cell.text;
       }
     }
+    const urlCell = byTarget('url');
+    const url = text(urlCell);
+    if (url !== null && !isHttpUrl(url)) fail(urlCell?.index ?? null, 'URL_INVALID');
     const sku = text(byTarget('sku'));
     const productCode = text(byTarget('productCode'));
 
@@ -160,7 +184,7 @@ export function validateImportTable(
           productName,
           productCode,
           category: text(byTarget('category')),
-          url: text(byTarget('url')),
+          url,
           sku,
           attrs,
           priceVnd: priceVnd as number | null,

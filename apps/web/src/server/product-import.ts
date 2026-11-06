@@ -4,6 +4,7 @@ import {
   type ColumnTarget,
   checkMapping,
   columnMappingSchema,
+  IMPORT_MAX_CELL_CHARS,
   ImportFileError,
   type ImportFileReason,
   type ImportProductPlan,
@@ -119,7 +120,11 @@ export async function runProductImport(
       status: 'preview',
       headers,
       mapping,
-      sample: table.slice(1, 1 + SAMPLE_ROWS).map((row) => row.slice(0, headers.length)),
+      sample: table
+        .slice(1, 1 + SAMPLE_ROWS)
+        .map((row) =>
+          row.slice(0, headers.length).map((cell) => cell.slice(0, IMPORT_MAX_CELL_CHARS)),
+        ),
       totalRows: validation.totalRows,
       validRows: validation.records.length,
       productCount: plan.length,
