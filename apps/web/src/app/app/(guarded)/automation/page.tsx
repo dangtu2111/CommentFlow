@@ -51,9 +51,11 @@ export default async function AutomationPage({ searchParams }: { searchParams: S
   }
 
   return (
-    <main className="app-page stack">
-      <h1 className="auth-title">{t('title')}</h1>
-      <p className="auth-subtitle">{t('subtitle')}</p>
+    <main className="app-page app-page-wide stack">
+      <header className="card auto-header">
+        <h1 className="auth-title">{t('title')}</h1>
+        <p className="auth-subtitle">{t('subtitle')}</p>
+      </header>
       <p role="note" className="banner banner-warning">
         {t('notWired')}
       </p>

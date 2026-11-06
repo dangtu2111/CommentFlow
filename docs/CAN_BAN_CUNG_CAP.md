@@ -78,14 +78,14 @@ Code đã xong-mock (connector giả/fixture). Để bật đường thật trê
 2. Đặt `POLLING_ENABLED=true` cho **worker** (cần `META_APP_ID`, `META_APP_SECRET`, `TOKEN_ENC_KEYS`). Mặc định TẮT.
 3. Chờ `POLLING-CHANNEL-LIST` (migration của làn b: hàm liệt kê kênh xuyên workspace) — chưa có thì worker chỉ báo lỗi cấu hình và không quét.
 4. Kiểm trên Page thật giả định: `updated_time` của bài tăng khi có bình luận mới (nếu không, đổi cách chọn bài — QP1).
-Không cần khóa mới nào ngoài mục 1. Kiểm tay: KT-021.
+Không cần khóa mới nào ngoài mục 1. Kiểm tay: KT-PBF.
 
 ## 2c. Bật connector Facebook ở worker — `FB-CONNECTOR-REGISTER` (Xong-mock)
 
 Code đã nối `createFacebookConnector` vào worker nhưng cờ **tắt mặc định**. Bạn cần cung cấp (chỉ khi muốn thử với Page thật; dùng Page thử, không dùng Page khách):
 - Một Page thử đã kết nối qua `FB-OAUTH` (mục 1) — token Page nằm mã hóa trong DB.
 - Trên **máy chạy worker** đặt biến: `FB_CONNECTOR_ENABLED=true`, `META_APP_ID`, `META_APP_SECRET` (cùng Meta App ở mục 1), `TOKEN_ENC_KEYS` (cùng khóa với web). Không commit giá trị; chỉ tên biến có trong `env.example`.
-- Điều kiện trước khi bật ở môi trường thật: `SEND-SWEEP`/`HIDE-SWEEP` đã merge (tránh yêu cầu kẹt `sending`). Kiểm tay: KT-016/KT-012.
+- Điều kiện trước khi bật ở môi trường thật: `SEND-SWEEP`/`HIDE-SWEEP` đã merge (tránh yêu cầu kẹt `sending`). Kiểm tay: KT-FCR/KT-012.
 
 ## 2b. Tên sản phẩm, logo, tên miền, email gửi — `CFG-APPNAME` (FR-125, mã KT-018)
 
@@ -188,20 +188,18 @@ Câu mẫu của shop chỉ là mã thuần + kho trong bộ nhớ, không khóa
 
 ## 2r. `DA-HANDOFF-RULES` (FR-143) — không cần tài nguyên ngoài
 Quy tắc chuyển người cho ảnh/video/sticker kèm chữ là mã thuần, không khóa/LLM/dịch vụ ngoài, không biến môi trường mới. Đọc nội dung ảnh thật (`ATTACH-VISION`, GĐ5, cờ `cf.vision`) cần model đọc ảnh — làm sau. Bạn không phải làm gì.
+
 ## 2p. `AUTO-MATRIX-UI` (FR-070/071) — không cần tài nguyên ngoài
 Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, không cần khóa hay dịch vụ ngoài. Cấu hình chưa áp dụng cho việc tự gửi thật (chờ nối pipeline). Bạn **không** phải làm gì.
 
 ## 2q. `AUTO-CONFIG-STORE` (FR-070/071) — không cần tài nguyên ngoài
 Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_rules`, migration 0047). Chỉ cần **chủ dự án duyệt và chạy migration 0047 lên staging/production qua CI có duyệt** (agent không chạy lệnh ghi lên các DB đó). Không cần khóa hay dịch vụ ngoài.
 
-## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
-Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
-
 ## 2r. `POSTS-LINK-PRODUCT` (FR-061) — không cần tài nguyên ngoài
 Chỉ là bảng `cf.post_products` (migration 0049) + truy vấn; không khóa/dịch vụ ngoài. Việc sinh đề xuất bằng AI (worker, cần LLM) chưa làm — cờ LLM giữ TẮT; khi làm sẽ gọi `suggestPostProducts` và vẫn cần người xác nhận.
 
-## 2t. `COST-GATE` (FR-071) — không cần tài nguyên ngoài mới
-Cổng chi phí AI chỉ đọc `ai_usage` + `workspaces.ai_cost_cap_usd` trong DB, không biến môi trường mới, không cờ (chưa nối vào đường gọi LLM thật — `COST-GATE-WIRE`). Kiểm tay mã KT-CG. Về sau bạn cần: (1) **quyết định trần chi phí mặc định theo gói** (đô/tháng) khi có cột `plans.ai_cost_cap_usd` (migration làn b); (2) trong LiteLLM đặt **ngân sách (budget) theo workspace/virtual key** làm lớp cứng thứ hai khi chạy nhiều worker; (3) cập nhật bảng giá model thật cho `estimateCallCostUsd` (hiện dùng giá dự phòng cao).
-
-## 2u. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
+## 2s. `PIPE-CACHE-SEMANTIC-STUB` (FR-026) — chưa cần ngay, cần khi bật semantic cache (GĐ5)
 Chỉ có cấu hình mẫu `infra/litellm/semantic-cache.example.yaml` + hàm dựng `cache` theo workspace; cờ `CACHE_SEMANTIC_ENABLED` MẶC ĐỊNH TẮT, chưa nối pipeline, không gọi dịch vụ thật. Để bật thật (`SEMANTIC-CACHE`, GĐ5) bạn cần: (1) một model embedding đăng ký trong LiteLLM, tên đặt ở `SEMANTIC_CACHE_EMBEDDING_MODEL` (đặt trong `config.yaml` trên máy ảo); (2) Redis có module RediSearch (Redis Stack) cho `redis-semantic`; (3) tự gộp khối `litellm_settings` của file mẫu vào cấu hình LiteLLM trên máy ảo.
+
+## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
+Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.

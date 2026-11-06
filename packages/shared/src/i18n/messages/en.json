@@ -667,7 +667,9 @@
     "subtitle": "Choose what the AI may do for each kind of comment/message: Off (suggestions for staff only), Trial run (records the reply it would send, without sending) or Auto (AI sends by itself once every safety check passes). Everything is Off by default.",
     "notWired": "Note: settings are saved durably but do not yet drive real auto-sending (this will be connected once the auto-send path exists).",
     "save": "Save settings",
+    "saveHint": "Owner only. Changes take effect after you press Save settings.",
     "matrix": {
+      "legend": "Auto-send level legend",
       "title": "Auto-send level by channel and label",
       "body": "Each cell is a separate level for comments and for messages of that channel.",
       "label": "Label",
@@ -806,6 +808,10 @@
   },
   "spamRules": {
     "title": "Spam rules",
+    "principle": {
+      "title": "Core safety principle: AI never hides a comment on its own",
+      "body": "Rules only flag or skip comments. Hiding a comment is always a human action, with a confirmation step."
+    },
     "subtitle": "Create rules to flag or skip spam comments. Press Preview to see how many comments from the last 7 days a rule matches; preview is read-only and changes no comment. AI never hides comments on its own.",
     "nameLabel": "Rule name",
     "typeLabel": "Rule type",
