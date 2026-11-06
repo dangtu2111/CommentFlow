@@ -5,6 +5,7 @@ import {
   enableTwoFactor,
   newLocalizedContext,
   register,
+  signIn,
   signInWithTotp,
   verifyEmail,
 } from '../support/flows';
@@ -44,10 +45,11 @@ function runScenarios(locale: Locale) {
       const page = await context.newPage();
       await register(page, t, owner);
       await verifyEmail(page, t, mailpit, owner);
-      await page.goto('/login');
-      await page.getByLabel(t('auth.fields.email'), { exact: true }).fill(owner.email);
-      await page.getByLabel(t('auth.fields.password'), { exact: true }).fill(owner.password);
-      await page.getByRole('button', { name: t('auth.login.submit'), exact: true }).click();
+      await signIn(page, t, owner);
+      // Chờ đăng nhập xong (màn tạo workspace) trước khi điều hướng đi — tránh hủy giữa chừng yêu cầu đăng nhập.
+      await expect(
+        page.getByRole('heading', { name: t('workspace.create.title'), level: 1 }),
+      ).toBeVisible();
       await createWorkspace(page, t, workspaceName);
       await expect(page).toHaveURL(/\/app\/security$/);
       totpSecret = await enableTwoFactor(page, t, owner);
