@@ -21,6 +21,9 @@ export type DraftChunkWrite = ChunkDraft & {
   contentHash: string;
   embedding: number[];
   embeddingModel: string;
+  /** Kết quả quét cài lệnh (FR-164). Thiếu = không nghi ngờ. */
+  injectionSuspected?: boolean;
+  injectionReason?: string | null;
 };
 
 const isDraftOfSource = (workspaceId: string, sourceId: string): SQL =>
@@ -70,15 +73,17 @@ export async function upsertDraftChunks(
   for (const row of rows) {
     await tx.execute(sql`
       INSERT INTO cf.kb_chunks (workspace_id, source_id, version_id, chunk_key, content, lang, content_hash,
-        embedding, tsv, is_draft, context_header, product_id, valid_from, valid_until, embedding_model)
+        embedding, tsv, is_draft, context_header, product_id, valid_from, valid_until, embedding_model,
+        injection_suspected, injection_reason)
       VALUES (${workspaceId}::uuid, ${sourceId}::uuid, NULL, ${row.chunkKey}, ${row.content}, ${row.lang},
         ${row.contentHash}, ${vectorLiteral(row.embedding)}::halfvec, ${tsvExpression(row)}, true,
-        ${row.contextHeader}, ${row.productId}::uuid, ${row.validFrom}, ${row.validUntil}, ${row.embeddingModel})
+        ${row.contextHeader}, ${row.productId}::uuid, ${row.validFrom}, ${row.validUntil}, ${row.embeddingModel},
+        ${row.injectionSuspected ?? false}, ${row.injectionReason ?? null})
       ON CONFLICT ON CONSTRAINT kb_chunks_key_unique DO UPDATE SET
         injection_suspected = CASE WHEN cf.kb_chunks.content_hash IS DISTINCT FROM EXCLUDED.content_hash
-          THEN false ELSE cf.kb_chunks.injection_suspected END,
+          THEN EXCLUDED.injection_suspected ELSE cf.kb_chunks.injection_suspected END,
         injection_reason = CASE WHEN cf.kb_chunks.content_hash IS DISTINCT FROM EXCLUDED.content_hash
-          THEN NULL ELSE cf.kb_chunks.injection_reason END,
+          THEN EXCLUDED.injection_reason ELSE cf.kb_chunks.injection_reason END,
         content = EXCLUDED.content, lang = EXCLUDED.lang, content_hash = EXCLUDED.content_hash,
         embedding = EXCLUDED.embedding, tsv = EXCLUDED.tsv, context_header = EXCLUDED.context_header,
         product_id = EXCLUDED.product_id, valid_from = EXCLUDED.valid_from, valid_until = EXCLUDED.valid_until,

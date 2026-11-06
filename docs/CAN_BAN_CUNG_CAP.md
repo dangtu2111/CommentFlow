@@ -148,3 +148,7 @@ Hàm thuần `sendRecheck` (`packages/ai/src/recheck/`) + job `send` của worke
 
 ## 2i. `AI-TRY-BOX-UI` (FR-059, FR-029, US-034, Xong-mock, mã KT-ATB) — không cần tài nguyên ngoài mới
 Ô Thử AI dùng bản mock (từ khóa + kiến thức mẫu). Để thử với AI/KB thật cần cùng khóa LLM ở mục 2e/2f và mô hình embedding ở 2g; khi đó việc `TRY-AI-REAL` nối `TryKnowledge` vào KB thật và `LLM` thật sau cờ (mặc định TẮT). Bạn **không** phải làm gì cho bản mock.
+
+## 2j. `AI-READINESS` (FR-146) — không cần tài nguyên ngoài
+
+Độ sẵn sàng của AI tính hoàn toàn từ dữ liệu trong DB (sản phẩm, chính sách, FAQ, thông tin shop) bằng mã; không gọi LLM, không biến môi trường mới, không cờ. Khi muốn đo "câu mẫu trả lời được" bằng LLM thật → việc `AI-EVAL-*` (cần khóa LLM, sẽ ghi ở mục riêng).

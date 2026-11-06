@@ -89,7 +89,8 @@ erDiagram
 | `post_price_mentions` | workspace_id, post_id, amount_vnd, text_span, product_id, matches_stock bool, checked_at | FR-150a; tính khi bài/quảng cáo được đồng bộ hoặc giá đổi |
 | `kb_gaps` | workspace_id, topic (`shipping`/`discount`/`product_info`/`policy`/`order_status`/`size`/`other`), sample_question_masked, product_id, count, first_seen_at, last_seen_at, status (`open`/`resolved`/`ignored`), resolved_by_source_id | FR-141, FR-134; gộp theo (workspace_id, topic, product_id) bằng chỉ mục duy nhất trên `coalesce(product_id, uuid-0)`; thêm `id`, `created_at`, `updated_at` (migration 0040, Q-RL1). Job hệ thống ghi đếm (gặp lại `resolved` → mở lại; `ignored` giữ nguyên, vẫn đếm); thành viên chỉ đổi `status`/`resolved_by_source_id` (trigger chặn cột đếm); không DELETE |
 | `readiness_checks` | workspace_id, lang, checklist jsonb (mục bắt buộc đã có/thiếu), sample_pass_rate numeric, score numeric, kb_version, computed_at | FR-146; tính lại khi xuất bản kiến thức |
-| `abbreviations` | workspace_id (null = hệ thống), short, full, lang | |
+| `system_abbreviations` | id, short, full, lang (`vi`/`en`), created_at; UNIQUE (lang, short) | Từ điển HỆ THỐNG (migration 0041, Q-AD1): không `workspace_id`, không RLS, `cf_app` chỉ SELECT; nội dung do migration seed |
+| `abbreviations` | workspace_id (NOT NULL), short, full, lang, created_at, updated_at; UNIQUE (workspace_id, lang, short) | Từ điển của workspace (FR-050): Owner (hoặc hệ thống) ghi, thành viên đọc; mục của shop đè mục hệ thống cùng `short`; `short` luôn thường, không khoảng trắng, ≤ 32 ký tự |
 
 ### 3.4 Kiến thức
 
@@ -299,4 +300,4 @@ Giá trị cache lưu kèm `product_revs = {product_id: rev}` của các sản p
 
 - Công cụ migration chốt trong `docs/decisions/001-stack.md` khi dựng khung (GĐ0); RLS và index vector viết SQL thuần.
 - Thời gian lưu: bình luận/tin nhắn 12 tháng (đề xuất, cần chốt); `ai_usage` gộp theo ngày sau 90 ngày; `webhook_events` 30 ngày.
-- Seed: chỉ `plans` và `abbreviations` hệ thống. **Không seed dữ liệu khách giả.**
+- Seed: chỉ `plans` và `system_abbreviations` (từ điển viết tắt hệ thống). **Không seed dữ liệu khách giả.**

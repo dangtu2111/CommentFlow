@@ -594,6 +594,82 @@
       }
     }
   },
+  "readiness": {
+    "pageTitle": "AI readiness",
+    "title": "AI readiness",
+    "subtitle": "The AI needs enough shop information to answer correctly. Below {min}% or with a required item missing, Auto mode cannot be turned on.",
+    "basisNote": "The score is computed from the data you entered (products, policies, FAQ, shop info) for the current language; it is not measured with a real AI run.",
+    "scoreLabel": "Readiness",
+    "meterLabel": "AI readiness: {score}%",
+    "statusReady": "Eligible to turn on Auto mode.",
+    "statusNotReady": "Not yet eligible for Auto mode (all required items and at least {min}% needed).",
+    "requiredTitle": "Required items ({done}/{total})",
+    "requiredDone": "Done",
+    "requiredMissing": "Missing",
+    "required": {
+      "product_price": {
+        "label": "At least 1 product with a price",
+        "hint": "Add products with prices so the AI quotes correctly."
+      },
+      "shipping_policy": {
+        "label": "Shipping policy",
+        "hint": "State areas and delivery time; the fee can say \"message the shop\"."
+      },
+      "return_policy": {
+        "label": "Return policy",
+        "hint": "State the conditions and time limit for returns."
+      },
+      "contact_hours": {
+        "label": "Contact method or opening hours",
+        "hint": "Fill in a phone/contact channel or opening hours in the shop info."
+      }
+    },
+    "samplesTitle": "Sample questions the AI can answer: {passed}/{total} ({rate}%)",
+    "answerable": "Can answer",
+    "unanswerable": "Cannot answer yet",
+    "missingTitle": "Suggestions",
+    "missingNone": "No suggestions left.",
+    "missing": {
+      "price": "Add prices to products.",
+      "size": "Add size to variants or an FAQ about sizes.",
+      "color": "Add colors to variants.",
+      "stock": "Enter stock for products.",
+      "shipping": "Add a shipping policy.",
+      "return": "Add a return policy.",
+      "warranty": "Add a warranty policy or an FAQ about warranty.",
+      "payment": "Add a payment policy or an FAQ about payment.",
+      "hours": "Fill in opening hours in the shop info.",
+      "contact": "Fill in a contact method in the shop info.",
+      "address": "Fill in the address in the shop info.",
+      "promo": "Add an FAQ about promotions."
+    },
+    "sample": {
+      "price_item": "How much is this shirt?",
+      "price_variant": "How much is size M in black?",
+      "price_total": "How much for 2 pieces?",
+      "size_available": "Do you have size L?",
+      "size_advice": "I am 165 cm and 55 kg, which size?",
+      "color_available": "Do you have white?",
+      "stock_item": "Is it in stock?",
+      "stock_variant": "Is size M in black in stock?",
+      "ship_fee": "How much is shipping?",
+      "ship_time": "How long until I receive it?",
+      "ship_area": "Do you ship to other provinces?",
+      "return_policy": "Can I return or exchange?",
+      "return_condition": "What are the return conditions?",
+      "warranty": "How long is the warranty?",
+      "payment_method": "How can I pay?",
+      "payment_cod": "Do you accept COD?",
+      "opening_hours": "What time do you open?",
+      "contact": "How can I contact the shop?",
+      "address": "Where is the shop?",
+      "promo": "Any promotions now?"
+    },
+    "error": {
+      "title": "Could not load readiness",
+      "body": "Something went wrong reading the data. Please try again later."
+    }
+  },
   "tryAi": {
     "pageTitle": "Try AI",
     "title": "Try AI",
@@ -669,6 +745,7 @@
       "comments": "Comments",
       "posts": "Posts",
       "tryAi": "Try AI",
+      "readiness": "AI readiness",
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",

@@ -1,3 +1,13 @@
+export {
+  ABBREVIATION_FULL_MAX,
+  ABBREVIATION_LANGS,
+  ABBREVIATION_SHORT_MAX,
+  type AbbreviationEntry,
+  type AbbreviationInput,
+  type AbbreviationLang,
+  mergeAbbreviations,
+  parseAbbreviation,
+} from './abbreviation';
 export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } from './brand';
 export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
 export { parseEnv } from './env';

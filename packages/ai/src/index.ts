@@ -145,6 +145,16 @@ export {
   type GuardViolation,
 } from './guard-money';
 export {
+  annotateInjection,
+  describeInjectionReasons,
+  INJECTION_REASONS,
+  type InjectionAnnotated,
+  type InjectionReason,
+  type InjectionScanOptions,
+  type InjectionScanResult,
+  scanInjection,
+} from './injection/injection-scan';
+export {
   buildChunkRows,
   type ChunkRow,
   contentHash,
@@ -178,6 +188,16 @@ export {
   normalizeAndDetectLang,
   normalizeText,
 } from './normalize/normalize-lang';
+export {
+  computeReadiness,
+  READINESS_REQUIRED_ITEMS,
+  READINESS_SAMPLE_QUESTIONS,
+  type ReadinessInput,
+  type ReadinessLang,
+  type ReadinessRequiredItem,
+  type ReadinessResult,
+  type ReadinessTopic,
+} from './readiness/readiness';
 export {
   AUTO_MESSAGE_WINDOW_MS,
   HUMAN_AGENT_WINDOW_MS,

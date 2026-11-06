@@ -24,6 +24,7 @@ export default defineConfig({
         'src/decide/*.ts': { branches: 95 },
         'src/gate/*.ts': { branches: 95 },
         'src/recheck/*.ts': { branches: 95 },
+        'src/injection/*.ts': { branches: 95 },
       },
     },
   },
