@@ -7,7 +7,14 @@
  */
 export type NavRole = 'owner' | 'staff';
 export type NavGroupKey = 'operations' | 'settings';
-export type NavItemKey = 'comments' | 'posts' | 'channels' | 'members' | 'activity' | 'settings';
+export type NavItemKey =
+  | 'comments'
+  | 'posts'
+  | 'tryAi'
+  | 'channels'
+  | 'members'
+  | 'activity'
+  | 'settings';
 
 export type NavItem = { key: NavItemKey; href: string };
 export type NavGroup = { key: NavGroupKey; items: NavItem[] };
@@ -19,6 +26,8 @@ const ENTRIES: readonly Entry[] = [
   // Bài viết (FR-060): xem được với mọi vai trò (RLS theo thành viên workspace).
   { key: 'posts', href: '/app/posts', group: 'operations', roles: ['owner', 'staff'] },
   // Trang Kênh (kết nối Facebook, FR-010) chỉ Owner; Staff nhận 404 nên không hiện liên kết.
+  // Thử AI (FR-059, US-034): Owner thử trước khi bật tự gửi; không trừ lượt, chạy bằng mock.
+  { key: 'tryAi', href: '/app/try-ai', group: 'settings', roles: ['owner'] },
   { key: 'channels', href: '/app/channels', group: 'settings', roles: ['owner'] },
   // Trang Thành viên chỉ Owner (docs/13 §3.1); Staff nhận 404 nên không hiện liên kết.
   { key: 'members', href: '/app/members', group: 'settings', roles: ['owner'] },

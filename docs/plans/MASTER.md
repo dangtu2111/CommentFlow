@@ -181,7 +181,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | USAGE-COUNTERS | FR-090 (`usage_counters`, hạn mức, chặn 100%) | US-060 | GĐ0-AI-WRAPPER | S+DB | không | ✅ (feat-usage-counters, migration 0039; chưa nối pipeline AI → `USAGE-GATE-PIPE`; `test:db` chạy ở CI) |
 | USAGE-METER-UI | FR-090 (đồng hồ lượt, cảnh báo 80%) | US-060 | USAGE-COUNTERS | — | không | ⏳ |
 | AI-VIRTUALKEY | FR-034 (khóa ảo LiteLLM theo workspace, ngân sách riêng) | — | USAGE-COUNTERS | S | **có** — khóa LLM | ⛔ |
-| AI-TRY-BOX-UI | FR-059 + FR-029 (Thử AI chạy cả pipeline, không trừ lượt) | US-034 | PIPE-DRAFT | — | không | ⏳ |
+| AI-TRY-BOX-UI | FR-059 + FR-029 (Thử AI chạy cả pipeline, không trừ lượt) | US-034 | PIPE-DRAFT | — | không | ✅ Xong-mock (`feat-ai-try-box-ui`; còn `TRY-AI-REAL`: KB/LLM thật, bộ đếm bền, E2E; KT-ATB) |
 | EVAL-SET-REAL | FR-165 (~300 bình luận thật đã che PII; mỗi mẫu có hành động đúng) | — | — | S (PII) | **có** — chủ dự án cung cấp | ⛔ |
 | EVAL-RUNNER | FR-120 (bộ đánh giá 4 nhóm ngôn ngữ), FR-165, `14` §4 (promptfoo, chạy CI) | — | EVAL-SET-REAL, PIPE-DECIDE-ACTION | — | **có** — khóa LLM; cài promptfoo (nêu giấy phép) | ⛔ |
 | COST-GATE | — (đo ≤ $2/1.000 lượt từ `ai_usage`) | — | EVAL-RUNNER | — | không | ⏳ |
@@ -229,7 +229,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| AUTO-SEND-GATE | FR-031 (11 cổng theo `09` §6, AI chỉ thêm điều kiện "cần duyệt"), FR-141 (tự gửi một phần) | US-040, UF-5 | PIPE-DECIDE-ACTION | S | không | ⏳ |
+| AUTO-SEND-GATE | FR-031 (11 cổng theo `09` §6, AI chỉ thêm điều kiện "cần duyệt"), FR-141 (tự gửi một phần) | US-040, UF-5 | PIPE-DECIDE-ACTION | S | không | ✅ (lõi hàm thuần `decideAutoSend`, `feat-auto-send-gate`; nối pipeline/`automation_settings`/`automation_events` ở AUTO-MATRIX-UI + PIPE-ROUTE; Stryker → `MUTATION-STRYKER`; KT-ASG) |
 | SEND-RECHECK | FR-110 (R1–R9 ngay trước khi gọi API; bị chặn → lý do hiển thị) | US-045 | AUTO-SEND-GATE, FB-REPLY | S | không | ⏳ |
 | AUTO-MATRIX-UI | FR-070 (Tắt/Chạy thử/Tự động theo kênh × nhãn), FR-071 (ngưỡng, khoảng trễ, giới hạn/ngày, giờ hoạt động, từ khóa chặn, chữ ký) | US-040, UF-5 | AUTO-SEND-GATE | S | không | ⏳ |
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ⏳ |

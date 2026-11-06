@@ -10,6 +10,7 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
     expect(keys('owner')).toEqual([
       'comments',
       'posts',
+      'tryAi',
       'channels',
       'members',
       'activity',
