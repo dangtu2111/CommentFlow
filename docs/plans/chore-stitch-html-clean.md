@@ -1,4 +1,4 @@
-# Kế hoạch `chore/stitch-fetch-html` — Tải HTML Stitch cho mọi màn
+# Kế hoạch `chore/stitch-html-clean` — Tải HTML Stitch cho mọi màn
 
 Mã gap matrix: không có (việc thiết kế) · Spec: `design/stitch/README.md`.
 
