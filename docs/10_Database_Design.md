@@ -137,7 +137,7 @@ erDiagram
 | `subscriptions` | workspace_id, product — unique (workspace_id, product), plan_code, status, period_start, period_end, cancel_at | |
 | `invoices` | workspace_id, product, number, amount_vnd, items jsonb, status (`pending`/`paid`/`void`), transfer_code (nội dung CK bắt buộc), due_at | |
 | `payments` | workspace_id, invoice_id, amount_vnd, bank_ref, raw_statement, confirmed_by, confirmed_at | |
-| `usage_counters` | workspace_id, product, meter (CommentFlow: `ai_turns`), period_start, used, limit, addon, warned_80_at, blocked_at | 1 lượt = 1 lần AI soạn; unique (workspace_id, product, meter, period_start) |
+| `usage_counters` | workspace_id, product, meter (CommentFlow: `ai_turns`), period_start (date), used, limit_amount (cột `limit` trong bản đầu, đổi vì là từ khóa SQL), addon, warned_80_at, blocked_at, created_at, updated_at | 1 lượt = 1 bình luận/tin được AI xử lý; PK (workspace_id, product, meter, period_start); migration 0039. `cf_app` chỉ SELECT (thành viên workspace); ghi duy nhất qua hàm DEFINER `core.consume_usage` (chỉ `withJob` của `cf_worker`): còn hạn mức thì trừ, hết (`used + amount > limit_amount + addon`) thì không trừ và ghi `blocked_at` |
 | `daily_stats` | workspace_id, date, channel_id, comments_in, replied, auto_replied, median_response_sec, edited_rate, cost_usd | Báo cáo |
 
 ### 3.7 Nhật ký, thông báo, quyền riêng tư

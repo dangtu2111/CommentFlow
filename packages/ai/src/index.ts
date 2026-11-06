@@ -138,6 +138,19 @@ export {
   type LlmMessage,
 } from './llm-client';
 export {
+  type AbbreviationDict,
+  createAbbreviationDict,
+  type DetectedLang,
+  type KnownLang,
+  type LangDetection,
+  type LangDetector,
+  type LangRule,
+  type NormalizeLangInput,
+  type NormalizeLangResult,
+  normalizeAndDetectLang,
+  normalizeText,
+} from './normalize/normalize-lang';
+export {
   executeRoute,
   type RouteBranches,
   type RouteOutcome,
