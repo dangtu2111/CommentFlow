@@ -231,6 +231,15 @@ export {
   normalizeText,
 } from './normalize/normalize-lang';
 export {
+  type ContactSink,
+  fillOrderIntentPhone,
+  type MaskAndCaptureInput,
+  type MaskAndCaptureResult,
+  maskAndCapture,
+  maskForTrace,
+  PII_SAVE_FAILED,
+} from './pii/mask-pipe';
+export {
   computeReadiness,
   READINESS_REQUIRED_ITEMS,
   READINESS_SAMPLE_QUESTIONS,

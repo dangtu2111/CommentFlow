@@ -54,7 +54,7 @@ export const extractResultSchema = z.object({
       items: textList,
       // LLM chỉ thấy văn bản đã che nên không thể biết số thật: giá trị nó trả bị bỏ; số thật do
       // PII-MASK-PIPE giữ (lưu Khách tiềm năng trước khi che) rồi điền vào sau.
-      phone: z.unknown().transform((): null => null),
+      phone: z.unknown().transform((): string | null => null),
       address: optionalText,
     })
     .nullable(),
