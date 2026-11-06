@@ -150,3 +150,13 @@ export {
   normalizeAndDetectLang,
   normalizeText,
 } from './normalize/normalize-lang';
+export {
+  type GuardVariantsInput,
+  type GuardVariantsResult,
+  guardVariants,
+  MAX_VARIANTS,
+  type PickedVariant,
+  pickVariant,
+  REASON_VARIANTS_EXHAUSTED,
+  replyFingerprint,
+} from './variation/variation';
