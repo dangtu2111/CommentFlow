@@ -188,27 +188,6 @@ a {
   font-size: var(--text-md);
 }
 
-.panel-points {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.panel-points li {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  font-size: var(--text-sm);
-}
-
-.panel-points svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--link);
-}
-
 /* Nền trang xác thực: gradient nhạt theo token (thiết kế Stitch) */
 .auth-page {
   background: linear-gradient(180deg, var(--selected-bg), var(--color-bg) 45%);
@@ -1085,42 +1064,6 @@ a {
   margin: var(--space-8) auto;
 }
 
-/* Ảnh đại diện chữ + huy hiệu nền tảng (không dùng ảnh/logo thật) */
-.inbox-avatar {
-  position: relative;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--selected-bg);
-  border: 1px solid var(--selected-border);
-  color: var(--color-primary-700);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-}
-
-.inbox-avatar-lg {
-  width: 56px;
-  height: 56px;
-  font-size: var(--text-md);
-}
-
-.inbox-avatar-platform {
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
-  padding: 0 3px;
-  border-radius: var(--radius-pill);
-  background: var(--color-text);
-  color: var(--color-surface);
-  font-size: 9px;
-  font-weight: var(--weight-bold);
-  line-height: 14px;
-}
-
 .inbox-item-body {
   flex: 1;
   min-width: 0;
@@ -1221,9 +1164,6 @@ a {
 @media (prefers-color-scheme: dark) {
   .suggestion {
     background: color-mix(in srgb, var(--color-ai-500) 14%, transparent);
-  }
-  .inbox-avatar {
-    color: var(--color-primary-300);
   }
 }
 
@@ -1356,14 +1296,6 @@ a {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-}
-
-.shell-user {
-  max-width: 18ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: var(--weight-medium);
 }
 
 .shell-body {
@@ -2013,72 +1945,6 @@ a {
 @media (max-width: 600px) {
   .session-item {
     flex-wrap: wrap;
-  }
-}
-
-/* Hộp thoại (<dialog> gốc) */
-
-/* Thanh ba bước của trình hướng dẫn 2FA */
-.stepper {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
-  margin: 0;
-  padding: var(--space-3);
-  list-style: none;
-  border-radius: var(--radius-lg);
-  background: var(--selected-bg);
-}
-
-.stepper li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-}
-
-.stepper li.is-current,
-.stepper li.is-done {
-  background: var(--color-surface);
-}
-
-.stepper-dot {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--color-border);
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
-}
-
-.stepper li.is-current .stepper-dot,
-.stepper li.is-done .stepper-dot {
-  background: var(--action-bg);
-  color: var(--action-fg);
-}
-
-.stepper-text {
-  display: grid;
-  min-width: 0;
-}
-
-.stepper-text small {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-@media (max-width: 600px) {
-  .stepper-text small {
-    display: none;
   }
 }
 

@@ -6,6 +6,7 @@ import { buildInboxHref, type InboxCursorValue, type InboxView } from '../../lib
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/inbox-format';
 import { labelTone, platformBadgeText } from '../../lib/inbox-visual';
 import { userInitials } from '../../lib/user-initials';
+import { Avatar } from '../ui/avatar';
 import { BulkCheckbox, type BulkLabels, BulkProvider } from './bulk-selection';
 
 export type InboxListItem = {
@@ -96,10 +97,9 @@ export async function InboxList({
               className="inbox-item-link"
               aria-current={view.selected === item.id ? 'true' : undefined}
             >
-              <span className="inbox-avatar" aria-hidden="true">
+              <Avatar badge={platformBadgeText(item.platform)}>
                 {userInitials(item.authorName ?? t('list.anonymous'))}
-                <span className="inbox-avatar-platform">{platformBadgeText(item.platform)}</span>
-              </span>
+              </Avatar>
               <div className="inbox-item-body">
                 <div className="inbox-item-head">
                   <span className="inbox-author">{item.authorName ?? t('list.anonymous')}</span>

@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import { avatarInitial, platformBadgeText } from '../../lib/inbox-visual';
 import { type MessageWindowKind, messageWindowState, splitMinutes } from '../../lib/message-window';
+import { Avatar } from '../ui/avatar';
 
 /** Dữ liệu hiển thị (vỏ giao diện: chưa có kênh nhắn tin thật; trang dev truyền dữ liệu MẪU có nhãn "[MẪU]"). */
 export type ConversationView = {
@@ -88,12 +89,7 @@ function ConversationRow({ c, active, now }: { c: ConversationView; active: bool
       className={active ? 'msg-row msg-row-active' : 'msg-row'}
       aria-current={active ? 'true' : undefined}
     >
-      <span className="msg-avatar" aria-hidden="true">
-        {avatarInitial(c.name)}
-        <span className={`msg-platform msg-platform-${c.platform}`}>
-          {platformBadgeText(c.platform)}
-        </span>
-      </span>
+      <Avatar badge={platformBadgeText(c.platform)}>{avatarInitial(c.name)}</Avatar>
       <div className="msg-row-body">
         <p className="msg-row-head">
           <strong>{c.name}</strong>
@@ -242,12 +238,9 @@ function CustomerColumn({ c }: { c: CustomerView }) {
   return (
     <aside className="msg-col msg-col-customer" aria-label={t('label')}>
       <div className="msg-customer-top">
-        <span className="msg-avatar msg-avatar-lg" aria-hidden="true">
+        <Avatar size="lg" badge={platformBadgeText(c.platform)}>
           {avatarInitial(c.name)}
-          <span className={`msg-platform msg-platform-${c.platform}`}>
-            {platformBadgeText(c.platform)}
-          </span>
-        </span>
+        </Avatar>
         <h2>{c.name}</h2>
         <p className="msg-stage">{c.stage}</p>
       </div>

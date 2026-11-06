@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Check,
   Download,
   KeyRound,
   LockKeyhole,
@@ -27,6 +26,7 @@ import { Banner } from '../ui/banner';
 import { Dialog, DialogTrigger } from '../ui/dialog';
 import { CodeField, PasswordField } from '../ui/fields';
 import { SectionHead } from '../ui/section-head';
+import { Stepper } from '../ui/stepper';
 import { SubmitButton } from '../ui/submit-button';
 
 const SETUP_ID = 'two-factor-setup-dialog';
@@ -41,27 +41,15 @@ function useError(state: SecurityState): string | undefined {
 }
 
 /** Thanh ba bước của trình hướng dẫn bật 2FA (bước đã qua có dấu tích, bước hiện tại nổi bật). */
-export function Stepper({ step }: { step: 1 | 2 | 3 }) {
+export function EnrollStepper({ step }: { step: 1 | 2 | 3 }) {
   const t = useTranslations('auth.security.twoFactor.steps');
-  return (
-    <ol className="stepper" aria-label={t('label')}>
-      {([1, 2, 3] as const).map((n) => (
-        <li
-          key={n}
-          className={n < step ? 'is-done' : n === step ? 'is-current' : undefined}
-          aria-current={n === step ? 'step' : undefined}
-        >
-          <span className="stepper-dot" aria-hidden="true">
-            {n < step ? <Check size={14} /> : n}
-          </span>
-          <span className="stepper-text">
-            <small>{t('step', { n })}</small>
-            {t(`name.${n}`)}
-          </span>
-        </li>
-      ))}
-    </ol>
-  );
+  const steps = ([1, 2, 3] as const).map((n) => ({
+    key: String(n),
+    state: n < step ? ('done' as const) : n === step ? ('current' as const) : ('todo' as const),
+    eyebrow: t('step', { n }),
+    title: t(`name.${n}`),
+  }));
+  return <Stepper label={t('label')} steps={steps} />;
 }
 
 /** Tải mã dự phòng thành file .txt ngay trong trình duyệt (không gửi đi đâu; Blob chỉ tồn tại ở máy người dùng). */
@@ -147,7 +135,7 @@ function EnableFlow({
   if (begin.status === 'enroll' && confirm.status === 'done') {
     return (
       <div className="stack">
-        <Stepper step={step} />
+        <EnrollStepper step={step} />
         <BackupCodes
           codes={begin.backupCodes}
           onSaved={() => {
@@ -161,7 +149,7 @@ function EnableFlow({
   if (begin.status === 'enroll') {
     return (
       <div className="stack">
-        <Stepper step={step} />
+        <EnrollStepper step={step} />
         <form action={confirmAction} className="form" noValidate>
           <div className="setup-grid">
             <div className="setup-qr">
@@ -186,7 +174,7 @@ function EnableFlow({
   }
   return (
     <div className="stack">
-      <Stepper step={step} />
+      <EnrollStepper step={step} />
       <form action={beginAction} className="form" noValidate>
         {beginError ? <Banner variant="danger">{beginError}</Banner> : null}
         <PasswordField
