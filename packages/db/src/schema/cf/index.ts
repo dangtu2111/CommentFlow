@@ -11,4 +11,5 @@ export * from './posts';
 export * from './product-aliases';
 export * from './products';
 export * from './retrieval';
+export * from './size-charts';
 export * from './webhook-events';
