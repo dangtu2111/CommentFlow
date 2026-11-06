@@ -1,48 +1,57 @@
 'use client';
 
-import { Circle, CircleCheck, KeyRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import { changePasswordAction } from '../../app/app/security/actions';
+import { cn } from '../../lib/cn';
 import { SECURITY_IDLE } from '../../lib/security-form';
 import {
   MIN_PASSWORD_LENGTH_HINT,
   passwordChecks,
   passwordStrength,
 } from '../../lib/settings-visual';
-import { Banner } from '../ui/banner';
-import { Dialog, DialogTrigger } from '../ui/dialog';
-import { PasswordField } from '../ui/fields';
-import { SectionHead } from '../ui/section-head';
-import { SubmitButton } from '../ui/submit-button';
+import { TwDialog, TwDialogTrigger, TwSubmit } from '../settings/tw/dialog';
+import { TwBanner, TwPasswordField } from '../settings/tw/fields';
+import { twBtn } from '../settings/tw/ui';
+import { Icon } from '../ui/icon';
 
 const DIALOG_ID = 'change-password-dialog';
 const CHECK_KEYS = ['length', 'mixedCase', 'digit', 'special'] as const;
 
-/** Thanh độ mạnh bốn đoạn + danh sách kiểm. Chỉ gợi ý phía client; máy chủ vẫn là nơi quyết định. */
+/** Thanh độ mạnh bốn đoạn + danh sách kiểm (`settings-change-password-modal`). Chỉ gợi ý phía client; máy chủ vẫn quyết định. */
 function StrengthMeter({ password }: { password: string }) {
   const t = useTranslations('auth.security.changePassword.strength');
   const checks = passwordChecks(password);
   const level = passwordStrength(password);
   return (
-    <div className="strength" data-level={level}>
-      <div className="strength-head">
-        <span>{t('title')}</span>
-        <strong aria-live="polite">{t(`level.${level}`)}</strong>
+    <div className="p-3 rounded-xl bg-surface-container-low space-y-2" data-level={level}>
+      <div className="flex items-center justify-between">
+        <span className="font-label-sm text-label-sm text-on-surface-variant">{t('title')}</span>
+        <strong aria-live="polite" className="font-title-sm text-title-sm text-primary font-bold">
+          {t(`level.${level}`)}
+        </strong>
       </div>
-      <div className="strength-bars" aria-hidden="true">
+      <div className="grid grid-cols-4 gap-1.5" aria-hidden="true">
         {[1, 2, 3, 4].map((step) => (
-          <span key={step} className={step <= level ? 'is-on' : undefined} />
+          <span
+            key={step}
+            className={cn(
+              'h-1.5 rounded-full',
+              step <= level ? 'bg-primary-container' : 'bg-surface-container-highest',
+            )}
+          />
         ))}
       </div>
-      <ul className="strength-checks">
+      <ul className="pt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5 font-label-sm text-label-sm">
         {CHECK_KEYS.map((key) => (
-          <li key={key} className={checks[key] ? 'is-ok' : undefined}>
-            {checks[key] ? (
-              <CircleCheck size={16} aria-hidden="true" />
-            ) : (
-              <Circle size={16} aria-hidden="true" />
+          <li
+            key={key}
+            className={cn(
+              'flex items-center gap-1.5',
+              checks[key] ? 'text-primary' : 'text-on-surface-variant',
             )}
+          >
+            <Icon name={checks[key] ? 'check_circle' : 'cancel'} size={16} />
             {t(`checks.${key}`, { min: MIN_PASSWORD_LENGTH_HINT })}
           </li>
         ))}
@@ -62,28 +71,34 @@ export function ChangePasswordCard() {
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
   return (
-    <section className="card stack" aria-labelledby="change-password-title">
-      <SectionHead
-        id="change-password-title"
-        icon={<KeyRound size={22} />}
-        title={t('title')}
-        description={t('body')}
-        end={
-          <DialogTrigger dialogId={DIALOG_ID} className="btn btn-secondary">
-            {t('open')}
-          </DialogTrigger>
-        }
-      />
-      <Dialog
+    <div className="bg-surface-container-low rounded-xl p-space-md flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+      <div className="flex items-center gap-space-md">
+        <span
+          aria-hidden="true"
+          className="w-10 h-10 rounded-lg bg-surface-container-lowest text-on-surface-variant flex items-center justify-center"
+        >
+          <Icon name="password" size={20} />
+        </span>
+        <div>
+          <h3 className="font-title-sm text-title-sm text-on-surface">{t('title')}</h3>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">{t('body')}</p>
+        </div>
+      </div>
+      <TwDialogTrigger dialogId={DIALOG_ID} className={twBtn({ tone: 'plain' })}>
+        <Icon name="edit_square" size={16} />
+        {t('open')}
+      </TwDialogTrigger>
+      <TwDialog
         dialogId={DIALOG_ID}
         title={t('dialogTitle')}
         description={t('dialogBody')}
-        icon={<KeyRound size={22} />}
+        icon={<Icon name="shield_lock" size={20} />}
+        size="lg"
       >
         <form
           action={action}
-          className="form"
           noValidate
+          className="space-y-4"
           onReset={() => {
             // React xóa ô nhập sau khi Server Action chạy xong; đồng bộ lại để thanh độ mạnh không dùng giá trị cũ.
             setNext('');
@@ -91,37 +106,50 @@ export function ChangePasswordCard() {
           }}
         >
           {state.status === 'error' ? (
-            <Banner variant="danger">
+            <TwBanner tone="danger">
               {errors(state.message, { minutes: state.retryMinutes ?? 15 })}
-            </Banner>
+            </TwBanner>
           ) : null}
-          <PasswordField
+          <TwPasswordField
             name="currentPassword"
             label={t('currentLabel')}
             autoComplete="current-password"
           />
-          <PasswordField
+          <TwPasswordField
             name="newPassword"
             label={t('newLabel')}
             hint={t('newHint')}
+            icon="password"
             autoComplete="new-password"
             onValueChange={setNext}
           />
           <StrengthMeter password={next} />
-          <PasswordField
+          <TwPasswordField
             name="confirmPassword"
             label={t('confirmLabel')}
+            icon="check_circle"
             autoComplete="new-password"
             onValueChange={setConfirm}
           />
           {confirm !== '' ? (
-            <p className={`match ${confirm === next ? 'is-ok' : 'is-bad'}`} aria-live="polite">
+            <p
+              aria-live="polite"
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold',
+                confirm === next
+                  ? 'bg-surface-container-high text-primary'
+                  : 'bg-error-container text-on-error-container',
+              )}
+            >
+              <Icon name={confirm === next ? 'check_circle' : 'cancel'} size={14} />
               {confirm === next ? t('match.yes') : t('match.no')}
             </p>
           ) : null}
-          <SubmitButton block={false}>{t('submit')}</SubmitButton>
+          <div className="flex justify-end">
+            <TwSubmit>{t('submit')}</TwSubmit>
+          </div>
         </form>
-      </Dialog>
-    </section>
+      </TwDialog>
+    </div>
   );
 }

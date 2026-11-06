@@ -1,4 +1,3 @@
-import { LockKeyhole } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
@@ -7,9 +6,10 @@ import { type SessionRow, SessionsCard } from '../../../../components/security/s
 import { EnrollStepper, TwoFactorCard } from '../../../../components/security/two-factor-card';
 import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
-import { SettingsFrame } from '../../../../components/settings/settings-frame';
-import { Dialog, DialogTrigger } from '../../../../components/ui/dialog';
-import { PageHeader } from '../../../../components/ui/page-header';
+import { SettingsFrame, TwPageHeader } from '../../../../components/settings/settings-frame';
+import { TwDialog, TwDialogTrigger } from '../../../../components/settings/tw/dialog';
+import { TwChip, twBtn } from '../../../../components/settings/tw/ui';
+import { Icon } from '../../../../components/ui/icon';
 
 const SAMPLE_OPEN = '[MẪU] Xem hộp thoại bật 2FA (bước 2)';
 const SAMPLE_QR = '[MẪU] Ảnh QR sinh ở máy chủ khi bật thật.';
@@ -51,52 +51,83 @@ export default async function DevSettingsPage({
   const enabled = params.state !== 'off';
   return (
     <DevShell>
-      <main className="app-page app-page-settings">
+      <main>
         <SettingsFrame
           viewerRole="owner"
           active="security"
           counts={{ channelsConnected: 3, channelsTotal: 3, members: 5 }}
-          header={<PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />}
+          header={
+            <TwPageHeader
+              title={t('settings.title')}
+              subtitle={t('settings.subtitle')}
+              end={
+                <TwChip tone={enabled ? 'ok' : 'warn'} dot className="px-3 py-1.5">
+                  {t(enabled ? 'settings.securityStatus.on' : 'settings.securityStatus.off')}
+                </TwChip>
+              }
+            />
+          }
+          sideNote={
+            <div className="bg-surface-container-low rounded-xl p-space-md shadow-sm space-y-2">
+              <div className="flex items-center gap-2 text-primary">
+                <Icon name="verified" size={16} />
+                <span className="font-title-sm text-title-sm">
+                  {t('settings.securityNote.title')}
+                </span>
+              </div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                {t('settings.securityNote.body')}
+              </p>
+            </div>
+          }
         >
           <p className="inbox-sample-note" role="note">
             {DEV_SAMPLE_NOTE}
           </p>
           <TwoFactorCard enabled={enabled} required={false} />
           <p>
-            <DialogTrigger dialogId={SETUP_DIALOG} className="btn btn-secondary">
+            <TwDialogTrigger dialogId={SETUP_DIALOG} className={twBtn({ tone: 'soft' })}>
               {SAMPLE_OPEN}
-            </DialogTrigger>
+            </TwDialogTrigger>
           </p>
-          <Dialog
+          <TwDialog
             dialogId={SETUP_DIALOG}
             title={t('auth.security.twoFactor.setupTitle')}
             description={t('auth.security.twoFactor.setupBody')}
-            icon={<LockKeyhole size={22} />}
+            icon={<Icon name="lock_person" size={20} />}
+            size="xl"
           >
-            <div className="stack">
+            <div className="space-y-space-md">
               <EnrollStepper step={2} />
-              <div className="setup-grid">
-                <div className="setup-qr">
-                  <h3 className="section-subtitle">{t('auth.security.twoFactor.scanTitle')}</h3>
-                  <p className="muted">{t('auth.security.twoFactor.scanBody')}</p>
-                  <p className="muted">{SAMPLE_QR}</p>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+                <div className="lg:col-span-5 bg-surface-container-low p-space-lg rounded-xl space-y-2">
+                  <h3 className="font-title-sm text-title-sm text-on-surface">
+                    {t('auth.security.twoFactor.scanTitle')}
+                  </h3>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant">
+                    {t('auth.security.twoFactor.scanBody')}
+                  </p>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant">{SAMPLE_QR}</p>
                 </div>
-                <div className="setup-code">
-                  <p className="muted">{t('auth.security.twoFactor.confirmLabel')}</p>
-                  <button type="button" className="btn btn-primary">
+                <div className="lg:col-span-7 bg-surface-container-lowest p-space-md rounded-xl space-y-space-md self-start">
+                  <p className="font-title-sm text-title-sm text-on-surface">
+                    {t('auth.security.twoFactor.confirmLabel')}
+                  </p>
+                  <button type="button" className={twBtn({ tone: 'primary', size: 'lg' })}>
                     {t('auth.security.twoFactor.confirm')}
                   </button>
                 </div>
               </div>
             </div>
-          </Dialog>
+          </TwDialog>
           <AccountCard
             name={SAMPLE_USER}
             email={SAMPLE_EMAIL}
             emailVerified
             memberRole={SAMPLE_ROLE}
-          />
-          <ChangePasswordCard />
+          >
+            <ChangePasswordCard />
+          </AccountCard>
           <SessionsCard sessions={SESSIONS} />
           <LanguageCard />
         </SettingsFrame>

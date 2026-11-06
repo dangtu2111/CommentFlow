@@ -77,7 +77,11 @@
       "title": "Thông tin đăng nhập & Tài khoản",
       "body": "Thông tin xác thực danh tính của bạn trong workspace này.",
       "email": "Địa chỉ email đăng nhập",
-      "verified": "Đã xác thực"
+      "verified": "Đã xác thực",
+      "edit": "Chỉnh sửa thông tin",
+      "phone": "Số điện thoại liên hệ",
+      "phoneEmpty": "Chưa cập nhật",
+      "soon": "Sắp có"
     },
     "soon": "Sắp có",
     "billing": {
@@ -216,6 +220,14 @@
         "button": "Gửi yêu cầu xóa workspace",
         "soon": "Chưa mở — chưa xóa dữ liệu thật"
       }
+    },
+    "securityStatus": {
+      "on": "2FA: Đang bật",
+      "off": "2FA: Chưa bật"
+    },
+    "securityNote": {
+      "title": "Bảo mật tài khoản",
+      "body": "Chủ sở hữu và quản trị viên workspace bắt buộc bật xác thực 2 bước (2FA) để bảo vệ quyền truy cập các kênh đã kết nối."
     }
   },
   "auth": {
@@ -421,8 +433,21 @@
           "method": "Phương thức chính",
           "methodValue": "Ứng dụng xác thực (TOTP)",
           "methodHint": "Google / Microsoft / 1Password",
-          "rotation": "Mã thay đổi mỗi 30 giây"
-        }
+          "rotation": "Mã thay đổi mỗi 30 giây",
+          "deviceTitle": "Thiết bị đã đồng bộ",
+          "deviceValue": "Chưa ghi nhận",
+          "deviceHint": "Tên ứng dụng/thiết bị Authenticator",
+          "policyTitle": "Chính sách bảo mật",
+          "policyRequired": "Bắt buộc với vai trò của bạn",
+          "policyOptional": "Tùy chọn với vai trò của bạn",
+          "policyHint": "Áp dụng theo vai trò trong workspace",
+          "policyMet": "Đã đáp ứng"
+        },
+        "switchDevice": "Đổi thiết bị",
+        "viewCodes": "Xem lại mã",
+        "maskedLabel": "Mã dự phòng đã ẩn",
+        "maskedNote": "Mã dự phòng chỉ hiện một lần khi tạo; mã đã tạo không xem lại được. Muốn có mã mới, hãy tạo lại bộ mã.",
+        "soon": "Sắp có"
       },
       "sessions": {
         "title": "Thiết bị đang đăng nhập",

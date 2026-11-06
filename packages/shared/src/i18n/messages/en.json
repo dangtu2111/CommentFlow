@@ -77,7 +77,11 @@
       "title": "Sign-in & account details",
       "body": "Your identity details in this workspace.",
       "email": "Sign-in email address",
-      "verified": "Verified"
+      "verified": "Verified",
+      "edit": "Edit profile",
+      "phone": "Contact phone number",
+      "phoneEmpty": "Not set",
+      "soon": "Coming soon"
     },
     "soon": "Coming soon",
     "billing": {
@@ -216,6 +220,14 @@
         "button": "Send workspace deletion request",
         "soon": "Not open yet — no real data is deleted"
       }
+    },
+    "securityStatus": {
+      "on": "2FA: On",
+      "off": "2FA: Off"
+    },
+    "securityNote": {
+      "title": "Account security",
+      "body": "Workspace owners and admins must turn on two-factor authentication (2FA) to protect access to connected channels."
     }
   },
   "auth": {
@@ -421,8 +433,21 @@
           "method": "Primary method",
           "methodValue": "Authenticator app (TOTP)",
           "methodHint": "Google / Microsoft / 1Password",
-          "rotation": "Code changes every 30 seconds"
-        }
+          "rotation": "Code changes every 30 seconds",
+          "deviceTitle": "Linked device",
+          "deviceValue": "Not recorded",
+          "deviceHint": "Authenticator app/device name",
+          "policyTitle": "Security policy",
+          "policyRequired": "Required for your role",
+          "policyOptional": "Optional for your role",
+          "policyHint": "Applies by role in the workspace",
+          "policyMet": "Met"
+        },
+        "switchDevice": "Change device",
+        "viewCodes": "View codes",
+        "maskedLabel": "Hidden backup codes",
+        "maskedNote": "Backup codes are shown only once when created and cannot be viewed again. To get new ones, regenerate the set.",
+        "soon": "Coming soon"
       },
       "sessions": {
         "title": "Signed-in devices",

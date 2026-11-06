@@ -1,8 +1,9 @@
-import { Laptop, MonitorSmartphone, Smartphone } from 'lucide-react';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { revokeOtherSessionsAction, revokeSessionAction } from '../../app/app/security/actions';
-import { SectionHead } from '../ui/section-head';
-import { SubmitButton } from '../ui/submit-button';
+import { cn } from '../../lib/cn';
+import { TwSubmit } from '../settings/tw/dialog';
+import { TwCard, TwCardHead, TwChip } from '../settings/tw/ui';
+import { Icon } from '../ui/icon';
 
 export type SessionRow = {
   id: string;
@@ -15,78 +16,90 @@ export type SessionRow = {
 };
 
 const MOBILE_OS = ['ios', 'android'];
+const TITLE_ID = 'sessions-title';
 
 /** Danh sách phiên đăng nhập CỦA CHÍNH người dùng + đăng xuất từng phiên khác (dùng ở `/app/security` và `/app/settings`). */
 export async function SessionsCard({ sessions }: { sessions: SessionRow[] }) {
   const [t, format] = await Promise.all([getTranslations('auth.security'), getFormatter()]);
+  const when = (date: Date) => format.dateTime(date, { dateStyle: 'medium', timeStyle: 'short' });
   return (
-    <section className="card stack" aria-labelledby="sessions-title">
-      <SectionHead
-        id="sessions-title"
-        icon={<MonitorSmartphone size={22} />}
+    <TwCard labelledBy={TITLE_ID}>
+      <TwCardHead
+        id={TITLE_ID}
+        icon={<Icon name="devices_other" size={24} />}
         title={t('sessions.title')}
         description={t('sessions.body')}
         end={
           sessions.some((session) => !session.current) ? (
             <form action={revokeOtherSessionsAction}>
-              <SubmitButton variant="danger-ghost" block={false}>
+              <TwSubmit tone="danger-soft" size="md">
+                <Icon name="logout" size={16} />
                 {t('sessions.signOutOthers')}
-              </SubmitButton>
+              </TwSubmit>
             </form>
           ) : null
         }
       />
-      {sessions.length === 0 ? <p className="muted">{t('sessions.empty')}</p> : null}
-      <ul className="session-list">
-        {sessions.map((session) => {
-          const Icon = MOBILE_OS.includes(session.os) ? Smartphone : Laptop;
-          return (
-            <li key={session.id} className={`session-item${session.current ? ' is-current' : ''}`}>
-              <span className="session-icon" aria-hidden="true">
-                <Icon size={20} />
+      {sessions.length === 0 ? (
+        <p className="font-body-md text-body-md text-on-surface-variant">{t('sessions.empty')}</p>
+      ) : null}
+      <ul className="space-y-space-sm">
+        {sessions.map((session) => (
+          <li
+            key={session.id}
+            className="p-space-md rounded-xl bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-md"
+          >
+            <div className="flex items-start gap-space-md">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0',
+                  session.current ? 'text-primary' : 'text-secondary',
+                )}
+              >
+                <Icon
+                  name={MOBILE_OS.includes(session.os) ? 'phone_iphone' : 'laptop_mac'}
+                  size={20}
+                />
               </span>
-              <div className="session-info">
-                <p className="session-device">
-                  {t('sessions.device', {
-                    browser: t(`sessions.browser.${session.browser}`),
-                    os: t(`sessions.os.${session.os}`),
-                  })}
-                  {session.current ? (
-                    <span className="chip chip-success">{t('sessions.current')}</span>
-                  ) : null}
-                </p>
-                <p className="muted">
-                  {t('sessions.lastUsed', {
-                    date: format.dateTime(session.lastUsedAt, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    }),
-                  })}
-                </p>
-                {session.createdAt ? (
-                  <p className="muted">
-                    {t('sessions.signedInAt', {
-                      date: format.dateTime(session.createdAt, {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      }),
-                      code: session.id.slice(-4),
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-title-md text-title-md text-on-surface">
+                    {t('sessions.device', {
+                      browser: t(`sessions.browser.${session.browser}`),
+                      os: t(`sessions.os.${session.os}`),
                     })}
-                  </p>
-                ) : null}
+                  </span>
+                  {session.current ? (
+                    <TwChip tone="ok" className="font-semibold">
+                      {t('sessions.current')}
+                    </TwChip>
+                  ) : null}
+                </div>
+                <div className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-3 flex-wrap">
+                  <span>{t('sessions.lastUsed', { date: when(session.lastUsedAt) })}</span>
+                  {session.createdAt ? (
+                    <span>
+                      {t('sessions.signedInAt', {
+                        date: when(session.createdAt),
+                        code: session.id.slice(-4),
+                      })}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-              {session.current ? null : (
-                <form action={revokeSessionAction}>
-                  <input type="hidden" name="sessionId" value={session.id} />
-                  <SubmitButton variant="secondary" block={false}>
-                    {t('sessions.revoke')}
-                  </SubmitButton>
-                </form>
-              )}
-            </li>
-          );
-        })}
+            </div>
+            {session.current ? null : (
+              <form action={revokeSessionAction}>
+                <input type="hidden" name="sessionId" value={session.id} />
+                <TwSubmit tone="danger-ghost" size="sm">
+                  {t('sessions.revoke')}
+                </TwSubmit>
+              </form>
+            )}
+          </li>
+        ))}
       </ul>
-    </section>
+    </TwCard>
   );
 }
