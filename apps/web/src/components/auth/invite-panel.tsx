@@ -22,6 +22,7 @@ async function InviteContext({
   sample?: InviteSample;
 }) {
   const t = await getTranslations('invite.ui');
+  const tc = await getTranslations('invite.card');
   return (
     <div className="flex flex-col justify-between bg-surface-container-low p-space-lg md:p-space-xl lg:col-span-5">
       <div className="flex flex-col gap-space-lg">
@@ -38,7 +39,7 @@ async function InviteContext({
           </div>
           <div className="mt-space-xs">
             <h1 className="font-headline-md text-headline-md font-bold tracking-tight text-on-surface">
-              {workspace}
+              {tc('title', { workspace })}
             </h1>
             {sample ? (
               <p className="mt-0.5 font-body-sm text-body-sm text-on-surface-variant">
