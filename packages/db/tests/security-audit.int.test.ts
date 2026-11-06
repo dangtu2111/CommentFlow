@@ -7,7 +7,7 @@ import { createAdminPool, createAppDb, seedMember, seedUser, seedWorkspace } fro
 
 /**
  * FR-001 nhật ký kiểm toán thay đổi bảo mật: mỗi thành viên ghi được sự kiện `security.*` của CHÍNH MÌNH vào workspace
- * mình đang ở (cùng đường `withActor` + `writeActionLog` của Server Action), không ghi được vào workspace khác, không
+ * mình đang ở (kiểm chính sách RLS mà `writeActionLog` của Server Action dựa vào; test ghi thẳng bảng vì @flow/db không import saas-core), không ghi được vào workspace khác, không
  * giả actor_id của người khác; Staff chỉ thấy dòng của mình, Owner thấy tất cả.
  */
 let admin: pg.Pool;
