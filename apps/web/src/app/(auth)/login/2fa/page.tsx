@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { AuthHeading } from '../../../../components/auth/auth-shell';
 import { TwoFactorForm } from '../../../../components/auth/two-factor-form';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getBrand } from '../../../../server/brand';
@@ -18,10 +19,7 @@ export default async function TwoFactorPage() {
   const t = await getTranslations('auth.twoFactor');
   return (
     <>
-      <div className="stack">
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">{t('subtitle')}</p>
-      </div>
+      <AuthHeading title={t('title')} subtitle={t('subtitle')} />
       <TwoFactorForm />
     </>
   );

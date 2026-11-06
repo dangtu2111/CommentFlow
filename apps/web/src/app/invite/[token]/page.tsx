@@ -1,9 +1,13 @@
-import { CircleAlert, MailCheck } from 'lucide-react';
+import { CircleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { AcceptInviteForm } from '../../../components/app/accept-invite-form';
 import { AuthShell } from '../../../components/auth/auth-shell';
 import { AuthStatus } from '../../../components/auth/auth-status';
+import { authButtonClass } from '../../../components/auth/auth-styles';
+import { InviteShell } from '../../../components/auth/invite-panel';
+import { INVITE_SAMPLE } from '../../../lib/invite-sample';
+import { showSampleData } from '../../../lib/sample-data';
 import { getAuthRuntime } from '../../../server/auth';
 import { getBrand } from '../../../server/brand';
 import { getCurrentUser } from '../../../server/session';
@@ -36,7 +40,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
           title={t('invalid.title')}
           description={t('invalid.body')}
         >
-          <a className="btn btn-secondary btn-block" href="/invite/clear">
+          <a className={authButtonClass('neutral')} href="/invite/clear">
             {t('invalid.action')}
           </a>
         </AuthStatus>
@@ -44,43 +48,39 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
     );
   }
 
-  const role = tr(preview.role);
   return (
-    <AuthShell>
-      <AuthStatus
-        icon={MailCheck}
-        tone="success"
-        title={t('card.title', { workspace: preview.workspaceName })}
-        description={t('card.role', { role })}
-      >
-        {user ? (
-          <>
-            <p className="muted">{t('card.signedIn')}</p>
-            <AcceptInviteForm token={token} />
-            <a className="btn btn-secondary btn-block" href="/invite/clear">
-              {t('card.later')}
-            </a>
-          </>
-        ) : (
-          <>
-            <p className="muted">{t('card.signedOut')}</p>
-            <Link
-              className="btn btn-primary btn-block"
-              href={`/invite/${token}/start?mode=login`}
-              prefetch={false}
-            >
-              {t('card.login')}
-            </Link>
-            <Link
-              className="btn btn-secondary btn-block"
-              href={`/invite/${token}/start?mode=register`}
-              prefetch={false}
-            >
-              {t('card.register')}
-            </Link>
-          </>
-        )}
-      </AuthStatus>
-    </AuthShell>
+    <InviteShell
+      workspace={preview.workspaceName}
+      role={tr(preview.role)}
+      sample={showSampleData() ? INVITE_SAMPLE : undefined}
+    >
+      {user ? (
+        <>
+          <p className="font-body-md text-body-md text-on-surface-variant">{t('card.signedIn')}</p>
+          <AcceptInviteForm token={token} />
+          <a className={authButtonClass('neutral')} href="/invite/clear">
+            {t('card.later')}
+          </a>
+        </>
+      ) : (
+        <>
+          <p className="font-body-md text-body-md text-on-surface-variant">{t('card.signedOut')}</p>
+          <Link
+            className={authButtonClass()}
+            href={`/invite/${token}/start?mode=login`}
+            prefetch={false}
+          >
+            {t('card.login')}
+          </Link>
+          <Link
+            className={authButtonClass('neutral')}
+            href={`/invite/${token}/start?mode=register`}
+            prefetch={false}
+          >
+            {t('card.register')}
+          </Link>
+        </>
+      )}
+    </InviteShell>
   );
 }

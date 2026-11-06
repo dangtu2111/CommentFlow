@@ -1,6 +1,5 @@
 'use client';
 
-import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
@@ -12,9 +11,11 @@ import {
   resetPasswordAction,
 } from '../../app/(auth)/actions';
 import { type FormState, IDLE } from '../../lib/auth-form';
-import { Banner } from '../ui/banner';
-import { PasswordField, TextField } from '../ui/fields';
-import { SubmitButton } from '../ui/submit-button';
+import { Icon } from '../ui/icon';
+import { AuthNotice, AuthPasswordField, AuthSubmit, AuthTextField, SoonField } from './auth-fields';
+
+const FORM = 'flex flex-col gap-space-md';
+const CATEGORY_KEYS = ['fashion', 'beauty', 'fnb', 'home', 'agency', 'other'] as const;
 
 /** Lỗi gắn với một ô thì hiện dưới ô đó; lỗi chung (sai mật khẩu, quá nhiều lần...) hiện ở dải trên form. */
 function useFormErrors(state: FormState) {
@@ -39,11 +40,11 @@ export function ResendVerificationForm({ email }: { email: string }) {
   const t = useTranslations('auth.checkEmail');
   const [state, action] = useActionState(resendVerificationAction, IDLE);
   return (
-    <div className="stack">
-      {state.status === 'sent' ? <Banner variant="success">{t('resent')}</Banner> : null}
+    <div className="flex flex-col gap-space-sm">
+      {state.status === 'sent' ? <AuthNotice tone="success">{t('resent')}</AuthNotice> : null}
       <form action={action}>
         <input type="hidden" name="email" value={email} />
-        <SubmitButton variant="secondary">{t('resend')}</SubmitButton>
+        <AuthSubmit tone="neutral">{t('resend')}</AuthSubmit>
       </form>
     </div>
   );
@@ -58,13 +59,13 @@ export function LoginForm() {
     <>
       {state.status === 'unverified' ? (
         <>
-          <Banner variant="warning">{t('errors.emailNotVerified')}</Banner>
+          <AuthNotice tone="warning">{t('errors.emailNotVerified')}</AuthNotice>
           <ResendVerificationForm email={state.email} />
         </>
       ) : null}
-      <form action={action} className="form" noValidate>
-        {errors.banner ? <Banner variant="danger">{errors.banner}</Banner> : null}
-        <TextField
+      <form action={action} className={FORM} noValidate>
+        {errors.banner ? <AuthNotice tone="danger">{errors.banner}</AuthNotice> : null}
+        <AuthTextField
           name="email"
           type="email"
           icon="mail"
@@ -74,40 +75,65 @@ export function LoginForm() {
           defaultValue={values.email}
           error={errors.forField('email')}
         />
-        <PasswordField
+        <AuthPasswordField
           name="password"
           label={t('fields.password')}
           autoComplete="current-password"
           error={errors.forField('password')}
           aux={<Link href="/forgot-password">{t('login.forgot')}</Link>}
         />
-        <SubmitButton>
+        <label className="flex cursor-not-allowed select-none items-center gap-2 opacity-70">
+          <input
+            type="checkbox"
+            disabled
+            aria-disabled="true"
+            title={t('ui.soon')}
+            className="h-4 w-4 rounded accent-primary"
+          />
+          <span className="font-body-sm text-body-sm text-on-surface-variant">
+            {t('ui.form.remember')} · {t('ui.soon')}
+          </span>
+        </label>
+        <AuthSubmit>
           {t('login.submit')}
-          <ArrowRight size={18} aria-hidden="true" />
-        </SubmitButton>
+          <Icon name="arrow_forward" size={18} />
+        </AuthSubmit>
       </form>
     </>
   );
 }
 
-export function RegisterForm() {
+export function RegisterForm({ sample = false }: { sample?: boolean }) {
   const t = useTranslations('auth');
   const [state, action] = useActionState(registerAction, IDLE);
   const errors = useFormErrors(state);
   const values = valuesOf(state);
   return (
-    <form action={action} className="form" noValidate>
-      {errors.banner ? <Banner variant="danger">{errors.banner}</Banner> : null}
-      <TextField
-        name="name"
-        icon="user"
-        label={t('fields.name')}
-        placeholder={t('fields.namePlaceholder')}
-        autoComplete="name"
-        defaultValue={'name' in values ? values.name : undefined}
-        error={errors.forField('name')}
-      />
-      <TextField
+    <form action={action} className={FORM} noValidate>
+      {sample ? (
+        <div className="flex items-center gap-space-xs rounded-lg bg-secondary-fixed/40 p-space-sm">
+          <span className="text-secondary">
+            <Icon name="stars" size={20} />
+          </span>
+          <span className="font-label-sm text-label-sm text-on-surface">
+            {t('ui.form.trialBanner')}
+          </span>
+        </div>
+      ) : null}
+      {errors.banner ? <AuthNotice tone="danger">{errors.banner}</AuthNotice> : null}
+      <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-2">
+        <AuthTextField
+          name="name"
+          icon="person"
+          label={t('fields.name')}
+          placeholder={t('fields.namePlaceholder')}
+          autoComplete="name"
+          defaultValue={'name' in values ? values.name : undefined}
+          error={errors.forField('name')}
+        />
+        <SoonField label={t('ui.form.storeName')} soon={t('ui.soon')} />
+      </div>
+      <AuthTextField
         name="email"
         type="email"
         icon="mail"
@@ -117,17 +143,26 @@ export function RegisterForm() {
         defaultValue={values.email}
         error={errors.forField('email')}
       />
-      <PasswordField
-        name="password"
-        label={t('fields.password')}
-        hint={t('fields.passwordHint')}
-        autoComplete="new-password"
-        error={errors.forField('password')}
-      />
-      <SubmitButton>
+      <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-2">
+        <AuthPasswordField
+          name="password"
+          label={t('fields.password')}
+          hint={t('fields.passwordHint')}
+          autoComplete="new-password"
+          error={errors.forField('password')}
+        />
+        <SoonField label={t('ui.form.category')} soon={t('ui.soon')} select>
+          {CATEGORY_KEYS.map((key) => (
+            <option key={key} value={key}>
+              {t(`ui.form.categories.${key}`)}
+            </option>
+          ))}
+        </SoonField>
+      </div>
+      <AuthSubmit tone="secondary">
+        <Icon name="rocket_launch" size={18} />
         {t('register.submit')}
-        <ArrowRight size={18} aria-hidden="true" />
-      </SubmitButton>
+      </AuthSubmit>
     </form>
   );
 }
@@ -137,11 +172,11 @@ export function ForgotPasswordForm() {
   const [state, action] = useActionState(forgotPasswordAction, IDLE);
   const errors = useFormErrors(state);
   const values = valuesOf(state);
-  if (state.status === 'sent') return <Banner variant="success">{t('forgot.sent')}</Banner>;
+  if (state.status === 'sent') return <AuthNotice tone="success">{t('forgot.sent')}</AuthNotice>;
   return (
-    <form action={action} className="form" noValidate>
-      {errors.banner ? <Banner variant="danger">{errors.banner}</Banner> : null}
-      <TextField
+    <form action={action} className={FORM} noValidate>
+      {errors.banner ? <AuthNotice tone="danger">{errors.banner}</AuthNotice> : null}
+      <AuthTextField
         name="email"
         type="email"
         icon="mail"
@@ -151,7 +186,7 @@ export function ForgotPasswordForm() {
         defaultValue={values.email}
         error={errors.forField('email')}
       />
-      <SubmitButton>{t('forgot.submit')}</SubmitButton>
+      <AuthSubmit>{t('forgot.submit')}</AuthSubmit>
     </form>
   );
 }
@@ -161,23 +196,23 @@ export function ResetPasswordForm({ token }: { token: string }) {
   const [state, action] = useActionState(resetPasswordAction, IDLE);
   const errors = useFormErrors(state);
   return (
-    <form action={action} className="form" noValidate>
-      {errors.banner ? <Banner variant="danger">{errors.banner}</Banner> : null}
+    <form action={action} className={FORM} noValidate>
+      {errors.banner ? <AuthNotice tone="danger">{errors.banner}</AuthNotice> : null}
       <input type="hidden" name="token" value={token} />
-      <PasswordField
+      <AuthPasswordField
         name="password"
         label={t('fields.newPassword')}
         hint={t('fields.passwordHint')}
         autoComplete="new-password"
         error={errors.forField('password')}
       />
-      <PasswordField
+      <AuthPasswordField
         name="passwordConfirm"
         label={t('fields.passwordConfirm')}
         autoComplete="new-password"
         error={errors.forField('passwordConfirm')}
       />
-      <SubmitButton>{t('reset.submit')}</SubmitButton>
+      <AuthSubmit>{t('reset.submit')}</AuthSubmit>
     </form>
   );
 }
