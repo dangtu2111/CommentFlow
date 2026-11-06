@@ -84,6 +84,28 @@ describe('FR-122 Haravan fetchCatalog', () => {
     expect(calls[0]?.url.searchParams.get('limit')).toBe('2');
   });
 
+  it('chuẩn hóa trường vắng/null: loại sản phẩm, xuất bản, vị trí tùy chọn, tồn kho không quản lý', async () => {
+    const node = productNode(8, {
+      product_type: null,
+      published_at: null,
+      options: [{ name: 'Size' }, { name: 'Màu', position: 1 }, { name: 'Chất liệu' }],
+      variants: [
+        variantNode(81, {
+          inventory_management: null,
+          inventory_quantity: null,
+          compare_at_price: null,
+        }),
+      ],
+    });
+    const { connector } = harness([page([node])]);
+    const product = (await connector.fetchCatalog()).products[0];
+    expect(product?.productType).toBe('');
+    expect(product?.published).toBe(false);
+    expect(product?.optionNames).toEqual(['Size', 'Chất liệu', 'Màu']);
+    expect(product?.variants[0]?.quantity).toBeNull();
+    expect(product?.variants[0]?.managed).toBe(false);
+  });
+
   it('chuẩn hóa hình dạng sản phẩm/biến thể (giá số hoặc chuỗi, tùy chọn)', async () => {
     const node = productNode(7, {
       variants: [
@@ -113,6 +135,25 @@ describe('FR-122 Haravan fetchCatalog', () => {
       optionValues: ['Mau 71', 'M', null],
     });
     expect(product?.variants[1]).toMatchObject({ managed: false, sku: null });
+  });
+
+  it('trường tùy chọn thiếu/null → giá trị mặc định an toàn (không bịa số liệu)', async () => {
+    const node = productNode(8, {
+      product_type: null,
+      options: [{ name: 'Size' }, { name: 'Màu', position: 0 }, { name: 'Kiểu' }],
+      variants: [
+        variantNode(81, { compare_at_price: null, inventory_quantity: null }),
+        variantNode(82, { compare_at_price: undefined, inventory_quantity: undefined }),
+      ],
+    });
+    const { connector } = harness([page([node])]);
+    const [product] = (await connector.fetchCatalog()).products;
+    expect(product?.productType).toBe('');
+    expect(product?.optionNames).toEqual(['Size', 'Màu', 'Kiểu']);
+    for (const variant of product?.variants ?? []) {
+      expect(variant.compareAtPrice).toBeNull();
+      expect(variant.quantity).toBeNull();
+    }
   });
 
   it('chưa xuất bản (published_at null) → published=false', async () => {

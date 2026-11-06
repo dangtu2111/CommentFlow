@@ -66,6 +66,10 @@ describe('FR-124 parse payload SePay', () => {
   it('nội dung thiếu → chuỗi rỗng (vẫn là giao dịch, sẽ không khớp hóa đơn)', () => {
     expect(parseSepayPayload(sepay({ content: undefined }))?.content).toBe('');
   });
+  it('số tài khoản thiếu hoặc null → accountNumber null', () => {
+    expect(parseSepayPayload(sepay({ accountNumber: undefined }))?.accountNumber).toBeNull();
+    expect(parseSepayPayload(sepay({ accountNumber: null }))?.accountNumber).toBeNull();
+  });
 });
 
 describe('FR-124 parse payload Casso', () => {
@@ -91,6 +95,15 @@ describe('FR-124 parse payload Casso', () => {
         accountNumber: '000111',
       },
     ]);
+  });
+  it('mô tả và tài khoản phụ thiếu/null → content rỗng, accountNumber null', () => {
+    for (const missing of [undefined, null]) {
+      const [tx] = parseCassoPayload({
+        data: [row({ description: missing, bank_sub_acc_id: missing })],
+      });
+      expect(tx?.content).toBe('');
+      expect(tx?.accountNumber).toBeNull();
+    }
   });
   it('thân không đúng dạng → mảng rỗng', () => {
     expect(parseCassoPayload(null)).toEqual([]);
