@@ -1,0 +1,1 @@
+- `Intl.supportedValuesOf('timeZone')` KHÔNG có `Asia/Ho_Chi_Minh` — dùng `WORKSPACE_TIME_ZONES`.

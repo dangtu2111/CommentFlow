@@ -1,0 +1,1 @@
+- **Biến môi trường:** `.env.local` (khóa riêng như `BETTER_AUTH_SECRET`) được nạp SAU `.env` ở web, worker, script và test (`scripts/lib/load-env.mjs`); chạy lại `print-dev-env.sh` không làm mất khóa. Biến của hệ điều hành/CI thắng cả hai.

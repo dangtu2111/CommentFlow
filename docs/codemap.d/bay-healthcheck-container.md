@@ -1,0 +1,1 @@
+- **Healthcheck container** phải gọi qua `$HOSTNAME`/IP container (SeaweedFS, Langfuse không nghe `localhost`).

@@ -1,0 +1,1 @@
+- **Thành viên bị gỡ** = `members.status = 'removed'`, giữ dòng (`cf_app` không DELETE); `tenancy` chỉ tính thành viên `active`.

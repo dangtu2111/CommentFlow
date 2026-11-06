@@ -1,0 +1,1 @@
+| `packages/db/src/schema/cf/` | Bảng sản phẩm (schema `cf`): `ai_usage`, `channels`, `posts`, `comments`, `webhook_events` (CH-SCHEMA, ADR 007): RLS + ghi theo vai trò/hệ thống, token Page ẩn khỏi `cf_app`, khóa ngoại ghép chống chéo workspace |
