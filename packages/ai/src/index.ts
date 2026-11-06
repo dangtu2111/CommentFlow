@@ -110,6 +110,12 @@ export {
   type VariantAxis,
 } from './decide/decide-action';
 export {
+  type AttachmentRuleResult,
+  evaluateAttachmentRules,
+  type ImageDependenceSource,
+  MAX_SHORT_TEXT_WORDS,
+} from './decide/handoff-rules';
+export {
   type BusinessHoursState,
   detectOrderStatusIntent,
   evaluateBusinessHours,
