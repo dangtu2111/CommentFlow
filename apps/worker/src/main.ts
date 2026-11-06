@@ -8,6 +8,7 @@ import { createIngestHandler } from './jobs/ingest';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
+import { startSweep } from './jobs/sweep';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
 import { HIDE_QUEUE, INGEST_QUEUE, SEND_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
@@ -55,6 +56,9 @@ async function main(): Promise<void> {
   );
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
   const stopRetention = startRetention({ db, logger });
+  // SEND-SWEEP + HIDE-SWEEP (ADR 008/009): mỗi 60 giây xử lý lại yêu cầu gửi/ẩn kẹt qua đúng job gửi/ẩn (kiểm lại R1–R3/H1–H3).
+  // Dùng chung sổ connector `registry` với `send`/`hide`.
+  const stopSweep = startSweep({ db, registry, logger });
   ready = true;
   logger.info({ port: config.port }, 'worker đã khởi động');
 
@@ -62,6 +66,7 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'worker đang dừng');
     ready = false;
     stopRetention();
+    stopSweep();
     await boss.stop({ graceful: true });
     await db.close();
     await health.close();

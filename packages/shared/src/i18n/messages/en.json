@@ -8,8 +8,16 @@
     "vi": "Tiếng Việt",
     "en": "English"
   },
+  "settings": {
+    "pageTitle": "Settings",
+    "title": "Account & Security",
+    "subtitle": "Manage two-step verification, your signed-in sessions and your interface language.",
+    "language": {
+      "title": "Interface language",
+      "body": "Applies to your whole interface on this device."
+    }
+  },
   "auth": {
-    "brand": "CommentFlow AI",
     "tabs": {
       "label": "Choose an action",
       "login": "Sign in",
@@ -107,7 +115,7 @@
       "bilingual": "Vietnamese and English interface."
     },
     "footer": {
-      "rights": "© {year} CommentFlow AI. All rights reserved."
+      "rights": "© {year} {appName}. All rights reserved."
     },
     "twoFactor": {
       "title": "Two-step verification",
@@ -127,6 +135,10 @@
       "subtitle": "Manage two-step verification and the devices signed in to your account.",
       "requiredBanner": "Workspace owners and administrators must turn on two-step verification. Turn it on now to keep using the app.",
       "backToApp": "Back to the app",
+      "language": {
+        "title": "Interface language",
+        "body": "Your choice is saved to your account: the interface, emails and your next sign-in on another device will use this language."
+      },
       "twoFactor": {
         "title": "Two-step verification (TOTP)",
         "offBody": "Add a second layer of protection: besides your password you need a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password...).",
@@ -213,7 +225,6 @@
       }
     },
     "header": {
-      "brand": "CommentFlow AI",
       "nav": "Main navigation"
     }
   },
@@ -429,7 +440,8 @@
       "noText": "(No text)",
       "redacted": "The customer deleted this comment; its content and the commenter details were removed from the system.",
       "notFoundTitle": "Comment not found",
-      "notFoundBody": "The comment no longer exists or is not in this workspace."
+      "notFoundBody": "The comment no longer exists or is not in this workspace.",
+      "back": "← Back to list"
     },
     "error": {
       "title": "Could not load the comment list",
@@ -544,10 +556,9 @@
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
-      "security": "Security"
+      "settings": "Settings"
     },
     "logout": "Sign out",
-    "brand": "CommentFlow AI",
     "navLabel": "Main navigation"
   },
   "banners": {

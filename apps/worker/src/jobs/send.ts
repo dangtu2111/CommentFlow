@@ -135,6 +135,12 @@ async function prepare(
     return { kind: 'done' };
   }
 
+  // Trần số lần gọi nền tảng (job quét/lượt chạy lại không được thử vô hạn): đã đủ lượt → UNKNOWN (có thể đã đăng), không gọi.
+  if (row.attempts >= MAX_SEND_ATTEMPTS) {
+    await finish('failed', 'UNKNOWN', 'send_failed');
+    return { kind: 'done' };
+  }
+
   await tx.execute(sql`
     UPDATE cf.comment_replies SET status = 'sending', attempts = attempts + 1, updated_at = now()
      WHERE id = ${row.reply_id}::uuid`);

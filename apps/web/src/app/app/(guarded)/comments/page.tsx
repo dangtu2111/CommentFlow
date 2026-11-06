@@ -1,9 +1,11 @@
+import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { CommentDetailPanel } from '../../../../components/comments/comment-detail';
 import { InboxList } from '../../../../components/comments/inbox-list';
 import { InboxTabs } from '../../../../components/comments/inbox-tabs';
 import { InboxToolbar } from '../../../../components/comments/inbox-toolbar';
 import { parseInboxSearchParams } from '../../../../lib/inbox-filters';
+import { buildInboxBackHref, inboxMobilePane } from '../../../../lib/inbox-pane';
 import { loadInbox } from '../../../../server/inbox';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -45,7 +47,7 @@ export default async function CommentsPage({
   const now = new Date();
   const filtered = Boolean(view.platform || view.channelId || view.adsOnly || view.search);
   return (
-    <main className="inbox">
+    <main className="inbox" data-pane={inboxMobilePane(view)}>
       <InboxTabs view={view} counts={counts} />
       <section className="inbox-list" aria-label={t('list.label')}>
         <InboxToolbar view={view} channels={channels} />
@@ -66,6 +68,11 @@ export default async function CommentsPage({
         )}
       </section>
       <aside className="inbox-detail" aria-label={t('detail.title')}>
+        {view.selected ? (
+          <Link href={buildInboxBackHref(view)} className="inbox-back">
+            {t('detail.back')}
+          </Link>
+        ) : null}
         {detail ? (
           // key = id: đổi bình luận → gắn lại panel (mở khóa cái cũ, lấy khóa cái mới).
           <CommentDetailPanel key={detail.id} comment={detail} timeZone={timeZone} now={now} />
