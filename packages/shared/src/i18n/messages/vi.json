@@ -1754,5 +1754,99 @@
   },
   "dialog": {
     "close": "Đóng"
+  },
+  "messagesUi": {
+    "sampleBanner": "[MẪU] Dữ liệu mẫu — không phải số liệu thật. Trang Tin nhắn thật chờ kênh Messenger/Instagram Direct (MESSENGER-WEBHOOK).",
+    "title": "Tin nhắn",
+    "inboxHeading": "Hộp thư phân luồng",
+    "search": "Tìm tên khách, SĐT, nội dung…",
+    "sortLabel": "Sắp xếp: 24h cận kề trước",
+    "filter": "Lọc sâu",
+    "tabs": {
+      "nearDeadline": "Sắp hết 24h",
+      "pending": "Chờ duyệt",
+      "needsHuman": "Cần nhân viên",
+      "aiReplying": "AI đang trả lời",
+      "willAutoSend": "Sẽ tự gửi",
+      "done": "Đã xong",
+      "all": "Tất cả"
+    },
+    "quick": {
+      "heading": "Lọc nhanh nghiệp vụ",
+      "platform": "Nền tảng mạng xã hội",
+      "intent": "Nhãn dự đoán AI",
+      "unreadOnly": "Từ bình luận qua",
+      "mineOnly": "Được giao cho tôi"
+    },
+    "list": {
+      "label": "Danh sách hội thoại",
+      "fromComment": "Từ bình luận",
+      "youPrefix": "Bạn",
+      "aiPrefix": "AI"
+    },
+    "chip": {
+      "needsHuman": "Cần nhân viên",
+      "aiAuto": "AI tự động",
+      "pending": "Chờ duyệt"
+    },
+    "thread": {
+      "label": "Khung hội thoại",
+      "channel": "Kênh",
+      "aiAuto": "AI tự động",
+      "aiOn": "BẬT",
+      "done": "Đã xong (E)",
+      "quotedFrom": "Trích dẫn bình luận gốc từ Fanpage",
+      "viewPost": "Xem bài viết",
+      "customerMsg": "Tin khách",
+      "sentAt": "Gửi lúc {time}"
+    },
+    "window": {
+      "open": "Cửa sổ 24 giờ Meta API: còn {hours} giờ {minutes} phút để trả lời tin nhắn.",
+      "warning": "Sắp hết cửa sổ 24 giờ: còn {hours} giờ {minutes} phút để trả lời. Sau đó chỉ nhân viên được gửi (thẻ HUMAN_AGENT).",
+      "humanAgent": "Đã quá 24 giờ: chỉ nhân viên được trả lời (thẻ HUMAN_AGENT, tối đa 7 ngày); AI không tự gửi.",
+      "locked": "Đã quá 7 ngày kể từ tin cuối của khách: không thể gửi tin nhắn nữa.",
+      "short": "Còn {hours}g {minutes}p",
+    "shortHumanAgent": "Chỉ nhân viên",
+    "shortLocked": "Đã khóa",
+      "remainingShort": "Còn {hours} giờ {minutes} phút",
+      "privateReply": "Trả lời riêng (Private Reply) từ bình luận chỉ gửi được 1 tin trong 7 ngày; khách phản hồi mới mở cửa sổ 24 giờ."
+    },
+    "ai": {
+      "heading": "Đề xuất phản hồi AI (Nhấn Tab để áp dụng)",
+      "apply": "Áp dụng",
+      "regenerate": "Tạo lại",
+      "sources": "Kiến thức sử dụng:"
+    },
+    "composer": {
+      "template": "Tin nhắn mẫu",
+      "insertKb": "Chèn từ kiến thức",
+      "hint": "Ctrl + Enter để gửi",
+      "placeholder": "Nhập câu trả lời hoặc chỉnh sửa gợi ý AI tại đây…",
+      "sendingAs": "Gửi dưới tên: {page} ({staff})",
+      "saveDraft": "Lưu nháp",
+      "send": "Gửi phản hồi",
+      "lockedHint": "Không thể soạn tin: đã khóa theo luật cửa sổ nhắn tin."
+    },
+    "customer": {
+      "label": "Thông tin khách hàng",
+      "interactions": "Tương tác",
+      "firstContact": "Liên hệ đầu",
+      "contactInfo": "Thông tin liên hệ",
+      "channel": "Kênh chat",
+      "userId": "ID người dùng",
+      "area": "Khu vực",
+      "orderHistory": "Lịch sử đơn",
+      "noOrder": "Chưa có đơn hàng",
+      "sku": "SKU: {sku}",
+      "interestedProduct": "Sản phẩm đang quan tâm",
+      "inStock": "Còn {n} cái",
+      "commentsOnPage": "Bình luận trên Fanpage ({n})",
+      "details": "Chi tiết",
+      "internalNote": "Ghi chú nội bộ CSKH",
+      "staffOnly": "Chỉ nội bộ thấy",
+      "saveNote": "Lưu ghi chú",
+      "tags": "Thẻ phân loại khách",
+      "addTag": "+ Thêm thẻ"
+    }
   }
 }

@@ -1754,5 +1754,99 @@
   },
   "dialog": {
     "close": "Close"
+  },
+  "messagesUi": {
+    "sampleBanner": "[SAMPLE] Sample data — not real figures. The real Messages page waits for the Messenger/Instagram Direct channel (MESSENGER-WEBHOOK).",
+    "title": "Messages",
+    "inboxHeading": "Triage inbox",
+    "search": "Search name, phone, content…",
+    "sortLabel": "Sort: closest to 24h first",
+    "filter": "Filter",
+    "tabs": {
+      "nearDeadline": "24h almost up",
+      "pending": "Pending review",
+      "needsHuman": "Needs staff",
+      "aiReplying": "AI replying",
+      "willAutoSend": "Will auto-send",
+      "done": "Done",
+      "all": "All"
+    },
+    "quick": {
+      "heading": "Quick filters",
+      "platform": "Social platform",
+      "intent": "AI predicted label",
+      "unreadOnly": "From comments",
+      "mineOnly": "Assigned to me"
+    },
+    "list": {
+      "label": "Conversation list",
+      "fromComment": "From comment",
+      "youPrefix": "You",
+      "aiPrefix": "AI"
+    },
+    "chip": {
+      "needsHuman": "Needs staff",
+      "aiAuto": "Auto AI",
+      "pending": "Pending review"
+    },
+    "thread": {
+      "label": "Conversation",
+      "channel": "Channel",
+      "aiAuto": "Auto AI",
+      "aiOn": "ON",
+      "done": "Done (E)",
+      "quotedFrom": "Original comment quoted from the Page",
+      "viewPost": "View post",
+      "customerMsg": "Customer message",
+      "sentAt": "Sent at {time}"
+    },
+    "window": {
+      "open": "Meta 24-hour window: {hours} h {minutes} min left to reply.",
+      "warning": "24-hour window closing: {hours} h {minutes} min left to reply. After that only staff can send (HUMAN_AGENT tag).",
+      "humanAgent": "Past 24 hours: only staff can reply (HUMAN_AGENT tag, up to 7 days); AI will not auto-send.",
+      "locked": "More than 7 days since the last customer message: sending is no longer possible.",
+      "short": "{hours}h {minutes}m left",
+    "shortHumanAgent": "Staff only",
+    "shortLocked": "Locked",
+      "remainingShort": "{hours} h {minutes} min left",
+      "privateReply": "A Private Reply from a comment allows one message within 7 days; the 24-hour window opens only after the customer replies."
+    },
+    "ai": {
+      "heading": "AI suggested reply (press Tab to apply)",
+      "apply": "Apply",
+      "regenerate": "Regenerate",
+      "sources": "Knowledge used:"
+    },
+    "composer": {
+      "template": "Quick reply",
+      "insertKb": "Insert from knowledge",
+      "hint": "Ctrl + Enter to send",
+      "placeholder": "Type a reply or edit the AI suggestion here…",
+      "sendingAs": "Sending as: {page} ({staff})",
+      "saveDraft": "Save draft",
+      "send": "Send reply",
+      "lockedHint": "Cannot compose: locked by the messaging-window rules."
+    },
+    "customer": {
+      "label": "Customer information",
+      "interactions": "Interactions",
+      "firstContact": "First contact",
+      "contactInfo": "Contact information",
+      "channel": "Chat channel",
+      "userId": "User ID",
+      "area": "Area",
+      "orderHistory": "Order history",
+      "noOrder": "No orders yet",
+      "sku": "SKU: {sku}",
+      "interestedProduct": "Products of interest",
+      "inStock": "{n} in stock",
+      "commentsOnPage": "Comments on the Page ({n})",
+      "details": "Details",
+      "internalNote": "Internal support note",
+      "staffOnly": "Staff only",
+      "saveNote": "Save note",
+      "tags": "Customer tags",
+      "addTag": "+ Add tag"
+    }
   }
 }
