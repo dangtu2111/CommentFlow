@@ -2,7 +2,7 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const ALERT_TYPES = ['MERGED', 'KẸT', 'HẾT HÀNG ĐỢI'];
+export const ALERT_TYPES = ['MERGED', 'KẸT', 'HẾT HÀNG ĐỢI', 'IM LẶNG'];
 
 export function formatLine(format, entry) {
   if (format === 'json') return JSON.stringify(entry);
