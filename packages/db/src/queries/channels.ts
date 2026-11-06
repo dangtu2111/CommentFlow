@@ -12,6 +12,7 @@ export type ChannelListItem = {
   platform: InboxPlatform;
   status: 'connected' | 'expired' | 'revoked' | 'error';
   webhookSubscribed: boolean;
+  replyLanguage: 'auto' | 'vi' | 'en';
 };
 
 export async function listChannels(tx: Database, workspaceId: string): Promise<ChannelListItem[]> {
@@ -21,8 +22,9 @@ export async function listChannels(tx: Database, workspaceId: string): Promise<C
     platform: InboxPlatform;
     status: ChannelListItem['status'];
     webhook_subscribed: boolean;
+    reply_language: ChannelListItem['replyLanguage'];
   }>(sql`
-    SELECT ch.id, ch.name, ch.platform, ch.status, ch.webhook_subscribed
+    SELECT ch.id, ch.name, ch.platform, ch.status, ch.webhook_subscribed, ch.reply_language
       FROM cf.channels ch
      WHERE ch.workspace_id = ${workspaceId}::uuid
      ORDER BY ch.name, ch.id`);
@@ -32,5 +34,23 @@ export async function listChannels(tx: Database, workspaceId: string): Promise<C
     platform: row.platform,
     status: row.status,
     webhookSubscribed: row.webhook_subscribed,
+    replyLanguage: row.reply_language,
   }));
+}
+
+/**
+ * Đổi ngôn ngữ trả lời của một kênh (FR-120). Gọi trong `withActor`: RLS + trigger chỉ cho Owner đổi `name`/
+ * `reply_language` (ch-rls.int.test.ts); kênh ngoài workspace → 0 dòng → `false`. Không đổi cột nào khác.
+ */
+export async function setChannelReplyLanguage(
+  tx: Database,
+  workspaceId: string,
+  channelId: string,
+  language: ChannelListItem['replyLanguage'],
+): Promise<boolean> {
+  const result = await tx.execute<{ id: string }>(sql`
+    UPDATE cf.channels SET reply_language = ${language}
+     WHERE id = ${channelId}::uuid AND workspace_id = ${workspaceId}::uuid
+    RETURNING id`);
+  return result.rows.length > 0;
 }
