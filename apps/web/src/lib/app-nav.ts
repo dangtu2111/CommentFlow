@@ -13,6 +13,7 @@ export type NavItemKey =
   | 'aiSent'
   | 'tryAi'
   | 'readiness'
+  | 'automation'
   | 'productImport'
   | 'kbGaps'
   | 'kbPublish'
@@ -39,6 +40,8 @@ const ENTRIES: readonly Entry[] = [
   { key: 'tryAi', href: '/app/try-ai', group: 'settings', roles: ['owner'] },
   // Độ sẵn sàng của AI (FR-146, US-107): Owner xem thiếu gì trước khi bật Tự động.
   { key: 'readiness', href: '/app/readiness', group: 'settings', roles: ['owner'] },
+  // Cài đặt tự gửi (FR-070/071): ma trận kênh × nhãn + cài đặt chung; chỉ Owner, Staff nhận 404.
+  { key: 'automation', href: '/app/automation', group: 'settings', roles: ['owner'] },
   // Nhập sản phẩm Excel/CSV (FR-051, US-003): chỉ Owner; Staff nhận 404.
   { key: 'productImport', href: '/app/products/import', group: 'settings', roles: ['owner'] },
   // Câu hỏi AI chưa trả lời được (FR-134, UF-11): Owner bổ sung kiến thức nhanh.

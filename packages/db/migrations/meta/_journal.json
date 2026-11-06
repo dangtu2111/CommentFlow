@@ -330,6 +330,13 @@
       "when": 1793950085737,
       "tag": "0046_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793950854931,
+      "tag": "0047_auto_config_store",
+      "breakpoints": true
     }
   ]
 }

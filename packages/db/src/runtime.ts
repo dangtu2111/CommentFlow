@@ -49,6 +49,13 @@ export {
   MAX_ACTION_LOG_LIMIT,
 } from './queries/action-logs';
 export {
+  type AutomationRuleRow,
+  type AutomationSettingsInput,
+  type AutomationSettingsRow,
+  getAutomationSettings,
+  saveAutomationSettings,
+} from './queries/automation-settings';
+export {
   type ChannelAlert,
   type ChannelAlertStatus,
   listChannelAlerts,
