@@ -17,6 +17,7 @@ import '../styles/auto-leads.css';
 import '../styles/reports-legal.css';
 import '../styles/settings-pages.css';
 import '../styles/messages.css';
+import '../styles/inbox.css';
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();

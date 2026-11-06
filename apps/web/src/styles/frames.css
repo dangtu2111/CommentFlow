@@ -183,3 +183,50 @@
   flex: 1 1 16rem;
   margin: 0;
 }
+
+/* ===== Khung theo HTML Stitch (comments.html): thanh trên cao 64px, thanh bên 256px dính theo màn hình (≥900px) ===== */
+@media (min-width: 900px) {
+  .shell-top {
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-wrap: nowrap;
+    height: 64px;
+    padding-block: 0;
+  }
+
+  .shell-nav {
+    box-sizing: border-box;
+    position: sticky;
+    top: 64px;
+    align-self: flex-start;
+    width: 256px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+    border-right: 0;
+    box-shadow: 1px 0 2px rgb(15 28 36 / 4%);
+  }
+
+  .shell-nav-groups {
+    gap: var(--space-3);
+  }
+
+  .shell-nav-heading {
+    font-size: 0.6875rem;
+  }
+
+  .shell-nav-link {
+    gap: var(--space-2);
+    padding: 4px var(--space-2);
+    min-height: 32px;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    font-weight: var(--weight-semibold);
+  }
+
+  .shell-nav-link svg {
+    width: 18px;
+    height: 18px;
+  }
+}

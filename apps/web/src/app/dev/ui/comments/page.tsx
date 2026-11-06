@@ -11,9 +11,16 @@ import {
   type CommentDetailView,
 } from '../../../../components/comments/comment-detail';
 import { InboxList, type InboxListItem } from '../../../../components/comments/inbox-list';
+import { InboxStrip } from '../../../../components/comments/inbox-strip';
 import { InboxTabs } from '../../../../components/comments/inbox-tabs';
 import { InboxToolbar } from '../../../../components/comments/inbox-toolbar';
 import { LocaleSwitcher } from '../../../../components/locale-switcher';
+import {
+  Workbench,
+  WorkbenchDetail,
+  WorkbenchFilters,
+  WorkbenchList,
+} from '../../../../components/ui/workbench';
 import { navGroupsFor } from '../../../../lib/app-nav';
 import { INBOX_TAB_KEYS, type InboxTabKey, type InboxView } from '../../../../lib/inbox-filters';
 import { buildNotifications } from '../../../../lib/notification-model';
@@ -165,9 +172,11 @@ export default async function DevCommentsPage({
           }
         />
         <div className="shell-main">
-          <main className="inbox" data-pane={params.c ? 'detail' : 'list'}>
-            <InboxTabs view={view} counts={SAMPLE_COUNTS} />
-            <section className="inbox-list" aria-label={t('comments.list.label')}>
+          <Workbench strip={<InboxStrip />} pane={params.c ? 'detail' : 'list'}>
+            <WorkbenchFilters>
+              <InboxTabs view={view} counts={SAMPLE_COUNTS} />
+            </WorkbenchFilters>
+            <WorkbenchList label={t('comments.list.label')}>
               <InboxToolbar view={view} channels={[]} />
               <p className="inbox-sample-note" role="note">
                 {SAMPLE_NOTE}
@@ -180,8 +189,8 @@ export default async function DevCommentsPage({
                 timeZone={SAMPLE_TZ}
                 now={NOW}
               />
-            </section>
-            <aside className="inbox-detail" aria-label={t('comments.detail.title')}>
+            </WorkbenchList>
+            <WorkbenchDetail label={t('comments.detail.title')}>
               <Link href="/dev/ui/comments" className="inbox-back">
                 {t('comments.detail.back')}
               </Link>
@@ -192,8 +201,8 @@ export default async function DevCommentsPage({
                 now={NOW}
                 preview
               />
-            </aside>
-          </main>
+            </WorkbenchDetail>
+          </Workbench>
         </div>
       </div>
     </div>

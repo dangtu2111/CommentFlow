@@ -1,6 +1,9 @@
 /** Nội dung câu trả lời (FR-042). Thuần. Độ dài tính theo KÝ TỰ (emoji = 1) để khớp `char_length` của DB (1–8000). */
 export const MAX_REPLY_LENGTH = 8000;
 
+/** Tổ hợp phím gửi nhanh hiển thị trên giao diện (xử lý phím nằm ở `ReplyComposer`). */
+export const REPLY_SEND_KEYS = 'Ctrl + Enter';
+
 export type ParsedReply = { ok: true; text: string } | { ok: false; reason: 'empty' | 'too_long' };
 
 export function parseReplyText(raw: unknown): ParsedReply {
