@@ -1,3 +1,4 @@
+import { Lock } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { ActivityDetailPanel } from '../../../../components/activity/activity-detail';
 import { ActivityList } from '../../../../components/activity/activity-list';
@@ -45,11 +46,13 @@ export default async function ActivityPage({
   return (
     <main className="log-page">
       <header className="log-header">
-        <h1>{t('title')}</h1>
-        <p className="muted">{isOwner ? t('subtitle.owner') : t('subtitle.staff')}</p>
+        <h1 className="page-title">{t('title')}</h1>
         <p>
-          <span className="badge badge-off">{t('readOnly')}</span>
+          <span className="chip chip-muted">
+            <Lock size={12} aria-hidden="true" /> {t('readOnly')}
+          </span>
         </p>
+        <p className="page-subtitle">{isOwner ? t('subtitle.owner') : t('subtitle.staff')}</p>
       </header>
       <section className="log-list" aria-label={t('list.label')}>
         <ActivityToolbar view={view} actions={actions} showActor={isOwner} />

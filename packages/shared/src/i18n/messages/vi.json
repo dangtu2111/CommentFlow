@@ -46,6 +46,15 @@
         "unavailable": "Chưa lưu được, vui lòng thử lại."
       },
       "addressSoon": "Cách xưng hô của shop và cách gọi khách sẽ được cài ở phần Giọng văn (sắp có)."
+    },
+    "breadcrumb": {
+      "label": "Đường dẫn"
+    },
+    "account": {
+      "title": "Thông tin đăng nhập & Tài khoản",
+      "body": "Thông tin xác thực danh tính của bạn trong workspace này.",
+      "email": "Địa chỉ email đăng nhập",
+      "verified": "Đã xác thực"
     }
   },
   "auth": {
@@ -175,7 +184,30 @@
         "newLabel": "Mật khẩu mới",
         "newHint": "Từ 10 đến 128 ký tự, không quá phổ biến hay đã bị lộ.",
         "confirmLabel": "Nhập lại mật khẩu mới",
-        "submit": "Đổi mật khẩu"
+        "submit": "Đổi mật khẩu",
+        "open": "Đổi mật khẩu",
+        "dialogTitle": "Đổi mật khẩu tài khoản",
+        "dialogBody": "Nhập mật khẩu đang dùng và mật khẩu mới. Sau khi đổi, bạn cần đăng nhập lại.",
+        "strength": {
+          "title": "Độ mạnh mật khẩu",
+          "level": {
+            "0": "Chưa nhập",
+            "1": "Yếu",
+            "2": "Trung bình",
+            "3": "Khá mạnh",
+            "4": "Rất mạnh"
+          },
+          "checks": {
+            "length": "Tối thiểu {min} ký tự",
+            "mixedCase": "Có chữ hoa và chữ thường",
+            "digit": "Có ít nhất một chữ số",
+            "special": "Có ký tự đặc biệt"
+          }
+        },
+        "match": {
+          "yes": "Mật khẩu trùng khớp",
+          "no": "Mật khẩu chưa trùng khớp"
+        }
       },
       "language": {
         "title": "Ngôn ngữ giao diện",
@@ -206,7 +238,23 @@
         "regen": "Tạo mã mới",
         "disableTitle": "Tắt xác thực 2 bước",
         "disableBody": "Tài khoản sẽ chỉ còn mật khẩu bảo vệ. Toàn bộ mã dự phòng hiện có sẽ bị hủy.",
-        "disable": "Tắt xác thực 2 bước"
+        "disable": "Tắt xác thực 2 bước",
+        "setupTitle": "Kích hoạt xác thực 2 bước",
+        "setupBody": "Bảo vệ tài khoản bằng mã 6 chữ số từ ứng dụng xác thực.",
+        "steps": {
+          "label": "Các bước bật xác thực 2 bước",
+          "step": "Bước {n}",
+          "name": {
+            "1": "Xác nhận mật khẩu",
+            "2": "Quét QR và nhập mã",
+            "3": "Lưu mã dự phòng"
+          }
+        },
+        "tiles": {
+          "method": "Phương thức chính",
+          "methodValue": "Ứng dụng xác thực (TOTP)",
+          "methodHint": "Google / Microsoft / 1Password"
+        }
       },
       "sessions": {
         "title": "Thiết bị đang đăng nhập",
@@ -303,7 +351,8 @@
       "you": "Bạn",
       "selfNote": "Bạn không thể tự đổi vai trò hay tự gỡ chính mình.",
       "unknownName": "(chưa có tên)",
-      "emailHidden": "(email ẩn khi tạm khóa)"
+      "emailHidden": "(email ẩn khi tạm khóa)",
+      "count": "{count} thành viên"
     },
     "actions": {
       "makeOwner": "Nâng lên Owner",
@@ -1198,14 +1247,28 @@
     "eyebrow": "Thiết lập ban đầu",
     "stepLabel": "Bước {n}",
     "stepsLabel": "Các bước thiết lập",
-    "state": { "done": "Đã xong", "current": "Đang làm", "todo": "Chưa bắt đầu" },
+    "state": {
+      "done": "Đã xong",
+      "current": "Đang làm",
+      "todo": "Chưa bắt đầu"
+    },
     "skippable": "Có thể bỏ qua",
     "steps": {
-      "workspace": { "title": "Tạo workspace" },
-      "channels": { "title": "Kết nối nền tảng" },
-      "pages": { "title": "Chọn Page kích hoạt" },
-      "knowledge": { "title": "Nhập kiến thức cho AI" },
-      "invite": { "title": "Mời nhân viên" }
+      "workspace": {
+        "title": "Tạo workspace"
+      },
+      "channels": {
+        "title": "Kết nối nền tảng"
+      },
+      "pages": {
+        "title": "Chọn Page kích hoạt"
+      },
+      "knowledge": {
+        "title": "Nhập kiến thức cho AI"
+      },
+      "invite": {
+        "title": "Mời nhân viên"
+      }
     },
     "next": {
       "title": "Sau khi tạo workspace",
@@ -1229,9 +1292,18 @@
       "inbox": "Về Hộp thư bình luận",
       "quickTitle": "Lối tắt",
       "links": {
-        "comments": { "title": "Bình luận", "hint": "Xem và duyệt bình luận đang chờ." },
-        "posts": { "title": "Bài viết", "hint": "Danh sách bài viết của các Page đã kết nối." },
-        "settings": { "title": "Cài đặt", "hint": "Bảo mật tài khoản và ngôn ngữ." }
+        "comments": {
+          "title": "Bình luận",
+          "hint": "Xem và duyệt bình luận đang chờ."
+        },
+        "posts": {
+          "title": "Bài viết",
+          "hint": "Danh sách bài viết của các Page đã kết nối."
+        },
+        "settings": {
+          "title": "Cài đặt",
+          "hint": "Bảo mật tài khoản và ngôn ngữ."
+        }
       },
       "open": "Mở"
     },
@@ -1481,5 +1553,8 @@
       "title": "Không tải được nhật ký",
       "body": "Có lỗi khi tải dữ liệu. Hãy thử lại sau."
     }
+  },
+  "dialog": {
+    "close": "Đóng"
   }
 }

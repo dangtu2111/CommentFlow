@@ -86,7 +86,12 @@ export function TextField({
 }
 
 /** Ô mật khẩu có nút hiện/ẩn (không lưu giá trị vào state ngoài ô). */
-export function PasswordField(props: Omit<FieldProps, 'icon' | 'defaultValue' | 'placeholder'>) {
+export function PasswordField(
+  props: Omit<FieldProps, 'icon' | 'defaultValue' | 'placeholder'> & {
+    /** Báo giá trị đang gõ cho thẻ cha (thanh độ mạnh); ô vẫn không điều khiển. */
+    onValueChange?: (value: string) => void;
+  },
+) {
   const id = useId();
   const t = useTranslations('auth.fields');
   const [visible, setVisible] = useState(false);
@@ -100,6 +105,7 @@ export function PasswordField(props: Omit<FieldProps, 'icon' | 'defaultValue' | 
           type={visible ? 'text' : 'password'}
           name={props.name}
           autoComplete={props.autoComplete}
+          onChange={props.onValueChange ? (e) => props.onValueChange?.(e.target.value) : undefined}
           required
           aria-invalid={props.error ? true : undefined}
           aria-describedby={describedBy(id, props.hint, props.error)}
