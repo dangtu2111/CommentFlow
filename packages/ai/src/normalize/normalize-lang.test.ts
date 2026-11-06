@@ -57,6 +57,14 @@ describe('FR-025 normalizeText — mở rộng viết tắt qua từ điển tru
     expect(d.lookup('')).toBeUndefined();
   });
 
+  it('FR-025 nhận từ điển không nguyên mẫu (đầu ra của loadAbbreviationEntries ở @flow/db)', () => {
+    const entries: Record<string, string> = Object.create(null);
+    entries.ib = 'inbox';
+    entries.sz = 'size';
+    const d = createAbbreviationDict(entries);
+    expect(normalizeText('ib sz m', d).text).toBe('inbox size m');
+  });
+
   it('không có từ nào trúng → hits = 0', () => {
     expect(normalizeText('xin chào', dict).abbreviationHits).toBe(0);
   });
