@@ -216,7 +216,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 | ADMIN-AI-COST | FR-103 (chi phí AI phân rã; cấu hình model, phiên bản prompt) | US-081 | ADMIN-SHELL | — | không | ⏳ |
 | ADMIN-FLAGS | FR-117 (trang Feature flags: override, kill switch, theo gói, rollout %; nhật ký) | US-085 | ADMIN-SHELL, FLAGS | S | không | ⏳ |
 | META-DATA-DELETE | FR-093 (callback xóa dữ liệu Meta: signed request → mã xác nhận) + trang tra cứu | US-070, UF-10 | CH-SCHEMA | S | **có** — Meta App | ⛔ |
-| DATA-EXPORT | FR-094 (xuất dữ liệu workspace) | US-071 | GĐ0-DB | S+DB | không | ⏳ |
+| DATA-EXPORT | FR-094 (xuất dữ liệu workspace) | US-071 | GĐ0-DB | S+DB | không | 🧪 Xong-mock (feat-data-export; còn `DATA-EXPORT-DELIVERY`: tải tệp/email) |
 | WORKSPACE-DELETE | FR-094 (xóa workspace nhiều bước), `DB-MAINTENANCE-ROLE` | US-071 | DATA-EXPORT | S+DB | không | ✅ Xong-mock dữ liệu + job (`feat-workspace-delete`, migration 0055, Q-WSD1; cờ `WORKSPACE_DELETE_ENABLED` TẮT; còn nối giao diện, thu hồi Meta, email báo) |
 | RETENTION-JOB | FR-126 (12 tháng; `ai_usage` gộp 90 ngày) | — | DB-MAINTENANCE-ROLE | S+DB | không | ✅ Xong (feat-retention-job) |
 | PUBLIC-PAGES | FR-125 (landing, chính sách quyền riêng tư, điều khoản, DPA) | — | CFG-APPNAME | — | **có** — tên miền (Q6), pháp lý | ⛔ |

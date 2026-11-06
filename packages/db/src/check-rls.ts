@@ -362,6 +362,18 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.usage_counters', 'warned_80_at', 'UPDATE'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'INSERT'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'UPDATE'],
+  // DATA-EXPORT (0056): Owner chỉ INSERT workspace_id/requested_by; mọi cột trạng thái do hệ thống (policy UPDATE) ghi
+  ['cf_app', 'core.data_exports', 'status', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'file_key', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'size_bytes', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'row_counts', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'error_code', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'ready_at', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'expires_at', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'id', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'requested_by', 'UPDATE'],
+  ['cf_app', 'core.data_exports', 'created_at', 'UPDATE'],
   // RETRIEVAL-LOG (0040): nhật ký chỉ thêm (không cột nào UPDATE được); kb_gaps khóa định danh không đổi
   ['cf_app', 'cf.retrieval_logs', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.retrieval_logs', 'query_masked', 'UPDATE'],
@@ -700,6 +712,12 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.invoices', 'r', 'is_system_context'],
   ['core.payments', 'r', 'is_workspace_owner'],
   ['core.payments', 'r', 'is_system_context'],
+  // DATA-EXPORT (0056): INSERT Owner + đúng người dùng hiện tại; UPDATE chỉ hệ thống; đọc: Owner hoặc hệ thống
+  ['core.data_exports', 'a', 'is_workspace_owner'],
+  ['core.data_exports', 'a', 'current_user_id'],
+  ['core.data_exports', 'w', 'is_system_context'],
+  ['core.data_exports', 'r', 'is_workspace_owner'],
+  ['core.data_exports', 'r', 'is_system_context'],
   // WORKSPACE-DELETE (0055): chỉ ĐỌC với cf_app (ghi qua hàm DEFINER); đọc: Owner hoặc hệ thống
   ['core.workspace_deletion_requests', 'r', 'is_workspace_owner'],
   ['core.workspace_deletion_requests', 'r', 'is_system_context'],
@@ -899,6 +917,7 @@ const NO_DELETE_TABLES = [
   'core.invoices',
   'core.payments',
   'core.subscriptions',
+  'core.data_exports',
   'core.workspace_deletion_requests',
 ];
 
@@ -980,7 +999,7 @@ async function checkWorkerDirectPrivileges(
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('list_due_workspace_deletions', 'execute_workspace_deletion')
                AND a.privilege_type = 'EXECUTE')
-      AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage')
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('purge_expired_retrieval_logs', 'purge_expired_workspace_data', 'compact_ai_usage', 'fail_stale_data_exports', 'expire_data_exports')
                AND a.privilege_type = 'EXECUTE')`);
   for (const row of found.rows) {
     violations.push({

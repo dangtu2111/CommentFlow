@@ -173,11 +173,14 @@
       "subtitle": "Xuất dữ liệu, xem thời gian lưu và gửi yêu cầu xóa workspace.",
       "notices": {
         "unavailable": "Tính năng này chưa mở. Yêu cầu của bạn chưa được ghi nhận và không có dữ liệu nào bị thay đổi.",
-        "mismatch": "Tên workspace nhập chưa đúng. Chưa có gì được gửi đi."
+        "mismatch": "Tên workspace nhập chưa đúng. Chưa có gì được gửi đi.",
+        "export_queued": "Đã ghi nhận yêu cầu xuất dữ liệu. Hệ thống đang tạo tệp; tệp hết hạn sau 7 ngày.",
+        "already_active": "Đang có một yêu cầu xuất dữ liệu chưa xong. Vui lòng chờ nó hoàn tất.",
+        "rate_limited": "Bạn đã yêu cầu xuất dữ liệu quá nhiều lần trong 24 giờ qua. Vui lòng thử lại sau."
       },
       "export": {
         "title": "Xuất dữ liệu workspace",
-        "body": "Tải toàn bộ dữ liệu workspace (bình luận, tin nhắn, kiến thức, cài đặt). Liên kết tải sẽ được gửi qua email của Owner.",
+        "body": "Tạo tệp dữ liệu workspace (bình luận, khách tiềm năng, kiến thức, cài đặt) đã che số điện thoại, email và tên khách; tệp hết hạn sau 7 ngày. Việc gửi liên kết tải qua email của Owner sẽ mở sau.",
         "button": "Yêu cầu xuất dữ liệu"
       },
       "retention": {

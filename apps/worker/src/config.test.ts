@@ -17,6 +17,7 @@ describe('loadConfig', () => {
       facebook: { enabled: false },
       workspaceDeleteEnabled: false,
       instagram: { enabled: false },
+      dataExport: { enabled: false },
       messenger: { enabled: false },
     });
   });
