@@ -166,3 +166,6 @@ Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phả
 
 ## 2l. `KB-TRYAI` (FR-059) — không cần tài nguyên ngoài mới
 Ô Thử AI có thể tìm trong KB thật của workspace (cờ `TRY_AI_KB_REAL`, mặc định TẮT; Xong-mock: embedding là fixture). Để vector có kết quả cần mô hình embedding ở 2g và worker điền `embedding` (`KB-CHUNKING`). Bạn **không** phải làm gì cho bản mock.
+
+## 2m. `SPAM-RULES` (FR-080) — không cần tài nguyên ngoài
+Xem trước quy tắc spam đọc `cf.comments` của chính workspace, không gọi dịch vụ ngoài. Lưu quy tắc cần bảng `rules` (migration do làn b/chủ dự án duyệt, `SPAM-RULES-DB`); chưa có thì nút Lưu báo chưa khả dụng.
