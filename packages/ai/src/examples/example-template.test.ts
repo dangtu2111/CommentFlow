@@ -5,6 +5,7 @@ import {
   EXAMPLE_REJECT,
   type ExampleVariant,
   fillExampleTemplate,
+  sanitizeExampleText,
 } from './example-template';
 
 const V1: ExampleVariant = { id: 'v-1', priceVnd: 150000, stock: 7 };
@@ -116,6 +117,43 @@ describe('FR-132 buildExampleTemplate — che PII và dữ kiện', () => {
         },
       ),
     );
+  });
+});
+
+describe('FR-132 hồi quy từ verifier-security', () => {
+  it('số kèm đơn vị tiền không bị coi là tồn kho (còn 1 triệu khi tồn = 1)', () => {
+    const v = [{ id: 'v-1', priceVnd: 150000, stock: 1 }];
+    for (const text of ['Còn 1 triệu thôi ạ', 'còn 1k', 'còn 1 tr nha']) {
+      expect(buildExampleTemplate(text, v)).toEqual({ ok: false, code: EXAMPLE_REJECT.MONEY });
+    }
+  });
+
+  it('nhận thêm cách nói tồn kho: còn lại có N, chỉ còn N, N available', () => {
+    expect(buildExampleTemplate('Chỉ còn 7 cái', [V1])).toMatchObject({
+      template: 'Chỉ còn {stock:v-1} cái',
+    });
+    expect(buildExampleTemplate('Còn lại có 7 cái', [V1])).toMatchObject({
+      template: 'Còn lại có {stock:v-1} cái',
+    });
+    expect(buildExampleTemplate('7 available', [V1])).toMatchObject({
+      template: '{stock:v-1} available',
+    });
+  });
+
+  it('từ chối lách: gạch nối mềm, chữ số Ả Rập-Ấn, từ lóng tiền, placeholder tự gõ', () => {
+    expect(sanitizeExampleText('Gọi 0912­345678')).toEqual({ ok: true, text: 'Gọi [sđt]' });
+    expect(sanitizeExampleText('Gọi ٠٩١٢٣٤٥٦٧٨')).toEqual({
+      ok: false,
+      code: EXAMPLE_REJECT.CONTACT,
+    });
+    expect(buildExampleTemplate('Giá 1 củ nhé', [V1])).toEqual({
+      ok: false,
+      code: EXAMPLE_REJECT.MONEY,
+    });
+    expect(buildExampleTemplate('Giá {price:v-1}', [V1])).toEqual({
+      ok: false,
+      code: EXAMPLE_REJECT.VOLATILE,
+    });
   });
 });
 

@@ -174,3 +174,6 @@ Xem trước quy tắc spam đọc `cf.comments` của chính workspace, không 
 
 ## 2n. `KB-TESTSET` (FR-054) — không cần tài nguyên ngoài
 Bộ câu kiểm thử chạy qua pipeline Thử AI bằng mô phỏng (không LLM, không khóa, không DB). Dùng KB thật khi cờ `TRY_AI_KB_REAL` bật (cùng cờ KB-TRYAI, mặc định TẮT). Lưu bộ câu và chặn nút Xuất bản cần bảng mới (migration làn b, `KB-TESTSET-PERSIST`). Bạn **không** phải làm gì cho bản mock.
+
+## 2o. `KB-SAMPLES` (FR-132) — không cần tài nguyên ngoài
+Câu mẫu của shop chỉ là mã thuần + kho trong bộ nhớ, không khóa/LLM/dịch vụ ngoài. Lưu thật cần bảng `kb_answer_examples` (migration làn b, `KB-SAMPLES-PERSIST`) và embedding ở 2g. Bạn không phải làm gì.

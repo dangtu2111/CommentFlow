@@ -1,4 +1,4 @@
-import { COMMENT_LABELS, type CommentLabel, maskPii } from '@flow/shared';
+import { COMMENT_LABELS, type CommentLabel } from '@flow/shared';
 import { z } from 'zod';
 import type { AnswerExample, ExampleStatus, ExampleStore } from './example-store';
 import {
@@ -6,6 +6,7 @@ import {
   type ExampleRejectCode,
   type ExampleVariant,
   fillExampleTemplate,
+  sanitizeExampleText,
 } from './example-template';
 
 /** Số mẫu tối đa mỗi workspace (docs/10 `kb_answer_examples`). */
@@ -37,6 +38,13 @@ const captureSchema = z.object({
   source: z.enum(CAPTURE_SOURCES),
   sourceDraftId: z.string().min(1).nullable(),
   approvedBy: z.string().min(1),
+  variants: z.array(
+    z.object({
+      id: z.string().min(1),
+      priceVnd: z.number().int().nonnegative(),
+      stock: z.number().int().nonnegative().nullable(),
+    }),
+  ),
 });
 
 export interface CaptureInput {
@@ -71,8 +79,10 @@ export async function captureAnswerExample(
   if (!parsed.success) return { ok: false, code: 'EXAMPLE_INVALID_INPUT' };
   const valid = parsed.data;
 
-  const built = buildExampleTemplate(valid.answer, input.variants);
+  const built = buildExampleTemplate(valid.answer, valid.variants);
   if (!built.ok) return built;
+  const question = sanitizeExampleText(valid.question);
+  if (!question.ok) return question;
 
   const existing = await deps.store.list(valid.workspaceId);
   const duplicate = existing.some(
@@ -91,7 +101,7 @@ export async function captureAnswerExample(
     channelId: valid.channelId,
     label: valid.label,
     lang: valid.lang,
-    questionMasked: maskPii(valid.question),
+    questionMasked: question.text,
     answerTemplate: built.template,
     variantIds: built.variantIds,
     sourceDraftId: valid.sourceDraftId,

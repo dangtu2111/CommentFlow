@@ -28,12 +28,26 @@ export type BuildTemplateResult =
   | { readonly ok: true; readonly template: string; readonly variantIds: readonly string[] }
   | { readonly ok: false; readonly code: ExampleRejectCode };
 
-const reject = (code: ExampleRejectCode): BuildTemplateResult => ({ ok: false, code });
+const reject = (
+  code: ExampleRejectCode,
+): { readonly ok: false; readonly code: ExampleRejectCode } => ({
+  ok: false,
+  code,
+});
 
-const ZERO_WIDTH = /[​-‍﻿]/g;
-// "còn 7", "con 7" / "7 left", "7 in stock". Chỉ phần chữ số bị thay.
-const STOCK_VI = /(?<=\b(?:còn|con)\s+)\d{1,6}(?!\d)/giu;
-const STOCK_EN = /(?<![\d.,])\d{1,6}(?=\s+(?:left|in stock)\b)/giu;
+const ZERO_WIDTH = /[­​-‍⁠-⁤﻿]/g;
+// Số KHÔNG được theo sau bởi đơn vị tiền ("còn 1 triệu" là giá, không phải tồn kho).
+const MONEY_UNIT_AFTER = String.raw`(?!\s*(?:k|nghìn|ngàn|tr|triệu|tỷ|tỉ|đ|₫|vnd|đồng)(?![\p{L}]))`;
+// "còn 7", "còn lại có 7", "chỉ còn 7" / "7 left", "7 in stock". Chỉ phần chữ số bị thay.
+const STOCK_VI = new RegExp(
+  String.raw`(?<=\b(?:còn|con)(?:\s+(?:lại|có))*\s+)\d{1,6}(?![\d.,])${MONEY_UNIT_AFTER}`,
+  'giu',
+);
+const STOCK_EN = /(?<![\d.,])\d{1,6}(?=\s+(?:left|in stock|pcs left|items left|available)\b)/giu;
+// Chữ số ngoài ASCII lách được regex SĐT; từ lóng chỉ tiền không nhận ra được → từ chối.
+const NON_ASCII_DIGIT = /(?![0-9])\p{Nd}/u;
+const SLANG_MONEY = /(?:\d\s*m\s*\d|(?<![\p{L}])(?:trăm|củ|lít|xị)(?![\p{L}]))/iu;
+const RESERVED = /\{(?:price|stock):|\p{Co}/u;
 const PLACEHOLDER = /\{(price|stock):([^}]+)\}/g;
 const SENTINEL_BASE = 0xe100; // vùng ký tự riêng: không khớp regex dữ kiện nào
 const CONTACT_KINDS = new Set(['phone', 'email', 'link']);
@@ -63,6 +77,25 @@ function swapStock(
   return unknown ? null : { text: out, ids };
 }
 
+export type SanitizeResult =
+  | { readonly ok: true; readonly text: string }
+  | { readonly ok: false; readonly code: ExampleRejectCode };
+
+/**
+ * Làm sạch văn bản khách/nhân viên: NFKC, bỏ ký tự vô hình, che SĐT/email; từ chối nếu còn liên hệ
+ * (tổng đài, link, chữ số lạ) hoặc ký tự dành riêng. Dùng cho CẢ câu hỏi lẫn câu trả lời.
+ */
+export function sanitizeExampleText(text: string): SanitizeResult {
+  const normalized = text.normalize('NFKC').replace(ZERO_WIDTH, '');
+  if (RESERVED.test(normalized)) return reject(EXAMPLE_REJECT.VOLATILE);
+  const masked = maskPii(normalized).trim();
+  if (NON_ASCII_DIGIT.test(masked)) return reject(EXAMPLE_REJECT.CONTACT);
+  if (extractClaims(masked).some((c) => CONTACT_KINDS.has(c.kind))) {
+    return reject(EXAMPLE_REJECT.CONTACT);
+  }
+  return { ok: true, text: masked };
+}
+
 /**
  * Che PII + thay giá/tồn bằng `{price:<id>}`/`{stock:<id>}`. `variants` là các biến thể của sản phẩm
  * mà câu nói đến; giá/tồn trong câu phải khớp đúng một trong số đó.
@@ -71,8 +104,11 @@ export function buildExampleTemplate(
   text: string,
   variants: readonly ExampleVariant[],
 ): BuildTemplateResult {
-  const masked = maskPii(text.normalize('NFKC').replace(ZERO_WIDTH, '')).trim();
+  const clean = sanitizeExampleText(text);
+  if (!clean.ok) return clean;
+  const masked = clean.text;
   if (masked === '') return reject(EXAMPLE_REJECT.EMPTY);
+  if (SLANG_MONEY.test(masked)) return reject(EXAMPLE_REJECT.MONEY);
 
   const stock = swapStock(masked, variants);
   if (stock === null) return reject(EXAMPLE_REJECT.STOCK);

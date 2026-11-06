@@ -65,6 +65,26 @@ describe('FR-132 captureAnswerExample', () => {
     expect(auto).toEqual({ ok: false, code: 'EXAMPLE_INVALID_INPUT' });
   });
 
+  it('câu hỏi của khách cũng bị kiểm PII chặt: số lách che, tổng đài → từ chối', async () => {
+    const { store, deps } = setup();
+    expect((await captureAnswerExample(base({ question: 'Gọi 0912­345678' }), deps)).ok).toBe(true);
+    expect((await store.list(WS))[0]?.questionMasked).toBe('Gọi [sđt]');
+    const bad = await captureAnswerExample(
+      base({ question: 'Gọi 1900 1234', answer: 'Dạ khác' }),
+      deps,
+    );
+    expect(bad).toEqual({ ok: false, code: EXAMPLE_REJECT.CONTACT });
+  });
+
+  it('biến thể sai kiểu bị từ chối ở ranh giới', async () => {
+    const { deps } = setup();
+    const r = await captureAnswerExample(
+      base({ variants: [{ id: 'v', priceVnd: -1, stock: null }] }),
+      deps,
+    );
+    expect(r).toEqual({ ok: false, code: 'EXAMPLE_INVALID_INPUT' });
+  });
+
   it('từ chối đầu vào sai nhãn/ngôn ngữ/quá dài', async () => {
     const { deps } = setup();
     for (const bad of [
