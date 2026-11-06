@@ -121,13 +121,13 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | PRODUCT-ALIAS | FR-128 (bí danh sản phẩm) | US-100 | PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-product-alias, migration 0043, Q-PA1; còn API/UI tab Bí danh, gợi ý chờ xác nhận, nối pipeline) |
 | SIZE-TABLE | FR-149 (bảng size có cấu trúc) | US-102 | PRODUCTS-VARIANTS | — | không | ⏳ |
 | ABBREV-DICT | FR-025 (từ điển viết tắt: hệ thống + workspace) | — | KB-SCHEMA | — | không | ✅ Xong-mock (feat-abbrev-dict, migration 0041; chưa nối pipeline/giao diện) |
-| KB-IMPORT-EXCEL | FR-051 (Excel/CSV: tải → khớp cột → xem lỗi → xác nhận) | US-003 | PRODUCTS-VARIANTS | — | không | ⏳ |
+| KB-IMPORT-EXCEL | FR-051 (Excel/CSV: tải → khớp cột → xem lỗi → xác nhận) | US-003 | PRODUCTS-VARIANTS | — | không | ✅ Xong (feat-kb-import-excel, Q-KBIX1, không migration; parse đồng bộ trong web → KB-IMPORT-EXCEL-WORKER; KT-KBIX) |
 | KB-PUBLISH-VERSION | FR-054 (nháp → xuất bản → khôi phục), UF-8 | US-035 | KB-SHOP-POLICY-FAQ | — | không | ✅ Xong-mock (feat-kb-publish-version, Q-KPV1; con trỏ phiên bản/snapshot nguồn/hạ nhãn → gap matrix) |
 | KB-TESTSET | FR-054 (bộ câu kiểm thử trước khi xuất bản) | US-034 | KB-PUBLISH-VERSION | — | không | ⏳ |
 | KB-CHUNKING | FR-055, 130 (cắt đoạn, `context_header`, `content_hash`), FR-131 (hạn hiệu lực) | — | KB-SCHEMA | DB | không | ✅ Xong-mock (feat-kb-chunking; embedding thật → KB-EMBED-LITELLM) |
 | KB-SEARCH-FTS | FR-057 (toàn văn `simple`+`unaccent`/`english`, `pg_trgm`), FR-127 (gần đúng), FR-135 (cache không trả giá cũ: `product_revs`) | US-100 | KB-CHUNKING, PRODUCTS-VARIANTS | DB | không | Xong-mock (feat-kb-search-fts, migration 0037; embedding bản fixture, còn bí danh/rerank/ngưỡng/trần token → PIPE-RETRIEVE) |
 | RETRIEVAL-LOG | FR-134 (`retrieval_logs`, kb_gaps) | US-106, UF-11 | KB-SEARCH-FTS | DB | không | ✅ Xong (feat-retrieval-log, migration 0040; chưa có nơi ghi → `RETRIEVAL-LOG-WIRE`; `test:db` chạy ở CI) |
-| KB-TRYAI | FR-059 (ô Thử AI hiện đoạn tìm được + điểm) | US-034 | KB-SEARCH-FTS | — | không | ⏳ |
+| KB-TRYAI | FR-059 (ô Thử AI hiện đoạn tìm được + điểm) | US-034 | KB-SEARCH-FTS | — | không | ✅ Xong-mock (feat-kb-tryai, Q-KTA1; cờ `TRY_AI_KB_REAL` TẮT; còn `TRY-AI-REAL`) |
 | KB-SAMPLES | FR-132 (câu mẫu của shop, đã che PII) | — | RETRIEVAL-LOG | S (PII) | không | ⏳ |
 | KB-EMBED-COL | FR-133 (cột `embedding_model`; job tạo lại làm ở GĐ5), FR-139 (cột `halfvec(1024)` + HNSW) | — | KB-SCHEMA | DB | không | ✅ (feat-kb-embed-col, migration 0042; job tạo lại → GĐ5) |
 | GSHEETS-LINK | FR-121 (Google Sheets liên kết + đồng bộ định kỳ) | US-003 | KB-IMPORT-EXCEL | S (OAuth) | **có** — Google Cloud | ⛔ |

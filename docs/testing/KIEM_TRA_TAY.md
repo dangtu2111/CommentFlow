@@ -767,6 +767,22 @@ Hàm thuần + cổng (embedder là bản mock), chưa có giao diện/đường
 | 3 | Bình luận "giá sao shop" dưới bài gắn sản phẩm | Nguồn chỉ là biến thể từ `product_variants` (giá/tồn đúng kho), không có đoạn kiến thức |
 | 4 | Bình luận "đổi trả thế nào" | Nguồn là đoạn FAQ/chính sách liên quan nhất, tổng ≤ ~3.000 token |
 
+## KT-KBIX — Nhập sản phẩm từ Excel/CSV (KB-IMPORT-EXCEL, FR-051, US-003, feat-kb-import-excel) · Import products from Excel/CSV
+
+Chuẩn bị: một file `.xlsx` và một `.csv` nhỏ (cột: Tên sản phẩm, SKU, Giá bán, Tồn kho, Màu, Size), thêm 1 dòng thiếu tên, 1 dòng giá `abc`, 1 ô `=1+1`; một file `.xls`/`.png` đổi đuôi `.csv`.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Đăng nhập Owner → menu **Nhập sản phẩm** (`/app/products/import`); đăng nhập Staff → không có mục, gõ thẳng URL | Owner thấy trang; Staff nhận 404 |
+| 2 | Chọn file `.csv` → **Đọc file** | Bảng khớp cột tự gợi ý đúng (Tên→Tên sản phẩm, Giá bán→Giá, Màu/Size→Thuộc tính); có vài dòng mẫu |
+| 3 | Xem "Kết quả kiểm tra" | Báo đúng dòng/cột lỗi: thiếu tên, giá không hợp lệ, ô công thức bị chặn; số dòng hợp lệ đúng |
+| 4 | Đổi cột "Màu" sang "Bỏ qua" → **Kiểm tra lại** | Số liệu cập nhật; chưa có sản phẩm nào được tạo (kiểm danh sách sản phẩm/DB) |
+| 5 | **Xác nhận nhập** | Thông báo số sản phẩm/biến thể mới; dòng lỗi được bỏ qua |
+| 6 | Nhập lại đúng file đó | Báo "cập nhật", không tạo trùng |
+| 7 | Chọn file `.xlsx` (có một ô công thức) | Đọc được; ô công thức bị báo lỗi, không dùng giá trị đã tính |
+| 8 | Chọn file giả đuôi `.csv`/file > 10 MB/file `.xls` | Thông báo lỗi rõ ràng, không có gì được nhập |
+| 9 | Đổi ngôn ngữ giao diện sang English | Mọi chữ trên trang và thông báo lỗi đổi sang tiếng Anh |
+
 ## KT-ATB — Ô Thử AI chạy cả pipeline, không trừ lượt (AI-TRY-BOX-UI, FR-059, FR-029, US-034, feat-ai-try-box-ui)
 
 | # | Bước | Kết quả mong đợi |
@@ -804,6 +820,18 @@ Chưa có giao diện; kiểm trên DB thử (`cf_dev`/`cf_test`). / No UI; veri
 | 1 | `pnpm db:migrate` (cf_dev, pgvector >= 0.8). | Áp 0042 không lỗi; DB cũ hơn 0.8 báo "cần extension vector >= 0.8". |
 | 2 | `\d cf.kb_chunks` trong psql. | Có `kb_chunks_embedding_hnsw_idx` (hnsw, một phần) và `kb_chunks_workspace_embedding_model_idx`. |
 | 3 | `CF_LANE=b pnpm --filter @flow/db exec vitest run --config vitest.int.config.ts tests/kb-embed-col.int.test.ts`. | 4 test xanh (gồm: workspace A vẫn nhận đủ 5 đoạn dù B có 120 đoạn gần hơn). |
+
+## KT-KTA — Ô Thử AI hiện đoạn tìm được từ KB + điểm (KB-TRYAI, FR-059, feat-kb-tryai)
+
+> Cần DB dev có phiên bản kiến thức đã xuất bản (KT-KPV) và đặt `TRY_AI_KB_REAL=true` (cờ TẮT mặc định).
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Cờ TẮT, mở `/app/try-ai`, thử "ship về Hà Nội bao nhiêu" | Dòng "Nguồn: kiến thức mẫu"; nguồn mẫu "Phí vận chuyển" kèm điểm |
+| 2 | Bật cờ, workspace chưa xuất bản phiên bản nào, thử lại | Vẫn "kiến thức mẫu" (không lỗi) |
+| 3 | Bật cờ, workspace có phiên bản chứa đoạn về phí ship, thử "ship Cà Mau bao nhiêu" | Dòng "kiến thức đã xuất bản của shop"; đoạn thật hiện kèm điểm 0–1 giảm dần, đoạn dùng để soạn được đánh dấu |
+| 4 | Câu hỏi không liên quan kiến thức nào | Không có nguồn; không tự gửi (thiếu nguồn) |
+| 5 | Đổi giao diện sang English | Dòng nguồn + nhãn đổi sang tiếng Anh |
 
 ## KT-PCX — Cache khớp chính xác (PIPE-CACHE-EXACT, FR-026/135) · Exact cache
 
