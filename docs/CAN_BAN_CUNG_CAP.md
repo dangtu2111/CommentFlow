@@ -69,14 +69,34 @@ Lưu ý an toàn:
 - Không commit địa chỉ tunnel. Không đặt tunnel vào `BETTER_AUTH_URL` (đăng nhập vẫn chạy ở `http://localhost:3000`).
 - `CLIENT_IP_SOURCE` giữ `none` ở dev (không tin header IP của tunnel).
 
-## 2b. Quét bù bình luận (`POLLING-BACKFILL`, `FB-BACKFILL`, `FB-FETCH-PAGE-WIDE`)
+## 2d. Quét bù bình luận (`POLLING-BACKFILL`, `FB-BACKFILL`, `FB-FETCH-PAGE-WIDE`)
 
 Code đã xong-mock (connector giả/fixture). Để bật đường thật trên staging bạn cần:
 1. Page thử có vài bài viết + bình luận, đã kết nối qua mục 1 (kênh `connected`, `webhook_subscribed`).
 2. Đặt `POLLING_ENABLED=true` cho **worker** (cần `META_APP_ID`, `META_APP_SECRET`, `TOKEN_ENC_KEYS`). Mặc định TẮT.
 3. Chờ `POLLING-CHANNEL-LIST` (migration của làn b: hàm liệt kê kênh xuyên workspace) — chưa có thì worker chỉ báo lỗi cấu hình và không quét.
 4. Kiểm trên Page thật giả định: `updated_time` của bài tăng khi có bình luận mới (nếu không, đổi cách chọn bài — QP1).
-Không cần khóa mới nào ngoài mục 1.
+Không cần khóa mới nào ngoài mục 1. Kiểm tay: KT-021.
+
+## 2c. Bật connector Facebook ở worker — `FB-CONNECTOR-REGISTER` (Xong-mock)
+
+Code đã nối `createFacebookConnector` vào worker nhưng cờ **tắt mặc định**. Bạn cần cung cấp (chỉ khi muốn thử với Page thật; dùng Page thử, không dùng Page khách):
+- Một Page thử đã kết nối qua `FB-OAUTH` (mục 1) — token Page nằm mã hóa trong DB.
+- Trên **máy chạy worker** đặt biến: `FB_CONNECTOR_ENABLED=true`, `META_APP_ID`, `META_APP_SECRET` (cùng Meta App ở mục 1), `TOKEN_ENC_KEYS` (cùng khóa với web). Không commit giá trị; chỉ tên biến có trong `env.example`.
+- Điều kiện trước khi bật ở môi trường thật: `SEND-SWEEP`/`HIDE-SWEEP` đã merge (tránh yêu cầu kẹt `sending`). Kiểm tay: KT-016/KT-012.
+
+## 2b. Tên sản phẩm, logo, tên miền, email gửi — `CFG-APPNAME` (FR-125, mã KT-018)
+
+Code đã đọc cấu hình, đang chạy bằng **giá trị tạm** (`CommentFlow AI`, không logo/tên miền). Khi chốt tên (Q6), chỉ cần đặt biến, **không sửa code**:
+
+| Biến | Ý nghĩa | Ghi chú |
+|---|---|---|
+| `APP_NAME` | Tên hiển thị (giao diện, tiêu đề trang, thư, tên trong app 2FA) | tối đa 60 ký tự |
+| `APP_LOGO_URL` | Logo: đường dẫn gốc (`/brand/logo.svg`, file đặt ở `apps/web/public/brand/`) hoặc URL `https://…` | bỏ trống = biểu tượng mặc định |
+| `APP_DOMAIN` | Tên miền công khai, ví dụ `app.ten-moi.vn` | chỉ tên miền, không `https://` |
+| `APP_EMAIL_FROM` | Người gửi thư đầy đủ `Tên <no-reply@ten-moi.vn>` | bỏ trống = dựng từ `APP_NAME` + `APP_DOMAIN`; `SMTP_FROM` (nếu có) vẫn được ưu tiên |
+
+Tên miền còn phải được xác minh (SPF/DKIM) ở nhà cung cấp email trước khi gửi thật.
 
 ## 3. Các mục khác (thêm khi tới lượt)
 - Nhà cung cấp email production, tên sản phẩm/tên miền (Q6), khóa nhà cung cấp LLM trả phí, bộ ~300 bình luận thật, Shopify dev store, Google Cloud, quyền TikTok: xem `docs/plans/MASTER.md` (cột "Ngoài").

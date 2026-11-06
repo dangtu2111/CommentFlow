@@ -7,6 +7,11 @@ export {
   MIN_PASSWORD_LENGTH,
 } from './auth';
 export { type AuthHandle, openAuthDb } from './auth-db';
+export {
+  type ChangePasswordFlow,
+  type ChangePasswordResult,
+  createChangePasswordFlow,
+} from './change-password';
 export { type CookieSpec, cookiesFromResponse, parseSetCookie } from './cookies';
 export {
   type AuthFlows,

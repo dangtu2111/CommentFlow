@@ -89,6 +89,12 @@ export {
 export { purgeExpiredWebhookPayloads, WEBHOOK_PAYLOAD_RETENTION_DAYS } from './retention';
 export { schema } from './schema';
 export {
+  listStuckOutbox,
+  type StuckOutboxKind,
+  type StuckOutboxOptions,
+  type StuckRequest,
+} from './stuck-outbox';
+export {
   type RecordedWebhookEvent,
   type RecordWebhookEventInput,
   recordWebhookEvent,

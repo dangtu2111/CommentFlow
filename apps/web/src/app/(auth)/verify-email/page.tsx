@@ -2,10 +2,11 @@ import { CircleAlert, CircleCheck } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { getBrand } from '../../../server/brand';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('verify.successTitle')} · ${t('brand')}` };
+  return { title: `${t('verify.successTitle')} · ${getBrand().name}` };
 }
 
 /** Đích sau khi bấm link trong thư xác minh (Better Auth chuyển về đây; lỗi kèm `?error=`). */

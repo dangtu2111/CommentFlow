@@ -135,6 +135,12 @@ async function prepare(
     return { kind: 'done' };
   }
 
+  // Trần số lần gọi nền tảng (job quét/lượt chạy lại không được thử vô hạn): đã đủ lượt → UNKNOWN (có thể đã đăng), không gọi.
+  if (row.attempts >= MAX_SEND_ATTEMPTS) {
+    await finish('failed', 'UNKNOWN', 'send_failed');
+    return { kind: 'done' };
+  }
+
   await tx.execute(sql`
     UPDATE cf.comment_replies SET status = 'sending', attempts = attempts + 1, updated_at = now()
      WHERE id = ${row.reply_id}::uuid`);
@@ -177,20 +183,42 @@ async function settle(
   return true;
 }
 
-/** Lần trước có thể đã gửi thành công nhưng mất kết quả: tìm câu trả lời của chính Page cho bình luận này, cùng nội dung. */
-async function findExistingReply(
+/**
+ * Lần trước có thể đã gửi thành công nhưng mất kết quả: tìm câu trả lời của chính Page cho bình luận này, cùng nội dung.
+ * Đọc theo bình luận CHA (`fetchReplies`, ADR 010 §3): connector thật không quét cả kênh (`fetchComments` ném `UNKNOWN`).
+ * Connector không có `fetchReplies` (connector giả) dùng `fetchComments` như trước. Lỗi truyền ra để nơi gọi ánh xạ.
+ */
+export async function findExistingReply(
   connector: PlatformConnector,
   channel: ChannelRef,
-  row: Row,
+  row: Pick<Row, 'comment_external_id' | 'reply_text' | 'comment_created_time'>,
 ): Promise<string | null> {
-  const since = row.comment_created_time ?? new Date(0);
-  const comments = await connector.fetchComments(channel, since);
+  const comments = connector.fetchReplies
+    ? await connector.fetchReplies(channel, row.comment_external_id)
+    : await connector.fetchComments(channel, row.comment_created_time ?? new Date(0));
   const wanted = row.reply_text.trim();
   const match = comments.find(
     (c) =>
       c.isFromPage && c.parentExternalId === row.comment_external_id && c.text.trim() === wanted,
   );
   return match?.externalId ?? null;
+}
+
+/**
+ * Meta chặn gửi (mã 368 → `BLOCKED`): hiện CHỈ ghi nhận qua hook (log id, không nội dung/token). Ghi `send_suspended_until`
+ * cần hàm Admin/DEFINER → gap `SEND-SUSPEND-ADMIN`. Hook lỗi không được làm hỏng việc ghi kết quả.
+ */
+export function notifyBlocked(
+  onBlocked: ((event: { channelId: string; replyId: string }) => void) | undefined,
+  code: string,
+  event: { channelId: string; replyId: string },
+): void {
+  if (code !== 'BLOCKED' || !onBlocked) return;
+  try {
+    onBlocked(event);
+  } catch {
+    // log không được làm hỏng luồng gửi
+  }
 }
 
 async function recordSent(
@@ -247,7 +275,10 @@ async function recordFailure(
     return true;
   }
   // Lỗi vĩnh viễn: ghi thất bại CÓ RÀO (job khác đã tiếp quản/ghi rồi thì không đụng); chỉ đánh dấu kênh khi ghi được.
-  const settled = await settle(tx, row, 'failed', error.code, 'send_failed', attemptsSoFar);
+  // Lượt tiếp quản (lần trước có thể đã đăng) hết lượt vì giới hạn tốc độ ở bước KIỂM: ghi `UNKNOWN` để "Gửi lại" sau vẫn
+  // kiểm trước, không đăng trùng (verifier-security).
+  const code = error.code === 'RATE_LIMIT' && !definitelyNotSent ? 'UNKNOWN' : error.code;
+  const settled = await settle(tx, row, 'failed', code, 'send_failed', attemptsSoFar);
   if (!settled) return false;
   // Chỉ TOKEN_EXPIRED (token của cả kênh hỏng) đổi trạng thái kênh. PERMISSION ở lệnh gửi MỘT bình luận có thể là từ chối
   // theo đối tượng (bình luận không trả lời được), không đủ để kết luận cả kênh bị thu hồi: ghi `failed` mã PERMISSION.
@@ -279,6 +310,8 @@ export async function processSendJob(options: {
   leaseSeconds?: number;
   /** Chờ khi job khác đang gửi (mặc định `setTimeout`); test tiêm bản ngắn. */
   sleep?: (ms: number) => Promise<void>;
+  /** Gọi khi nền tảng chặn gửi (BLOCKED/368); mặc định không làm gì. */
+  onBlocked?: (event: { channelId: string; replyId: string }) => void;
 }): Promise<void> {
   const { db, registry, job } = options;
   const leaseSeconds = options.leaseSeconds ?? SEND_LEASE_SECONDS;
@@ -323,6 +356,12 @@ export async function processSendJob(options: {
     if (externalReplyId !== null) await recordSent(tx, row, externalReplyId, attemptsSoFar);
     return false;
   });
+  if (failure) {
+    notifyBlocked(options.onBlocked, failure.code, {
+      channelId: row.channel_id,
+      replyId: row.reply_id,
+    });
+  }
   if (retry && failure) throw new SendRetryableError(failure.code);
 }
 
@@ -370,7 +409,7 @@ async function failExhausted(db: FlowDb, job: SendJob): Promise<boolean> {
 export function createSendHandler(options: {
   db: FlowDb;
   registry: ConnectorRegistry;
-  logger: Pick<Logger, 'error'>;
+  logger: Pick<Logger, 'error'> & Partial<Pick<Logger, 'warn'>>;
 }): BatchHandler {
   const { db, registry, logger } = options;
   return async (jobs) => {
@@ -380,7 +419,12 @@ export function createSendHandler(options: {
       if (!result.success) throw new AppError('VALIDATION_FAILED', 'Dữ liệu job không hợp lệ.');
       const parsed = result.data;
       try {
-        await processSendJob({ db, registry, job: parsed });
+        await processSendJob({
+          db,
+          registry,
+          job: parsed,
+          onBlocked: (event) => logger.warn?.(event, 'send bị nền tảng chặn (BLOCKED)'),
+        });
       } catch (error) {
         logger.error({ replyId: parsed.replyId, error: safeCode(error) }, 'send lỗi');
         // Lượt thử CUỐI của pg-boss: ghi yêu cầu `failed` + bình luận `send_failed` (không để kẹt `sending`), rồi kết thúc job.

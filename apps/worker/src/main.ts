@@ -1,5 +1,5 @@
-import { createConnectorRegistry } from '@flow/connectors';
 import { createDb } from '@flow/db';
+import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
 import { startHealthServer } from './health';
@@ -8,6 +8,7 @@ import { createIngestHandler } from './jobs/ingest';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
+import { startSweep } from './jobs/sweep';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
 import { HIDE_QUEUE, INGEST_QUEUE, SEND_QUEUE, SYSTEM_PING_QUEUE } from './queue/definitions';
@@ -34,18 +35,24 @@ async function main(): Promise<void> {
     { batchSize: 1, localConcurrency: 10 },
     createIngestHandler({ db, logger }),
   );
-  // docs/09 §9: send — tối đa 3 job đồng thời; `sendRecheck` + khóa theo yêu cầu chống gửi trùng. Sổ connector RỖNG cho tới
-  // khi có connector Facebook thật (`feat/fb-connector`): thiếu connector → yêu cầu ghi `connector_unavailable`.
+  // Sổ connector: RỖNG khi `FB_CONNECTOR_ENABLED` tắt (mặc định) → yêu cầu ghi `connector_unavailable`, không gọi Meta.
+  const registry = buildConnectorRegistry({
+    db,
+    facebook: config.facebook,
+    tokenEncKeys: config.tokenEncKeys,
+    logger,
+  });
+  // docs/09 §9: send — tối đa 3 job đồng thời; `sendRecheck` + khóa theo yêu cầu chống gửi trùng.
   await boss.work(
     SEND_QUEUE,
     { batchSize: 1, localConcurrency: 3 },
-    createSendHandler({ db, registry: createConnectorRegistry([]), logger }),
+    createSendHandler({ db, registry, logger }),
   );
-  // FR-044: hide — ẩn/bỏ ẩn bình luận; kiểm lại trước khi gọi nền tảng, ẩn lặp lại idempotent. Sổ connector RỖNG như `send`.
+  // FR-044: hide — ẩn/bỏ ẩn bình luận; kiểm lại trước khi gọi nền tảng, ẩn lặp lại idempotent. Dùng chung sổ với `send`.
   await boss.work(
     HIDE_QUEUE,
     { batchSize: 1, localConcurrency: 3 },
-    createHideHandler({ db, registry: createConnectorRegistry([]), logger }),
+    createHideHandler({ db, registry, logger }),
   );
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
   const stopRetention = startRetention({ db, logger });
@@ -57,6 +64,9 @@ async function main(): Promise<void> {
       'POLLING_ENABLED bật nhưng chưa có hàm liệt kê kênh (POLLING-CHANNEL-LIST): quét bù KHÔNG chạy',
     );
   }
+  // SEND-SWEEP + HIDE-SWEEP (ADR 008/009): mỗi 60 giây xử lý lại yêu cầu gửi/ẩn kẹt qua đúng job gửi/ẩn (kiểm lại R1–R3/H1–H3).
+  // Dùng chung sổ connector `registry` với `send`/`hide`.
+  const stopSweep = startSweep({ db, registry, logger });
   ready = true;
   logger.info({ port: config.port }, 'worker đã khởi động');
 
@@ -64,6 +74,7 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'worker đang dừng');
     ready = false;
     stopRetention();
+    stopSweep();
     await boss.stop({ graceful: true });
     await db.close();
     await health.close();

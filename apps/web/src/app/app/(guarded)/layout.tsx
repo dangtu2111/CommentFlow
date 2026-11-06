@@ -1,10 +1,9 @@
-import { MessageSquareText } from 'lucide-react';
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { ShellNav } from '../../../components/app/shell-nav';
 import { SystemBanners } from '../../../components/app/system-banners';
 import { WorkspaceSwitcher } from '../../../components/app/workspace-switcher';
+import { BrandLogo } from '../../../components/brand-logo';
 import { LocaleSwitcher } from '../../../components/locale-switcher';
 import { SubmitButton } from '../../../components/ui/submit-button';
 import { navGroupsFor } from '../../../lib/app-nav';
@@ -33,12 +32,7 @@ export default async function GuardedAppLayout({ children }: { children: ReactNo
   return (
     <div className="shell">
       <header className="shell-top">
-        <Link href="/app" className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            <MessageSquareText size={18} />
-          </span>
-          {t('brand')}
-        </Link>
+        <BrandLogo href="/app" />
         <WorkspaceSwitcher current={workspace} memberships={memberships} counts={counts} />
         <div className="shell-top-end">
           <LocaleSwitcher />
