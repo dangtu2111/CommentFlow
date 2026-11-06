@@ -146,7 +146,11 @@ describe('FR-157 mẫu ngưng/hết hàng', () => {
 
   it('mọi biến thể đang bán hết hàng (tươi) → sold_out', () => {
     const r = run(product({}, [{ stock: 0 }, { stock: 0 }]));
-    expect(r).toMatchObject({ availability: 'sold_out', stockStale: false, canStateQuantity: false });
+    expect(r).toMatchObject({
+      availability: 'sold_out',
+      stockStale: false,
+      canStateQuantity: false,
+    });
   });
 
   it('biến thể đã archived bị bỏ qua khi xét tồn', () => {
