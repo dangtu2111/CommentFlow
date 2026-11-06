@@ -11,7 +11,9 @@ import {
 } from 'react';
 import { replyCommentAction } from '../../app/app/(guarded)/comments/actions';
 import { MAX_REPLY_LENGTH } from '../../lib/reply-input';
+import { deriveSuggestionUi, type SuggestionView } from '../../lib/suggestion';
 import type { ReplyFailure } from '../../server/reply-action';
+import { type SuggestionLabels, SuggestionPanel } from './suggestion-panel';
 
 type Labels = {
   field: string;
@@ -34,11 +36,16 @@ export function ReplyComposer({
   prefill,
   labels,
   isRetry,
+  suggestion = null,
+  suggestionLabels,
 }: {
   commentId: string;
   prefill: string;
   labels: Labels;
   isRetry: boolean;
+  /** Gợi ý AI (FR-043); không có → không hiện ô gợi ý. */
+  suggestion?: SuggestionView | null;
+  suggestionLabels?: SuggestionLabels;
 }) {
   const router = useRouter();
   const [text, setText] = useState(prefill);
@@ -49,6 +56,7 @@ export function ReplyComposer({
   const counterText = labels.counter
     .replace('{count}', String(length))
     .replace('{max}', String(MAX_REPLY_LENGTH));
+  const suggestionUi = deriveSuggestionUi(suggestionLabels ? suggestion : null, text);
   const buttonText = pending ? labels.sending : isRetry ? labels.retry : labels.send;
 
   // Đổi bình luận (hoặc câu cũ để Thử lại) → đặt lại nội dung.
@@ -84,6 +92,17 @@ export function ReplyComposer({
       <label className="reply-label" htmlFor={`reply-${commentId}`}>
         {labels.field}
       </label>
+      {suggestion && suggestionLabels && suggestionUi.show ? (
+        <SuggestionPanel
+          text={suggestion.text}
+          ui={suggestionUi}
+          labels={suggestionLabels}
+          onUse={() => {
+            setText(suggestion.text);
+            textareaRef.current?.focus();
+          }}
+        />
+      ) : null}
       <textarea
         id={`reply-${commentId}`}
         ref={textareaRef}

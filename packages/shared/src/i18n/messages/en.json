@@ -493,6 +493,21 @@
       "heldNamed": "{name} is handling this comment (about {seconds}s left). View only.",
       "heldAnonymous": "A teammate is handling this comment (about {seconds}s left). View only."
     },
+    "suggestion": {
+      "title": "AI suggestion",
+      "use": "Use suggestion",
+      "edited": "Edited from the suggestion",
+      "needsHuman": "The AI suggests a person reviews this reply before sending.",
+      "sources": "Suggestion sources",
+      "sourceFallback": "Knowledge source",
+      "more": "+{count} sources"
+    },
+    "relabel": {
+      "field": "Change label",
+      "apply": "Save label",
+      "working": "Saving…",
+      "failed": "Could not change the label. Please try again."
+    },
     "reply": {
       "field": "Reply",
       "placeholder": "Type the reply to send to the customer…",
