@@ -305,6 +305,23 @@ Nếu hỏng: ghi số bước, ảnh chụp và nội dung hiện trên màn h�
 
 ---
 
+## KT-017 — Lưu ngôn ngữ theo người dùng (AUTH-LANG-PREF, FR-119)
+
+Điều kiện: nhánh `feat-auth-lang-pref`; máy ảo bật; một tài khoản đã đăng nhập.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | Mở `/app/security` (mục Bảo mật trong điều hướng). | Có thẻ "Ngôn ngữ giao diện" với hai nút Tiếng Việt / English; nút ngôn ngữ đang dùng bị mờ. |
+| 2 | Bấm "English". | Trang đổi sang tiếng Anh ngay (tiêu đề thẻ: "Interface language"). |
+| 3 | Trong `psql` (máy ảo, `cf_dev`): `SELECT locale FROM core.users WHERE email = '<email của bạn>';` | `en`. |
+| 4 | Đăng xuất, xóa cookie `NEXT_LOCALE` của trang, đăng nhập lại. | Giao diện vẫn tiếng Anh (lấy từ tài khoản). |
+| 5 | Bấm "Tiếng Việt" ở thanh trên (hoặc ở Cài đặt). | Giao diện tiếng Việt; bước 3 cho `vi`. |
+| 6 | Đăng xuất, ở trang đăng nhập bấm đổi ngôn ngữ. | Giao diện đổi (cookie), không lỗi; DB không đổi vì chưa có phiên. |
+
+Nếu hỏng: ghi số bước, ảnh chụp.
+
+---
+
 ## KT-016 — Quét yêu cầu gửi/ẩn kẹt (SEND-SWEEP + HIDE-SWEEP, ADR 008/009)
 
 Điều kiện: nhánh `feat-send-hide-sweep`; máy ảo `cf` bật; đã `pnpm db:migrate` (0031) và chạy worker bản mới. Sổ connector của worker còn RỖNG (chưa có connector thật) nên bước gửi/ẩn kết thúc `connector_unavailable` — đủ để thấy quét hoạt động.

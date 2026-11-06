@@ -136,6 +136,10 @@
       "subtitle": "Manage two-step verification and the devices signed in to your account.",
       "requiredBanner": "Workspace owners and administrators must turn on two-step verification. Turn it on now to keep using the app.",
       "backToApp": "Back to the app",
+      "language": {
+        "title": "Interface language",
+        "body": "Your choice is saved to your account: the interface, emails and your next sign-in on another device will use this language."
+      },
       "twoFactor": {
         "title": "Two-step verification (TOTP)",
         "offBody": "Add a second layer of protection: besides your password you need a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password...).",
