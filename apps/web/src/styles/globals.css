@@ -1664,3 +1664,18 @@ a {
   gap: var(--space-4);
   padding: var(--space-3);
 }
+
+/* ---------- Đồng hồ lượt AI (FR-090) ---------- */
+.usage-meter {
+  width: 100%;
+  height: 12px;
+  accent-color: var(--color-success);
+}
+
+.usage-meter[data-level="warning"] {
+  accent-color: var(--color-warning);
+}
+
+.usage-meter[data-level="blocked"] {
+  accent-color: var(--color-danger);
+}
