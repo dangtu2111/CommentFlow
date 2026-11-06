@@ -189,6 +189,23 @@ export {
   recordLeads,
   updateLead,
 } from './queries/leads';
+export {
+  claimDataExport,
+  completeDataExport,
+  type DataExportRow,
+  type DataExportStatus,
+  type ExpiredExport,
+  expireDataExports,
+  failDataExport,
+  listDataExports,
+  readAutomationSettings,
+  readCommentsPage,
+  readKbChunksPage,
+  readLeadsPage,
+  readRulesPage,
+  type RequestExportResult,
+  requestDataExport,
+} from './queries/data-export';
 export { linkProductsToPosts } from './queries/post-products';
 export {
   DEFAULT_POSTS_LIMIT,

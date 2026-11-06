@@ -154,7 +154,7 @@ erDiagram
 | `notification_prefs` | workspace_id, user_id, event, channel (`inapp`/`email`/`push`), enabled |
 | `push_subscriptions` | user_id, endpoint, keys jsonb |
 | `deletion_requests` | platform, external_user_id, confirmation_code, status, reason, completed_at |
-| `data_exports` | workspace_id, requested_by, status, file_key, expires_at |
+| `data_exports` | workspace_id, requested_by, status (`pending`/`running`/`ready`/`failed`/`expired`), file_key, size_bytes, row_counts, error_code, ready_at, expires_at (Q-EXP1) |
 
 ### 3.8 Feature flag & bảo vệ gửi
 

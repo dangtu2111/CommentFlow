@@ -362,6 +362,14 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.usage_counters', 'warned_80_at', 'UPDATE'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'INSERT'],
   ['cf_app', 'core.usage_counters', 'blocked_at', 'UPDATE'],
+  // DATA-EXPORT (0055): Owner chỉ INSERT workspace_id/requested_by; mọi cột trạng thái do hệ thống (policy UPDATE) ghi
+  ['cf_app', 'core.data_exports', 'status', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'file_key', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'size_bytes', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'row_counts', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'error_code', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'ready_at', 'INSERT'],
+  ['cf_app', 'core.data_exports', 'expires_at', 'INSERT'],
   // RETRIEVAL-LOG (0040): nhật ký chỉ thêm (không cột nào UPDATE được); kb_gaps khóa định danh không đổi
   ['cf_app', 'cf.retrieval_logs', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.retrieval_logs', 'query_masked', 'UPDATE'],
@@ -700,6 +708,12 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['core.invoices', 'r', 'is_system_context'],
   ['core.payments', 'r', 'is_workspace_owner'],
   ['core.payments', 'r', 'is_system_context'],
+  // DATA-EXPORT (0055): INSERT Owner + đúng người dùng hiện tại; UPDATE chỉ hệ thống; đọc: Owner hoặc hệ thống
+  ['core.data_exports', 'a', 'is_workspace_owner'],
+  ['core.data_exports', 'a', 'current_user_id'],
+  ['core.data_exports', 'w', 'is_system_context'],
+  ['core.data_exports', 'r', 'is_workspace_owner'],
+  ['core.data_exports', 'r', 'is_system_context'],
   // POSTS-LINK-PRODUCT (0049): INSERT/UPDATE thành viên (đề xuất: + hệ thống); DELETE thành viên hoặc hệ thống
   ['cf.post_products', 'a', 'is_workspace_member'],
   ['cf.post_products', 'a', 'is_system_context'],
@@ -896,6 +910,7 @@ const NO_DELETE_TABLES = [
   'core.invoices',
   'core.payments',
   'core.subscriptions',
+  'core.data_exports',
 ];
 
 async function checkNoDelete(db: Queryable, violations: RlsViolation[]): Promise<void> {
