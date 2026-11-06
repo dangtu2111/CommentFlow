@@ -107,9 +107,14 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
 
   return (
     <main className="app-page app-page-settings">
-      <SettingsFrame viewerRole={workspace.role} active="channels" counts={counts}>
-        <PageHeader title={t('title')} subtitle={t('subtitle', { workspace: workspace.name })} />
-
+      <SettingsFrame
+        viewerRole={workspace.role}
+        active="channels"
+        counts={counts}
+        header={
+          <PageHeader title={t('title')} subtitle={t('subtitle', { workspace: workspace.name })} />
+        }
+      >
         {notice ? (
           <Banner variant={NOTICE_VARIANT[notice]}>
             {t(`notice.${notice}`, { ok: countParam(query.ok), bad: countParam(query.bad) })}

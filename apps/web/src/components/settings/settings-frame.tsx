@@ -19,6 +19,9 @@ const ICONS = {
   security: ShieldCheck,
 } as const;
 
+/** Phần khung do trang cha cung cấp (vai trò + số đếm cột trái); view tự đặt `active` và `header`. */
+export type SettingsFrameScope = { viewerRole: SettingsRole; counts: SettingsCounts | null };
+
 /**
  * Khung trang Cài đặt (design/stitch/settings-security.png): đường dẫn + cột trái "CẤU HÌNH WORKSPACE" + nội dung.
  * Dùng chung cho Tài khoản & Bảo mật, Kênh và Thành viên (mỗi trang tự đặt tiêu đề trong `children`).
@@ -27,11 +30,14 @@ export async function SettingsFrame({
   viewerRole,
   active,
   counts,
+  header,
   children,
 }: {
   viewerRole: SettingsRole;
   active: SettingsNavKey;
   counts: SettingsCounts | null;
+  /** Đầu trang (PageHeader) của trang con; nằm trên cả cột trái lẫn nội dung. */
+  header: ReactNode;
   children: ReactNode;
 }) {
   const t = await getTranslations('settings');
@@ -55,6 +61,7 @@ export async function SettingsFrame({
       <SplitLayout
         navLabel={t('nav.label')}
         navTitle={t('nav.title')}
+        header={header}
         items={settingsNavFor(viewerRole).map((item) => {
           const Icon = ICONS[item.key];
           return {

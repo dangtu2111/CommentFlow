@@ -928,7 +928,8 @@ a {
 /* ===== UI-FIDELITY nhóm 4: Cài đặt / Thành viên / Nhật ký (Q-UIST1) ===== */
 .app-page-settings {
   max-width: none;
-  padding-inline: var(--space-6);
+  margin: 0;
+  padding: var(--space-4);
 }
 
 /* Chip trạng thái / vai trò (nền nhạt theo token) */

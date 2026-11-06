@@ -64,6 +64,7 @@
 | KT-RL | Nhật ký tìm kiếm + `kb_gaps` (chỉ DB, chưa có giao diện) | feat-retrieval-log | chưa | chưa | — |
 | KT-RLP | Giới hạn tốc độ gửi (chỉ logic + test, chưa nối job/Redis; không cần khóa/dịch vụ ngoài) | feat-rate-limit-page | chưa | chưa | — |
 | KT-RLS | Ngôn ngữ trả lời của AI theo kênh (Cài đặt, chỉ Owner) | feat-reply-lang-ui | chưa | chưa | — |
+| KT-SC | Semantic cache đầy đủ (qua interface, mock) | — | không | chưa | — |
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-TT | Connector TikTok (`TIKTOK_CONNECTOR_ENABLED`, **cần quyền TikTok API for Business + tài khoản Business thử**; sau `TIKTOK-CHANNEL-CONNECT`) | feat-tiktok-connector | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
@@ -1231,6 +1232,14 @@ Hàm thuần + cổng (embedder là bản mock), chưa có giao diện/đường
 | 2 | Khi nối pipeline: bình luận khiếu nại ("hàng lỗi, đòi hoàn tiền") | Không tìm kiến thức, không có bản nháp AI; chuyển người |
 | 3 | Bình luận "giá sao shop" dưới bài gắn sản phẩm | Nguồn chỉ là biến thể từ `product_variants` (giá/tồn đúng kho), không có đoạn kiến thức |
 | 4 | Bình luận "đổi trả thế nào" | Nguồn là đoạn FAQ/chính sách liên quan nhất, tổng ≤ ~3.000 token |
+
+## KT-SC — Semantic cache đầy đủ (SEMANTIC-CACHE, FR-026) · Semantic cache
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cache/semantic-lookup.test.ts`. | Test xanh: khóa có workspace/bài/kb_version; dưới ngưỡng → miss; câu có giá/dữ liệu sản phẩm không được ghi; khác số/ngôn ngữ → miss; cờ tắt → không gọi embed. |
 
 ## KT-SET — Trang Cài đặt (SETTINGS-PAGE, feat-settings-page)
 

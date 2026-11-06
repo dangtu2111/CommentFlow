@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { DEV_SAMPLE_NOTE, DevShell } from '../../../../components/dev/dev-shell';
 import { BillingView } from '../../../../components/settings/billing-view';
-import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import type { InvoiceListRow } from '../../../../lib/billing-view';
 import { buildUsageMeterView } from '../../../../lib/usage-meter-view';
 
@@ -56,17 +55,15 @@ export default async function DevBillingPage({
         {DEV_SAMPLE_NOTE}
       </p>
       <main className="app-page app-page-settings">
-        <SettingsFrame
-          viewerRole="owner"
-          active="billing"
-          counts={{ channelsConnected: 3, channelsTotal: 3, members: 5 }}
-        >
-          <BillingView
-            currentPlan={unknown ? null : 'growth'}
-            usage={buildUsageMeterView({ used: 2450, limit: 3000 })}
-            invoices={unknown ? [] : INVOICES}
-          />
-        </SettingsFrame>
+        <BillingView
+          frame={{
+            viewerRole: 'owner',
+            counts: { channelsConnected: 3, channelsTotal: 3, members: 5 },
+          }}
+          currentPlan={unknown ? null : 'growth'}
+          usage={buildUsageMeterView({ used: 2450, limit: 3000 })}
+          invoices={unknown ? [] : INVOICES}
+        />
       </main>
     </DevShell>
   );

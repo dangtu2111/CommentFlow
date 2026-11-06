@@ -12,8 +12,10 @@ import {
 } from '../../lib/plan-catalog';
 import type { UsageMeterView } from '../../lib/usage-meter-view';
 import type { PaymentCard } from '../../server/invoice-payment';
+import { PageHeader } from '../ui/page-header';
 import { SectionHead } from '../ui/section-head';
 import { PaymentQrCard } from './payment-qr-card';
+import { SettingsFrame, type SettingsFrameScope } from './settings-frame';
 import { UsageMeterCard } from './usage-meter-card';
 
 /**
@@ -27,7 +29,9 @@ export async function BillingView({
   invoices,
   payment = null,
   paymentNotice = null,
+  frame,
 }: {
+  frame: SettingsFrameScope;
   currentPlan: PlanCode | null;
   usage: UsageMeterView | null;
   invoices: InvoiceListRow[];
@@ -39,12 +43,11 @@ export async function BillingView({
   const current = currentPlan ? planByCode(currentPlan) : undefined;
   const soon = t('soon');
   return (
-    <>
-      <header className="stack-tight">
-        <h1 className="page-title">{t('billing.title')}</h1>
-        <p className="page-subtitle">{t('billing.subtitle')}</p>
-      </header>
-
+    <SettingsFrame
+      {...frame}
+      active="billing"
+      header={<PageHeader title={t('billing.title')} subtitle={t('billing.subtitle')} />}
+    >
       <section className="card stack" aria-labelledby="billing-current">
         <SectionHead
           id="billing-current"
@@ -229,6 +232,6 @@ export async function BillingView({
           </div>
         </div>
       </section>
-    </>
+    </SettingsFrame>
   );
 }

@@ -9,6 +9,7 @@ import { LanguageCard } from '../../../../components/settings/language-card';
 import { ReplyLanguageCard } from '../../../../components/settings/reply-language-card';
 import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { UsageMeterCard } from '../../../../components/settings/usage-meter-card';
+import { PageHeader } from '../../../../components/ui/page-header';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getDb } from '../../../../server/db';
 import { requestContext } from '../../../../server/request-context';
@@ -52,11 +53,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
   });
   return (
     <main className="app-page app-page-settings">
-      <SettingsFrame viewerRole={workspace.role} active="security" counts={counts}>
-        <header className="stack-tight">
-          <h1 className="page-title">{t('title')}</h1>
-          <p className="page-subtitle">{t('subtitle')}</p>
-        </header>
+      <SettingsFrame
+        viewerRole={workspace.role}
+        active="security"
+        counts={counts}
+        header={<PageHeader title={t('title')} subtitle={t('subtitle')} />}
+      >
         <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
         <AccountCard
           name={user.name}
