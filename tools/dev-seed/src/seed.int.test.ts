@@ -25,9 +25,9 @@ const deps = () => ({
   workerDb,
   hashPassword,
   now: new Date(),
-  // Cổng chỉ-cf_dev của CLI không áp cho DB test; vẫn từ chối mọi DB không phải cf_test*.
+  // Cổng chỉ-cf_dev của CLI không áp cho DB test; chỉ cho cf_test / cf_test_<làn> / cf_ci (DB của job CI), từ chối DB khác.
   assertDatabase: ({ database }: { database: string }) => {
-    if (!/^cf_test(_[a-z0-9]{1,8})?$/.test(database)) throw new Error(`DB lạ: ${database}`);
+    if (!/^(cf_test(_[a-z0-9]{1,8})?|cf_ci)$/.test(database)) throw new Error(`DB lạ: ${database}`);
   },
 });
 
