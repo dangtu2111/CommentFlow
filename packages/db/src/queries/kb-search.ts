@@ -82,12 +82,17 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
     sql`SELECT set_config('pg_trgm.word_similarity_threshold', ${String(WORD_SIMILARITY_THRESHOLD)}, true)`,
   );
 
+  if (input.queryVector) {
+    // HNSW (0042) quét gần đúng rồi mới lọc workspace/phiên bản → quét tiếp đến đủ LIMIT, giữ đúng thứ tự (FR-139).
+    await tx.execute(sql`SELECT set_config('hnsw.iterative_scan', 'strict_order', true)`);
+  }
+
   const vectorBranch = input.queryVector
     ? sql`
       SELECT c.id, row_number() OVER (ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024), c.id) AS r
         FROM cf.kb_chunks c
        WHERE ${filters} AND c.embedding IS NOT NULL
-       ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024), c.id
+       ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024)
        LIMIT ${BRANCH_LIMIT}`
     : sql`SELECT NULL::uuid AS id, NULL::bigint AS r WHERE false`;
   const textBranch =

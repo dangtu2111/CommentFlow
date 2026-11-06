@@ -148,3 +148,7 @@ Hàm thuần `decideAutoSend` (`packages/ai/src/gate/`), không khóa/dịch v�
 ## 2j. `AI-READINESS` (FR-146) — không cần tài nguyên ngoài
 
 Độ sẵn sàng của AI tính hoàn toàn từ dữ liệu trong DB (sản phẩm, chính sách, FAQ, thông tin shop) bằng mã; không gọi LLM, không biến môi trường mới, không cờ. Khi muốn đo "câu mẫu trả lời được" bằng LLM thật → việc `AI-EVAL-*` (cần khóa LLM, sẽ ghi ở mục riêng).
+
+## pgvector >= 0.8 cho chỉ mục HNSW — `KB-EMBED-COL`
+
+Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phải dùng PostgreSQL 16 + pgvector >= 0.8 (hiện `pgvector/pgvector:0.8.7-pg16`). Migration 0042 báo lỗi rõ nếu thấp hơn. Chủ dự án chỉ cần nâng image khi dựng staging/production mới.
