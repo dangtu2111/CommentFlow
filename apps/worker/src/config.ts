@@ -14,7 +14,7 @@ function isWorkerRoleUrl(value: string): boolean {
   }
 }
 
-const envSchema = z.object({
+const envShape = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   WORKER_PORT: z.coerce.number().int().min(0).max(65535).default(3001),
   /**
@@ -28,6 +28,20 @@ const envSchema = z.object({
     .refine(isWorkerRoleUrl, 'phải đăng nhập bằng role cf_worker'),
   /** `v1:<64 hex>,v2:<…>` (docs/13 §5). Chưa cần khi chưa có kênh nào có token; có kênh mà thiếu → worker không khởi động. */
   TOKEN_ENC_KEYS: z.string().optional(),
+  /** FR-023: quét bù gọi Meta THẬT — cờ MẶC ĐỊNH TẮT; chỉ đúng chữ `true` mới bật (như FB_OAUTH_ENABLED). */
+  POLLING_ENABLED: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true'),
+  META_APP_ID: z.string().optional(),
+  META_APP_SECRET: z.string().optional(),
+});
+
+const envSchema = envShape.superRefine((env, ctx) => {
+  if (!env.POLLING_ENABLED) return;
+  for (const name of ['META_APP_ID', 'META_APP_SECRET'] as const) {
+    if (!env[name]) ctx.addIssue({ code: 'custom', path: [name], message: 'bắt buộc khi bật' });
+  }
 });
 
 /**
@@ -61,6 +75,9 @@ export type WorkerConfig = {
   port: number;
   databaseUrl: string;
   tokenEncKeys: string | undefined;
+  pollingEnabled: boolean;
+  metaAppId: string | undefined;
+  metaAppSecret: string | undefined;
   facebook: FacebookConnectorConfig;
 };
 
@@ -71,6 +88,9 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     port: env.WORKER_PORT,
     databaseUrl: env.DATABASE_WORKER_URL,
     tokenEncKeys: env.TOKEN_ENC_KEYS,
+    pollingEnabled: env.POLLING_ENABLED,
+    metaAppId: env.META_APP_ID,
+    metaAppSecret: env.META_APP_SECRET,
     facebook: loadFacebookConfig(source),
   };
 }

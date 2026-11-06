@@ -56,6 +56,14 @@ async function main(): Promise<void> {
   );
   // WEBHOOK-PAYLOAD-RETENTION: dọn payload webhook > 14 ngày khi khởi động rồi mỗi giờ (ngữ cảnh trần).
   const stopRetention = startRetention({ db, logger });
+  // FR-023 quét bù: cờ POLLING_ENABLED mặc định TẮT (đường gọi Meta thật). Lõi job đã sẵn (`jobs/polling.ts`) nhưng chưa
+  // có bản DB của `ChannelLister` (cần hàm DEFINER liệt kê kênh xuyên workspace = migration của làn b; gap
+  // `POLLING-CHANNEL-LIST`, QP4) → bật cờ mà thiếu thì báo lỗi rõ và KHÔNG chạy, không đoán đường vòng.
+  if (config.pollingEnabled) {
+    logger.error(
+      'POLLING_ENABLED bật nhưng chưa có hàm liệt kê kênh (POLLING-CHANNEL-LIST): quét bù KHÔNG chạy',
+    );
+  }
   // SEND-SWEEP + HIDE-SWEEP (ADR 008/009): mỗi 60 giây xử lý lại yêu cầu gửi/ẩn kẹt qua đúng job gửi/ẩn (kiểm lại R1–R3/H1–H3).
   // Dùng chung sổ connector `registry` với `send`/`hide`.
   const stopSweep = startSweep({ db, registry, logger });

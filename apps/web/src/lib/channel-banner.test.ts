@@ -1,5 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { buildBannerModel, type ChannelAlertInput } from './channel-banner';
+import {
+  buildBannerModel,
+  buildWebhookSilentBanner,
+  type ChannelAlertInput,
+  MAX_BANNER_NAMES,
+} from './channel-banner';
+
+describe('FR-023 buildWebhookSilentBanner — cảnh báo webhook im lặng', () => {
+  const ch = (name: string) => ({ id: name, name });
+
+  it('FR-023 không có kênh im lặng → không banner', () => {
+    expect(buildWebhookSilentBanner([], 'owner')).toBeNull();
+  });
+
+  it('FR-023 chỉ Owner thấy (nội dung webhook chỉ Owner đọc được); Staff → không banner', () => {
+    expect(buildWebhookSilentBanner([ch('A')], 'staff')).toBeNull();
+    expect(buildWebhookSilentBanner([ch('A')], 'owner')).toMatchObject({
+      names: ['A'],
+      moreCount: 0,
+    });
+  });
+
+  it('FR-023 tối đa 3 tên + số còn lại, giữ thứ tự', () => {
+    const banner = buildWebhookSilentBanner(['K1', 'K2', 'K3', 'K4', 'K5'].map(ch), 'owner');
+    expect(MAX_BANNER_NAMES).toBe(3);
+    expect(banner?.names).toEqual(['K1', 'K2', 'K3']);
+    expect(banner?.moreCount).toBe(2);
+  });
+});
 
 const alert = (name: string, status: ChannelAlertInput['status']): ChannelAlertInput => ({
   id: name,

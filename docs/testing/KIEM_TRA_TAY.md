@@ -20,10 +20,24 @@
 | KT-010 | Ẩn / Bỏ ẩn bình luận | FB-HIDE | chưa | chưa | — |
 | KT-015 | Role DB riêng cho worker (`cf_worker`, ADR 011; **làm theo thứ tự: tạo role → `.env` → migrate**) | feat/worker-db-role | chưa | chưa | — |
 | KT-012 | Connector Facebook thật: trả lời, ẩn/bỏ ẩn, đăng ký webhook (**cần Page thật + token**) | feat/fb-connector | có | chưa | — |
+| KT-021 | Quét bù bình luận + banner webhook im lặng (**cần Page thử + `POLLING_ENABLED=true` + `POLLING-CHANNEL-LIST`**) | feat-polling-backfill | chưa | chưa | — |
 | KT-016 | Worker nối connector Facebook (`FB_CONNECTOR_ENABLED`, **cần Page thử**; bước kích hoạt ở đầu KT-012) | feat/fb-connector-register | chưa | chưa | — |
 | KT-014 | Kết nối Facebook (OAuth) + Kết nối lại (**cần Meta App + Page thử; cờ `FB_OAUTH_ENABLED=true`**) | feat/fb-oauth | chưa | chưa | — |
 | KT-018 | Tên sản phẩm/logo/tên miền/email gửi cấu hình được (giá trị tạm) | feat-cfg-appname | chưa | chưa | — |
 | KT-016 | Quét yêu cầu gửi/ẩn kẹt (job quét 60 giây; **cần migrate 0031 + worker bản mới**) | feat-send-hide-sweep | chưa | chưa | — |
+
+---
+
+## KT-016 — Quét bù bình luận + banner webhook im lặng (POLLING-BACKFILL, FR-023)
+
+Điều kiện: Page thử đã kết nối (KT-014), webhook đang chạy (KT-002), worker bật `POLLING_ENABLED=true`, `POLLING-CHANNEL-LIST` đã có.
+1. Trên Page thử, đăng một bình luận mới rồi **tắt webhook** (hoặc tạm đổi `META_APP_SECRET` sai ở web để webhook bị từ chối). — Mong đợi: bình luận chưa hiện ở trang Bình luận ngay.
+2. Chờ > 10 phút (5 phút chờ webhook + chu kỳ quét 5 phút). — Mong đợi: bình luận xuất hiện ở trang Bình luận (do quét bù).
+3. Đăng nhập bằng Owner, mở bất kỳ trang trong `/app`. — Mong đợi: banner "Webhook có thể đang bị sót tin: <tên Page>" (en: "Webhook may be dropping events: …").
+4. Đăng nhập bằng Staff. — Mong đợi: KHÔNG thấy banner này.
+5. Bật lại webhook, đăng bình luận mới. — Mong đợi: bình luận hiện ngay; banner biến mất sau lần tải trang kế.
+6. Kiểm tra không trùng: bình luận ở bước 2 chỉ xuất hiện một lần. — Mong đợi: một dòng.
+7. Chuyển ngôn ngữ vi ↔ en. — Mong đợi: banner đổi ngôn ngữ.
 
 ---
 

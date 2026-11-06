@@ -31,7 +31,7 @@
 | FR-020 | Webhook kiểm chữ ký, ghi job vào hàng đợi, trả 200 ngay | Bắt buộc |
 | FR-021 | Chống trùng theo `(channel_id, external_comment_id)`; lưu sự kiện vào `webhook_events` | Bắt buộc |
 | FR-022 | **Bỏ qua bình luận/tin nhắn do chính Page viết** (gồm câu AI tự gửi) | Bắt buộc |
-| FR-023 | Polling dự phòng bù bình luận sót; cảnh báo webhook im lặng | Bắt buộc |
+| FR-023 | Polling dự phòng bù bình luận sót (mỗi lần: tối đa 25 bài mới nhất của Page, bài có hoạt động trong 7 ngày; cửa sổ chồng 15 phút; bỏ bình luận mới hơn 5 phút vì chờ webhook); cảnh báo webhook im lặng | Bắt buộc |
 | FR-024 | Lọc quy tắc trước AI: chỉ emoji/sticker/tag/dấu chấm → Bỏ qua, không trừ lượt | Bắt buộc |
 | FR-025 | Chuẩn hóa văn bản (Unicode NFC, viết thường, từ điển viết tắt theo ngôn ngữ); nhận diện ngôn ngữ vi/en theo quy tắc ở `09_System_Architecture.md` §5 | Bắt buộc |
 | FR-026 | Bộ nhớ đệm: khớp chính xác (câu chuẩn hóa + bài + phiên bản kiến thức + workspace) và semantic cache LiteLLM; khóa luôn có `workspace_id` | Bắt buộc |
