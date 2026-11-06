@@ -1,35 +1,30 @@
-// Phần dùng chung của các script ghép tài liệu: đọc thư mục nguồn, ghi hoặc kiểm file ghép.
+// Phần dùng chung của các script ghép tài liệu: đọc thư mục nguồn, kiểm định dạng, ghi file ghép (KHÔNG commit).
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { assemble, diffAgainst } from './fragments.mjs';
+import { checkFragments } from './docs-check.mjs';
+import { assemble } from './fragments.mjs';
 
-/**
- * @param {{ label: string, command: string, dir: URL, out: URL, outName: string, sections: { head: string, prefix?: string, separator?: string }[] }} target
- * @param {string[]} args  `--check` = chỉ kiểm, thoát 1 nếu lệch
- */
-export function runFragments(target, args) {
+/** Đọc mọi file `.md` của thư mục nguồn: tên → nội dung. */
+export function readFragments(dir) {
   const files = {};
-  for (const name of readdirSync(target.dir)) {
-    if (name.endsWith('.md')) files[name] = readFileSync(new URL(name, target.dir), 'utf8');
+  for (const name of readdirSync(dir)) {
+    if (name.endsWith('.md')) files[name] = readFileSync(new URL(name, dir), 'utf8');
   }
-  const { text, problems } = assemble(files, target.sections);
+  return files;
+}
+
+/** Kiểm các file nhỏ rồi ghi file ghép; thoát 1 nếu có lỗi. `onlyCheck` = chỉ kiểm, không ghi. */
+export function runFragments(target, { onlyCheck = false } = {}) {
+  const files = readFragments(target.dir);
+  const problems = checkFragments(target, files);
   if (problems.length > 0) {
-    for (const problem of problems) console.error(`${target.label}: ${problem}`);
+    for (const problem of problems) console.error(problem);
     process.exit(1);
   }
-  if (args.includes('--check')) {
-    let current = '';
-    try {
-      current = readFileSync(target.out, 'utf8');
-    } catch {}
-    if (diffAgainst(text, current)) {
-      console.error(
-        `${target.label}: ${target.outName} không khớp các file nhỏ — chạy \`${target.command}\` rồi commit cả hai`,
-      );
-      process.exit(1);
-    }
-    console.log(`${target.label}: đạt (${Object.keys(files).length} file → ${target.outName})`);
+  const count = Object.keys(files).length;
+  if (onlyCheck) {
+    console.log(`${target.label}: đạt (${count} file)`);
     return;
   }
-  writeFileSync(target.out, text);
-  console.log(`${target.label}: đã ghi ${target.outName} từ ${Object.keys(files).length} file`);
+  writeFileSync(target.out, assemble(files, target.sections).text);
+  console.log(`${target.label}: đã ghi ${target.outName} từ ${count} file`);
 }
