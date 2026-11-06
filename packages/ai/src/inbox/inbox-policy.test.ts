@@ -139,7 +139,11 @@ describe('FR-047 quyền gửi khớp R8 của sendRecheck (property)', () => {
         (elapsed, sender) => {
           const last = ago(elapsed);
           const permission = decideInboxSend(input({ sender, lastCustomerMsgAt: last }));
-          const message = messageRecheckFor(sender, last);
+          const message = messageRecheckFor(
+            sender,
+            last,
+            permission.allowed ? permission.tag : null,
+          );
           const result =
             sender === 'ai'
               ? sendRecheck({
@@ -181,7 +185,37 @@ describe('FR-047 quyền gửi khớp R8 của sendRecheck (property)', () => {
   });
 
   it('không có tin khách → messageRecheckFor trả null (R8 chặn)', () => {
-    expect(messageRecheckFor('ai', null)).toBeNull();
+    expect(messageRecheckFor('ai', null, null)).toBeNull();
+  });
+
+  it('soạn dưới 24 giờ (không thẻ), gửi sau 24 giờ → R8 chặn vì thiếu thẻ HUMAN_AGENT', () => {
+    const last = ago(25 * H);
+    const message = messageRecheckFor('staff', last, null);
+    expect(message).toEqual({ lastInboundAt: last, humanAgent: false });
+    const r = sendRecheck({
+      target: 'message',
+      now: NOW.toISOString(),
+      mode: 'human',
+      comment: comment('sending'),
+      channel: { status: 'connected', sendSuspended: false },
+      automation: null,
+      price: null,
+      kb: null,
+      quota: null,
+      rate: null,
+      message,
+    } as never);
+    expect(r.ok).toBe(false);
+    expect(messageRecheckFor('staff', last, 'HUMAN_AGENT')?.humanAgent).toBe(true);
+    expect(messageRecheckFor('ai', last, 'HUMAN_AGENT')?.humanAgent).toBe(false);
+  });
+
+  it('AI đã chuyển người (handedOff) → không được gửi', () => {
+    expect(decideInboxSend(input({ handedOff: true }))).toEqual({
+      allowed: false,
+      reason: 'handed_off',
+    });
+    expect(decideInboxSend(input({ sender: 'staff', handedOff: true })).allowed).toBe(true);
   });
 });
 

@@ -88,6 +88,9 @@ export function createConversationClaimService(deps: {
 }): ConversationClaimService {
   const now = deps.now ?? (() => new Date());
   const ttlMs = deps.ttlMs ?? CLAIM_TTL_MS;
+  if (!Number.isSafeInteger(ttlMs) || ttlMs <= 0) {
+    throw new Error('claim: ttlMs phải là số nguyên dương');
+  }
   const { store } = deps;
 
   return {
@@ -97,7 +100,9 @@ export function createConversationClaimService(deps: {
         const key = claimKey(workspaceId, conversationId);
         for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
           const current = await store.get(key);
-          const d = decideClaim({ current, actor, now: now(), ttlMs });
+          const at = now();
+          if (Number.isNaN(at.getTime())) return { ok: false, reason: 'store_error' };
+          const d = decideClaim({ current, actor, now: at, ttlMs });
           if (d.action === 'deny') return { ok: false, reason: 'held', heldBy: d.heldBy };
           if (await store.compareAndSet(key, current, d.next)) {
             return { ok: true, expiresAt: new Date(d.next.expiresAt) };

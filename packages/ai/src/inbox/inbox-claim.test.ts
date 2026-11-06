@@ -144,6 +144,17 @@ describe('FR-047 createConversationClaimService', () => {
     expect(await store.compareAndSet(k, { holder: 'a', expiresAt: 10 }, null)).toBe(true);
     expect(await store.get(k)).toBeNull();
   });
+  it('ttlMs không hợp lệ → ném lỗi cấu hình', () => {
+    for (const ttlMs of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      expect(() =>
+        createConversationClaimService({ store: createInMemoryClaimStore(), ttlMs }),
+      ).toThrow();
+    }
+  });
+  it('đồng hồ hỏng → store_error, không tạo khóa vĩnh viễn', async () => {
+    const svc = make(undefined, () => new Date('x'));
+    expect(await svc.claim(WS, CV, 'a')).toEqual({ ok: false, reason: 'store_error' });
+  });
   it('actor rỗng → input_invalid', async () => {
     expect(await make().claim(WS, CV, '')).toEqual({ ok: false, reason: 'input_invalid' });
     expect(await make().release(WS, CV, '')).toEqual({ released: false });

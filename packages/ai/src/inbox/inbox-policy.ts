@@ -49,6 +49,8 @@ export type InboxSendInput = {
   /** Số lượt AI đã trả lời trong hội thoại (`conversations.ai_turns`). */
   aiTurns: number;
   maxAiTurns: number;
+  /** Đã chuyển người (`shouldHandoffToHuman`) hoặc nhân viên đang giữ → AI không được gửi. */
+  handedOff?: boolean;
 };
 
 export const INBOX_DENY_REASONS = [
@@ -58,6 +60,7 @@ export const INBOX_DENY_REASONS = [
   'ai_disabled',
   'conversation_resolved',
   'ai_turns_exhausted',
+  'handed_off',
 ] as const;
 export type InboxDenyReason = (typeof INBOX_DENY_REASONS)[number];
 
@@ -81,20 +84,26 @@ export function decideInboxSend(i: InboxSendInput): InboxSendDecision {
   if (window === 'human_only') return deny('ai_window_expired');
   if (!i.aiEnabled) return deny('ai_disabled');
   if (i.status === 'resolved') return deny('conversation_resolved');
+  if (i.handedOff === true) return deny('handed_off');
   if (i.aiTurns >= i.maxAiTurns) return deny('ai_turns_exhausted');
   return { allowed: true, tag: null };
 }
 
 /**
- * Giá trị cho `sendRecheck(...).message` (R8). Nhân viên gửi chế độ `human` có thẻ HUMAN_AGENT (7 ngày); AI luôn 24 giờ.
- * Không có tin khách → `null` (R8 chặn).
+ * Giá trị cho `sendRecheck(...).message` (R8). `tag` là thẻ SẼ GỬI KÈM tin: chỉ nhân viên có thẻ HUMAN_AGENT mới được
+ * cửa sổ 7 ngày; không thẻ (hoặc AI) → 24 giờ, nên tin soạn lúc <24 giờ nhưng gửi sau 24 giờ mà thiếu thẻ bị R8 chặn.
+ * Không có tin khách → `null` (R8 chặn). Lưu ý: `decideInboxSend` chỉ là điều kiện cần; AI tự gửi vẫn qua `decideAutoSend`.
  */
 export function messageRecheckFor(
   sender: InboxSender,
   lastCustomerMsgAt: Date | null,
+  tag: 'HUMAN_AGENT' | null,
 ): { lastInboundAt: Date; humanAgent: boolean } | null {
   if (lastCustomerMsgAt === null) return null;
-  return { lastInboundAt: lastCustomerMsgAt, humanAgent: sender === 'staff' };
+  return {
+    lastInboundAt: lastCustomerMsgAt,
+    humanAgent: sender === 'staff' && tag === 'HUMAN_AGENT',
+  };
 }
 
 export const INBOX_STATES = [
