@@ -1,0 +1,1 @@
+| QICO1 | 06/11 | Icon Bình luận: dòng "Nghi spam" của Stitch dùng tên `gshield` không tồn tại trong Material Symbols (Stitch tự hiện chữ "gshield" rộng 28px) → dùng icon `shield`, màu danger | Chọn icon đúng ý "khiên"; "Gửi lỗi" mờ 60% trong Stitch không áp dụng (giữ màu chữ phụ) | Đổi tên trong `TAB_ICON` / bảng `Icon` |

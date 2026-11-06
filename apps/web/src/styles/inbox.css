@@ -126,18 +126,37 @@
   background: var(--color-warning);
 }
 
-.inbox-tab-dot[data-tab="spam_suspected"],
-.inbox-tab-dot[data-tab="send_failed"] {
-  background: var(--color-danger);
-}
-
-.inbox-tab-dot[data-tab="auto_replied"],
-.inbox-tab-dot[data-tab="replied"] {
-  background: var(--color-success);
+/* Stitch: "Sẽ tự gửi" chấm 6px; các tab còn lại có icon (Material Symbols vẽ bằng SVG, 14px). */
+.inbox-tab-dot[data-tab="scheduled_auto"] {
+  width: 6px;
+  height: 6px;
 }
 
 .inbox-tab[aria-current="page"] .inbox-tab-dot[data-tab] {
   background: var(--action-fg);
+}
+
+.inbox-tab-icon {
+  flex: none;
+  display: inline-flex;
+}
+
+.inbox-tab-icon[data-tab="auto_replied"] {
+  color: var(--color-primary-700);
+}
+
+.inbox-tab-icon[data-tab="spam_suspected"] {
+  color: var(--color-danger);
+}
+
+.inbox-tab[aria-current="page"] .inbox-tab-icon[data-tab] {
+  color: var(--action-fg);
+}
+
+.inbox-section-title-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .inbox-tab-count {
