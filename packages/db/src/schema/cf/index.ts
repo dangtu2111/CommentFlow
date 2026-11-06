@@ -15,4 +15,5 @@ export * from './product-aliases';
 export * from './products';
 export * from './retrieval';
 export * from './size-charts';
+export * from './spam-rules';
 export * from './webhook-events';

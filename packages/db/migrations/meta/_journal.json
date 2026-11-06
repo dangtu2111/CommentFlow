@@ -344,6 +344,13 @@
       "when": 1793952386506,
       "tag": "0048_automation_settings_rls_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1793953943866,
+      "tag": "0049_spam_rules_store",
+      "breakpoints": true
     }
   ]
 }

@@ -786,7 +786,8 @@
     "saved": "Rule saved.",
     "error": {
       "invalid_rule": "The rule is not valid: check the name, pattern (regex must not use nested repetition) and action.",
-      "unavailable": "Could not complete this now (saving rules is not available yet). Please try again later."
+      "limit_reached": "You have reached 50 rules. Delete an old rule before adding a new one.",
+      "unavailable": "Could not complete this now. Please try again later."
     }
   },
   "kbGaps": {

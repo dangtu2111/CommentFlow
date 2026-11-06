@@ -1,4 +1,9 @@
-import { type Database, type FlowDb, listRecentCommentTexts } from '@flow/db/runtime';
+import {
+  createSpamRule,
+  type Database,
+  type FlowDb,
+  listRecentCommentTexts,
+} from '@flow/db/runtime';
 import {
   PREVIEW_WINDOW_DAYS,
   previewSpamRule,
@@ -12,14 +17,15 @@ import { getDb } from './db';
  * (chỉ đọc, không đổi bình luận), khớp bằng hàm thuần ở `@flow/shared`. `workspaceId`/`userId` lấy từ
  * `requireAppUser`, không từ client. Q-SPR1.
  *
- * Lưu quy tắc cần bảng `rules` (docs/10 §3.5; migration chỉ làn b): `SpamRuleStore` là interface cho bản DB sau này;
- * chưa có kho → `save` trả `unavailable` và KHÔNG ghi gì. Quy tắc chỉ đánh dấu/bỏ qua; không có đường tự ẩn ở đây.
+ * Lưu quy tắc vào `cf.rules` (migration 0049, Q-SRS1) trong `withActor` — RLS chỉ cho Owner ghi, `created_by` = chính
+ * người ghi. `SpamRuleStore` là interface; không có kho → `save` trả `unavailable` và KHÔNG ghi gì. Quá trần 50
+ * quy tắc → `SpamRuleLimitError` (nơi gọi bắt). Quy tắc chỉ đánh dấu/bỏ qua; không có đường tự ẩn ở đây.
  */
 type Ctx = { workspaceId: string; userId: string };
 
-/** Kho lưu quy tắc (bản DB do làn b: `rules` + RLS ghi bằng `withActor`, Owner). */
+/** Kho lưu quy tắc (bản DB: `createSpamRule`); trả id quy tắc mới. */
 export type SpamRuleStore = {
-  create(tx: Database, workspaceId: string, rule: SpamRule): Promise<void>;
+  create(tx: Database, workspaceId: string, userId: string, rule: SpamRule): Promise<string>;
 };
 
 type Deps = {
@@ -41,7 +47,7 @@ export function createSpamRulesService({ db, ops, store }: Deps) {
     save: async (ctx: Ctx, rule: SpamRule): Promise<'ok' | 'unavailable'> => {
       if (!store) return 'unavailable';
       await db.withActor(ctx.workspaceId, ctx.userId, (tx: Database) =>
-        store.create(tx, ctx.workspaceId, rule),
+        store.create(tx, ctx.workspaceId, ctx.userId, rule),
       );
       return 'ok';
     },
@@ -49,4 +55,8 @@ export function createSpamRulesService({ db, ops, store }: Deps) {
 }
 
 export const spamRules = () =>
-  createSpamRulesService({ db: getDb(), ops: { listRecentCommentTexts } });
+  createSpamRulesService({
+    db: getDb(),
+    ops: { listRecentCommentTexts },
+    store: { create: createSpamRule },
+  });
