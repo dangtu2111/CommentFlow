@@ -1,18 +1,31 @@
 /* SplitLayout — cột con + nội dung (Cài đặt). Chỉ dùng token từ styles/tokens.css. Tách nguyên văn từ globals.css (UI-KIT). */
 
+/* Lưới 2 cột: phần tử đầu của nội dung (tiêu đề) chiếm cả hàng 1; thẻ "CẤU HÌNH WORKSPACE" nằm hàng 2,
+   thẳng mép trên với thẻ đầu tiên của cột chính (đúng thiết kế). `.settings-content` dùng
+   display: contents để các thẻ con tham gia chung lưới. */
 .settings-layout {
   display: grid;
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4) var(--space-6);
   align-items: start;
 }
 
 .settings-content {
-  display: grid;
-  gap: var(--space-4);
+  display: contents;
+}
+
+.settings-content > * {
   min-width: 0;
 }
 
+.settings-content > :first-child {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
 .settings-subnav {
+  grid-column: 1;
+  grid-row: 2;
   display: grid;
   gap: var(--space-2);
   grid-template-columns: minmax(0, 1fr);
@@ -88,6 +101,10 @@
 @media (min-width: 900px) {
   .settings-layout {
     grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .settings-content > :not(:first-child) {
+    grid-column: 2;
   }
 
   .settings-subnav ul {

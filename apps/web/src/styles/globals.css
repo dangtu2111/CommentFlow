@@ -1946,7 +1946,8 @@ a {
 
 /* ===== UI-FIDELITY nhóm 4: Cài đặt / Thành viên / Nhật ký (Q-UIST1) ===== */
 .app-page-settings {
-  max-width: 1200px;
+  max-width: 1480px;
+  padding-inline: var(--space-4);
 }
 
 /* Chip trạng thái / vai trò (nền nhạt theo token) */
@@ -2238,7 +2239,6 @@ a {
 .settings-frame {
   display: grid;
   gap: var(--space-4);
-  max-width: 1200px;
 }
 
 .stack-tight {
