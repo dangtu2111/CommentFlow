@@ -63,6 +63,39 @@ describe('FR-016 buildConnectorRegistry (FB-CONNECTOR-REGISTER)', () => {
     fetchSpy.mockRestore();
   });
 
+  it('FR-015 TIKTOK_CONNECTOR_ENABLED độc lập: tắt/thiếu → không có tiktok; bật → có, không gọi mạng; thiếu khóa → ném', () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const tiktok = { enabled: true, clientSecret: 'tiktok-bi-mat-gia-0123456789' } as const;
+    const none = buildConnectorRegistry({
+      ...base,
+      facebook: off,
+      instagram: off,
+      tokenEncKeys: undefined,
+    });
+    expect(none.has('tiktok')).toBe(false);
+    const onlyTt = buildConnectorRegistry({
+      ...base,
+      facebook: off,
+      instagram: off,
+      tiktok,
+      tokenEncKeys: KEYS,
+    });
+    expect(onlyTt.has('tiktok')).toBe(true);
+    expect(onlyTt.has('facebook')).toBe(false);
+    expect(onlyTt.get('tiktok').setHidden).toBeUndefined();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+    expect(() =>
+      buildConnectorRegistry({
+        ...base,
+        facebook: off,
+        instagram: off,
+        tiktok,
+        tokenEncKeys: undefined,
+      }),
+    ).toThrow();
+  });
+
   it('cờ bật mà khóa mã hóa sai định dạng/thiếu → ném (không khởi động), không lộ khóa', () => {
     for (const keys of ['khoa-hong-bimat', undefined]) {
       for (const flags of [

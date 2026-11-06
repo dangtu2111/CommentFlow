@@ -17,6 +17,7 @@ describe('loadConfig', () => {
       facebook: { enabled: false },
       instagram: { enabled: false },
       messenger: { enabled: false },
+      tiktok: { enabled: false },
     });
   });
 
@@ -166,6 +167,39 @@ describe('loadConfig', () => {
       } catch (error) {
         expect(isAppError(error) && error.code).toBe('CONFIG_INVALID');
         expect((error as Error).message).not.toContain(full.META_APP_SECRET);
+      }
+    });
+  });
+
+  describe('FR-015 loadConfig TIKTOK_CONNECTOR_ENABLED (TIKTOK-CONNECTOR)', () => {
+    const TIKTOK_CLIENT_SECRET = 'tiktok-bi-mat-gia-0123456789';
+    const TOKEN_ENC_KEYS = `v1:${'a'.repeat(64)}`;
+    const full = { DATABASE_WORKER_URL, TIKTOK_CLIENT_SECRET, TOKEN_ENC_KEYS };
+
+    it('mặc định TẮT; chỉ đúng chữ `true` mới bật; độc lập với cờ Meta', () => {
+      for (const flag of [undefined, '', 'false', '1', 'yes', 'TRUE']) {
+        expect(loadConfig({ ...full, TIKTOK_CONNECTOR_ENABLED: flag }).tiktok).toEqual({
+          enabled: false,
+        });
+      }
+      const cfg = loadConfig({ ...full, TIKTOK_CONNECTOR_ENABLED: 'true' });
+      expect(cfg.tiktok).toEqual({ enabled: true, clientSecret: TIKTOK_CLIENT_SECRET });
+      expect(cfg.facebook).toEqual({ enabled: false });
+    });
+
+    it('bật mà thiếu/ngắn biến → CONFIG_INVALID, không lộ bí mật', () => {
+      for (const override of [
+        { TIKTOK_CLIENT_SECRET: undefined },
+        { TIKTOK_CLIENT_SECRET: 'ngan' },
+        { TOKEN_ENC_KEYS: ' ' },
+      ]) {
+        try {
+          loadConfig({ ...full, TIKTOK_CONNECTOR_ENABLED: 'true', ...override });
+          expect.unreachable();
+        } catch (error) {
+          expect(isAppError(error) && error.code).toBe('CONFIG_INVALID');
+          expect((error as Error).message).not.toContain(TIKTOK_CLIENT_SECRET);
+        }
       }
     });
   });
