@@ -64,17 +64,31 @@ export function parseRobots(text: string): RobotsRules {
 /** Nhóm của tên bot (khớp tên chứa trong User-agent, dài nhất thắng); không có thì nhóm `*`. */
 function pickGroup(rules: RobotsRules, userAgent: string): RobotsGroup | undefined {
   const name = userAgent.toLowerCase();
-  let best: RobotsGroup | undefined;
   let bestLength = 0;
   for (const group of rules.groups) {
     for (const agent of group.agents) {
       if (agent !== '*' && agent !== '' && name.includes(agent) && agent.length > bestLength) {
-        best = group;
         bestLength = agent.length;
       }
     }
   }
-  return best ?? rules.groups.find((group) => group.agents.includes('*'));
+  // RFC 9309 §2.2.1: gộp quy tắc của MỌI nhóm cùng khớp bot (nhóm tên cụ thể dài nhất, hoặc mọi nhóm `*`).
+  const matching = rules.groups.filter((group) =>
+    bestLength > 0
+      ? group.agents.some((agent) => agent.length === bestLength && name.includes(agent))
+      : group.agents.includes('*'),
+  );
+  if (matching.length === 0) return undefined;
+  return {
+    agents: [],
+    rules: matching.flatMap((group) => group.rules),
+    crawlDelayMs: matching.find((group) => group.crawlDelayMs !== undefined)?.crawlDelayMs,
+  };
+}
+
+/** RFC 9309 §2.2.2: so khớp trên dạng mã hóa phần trăm (URL luôn mã hóa; mẫu robots thường viết UTF-8 thô). */
+function encodePattern(pattern: string): string {
+  return pattern.replace(/[^*$%\x21-\x7e]+/g, (raw) => encodeURIComponent(raw));
 }
 
 /**
@@ -109,7 +123,7 @@ export function isAllowedByRobots(rules: RobotsRules, userAgent: string, path: s
   let bestLength = -1;
   let allowed = true;
   for (const rule of group.rules) {
-    const length = matchLength(rule.pattern, path);
+    const length = matchLength(encodePattern(rule.pattern), path);
     if (length >= 0 && (length > bestLength || (length === bestLength && rule.allow))) {
       bestLength = length;
       allowed = rule.allow;

@@ -76,6 +76,22 @@ function isBlockedIpv6(bytes: number[]): boolean {
   const isNat64 = bytes[0] === 0 && bytes[1] === 0x64 && bytes[2] === 0xff && bytes[3] === 0x9b;
   if (isNat64 && bytes.slice(4, 12).every((byte) => byte === 0))
     return isBlockedIpv4(bytes.slice(12));
+  const isNat64Local =
+    bytes[0] === 0 &&
+    bytes[1] === 0x64 &&
+    bytes[2] === 0xff &&
+    bytes[3] === 0x9b &&
+    bytes[4] === 0 &&
+    bytes[5] === 1;
+  if (isNat64Local) return true; // 64:ff9b:1::/48 (RFC 8215): NAT64 nội bộ
+  const isSiit =
+    bytes.slice(0, 8).every((byte) => byte === 0) &&
+    bytes[8] === 0xff &&
+    bytes[9] === 0xff &&
+    bytes[10] === 0 &&
+    bytes[11] === 0;
+  if (isSiit) return isBlockedIpv4(bytes.slice(12)); // ::ffff:0:a.b.c.d
+  if (bytes[0] === 0xfe && (bytes[1]! & 0xc0) === 0xc0) return true; // fec0::/10 site-local (đã bỏ nhưng vẫn có nơi định tuyến)
   if (bytes[0] === 0x20 && bytes[1] === 0x02) return isBlockedIpv4(bytes.slice(2, 6)); // 6to4
   if (bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x0d && bytes[3] === 0xb8) return true; // tài liệu
   if ((bytes[0]! & 0xfe) === 0xfc) return true; // ULA fc00::/7

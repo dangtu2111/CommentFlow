@@ -64,11 +64,17 @@ const DEFAULT_MAX_REDIRECTS = 3;
 const DEFAULT_ACCEPT = ['text/html', 'application/xhtml+xml', 'text/plain'];
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
+function stripTrailingDot(host: string): string {
+  return host.endsWith('.') ? host.slice(0, -1) : host;
+}
+
 function isDomainAllowed(hostname: string, allowedDomains: readonly string[] | undefined): boolean {
   if (!allowedDomains) return true;
-  const host = hostname.toLowerCase();
+  const host = stripTrailingDot(hostname.toLowerCase());
   return allowedDomains.some((domain) => {
-    const normalized = domain.toLowerCase();
+    const normalized = stripTrailingDot(domain.trim().toLowerCase());
+    // Mục rỗng/không có dấu chấm (vd. "com") không được khớp rộng.
+    if (!normalized.includes('.')) return false;
     return host === normalized || host.endsWith(`.${normalized}`);
   });
 }

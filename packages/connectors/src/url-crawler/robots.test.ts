@@ -71,6 +71,27 @@ describe('FR-053 parseRobots + isAllowedByRobots', () => {
     expect(isAllowedByRobots(rules, UA, '/b')).toBe(true);
   });
 
+  it('RFC 9309: gộp quy tắc của mọi nhóm cùng khớp bot (nhóm * lặp, nhóm tên cụ thể lặp)', () => {
+    const star = parseRobots(
+      'User-agent: *\nDisallow: /a\n\nUser-agent: *\nDisallow: /chinh-sach\nCrawl-delay: 4\n',
+    );
+    expect(isAllowedByRobots(star, UA, '/a')).toBe(false);
+    expect(isAllowedByRobots(star, UA, '/chinh-sach')).toBe(false);
+    expect(crawlDelayFor(star, UA)).toBe(4000);
+    const named = parseRobots(
+      'User-agent: commentflowbot\nDisallow: /x\n\nUser-agent: other\nDisallow: /y\n\nUser-agent: commentflowbot\nDisallow: /z\n',
+    );
+    expect(isAllowedByRobots(named, UA, '/x')).toBe(false);
+    expect(isAllowedByRobots(named, UA, '/z')).toBe(false);
+    expect(isAllowedByRobots(named, UA, '/y')).toBe(true);
+  });
+
+  it('RFC 9309: mẫu UTF-8 thô khớp đường dẫn đã mã hóa phần trăm', () => {
+    const rules = parseRobots('User-agent: *\nDisallow: /chính-sách\n');
+    expect(isAllowedByRobots(rules, UA, '/ch%C3%ADnh-s%C3%A1ch/doi-tra')).toBe(false);
+    expect(isAllowedByRobots(rules, UA, '/khac')).toBe(true);
+  });
+
   it('quy tắc đặt trước User-agent bị bỏ qua', () => {
     expect(isAllowedByRobots(parseRobots('Disallow: /\n'), UA, '/')).toBe(true);
   });

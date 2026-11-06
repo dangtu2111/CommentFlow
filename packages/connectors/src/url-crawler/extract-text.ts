@@ -133,7 +133,12 @@ function isInvisible(code: number): boolean {
     (code >= 0x202a && code <= 0x202e) ||
     (code >= 0x2060 && code <= 0x2064) ||
     (code >= 0x2066 && code <= 0x2069) ||
-    code === 0xfeff
+    code === 0xfeff ||
+    code === 0xad || // dấu gạch nối mềm
+    code === 0x180e ||
+    (code >= 0xfe00 && code <= 0xfe0f) || // bộ chọn biến thể
+    (code >= 0xe0000 && code <= 0xe007f) || // ký tự tag ("ASCII smuggling")
+    (code >= 0xe0100 && code <= 0xe01ef)
   );
 }
 
@@ -146,10 +151,10 @@ export function normalizeExtractedText(text: string): string {
     if (trimmed !== '') lines.push(trimmed);
     line = '';
   };
-  for (let i = 0; i < text.length; i += 1) {
-    const code = text.charCodeAt(i);
+  for (const char of text) {
+    const code = char.codePointAt(0) ?? 0;
     if (LINE_BREAK_CODES.has(code)) flush();
-    else if (!isInvisible(code)) line += text[i];
+    else if (!isInvisible(code)) line += char;
   }
   flush();
   return lines.join('\n');
@@ -178,7 +183,8 @@ function findTagEnd(html: string, from: number): number {
 }
 
 function walk(html: string, focus: string | undefined): { title: string | undefined; raw: string } {
-  const lower = html.toLowerCase();
+  // Chỉ hạ chữ A–Z: `toLowerCase()` đổi độ dài với vài ký tự (vd. "İ" → 2 ký tự) làm lệch vị trí so với `html`.
+  const lower = html.replace(/[A-Z]/g, (char) => char.toLowerCase());
   let out = '';
   let title: string | undefined;
   let skipName: string | undefined;
@@ -241,7 +247,8 @@ function walk(html: string, focus: string | undefined): { title: string | undefi
     }
 
     const attributes = lower.slice(nameStart + name.length, end);
-    const selfClosing = html[end - 1] === '/' || VOID_ELEMENTS.has(name);
+    // HTML5: `/>` trên thẻ không-void KHÔNG tự đóng (`<div style="display:none"/>` vẫn là thẻ mở).
+    const selfClosing = VOID_ELEMENTS.has(name);
     if (name === 'title') {
       const content = consumeRaw('title', i);
       if (title === undefined && (!skipName || skipName === 'head'))

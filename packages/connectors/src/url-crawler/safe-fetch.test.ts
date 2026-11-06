@@ -165,6 +165,19 @@ describe('FR-053 safeFetch', () => {
         safeFetch('https://shop.example.vn/a', net, { ...OPTIONS, allowedDomains: [] }),
       ),
     ).toBe('DOMAIN_NOT_ALLOWED');
+    // mục rỗng / TLD trần không khớp rộng; dấu chấm cuối và khoảng trắng được chuẩn hóa
+    for (const bad of ['', ' ', 'vn', '.']) {
+      const denied = safeFetch('https://shop.example.vn/a', net, {
+        ...OPTIONS,
+        allowedDomains: [bad],
+      });
+      expect(await reasonOf(denied)).toBe('DOMAIN_NOT_ALLOWED');
+    }
+    const ok = await safeFetch('https://shop.example.vn/a', net, {
+      ...OPTIONS,
+      allowedDomains: [' Shop.Example.vn. '],
+    });
+    expect(ok.status).toBe(200);
   });
 
   it('chỉ nhận text/html, xhtml, text/plain; từ chối loại khác hoặc thiếu Content-Type', async () => {

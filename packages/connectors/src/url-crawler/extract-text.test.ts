@@ -82,7 +82,18 @@ describe('FR-053 extractCleanText — tách văn bản sạch từ HTML', () => 
     );
     expect(extractCleanText('<nav>x</div></nav><p>y</p>').text).toBe('y');
     expect(extractCleanText('<textarea>ẩn</textarea><p>hiện</p>').text).toBe('hiện');
-    expect(extractCleanText('<nav/><p>hiện</p>').text).toBe('hiện');
+    // Thẻ không-void có "/>" vẫn là thẻ mở (HTML5): không được dùng để lọt phần tử ẩn.
+    expect(extractCleanText('<nav/><p>ẩn</p></nav><p>hiện</p>').text).toBe('hiện');
+    expect(extractCleanText('<div style="display:none"/>LỆNH ẨN</div><p>hiện</p>').text).toBe(
+      'hiện',
+    );
+    expect(extractCleanText('<br/>a<br />b').text).toBe('a\nb');
+    // "İ" đổi độ dài khi toLowerCase: không được làm lệch vị trí thẻ
+    expect(extractCleanText('İ<div style="display:none">LỆNH ẨN</div><nav>x</nav>ok').text).toBe(
+      'İok',
+    );
+    // ký tự tag Unicode (ASCII smuggling), bộ chọn biến thể, gạch nối mềm bị bỏ
+    expect(extractCleanText('a\u{E0041}\u{E0042}b\u{FE0F}c­d').text).toBe('abcd');
   });
 
   it('không có tiêu đề → undefined; chỉ lấy tiêu đề đầu tiên', () => {
