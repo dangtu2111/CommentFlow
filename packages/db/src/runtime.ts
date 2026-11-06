@@ -110,6 +110,15 @@ export {
   type CommentLockResult,
   releaseCommentLock,
 } from './queries/comment-lock';
+// DEV-SEED-DEMO: dữ liệu mẫu dev dùng đúng hàm truy vấn có sẵn (không viết SQL riêng cho bản nháp/liên kết bài).
+export {
+  assignConversation,
+  recordInboundMessage,
+  recordOutboundMessage,
+  setConversationAi,
+  setConversationStatus,
+  touchConversationLastMessage,
+} from './queries/conversations';
 export {
   claimDataExport,
   completeDataExport,
@@ -128,7 +137,6 @@ export {
   readRulesPage,
   requestDataExport,
 } from './queries/data-export';
-// DEV-SEED-DEMO: dữ liệu mẫu dev dùng đúng hàm truy vấn có sẵn (không viết SQL riêng cho bản nháp/liên kết bài).
 export { insertDraft, type NewDraft } from './queries/drafts';
 export {
   ACTIONABLE_COMMENT_STATUSES,
@@ -225,6 +233,7 @@ export {
   recordLeads,
   updateLead,
 } from './queries/leads';
+export { createPostNote } from './queries/post-notes';
 export { linkProductsToPosts } from './queries/post-products';
 export {
   DEFAULT_POSTS_LIMIT,
