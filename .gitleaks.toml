@@ -23,18 +23,3 @@ matchCondition = "AND"
 regexTarget = "line"
 paths = ['''(^|/)packages/ai/src/confidence/confidence\.test\.ts$''']
 regexes = ['''sRetrievalTop2''']
-
-[[allowlists]]
-description = "Khóa TikTok GIẢ 'tiktok-bi-mat-gia-…' trong test connector-registry (commit f975b1c, nhánh feat-tiktok-connector; gitleaks quét mọi nhánh) — dữ liệu thử, không phải bí mật; chỉ áp cho đúng file test"
-paths = ['''(^|/)apps/worker/src/channels/connector-registry\.test\.ts$''']
-regexes = ['''tiktok-bi-mat-gia-[0-9]+''']
-
-[[allowlists]]
-description = "Token mời GIẢ 'inv_annhien_…' (dummyToken) trong HTML mẫu Stitch của email mời, nằm ở nhánh chore/stitch-fetch-html (gitleaks quét mọi nhánh) — dữ liệu minh họa, không phải bí mật; chỉ áp cho đúng file thiết kế"
-paths = ['''(^|/)design/stitch/email-invite\.html$''']
-regexes = ['''inv_annhien_[0-9a-f]+''']
-
-[[allowlists]]
-description = "Khóa GIẢ 'tiktok-bi-mat-gia-…' trong test cấu hình/registry connector TikTok (commit f975b1c, nhánh feat-tiktok-connector; gitleaks quét mọi nhánh) — giá trị minh họa, không phải bí mật; chỉ áp cho đúng hai file test"
-paths = ['''(^|/)apps/worker/src/config\.test\.ts$''', '''(^|/)apps/worker/src/channels/connector-registry\.test\.ts$''']
-regexes = ['''tiktok-bi-mat-gia-[0-9]+''']
