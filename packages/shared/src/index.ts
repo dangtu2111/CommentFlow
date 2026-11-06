@@ -174,6 +174,7 @@ export {
   type KbReembedJob,
   kbReembedJobSchema,
 } from './kb-reembed';
+export { type KiotVietConfig, readKiotVietConfig } from './kiotviet-config';
 export {
   LEAD_MAX_PER_CAPTURE,
   LEAD_NAME_MAX,
@@ -396,6 +397,7 @@ export {
   type RuleFilterResult,
   ruleFilter,
 } from './rule-filter';
+export { readSapoConfig, type SapoConfig } from './sapo-config';
 export {
   isProductCacheStale,
   normalizeSearchText,

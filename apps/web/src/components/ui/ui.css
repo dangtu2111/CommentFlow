@@ -15,7 +15,6 @@
 @import "./split-layout.css";
 @import "./stat.css";
 @import "./stepper.css";
-@import "./workbench.css";
 @import "./kbd.css";
 @import "./icon.css";
 @import "./inset.css";
@@ -24,3 +23,8 @@
 @import "./metric-card.css";
 @import "./platform-badge.css";
 @import "./data-table.css";
+
+/* Thành phần chưa có chức năng ("Sắp có", UI-first): con trỏ cấm — dùng chung nhiều màn. */
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}

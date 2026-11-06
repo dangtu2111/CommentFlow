@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { QuoteBlock, StateNote } from './state-note';
 
 /** Làm tươi trang mỗi 3 giây khi yêu cầu còn `queued`/`sending`; quá 2 phút thì dừng và nhắc tải lại. */
 const REFRESH_MS = 3000;
@@ -31,10 +32,9 @@ export function ReplyProgress({
   }, [router]);
 
   return (
-    <div className="reply-state reply-sending" role="status">
-      <p className="reply-state-title">{slow ? labels.slow : labels.sending}</p>
-      <p className="reply-quote-label">{labels.yourReply}</p>
-      <blockquote className="reply-quote">{text}</blockquote>
-    </div>
+    <StateNote tone="progress" role="status" title={slow ? labels.slow : labels.sending}>
+      <p className="mt-1 font-label-md text-label-md text-on-surface-variant">{labels.yourReply}</p>
+      <QuoteBlock>{text}</QuoteBlock>
+    </StateNote>
   );
 }

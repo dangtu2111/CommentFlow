@@ -4,6 +4,8 @@ import { COMMENT_LABELS, type CommentLabel, isCommentLabel } from '@flow/shared'
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { relabelCommentsAction } from '../../app/app/(guarded)/comments/actions';
+import { Icon } from '../ui/icon';
+import { InlineError } from './state-note';
 
 type Labels = {
   field: string;
@@ -39,10 +41,17 @@ export function RelabelSelect({
   }
 
   return (
-    <div className="relabel">
-      <label htmlFor={`relabel-${commentId}`}>{labels.field}</label>
+    <div className="flex flex-wrap items-center gap-2">
+      <label
+        htmlFor={`relabel-${commentId}`}
+        className="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant"
+      >
+        <Icon name="edit" size={14} />
+        {labels.field}
+      </label>
       <select
         id={`relabel-${commentId}`}
+        className="h-8 rounded bg-surface-container-lowest px-2 font-label-sm text-label-sm text-on-surface shadow-sm"
         value={value}
         onChange={(event) => setValue(event.target.value)}
         disabled={pending}
@@ -58,18 +67,14 @@ export function RelabelSelect({
       </select>
       <button
         type="button"
-        className="btn"
+        className="h-8 rounded bg-surface-container-lowest px-2.5 font-label-sm text-label-sm text-on-surface shadow-sm transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60"
         onClick={apply}
         disabled={pending || !isCommentLabel(value) || value === current}
         aria-busy={pending}
       >
         {pending ? labels.working : labels.apply}
       </button>
-      {failed ? (
-        <p className="reply-error" role="alert">
-          {labels.failed}
-        </p>
-      ) : null}
+      {failed ? <InlineError>{labels.failed}</InlineError> : null}
     </div>
   );
 }

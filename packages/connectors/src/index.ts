@@ -79,6 +79,21 @@ export {
 } from './instagram/connector';
 export { parseInstagramWebhook } from './instagram/webhook';
 export {
+  createKiotVietConnector,
+  type KiotVietCatalog,
+  type KiotVietConnector,
+  type KiotVietConnectorOptions,
+  type KiotVietProduct,
+  type KiotVietVariant,
+} from './kiotviet/connector';
+export { buildKiotVietImportPlan, parseKiotVietMoney } from './kiotviet/normalize';
+export {
+  createKiotVietTokenProvider,
+  type KiotVietCredentials,
+  type KiotVietTokenProviderOptions,
+} from './kiotviet/token';
+export { signKiotVietBody, verifyKiotVietWebhook } from './kiotviet/webhook';
+export {
   createMessengerSender,
   MESSENGER_MAX_TEXT_LENGTH,
   MessageNotAllowedError,
@@ -92,6 +107,16 @@ export {
 } from './messenger/webhook';
 export { type MessengerSendMode, messengerSendMode } from './messenger/window';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
+export {
+  createSapoConnector,
+  type SapoCatalog,
+  type SapoConnector,
+  type SapoConnectorOptions,
+  type SapoProduct,
+  type SapoVariant,
+} from './sapo/connector';
+export { buildSapoImportPlan, parseSapoMoney } from './sapo/normalize';
+export { signSapoBody, verifySapoWebhook } from './sapo/webhook';
 export {
   createShopifyConnector,
   DEFAULT_SHOPIFY_API_VERSION,

@@ -2024,6 +2024,83 @@
     "error": {
       "title": "Không tải được danh sách khách.",
       "body": "Hãy thử lại sau."
+    },
+    "ui": {
+      "soon": "Sắp có",
+      "sampleTag": "[MẪU]",
+      "badge": "CRM chống cướp khách",
+      "syncNote": "Chỉ xem · cập nhật khi tải lại trang",
+      "subtitle": "Tự động trích xuất SĐT, địa chỉ và sản phẩm từ bình luận/tin nhắn để phòng chống cướp khách và chốt đơn đa kênh.",
+      "export": "Xuất Excel / CSV",
+      "bulk": "Đổi trạng thái hàng loạt",
+      "addManual": "Thêm khách thủ công",
+      "search": "Tìm theo tên khách, SĐT, mã đơn, sản phẩm...",
+      "viewKanban": "Bảng Kanban",
+      "viewList": "Dạng danh sách",
+      "filter": {
+        "platform": "Nền tảng",
+        "owner": "Phụ trách",
+        "source": "Nguồn",
+        "all": "Tất cả",
+        "sourceHidden": "Bình luận tự ẩn",
+        "days30": "30 ngày qua",
+        "reset": "Đặt lại bộ lọc"
+      },
+      "kpi": {
+        "total": "Tổng khách tiềm năng",
+        "vsLast": "So với tháng trước ({n} khách)",
+        "quota": "Đạt {pct} chỉ tiêu",
+        "extracted": "Tự động trích xuất",
+        "aiScan": "AI Scan",
+        "hiddenPhones": "{pct} tự ẩn số điện thoại",
+        "savedHours": "Tiết kiệm {h} CSKH",
+        "won": "Đã chốt đơn thành công",
+        "rate": "CR: {pct}",
+        "closeTime": "Thời gian chốt TB:",
+        "vsWeek": "{pct} so với tuần trước",
+        "revenue": "Doanh thu ước tính",
+        "aov": "AOV: {v}/đơn",
+        "pendingPay": "{n} đơn chờ thanh toán"
+      },
+      "card": {
+        "verified": "Khách có tương tác nhiều lần",
+        "copy": "Sao chép SĐT",
+        "call": "Gọi điện",
+        "csNote": "Ghi chú CSKH:",
+        "callback": "Lịch gọi lại:",
+        "claim": "Nhận phụ trách"
+      },
+      "drawer": {
+        "label": "Chi tiết khách tiềm năng",
+        "lead": "Khách #{code}",
+        "created": "Tạo lúc {time}",
+        "expand": "Phóng to",
+        "close": "Đóng ngăn chi tiết",
+        "status": "Trạng thái:",
+        "callNow": "Gọi ngay",
+        "message": "Nhắn Zalo/SMS",
+        "copyAll": "Sao chép đủ",
+        "extracted": "Thông tin trích xuất tự động",
+        "confidence": "Độ tin cậy {pct}",
+        "fullName": "Họ và tên:",
+        "phone": "Số điện thoại:",
+        "secured": "Đã bảo mật",
+        "address": "Địa chỉ giao:",
+        "product": "Sản phẩm mua:",
+        "sku": "Mã SKU:",
+        "value": "Giá trị dự kiến:",
+        "context": "Ngữ cảnh bình luận gốc",
+        "hiddenAt": "Đã tự ẩn lúc {time}",
+        "post": "Bài viết: {post}",
+        "protect": "Bảo vệ an toàn chống đối thủ cướp khách",
+        "viewPost": "Xem trên bài viết",
+        "history": "Lịch sử & Ghi chú nội bộ",
+        "notePlaceholder": "Thêm ghi chú CSKH nội bộ (không gửi khách)...",
+        "save": "Lưu",
+        "noHistory": "Chưa có lịch sử.",
+        "cancel": "Hủy khách",
+        "markWon": "Chuyển sang Đã chốt đơn"
+      }
     }
   },
   "reports": {
@@ -2070,6 +2147,94 @@
     "error": {
       "title": "Không tải được báo cáo.",
       "body": "Hãy thử lại sau."
+    },
+    "ui": {
+      "soon": "Sắp có",
+      "sampleTag": "[MẪU]",
+      "badge": "Đo lường AI",
+      "today": "Hôm nay",
+      "customRange": "Chọn khoảng ngày",
+      "allChannels": "Tất cả kênh (FB, IG, TikTok)",
+      "weeklyEmail": "Tóm tắt email tuần",
+      "exportExcel": "Xuất Excel",
+      "refresh": "Làm mới dữ liệu",
+      "kpi": {
+        "total": "Tổng tương tác xử lý",
+        "comments": "Bình luận",
+        "messages": "Tin nhắn",
+        "vsLast": "so với kỳ trước",
+        "aiRate": "Tỷ lệ AI tự động xử lý",
+        "aiRateNote": "Tự gửi chuẩn xác không qua duyệt",
+        "safe": "Đạt chuẩn an toàn",
+        "beforeAi": "Trước khi có AI: {time}",
+        "waitCut": "Giảm {pct} thời gian chờ",
+        "hoursSaved": "Giờ công nhân sự tiết kiệm",
+        "hours": "{hours} giờ",
+        "fte": "Tương đương {fte} nhân sự toàn thời gian",
+        "savedMoney": "Tiết kiệm ước tính",
+        "leads": "Khách tiềm năng & SĐT",
+        "leadsNote": "Từ chat & comment tự động",
+        "conversion": "Tỷ lệ CĐ: {pct}",
+        "leadsWeek": "{n} tuần này"
+      },
+      "trend": {
+        "title": "Xu hướng xử lý tương tác theo ngày",
+        "range": "30 ngày qua",
+        "subtitle": "Khối lượng công việc tự động giải phóng cho đội ngũ CSKH",
+        "legend": {
+          "ai": "AI Tự động",
+          "review": "Duyệt & Gửi",
+          "skip": "Bỏ qua / Spam"
+        },
+        "chartLabel": "Biểu đồ cột xếp chồng theo ngày (dữ liệu mẫu)",
+        "today": "{date} (Nay)",
+        "empty": "Chưa có số liệu theo ngày.",
+        "note": "Tốc độ tự động giải phóng đang tăng {pct} kể từ khi bổ sung cơ sở kiến thức.",
+        "shifts": "Xem chi tiết ca trực"
+      },
+      "intent": {
+        "title": "Phân bố nhãn ý định (AI Intent)",
+        "subtitle": "Mô hình phân loại nhận diện tự động ý định của khách hàng",
+        "chartLabel": "Biểu đồ vành khuyên phân bố ý định (dữ liệu mẫu)",
+        "groups": "Phân nhóm",
+        "empty": "Chưa có số liệu nhãn ý định.",
+        "accuracy": "Độ chính xác nhận diện ý định đạt {pct} (F1-score)",
+        "train": "Huấn luyện thêm"
+      },
+      "posts": {
+        "title": "Top bài viết nhiều bình luận hỏi giá nhất",
+        "subtitle": "Phân bổ nguồn tương tác để tối ưu liên kết sản phẩm tự động chốt đơn",
+        "all": "Xem tất cả bài viết",
+        "colPost": "Bài viết & Kênh",
+        "colProduct": "Sản phẩm liên kết",
+        "colQuestions": "Bình luận hỏi giá",
+        "colAuto": "AI tự động hóa",
+        "colAction": "Thao tác",
+        "unlinked": "Chưa gắn SP",
+        "allHuman": "100% người trả lời",
+        "linkNow": "Gắn ngay",
+        "viewPage": "Xem Page",
+        "empty": "Chưa có số liệu theo bài viết.",
+        "footer": "Gắn sản phẩm giúp AI trích xuất giá, bảng size và tồn kho chính xác.",
+        "bulkLink": "Tự động gắn hàng loạt →"
+      },
+      "staff": {
+        "subtitle": "Tốc độ phản hồi và độ tin cậy vào gợi ý AI",
+        "count": "{n} nhân sự",
+        "summary": "{answered} câu đã trả lời • trung vị {median}",
+        "agreement": "Tỷ lệ đồng thuận với AI toàn đội:",
+        "permissions": "Cài đặt phân quyền"
+      },
+      "insight": {
+        "title": "Đề xuất tối ưu Cơ sở kiến thức (AI Smart Insight)",
+        "urgent": "Khuyến nghị cấp thiết",
+        "struggle": "AI gặp khó khăn nhất với câu hỏi:",
+        "asked": "Khách đã hỏi {n} lần trong 7 ngày qua nhưng chưa có kịch bản mẫu hoặc tài liệu trong FAQ.",
+        "gain": "Nếu bổ sung mục này, tỷ lệ tự động xử lý dự kiến tăng thêm {pct} và giảm thêm {hours} giờ công cho nhân sự.",
+        "empty": "Chưa có đề xuất. Gợi ý xuất hiện khi AI gặp nhiều câu hỏi chưa có trong cơ sở kiến thức.",
+        "add": "Thêm câu này vào Cơ sở kiến thức ngay",
+        "dismiss": "Bỏ qua cảnh báo"
+      }
     }
   },
   "activity": {
@@ -2084,7 +2249,11 @@
       "actor": "Tác nhân",
       "action": "Hành động",
       "target": "Đối tượng",
-      "noTarget": "—"
+      "noTarget": "—",
+      "payload": "Tóm tắt payload",
+      "result": "Kết quả",
+      "detail": "Chi tiết",
+      "viewLog": "Xem log"
     },
     "list": {
       "label": "Danh sách nhật ký",
@@ -2157,6 +2326,39 @@
     "error": {
       "title": "Không tải được nhật ký",
       "body": "Có lỗi khi tải dữ liệu. Hãy thử lại sau."
+    },
+    "ui": {
+      "soon": "Sắp có",
+      "sampleTag": "[MẪU]",
+      "readOnly": "Chỉ đọc · không sửa hay xóa được",
+      "refreshNote": "Cập nhật khi tải lại trang",
+      "exportAudit": "Xuất file Audit",
+      "archive": "Lưu trữ (30 ngày)",
+      "autoRefresh": "Tự làm mới (15s)",
+      "search": "Tìm theo ID, từ khóa, tên khách, mã nhân viên...",
+      "channel": "Kênh",
+      "allChannels": "Tất cả kênh",
+      "applied": "Đang áp dụng:",
+      "noFilter": "chưa lọc",
+      "clearAll": "Xóa toàn bộ",
+      "found": "Hiển thị {n} sự kiện",
+      "kpi": {
+        "total": "Tổng thao tác hôm nay",
+        "ai": "AI tự động thực hiện",
+        "human": "Nhân viên thực hiện",
+        "reliability": "Độ tin cậy thao tác"
+      },
+      "inspector": {
+        "close": "Đóng bảng xem",
+        "channel": "Kênh thực thi:",
+        "commentId": "Bình luận ID:",
+        "rule": "Quy tắc kích hoạt: {rule}",
+        "trace": "Kỹ thuật Meta Graph Trace",
+        "copyJson": "Sao chép JSON",
+        "noTrace": "Chưa ghi vết gọi nền tảng cho dòng này.",
+        "openComment": "Mở bình luận trên Fanpage",
+        "viewLead": "Xem hồ sơ khách {code}"
+      }
     }
   },
   "dialog": {

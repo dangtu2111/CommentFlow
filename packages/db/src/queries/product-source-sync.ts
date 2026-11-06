@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
 
 /** Nguồn ngoài có API chính thức (docs/12 §4); khớp CHECK `products_source_check` (migration 0034). */
-export type ExternalProductSource = 'shopify' | 'haravan';
+export type ExternalProductSource = 'shopify' | 'haravan' | 'sapo' | 'kiotviet';
 
 /** Trường lấy từ nguồn nên khóa không cho sửa tay trong CommentFlow (docs/12 §4.1 "Khóa trường"). */
 const SOURCE_LOCKED_FIELDS = ['name', 'price_vnd', 'compare_at_vnd', 'stock'];
