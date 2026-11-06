@@ -3,6 +3,9 @@
  * `CF_LANE`), không bao giờ `cf_dev`. Hàm thuần — không đọc file, không in giá trị biến (chỉ nêu TÊN biến thiếu).
  */
 
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 /** Biến phải có (sau khi nạp `.env.local` + `.env`) để chạy E2E. */
 export const REQUIRED_VARS = [
   'TEST_DATABASE_URL',
@@ -73,6 +76,10 @@ export function buildE2eEnv(source, { port, lane }) {
     // Dev/test không ra internet; vẫn còn danh sách mật khẩu phổ biến cục bộ.
     PWNED_CHECK: 'off',
     CLIENT_IP_SOURCE: 'none',
+    // Hồ sơ (SETTINGS-PROFILE-WIRE): chỉ bật ở E2E (APP_ENV=test) — SMS MOCK ghi mã OTP vào tệp tạm để E2E đọc, ảnh đại diện MOCK.
+    PHONE_VERIFY_ENABLED: 'true',
+    NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED: 'true',
+    SMS_MOCK_OUTBOX_FILE: join(tmpdir(), `cf-e2e-sms-outbox-${port}.jsonl`),
     BETTER_AUTH_URL: baseUrl,
     E2E_BASE_URL: baseUrl,
     PORT: String(port),
