@@ -171,7 +171,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 | DA-RULES-LEGAL | FR-160 (cam kết pháp lý/uy tín bắt buộc có nguồn) | — | PIPE-DECIDE-ACTION | S | không | ⏳ |
 | DA-HANDOFF-RULES | FR-143 (quy tắc chuyển người cho ảnh/video/sticker kèm chữ) | — | ATTACHMENTS-STORE, PIPE-DECIDE-ACTION | — | không | ⏳ |
 | PIPE-MERGE-BURST | FR-148 (gộp bình luận liên tiếp < 30 giây) | US-109 | WH-INGEST | — | không | ⏳ |
-| PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ⏳ |
+| PIPE-VARIATION | FR-161 (đa dạng diễn đạt, giữ nguyên nội dung) | US-105 | PIPE-DRAFT | — | không | ✅ Xong-mock (lõi hàm thuần, `feat-pipe-variation`; còn `VARIATION-WIRE`: Redis `…:recent` + ghi `drafts.variants`, và `VARIATION-NAME`: chèn tên khách) |
 | PIPE-CACHE-SEMANTIC-STUB | FR-026 (semantic cache LiteLLM — cấu hình tối thiểu; phần đầy đủ ở GĐ5) | — | PIPE-CACHE-EXACT | — | không | ⏳ |
 
 ### 2D. Hạn mức, chi phí, đánh giá

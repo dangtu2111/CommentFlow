@@ -61,12 +61,55 @@ describe('FR-029/FR-138 drafter LLM', () => {
       step: DRAFT_STEP,
       promptVersion: DRAFT_PROMPT_VERSION,
       model: 'soan',
-      temperature: 0.2,
+      temperature: 0.3,
       draftId: '22222222-2222-4222-8222-222222222222',
     });
     expect(calls[0]?.messages.map((m) => m.cache)).toEqual([true, true, undefined]);
     expect(r.needs_human).toBe(false);
     expect(r.sources).toEqual(['sp-1']);
+  });
+
+  it('FR-161 variants: câu gốc đầu, chỉ giữ biến thể đúng số/nguồn, vẫn MỘT lần gọi, draft@2', async () => {
+    const { llm, calls } = fakeLlm(
+      JSON.stringify({
+        ...good,
+        variants: [
+          'Áo này đang giá 199.000đ nha bạn.',
+          'Áo này giá 99.000đ thôi ạ.',
+          'Dạ giá 199000đ ạ',
+        ],
+      }),
+    );
+    const r = await createLlmDrafter({ llm, model: 'soan' }).draft(input());
+    expect(calls).toHaveLength(1);
+    expect(DRAFT_PROMPT_VERSION).toBe('draft@2');
+    expect(r.variants).toEqual([
+      good.reply,
+      'Áo này đang giá 199.000đ nha bạn.',
+      'Dạ giá 199000đ ạ',
+    ]);
+  });
+
+  it('FR-161 variants: không có biến thể → chỉ câu gốc; needs_human → rỗng', async () => {
+    const solo = await createLlmDrafter({
+      llm: fakeLlm(JSON.stringify(good)).llm,
+      model: 'm',
+    }).draft(input());
+    expect(solo.variants).toEqual([good.reply]);
+
+    const noSource = await createLlmDrafter({
+      llm: fakeLlm(JSON.stringify(good)).llm,
+      model: 'm',
+    }).draft(input({ sources: [] }));
+    expect(noSource.variants).toEqual([]);
+
+    const missing = await createLlmDrafter({
+      llm: fakeLlm(JSON.stringify({ ...good, sources: ['x'], variants: ['Dạ giá 199.000đ ạ nhé'] }))
+        .llm,
+      model: 'm',
+    }).draft(input());
+    expect(missing.needs_human).toBe(true);
+    expect(missing.variants).toEqual([]);
   });
 
   it('chỉ nguồn đạt ngưỡng mới vào prompt', async () => {

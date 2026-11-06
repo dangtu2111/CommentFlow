@@ -31,6 +31,15 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-PC | Độ tin cậy do code tính + kết quả AI hỏng → 0 (chỉ mã/test, không cần khóa; xem mục KT-PC bên dưới) | feat-pipe-confidence | chưa | chưa | — |
+| KT-PV | Đa dạng diễn đạt, giữ nguyên nội dung (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-PV bên dưới) | feat-pipe-variation | chưa | chưa | — |
+
+---
+
+## KT-PV — Đa dạng diễn đạt (PIPE-VARIATION, FR-161)
+
+Chưa có giao diện/pipeline nối (còn `VARIATION-WIRE`); mục này chỉ kiểm test. Không cần tiếng Việt/Anh.
+1. Chạy `pnpm --filter @flow/ai exec vitest run src/variation src/draft`. — Mong đợi: tất cả test xanh.
+2. (Khi đã có khóa LLM, tùy chọn) gọi `createLlmDrafter` với `DRAFT_LLM_ENABLED=true` cho cùng một câu hỏi vài lần. — Mong đợi: `variants` 3–5 câu khác chữ, cùng giá/link; không có câu đổi số tiền (câu đổi số bị loại).
 
 ---
 

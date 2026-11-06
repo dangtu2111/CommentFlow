@@ -111,3 +111,13 @@ export {
   type LlmClientOptions,
   type LlmMessage,
 } from './llm-client';
+export {
+  type GuardVariantsInput,
+  type GuardVariantsResult,
+  guardVariants,
+  MAX_VARIANTS,
+  type PickedVariant,
+  pickVariant,
+  REASON_VARIANTS_EXHAUSTED,
+  replyFingerprint,
+} from './variation/variation';
