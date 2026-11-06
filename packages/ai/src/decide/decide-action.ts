@@ -1,6 +1,7 @@
 import { COMMENT_LABELS, KB_GAP_TOPICS, type KbGapTopic } from '@flow/shared';
 import { z } from 'zod';
 import type { ActionKind } from '../confidence/confidence';
+import { evaluateAttachmentRules } from './handoff-rules';
 
 /**
  * `decideAction` (FR-147, FR-141, `docs/09` §4): CODE chọn một trong bốn hành động, AI chỉ viết câu
@@ -102,6 +103,16 @@ export const decideActionInputSchema = z.object({
   }),
   /** Mỗi ý khách hỏi theo chủ đề; `sourced` = bước tìm kiếm có nguồn trả lời được. */
   topics: z.array(z.object({ topic: z.enum(KB_GAP_TOPICS), sourced: z.boolean() })),
+  /**
+   * Bình luận gốc (FR-143, DA-HANDOFF-RULES): chữ + loại tệp đính kèm. Tùy chọn (thiếu → chỉ theo cờ model);
+   * có mà hỏng → chuyển người.
+   */
+  comment: z
+    .object({
+      text: z.string().max(5000),
+      attachmentTypes: z.array(z.string().max(32)).max(10),
+    })
+    .optional(),
   thread: z.object({
     /** Số lần AI/shop đã hỏi lại trong cùng chuỗi. */
     clarifyCount: nonNegativeInt,
@@ -240,7 +251,12 @@ function clarifyNeed(
   const productResolved = candidates.length === 1;
 
   // Ảnh mà chưa nhận ra sản phẩm: hỏi mẫu nào nhưng vẫn cần người (FR-143, §6 mục 6).
-  if (input.extract.refers_to_image && !productResolved) {
+  const image = evaluateAttachmentRules({
+    text: input.comment?.text ?? '',
+    attachmentTypes: input.comment?.attachmentTypes ?? [],
+    modelRefersToImage: input.extract.refers_to_image,
+  });
+  if (image.imageDependent && !productResolved) {
     return {
       reason: 'image_product',
       clarify: { ask: 'product', axes: [], options },

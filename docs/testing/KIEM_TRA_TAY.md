@@ -1,5 +1,16 @@
 # Kiểm tra tay — danh sách dồn
 
+## KT-DHR — Chuyển người khi có ảnh/video chưa rõ sản phẩm (DA-HANDOFF-RULES, FR-143, feat-da-handoff-rules)
+
+> Chưa nối pipeline/giao diện: chỉ lõi + test tự động; kiểm tay dồn cho `DA-HANDOFF-WIRE`. / Core + automated tests only; manual checks deferred to `DA-HANDOFF-WIRE`.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/decide` | Mọi test xanh |
+| 2 | (Sau khi nối) Khách bình luận ảnh + "mẫu này giá sao" trên bài chưa gắn sản phẩm | Bình luận vào "Cần người", lý do "Có ảnh, chưa nhận ra sản phẩm", không tự gửi |
+| 3 | (Sau khi nối) Cùng bình luận trên bài đã gắn đúng 1 sản phẩm | AI trả lời bình thường |
+| 4 | (Sau khi nối) Chỉ gửi sticker kèm chữ | Không bị coi là hỏi về ảnh |
+
 ## KT-DROH — Hỏi đơn hàng + câu mời theo giờ làm việc (DA-RULES-ORDER-HOURS, FR-153/152, feat-da-rules-order-hours)
 
 > Hàm thuần chưa nối giao diện/pipeline nên kiểm bằng lệnh. / Pure functions, not wired to UI yet — verify by command.
@@ -946,6 +957,15 @@ Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
 |---|---|---|
 | 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
 | 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
+
+## KT-PCS — Semantic cache LiteLLM (stub) (PIPE-CACHE-SEMANTIC-STUB, FR-026) · Semantic cache stub
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cache/semantic-cache.test.ts`. | Test xanh: cờ tắt → no-cache/no-store; bật → namespace chứa workspace_id + kb_version; hai shop không chung namespace. |
+| 2 | Mở `infra/litellm/semantic-cache.example.yaml`. | Chỉ là file mẫu (không nằm trong `config.yaml`); không có khóa/giá trị thật. |
 
 ## KT-PN — Ghi chú theo bài có hạn (POST-NOTES, FR-062, US-033) · Post notes
 
