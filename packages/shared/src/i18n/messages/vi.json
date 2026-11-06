@@ -563,6 +563,7 @@
     },
     "nav": {
       "comments": "Bình luận",
+      "posts": "Bài viết",
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
@@ -639,6 +640,64 @@
       "none": "Hãy chọn ít nhất một Page.",
       "unavailable": "Tính năng kết nối Facebook đang được cấu hình lại. Hãy báo quản trị hệ thống.",
       "expiredSession": "Phiên chọn Page đã hết hạn. Hãy bấm Kết nối Facebook để bắt đầu lại."
+    }
+  },
+  "posts": {
+    "title": "Bài viết",
+    "subtitle": "Bài đăng của các kênh đã kết nối, kèm số bình luận đang chờ xử lý.",
+    "count": "{count} bài",
+    "error": {
+      "title": "Không tải được danh sách bài viết",
+      "body": "Đã có lỗi khi tải dữ liệu. Hãy tải lại trang sau ít phút."
+    },
+    "toolbar": {
+      "label": "Lọc bài viết",
+      "searchLabel": "Tìm bài viết",
+      "search": "Tìm theo nội dung hoặc mã bài…",
+      "platform": "Nền tảng",
+      "allPlatforms": "Tất cả nền tảng",
+      "channel": "Kênh",
+      "allChannels": "Tất cả kênh",
+      "kind": "Loại bài",
+      "allKinds": "Tất cả loại bài",
+      "sort": "Sắp xếp",
+      "apply": "Áp dụng",
+      "clear": "Xóa bộ lọc"
+    },
+    "platforms": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "kind": {
+      "ads": "Quảng cáo",
+      "organic": "Bài thường"
+    },
+    "sort": {
+      "pending": "Bình luận chờ nhiều nhất",
+      "newest": "Mới đăng nhất"
+    },
+    "list": {
+      "label": "Danh sách bài viết",
+      "noMessage": "(Chưa có nội dung bài — mã {id})",
+      "postId": "Mã bài: {id}",
+      "comments": "{count} bình luận",
+      "pending": "{count} chờ xử lý",
+      "noPending": "Không có bình luận chờ",
+      "viewOriginal": "Xem bài gốc",
+      "unknownTime": "Chưa rõ thời gian đăng"
+    },
+    "pagination": {
+      "label": "Phân trang",
+      "summary": "Trang {page} / {pages}",
+      "prev": "Trang trước",
+      "next": "Trang sau"
+    },
+    "empty": {
+      "title": "Chưa có bài viết",
+      "body": "Bài viết sẽ xuất hiện khi kênh nhận bình luận đầu tiên.",
+      "filteredTitle": "Không có bài khớp bộ lọc",
+      "filteredBody": "Thử bỏ bớt bộ lọc hoặc đổi từ khóa."
     }
   },
   "activity": {

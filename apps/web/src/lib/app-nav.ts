@@ -7,7 +7,7 @@
  */
 export type NavRole = 'owner' | 'staff';
 export type NavGroupKey = 'operations' | 'settings';
-export type NavItemKey = 'comments' | 'channels' | 'members' | 'activity' | 'settings';
+export type NavItemKey = 'comments' | 'posts' | 'channels' | 'members' | 'activity' | 'settings';
 
 export type NavItem = { key: NavItemKey; href: string };
 export type NavGroup = { key: NavGroupKey; items: NavItem[] };
@@ -16,6 +16,8 @@ type Entry = NavItem & { group: NavGroupKey; roles: readonly NavRole[] };
 
 const ENTRIES: readonly Entry[] = [
   { key: 'comments', href: '/app/comments', group: 'operations', roles: ['owner', 'staff'] },
+  // Bài viết (FR-060): xem được với mọi vai trò (RLS theo thành viên workspace).
+  { key: 'posts', href: '/app/posts', group: 'operations', roles: ['owner', 'staff'] },
   // Trang Kênh (kết nối Facebook, FR-010) chỉ Owner; Staff nhận 404 nên không hiện liên kết.
   { key: 'channels', href: '/app/channels', group: 'settings', roles: ['owner'] },
   // Trang Thành viên chỉ Owner (docs/13 §3.1); Staff nhận 404 nên không hiện liên kết.
