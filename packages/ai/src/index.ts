@@ -1,4 +1,18 @@
 export {
+  buildExactCacheKey,
+  type CachedAnswer,
+  type CacheMissReason,
+  createMemoryCacheStore,
+  DEFAULT_CACHE_TTL_SECONDS,
+  type ExactCacheDeps,
+  type ExactCacheKeyInput,
+  type ExactCacheLookup,
+  type ExactCacheStore,
+  type ExactCacheStoreResult,
+  lookupExactCache,
+  storeExactCache,
+} from './cache/exact-cache';
+export {
   type ClassifyConfig,
   DEFAULT_CLASSIFY_MODEL,
   loadClassifyConfig,
