@@ -218,7 +218,7 @@ Cổng 3: chạy trên staging 7 ngày với bình luận thật; 0 sai giá; lu
 | ADMIN-FLAGS | FR-117 (trang Feature flags: override, kill switch, theo gói, rollout %; nhật ký) | US-085 | ADMIN-SHELL, FLAGS | S | không | ⏳ |
 | META-DATA-DELETE | FR-093 (callback xóa dữ liệu Meta: signed request → mã xác nhận) + trang tra cứu | US-070, UF-10 | CH-SCHEMA | S | **có** — Meta App | ⛔ |
 | DATA-EXPORT | FR-094 (xuất dữ liệu workspace) | US-071 | GĐ0-DB | S+DB | không | ⏳ |
-| WORKSPACE-DELETE | FR-094 (xóa workspace nhiều bước), `DB-MAINTENANCE-ROLE` | US-071 | DATA-EXPORT | S+DB | không | ⏳ |
+| WORKSPACE-DELETE | FR-094 (xóa workspace nhiều bước), `DB-MAINTENANCE-ROLE` | US-071 | DATA-EXPORT | S+DB | không | ✅ Xong-mock dữ liệu + job (`feat-workspace-delete`, migration 0055, Q-WSD1; cờ `WORKSPACE_DELETE_ENABLED` TẮT; còn nối giao diện, thu hồi Meta, email báo) |
 | RETENTION-JOB | FR-126 (12 tháng; `ai_usage` gộp 90 ngày) | — | DB-MAINTENANCE-ROLE | S+DB | không | ✅ Xong (feat-retention-job) |
 | PUBLIC-PAGES | FR-125 (landing, chính sách quyền riêng tư, điều khoản, DPA) | — | CFG-APPNAME | — | **có** — tên miền (Q6), pháp lý | ⛔ |
 | ONBOARDING-WIZARD | FR-146 (wizard 5 bước, điều kiện sẵn sàng AI) | UF-1 | AI-READINESS, FB-OAUTH | — | không | Xong-mock UI (feat-onboarding-wizard, Q-OBW1; KT-OBW) |
@@ -279,7 +279,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | MESSENGER-WEBHOOK | FR-014 (webhook `messages`, gửi trong cửa sổ) | UF-6 | FB-OAUTH | S | **có** — Meta App Review | ✅ Xong-mock (`feat-messenger-webhook`, Q-MSW1; còn `MESSENGER-INGEST` cần migration làn b) |
 | IG-DM | FR-013 (tin nhắn Instagram) | UF-6 | IG-CONNECTOR | S | **có** — Meta | ⛔ |
 | MSG-INBOX | FR-047 (hội thoại: cửa sổ 24 giờ/7 ngày, AI theo hội thoại, tối đa lượt AI, chuyển người) | US-020–023 | MESSENGER-WEBHOOK | S | không | ⏳ |
-| PRIVATE-REPLY | FR-046 (nhắn riêng từ bình luận, 1 tin ≤ 7 ngày) | US-017 | MESSENGER-WEBHOOK | S | không | ⏳ |
+| PRIVATE-REPLY | FR-046 (nhắn riêng từ bình luận, 1 tin ≤ 7 ngày) | US-017 | MESSENGER-WEBHOOK | S | không | ✅ Xong-mock (logic thuần; nối DB/giao diện → `PRIVATE-REPLY-WIRE`) |
 | MSG-GREETINGS | FR-074 (tin chào, ngoài giờ, báo chuyển nhân viên theo ngôn ngữ) | — | MSG-INBOX | — | không | ⏳ |
 | REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ |
 | PUSH-EMAIL | FR-084 (thông báo đẩy PWA + email, giờ yên lặng) | — | REPORTS | — | **có** — nhà cung cấp email (SMTP thật) | ⛔ |

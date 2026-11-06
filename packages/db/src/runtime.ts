@@ -289,3 +289,15 @@ export {
   type RecordWebhookEventInput,
   recordWebhookEvent,
 } from './webhook-events';
+export {
+  type ConfirmDeletionResult,
+  cancelWorkspaceDeletion,
+  confirmWorkspaceDeletion,
+  type DeletionRequestRow,
+  type DueDeletion,
+  type ExecuteDeletionResult,
+  executeWorkspaceDeletion,
+  getLatestDeletionRequest,
+  listDueWorkspaceDeletions,
+  requestWorkspaceDeletion,
+} from './workspace-deletion';

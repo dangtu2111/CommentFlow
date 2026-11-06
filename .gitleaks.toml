@@ -30,6 +30,6 @@ paths = ['''(^|/)design/stitch/email-invite\.html$''']
 regexes = ['''inv_annhien_[0-9a-f]+''']
 
 [[allowlists]]
-description = "Khóa TikTok GIẢ 'tiktok-bi-mat-gia-…' trong test worker của nhánh feat-tiktok-connector (gitleaks quét mọi nhánh) — dữ liệu minh họa, không phải bí mật; chỉ áp cho đúng 2 file test"
+description = "Khóa GIẢ 'tiktok-bi-mat-gia-…' trong test cấu hình/registry connector TikTok (commit f975b1c, nhánh feat-tiktok-connector; gitleaks quét mọi nhánh) — giá trị minh họa, không phải bí mật; chỉ áp cho đúng hai file test"
 paths = ['''(^|/)apps/worker/src/config\.test\.ts$''', '''(^|/)apps/worker/src/channels/connector-registry\.test\.ts$''']
-regexes = ['''tiktok-bi-mat-gia-0123456789''']
+regexes = ['''tiktok-bi-mat-gia-[0-9]+''']
