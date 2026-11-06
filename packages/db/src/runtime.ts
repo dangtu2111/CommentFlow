@@ -132,6 +132,16 @@ export {
   requestCommentReply,
 } from './replies';
 export { purgeExpiredWebhookPayloads, WEBHOOK_PAYLOAD_RETENTION_DAYS } from './retention';
+export {
+  insertRetrievalLog,
+  type KbGapFilter,
+  listKbGaps,
+  listRetrievalLogs,
+  purgeExpiredRetrievalLogs,
+  type RecordedKbGap,
+  recordKbGap,
+  setKbGapStatus,
+} from './retrieval-logs';
 export { schema } from './schema';
 export {
   listStuckOutbox,

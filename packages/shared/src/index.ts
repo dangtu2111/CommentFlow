@@ -97,6 +97,25 @@ export {
   type ShopPronoun,
 } from './reply-style';
 export {
+  buildKbGapRecord,
+  buildRetrievalLogRecord,
+  KB_GAP_STATUSES,
+  KB_GAP_TOPICS,
+  type KbGapInput,
+  type KbGapRecord,
+  type KbGapStatus,
+  type KbGapTopic,
+  RETRIEVAL_LOG_RETENTION_DAYS,
+  RETRIEVAL_MAX_CANDIDATES,
+  RETRIEVAL_MAX_PRODUCTS,
+  RETRIEVAL_MAX_USED_CHUNKS,
+  RETRIEVAL_ROUTES,
+  RETRIEVAL_TEXT_MAX_CHARS,
+  type RetrievalLogInput,
+  type RetrievalLogRecord,
+  type RetrievalRoute,
+} from './retrieval-log';
+export {
   type RuleFilterInput,
   type RuleFilterReason,
   type RuleFilterResult,
