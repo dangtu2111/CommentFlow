@@ -6,6 +6,12 @@ import { type ReactNode, useId, useState } from 'react';
 import { FormField } from './form-field';
 import { Input } from './input';
 
+// Giá trị kỹ thuật (không phải chữ hiển thị): tách thành hằng để luật i18n không coi là chuỗi giao diện.
+const KIND_TOGGLE = 'toggle';
+const KIND_CODE = 'code';
+const INPUT_MODE_TEXT = 'text';
+const INPUT_MODE_NUMERIC = 'numeric';
+
 const ICONS = { mail: Mail, user: User, lock: Lock };
 
 type FieldProps = {
@@ -68,7 +74,7 @@ export function PasswordField(
           <Lock className="input-icon" size={18} aria-hidden="true" />
           <Input
             {...control}
-            kind="toggle"
+            kind={KIND_TOGGLE}
             type={visible ? 'text' : 'password'}
             name={props.name}
             autoComplete={props.autoComplete}
@@ -115,10 +121,10 @@ export function CodeField(props: {
           <ShieldCheck className="input-icon" size={18} aria-hidden="true" />
           <Input
             {...control}
-            kind="code"
+            kind={KIND_CODE}
             name={props.name}
             type="text"
-            inputMode={backup ? 'text' : 'numeric'}
+            inputMode={backup ? INPUT_MODE_TEXT : INPUT_MODE_NUMERIC}
             autoComplete="one-time-code"
             maxLength={backup ? 16 : 10}
             required
