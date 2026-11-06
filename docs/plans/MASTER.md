@@ -288,7 +288,7 @@ Cổng: theo từng tính năng (`docs/14` §8).
 | PRIVATE-REPLY | FR-046 (nhắn riêng từ bình luận, 1 tin ≤ 7 ngày) | US-017 | MESSENGER-WEBHOOK | S | không | ✅ Xong-mock (logic thuần; nối DB/giao diện → `PRIVATE-REPLY-WIRE`) |
 | MSG-GREETINGS | FR-074 (tin chào, ngoài giờ, báo chuyển nhân viên theo ngôn ngữ) | — | MSG-INBOX | — | không | ✅ Xong-mock (`feat-msg-greetings`, Q-MSG1; còn `MSG-GREETINGS-WIRE` cần migration làn b + `MSG-GREETINGS-UI`) |
 | REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ (logic chỉ số + CSV: Xong-mock `feat-reports-metrics`; còn `REPORTS-UI`, `REPORTS-WEEKLY-EMAIL`) |
-| PUSH-EMAIL | FR-084 (thông báo đẩy PWA + email, giờ yên lặng) | — | REPORTS | — | **có** — nhà cung cấp email (SMTP thật) | ⛔ |
+| PUSH-EMAIL | FR-084 (thông báo đẩy PWA + email, giờ yên lặng) | — | REPORTS | — | **có** — nhà cung cấp email (SMTP thật) | ✅ Xong-mock lõi thuần (feat-push-email) |
 | ADMIN-REST | FR-104 (gói & mã giảm giá, nội dung hệ thống, quản trị viên), Admin Console tiếng Anh | — | ADMIN-SHELL | S | không | 🟡 Xong-mock phần dữ liệu gói & mã giảm giá (`feat-admin-plans-coupons`, Q-ADP1, migration 0060; còn `ADMIN-REST-UI`, `ADMIN-AUDIT`, `COUPON-CHECKOUT-WIRE`, `COUPON-RATELIMIT-WIRE`, nội dung hệ thống, quản trị viên; KT-ADP) |
 | ADMIN-IMPERSONATE | FR-105 ("Xem như khách": lý do, chỉ đọc, ≤ 30 phút, nhật ký; `admin_impersonations`) | US-082 | ADMIN-SHELL | S+DB | không | ✅ Xong-mock (`feat-admin-impersonate`, Q-AIMP1: logic thuần + guard chỉ-đọc + store/audit interface; bảng `admin_impersonations`/middleware/giao diện → `ADMIN-IMPERSONATE-WIRE`) |
 | ML-SERVICE | FR-027 (bộ phân loại tự host), FR-025 (chuẩn hóa/nhận ngôn ngữ ở `ml`) | — | COST-GATE | — | không | ⏳ |
