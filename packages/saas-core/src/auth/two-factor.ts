@@ -1,12 +1,14 @@
 import { and, desc, eq } from '@flow/db/runtime';
-import { sessions } from '@flow/db/schema/core';
+import { sessions, twoFactors } from '@flow/db/schema/core';
 import { AppError, isLocale, type Locale } from '@flow/shared';
 import QRCode from 'qrcode';
 import type { RateLimiter } from '../ratelimit';
 import type { Auth } from './auth';
 import { MAX_PASSWORD_LENGTH } from './auth';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
+import { BACKUP_CODES_TOTAL, countRemainingBackupCodes } from './backup-codes';
 import { type CookieSpec, cookiesFromResponse } from './cookies';
+import { maskIp } from './ip-mask';
 import { bindingOf, signPending, verifyPending } from './pending';
 import { revokeOtherSessionsOfUser } from './revoke';
 import { type BrowserKind, type OsKind, parseUserAgent } from './ua';
@@ -46,6 +48,8 @@ export type SessionItem = {
   id: string;
   browser: BrowserKind;
   os: OsKind;
+  /** IP đã che (`113.161.x.x`); null nếu không có/không phải IP. KHÔNG bao giờ là IP thô. */
+  maskedIp: string | null;
   lastUsedAt: Date;
   createdAt: Date;
   current: boolean;
@@ -66,6 +70,9 @@ export type SecurityOverview = {
   twoFactorEnabled: boolean;
   /** Tài khoản thuộc diện bắt buộc 2FA (Owner của workspace hoặc quản trị nền tảng). */
   required: boolean;
+  /** Số mã dự phòng chưa dùng (chỉ đếm, không lộ mã); 0 khi chưa bật 2FA. */
+  backupCodesRemaining: number;
+  backupCodesTotal: number;
   sessions: SessionItem[];
 };
 
@@ -287,11 +294,12 @@ export function createTwoFactorFlows(options: {
     async overview(headers: Headers): Promise<SecurityOverview | null> {
       const user = await currentUser(headers);
       if (!user) return null;
-      const rows = await unwrapAuthDb(authDb).transaction((tx) =>
-        tx
+      const [rows, codeRows] = await unwrapAuthDb(authDb).transaction(async (tx) => [
+        await tx
           .select({
             id: sessions.id,
             userAgent: sessions.userAgent,
+            ip: sessions.ipAddress,
             createdAt: sessions.createdAt,
             updatedAt: sessions.updatedAt,
             expiresAt: sessions.expiresAt,
@@ -299,16 +307,27 @@ export function createTwoFactorFlows(options: {
           .from(sessions)
           .where(eq(sessions.userId, user.id))
           .orderBy(desc(sessions.updatedAt)),
-      );
+        await tx
+          .select({ backupCodes: twoFactors.backupCodes, verified: twoFactors.verified })
+          .from(twoFactors)
+          .where(eq(twoFactors.userId, user.id)),
+      ]);
       const currentId = (user.session as { id: string }).id;
+      const codeRow = codeRows[0];
       return {
         twoFactorEnabled: user.twoFactorEnabled,
         required: await isRequiredFor(user),
+        backupCodesRemaining:
+          user.twoFactorEnabled && codeRow?.verified
+            ? await countRemainingBackupCodes(secret, codeRow.backupCodes)
+            : 0,
+        backupCodesTotal: BACKUP_CODES_TOTAL,
         sessions: rows
           .filter((row) => row.expiresAt.getTime() > now())
           .map((row) => ({
             id: row.id,
             ...parseUserAgent(row.userAgent),
+            maskedIp: maskIp(row.ip),
             lastUsedAt: row.updatedAt,
             createdAt: row.createdAt,
             current: row.id === currentId,

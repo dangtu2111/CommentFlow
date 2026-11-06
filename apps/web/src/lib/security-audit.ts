@@ -10,12 +10,19 @@ export const SECURITY_EVENTS = [
   'backup_codes_regenerated',
   'session_revoked',
   'other_sessions_revoked',
+  'profile_updated',
+  'avatar_changed',
+  'avatar_removed',
+  'phone_otp_sent',
+  'phone_verified',
 ] as const;
 
 export type SecurityEvent = (typeof SECURITY_EVENTS)[number];
 
 /** Chi tiết cho phép ghi: danh sách trắng, chỉ số liệu — không bao giờ mật khẩu, mã, email, token. */
 const ALLOWED_DETAIL = ['removed'] as const;
+/** Tên trường hồ sơ được phép ghi vào `fields` (chỉ TÊN, không giá trị). */
+const PROFILE_FIELDS: readonly string[] = ['name', 'timezone', 'theme'];
 
 export function securityAuditEntry(
   event: SecurityEvent,
@@ -25,6 +32,13 @@ export function securityAuditEntry(
   for (const key of ALLOWED_DETAIL) {
     const value = input.detail?.[key];
     if (typeof value === 'number') after[key] = value;
+  }
+  const fields = input.detail?.fields;
+  if (event === 'profile_updated' && Array.isArray(fields)) {
+    const names = fields.filter(
+      (f): f is string => typeof f === 'string' && PROFILE_FIELDS.includes(f),
+    );
+    if (names.length > 0) after.fields = names;
   }
   return {
     workspaceId: input.workspaceId,

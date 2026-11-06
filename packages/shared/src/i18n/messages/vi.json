@@ -71,7 +71,8 @@
       "themeLabel": "Chế độ giao diện",
       "light": "Giao diện Sáng",
       "dark": "Giao diện Tối",
-      "soon": "Sắp ra mắt"
+      "system": "Theo hệ thống",
+      "themeHint": "Chế độ Tối hiện áp dụng cho khung Cài đặt."
     },
     "account": {
       "title": "Thông tin đăng nhập & Tài khoản",
@@ -81,7 +82,12 @@
       "edit": "Chỉnh sửa thông tin",
       "phone": "Số điện thoại liên hệ",
       "phoneEmpty": "Chưa cập nhật",
-      "soon": "Sắp có"
+      "soon": "Sắp có",
+      "phoneVerified": "Đã xác minh",
+      "phoneUnverified": "Chưa xác minh",
+      "verifyPhone": "Xác minh số điện thoại",
+      "verifyPhoneOff": "Xác minh số điện thoại chưa được bật",
+      "timezone": "Múi giờ làm việc"
     },
     "soon": "Sắp có",
     "billing": {
@@ -236,6 +242,78 @@
     "securityNote": {
       "title": "Bảo mật tài khoản",
       "body": "Chủ sở hữu và quản trị viên workspace bắt buộc bật xác thực 2 bước (2FA) để bảo vệ quyền truy cập các kênh đã kết nối."
+    },
+    "profile": {
+      "title": "Chỉnh sửa thông tin",
+      "body": "Cập nhật thông tin nhận diện tài khoản cá nhân và liên hệ trong Workspace.",
+      "avatarChange": "Đổi ảnh",
+      "avatarRemove": "Xóa ảnh",
+      "avatarHint": "Hỗ trợ JPG, PNG. Dung lượng tối đa 2 MB.",
+      "avatarOff": "Tải ảnh đại diện chưa được bật ở môi trường này.",
+      "avatarSaved": "Đã cập nhật ảnh đại diện.",
+      "avatarRemoved": "Đã xóa ảnh đại diện.",
+      "avatarErrors": {
+        "too_large": "Ảnh vượt quá 2 MB.",
+        "type": "Chỉ hỗ trợ ảnh JPG hoặc PNG.",
+        "empty": "Chưa chọn ảnh.",
+        "failed": "Không lưu được ảnh, vui lòng thử lại.",
+        "disabled": "Tải ảnh đại diện chưa được bật ở môi trường này."
+      },
+      "nameLabel": "Họ và tên",
+      "nameCount": "({count}/{max} ký tự)",
+      "nameRequired": "Vui lòng nhập họ tên",
+      "nameTooLong": "Họ tên tối đa {max} ký tự",
+      "emailLabel": "Email đăng nhập",
+      "emailVerified": "Đã xác thực",
+      "emailHint": "Muốn đổi email, vui lòng liên hệ hỗ trợ.",
+      "phoneLabel": "Số điện thoại liên hệ",
+      "phoneEmpty": "Chưa có số điện thoại",
+      "phoneHint": "Số điện thoại chỉ được lưu sau khi xác minh bằng mã OTP.",
+      "phoneVerify": "Xác minh",
+      "phoneChange": "Đổi số",
+      "timezoneLabel": "Múi giờ làm việc",
+      "timezoneInvalid": "Múi giờ không hợp lệ",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi",
+      "saving": "Đang lưu thay đổi...",
+      "saved": "Đã lưu thay đổi.",
+      "failed": "Không lưu được, vui lòng thử lại."
+    },
+    "phone": {
+      "title": "Xác minh số điện thoại",
+      "body": "Liên kết số điện thoại Việt Nam để nhận mã khôi phục tài khoản và cảnh báo bảo mật quan trọng.",
+      "steps": {
+        "label": "Các bước xác minh",
+        "one": "Bước 1: Nhập số điện thoại",
+        "two": "Bước 2: Nhập mã OTP 6 số",
+        "three": "Bước 3: Hoàn tất xác minh"
+      },
+      "numberLabel": "Số điện thoại di động (Việt Nam)",
+      "numberPlaceholder": "Nhập số điện thoại của bạn...",
+      "numberHint": "Mã OTP xác thực sẽ được gửi qua tin nhắn SMS tới số máy này.",
+      "send": "Gửi mã xác thực",
+      "sentTo": "Mã xác thực 6 số đã được gửi tới",
+      "changeNumber": "Đổi số khác",
+      "otpLabel": "Mã OTP 6 số",
+      "otpDigit": "Chữ số {n}",
+      "expiresHint": "Mã có hiệu lực 5 phút, nhập sai tối đa 5 lần.",
+      "resendIn": "Gửi lại sau {seconds} giây",
+      "resend": "Gửi lại mã",
+      "back": "Quay lại",
+      "verify": "Xác minh ngay",
+      "successTitle": "Đã xác minh số điện thoại thành công!",
+      "successBody": "Số điện thoại {phone} đã được liên kết với tài khoản của bạn.",
+      "done": "Hoàn tất & Đóng",
+      "off": "Xác minh số điện thoại chưa được bật ở môi trường này.",
+      "errors": {
+        "invalid_phone": "Số điện thoại không hợp lệ. Hãy nhập số di động Việt Nam.",
+        "invalid_code": "Mã không đúng hoặc đã hết hạn.",
+        "rate_limited": "Bạn thao tác quá nhanh, vui lòng thử lại sau {seconds} giây.",
+        "cooldown": "Vui lòng đợi {seconds} giây trước khi gửi lại mã.",
+        "send_failed": "Không gửi được mã, vui lòng thử lại sau.",
+        "disabled": "Xác minh số điện thoại chưa được bật ở môi trường này.",
+        "generic": "Có lỗi xảy ra, vui lòng thử lại."
+      }
     }
   },
   "auth": {
@@ -456,7 +534,13 @@
           "policyRequired": "Bắt buộc với vai trò của bạn",
           "policyOptional": "Tùy chọn với vai trò của bạn",
           "policyHint": "Áp dụng theo vai trò trong workspace",
-          "policyMet": "Đã đáp ứng"
+          "policyMet": "Đã đáp ứng",
+          "codesTitle": "Mã dự phòng còn lại",
+          "codesValue": "{remaining}/{total} mã",
+          "codesHint": "Mỗi mã chỉ dùng được một lần",
+          "codesLow": "Sắp hết mã — hãy tạo lại bộ mã mới",
+          "codesEmpty": "Đã hết mã — hãy tạo lại bộ mã mới",
+          "codesOk": "Còn đủ để khôi phục"
         },
         "switchDevice": "Đổi thiết bị",
         "viewCodes": "Xem lại mã",
@@ -491,7 +575,9 @@
           "chromeos": "ChromeOS",
           "linux": "Linux",
           "other": "hệ điều hành khác"
-        }
+        },
+        "ip": "IP: {ip}",
+        "ipUnknown": "IP: không xác định"
       }
     },
     "demo": {
@@ -2501,7 +2587,12 @@
       "security_two_factor_disabled": "Tắt xác thực hai bước",
       "security_backup_codes_regenerated": "Tạo lại mã dự phòng",
       "security_session_revoked": "Đăng xuất một thiết bị",
-      "security_other_sessions_revoked": "Đăng xuất các thiết bị khác"
+      "security_other_sessions_revoked": "Đăng xuất các thiết bị khác",
+      "security_profile_updated": "Cập nhật thông tin cá nhân",
+      "security_avatar_changed": "Đổi ảnh đại diện",
+      "security_avatar_removed": "Xóa ảnh đại diện",
+      "security_phone_otp_sent": "Gửi mã xác minh số điện thoại",
+      "security_phone_verified": "Xác minh số điện thoại"
     },
     "empty": {
       "title": "Chưa có nhật ký",

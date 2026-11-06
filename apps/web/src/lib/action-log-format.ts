@@ -24,6 +24,11 @@ const KNOWN_ACTIONS = [
   'security.backup_codes_regenerated',
   'security.session_revoked',
   'security.other_sessions_revoked',
+  'security.profile_updated',
+  'security.avatar_changed',
+  'security.avatar_removed',
+  'security.phone_otp_sent',
+  'security.phone_verified',
 ] as const;
 
 /** Khóa nhãn dịch: next-intl cấm dấu chấm trong tên khóa nên `member.left` → `member_left`. */

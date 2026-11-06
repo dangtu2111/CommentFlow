@@ -755,12 +755,12 @@ describe('check-rls', () => {
 
   it('bắt cột mới của users bị lộ cho cf_app khi ai đó cấp lại SELECT cả bảng (danh sách cho phép 7 cột)', async () => {
     const v = await violationsAfter(`
-      ALTER TABLE core.users ADD COLUMN phone text;
+      ALTER TABLE core.users ADD COLUMN spare_probe text;
       GRANT SELECT ON core.users TO cf_app`);
     expect(v).toContainEqual(
       expect.objectContaining({
         subject: 'core.users',
-        message: expect.stringContaining('cột phone'),
+        message: expect.stringContaining('cột spare_probe'),
       }),
     );
   });

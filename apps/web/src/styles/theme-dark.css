@@ -1,0 +1,122 @@
+/*
+ * Chế độ tối của khung Cài đặt (SETTINGS-PROFILE-WIRE, Q-WPROF1). Màu CHÉP NGUYÊN từ khối <style> của
+ * design/stitch/cai-dat-tai-khoan-bao-mat-che-do-toi-dark-mode.html (không bịa): nền #0E161B, thẻ #16222A, ô #1F2D37,
+ * viền #26343D, chữ #E6EEF2/#9FB0BA, nhấn #3BC9DB/#1098AD, thành công #69DB7C, lỗi #FF8787.
+ *
+ * PHẠM VI THỰC TẾ: token của app là hex cố định trong tailwind.config.ts (không có biến CSS theo chủ đề) nên ở nhánh này
+ * chỉ KHUNG CÀI ĐẶT (`.app-page-settings`) và hộp thoại bên trong nó đổi theo `html[data-theme='dark']`; thanh trên/menu
+ * của app giữ giao diện sáng. Mở rộng toàn app = chuyển token Tailwind sang biến CSS (đề xuất riêng).
+ * `.tw` có `important` nên bộ chọn ở đây phải dài hơn (`html[...] .app-page-settings .tw …`).
+ */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --dk-bg: #0e161b;
+  --dk-card: #16222a;
+  --dk-well: #1f2d37;
+  --dk-border: #26343d;
+  --dk-text: #e6eef2;
+  --dk-muted: #9fb0ba;
+  --dk-accent: #3bc9db;
+  --dk-accent-strong: #1098ad;
+  --dk-ok: #69db7c;
+  --dk-err: #ff8787;
+}
+
+html[data-theme="dark"] .app-page-settings {
+  background-color: var(--dk-bg);
+  color: var(--dk-text);
+  min-height: 100vh;
+}
+
+html[data-theme="dark"] .app-page-settings .tw,
+html[data-theme="dark"] .app-page-settings [data-tw] {
+  color: var(--dk-text);
+}
+
+html[data-theme="dark"] .app-page-settings .tw .bg-surface-container-lowest,
+html[data-theme="dark"] .app-page-settings [data-tw] .bg-surface-container-lowest,
+html[data-theme="dark"] .app-page-settings dialog[data-tw] {
+  background-color: var(--dk-card);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+
+html[data-theme="dark"] .app-page-settings .tw .bg-surface-container-low,
+html[data-theme="dark"] .app-page-settings .tw .bg-surface-container,
+html[data-theme="dark"] .app-page-settings .tw .bg-surface-container-high,
+html[data-theme="dark"] .app-page-settings .tw .bg-surface-container-highest,
+html[data-theme="dark"] .app-page-settings [data-tw] .bg-surface-container-low,
+html[data-theme="dark"] .app-page-settings [data-tw] .bg-surface-container,
+html[data-theme="dark"] .app-page-settings [data-tw] .bg-surface-container-high {
+  background-color: var(--dk-well);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+
+html[data-theme="dark"] .app-page-settings .tw .text-on-surface,
+html[data-theme="dark"] .app-page-settings [data-tw] .text-on-surface {
+  color: var(--dk-text);
+}
+html[data-theme="dark"] .app-page-settings .tw .text-on-surface-variant,
+html[data-theme="dark"] .app-page-settings [data-tw] .text-on-surface-variant {
+  color: var(--dk-muted);
+}
+html[data-theme="dark"] .app-page-settings .tw .text-primary,
+html[data-theme="dark"] .app-page-settings .tw .text-primary-container,
+html[data-theme="dark"] .app-page-settings [data-tw] .text-primary,
+html[data-theme="dark"] .app-page-settings [data-tw] .text-primary-container {
+  color: var(--dk-accent);
+}
+html[data-theme="dark"] .app-page-settings .tw .bg-primary-container,
+html[data-theme="dark"] .app-page-settings [data-tw] .bg-primary-container {
+  background-color: var(--dk-accent-strong);
+  color: #ffffff;
+}
+html[data-theme="dark"] .app-page-settings .tw .border-surface-container,
+html[data-theme="dark"] .app-page-settings .tw .border-t,
+html[data-theme="dark"] .app-page-settings .tw .border-outline-variant,
+html[data-theme="dark"] .app-page-settings [data-tw] .border-surface-container,
+html[data-theme="dark"] .app-page-settings [data-tw] .border-outline-variant {
+  border-color: var(--dk-border);
+}
+html[data-theme="dark"] .app-page-settings .tw .shadow-sm,
+html[data-theme="dark"] .app-page-settings .tw .shadow-md,
+html[data-theme="dark"] .app-page-settings .tw .shadow-xl,
+html[data-theme="dark"] .app-page-settings [data-tw] .shadow-xl {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+}
+html[data-theme="dark"] .app-page-settings select,
+html[data-theme="dark"] .app-page-settings input,
+html[data-theme="dark"] .app-page-settings textarea {
+  background-color: var(--dk-well);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+html[data-theme="dark"] .app-page-settings dialog[data-tw]::backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+/* Màu chữ trạng thái dựng sẵn bằng hex trong thành phần (xanh "đã xác thực", đỏ lỗi) → bản sáng hơn của Stitch. */
+html[data-theme="dark"] .app-page-settings .tw [class*="text-[#237A36]"] {
+  color: var(--dk-ok);
+}
+html[data-theme="dark"] .app-page-settings .tw .text-error {
+  color: var(--dk-err);
+}
+
+/* Thẻ CSS cũ chưa port Tailwind (Lượt AI, Ngôn ngữ trả lời…) trong cùng khung Cài đặt: cùng bảng màu tối. */
+html[data-theme="dark"] .app-page-settings .card {
+  background-color: var(--dk-card);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+html[data-theme="dark"] .app-page-settings .card .section-title {
+  color: var(--dk-text);
+}
+html[data-theme="dark"] .app-page-settings .card .muted {
+  color: var(--dk-muted);
+}
+html[data-theme="dark"] .app-page-settings .member-item {
+  background-color: var(--dk-well);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}

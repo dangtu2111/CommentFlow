@@ -564,6 +564,49 @@ describe('danh sách phiên của chính mình', () => {
     expect(await twoFactor.overview(new Headers())).toBeNull();
   });
 
+  it('SETTINGS-PROFILE-WIRE: phiên mới LƯU IP đã che, danh sách hiện IP che (phiên cũ có IP thô cũng không lộ)', async () => {
+    const mine = await newUser();
+    const signed = await flows.signIn({
+      ...mine,
+      headers: new Headers({ 'x-forwarded-for': '113.161.22.9' }),
+    });
+    if (signed.status !== 'ok') throw new Error(signed.status);
+    const jar = new Jar().apply(signed.cookies);
+    const stored = (
+      await owner.query('SELECT ip FROM core.sessions WHERE user_id = $1', [mine.userId])
+    ).rows;
+    expect(stored.map((r) => r.ip)).toEqual(['113.161.x.x']);
+
+    await owner.query("UPDATE core.sessions SET ip = '203.0.113.9' WHERE user_id = $1", [
+      mine.userId,
+    ]);
+    const overview = await twoFactor.overview(jar.headers);
+    expect(overview?.sessions[0]?.maskedIp).toBe('203.0.x.x');
+    expect(JSON.stringify(overview)).not.toContain('203.0.113.9');
+  });
+
+  it('SETTINGS-PROFILE-WIRE: số mã dự phòng còn lại thật (10 → 9 sau khi dùng một mã), không lộ mã', async () => {
+    const plain = await newUser();
+    const plainOverview = await twoFactor.overview((await login(plain)).headers);
+    expect(plainOverview).toMatchObject({ backupCodesRemaining: 0, backupCodesTotal: 10 });
+
+    const user = await userWithTwoFactor();
+    const first = await flows.signIn({ ...user, headers: new Headers() });
+    if (first.status !== 'two_factor_required') throw new Error(first.status);
+    const used = await twoFactor.verifyLogin({
+      code: user.backupCodes[0] as string,
+      kind: 'backup',
+      headers: new Jar().apply(first.cookies).headers,
+    });
+    if (used.status !== 'ok') throw new Error(used.status);
+    const jar = new Jar().apply(used.cookies);
+    const overview = await twoFactor.overview(jar.headers);
+    expect(overview).toMatchObject({ backupCodesRemaining: 9, backupCodesTotal: 10 });
+    for (const code of user.backupCodes) {
+      expect(JSON.stringify(overview)).not.toContain(code);
+    }
+  });
+
   it('đăng xuất phiên khác của mình được; phiên của người khác (IDOR) và phiên hiện tại thì không', async () => {
     const mine = await newUser();
     const theirs = await newUser();

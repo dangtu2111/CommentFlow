@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cài đặt - Chỉnh sửa thông tin cá nhân | CommentFlow AI</title>
+<!-- Google Fonts: Be Vietnam Pro -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', 'sans-serif'],
+          },
+          colors: {
+            flowteal: {
+              50: '#e6f7f9',
+              100: '#c5ecf1',
+              500: '#15aabf',
+              600: '#0c8599',
+              700: '#0B7285', // Flow Teal Brand Primary
+              800: '#085361',
+              900: '#053843',
+            },
+            sparkviolet: {
+              500: '#7950f2',
+              600: '#6741D9', // Spark Violet Brand
+              700: '#5f3dc4',
+            },
+            semanticRed: '#C92A2A',
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: CustomStyles -->
+<style data-purpose="base-styling">
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Custom scrollbar for subtle viewports */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cfd8dc;
+      border-radius: 9999px;
+    }
+  </style>
+<!-- END: CustomStyles -->
+</head>
+<body class="bg-slate-100 text-slate-800 text-sm antialiased overflow-hidden select-none">
+<!-- BEGIN: BasePageContent (Simulated Background) -->
+<div class="flex h-screen w-full filter blur-[1px]">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0">
+<div>
+<!-- Logo Area -->
+<div class="h-16 px-5 border-b border-slate-100 flex items-center gap-2">
+<span class="font-bold text-lg text-slate-900 tracking-tight">Comment<span class="text-flowteal-700">Flow</span></span>
+<span class="bg-sparkviolet-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider">AI</span>
+</div>
+<!-- Navigation Sections -->
+<div class="p-3">
+<p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">ĐIỀU HƯỚNG VẬN HÀNH</p>
+<nav class="space-y-1">
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<span class="flex items-center gap-2.5">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Bình luận
+              </span>
+<span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">24</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<span class="flex items-center gap-2.5">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Tin nhắn
+              </span>
+<span class="inline-flex items-center gap-1 text-xs text-rose-500 font-semibold"><span class="w-2 h-2 rounded-full bg-rose-500"></span> 8</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<span class="flex items-center gap-2.5">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Khách tiềm năng
+              </span>
+<span class="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-semibold">+5</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<span class="flex items-center gap-2.5">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Bài viết
+              </span>
+<span class="text-xs bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-semibold">3</span>
+</a>
+</nav>
+<p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3 mt-6 mb-2">HỆ THỐNG &amp; TRÍ TUỆ</p>
+<nav class="space-y-1">
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Cơ sở kiến thức
+            </a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Tự động hóa
+            </a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Báo cáo
+            </a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Quy tắc spam
+            </a>
+<!-- Active Menu Item: Cài đặt -->
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-flowteal-700 text-white font-medium shadow-sm" href="#">
+<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Cài đặt
+            </a>
+</nav>
+</div>
+</div>
+<!-- Footer Side Stats & Profile -->
+<div class="p-3 border-t border-slate-100 bg-slate-50/50">
+<div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mb-3">
+<div class="flex items-center justify-between text-xs mb-1.5">
+<span class="font-semibold text-slate-700 flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-sparkviolet-600" fill="currentColor" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" fill-rule="evenodd"></path></svg>
+              Hạn mức AI
+            </span>
+<span class="text-flowteal-700 font-bold">71%</span>
+</div>
+<div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-2">
+<div class="bg-flowteal-700 h-full w-[71%] rounded-full"></div>
+</div>
+<div class="flex justify-between items-center text-[11px] text-slate-500">
+<span>2.140 / 3.000 lượt</span>
+<a class="text-flowteal-700 font-semibold hover:underline" href="#">Nâng gói</a>
+</div>
+</div>
+<div class="flex items-center justify-between px-2 py-1.5">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center font-bold text-slate-700 text-xs">NL</div>
+<div>
+<p class="text-xs font-semibold text-slate-800 leading-tight">Nguyễn Mai Linh</p>
+<p class="text-[11px] text-emerald-600 font-medium">CSKH • Trực tuyến</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- Main Content Background Shell -->
+<div class="flex-1 flex flex-col min-w-0 bg-slate-50">
+<!-- Topbar -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-3">
+<div class="bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 flex items-center gap-2">
+<span>Thời Trang Mẫu An Nhiên</span>
+<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-bold">18 chờ duyệt</span>
+</div>
+<div class="flex items-center gap-2 text-xs text-slate-500">
+<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-600"></span> FB</span>
+<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-pink-600"></span> IG</span>
+<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-900"></span> TikTok</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs text-emerald-600 font-medium">AI tự động: <b>Bật (2 kênh)</b></span>
+<button class="bg-rose-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm">Dừng khẩn cấp</button>
+</div>
+</header>
+<!-- Main Container Dummy -->
+<main class="p-8 overflow-y-auto space-y-6">
+<div>
+<div class="text-xs text-slate-400 mb-1">Cài đặt hệ thống › Tài khoản &amp; Bảo mật</div>
+<h1 class="text-2xl font-bold text-slate-900">Tài khoản &amp; Bảo mật</h1>
+</div>
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+<h2 class="font-semibold text-base mb-4">Xác thực 2 bước (Two-Factor Authentication - 2FA)</h2>
+<div class="h-24 bg-slate-50 rounded-lg border border-dashed border-slate-200"></div>
+</div>
+</main>
+</div>
+</div>
+<!-- END: BasePageContent -->
+<!-- BEGIN: ModalBackdropAndContainer -->
+<!-- Backdrop Overlay covering the full screen -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-sm transition-all" data-purpose="modal-overlay">
+<!-- BEGIN: EditProfileModalDialog -->
+<div aria-labelledby="modal-headline" aria-modal="true" class="bg-white w-full max-w-[600px] rounded-xl border border-[#DDE3E7] shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200" data-purpose="edit-profile-dialog" role="dialog">
+<!-- BEGIN: ModalHeader -->
+<header class="px-6 pt-5 pb-4 border-b border-slate-100 flex items-start justify-between">
+<div>
+<h2 class="text-lg font-semibold text-neutral-900 leading-snug" id="modal-headline">Chỉnh sửa thông tin</h2>
+<p class="text-xs text-neutral-500 mt-0.5">Cập nhật thông tin nhận diện tài khoản cá nhân và liên hệ trong Workspace.</p>
+</div>
+<!-- Close Button (X icon) -->
+<button aria-label="Đóng hộp thoại" class="text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-flowteal-600" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</header>
+<!-- END: ModalHeader -->
+<!-- BEGIN: ModalBody -->
+<div class="px-6 py-5 overflow-y-auto space-y-5">
+<!-- Profile Picture Section -->
+<div class="flex items-center gap-4 p-3.5 bg-slate-50/70 border border-slate-200/80 rounded-xl" data-purpose="avatar-upload-group">
+<!-- User Avatar Placeholder / Circular 72px -->
+<div class="relative w-[72px] h-[72px] rounded-full ring-2 ring-white shadow-sm shrink-0 bg-flowteal-100 text-flowteal-800 font-bold text-xl flex items-center justify-center overflow-hidden">
+<span>NL</span>
+<!-- Camera overlay icon indicator -->
+<div class="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+<svg class="w-5 h-5 text-white drop-shadow" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+<!-- Buttons & Description -->
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1.5">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-700 bg-white border border-neutral-300 rounded-lg shadow-2xs hover:bg-neutral-50 hover:border-neutral-400 active:scale-95 transition" type="button">
+<svg class="w-3.5 h-3.5 text-neutral-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Đổi ảnh
+              </button>
+<button class="px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition active:scale-95" type="button">
+                Xóa ảnh
+              </button>
+</div>
+<p class="text-[11px] text-neutral-500 leading-relaxed">Hỗ trợ JPG, PNG. Dung lượng tối đa 2 MB.</p>
+</div>
+</div>
+<!-- Form Fields Container -->
+<form class="space-y-4" data-purpose="profile-edit-form">
+<!-- Field 1: Họ và tên (Required & Error Sample) -->
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="text-xs font-semibold text-neutral-800" for="fullNameInput">
+                Họ và tên <span class="text-semanticRed">*</span>
+</label>
+<span class="text-[11px] text-neutral-400 font-mono">(16/50 ký tự)</span>
+</div>
+<div class="relative">
+<input aria-describedby="fullNameError" aria-invalid="true" class="w-full px-3 py-2 text-sm text-neutral-800 bg-white rounded-lg border border-red-500 ring-1 ring-red-500/20 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100 placeholder-neutral-400 transition" id="fullNameInput" type="text" value="Nguyễn Mai Linh"/>
+</div>
+<!-- Error feedback indicator -->
+<p class="flex items-center gap-1 mt-1 text-xs font-medium text-semanticRed" id="fullNameError">
+<svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" fill-rule="evenodd"></path></svg>
+              Vui lòng nhập họ tên
+            </p>
+</div>
+<!-- Field 2: Email đăng nhập (Read-only + Badge) -->
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="text-xs font-semibold text-neutral-800 flex items-center gap-2" for="emailInput">
+                Email đăng nhập
+              </label>
+<!-- Chip "Đã xác thực" -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+<svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
+                Đã xác thực
+              </span>
+</div>
+<div class="relative">
+<input class="w-full px-3 py-2 pr-9 text-sm text-neutral-600 bg-neutral-100/90 rounded-lg border border-neutral-200 cursor-not-allowed select-all" disabled="" id="emailInput" readonly="" type="email" value="linh.sales@annhienstore.vn"/>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-neutral-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+<p class="text-xs text-neutral-500 mt-1">
+              Muốn đổi email, <a class="text-flowteal-700 hover:text-flowteal-800 font-semibold underline underline-offset-2" href="#">liên hệ hỗ trợ</a>.
+            </p>
+</div>
+<!-- Field 3: Số điện thoại (Input with Verify OTP Action) -->
+<div>
+<label class="block text-xs font-semibold text-neutral-800 mb-1.5" for="phoneInput">
+              Số điện thoại liên hệ
+            </label>
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<input class="w-full px-3 py-2 text-sm text-neutral-800 bg-white rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-flowteal-600 focus:border-flowteal-600 placeholder-neutral-400 transition" id="phoneInput" placeholder="Nhập số điện thoại..." type="text" value="0982 ••• 789"/>
+</div>
+<button class="px-3.5 py-2 text-xs font-semibold text-flowteal-700 bg-flowteal-50 border border-flowteal-200 hover:bg-flowteal-100/80 rounded-lg transition active:scale-95 shrink-0" type="button">
+                Xác minh
+              </button>
+</div>
+<p class="text-xs text-neutral-500 mt-1 leading-relaxed">
+              Mã OTP sẽ được gửi đến số điện thoại này để xác thực khi bạn cập nhật.
+            </p>
+</div>
+<!-- Field 4: Múi giờ làm việc -->
+<div>
+<label class="block text-xs font-semibold text-neutral-800 mb-1.5" for="timeZoneSelect">
+              Múi giờ làm việc
+            </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<select class="w-full pl-9 pr-8 py-2 text-sm text-neutral-800 bg-white rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-flowteal-600 focus:border-flowteal-600 transition cursor-pointer appearance-none" id="timeZoneSelect">
+<option selected="">(GMT+07:00) Giờ Đông Dương - Hà Nội, Bangkok, Jakarta</option>
+<option>(GMT+08:00) Singapore, Kuala Lumpur, Bắc Kinh</option>
+<option>(GMT+09:00) Tokyo, Seoul</option>
+<option>(GMT+00:00) Giờ phối hợp quốc tế (UTC) - London</option>
+<option>(GMT-05:00) Giờ miền Đông - New York</option>
+</select>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-neutral-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+</div>
+</form>
+</div>
+<!-- END: ModalBody -->
+<!-- BEGIN: ModalFooter -->
+<footer class="px-6 py-4 border-t border-neutral-200 bg-neutral-50/60 flex items-center justify-between">
+<!-- Saving Status Spinner / Left aligned -->
+<div class="flex items-center gap-2 text-xs font-medium text-flowteal-700" data-purpose="saving-status-indicator">
+<svg class="animate-spin h-3.5 w-3.5 text-flowteal-700" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+<path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path>
+</svg>
+<span>Đang lưu thay đổi...</span>
+</div>
+<!-- Action Buttons / Right aligned -->
+<div class="flex items-center gap-2.5">
+<button class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-100 hover:border-neutral-400 active:scale-95 transition" type="button">
+            Hủy
+          </button>
+<button class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-flowteal-700 hover:bg-flowteal-800 rounded-lg shadow-sm hover:shadow active:scale-95 transition" type="submit">
+<span>Lưu thay đổi</span>
+</button>
+</div>
+</footer>
+<!-- END: ModalFooter -->
+</div>
+<!-- END: EditProfileModalDialog -->
+</div>
+<!-- END: ModalBackdropAndContainer -->
+</body></html>

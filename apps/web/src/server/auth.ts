@@ -1,13 +1,18 @@
+import { appendFile } from 'node:fs/promises';
 import {
   type Auth,
   type AuthFlows,
   type AuthHandle,
+  type AuthProfileStore,
   type ChangePasswordFlow,
   createAuth,
   createAuthFlows,
+  createAuthProfileStore,
   createChangePasswordFlow,
+  createMockSmsProvider,
   createNotifier,
   createPasswordPolicy,
+  createPhoneVerifyFlows,
   createSealedValueCodec,
   createSignedValueCodec,
   createSmtpTransport,
@@ -15,6 +20,7 @@ import {
   createValkeyRateLimiter,
   openAuthDb,
   openWorkspaceServices,
+  type PhoneVerifyFlows,
   type RateLimiter,
   type SealedValueCodec,
   type SignedValueCodec,
@@ -31,6 +37,7 @@ import {
   FB_STATE_COOKIE_LABEL,
   FB_STATE_TTL_SECONDS,
 } from './fb-oauth-state';
+import { resolvePhoneVerify } from './profile-config';
 import { WORKSPACE_COOKIE_LABEL, WORKSPACE_COOKIE_TTL_SECONDS } from './workspace-selection';
 
 /**
@@ -42,6 +49,10 @@ export type AuthRuntime = {
   authHandle: AuthHandle;
   flows: AuthFlows;
   twoFactor: TwoFactorFlows;
+  /** Hồ sơ phần `cf_app` không đọc được (múi giờ, giao diện, SĐT) — đọc bằng `cf_auth` theo userId của phiên. */
+  profileStore: Pick<AuthProfileStore, 'readProfile'>;
+  /** Xác minh SĐT bằng OTP; `enabled` theo cờ `PHONE_VERIFY_ENABLED` (SMS MOCK, chỉ dev/test/ci). */
+  phoneVerify: PhoneVerifyFlows;
   /** Đổi mật khẩu của chính mình (kiểm mật khẩu lộ + rate limit + xóa mọi phiên). */
   changePassword: ChangePasswordFlow;
   tenancy: Tenancy;
@@ -113,11 +124,31 @@ function createRuntime(): AuthRuntime {
     workspaceRoles: async (userId) =>
       (await tenancy.listWorkspacesOfUser(userId)).map((w) => w.role),
   });
+  const profileStore = createAuthProfileStore(authHandle);
+  const outboxFile = process.env.SMS_MOCK_OUTBOX_FILE?.trim();
+  const phoneVerify = createPhoneVerifyFlows({
+    store: profileStore.challenges,
+    sms: createMockSmsProvider({
+      appEnv: env.APP_ENV,
+      // SĐT đã che; mã OTP chỉ vào log dev (MOCK từ chối chạy ở staging/production).
+      log: (line) => console.info(line),
+      ...(outboxFile ? { outbox: { append: (line: string) => appendFile(outboxFile, line) } } : {}),
+    }),
+    limiter,
+    secret: env.BETTER_AUTH_SECRET,
+    enabled: resolvePhoneVerify({
+      APP_ENV: env.APP_ENV,
+      PHONE_VERIFY_ENABLED: process.env.PHONE_VERIFY_ENABLED,
+    }).enabled,
+  });
   return {
     auth,
     authHandle,
     flows: createAuthFlows({ auth, limiter, passwordPolicy, twoFactor }),
     twoFactor,
+    // Chỉ đọc: kho thử thách OTP (`challenges`, có `markVerified`) KHÔNG đưa ra ngoài — SĐT chỉ được ghi qua `phoneVerify`.
+    profileStore: { readProfile: profileStore.readProfile },
+    phoneVerify,
     changePassword: createChangePasswordFlow({
       auth,
       authDb: authHandle,

@@ -29,6 +29,14 @@ describe('buildE2eEnv', () => {
     expect(env.REDIS_KEY_PREFIX).toBe('e2e:');
   });
 
+  it('bật SMS MOCK + ảnh đại diện MOCK chỉ cho E2E (APP_ENV=test), hộp thư thử theo cổng', () => {
+    const env = buildE2eEnv(base, { port: 3123 });
+    expect(env.APP_ENV).toBe('test');
+    expect(env.PHONE_VERIFY_ENABLED).toBe('true');
+    expect(env.NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED).toBe('true');
+    expect(env.SMS_MOCK_OUTBOX_FILE).toContain('cf-e2e-sms-outbox-3123');
+  });
+
   it('CF_LANE đổi tên DB thành cf_test_<làn> cho cả ba role, giữ nguyên máy/mật khẩu', () => {
     const env = buildE2eEnv(base, { port: 3100, lane: 'b' });
     for (const name of ['DATABASE_URL', 'DATABASE_ADMIN_URL', 'DATABASE_AUTH_URL']) {

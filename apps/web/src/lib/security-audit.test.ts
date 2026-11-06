@@ -30,4 +30,40 @@ describe('FR-001 nhật ký kiểm toán thay đổi bảo mật', () => {
     });
     expect(entry.after).toEqual({ removed: 3 });
   });
+
+  it('SETTINGS-PROFILE-WIRE có sự kiện hồ sơ/SĐT/ảnh', () => {
+    for (const event of [
+      'profile_updated',
+      'avatar_changed',
+      'avatar_removed',
+      'phone_otp_sent',
+      'phone_verified',
+    ] as const) {
+      expect(SECURITY_EVENTS).toContain(event);
+    }
+  });
+
+  it('profile_updated chỉ ghi TÊN trường đã đổi (danh sách trắng), không giá trị/PII', () => {
+    const entry = securityAuditEntry('profile_updated', {
+      workspaceId: 'w1',
+      userId: 'u1',
+      detail: {
+        fields: ['name', 'timezone', 'email', 'phone', 'Nguyễn Văn A'],
+        name: 'Nguyễn Văn A',
+        phone: '+84912345678',
+      },
+    });
+    expect(entry.after).toEqual({ fields: ['name', 'timezone'] });
+    expect(JSON.stringify(entry)).not.toContain('Nguyễn');
+    expect(JSON.stringify(entry)).not.toContain('84912345678');
+  });
+
+  it('phone_verified/phone_otp_sent không mang SĐT hay mã', () => {
+    const entry = securityAuditEntry('phone_verified', {
+      workspaceId: 'w1',
+      userId: 'u1',
+      detail: { phone: '+84912345678', code: '123456', masked: '+849 ••• ••• 678' },
+    });
+    expect(entry.after).toBeUndefined();
+  });
 });

@@ -1,4 +1,5 @@
 import { listChannels } from '@flow/db/runtime';
+import { DEFAULT_TIME_ZONE } from '@flow/saas-core';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ChangePasswordCard } from '../../../../components/security/change-password-card';
@@ -11,8 +12,10 @@ import { SettingsFrame, TwPageHeader } from '../../../../components/settings/set
 import { TwChip } from '../../../../components/settings/tw/ui';
 import { UsageMeterCard } from '../../../../components/settings/usage-meter-card';
 import { Icon } from '../../../../components/ui/icon';
+import { parseThemeChoice } from '../../../../lib/theme';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getDb } from '../../../../server/db';
+import { isAvatarUploadEnabled, resolvePhoneVerify } from '../../../../server/profile-config';
 import { requestContext } from '../../../../server/request-context';
 import { requireAppUser } from '../../../../server/require-app-user';
 import { loadSettingsCounts } from '../../../../server/settings-counts';
@@ -46,6 +49,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
   const usage = workspace.role === 'owner' ? await loadUsageMeterView(workspace.id) : null;
   const overview = await getAuthRuntime().twoFactor.overview((await requestContext()).headers);
   if (!overview) redirect('/login');
+  // Hồ sơ phần cf_app không đọc được (múi giờ, giao diện, SĐT, ảnh): đọc bằng cf_auth theo userId của phiên.
+  const profile = await getAuthRuntime().profileStore.readProfile(user.id);
   const t = await getTranslations('settings');
   const counts = await loadSettingsCounts({
     role: workspace.role,
@@ -81,18 +86,31 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
           </div>
         }
       >
-        <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
+        <TwoFactorCard
+          enabled={overview.twoFactorEnabled}
+          required={overview.required}
+          backupRemaining={overview.backupCodesRemaining}
+          backupTotal={overview.backupCodesTotal}
+        />
         <AccountCard
           name={user.name}
           email={user.email}
           emailVerified={user.emailVerified}
           memberRole={workspace.role}
+          profile={{
+            image: profile?.image ?? null,
+            timezone: profile?.timezone ?? DEFAULT_TIME_ZONE,
+            phone: profile?.phone ?? null,
+            phoneVerified: profile?.phoneVerifiedAt != null,
+          }}
+          phoneVerifyEnabled={resolvePhoneVerify().enabled}
+          avatarEnabled={isAvatarUploadEnabled()}
         >
           <ChangePasswordCard />
         </AccountCard>
         <SessionsCard sessions={overview.sessions} />
         {usage ? <UsageMeterCard view={usage} /> : null}
-        <LanguageCard />
+        <LanguageCard theme={parseThemeChoice(profile?.theme)} />
         {channels ? (
           <ReplyLanguageCard channels={channels} notice={replyNoticeOf(query.rl)} />
         ) : null}

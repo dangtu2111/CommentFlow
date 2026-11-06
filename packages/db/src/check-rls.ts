@@ -35,7 +35,8 @@ const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
 const OWN_USER_TABLES = ['core.users', 'core.sessions', 'core.accounts'];
 /** Bảng cf_app KHÔNG được có quyền nào (chỉ cf_auth). */
 // two_factors chứa secret TOTP và mã dự phòng: cf_app không được chạm (cf_auth cấp riêng khi tạo bảng).
-const AUTH_ONLY_TABLES = ['core.verifications', 'core.two_factors'];
+// phone_verifications (0062): mã OTP băm — cũng chỉ cf_auth.
+const AUTH_ONLY_TABLES = ['core.verifications', 'core.two_factors', 'core.phone_verifications'];
 /** Mọi bảng xác thực: cf_auth chỉ được chạm các bảng này. */
 const AUTH_TABLES = [...OWN_USER_TABLES, ...AUTH_ONLY_TABLES];
 
@@ -246,6 +247,14 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'core.users', 'is_admin', 'UPDATE'],
   ['cf_app', 'core.users', 'admin_role', 'UPDATE'],
   ['cf_app', 'core.users', 'email', 'INSERT'],
+  // SĐT (0062): chỉ cf_auth ghi sau khi OTP đúng; cf_app không đọc/ghi (kể cả của chính mình)
+  ['cf_app', 'core.users', 'phone', 'SELECT'],
+  ['cf_app', 'core.users', 'phone', 'UPDATE'],
+  ['cf_app', 'core.users', 'phone_verified_at', 'SELECT'],
+  ['cf_app', 'core.users', 'phone_verified_at', 'UPDATE'],
+  // múi giờ/giao diện: cf_app chỉ GHI (policy chỉ-dòng-của-mình), không đọc → thành viên khác không đọc được
+  ['cf_app', 'core.users', 'timezone', 'SELECT'],
+  ['cf_app', 'core.users', 'theme', 'SELECT'],
   ['cf_app', 'core.accounts', 'password', 'UPDATE'],
   // lời mời: sau khi tạo chỉ thu hồi được (revoked_at); không sửa token/email/vai trò/hạn/đã-dùng
   ['cf_app', 'core.invitations', 'token_hash', 'UPDATE'],
