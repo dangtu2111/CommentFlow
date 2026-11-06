@@ -229,17 +229,18 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
         description={enabled ? t('onBody') : t('offBody')}
         end={
           <div className="row">
-            {enabled ? (
+            {enableFlow ? (
+              // Cả khi 2FA vừa bật nhưng còn đang hiện mã dự phòng: nút phải mở lại đúng hộp thoại này.
+              <DialogTrigger dialogId={SETUP_ID} className="btn btn-primary">
+                {t('start')}
+              </DialogTrigger>
+            ) : (
               <DialogTrigger dialogId={REGEN_ID} className="btn btn-secondary">
                 <RefreshCw size={16} aria-hidden="true" />
                 {t('regenTitle')}
               </DialogTrigger>
-            ) : (
-              <DialogTrigger dialogId={SETUP_ID} className="btn btn-primary">
-                {t('start')}
-              </DialogTrigger>
             )}
-            {enabled && !required ? (
+            {!enableFlow && !required ? (
               <DialogTrigger dialogId={DISABLE_ID} className="btn btn-danger-ghost">
                 <Power size={16} aria-hidden="true" />
                 {t('disableTitle')}

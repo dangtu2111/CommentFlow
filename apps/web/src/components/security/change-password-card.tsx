@@ -80,7 +80,16 @@ export function ChangePasswordCard() {
         description={t('dialogBody')}
         icon={<KeyRound size={22} />}
       >
-        <form action={action} className="form" noValidate>
+        <form
+          action={action}
+          className="form"
+          noValidate
+          onReset={() => {
+            // React xóa ô nhập sau khi Server Action chạy xong; đồng bộ lại để thanh độ mạnh không dùng giá trị cũ.
+            setNext('');
+            setConfirm('');
+          }}
+        >
           {state.status === 'error' ? (
             <Banner variant="danger">
               {errors(state.message, { minutes: state.retryMinutes ?? 15 })}
