@@ -189,6 +189,28 @@ export {
   type ReadinessTopic,
 } from './readiness/readiness';
 export {
+  createDbKbSearcher,
+  type KbSearcher,
+  type KbSearchQuery,
+} from './retrieve/kb-searcher';
+export {
+  type RetrieveDeps,
+  type RetrieveInput,
+  type RetrieveResult,
+  retrieveKnowledge,
+  type SkipReason,
+} from './retrieve/retrieve';
+export {
+  DEFAULT_MAX_SOURCE_TOKENS,
+  DEFAULT_MIN_RELEVANCE_RETRIEVE,
+  estimateTokens,
+  type KbHit,
+  kbHitsToSources,
+  MAX_RRF_SCORE,
+  rrfRelevance,
+  variantsToSources,
+} from './retrieve/sources';
+export {
   type CustomerContext,
   MAX_OTHER_POST_QUESTIONS,
   MAX_THREAD_TURNS,
