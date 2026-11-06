@@ -22,7 +22,11 @@ export const DOCS_TARGETS = [
     rules: [
       { prefix: 'lenh-', start: /^\| /, what: 'một hàng bảng (`| …`)' },
       { prefix: 'cay-', start: /^\| /, what: 'một hàng bảng (`| …`)' },
-      { prefix: 'mien-', start: /^(\| |- )/, what: 'một hàng bảng (`| …`) hoặc gạch đầu dòng (`- …`)' },
+      {
+        prefix: 'mien-',
+        start: /^(\| |- )/,
+        what: 'một hàng bảng (`| …`) hoặc gạch đầu dòng (`- …`)',
+      },
       { prefix: 'diem-vao-', start: /^\| /, what: 'một hàng bảng (`| …`)' },
       { prefix: 'bay-', start: /^- /, what: 'một gạch đầu dòng (`- …`)' },
     ],
@@ -38,7 +42,12 @@ export const DOCS_TARGETS = [
       { head: '_docs.md', prefix: 'docs-' },
     ],
     rules: [
-      { prefix: 'q', start: /^\| Q[^|]*\|/, what: 'một hàng bảng bắt đầu `| Q<mã> |`', code: /^\|\s*(Q[^|\s]*)\s*\|/ },
+      {
+        prefix: 'q',
+        start: /^\| Q[^|]*\|/,
+        what: 'một hàng bảng bắt đầu `| Q<mã> |`',
+        code: /^\|\s*(Q[^|\s]*)\s*\|/,
+      },
       { prefix: 'docs-', start: /^- /, what: 'một gạch đầu dòng (`- …`)' },
     ],
   },

@@ -44,6 +44,7 @@ export function checkFragments(target, files) {
 }
 
 function trackCode(problems, seen, label, name, key, code) {
-  if (seen.has(key)) problems.push(`${label}: ${name}: trùng mã ${code} (đã có ở ${seen.get(key)})`);
+  if (seen.has(key))
+    problems.push(`${label}: ${name}: trùng mã ${code} (đã có ở ${seen.get(key)})`);
   else seen.set(key, name);
 }
