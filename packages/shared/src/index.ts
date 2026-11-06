@@ -10,6 +10,7 @@ export {
 } from './abbreviation';
 export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } from './brand';
 export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
+export * from './conversation-window';
 export {
   type AutomationSettingsExportSource,
   type CommentExportSource,

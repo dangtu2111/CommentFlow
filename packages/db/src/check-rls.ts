@@ -273,6 +273,19 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.size_charts', 'category', 'UPDATE'],
   ['cf_app', 'cf.size_charts', 'category_norm', 'UPDATE'],
   // POST-NOTES (0045): bài và workspace của ghi chú/ghi đè không đổi sau khi tạo
+  // MSG-STORE (0058): định danh hội thoại không đổi; tin nhắn bất biến (không UPDATE nào)
+  ['cf_app', 'cf.conversations', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.conversations', 'channel_id', 'UPDATE'],
+  ['cf_app', 'cf.conversations', 'external_id', 'UPDATE'],
+  ['cf_app', 'cf.conversations', 'customer_external_id', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'text', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'external_id', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'direction', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'sent_by', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'tag', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'created_time', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'conversation_id', 'UPDATE'],
+  ['cf_app', 'cf.messages', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_notes', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.post_notes', 'post_id', 'UPDATE'],
   ['cf_app', 'cf.post_auto_overrides', 'workspace_id', 'UPDATE'],
@@ -551,7 +564,8 @@ async function checkDefinerFunctions(db: Queryable, violations: RlsViolation[]):
     SELECT v.tbl AS name, v.trg AS trg FROM (VALUES
       ('cf.channels', 'channels_guard_user_update'), ('cf.comments', 'comments_guard_user_update'),
       ('cf.comments', 'comments_apply_tombstone'), ('cf.products', 'products_set_rev'),
-      ('cf.product_variants', 'product_variants_bump_rev'), ('cf.kb_chunks', 'kb_chunks_fill_search')) AS v(tbl, trg)
+      ('cf.product_variants', 'product_variants_bump_rev'), ('cf.kb_chunks', 'kb_chunks_fill_search'),
+      ('cf.conversations', 'conversations_guard_user_update'), ('cf.messages', 'messages_guard_user_insert')) AS v(tbl, trg)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t
       WHERE t.tgrelid = v.tbl::regclass AND t.tgname = v.trg AND NOT t.tgisinternal AND t.tgenabled = 'O')`);
@@ -676,6 +690,14 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.size_charts', 'w', 'is_workspace_owner'],
   ['cf.size_charts', 'w', 'is_system_context'],
   ['cf.size_charts', 'r', 'is_workspace_member'],
+  // MSG-STORE (0058): hội thoại INSERT chỉ hệ thống; UPDATE thành viên hoặc hệ thống; tin nhắn INSERT thành viên hoặc hệ thống
+  ['cf.conversations', 'a', 'is_system_context'],
+  ['cf.conversations', 'w', 'is_workspace_member'],
+  ['cf.conversations', 'w', 'is_system_context'],
+  ['cf.conversations', 'r', 'is_workspace_member'],
+  ['cf.messages', 'a', 'is_workspace_member'],
+  ['cf.messages', 'a', 'is_system_context'],
+  ['cf.messages', 'r', 'is_workspace_member'],
   // POST-NOTES (0045): Owner hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
   ['cf.post_notes', 'a', 'is_workspace_owner'],
   ['cf.post_notes', 'a', 'is_system_context'],
@@ -786,6 +808,11 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.size_charts', 'w', 'is_workspace_member'],
   ['cf.size_charts', 'a', 'IS NULL'],
   ['cf.size_charts', 'w', 'IS NULL'],
+  // hội thoại/tin nhắn: withWorkspace trần (không người dùng) không được ghi; INSERT hội thoại không có nhánh thành viên
+  ['cf.conversations', 'a', 'is_workspace_member'],
+  ['cf.conversations', 'a', 'IS NULL'],
+  ['cf.conversations', 'w', 'IS NULL'],
+  ['cf.messages', 'a', 'IS NULL'],
   // ghi chú theo bài + ghi đè: Staff không ghi; withWorkspace trần không được ghi
   ['cf.post_notes', 'a', 'is_workspace_member'],
   ['cf.post_notes', 'w', 'is_workspace_member'],
@@ -901,6 +928,8 @@ const NO_DELETE_TABLES = [
   'cf.comment_replies',
   'cf.comment_hides',
   'cf.comment_tombstones',
+  'cf.conversations',
+  'cf.messages',
   'cf.kb_sources',
   'cf.kb_versions',
   'cf.shop_profiles',
