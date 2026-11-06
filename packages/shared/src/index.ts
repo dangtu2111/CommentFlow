@@ -131,6 +131,12 @@ export {
   planKbVersion,
 } from './kb-publish';
 export {
+  KB_REEMBED_BATCH_MAX,
+  KB_REEMBED_QUEUE,
+  type KbReembedJob,
+  kbReembedJobSchema,
+} from './kb-reembed';
+export {
   LEAD_MAX_PER_CAPTURE,
   LEAD_NAME_MAX,
   LEAD_NOTE_MAX,

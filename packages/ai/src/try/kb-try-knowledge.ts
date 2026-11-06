@@ -33,6 +33,7 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
         queryText: query,
         lang: context.lang,
         queryVector,
+        embeddingModel: deps.embedder.model,
         productIds: context.productIds,
       });
       const candidates: TryCandidate[] = [];

@@ -80,6 +80,7 @@ async function searchKnowledge(deps: RetrieveDeps, input: RetrieveInput): Promis
     queryText,
     lang: input.lang,
     queryVector,
+    embeddingModel: deps.embedder.model,
     productIds: input.resolvedProductIds,
   });
 }
