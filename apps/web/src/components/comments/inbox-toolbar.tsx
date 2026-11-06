@@ -27,6 +27,10 @@ export async function InboxToolbar({
       <input type="hidden" name="tab" value={view.tab} />
       <label className="inbox-field inbox-field-search">
         <span className="visually-hidden">{t('toolbar.searchLabel')}</span>
+        <svg className="inbox-search-icon" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <path d="m13 13 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
         <input
           type="search"
           name="q"
