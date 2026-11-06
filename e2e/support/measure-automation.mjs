@@ -15,19 +15,19 @@ const SCREENS = {
   automation: {
     route: '/dev/ui/automation',
     targets: [
-      ['thẻ-ma-trận', 'main .p-space-lg.space-y-space-md', '.auto-card:nth-of-type(1)'],
-      ['bảng-ma-trận', 'main table', '.auto-table'],
+      ['thẻ-số-liệu', 'main .grid > .p-space-lg', '.metric-card'],
       ['đầu-bảng', 'main thead th:first-child', '.auto-table thead th:first-child'],
       ['viên-chế-độ', 'main td .rounded-full', '.mode-select'],
-      ['khối-ngưỡng', 'main .p-4.rounded-xl.bg-surface-container-low', '.auto-guard-grid .inset'],
-      ['thanh-lưu', 'main > div > div:last-child > .bg-surface-container-low', '.auto-savebar'],
+      ['khối-ngưỡng', 'main .p-4.rounded-xl.bg-surface-container-low', '.auto-guard .inset'],
+      ['thanh-lưu', 'main .p-4.rounded-xl.bg-surface-container-low.gap-3', '.auto-savebar'],
     ],
   },
   'spam-rules': {
     route: '/dev/ui/spam-rules',
     targets: [
       ['tiêu-đề', 'main h1', '.page-title'],
-      ['khối-nền', 'main .bg-surface-container-low.rounded-xl', '.inset'],
+      ['thẻ-quy-tắc', 'main .hover\\:shadow-md', '.spam-rule-card'],
+      ['thẻ-số-liệu', 'main .grid > .p-space-md', '.metric-card'],
       ['nút-chính', 'main #btn-save-active', '.spam-builder-actions .btn-primary'],
     ],
   },

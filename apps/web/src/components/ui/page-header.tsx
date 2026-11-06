@@ -29,12 +29,48 @@ export function Breadcrumb({
   );
 }
 
-/** Đầu trang: tiêu đề h1 + mô tả ngắn (tùy chọn). */
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: ReactNode }) {
-  return (
-    <header className="stack-tight">
-      <h1 className="page-title">{title}</h1>
+/**
+ * Đầu trang: tiêu đề h1 + mô tả ngắn (tùy chọn). Có thể thêm ô biểu tượng (`icon`), huy hiệu cạnh tiêu đề
+ * (`badge`) và cụm nút/trạng thái bên phải (`actions`); không thêm gì thì giữ bố cục cũ.
+ */
+export function PageHeader({
+  title,
+  subtitle,
+  icon,
+  badge,
+  actions,
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  icon?: ReactNode;
+  badge?: ReactNode;
+  actions?: ReactNode;
+}) {
+  const text = (
+    <>
+      {badge ? (
+        <div className="page-title-row">
+          <h1 className="page-title">{title}</h1>
+          {badge}
+        </div>
+      ) : (
+        <h1 className="page-title">{title}</h1>
+      )}
       {subtitle ? <p className="page-subtitle">{subtitle}</p> : null}
+    </>
+  );
+  if (!icon && !actions) return <header className="stack-tight">{text}</header>;
+  return (
+    <header className="page-header-rich">
+      <div className="page-header-main">
+        {icon ? (
+          <span className="page-header-icon" aria-hidden="true">
+            {icon}
+          </span>
+        ) : null}
+        <div className="stack-tight">{text}</div>
+      </div>
+      {actions ? <div className="page-header-actions">{actions}</div> : null}
     </header>
   );
 }
