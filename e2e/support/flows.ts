@@ -111,6 +111,8 @@ export async function signInWithTotp(
   await expect(page).toHaveURL(/\/login\/2fa/);
   await page.getByLabel(t('auth.twoFactor.codeLabel'), exact).fill(await freshCode(secret));
   await page.getByRole('button', { name: t('auth.twoFactor.submit'), ...exact }).click();
+  // Chờ rời khỏi /login — điều hướng ngay sau click sẽ hủy yêu cầu xác minh 2FA giữa chừng (phiên chưa được tạo).
+  await expect(page).not.toHaveURL(/\/login/);
 }
 
 /** Dòng chào + tên workspace của trang /app (bằng chứng đã vào được workspace đó). */
