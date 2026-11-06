@@ -1,5 +1,7 @@
 # Cần bạn cung cấp / thiết lập (chủ dự án)
 
+> `PII-MASK-PIPE` (FR-033): không cần tài nguyên ngoài (hàm thuần); không có biến môi trường mới.
+
 > Những thứ agent **không tự làm được** vì cần tài khoản, bí mật hoặc thao tác ngoài repo. Agent chỉ thêm **tên biến** vào `env.example`; **giá trị thật bạn tự đặt trong `.env.local`** (không bao giờ commit, không gửi cho agent). Cập nhật file này khi có mục mới.
 
 ## 1. Meta App (đăng nhập Facebook + webhook bình luận) — `FB-OAUTH`, `WH-INGEST`
@@ -169,3 +171,6 @@ Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phả
 
 ## 2m. `SPAM-RULES` (FR-080) — không cần tài nguyên ngoài
 Xem trước quy tắc spam đọc `cf.comments` của chính workspace, không gọi dịch vụ ngoài. Lưu quy tắc cần bảng `rules` (migration do làn b/chủ dự án duyệt, `SPAM-RULES-DB`); chưa có thì nút Lưu báo chưa khả dụng.
+
+## 2n. `KB-TESTSET` (FR-054) — không cần tài nguyên ngoài
+Bộ câu kiểm thử chạy qua pipeline Thử AI bằng mô phỏng (không LLM, không khóa, không DB). Dùng KB thật khi cờ `TRY_AI_KB_REAL` bật (cùng cờ KB-TRYAI, mặc định TẮT). Lưu bộ câu và chặn nút Xuất bản cần bảng mới (migration làn b, `KB-TESTSET-PERSIST`). Bạn **không** phải làm gì cho bản mock.
