@@ -553,6 +553,11 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.posts', 'w', 'is_system_context'],
   ['cf.posts', 'r', 'is_workspace_member'],
   // PRODUCTS-VARIANTS (0034): thành viên (Owner+Staff) hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  // PRODUCT-ALIAS (0043): như sản phẩm (Owner+Staff hoặc hệ thống ghi); INSERT còn buộc confirmed_by = người đang ghi
+  ['cf.product_aliases', 'a', 'is_workspace_member'],
+  ['cf.product_aliases', 'a', 'is_system_context'],
+  ['cf.product_aliases', 'a', 'current_user_id'],
+  ['cf.product_aliases', 'r', 'is_workspace_member'],
   ['cf.products', 'a', 'is_workspace_member'],
   ['cf.products', 'a', 'is_system_context'],
   ['cf.products', 'w', 'is_workspace_member'],
@@ -634,6 +639,7 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   // sản phẩm: không nhánh "không người dùng" trong policy GHI (withWorkspace trần không được ghi)
   ['cf.products', 'a', 'IS NULL'],
   ['cf.products', 'w', 'IS NULL'],
+  ['cf.product_aliases', 'a', 'IS NULL'],
   ['cf.product_variants', 'a', 'IS NULL'],
   ['cf.product_variants', 'w', 'IS NULL'],
   ['cf.channels', 'w', 'is_workspace_member'], // Staff không ghi kênh

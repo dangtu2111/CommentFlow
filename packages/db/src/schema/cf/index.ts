@@ -8,6 +8,7 @@ export * from './comments';
 export * from './kb';
 export * from './kb-content';
 export * from './posts';
+export * from './product-aliases';
 export * from './products';
 export * from './retrieval';
 export * from './webhook-events';
