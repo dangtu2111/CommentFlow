@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { describe, expect, it } from 'vitest';
 import {
   APPROVED,
   findUnapproved,
@@ -9,22 +8,24 @@ import {
 const block = (description) =>
   `[[allowlists]]\ndescription = "${description}"\npaths = ['''x''']\n`;
 
-test('liệt kê description của từng khối allowlists', () => {
-  const toml = `title = "x"\n${block('A một')}\n${block('B hai')}`;
-  assert.deepEqual(listAllowlistDescriptions(toml), ['A một', 'B hai']);
-});
+describe('check-gitleaks-allowlist', () => {
+  it('liệt kê description của từng khối allowlists', () => {
+    const toml = `title = "x"\n${block('A một')}\n${block('B hai')}`;
+    expect(listAllowlistDescriptions(toml)).toEqual(['A một', 'B hai']);
+  });
 
-test('allowlist đã duyệt (theo tiền tố) được chấp nhận', () => {
-  const toml = APPROVED.map((prefix) => block(`${prefix} — ghi chú thêm`)).join('\n');
-  assert.deepEqual(findUnapproved(toml), []);
-});
+  it('allowlist đã duyệt (theo tiền tố) được chấp nhận', () => {
+    const toml = APPROVED.map((prefix) => block(`${prefix} — ghi chú thêm`)).join('\n');
+    expect(findUnapproved(toml)).toEqual([]);
+  });
 
-test('allowlist lạ bị báo (không cho nới cấu hình)', () => {
-  const toml = `${block(APPROVED[0])}\n${block("Khóa GIẢ 'abc' trong test")}`;
-  assert.deepEqual(findUnapproved(toml), ["Khóa GIẢ 'abc' trong test"]);
-});
+  it('allowlist lạ bị báo (không cho nới cấu hình)', () => {
+    const toml = `${block(APPROVED[0])}\n${block("Khóa GIẢ 'abc' trong test")}`;
+    expect(findUnapproved(toml)).toEqual(["Khóa GIẢ 'abc' trong test"]);
+  });
 
-test('khối không có description bị coi là chưa duyệt', () => {
-  const toml = "[[allowlists]]\npaths = ['''x''']\n";
-  assert.equal(findUnapproved(toml).length, 1);
+  it('khối không có description bị coi là chưa duyệt', () => {
+    const toml = "[[allowlists]]\npaths = ['''x''']\n";
+    expect(findUnapproved(toml)).toHaveLength(1);
+  });
 });
