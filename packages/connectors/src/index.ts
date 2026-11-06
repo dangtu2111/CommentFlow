@@ -6,6 +6,13 @@ export {
   normalizeAttachments,
 } from './attachments';
 export {
+  type BankTransaction,
+  parseCassoPayload,
+  parseSepayPayload,
+  verifyCassoToken,
+  verifySepayAuth,
+} from './bank/bank-webhook';
+export {
   ACTIONS,
   type ActionCapability,
   type ActionContext,
@@ -54,6 +61,17 @@ export {
   signMetaBody,
   verifyMetaSignature,
 } from './facebook/webhook';
+export {
+  createHaravanConnector,
+  HARAVAN_API_BASE,
+  type HaravanCatalog,
+  type HaravanConnector,
+  type HaravanConnectorOptions,
+  type HaravanProduct,
+  type HaravanVariant,
+} from './haravan/connector';
+export { buildHaravanImportPlan, parseHaravanMoney } from './haravan/normalize';
+export { signHaravanBody, verifyHaravanWebhook } from './haravan/webhook';
 export {
   createInstagramConnector,
   type InstagramConnector,
