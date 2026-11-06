@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { AcceptInviteForm } from '../../../components/app/accept-invite-form';
 import { AuthShell } from '../../../components/auth/auth-shell';
+import { AuthStatus } from '../../../components/auth/auth-status';
 import { getAuthRuntime } from '../../../server/auth';
 import { getBrand } from '../../../server/brand';
 import { getCurrentUser } from '../../../server/session';
@@ -29,16 +30,16 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!preview) {
     return (
       <AuthShell>
-        <div className="stack">
-          <span className="status-icon status-icon-danger" aria-hidden="true">
-            <CircleAlert size={28} />
-          </span>
-          <h1 className="auth-title">{t('invalid.title')}</h1>
-          <p className="auth-subtitle">{t('invalid.body')}</p>
+        <AuthStatus
+          icon={CircleAlert}
+          tone="danger"
+          title={t('invalid.title')}
+          description={t('invalid.body')}
+        >
           <a className="btn btn-secondary btn-block" href="/invite/clear">
             {t('invalid.action')}
           </a>
-        </div>
+        </AuthStatus>
       </AuthShell>
     );
   }
@@ -46,12 +47,12 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const role = tr(preview.role);
   return (
     <AuthShell>
-      <div className="stack">
-        <span className="status-icon status-icon-success" aria-hidden="true">
-          <MailCheck size={28} />
-        </span>
-        <h1 className="auth-title">{t('card.title', { workspace: preview.workspaceName })}</h1>
-        <p className="auth-subtitle">{t('card.role', { role })}</p>
+      <AuthStatus
+        icon={MailCheck}
+        tone="success"
+        title={t('card.title', { workspace: preview.workspaceName })}
+        description={t('card.role', { role })}
+      >
         {user ? (
           <>
             <p className="muted">{t('card.signedIn')}</p>
@@ -79,7 +80,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
             </Link>
           </>
         )}
-      </div>
+      </AuthStatus>
     </AuthShell>
   );
 }

@@ -2,6 +2,7 @@ import { MailCheck } from 'lucide-react';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { AuthStatus } from '../../../components/auth/auth-status';
 import { ResendVerificationForm } from '../../../components/auth/forms';
 import { maskEmail } from '../../../lib/auth-form';
 import { PENDING_EMAIL_COOKIE } from '../../../lib/pending-email';
@@ -17,16 +18,13 @@ export default async function CheckEmailPage() {
   const email = (await cookies()).get(PENDING_EMAIL_COOKIE)?.value;
   return (
     <>
-      <span className="status-icon">
-        <MailCheck size={24} aria-hidden="true" />
-      </span>
-      <div className="stack">
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">
-          {email ? t('body', { email: maskEmail(email) }) : t('bodyNoEmail')}
-        </p>
+      <AuthStatus
+        icon={MailCheck}
+        title={t('title')}
+        description={email ? t('body', { email: maskEmail(email) }) : t('bodyNoEmail')}
+      >
         <p className="auth-subtitle">{t('hint')}</p>
-      </div>
+      </AuthStatus>
       {email ? <ResendVerificationForm email={email} /> : null}
       <p className="text-center">
         <Link href="/login">{t('back')}</Link>

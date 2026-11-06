@@ -1,0 +1,24 @@
+/* AuthStatus — biểu tượng tròn + tiêu đề + mô tả cho các trang kết quả trong khung xác thực. */
+
+.auth-status {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.auth-status-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--selected-bg);
+  color: var(--link);
+}
+
+.auth-status-icon-danger {
+  color: var(--color-danger);
+}
+
+.auth-status-icon-success {
+  color: var(--color-success);
+}
