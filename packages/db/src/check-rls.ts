@@ -12,7 +12,7 @@ const AUTH_ROLE = 'cf_auth';
 const WORKER_ROLE = 'cf_worker';
 
 /** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
-const SYSTEM_TABLES = ['core.feature_flags'];
+const SYSTEM_TABLES = ['core.feature_flags', 'cf.system_abbreviations'];
 /** Bảng không có workspace_id nhưng khóa chính chính là định danh workspace. */
 const RLS_BY_OWN_ID_TABLES = ['core.workspaces'];
 /** Bảng "của chính mình" với cf_app: policy chỉ cho dòng có user_id/id = current_user_id() (không workspace). */
@@ -264,6 +264,9 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   // KB-SHOP-POLICY-FAQ (0036): khóa định danh + ngôn ngữ/loại không đổi sau khi tạo
   ['cf_app', 'cf.shop_profiles', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.shop_profiles', 'lang', 'UPDATE'],
+  // ABBREV-DICT (0041): workspace và ngôn ngữ của mục không đổi sau khi tạo
+  ['cf_app', 'cf.abbreviations', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.abbreviations', 'lang', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'kind', 'UPDATE'],
   ['cf_app', 'cf.policy_items', 'lang', 'UPDATE'],
@@ -581,6 +584,12 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.brand_voice', 'w', 'is_workspace_owner'],
   ['cf.brand_voice', 'w', 'is_system_context'],
   ['cf.brand_voice', 'r', 'is_workspace_member'],
+  // ABBREV-DICT (0041): Owner hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  ['cf.abbreviations', 'a', 'is_workspace_owner'],
+  ['cf.abbreviations', 'a', 'is_system_context'],
+  ['cf.abbreviations', 'w', 'is_workspace_owner'],
+  ['cf.abbreviations', 'w', 'is_system_context'],
+  ['cf.abbreviations', 'r', 'is_workspace_member'],
   ['cf.comments', 'a', 'is_system_context'],
   ['cf.comments', 'w', 'is_workspace_member'], // + is_system_context (trigger chặn sửa dữ liệu nền tảng ở đường người dùng)
   ['cf.comments', 'r', 'is_workspace_member'],
