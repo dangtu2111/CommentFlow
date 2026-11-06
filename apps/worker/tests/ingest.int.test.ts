@@ -138,7 +138,7 @@ describe('FR-021 job ingest — bình luận mới', () => {
     await handler()(job(ws, await record(pageId, change(pageId, { message: 'chỉ chữ' }))));
     const rows = (
       await admin.query(
-        'SELECT text, attachments FROM cf.comments WHERE channel_id = $1 ORDER BY (attachments = \'[]\'::jsonb), text',
+        "SELECT text, attachments FROM cf.comments WHERE channel_id = $1 ORDER BY (attachments = '[]'::jsonb), text",
         [channelId],
       )
     ).rows;

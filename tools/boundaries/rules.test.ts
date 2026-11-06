@@ -31,13 +31,13 @@ const has = (rule: string, fromContains: string) =>
   violations.some((v) => v.rule === rule && v.from.includes(fromContains));
 
 describe('luật ranh giới dependency-cruiser', () => {
-  it('saas-core không import ai', () => {
+  it('FR-118 saas-core không import ai', () => {
     expect(has('saas-core-khong-biet-san-pham', 'saas-core/src/imports-ai.ts')).toBe(true);
   });
   it('saas-core không import apps', () => {
     expect(has('saas-core-khong-biet-san-pham', 'saas-core/src/imports-app.ts')).toBe(true);
   });
-  it('saas-core không import schema cf của db', () => {
+  it('FR-118 saas-core không import schema cf của db', () => {
     expect(has('saas-core-khong-biet-san-pham', 'saas-core/src/imports-cf-schema.ts')).toBe(true);
   });
   it('saas-core được import db (không phải schema cf)', () => {

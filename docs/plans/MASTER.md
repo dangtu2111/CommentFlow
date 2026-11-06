@@ -76,8 +76,8 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ✅ Xong (`feat-cli-parseenv`; chờ CI) |
 | E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ✅ xanh 6/6 trên CI (nguyên nhân gốc: cookie phiên cũ sau xoay phiên — đã sửa ở fix/2fa-backup-codes) |
 | FR-005-SEARCH | FR-005 (ô tìm kiếm của bộ chuyển workspace; số việc cần xử lý tách thành `FR-005-COUNT`) | US-006 | INBOX-LIST | — | không | ✅ (tìm kiếm) |
-| TEST-COVERAGE-GAP | — (nâng coverage `saas-core` 41% → 85%, ratchet) | — | — | — | không | ⏳ (liên tục) |
-| TRACE-DEBT | — (xóa dần `trace-baseline.json`: 10 mã FR cần test mang mã) | — | — | — | không | ⏳ (liên tục) |
+| TEST-COVERAGE-GAP | — (nâng coverage `saas-core` 41% → 85%, ratchet; 06/11: 63% dòng/53% nhánh) | — | — | — | không | ⏳ (liên tục) |
+| TRACE-DEBT | — (xóa dần `trace-baseline.json`: baseline đã về 0 mã, 06/11/2026; không thêm nợ mới) | — | — | — | không | ✅ (`feat-trace-debt`) |
 
 ### 1B. Kênh, webhook, inbox
 
@@ -137,7 +137,7 @@ Cổng 2: **≤ $2 / 1.000 lượt** trên bộ đánh giá; mọi nhóm ngôn n
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| POSTS-LIST | FR-060 (danh sách bài, lọc, gắn/chưa gắn) | US-032, UF-7 | CH-SCHEMA | — | không | ⏳ |
+| POSTS-LIST | FR-060 (danh sách bài, lọc, gắn/chưa gắn) | US-032, UF-7 | CH-SCHEMA | — | không | ✅ (danh sách + lọc nền tảng/kênh/loại + tìm + sắp xếp + phân trang; còn lọc gắn/chưa gắn — cần `post_products`, xem gap `POSTS-LIST-LINK-FILTER`) |
 | POSTS-LINK-PRODUCT | FR-061 (gắn nhiều sản phẩm, sản phẩm chính, gắn hàng loạt; AI gợi ý cần xác nhận) | US-032 | POSTS-LIST, PRODUCTS-VARIANTS | — | không | ⏳ |
 | POST-NOTES | FR-062 (ghi chú có hạn; ghi đè chế độ tự động theo bài) | US-033 | POSTS-LIST | — | không | ⏳ |
 | DATA-PRIORITY | FR-063 (thứ tự ưu tiên dữ liệu khi trả lời) | — | POST-NOTES, KB-SEARCH-FTS | — | không | ⏳ |

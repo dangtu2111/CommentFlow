@@ -5,7 +5,7 @@
 - `NormalizedComment.attachments?`; webhook đọc `photo`/`video`, serialize/deserialize giữ tệp; Graph lấy `attachment{type,url,media,target}`.
 - Worker `ingest.ts` ghi `comments.attachments` (chỉ khi tạo; sửa bình luận không đổi tệp — Q-ATT1).
 - Migration `0035_comment_attachments_check.sql`: CHECK mảng ≤ 10 (`comments_attachments_shape_check`) + schema Drizzle + snapshot.
-- Docs: plan, Q-ATT1, docs/10, gap-matrix, MASTER, KT-022, codemap.
+- Docs: plan, Q-ATT1, docs/10, gap-matrix, MASTER, KT-023, codemap.
 
 ## File đã đọc + điều rút ra
 `webhook.ts`/`connector.ts` (chuẩn hóa + storedCommentSchema phải thêm trường mới), `ingest.ts` (insert ở một chỗ), `comments.ts` (cột đã có từ 0019; không mã nào ghi trước đây).

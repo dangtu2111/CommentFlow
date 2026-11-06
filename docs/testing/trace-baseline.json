@@ -1,5 +1,5 @@
 {
   "version": 1,
   "note": "Nợ truy vết 04/11/2026: mã FR của các dòng gap matrix đã Xong từ trước nhưng chưa có test mang mã FR trong tên. Chỉ được GIẢM: thêm test có mã FR trong tên rồi xóa mã khỏi danh sách. Không thêm mã mới vào đây (xem docs/testing/STANDARD.md §2).",
-  "codes": ["FR-002", "FR-003", "FR-004", "FR-034", "FR-118"]
+  "codes": []
 }

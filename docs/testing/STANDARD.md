@@ -73,7 +73,7 @@ Công cụ: `fast-check` (TS, MIT), `hypothesis` (Python, MPL-2.0). **Chưa cài
 |---|---|---|---|---|---|
 | `packages/ai` | 100 | 97 | 100 | 90 | đã vượt 85 |
 | `packages/shared` | 100 | 100 | 100 | 93 | đã vượt 85 |
-| `packages/saas-core` | 41 | 40 | 39 | 41 | 85 — nợ `TEST-COVERAGE-GAP` (phần lớn mã chỉ được test tích hợp phủ) |
+| `packages/saas-core` | 63 | 61 | 63 | 53 | 85 — nợ `TEST-COVERAGE-GAP` (phần lớn mã chỉ được test tích hợp phủ) |
 
 - Ngưỡng nằm ở `packages/*/vitest.config.ts`. **Test tích hợp không bật coverage** trong CI (sẽ làm job `database` chậm và cần gộp báo cáo hai lần chạy); khi có nhu cầu, đo riêng và gộp, chỉ bật nếu thêm < 1 phút. Vì vậy `saas-core` đang được đo thiếu so với thực tế.
 - Nhánh nâng ngưỡng: đo lại (`pnpm test:coverage`), sửa số trong config + bảng trên + dòng `TEST-COVERAGE-GAP`.

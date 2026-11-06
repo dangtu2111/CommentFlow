@@ -88,7 +88,7 @@ async function matrix(text: (who: Who) => string): Promise<Record<Who, number | 
   return out;
 }
 
-describe('members: chỉ Owner đang hoạt động ghi được', () => {
+describe('FR-004 members: chỉ Owner đang hoạt động ghi được', () => {
   it('UPDATE vai trò của một thành viên', async () => {
     const results = await matrix(
       () => `UPDATE core.members SET role = 'staff' WHERE id = '${staffMember}'`,
@@ -119,7 +119,7 @@ describe('members: chỉ Owner đang hoạt động ghi được', () => {
   });
 });
 
-describe('invitations: chỉ Owner đọc/ghi', () => {
+describe('FR-003 invitations: chỉ Owner đọc/ghi', () => {
   it('SELECT chỉ Owner thấy dòng', async () => {
     const results = await matrix(
       () => `SELECT id FROM core.invitations WHERE workspace_id = '${ws}'`,
@@ -218,7 +218,7 @@ describe('action_logs: người gọi phải là chính thành viên ghi', () =>
   });
 });
 
-describe('đường khởi tạo workspace', () => {
+describe('FR-002 đường khởi tạo workspace', () => {
   it('người tạo thành Owner đầu tiên; sau đó người khác không tự phong Owner', async () => {
     const nw = newId();
     const creator = await seedUser(admin, 'nguoi-tao');
