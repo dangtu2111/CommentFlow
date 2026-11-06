@@ -191,3 +191,6 @@ Trang `/app/automation` (chỉ Owner) chạy hoàn toàn trong ứng dụng, kh�
 
 ## 2q. `AUTO-CONFIG-STORE` (FR-070/071) — không cần tài nguyên ngoài
 Lưu cấu hình tự gửi vào DB (`cf.automation_settings`, `cf.automation_rules`, migration 0047). Chỉ cần **chủ dự án duyệt và chạy migration 0047 lên staging/production qua CI có duyệt** (agent không chạy lệnh ghi lên các DB đó). Không cần khóa hay dịch vụ ngoài.
+
+## 2r. `COST-GATE` (FR-071) — không cần tài nguyên ngoài mới
+Cổng chi phí AI chỉ đọc `ai_usage` + `workspaces.ai_cost_cap_usd` trong DB, không biến môi trường mới, không cờ (chưa nối vào đường gọi LLM thật — `COST-GATE-WIRE`). Kiểm tay mã KT-CG. Về sau bạn cần: (1) **quyết định trần chi phí mặc định theo gói** (đô/tháng) khi có cột `plans.ai_cost_cap_usd` (migration làn b); (2) trong LiteLLM đặt **ngân sách (budget) theo workspace/virtual key** làm lớp cứng thứ hai khi chạy nhiều worker; (3) cập nhật bảng giá model thật cho `estimateCallCostUsd` (hiện dùng giá dự phòng cao).
