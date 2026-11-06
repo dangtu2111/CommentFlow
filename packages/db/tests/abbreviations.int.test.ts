@@ -233,21 +233,21 @@ describe('FR-050 RLS: vai trò và chéo workspace', () => {
 describe('FR-025 loadAbbreviationEntries', () => {
   it('trộn hệ thống + workspace: mục của shop đè; đúng ngôn ngữ; không lẫn workspace khác', async () => {
     await db.withActor(ws, owner, (tx) => createAbbreviation(tx, ws, entry('ib', 'nhắn riêng')));
-    await db.withActor(ws, owner, (tx) => createAbbreviation(tx, ws, entry('shopA', 'cửa hàng A')));
+    await db.withActor(ws, owner, (tx) => createAbbreviation(tx, ws, entry('shopa', 'cửa hàng A')));
     await db.withActor(other, otherOwner, (tx) =>
-      createAbbreviation(tx, other, entry('shopB', 'cửa hàng B')),
+      createAbbreviation(tx, other, entry('shopb', 'cửa hàng B')),
     );
     const vi = await db.withWorkspace(ws, (tx) => loadAbbreviationEntries(tx, ws, 'vi'));
     expect(vi.ib).toBe('nhắn riêng');
     expect(vi.sz).toBe('size');
-    expect(vi.shopA).toBe('cửa hàng A');
-    expect(vi.shopB).toBeUndefined();
+    expect(vi.shopa).toBe('cửa hàng A');
+    expect(vi.shopb).toBeUndefined();
     expect(vi.thx).toBeUndefined();
     const en = await db.withWorkspace(ws, (tx) => loadAbbreviationEntries(tx, ws, 'en'));
     expect(en.thx).toBe('thanks');
     expect(en.ib).toBeUndefined();
     const otherVi = await db.withWorkspace(other, (tx) => loadAbbreviationEntries(tx, other, 'vi'));
     expect(otherVi.ib).toBe('inbox');
-    expect(otherVi.shopA).toBeUndefined();
+    expect(otherVi.shopa).toBeUndefined();
   });
 });

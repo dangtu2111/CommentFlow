@@ -709,6 +709,17 @@ Hàm thuần, chưa có giao diện/đường chạy → kiểm bằng lệnh. K
 | 2 | Sau khi migrate `0041`: `SELECT short, full FROM cf.system_abbreviations WHERE lang = 'vi' ORDER BY short;` | Có "ib → inbox", "sz → size", "dc → được", "k → không"… Soát danh sách: từ nào sai/thiếu thì báo để thêm bằng migration mới |
 | 3 | Khi có giao diện (`KB-ABBREV-UI`): Owner thêm "cod" → "thanh toán khi nhận hàng", đăng nhập Staff | Staff thấy mục nhưng không thêm/sửa/xóa được; shop khác không thấy |
 
+## KT-RT — Tìm kiến thức cho nhãn cần trả lời (PIPE-RETRIEVE, FR-028, feat-pipe-retrieve)
+
+Hàm thuần + cổng (embedder là bản mock), chưa có giao diện/đường chạy → kiểm bằng lệnh. Kiểm tay thật khi pipeline được nối. / Pure core with mock embedder; verify by command.
+
+| # | Việc | Kết quả mong đợi |
+|---|---|---|
+| 1 | Chạy `pnpm --filter @flow/ai exec vitest run src/retrieve` | Xanh (ví dụ + property-based), không gọi mạng/LLM/DB |
+| 2 | Khi nối pipeline: bình luận khiếu nại ("hàng lỗi, đòi hoàn tiền") | Không tìm kiến thức, không có bản nháp AI; chuyển người |
+| 3 | Bình luận "giá sao shop" dưới bài gắn sản phẩm | Nguồn chỉ là biến thể từ `product_variants` (giá/tồn đúng kho), không có đoạn kiến thức |
+| 4 | Bình luận "đổi trả thế nào" | Nguồn là đoạn FAQ/chính sách liên quan nhất, tổng ≤ ~3.000 token |
+
 ## KT-ATB — Ô Thử AI chạy cả pipeline, không trừ lượt (AI-TRY-BOX-UI, FR-059, FR-029, US-034, feat-ai-try-box-ui)
 
 | # | Bước | Kết quả mong đợi |
