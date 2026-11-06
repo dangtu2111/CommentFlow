@@ -33,7 +33,7 @@ Dev server cổng 3000/3001 chỉ chạy được một cái mỗi lúc; làn th
 
 - **Mỗi thời điểm chỉ một nhánh có migration.** Nhánh cần migration báo trước cho chủ dự án; nhánh khác chờ merge hoặc rebase sau.
 - `pnpm check:migrations` (chạy ở CI) đỏ khi số migration trùng/không liên tục hoặc không khớp `_journal.json`. Đây là lưới an toàn, không phải khóa.
-- File chung dễ xung đột: `docs/gap-matrix.md`, `docs/codemap.md`, `pnpm-lock.yaml`, `packages/db/src/schema/*`, `packages/db/migrations/meta/*`. Mỗi nhánh chỉ sửa dòng của mình; xung đột thì giải quyết khi rebase, không viết lại cả file.
+- File chung dễ xung đột: `docs/gap-matrix.md`, `pnpm-lock.yaml`, `packages/db/src/schema/*`, `packages/db/migrations/meta/*`. Mỗi nhánh chỉ sửa dòng của mình; xung đột thì giải quyết khi rebase, không viết lại cả file. `docs/codemap.md` và `docs/plans/QUYET_DINH_CHO_DUYET.md` KHÔNG còn là file chung: mỗi nhánh thêm file riêng ở `docs/codemap.d/` / `docs/plans/quyet-dinh/` rồi chạy `pnpm codemap:build` / `pnpm quyet:build`; nếu hai file sinh ra xung đột khi merge → chạy lại `build` (không gỡ tay).
 
 ## Thứ tự merge và rebase
 

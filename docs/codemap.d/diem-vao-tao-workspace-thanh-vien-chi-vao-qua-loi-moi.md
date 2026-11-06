@@ -1,0 +1,1 @@
+| Tạo workspace (thành viên chỉ vào qua lời mời) | `createTenancy` → `createWorkspace` (không còn `addMember`); test dựng thành viên bằng `seedMemberForTest` (`packages/saas-core/tests/helpers.ts`, chỉ test) | `packages/saas-core/src/tenancy/tenancy.ts:30,47,60` |

@@ -1,0 +1,1 @@
+- **Server Action trong `(auth)/actions.ts`** chỉ được xuất hàm async (hằng số để ở `lib/`). Form dùng `useActionState`; kết quả luôn là trạng thái trung tính (`lib/auth-form.ts`), không bao giờ là mã lỗi thô của Better Auth.

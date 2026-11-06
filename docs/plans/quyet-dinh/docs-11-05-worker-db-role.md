@@ -1,0 +1,1 @@
+- 05/11 (WORKER-DB-ROLE, Q3–Q6): `docs/15` §5 (bảng biến môi trường DB: thêm `DATABASE_WORKER_URL`) và §6 (role `cf_worker` phải có trước migrate).

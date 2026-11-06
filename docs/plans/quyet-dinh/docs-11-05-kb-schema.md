@@ -1,0 +1,1 @@
+- 05/11 (KB-SCHEMA, QKB1): `docs/10_Database_Design.md` §3.4 (ba bảng `kb_*` ghi cột/ràng buộc thực tế) và §4 (bảng quyền `kb_*`).

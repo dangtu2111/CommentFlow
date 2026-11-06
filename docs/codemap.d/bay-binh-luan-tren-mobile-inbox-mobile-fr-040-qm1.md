@@ -1,0 +1,1 @@
+- **Bình luận trên mobile (INBOX-MOBILE, FR-040, QM1):** `lib/inbox-pane.ts` (`inboxMobilePane`: có `?c=` → `detail`, không → `list`; `buildInboxBackHref`) → `comments/page.tsx` đặt `data-pane` trên `<main class="inbox">` + liên kết `.inbox-back`; `styles/globals.css` khối `@media (max-width: 899px)` ẩn ngăn không dùng; chuỗi `comments.detail.back`.

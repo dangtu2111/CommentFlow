@@ -1,0 +1,1 @@
+- **Biome** tự định dạng cả `*.yml`/`*.json`; chạy `pnpm exec biome check --write .` trước khi commit.

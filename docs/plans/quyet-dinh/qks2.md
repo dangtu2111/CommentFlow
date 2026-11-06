@@ -1,0 +1,1 @@
+| QKS2 | 06/11 | Truy vấn lỗi gõ cho đoạn kiến thức | Thêm nhánh thứ ba `pg_trgm` (`search_norm % q`, `similarity`) vào RRF cùng vector và toàn văn; GIN `gin_trgm_ops(search_norm)`. Ngưỡng `similarity` 0,3 (khởi điểm docs/10 §5.1) đặt bằng `set_config` cục bộ giao dịch | FR-057 yêu cầu `pg_trgm` cho lỗi gõ | Bỏ nhánh/chỉ mục trong migration kế tiếp |

@@ -1,0 +1,1 @@
+| Truy vết FR → test | `pnpm test:trace` | FR của dòng ✅ gap matrix phải có trong tên test; nợ cũ ở `docs/testing/trace-baseline.json` (`scripts/check-test-trace.mjs`, `scripts/lib/test-trace.mjs`); chạy ở CI; chuẩn: `docs/testing/STANDARD.md` §2 |
