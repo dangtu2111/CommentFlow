@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { AppError, isProductCacheStale } from '@flow/shared';
 import { z } from 'zod';
+import { extractClaims, type GuardClaimKind } from '../guard-money';
 
 /**
  * Bước `cacheLookup` — cache khớp chính xác (FR-026, FR-135; docs/09 §4, docs/10 §5.3).
@@ -119,8 +120,19 @@ function parseEntry(raw: string): z.infer<typeof entrySchema> | null {
 
 export type ExactCacheStoreResult =
   | { stored: true }
-  | { stored: false; reason: 'disabled' | 'not_cacheable' };
+  | {
+      stored: false;
+      reason: 'disabled' | 'not_cacheable' | 'unverifiable_price' | 'personal_data';
+    };
 
+const PERSONAL_KINDS: ReadonlySet<GuardClaimKind> = new Set(['phone', 'email']);
+
+/**
+ * Ghi cache. Hợp đồng với bên gọi:
+ *  - `productRevs` = `products.rev` đọc CÙNG LÚC với lần đọc giá để soạn câu (không đọc lại lúc ghi, kẻo gắn giá cũ với rev mới);
+ *  - câu có số tiền mà `productRevs` rỗng → không ghi (không có cách kiểm giá cũ sau này, FR-135);
+ *  - câu có SĐT/email → không ghi (cache dùng chung mọi khách hỏi cùng câu, không được lộ dữ liệu riêng).
+ */
 export async function storeExactCache(
   deps: ExactCacheDeps,
   input: ExactCacheKeyInput,
@@ -129,6 +141,13 @@ export async function storeExactCache(
 ): Promise<ExactCacheStoreResult> {
   if (!deps.enabled) return { stored: false, reason: 'disabled' };
   if (!answer.cacheable) return { stored: false, reason: 'not_cacheable' };
+  const claims = [answer.reply, ...answer.variants].flatMap(extractClaims);
+  if (claims.some((claim) => PERSONAL_KINDS.has(claim.kind))) {
+    return { stored: false, reason: 'personal_data' };
+  }
+  if (Object.keys(productRevs).length === 0 && claims.some((claim) => claim.kind === 'money')) {
+    return { stored: false, reason: 'unverifiable_price' };
+  }
   const key = buildExactCacheKey(input);
   await deps.store.set(
     key,

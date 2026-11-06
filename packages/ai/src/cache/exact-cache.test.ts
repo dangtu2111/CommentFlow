@@ -30,6 +30,10 @@ const answer = (over: Partial<CachedAnswer> = {}): CachedAnswer => ({
   ...over,
 });
 
+/** Câu không có số tiền/SĐT → cache được dù không dùng sản phẩm. */
+const plainAnswer = (over: Partial<CachedAnswer> = {}): CachedAnswer =>
+  answer({ reply: 'Dạ shop còn hàng ạ.', variants: ['Còn ạ.'], ...over });
+
 describe('FR-026 buildExactCacheKey (khóa cache khớp chính xác)', () => {
   it('có workspace_id, kb_version, bài và băm; không chứa văn bản thô', () => {
     const key = buildExactCacheKey(keyInput());
@@ -122,7 +126,7 @@ describe('FR-026 FR-135 lookupExactCache / storeExactCache', () => {
 
   it('cache không dùng sản phẩm → hit, không đọc rev', async () => {
     const { deps, getCurrentRevs } = setup();
-    await storeExactCache(deps, keyInput(), answer(), {});
+    await storeExactCache(deps, keyInput(), plainAnswer(), {});
     expect((await lookupExactCache(deps, keyInput())).status).toBe('hit');
     expect(getCurrentRevs).not.toHaveBeenCalled();
   });
@@ -142,8 +146,13 @@ describe('FR-026 FR-135 lookupExactCache / storeExactCache', () => {
 
   it('cùng câu ở hai workspace → mỗi bên đọc đúng câu trả lời của mình', async () => {
     const { deps } = setup();
-    await storeExactCache(deps, keyInput({ workspaceId: WS_B }), answer({ reply: 'của B' }), {});
-    await storeExactCache(deps, keyInput(), answer({ reply: 'của A' }), {});
+    await storeExactCache(
+      deps,
+      keyInput({ workspaceId: WS_B }),
+      plainAnswer({ reply: 'của B' }),
+      {},
+    );
+    await storeExactCache(deps, keyInput(), plainAnswer({ reply: 'của A' }), {});
     expect(await lookupExactCache(deps, keyInput())).toMatchObject({
       status: 'hit',
       answer: { reply: 'của A' },
@@ -183,13 +192,41 @@ describe('FR-026 FR-135 lookupExactCache / storeExactCache', () => {
     expect(await store.get(buildExactCacheKey(keyInput()))).toBeNull();
   });
 
+  it('FR-135 câu có số tiền mà product_revs rỗng → không ghi (không thể kiểm giá cũ)', async () => {
+    const { deps, store } = setup();
+    const res = await storeExactCache(deps, keyInput(), answer(), {});
+    expect(res).toEqual({ stored: false, reason: 'unverifiable_price' });
+    expect(await store.get(buildExactCacheKey(keyInput()))).toBeNull();
+    const plain = answer({ reply: 'Dạ shop còn hàng ạ.', variants: ['Còn ạ.'] });
+    expect(await storeExactCache(deps, keyInput(), plain, {})).toEqual({ stored: true });
+  });
+
+  it('số tiền chỉ nằm trong variants cũng bị chặn khi product_revs rỗng', async () => {
+    const { deps } = setup();
+    const a = answer({ reply: 'Dạ ạ.', variants: ['Giá 300k nhé'] });
+    expect(await storeExactCache(deps, keyInput(), a, {})).toEqual({
+      stored: false,
+      reason: 'unverifiable_price',
+    });
+  });
+
+  it('câu chứa SĐT/email (dữ liệu riêng của khách) → không ghi, tránh gửi lộ cho khách khác', async () => {
+    const { deps } = setup();
+    for (const reply of ['Em gọi 0912345678 nhé ạ.', 'Em gửi qua a@b.vn ạ.']) {
+      const res = await storeExactCache(deps, keyInput(), answer({ reply, variants: [] }), {
+        p1: 1,
+      });
+      expect(res).toEqual({ stored: false, reason: 'personal_data' });
+    }
+  });
+
   it('ghi kèm TTL (mặc định 24 giờ, ghi đè được) và trả stored:true', async () => {
     const set = vi.fn(async (_key: string, _value: string, _ttl: number) => undefined);
     const store = { get: async () => null, set, del: async () => undefined };
     const deps = { store, getCurrentRevs: async () => ({}), enabled: true };
-    expect(await storeExactCache(deps, keyInput(), answer(), {})).toEqual({ stored: true });
+    expect(await storeExactCache(deps, keyInput(), plainAnswer(), {})).toEqual({ stored: true });
     expect(set.mock.calls[0]?.[2]).toBe(86_400);
-    await storeExactCache({ ...deps, ttlSeconds: 60 }, keyInput(), answer(), {});
+    await storeExactCache({ ...deps, ttlSeconds: 60 }, keyInput(), plainAnswer(), {});
     expect(set.mock.calls[1]?.[2]).toBe(60);
   });
 

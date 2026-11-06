@@ -149,6 +149,9 @@ Hàm thuần `decideAutoSend` (`packages/ai/src/gate/`), không khóa/dịch v�
 
 Độ sẵn sàng của AI tính hoàn toàn từ dữ liệu trong DB (sản phẩm, chính sách, FAQ, thông tin shop) bằng mã; không gọi LLM, không biến môi trường mới, không cờ. Khi muốn đo "câu mẫu trả lời được" bằng LLM thật → việc `AI-EVAL-*` (cần khóa LLM, sẽ ghi ở mục riêng).
 
+## Redis cho cache câu trả lời — `PIPE-CACHE-EXACT` (FR-026, Xong-mock, mã KT-PCX)
+Cache khớp chính xác chạy sau interface `ExactCacheStore` với bản bộ nhớ; chưa có biến môi trường/Redis mới. Khi nối pipeline (`PIPE-ORCHESTRATOR`) cần Redis 7 đã có trong hạ tầng (docs/09 §2, dùng lại URL Redis của hệ thống) và cờ `cf.cache.answers` (docs/09 §10; mặc định TẮT cho đường thật). Không cần khóa/tài khoản mới.
+
 ## pgvector >= 0.8 cho chỉ mục HNSW — `KB-EMBED-COL`
 
 Không cần khóa/tài khoản. Máy ảo `cf`, CI và staging/production phải dùng PostgreSQL 16 + pgvector >= 0.8 (hiện `pgvector/pgvector:0.8.7-pg16`). Migration 0042 báo lỗi rõ nếu thấp hơn. Chủ dự án chỉ cần nâng image khi dựng staging/production mới.

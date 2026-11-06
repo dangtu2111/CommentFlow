@@ -764,3 +764,12 @@ Chưa có giao diện; kiểm trên DB thử (`cf_dev`/`cf_test`). / No UI; veri
 | 1 | `pnpm db:migrate` (cf_dev, pgvector >= 0.8). | Áp 0042 không lỗi; DB cũ hơn 0.8 báo "cần extension vector >= 0.8". |
 | 2 | `\d cf.kb_chunks` trong psql. | Có `kb_chunks_embedding_hnsw_idx` (hnsw, một phần) và `kb_chunks_workspace_embedding_model_idx`. |
 | 3 | `CF_LANE=b pnpm --filter @flow/db exec vitest run --config vitest.int.config.ts tests/kb-embed-col.int.test.ts`. | 4 test xanh (gồm: workspace A vẫn nhận đủ 5 đoạn dù B có 120 đoạn gần hơn). |
+
+## KT-PCX — Cache khớp chính xác (PIPE-CACHE-EXACT, FR-026/135) · Exact cache
+
+Chưa có giao diện; kiểm bằng test. / No UI; verify with tests.
+
+| # | Bước | Kết quả mong đợi |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/cache`. | 19 test xanh: khóa chứa workspace_id, đổi giá (rev lệch) → không trả giá cũ, cờ tắt → không dùng cache. |
+| 2 | CI job `database` chạy `tests/kb-version.int.test.ts`. | `getCurrentKbVersion` trả 0 / số lớn nhất, không lộ workspace khác. |
