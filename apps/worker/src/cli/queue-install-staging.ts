@@ -1,6 +1,7 @@
 // Cài pg-boss + hàng đợi lên STAGING (CLI riêng, tách khỏi `queue-install.ts`). KHÔNG đọc file .env.
 // Cùng biến với `pnpm db:migrate:staging`: APP_ENV=staging, DATABASE_ADMIN_URL, CF_STAGING_DB_HOSTS,
 // CF_CONFIRM_STAGING_MIGRATE=<tên-db>@<số-migration-cuối> (áp thật). `--dry-run` không kết nối DB.
+import { parseStagingCliEnv } from '@flow/db';
 import { isAppError } from '@flow/shared';
 import { QUEUES } from '../queue/definitions';
 import { installQueueSchemaStaging } from '../queue/install';
@@ -14,7 +15,7 @@ const dryRun = args.includes('--dry-run');
 
 try {
   await installQueueSchemaStaging({
-    env: process.env,
+    env: parseStagingCliEnv(),
     dryRun,
     queues: QUEUES,
     log: (line) => console.log(line),

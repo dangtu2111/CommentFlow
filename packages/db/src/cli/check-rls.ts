@@ -1,11 +1,9 @@
 // Kiểm RLS trên database trỏ bởi DATABASE_ADMIN_URL (hoặc TEST_DATABASE_ADMIN_URL nếu đặt CHECK_RLS_TEST=1).
 import pg from 'pg';
 import { checkRls } from '../check-rls';
+import { parseCheckRlsEnv } from '../cli-env';
 
-const url =
-  process.env.CHECK_RLS_TEST === '1'
-    ? process.env.TEST_DATABASE_ADMIN_URL
-    : process.env.DATABASE_ADMIN_URL;
+const { url } = parseCheckRlsEnv();
 if (!url) {
   console.error('Thiếu DATABASE_ADMIN_URL (hoặc TEST_DATABASE_ADMIN_URL khi CHECK_RLS_TEST=1).');
   process.exit(1);

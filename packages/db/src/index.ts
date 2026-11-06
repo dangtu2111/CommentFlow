@@ -2,6 +2,12 @@
 
 export { resetTestSchemas, runMigrations } from './admin';
 export { checkRls, type Queryable, type RlsViolation } from './check-rls';
+export {
+  parseAdminCliEnv,
+  parseCheckRlsEnv,
+  parseStagingCliEnv,
+  parseTestResetEnv,
+} from './cli-env';
 export { assertMigrationAllowed, assertTestResetAllowed } from './migration-guard';
 export * from './runtime';
 export {
