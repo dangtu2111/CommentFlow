@@ -1,11 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { LeaveWorkspace } from '../../../../components/app/leave-workspace';
 import { getAuthRuntime } from '../../../../server/auth';
+import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
   const t = await getTranslations('leave');
-  return { title: `${t('title')} · ${(await getTranslations('auth'))('brand')}` };
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 /** Trang Rời workspace (mọi vai trò; lối vào ở bộ chuyển workspace). Owner cuối: giải thích + link Thành viên, không có nút. */

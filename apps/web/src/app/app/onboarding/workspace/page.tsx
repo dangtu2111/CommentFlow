@@ -3,12 +3,13 @@ import { DEFAULT_LOCALE, isLocale } from '@flow/shared';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { CreateWorkspaceForm } from '../../../../components/app/create-workspace-form';
+import { getBrand } from '../../../../server/brand';
 import { pendingInviteToken } from '../../../../server/invite-cookie';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
   const t = await getTranslations('workspace.create');
-  return { title: `${t('title')} · ${(await getTranslations('auth'))('brand')}` };
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 /** Bước đầu của UF-1: người chưa có workspace tạo workspace của mình (người tạo là Owner). */

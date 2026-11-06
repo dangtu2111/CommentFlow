@@ -45,6 +45,7 @@ export {
   listChannelAlerts,
 } from './queries/channel-alerts';
 export { type ChannelListItem, listChannels } from './queries/channels';
+export { relabelComments, SKIPPABLE_STATUSES, skipComments } from './queries/comment-bulk';
 export { type CommentDetail, getCommentDetail } from './queries/comment-detail';
 export {
   acquireCommentLock,
@@ -82,6 +83,12 @@ export {
 } from './replies';
 export { purgeExpiredWebhookPayloads, WEBHOOK_PAYLOAD_RETENTION_DAYS } from './retention';
 export { schema } from './schema';
+export {
+  listStuckOutbox,
+  type StuckOutboxKind,
+  type StuckOutboxOptions,
+  type StuckRequest,
+} from './stuck-outbox';
 export {
   type RecordedWebhookEvent,
   type RecordWebhookEventInput,

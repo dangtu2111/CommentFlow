@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { ForgotPasswordForm } from '../../../components/auth/forms';
+import { getBrand } from '../../../server/brand';
 
 export async function generateMetadata() {
   const t = await getTranslations('auth');
-  return { title: `${t('forgot.title')} · ${t('brand')}` };
+  return { title: `${t('forgot.title')} · ${getBrand().name}` };
 }
 
 export default async function ForgotPasswordPage() {

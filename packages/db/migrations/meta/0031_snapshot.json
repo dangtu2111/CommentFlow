@@ -1,5 +1,5 @@
 {
-  "id": "f1c25df4-d7f2-404a-87ce-51ad6008bf74",
+  "id": "dd272704-9d1c-428c-8de3-70c6449ee450",
   "prevId": "5c1d7a52-3b0e-4f6a-9d21-7e8a4b0c6f13",
   "version": "7",
   "dialect": "postgresql",
@@ -1698,6 +1698,22 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "comment_hides_stuck_idx": {
+          "name": "comment_hides_stuck_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cf\".\"comment_hides\".\"status\" in ('queued', 'sending')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1924,6 +1940,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comment_replies_stuck_idx": {
+          "name": "comment_replies_stuck_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cf\".\"comment_replies\".\"status\" in ('queued', 'sending')",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2466,499 +2498,6 @@
         "comments_label_source_check": {
           "name": "comments_label_source_check",
           "value": "\"cf\".\"comments\".\"label_source\" is null or \"cf\".\"comments\".\"label_source\" in ('rule', 'ml', 'llm', 'human')"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "cf.kb_chunks": {
-      "name": "kb_chunks",
-      "schema": "cf",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_id": {
-          "name": "source_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "version_id": {
-          "name": "version_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "chunk_key": {
-          "name": "chunk_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "injection_suspected": {
-          "name": "injection_suspected",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "injection_reason": {
-          "name": "injection_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lang": {
-          "name": "lang",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_hash": {
-          "name": "content_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "embedding": {
-          "name": "embedding",
-          "type": "halfvec(1024)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "tsv": {
-          "name": "tsv",
-          "type": "tsvector",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "is_draft": {
-          "name": "is_draft",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "context_header": {
-          "name": "context_header",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "valid_from": {
-          "name": "valid_from",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "valid_until": {
-          "name": "valid_until",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "embedding_model": {
-          "name": "embedding_model",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "kb_chunks_workspace_version_idx": {
-          "name": "kb_chunks_workspace_version_idx",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "version_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "kb_chunks_tsv_idx": {
-          "name": "kb_chunks_tsv_idx",
-          "columns": [
-            {
-              "expression": "tsv",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "gin",
-          "with": {}
-        },
-        "kb_chunks_workspace_product_idx": {
-          "name": "kb_chunks_workspace_product_idx",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "product_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"cf\".\"kb_chunks\".\"product_id\" is not null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "kb_chunks_workspace_id_workspaces_id_fk": {
-          "name": "kb_chunks_workspace_id_workspaces_id_fk",
-          "tableFrom": "kb_chunks",
-          "tableTo": "workspaces",
-          "schemaTo": "core",
-          "columnsFrom": ["workspace_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "kb_chunks_source_fk": {
-          "name": "kb_chunks_source_fk",
-          "tableFrom": "kb_chunks",
-          "tableTo": "kb_sources",
-          "schemaTo": "cf",
-          "columnsFrom": ["workspace_id", "source_id"],
-          "columnsTo": ["workspace_id", "id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "kb_chunks_version_fk": {
-          "name": "kb_chunks_version_fk",
-          "tableFrom": "kb_chunks",
-          "tableTo": "kb_versions",
-          "schemaTo": "cf",
-          "columnsFrom": ["workspace_id", "version_id"],
-          "columnsTo": ["workspace_id", "id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "kb_chunks_key_unique": {
-          "name": "kb_chunks_key_unique",
-          "nullsNotDistinct": true,
-          "columns": ["workspace_id", "source_id", "version_id", "chunk_key"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "kb_chunks_lang_check": {
-          "name": "kb_chunks_lang_check",
-          "value": "\"cf\".\"kb_chunks\".\"lang\" in ('vi', 'en')"
-        },
-        "kb_chunks_published_version_check": {
-          "name": "kb_chunks_published_version_check",
-          "value": "\"cf\".\"kb_chunks\".\"is_draft\" or \"cf\".\"kb_chunks\".\"version_id\" is not null"
-        },
-        "kb_chunks_valid_range_check": {
-          "name": "kb_chunks_valid_range_check",
-          "value": "\"cf\".\"kb_chunks\".\"valid_from\" is null or \"cf\".\"kb_chunks\".\"valid_until\" is null or \"cf\".\"kb_chunks\".\"valid_until\" > \"cf\".\"kb_chunks\".\"valid_from\""
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "cf.kb_sources": {
-      "name": "kb_sources",
-      "schema": "cf",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "origin_url": {
-          "name": "origin_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "external_key": {
-          "name": "external_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
-        "last_synced_at": {
-          "name": "last_synced_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sync_error": {
-          "name": "sync_error",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "kb_sources_external_key_unique": {
-          "name": "kb_sources_external_key_unique",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "external_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"cf\".\"kb_sources\".\"external_key\" is not null and \"cf\".\"kb_sources\".\"deleted_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "kb_sources_workspace_id_workspaces_id_fk": {
-          "name": "kb_sources_workspace_id_workspaces_id_fk",
-          "tableFrom": "kb_sources",
-          "tableTo": "workspaces",
-          "schemaTo": "core",
-          "columnsFrom": ["workspace_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "kb_sources_workspace_id_id_unique": {
-          "name": "kb_sources_workspace_id_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["workspace_id", "id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "kb_sources_type_check": {
-          "name": "kb_sources_type_check",
-          "value": "\"cf\".\"kb_sources\".\"type\" in ('manual', 'faq', 'excel', 'shopify', 'url', 'policy')"
-        },
-        "kb_sources_status_check": {
-          "name": "kb_sources_status_check",
-          "value": "\"cf\".\"kb_sources\".\"status\" in ('active', 'syncing', 'error')"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "cf.kb_versions": {
-      "name": "kb_versions",
-      "schema": "cf",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "number": {
-          "name": "number",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "published_by": {
-          "name": "published_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "published_at": {
-          "name": "published_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "note": {
-          "name": "note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "changed_categories": {
-          "name": "changed_categories",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::text[]"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "kb_versions_workspace_id_workspaces_id_fk": {
-          "name": "kb_versions_workspace_id_workspaces_id_fk",
-          "tableFrom": "kb_versions",
-          "tableTo": "workspaces",
-          "schemaTo": "core",
-          "columnsFrom": ["workspace_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "kb_versions_published_by_users_id_fk": {
-          "name": "kb_versions_published_by_users_id_fk",
-          "tableFrom": "kb_versions",
-          "tableTo": "users",
-          "schemaTo": "core",
-          "columnsFrom": ["published_by"],
-          "columnsTo": ["id"],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "kb_versions_workspace_number_unique": {
-          "name": "kb_versions_workspace_number_unique",
-          "nullsNotDistinct": false,
-          "columns": ["workspace_id", "number"]
-        },
-        "kb_versions_workspace_id_id_unique": {
-          "name": "kb_versions_workspace_id_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["workspace_id", "id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "kb_versions_number_check": {
-          "name": "kb_versions_number_check",
-          "value": "\"cf\".\"kb_versions\".\"number\" >= 1"
         }
       },
       "isRLSEnabled": false

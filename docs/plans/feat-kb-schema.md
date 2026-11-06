@@ -27,13 +27,13 @@ Không có. Các chỗ spec chưa nêu đã tự chọn phương án an toàn, g
 ## File sẽ sửa / tạo
 
 - `packages/db/src/schema/cf/kb.ts` (tạo) · `schema/cf/index.ts` (export)
-- `packages/db/migrations/0031_kb_schema.sql` + `meta/*` (drizzle-kit sinh; phần RLS viết tay)
+- `packages/db/migrations/0033_kb_schema.sql` + `meta/*` (drizzle-kit sinh; phần RLS viết tay)
 - `packages/db/tests/kb-schema.int.test.ts` (tạo, viết trước)
 - `docs/10_Database_Design.md` §3.4, §4; `docs/plans/QUYET_DINH_CHO_DUYET.md`; `docs/gap-matrix.md`; `docs/plans/MASTER.md`; `docs/codemap.md`; `docs/testing/KIEM_TRA_TAY.md`; `docs/handoff/feat-kb-schema.md`
 
 ## Migration
 
-`0031_kb_schema.sql`: 3 bảng + khóa ngoại ghép + chỉ mục (B-tree `(workspace_id, version_id)`, `(workspace_id, product_id)`, GIN `tsv`; **HNSW và chỉ mục `embedding_model` để `KB-EMBED-COL`**) + RLS/GRANT viết tay. Đường lùi: `DROP TABLE cf.kb_chunks, cf.kb_versions, cf.kb_sources CASCADE` (bảng mới, chưa có dữ liệu thật). Chỉ chạy trên `cf_dev`/`cf_test`/`cf_ci`.
+`0033_kb_schema.sql`: 3 bảng + khóa ngoại ghép + chỉ mục (B-tree `(workspace_id, version_id)`, `(workspace_id, product_id)`, GIN `tsv`; **HNSW và chỉ mục `embedding_model` để `KB-EMBED-COL`**) + RLS/GRANT viết tay. Đường lùi: `DROP TABLE cf.kb_chunks, cf.kb_versions, cf.kb_sources CASCADE` (bảng mới, chưa có dữ liệu thật). Chỉ chạy trên `cf_dev`/`cf_test`/`cf_ci`.
 
 ## Test viết trước
 

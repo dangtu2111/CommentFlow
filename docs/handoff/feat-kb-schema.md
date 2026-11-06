@@ -1,7 +1,7 @@
 # Bàn giao `feat-kb-schema` (làn b, claude) — KB-SCHEMA
 
 ## Đã làm
-- Migration `0031_kb_schema.sql`: `cf.kb_sources`, `cf.kb_versions` (bất biến), `cf.kb_chunks` (`halfvec(1024)`, `tsv`, `context_header`, `valid_*`, `embedding_model`) + RLS/GRANT viết tay (QKB1). Schema drizzle `packages/db/src/schema/cf/kb.ts`.
+- Migration `0033_kb_schema.sql`: `cf.kb_sources`, `cf.kb_versions` (bất biến), `cf.kb_chunks` (`halfvec(1024)`, `tsv`, `context_header`, `valid_*`, `embedding_model`) + RLS/GRANT viết tay (QKB1). Schema drizzle `packages/db/src/schema/cf/kb.ts`.
 - Test tích hợp `packages/db/tests/kb-schema.int.test.ts` (RLS chéo workspace, ghi theo vai trò, FK ghép, CHECK, halfvec, tsv).
 - Docs: `docs/10` §3.4/§4, QUYET_DINH (QKB1), gap-matrix, MASTER, codemap, KIEM_TRA_TAY (KT-016).
 

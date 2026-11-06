@@ -6,13 +6,16 @@ import {
   cancelCommentReply,
   HideRejectedError,
   ReplyRejectedError,
+  relabelComments,
   releaseCommentLock,
   requestCommentHide,
   requestCommentReply,
+  skipComments,
 } from '@flow/db/runtime';
 import { HIDE_QUEUE, SEND_QUEUE } from '@flow/shared';
 import { z } from 'zod';
 import type { LockActionResult } from '../../../../lib/comment-lock-result';
+import { type BulkResult, createBulkActions } from '../../../../server/bulk-action';
 import { getDb } from '../../../../server/db';
 import { createHideAction, type HideActionResult } from '../../../../server/hide-action';
 import { enqueueJob } from '../../../../server/queue';
@@ -100,4 +103,45 @@ export async function hideCommentAction(
 ): Promise<HideActionResult> {
   const { user, workspace } = await requireAppUser({});
   return changeHidden({ workspaceId: workspace.id, userId: user.id }, commentId, hide);
+}
+
+/**
+ * Hành động hàng loạt (FR-045). Ẩn đi qua ĐÚNG đường ẩn từng bình luận ở trên (`changeHidden`); không có gửi hàng loạt.
+ * Quyền thật do RLS/trigger/hàm DB quyết định; ở đây chỉ gom đầu vào + kết quả (xem `server/bulk-action.ts`).
+ */
+const bulk = createBulkActions({
+  skip: (session, ids) =>
+    getDb().withActor(session.workspaceId, session.userId, (tx) =>
+      skipComments(tx, session.workspaceId, session.userId, ids),
+    ),
+  relabel: (session, ids, label) =>
+    getDb().withActor(session.workspaceId, session.userId, (tx) =>
+      relabelComments(tx, session.workspaceId, session.userId, ids, label),
+    ),
+  hide: (session, commentId, hide) => changeHidden(session, commentId, hide),
+  warn: (event) => console.warn(JSON.stringify(event)),
+});
+
+/** Bỏ qua nhiều bình luận (chuyển `skipped`). Workspace/người dùng từ phiên, KHÔNG từ client. */
+export async function skipCommentsAction(commentIds: string[]): Promise<BulkResult> {
+  const { user, workspace } = await requireAppUser({});
+  return bulk.skipMany({ workspaceId: workspace.id, userId: user.id }, commentIds);
+}
+
+/** Đổi nhãn nhiều bình luận; nhãn phải thuộc bộ chuẩn (`@flow/shared`). */
+export async function relabelCommentsAction(
+  commentIds: string[],
+  label: string,
+): Promise<BulkResult> {
+  const { user, workspace } = await requireAppUser({});
+  return bulk.relabelMany({ workspaceId: workspace.id, userId: user.id }, commentIds, label);
+}
+
+/** Ẩn nhiều bình luận; server BẮT BUỘC `confirmed === true` (hộp xác nhận ở giao diện). */
+export async function hideCommentsAction(
+  commentIds: string[],
+  confirmed: boolean,
+): Promise<BulkResult> {
+  const { user, workspace } = await requireAppUser({});
+  return bulk.hideMany({ workspaceId: workspace.id, userId: user.id }, commentIds, confirmed);
 }
