@@ -594,6 +594,33 @@
       }
     }
   },
+  "aiSent": {
+    "pageTitle": "AI đã gửi",
+    "title": "Lịch sử AI đã tự gửi",
+    "subtitle": "Các câu AI đã tự gửi cho khách. Nếu thấy câu nào sai, bấm Đánh dấu sai (kèm lý do nếu muốn): hệ thống dùng tín hiệu này để tự dừng tự gửi khi AI sai quá nhiều.",
+    "filterLabel": "Lọc lịch sử",
+    "filter": { "all": "Tất cả", "sent": "Đã gửi", "marked_wrong": "Bị đánh dấu sai" },
+    "status": { "sent": "Đã gửi", "marked_wrong": "Đã đánh dấu sai" },
+    "empty": "Chưa có câu nào AI tự gửi. Danh sách xuất hiện khi bạn bật chế độ Tự động và AI bắt đầu trả lời.",
+    "meta": "Nhãn: {label} · độ tin cậy {confidence}% · gửi lúc {date}",
+    "reason": "Lý do: {reason}",
+    "reasonLabel": "Lý do (không bắt buộc)",
+    "reasonPlaceholder": "Ví dụ: sai giá",
+    "markWrong": "Đánh dấu sai",
+    "signal": "Cảnh báo: {wrong}/{sent} câu AI gửi trong 1 giờ qua bị đánh dấu sai (vượt 10%). Nên xem lại kiến thức và cài đặt tự gửi.",
+    "pagination": "Phân trang",
+    "prev": "Trang trước",
+    "next": "Trang sau",
+    "error": {
+      "already_marked": "Câu này đã được đánh dấu sai trước đó.",
+      "reason_too_long": "Lý do quá dài (tối đa 300 ký tự).",
+      "unavailable": "Chưa thể đánh dấu lúc này. Vui lòng thử lại."
+    },
+    "loadError": {
+      "title": "Không tải được lịch sử",
+      "body": "Vui lòng tải lại trang sau ít phút."
+    }
+  },
   "productImport": {
     "pageTitle": "Nhập sản phẩm từ Excel/CSV",
     "title": "Nhập sản phẩm từ Excel/CSV",
@@ -891,6 +918,7 @@
       "posts": "Bài viết",
       "tryAi": "Thử AI",
       "readiness": "Độ sẵn sàng AI",
+      "aiSent": "AI đã gửi",
       "productImport": "Nhập sản phẩm",
       "kbGaps": "Câu hỏi chưa trả lời",
       "kbPublish": "Phiên bản kiến thức",

@@ -594,6 +594,33 @@
       }
     }
   },
+  "aiSent": {
+    "pageTitle": "AI sent",
+    "title": "Replies the AI sent automatically",
+    "subtitle": "Replies the AI sent to customers on its own. If one is wrong, press Mark as wrong (with a reason if you like): the system uses this signal to pause auto-send when the AI is wrong too often.",
+    "filterLabel": "Filter history",
+    "filter": { "all": "All", "sent": "Sent", "marked_wrong": "Marked wrong" },
+    "status": { "sent": "Sent", "marked_wrong": "Marked wrong" },
+    "empty": "The AI has not auto-sent anything yet. This list fills in once you turn on Automatic mode and the AI starts replying.",
+    "meta": "Label: {label} · confidence {confidence}% · sent {date}",
+    "reason": "Reason: {reason}",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "For example: wrong price",
+    "markWrong": "Mark as wrong",
+    "signal": "Warning: {wrong} of {sent} AI replies sent in the last hour were marked wrong (over 10%). Review your knowledge and auto-send settings.",
+    "pagination": "Pagination",
+    "prev": "Previous page",
+    "next": "Next page",
+    "error": {
+      "already_marked": "This reply was already marked as wrong.",
+      "reason_too_long": "The reason is too long (300 characters at most).",
+      "unavailable": "Could not mark it right now. Please try again."
+    },
+    "loadError": {
+      "title": "Could not load the history",
+      "body": "Please reload the page in a few minutes."
+    }
+  },
   "productImport": {
     "pageTitle": "Import products from Excel/CSV",
     "title": "Import products from Excel/CSV",
@@ -891,6 +918,7 @@
       "posts": "Posts",
       "tryAi": "Try AI",
       "readiness": "AI readiness",
+      "aiSent": "AI sent",
       "productImport": "Import products",
       "kbGaps": "Unanswered questions",
       "kbPublish": "Knowledge versions",
