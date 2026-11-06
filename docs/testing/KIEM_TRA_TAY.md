@@ -28,6 +28,7 @@
 | KT-030 | Phân loại + tách thông tin bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-030 bên dưới) | feat-pipe-classify-extract | chưa | chưa | — |
 | KT-031 | Soạn trả lời bằng LLM (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-031 bên dưới) | feat-pipe-draft | chưa | chưa | — |
 | KT-034 | Viết lại câu hỏi theo ngữ cảnh + nhớ 5 lượt (chỉ mã/test; **chạy thật cần khóa LLM**, xem mục KT-034 bên dưới) | feat-pipe-rewrite-ctx | chưa | chưa | — |
+| KT-AC | Hiệu chuẩn ngưỡng tự gửi + độ tin cậy: kiểm bằng lệnh vitest `src/calibration` (xem mục KT-AC bên dưới) | feat-auto-calibration | chưa | chưa | — |
 | KT-ADC | Khoảng trễ tự gửi có hủy: kiểm bằng lệnh vitest `src/delay` (xem mục KT-ADC bên dưới) | feat-auto-delay-cancel | chưa | chưa | — |
 | KT-ASG | Cổng tự gửi 11 bước `decideAutoSend` do code quyết (chỉ mã/test, không cần khóa; xem mục KT-ASG bên dưới) | feat-auto-send-gate | chưa | chưa | — |
 | KT-CG | Cổng chi phí AI | — | có | chưa | — |
@@ -44,6 +45,7 @@
 | KT-SR | Kiểm lại R1–R9 ngay trước khi gửi `sendRecheck` + lý do hiển thị `recheck:R1–R9` (mã/test + hộp soạn; xem mục KT-SR bên dưới) | feat-send-recheck | chưa | chưa | — |
 | KT-UC | Bộ đếm lượt AI theo kỳ + chặn ở 100% (chỉ DB + mã, chưa có giao diện; **cần migrate 0039**; không cần khóa/dịch vụ ngoài) | feat-usage-counters | chưa | chưa | — |
 | KT-UIA | Giao diện xác thực khớp thiết kế | — | có | chưa | — |
+| KT-URL | Giao diện Báo cáo/Landing/Quyền riêng tư/Điều khoản khớp thiết kế | — | có | chưa | — |
 
 ---
 
@@ -491,6 +493,14 @@ Chưa có giao diện/pipeline nối; mục này chỉ kiểm cờ và test. Kh�
 3. (Khi đã có khóa LLM, tùy chọn) đặt `REWRITE_LLM_ENABLED=true` + `REWRITE_LLM_MODEL`, gọi `createLlmRewriter` với "còn không shop" + bình luận cha "áo này giá sao". — Mong đợi: `source: 'llm'`, câu tìm kiếm nêu rõ sản phẩm, không có SĐT/email; dòng `ai_usage` bước `rewrite`.
 
 ---
+
+## KT-AC — Hiệu chuẩn ngưỡng tự gửi + độ tin cậy (AUTO-CALIBRATION, FR-072, FR-163, feat-auto-calibration)
+
+> Chưa nối DB/giao diện nên kiểm bằng lệnh. / Not wired to DB/UI yet — verify by command.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | `pnpm --filter @flow/ai exec vitest run src/calibration` | Mọi test xanh (gồm property-based: đề xuất luôn trong [0,80; 0,99]; < 50 mẫu không đề xuất; trọng số hồi quy luôn hợp lệ). / All green. |
 
 ## KT-ADC — Khoảng trễ tự gửi có hủy (AUTO-DELAY-CANCEL, FR-071, US-042, feat-auto-delay-cancel)
 
@@ -1064,6 +1074,18 @@ Chỉ phần máy (chưa có giao diện): người thử cần `pnpm db:migrate
 | 2 | Đăng nhập Owner, mở `/app/kb`. | Thanh "Độ đầy đủ kiến thức" = % ở trang Độ sẵn sàng; menu trái dẫn tới Nhập sản phẩm, Thử AI, Độ sẵn sàng…; Staff mở `/app/kb` nhận 404. |
 | 3 | Mở `/app/posts`, bấm tab Facebook/Instagram, sang trang 2. | Danh sách lọc đúng nền tảng, số trang hiển thị "1 … 5 6 7 … n", dòng "Hiển thị a - b trên N bài đăng" đúng. |
 | 4 | Mở `/dev/ui/automation`, `/dev/ui/spam-rules`, `/dev/ui/leads` (bản dev). | Ô chế độ có màu Tự động/Chạy thử/Tắt; mọi nội dung mẫu có nhãn [MẪU]; production trả 404. Đăng nhập Owner mở `/app/automation`, `/app/spam-rules`: bố cục thẻ, Lưu vẫn hoạt động. |
+
+## KT-URL — Giao diện Báo cáo, Landing, Quyền riêng tư, Điều khoản (UI-FIDELITY-REPORTS-LEGAL, feat-ui-reports-legal)
+
+> Chỉ đổi giao diện, không đổi logic; trang mẫu dev. / UI only; dev sample pages.
+
+| # | Bước / Step | Kết quả mong đợi / Expected |
+|---|---|---|
+| 1 | Chạy web dev, mở /dev/ui/bao-cao ở 1440px | Đầu trang, 4 thẻ KPI, biểu đồ cột, phân bố ý định, bảng top bài viết, hiệu suất nhân viên; mọi số có nhãn [MẪU]. |
+| 2 | Mở /dev/ui/landing, /dev/ui/privacy, /dev/ui/terms | Khung đầu/chân trang chung; không có huy hiệu "Meta Tech Partner", số shop, nút Google/Facebook; nội dung pháp lý ghi [MẪU]. |
+| 3 | Thu cửa sổ còn 390px | Không cuộn ngang; mục lục Điều khoản xếp lên trên. |
+| 4 | Chế độ tối của hệ điều hành | Chữ vẫn đọc được. |
+| 5 | Chạy bản production (NODE_ENV=production) | Bốn route /dev/ui/* trả 404. |
 
 ## KT-WSS — Tìm workspace trong bộ chuyển (FR-005-SEARCH)
 

@@ -1,6 +1,8 @@
 import { LOCALES } from '@flow/shared';
+import { Languages } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { setLocale } from '../../app/actions';
+import { SectionHead } from '../ui/section-head';
 
 /** Thẻ chọn ngôn ngữ giao diện ở Cài đặt (FR-119); lưu cookie qua `setLocale`. Ngôn ngữ đang dùng bị khóa. */
 export async function LanguageCard() {
@@ -11,10 +13,12 @@ export async function LanguageCard() {
   ]);
   return (
     <section className="card stack" aria-labelledby="language-title">
-      <h2 id="language-title" className="section-title">
-        {t('title')}
-      </h2>
-      <p className="muted">{t('body')}</p>
+      <SectionHead
+        id="language-title"
+        icon={<Languages size={22} />}
+        title={t('title')}
+        description={t('body')}
+      />
       <form action={setLocale} aria-label={t('title')} className="locale-switch-group">
         {LOCALES.map((locale) => (
           <button

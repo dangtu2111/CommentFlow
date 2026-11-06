@@ -2,6 +2,7 @@ import { isLocale } from '@flow/shared';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { actionLabelKey, diffRows } from '../../lib/action-log-format';
 import { formatAbsoluteTime } from '../../lib/inbox-format';
+import { activityTone } from '../../lib/settings-visual';
 import { type ActivityListItem, actorDisplay } from './activity-list';
 
 export type ActivityDetail = ActivityListItem & {
@@ -27,7 +28,9 @@ export async function ActivityDetailPanel({
   return (
     <article className="log-detail-body">
       <h2>{key ? t(`actions.${key as 'workspace_created'}`) : entry.action}</h2>
-      <p className="muted">{entry.action}</p>
+      <p>
+        <code className={`chip chip-tone-${activityTone(entry.action)}`}>{entry.action}</code>
+      </p>
       <dl className="log-meta">
         <dt>{t('detail.time')}</dt>
         <dd>{formatAbsoluteTime(entry.createdAt, locale, timeZone)}</dd>

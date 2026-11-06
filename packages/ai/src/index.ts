@@ -2,6 +2,7 @@
 // chỉ khi tạo module (thư mục) mới mới thêm một dòng ở đây (xếp theo vần).
 export * from './automation';
 export * from './cache';
+export * from './calibration';
 export * from './classify';
 export * from './confidence';
 export * from './cost-gate';

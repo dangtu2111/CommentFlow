@@ -34,7 +34,9 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | GĐ0-AUTH-CORE | FR-001–005 (lõi) | US-001, 005 | DB | S | không | ✅ |
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
+| UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
 | UI-FIDELITY-AUTO-LEADS | docs/08 §2, §7 (automation.png, spam-rules.png, leads.png) | UF-4 | AUTO-MATRIX-UI, SPAM-RULES | — | không | 🟡 Giao diện khớp một phần (`feat-ui-automation-leads`, QAL1; Leads thật chờ `LEADS-KANBAN`) |
+| UI-FIDELITY-POLISH | docs/08 §2 (rà lại mọi màn đã làm) | UF-1..4 | UI-FIDELITY-* | — | không | 🟡 Vòng 2 sửa lỗi bố cục (`feat-ui-polish-pass`, QPOL1); điểm cần dữ liệu thật giữ ở các dòng UI-FIDELITY-* |
 | UI-AUTH-FIDELITY | FR-001, 119 | US-001, UF-1 | UI-AUTH | — | không | 🟡 giao diện đăng nhập/đăng ký khớp Stitch; phần còn lại xem gap matrix |
 | AUTH-2FA | FR-001 (TOTP + mã dự phòng) | US-005 | AUTH-CORE | S | không | ✅ |
 | AUTH-SESSIONS-UI | FR-001 (thiết bị) | US-005 | AUTH-2FA | — | không | ✅ (trang tạm) |
@@ -237,7 +239,7 @@ Cổng 4: unit test 11 cổng + R1–R9 + test đua xanh; AI tự gửi an toàn
 | SEND-RECHECK | FR-110 (R1–R9 ngay trước khi gọi API; bị chặn → lý do hiển thị) | US-045 | AUTO-SEND-GATE, FB-REPLY | S | không | ✅ (lõi hàm thuần `sendRecheck` + job `send` gọi R1–R3/R9, lý do `recheck:R1–R9` vi/en, Stryker 95,2% — `feat-send-recheck`; dữ liệu thật R4–R8 cho tự gửi → `SEND-RECHECK-WIRE`; KT-SR) |
 | AUTO-MATRIX-UI | FR-070 (Tắt/Chạy thử/Tự động theo kênh × nhãn), FR-071 (ngưỡng, khoảng trễ, giới hạn/ngày, giờ hoạt động, từ khóa chặn, chữ ký) | US-040, UF-5 | AUTO-SEND-GATE | S | không | ✅ Xong-mock (`feat-auto-matrix-ui`, Q-AMU1: schema Zod + store bộ nhớ + trang `/app/automation` chỉ Owner; bảng DB → `AUTO-MATRIX-DB` làn b — phần lưu ✅ ở `feat-auto-config-store` (Q-ACS1, migration 0047, KT-ACS), còn `AUTO-CONFIG-WIRE`; hạn mức tháng/tự tạm dừng → `AUTO-SETTINGS-COST`; KT-AMU) |
 | AUTO-DELAY-CANCEL | FR-071 (khoảng trễ có hủy) | US-042 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-delay-cancel`, Q-ADC1: `packages/ai/src/delay/` máy trạng thái thuần + `AutoSendDelayScheduler` bộ nhớ; bản bền/nối pipeline/nút Hủy UI → `AUTO-DELAY-WIRE` làn b; KT-ADC) |
-| AUTO-CALIBRATION | FR-072 (50/10%/15/0,80; đề xuất kèm lý do), FR-163 (hiệu chuẩn độ tin cậy) | US-041 | AUTO-MATRIX-UI | S | không | ⏳ |
+| AUTO-CALIBRATION | FR-072 (50/10%/15/0,80; đề xuất kèm lý do), FR-163 (hiệu chuẩn độ tin cậy) | US-041 | AUTO-MATRIX-UI | S | không | ✅ Xong-mock (`feat-auto-calibration`, Q-AC1: `packages/ai/src/calibration/` hàm thuần đề xuất ngưỡng + hồi quy logistic/ECE; nối DB/UI/job hằng tuần → `AUTO-CALIBRATION-WIRE` làn b; KT-AC) |
 | EMERGENCY-STOP | FR-073 (dừng khẩn cấp toàn workspace) | US-043 | AUTO-MATRIX-UI | S | không | ⏳ |
 | AUTO-PAUSE | FR-073 (tự tạm dừng khi bất thường) | US-044 | EMERGENCY-STOP | S | không | ⏳ |
 | AI-SENT-HISTORY | FR-075 (lịch sử AI đã gửi + Đánh dấu sai) | US-040 | AUTO-SEND-GATE | — | không | ✅ Xong-mock (feat-ai-sent-history; phần DB ở AI-SENT-HISTORY-DB) |
@@ -308,3 +310,4 @@ Cổng: theo từng tính năng (`docs/14` §8).
 - Xong một việc → đổi trạng thái ở đây **và** dòng gap matrix cùng commit (`/finish`); thêm việc phát sinh vào đúng GĐ, giữ ≤ 1–2 ngày công.
 - Dòng `⛔` chỉ chuyển ⏳ khi chủ dự án cung cấp tài nguyên/quyết định; ghi lại trong handoff.
 - Việc cơ học (dịch chuỗi, đổi tên hàng loạt, cập nhật bản đồ) → issue nhãn `mech` cho máy phụ, không tính vào bảng này.
+| UI-FIDELITY-REPORTS-LEGAL | docs/08 §2 (reports, landing-pricing, privacy-data-deletion, terms-dpa) | — | REPORTS, PUBLIC-PAGES | — | không | 🟡 Giao diện mẫu dev khớp một phần (`feat-ui-reports-legal`, QRL1; trang thật chờ `REPORTS`, `PUBLIC-PAGES`) |

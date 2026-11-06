@@ -57,4 +57,9 @@ export default [
       ],
     },
   },
+  {
+    // Trang mẫu dev gắn "[MẪU]" (chỉ NODE_ENV!==production, QRL1) và khung công khai của chúng: không phải giao diện thật.
+    files: ['src/app/dev/**/*.tsx', 'src/components/public/**/*.tsx'],
+    rules: { 'i18next/no-literal-string': 'off' },
+  },
 ];

@@ -77,22 +77,25 @@ async function freshCode(secret: string): Promise<string> {
  */
 export async function enableTwoFactor(page: Page, t: Translate, user: TestUser): Promise<void> {
   const tf = (key: string) => t(`auth.security.twoFactor.${key}`);
-  await page.getByLabel(tf('passwordLabel'), exact).fill(user.password);
-  await page.getByRole('button', { name: tf('start'), ...exact }).click();
+  // Hộp thoại bật 2FA tự mở với Owner/Admin; nút mở cùng tên với nút nộp nên mọi thao tác giới hạn trong hộp thoại.
+  const dialog = page.locator('#two-factor-setup-dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel(tf('passwordLabel'), exact).fill(user.password);
+  await dialog.getByRole('button', { name: tf('start'), ...exact }).click();
 
-  const keyLine = page.locator('p', { hasText: tf('manualKey') }).locator('code');
+  const keyLine = dialog.locator('p', { hasText: tf('manualKey') }).locator('code');
   await expect(keyLine).toBeVisible();
   const shown = ((await keyLine.textContent()) ?? '').trim();
   const secret = shown.startsWith('otpauth://') ? secretFromUri(shown) : shown.replace(/\s+/g, '');
 
-  await page.getByLabel(tf('confirmLabel'), exact).fill(await freshCode(secret));
-  await page.getByRole('button', { name: tf('confirm'), ...exact }).click();
+  await dialog.getByLabel(tf('confirmLabel'), exact).fill(await freshCode(secret));
+  await dialog.getByRole('button', { name: tf('confirm'), ...exact }).click();
 
-  await expect(page.getByRole('heading', { name: tf('backupTitle') })).toBeVisible();
-  await page.getByRole('button', { name: tf('saved'), ...exact }).click();
+  await expect(dialog.getByRole('heading', { name: tf('backupTitle') })).toBeVisible();
+  await dialog.getByRole('button', { name: tf('saved'), ...exact }).click();
   // Sau "Đã lưu": mã dự phòng biến mất và màn quản lý (có mục tạo lại mã) hiện ra.
   await expect(page.getByRole('heading', { name: tf('backupTitle') })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: tf('regenTitle') })).toBeVisible();
+  await expect(page.getByRole('button', { name: tf('regenTitle'), ...exact })).toBeVisible();
   await expect(page.getByText(tf('statusOn'), exact)).toBeVisible();
 }
 

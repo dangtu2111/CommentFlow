@@ -1,5 +1,6 @@
 'use client';
 
+import { Check, LockKeyhole, Power, RefreshCw, Smartphone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useActionState, useCallback, useEffect, useState } from 'react';
@@ -10,16 +11,47 @@ import {
   regenerateBackupCodesAction,
 } from '../../app/app/security/actions';
 import { SECURITY_IDLE, type SecurityState } from '../../lib/security-form';
+import { enrollStep } from '../../lib/settings-visual';
 import { showEnableFlow } from '../../lib/two-factor-view';
 import { Banner } from '../ui/banner';
+import { Dialog, DialogTrigger } from '../ui/dialog';
 import { CodeField, PasswordField } from '../ui/fields';
+import { SectionHead } from '../ui/section-head';
 import { SubmitButton } from '../ui/submit-button';
+
+const SETUP_ID = 'two-factor-setup-dialog';
+const REGEN_ID = 'two-factor-regen-dialog';
+const DISABLE_ID = 'two-factor-disable-dialog';
 
 function useError(state: SecurityState): string | undefined {
   const t = useTranslations('auth.errors');
   return state.status === 'error'
     ? t(state.message, { minutes: state.retryMinutes ?? 15 })
     : undefined;
+}
+
+/** Thanh ba bước của trình hướng dẫn bật 2FA (bước đã qua có dấu tích, bước hiện tại nổi bật). */
+export function Stepper({ step }: { step: 1 | 2 | 3 }) {
+  const t = useTranslations('auth.security.twoFactor.steps');
+  return (
+    <ol className="stepper" aria-label={t('label')}>
+      {([1, 2, 3] as const).map((n) => (
+        <li
+          key={n}
+          className={n < step ? 'is-done' : n === step ? 'is-current' : undefined}
+          aria-current={n === step ? 'step' : undefined}
+        >
+          <span className="stepper-dot" aria-hidden="true">
+            {n < step ? <Check size={14} /> : n}
+          </span>
+          <span className="stepper-text">
+            <small>{t('step', { n })}</small>
+            {t(`name.${n}`)}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 /** Danh sách mã dự phòng: hiện một lần, có nút sao chép (không lưu ở đâu khác ngoài màn hình này). */
@@ -41,7 +73,7 @@ function BackupCodes({ codes, onSaved }: { codes: string[]; onSaved?: () => void
     }
   };
   return (
-    <section className="stack" aria-labelledby="backup-title">
+    <section className="stack backup-box" aria-labelledby="backup-title">
       <h3 id="backup-title" className="section-subtitle">
         {t('backupTitle')}
       </h3>
@@ -86,61 +118,74 @@ function EnableFlow({
   useEffect(() => {
     if (enrolling) onEnrolling();
   }, [enrolling, onEnrolling]);
+  const step = enrollStep({ begun: enrolling, confirmed: confirm.status === 'done' });
 
   if (begin.status === 'enroll' && confirm.status === 'done') {
     return (
-      <BackupCodes
-        codes={begin.backupCodes}
-        onSaved={() => {
-          onFinished();
-          router.refresh();
-        }}
-      />
+      <div className="stack">
+        <Stepper step={step} />
+        <BackupCodes
+          codes={begin.backupCodes}
+          onSaved={() => {
+            onFinished();
+            router.refresh();
+          }}
+        />
+      </div>
     );
   }
   if (begin.status === 'enroll') {
     return (
-      <form action={confirmAction} className="form" noValidate>
-        <h3 className="section-subtitle">{t('scanTitle')}</h3>
-        <p className="muted">{t('scanBody')}</p>
-        {/* Ảnh QR do server tạo (data URL); khóa bí mật không đi qua dịch vụ nào bên ngoài. */}
-        {/* biome-ignore lint/performance/noImgElement: data URL nhúng sẵn, không cần tối ưu ảnh của Next */}
-        <img className="qr" src={begin.qrDataUrl} width={224} height={224} alt={t('qrAlt')} />
-        <p className="muted">
-          {t('manualKey')} <code className="manual-key">{begin.manualKey}</code>
-        </p>
-        {confirmError ? <Banner variant="danger">{confirmError}</Banner> : null}
-        <CodeField name="code" label={t('confirmLabel')} />
-        <SubmitButton>{t('confirm')}</SubmitButton>
-      </form>
+      <div className="stack">
+        <Stepper step={step} />
+        <form action={confirmAction} className="form" noValidate>
+          <div className="setup-grid">
+            <div className="setup-qr">
+              <h3 className="section-subtitle">{t('scanTitle')}</h3>
+              <p className="muted">{t('scanBody')}</p>
+              {/* Ảnh QR do server tạo (data URL); khóa bí mật không đi qua dịch vụ nào bên ngoài. */}
+              {/* biome-ignore lint/performance/noImgElement: data URL nhúng sẵn, không cần tối ưu ảnh của Next */}
+              <img className="qr" src={begin.qrDataUrl} width={224} height={224} alt={t('qrAlt')} />
+              <p className="muted">
+                {t('manualKey')} <code className="manual-key">{begin.manualKey}</code>
+              </p>
+            </div>
+            <div className="setup-code">
+              {confirmError ? <Banner variant="danger">{confirmError}</Banner> : null}
+              <CodeField name="code" label={t('confirmLabel')} />
+              <SubmitButton>{t('confirm')}</SubmitButton>
+            </div>
+          </div>
+        </form>
+      </div>
     );
   }
   return (
-    <form action={beginAction} className="form" noValidate>
-      {beginError ? <Banner variant="danger">{beginError}</Banner> : null}
-      <PasswordField
-        name="password"
-        label={t('passwordLabel')}
-        hint={t('passwordHint')}
-        autoComplete="current-password"
-      />
-      <SubmitButton block={false}>{t('start')}</SubmitButton>
-    </form>
+    <div className="stack">
+      <Stepper step={step} />
+      <form action={beginAction} className="form" noValidate>
+        {beginError ? <Banner variant="danger">{beginError}</Banner> : null}
+        <PasswordField
+          name="password"
+          label={t('passwordLabel')}
+          hint={t('passwordHint')}
+          autoComplete="current-password"
+        />
+        <SubmitButton block={false}>{t('start')}</SubmitButton>
+      </form>
+    </div>
   );
 }
 
-/** Đã bật: tạo lại mã dự phòng và tắt 2FA (đều cần mật khẩu). Owner/Admin không được tắt. */
-function ManageFlow({ required }: { required: boolean }) {
+/** Tạo lại mã dự phòng (cần mật khẩu); mã mới hiện ngay trong hộp thoại. */
+function RegenFlow() {
   const t = useTranslations('auth.security.twoFactor');
   const [regen, regenAction] = useActionState(regenerateBackupCodesAction, SECURITY_IDLE);
-  const [disable, disableAction] = useActionState(disableTwoFactorAction, SECURITY_IDLE);
   const regenError = useError(regen);
-  const disableError = useError(disable);
   return (
     <div className="stack">
       {regen.status === 'codes' ? <BackupCodes codes={regen.backupCodes} /> : null}
       <form action={regenAction} className="form" noValidate>
-        <h3 className="section-subtitle">{t('regenTitle')}</h3>
         <p className="muted">{t('regenBody')}</p>
         {regenError ? <Banner variant="danger">{regenError}</Banner> : null}
         <PasswordField name="password" label={t('passwordLabel')} autoComplete="current-password" />
@@ -148,22 +193,24 @@ function ManageFlow({ required }: { required: boolean }) {
           {t('regen')}
         </SubmitButton>
       </form>
-      {required ? null : (
-        <form action={disableAction} className="form" noValidate>
-          <h3 className="section-subtitle">{t('disableTitle')}</h3>
-          <p className="muted">{t('disableBody')}</p>
-          {disableError ? <Banner variant="danger">{disableError}</Banner> : null}
-          <PasswordField
-            name="password"
-            label={t('passwordLabel')}
-            autoComplete="current-password"
-          />
-          <SubmitButton variant="secondary" block={false}>
-            {t('disable')}
-          </SubmitButton>
-        </form>
-      )}
     </div>
+  );
+}
+
+/** Tắt 2FA (cần mật khẩu). Chỉ dựng khi tài khoản không bắt buộc 2FA (Owner/Admin không được tắt). */
+function DisableFlow() {
+  const t = useTranslations('auth.security.twoFactor');
+  const [disable, disableAction] = useActionState(disableTwoFactorAction, SECURITY_IDLE);
+  const disableError = useError(disable);
+  return (
+    <form action={disableAction} className="form" noValidate>
+      <Banner variant="warning">{t('disableBody')}</Banner>
+      {disableError ? <Banner variant="danger">{disableError}</Banner> : null}
+      <PasswordField name="password" label={t('passwordLabel')} autoComplete="current-password" />
+      <SubmitButton variant="secondary" block={false}>
+        {t('disable')}
+      </SubmitButton>
+    </form>
   );
 }
 
@@ -172,21 +219,72 @@ export function TwoFactorCard({ enabled, required }: { enabled: boolean; require
   const [enrolling, setEnrolling] = useState(false);
   const startEnrolling = useCallback(() => setEnrolling(true), []);
   const finishEnrolling = useCallback(() => setEnrolling(false), []);
+  const enableFlow = showEnableFlow({ enabled, enrolling });
   return (
     <section className="card stack" aria-labelledby="two-factor-title">
-      <div className="row row-between">
-        <h2 id="two-factor-title" className="section-title">
-          {t('title')}
-        </h2>
-        <span className={`badge ${enabled ? 'badge-on' : 'badge-off'}`}>
+      <SectionHead
+        id="two-factor-title"
+        icon={<LockKeyhole size={22} />}
+        title={t('title')}
+        description={enabled ? t('onBody') : t('offBody')}
+        end={
+          <div className="row">
+            {enableFlow ? (
+              // Cả khi 2FA vừa bật nhưng còn đang hiện mã dự phòng: nút phải mở lại đúng hộp thoại này.
+              <DialogTrigger dialogId={SETUP_ID} className="btn btn-primary">
+                {t('start')}
+              </DialogTrigger>
+            ) : (
+              <DialogTrigger dialogId={REGEN_ID} className="btn btn-secondary">
+                <RefreshCw size={16} aria-hidden="true" />
+                {t('regenTitle')}
+              </DialogTrigger>
+            )}
+            {!enableFlow && !required ? (
+              <DialogTrigger dialogId={DISABLE_ID} className="btn btn-danger-ghost">
+                <Power size={16} aria-hidden="true" />
+                {t('disableTitle')}
+              </DialogTrigger>
+            ) : null}
+          </div>
+        }
+      />
+      <p>
+        <span className={`chip ${enabled ? 'chip-success' : 'chip-muted'}`}>
           {enabled ? t('statusOn') : t('statusOff')}
         </span>
-      </div>
-      <p className="muted">{enabled ? t('onBody') : t('offBody')}</p>
-      {showEnableFlow({ enabled, enrolling }) ? (
-        <EnableFlow onEnrolling={startEnrolling} onFinished={finishEnrolling} />
+      </p>
+      <dl className="info-tiles">
+        <div className="info-tile">
+          <dt>
+            {t('tiles.method')}
+            <Smartphone size={16} aria-hidden="true" />
+          </dt>
+          <dd>{t('tiles.methodValue')}</dd>
+          <dd className="muted">{t('tiles.methodHint')}</dd>
+        </div>
+      </dl>
+      {enableFlow ? (
+        <Dialog
+          dialogId={SETUP_ID}
+          title={t('setupTitle')}
+          description={t('setupBody')}
+          icon={<LockKeyhole size={22} />}
+          defaultOpen={required && !enabled}
+        >
+          <EnableFlow onEnrolling={startEnrolling} onFinished={finishEnrolling} />
+        </Dialog>
       ) : (
-        <ManageFlow required={required} />
+        <>
+          <Dialog dialogId={REGEN_ID} title={t('regenTitle')} icon={<RefreshCw size={22} />}>
+            <RegenFlow />
+          </Dialog>
+          {required ? null : (
+            <Dialog dialogId={DISABLE_ID} title={t('disableTitle')} icon={<Power size={22} />}>
+              <DisableFlow />
+            </Dialog>
+          )}
+        </>
       )}
     </section>
   );

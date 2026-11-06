@@ -1,0 +1,7 @@
+# UI-FIDELITY nhóm 4 — ảnh `ui-settings`
+
+Ảnh "sau" (trang mẫu `/dev/ui/{settings,members,activity}`, dữ liệu [MẪU]): `settings|members|activity-{1440,390}.png`, `hop-thoai-{doi-mat-khau,tat-2fa,tao-lai-ma,bat-2fa-buoc-2}-{1440,390}.png`. So với `design/stitch/settings-*.png`, `activity-log.png`. Không có ảnh "trước": trang thật cần DB + phiên (máy lane không có); thay đổi so với bản cũ nằm ở diff.
+
+**Đã khớp:** tiêu đề + đường dẫn; thẻ có ô biểu tượng màu nút chính; 2FA có chip trạng thái + nút mở hộp thoại; hộp thoại bật 2FA có thanh 3 bước, đổi mật khẩu có thanh độ mạnh + danh sách kiểm + "trùng khớp", tắt 2FA có cảnh báo; thẻ tài khoản (ảnh đại diện chữ, chip vai trò, email đã xác thực); phiên đăng nhập dạng dòng thẻ + chip "Thiết bị này"; Thành viên dạng dòng có ảnh đại diện + chip vai trò/trạng thái; Nhật ký có chip hành động theo tông, ảnh đại diện tác nhân, chi tiết dạng thẻ; mobile 390px không tràn ngang trong phần nội dung.
+**Chưa khớp / bỏ có chủ ý (Q-UIST1):** Gói & Thanh toán (`settings-billing.png`), điểm bảo mật 100/100, "Meta Tech Partner Tier 1/ISO 27001", thiết bị đồng bộ, số điện thoại/ID, "Đăng xuất tất cả thiết bị khác", KPI + xuất audit/lưu trữ/tự làm mới của Nhật ký, ma trận quyền, VietQR, xem lại/tải mã dự phòng, ảnh người thật, tab ngang Cài đặt (chỉ có trang đã tồn tại). Ghi ở gap `UI-FIDELITY-SETTINGS-DATA`.
+**Lưu ý:** thanh điều hướng ngang của khung ở 390px (đã có từ nhóm 2) làm trang rộng hơn màn hình một chút — ngoài phạm vi nhóm này.
