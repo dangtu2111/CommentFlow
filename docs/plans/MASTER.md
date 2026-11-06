@@ -76,7 +76,7 @@ Cổng 1: bình luận thật trên Page thử hiện trong inbox < 1 phút; tr�
 | CLI-PARSEENV | — (CLI qua `parseEnv`) | — | — | — | không | ✅ Xong (`feat-cli-parseenv`; chờ CI) |
 | E2E-CI | — (E2E trên CI: Valkey + Mailpit + Chromium) | UF-1 | E2E-GATE0 | — | không | ✅ xanh 6/6 trên CI (nguyên nhân gốc: cookie phiên cũ sau xoay phiên — đã sửa ở fix/2fa-backup-codes) |
 | FR-005-SEARCH | FR-005 (ô tìm kiếm của bộ chuyển workspace; số việc cần xử lý tách thành `FR-005-COUNT`) | US-006 | INBOX-LIST | — | không | ✅ (tìm kiếm) |
-| TEST-COVERAGE-GAP | — (nâng coverage `saas-core` 41% → 85%, ratchet) | — | — | — | không | ⏳ (liên tục) |
+| TEST-COVERAGE-GAP | — (nâng coverage `saas-core` 41% → 85%, ratchet; 06/11: 63% dòng/53% nhánh) | — | — | — | không | ⏳ (liên tục) |
 | TRACE-DEBT | — (xóa dần `trace-baseline.json`: baseline đã về 0 mã, 06/11/2026; không thêm nợ mới) | — | — | — | không | ✅ (`feat-trace-debt`) |
 
 ### 1B. Kênh, webhook, inbox
