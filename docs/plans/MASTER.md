@@ -35,7 +35,7 @@ Kèm theo: chủ dự án đã có Meta App dev (redirect `http://localhost:3000
 | UI-AUTH | FR-001, 119 | US-001, UF-1 | AUTH-CORE | — | không | ✅ |
 | UI-FIDELITY-COMMENTS | docs/08 §7.1 (comments.png) | UF-3 | INBOX-LIST | — | không | 🟡 Giao diện khớp một phần (`feat-ui-comments`, Q-UIC1; còn `UI-FIDELITY-COMMENTS-DATA`) |
 | UI-FIDELITY-SIDEBAR | docs/08 §3 (comments.png) | UF-4 | — | — | không | 🟡 Giao diện khớp một phần (`feat-ui-sidebar-reorg`, Q-UISB1) |
-| UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (`feat-ui-kit-foundation`, Q-UIKIT1); chuyển trang còn lại |
+| UI-KIT | docs/08 §2, `design/stitch/brand-guideline.html` | UF-4 | — | — | không | 🟡 PR1 nền kit (Q-UIKIT1) · PR2 avatar/pill/Stepper (`feat-ui-kit-migrate`, Q-UIKIT2); còn EmptyState/Table/AppShell + trang nhóm 2 |
 | UI-FIDELITY-SETTINGS-PAGES | docs/08 §7 (settings-billing.png) | UF-4 | UI-FIDELITY-SETTINGS-V2 | — | không | ✅ Xong-mock giao diện (`feat-ui-settings-pages`, Q-USP1; còn `PLANS-SCHEMA`, `QR-PAYMENT`) |
 | UI-FIDELITY-SETTINGS-V2 | docs/08 §7 (settings-security.png) | UF-4 | UI-FIDELITY-SETTINGS | — | verifier-security (xóa phiên) | ✅ Giao diện khớp (`feat-ui-settings-v2`, Q-UISET2; còn `SETTINGS-SECURITY-DATA`) |
 | UI-FIDELITY-SETTINGS | docs/08 §7 (settings-*.png, activity-log.png) | UF-4 | SETTINGS-PAGE | — | không | 🟡 Giao diện khớp một phần (`feat-ui-settings`, Q-UIST1; còn `UI-FIDELITY-SETTINGS-DATA`) |
@@ -275,13 +275,13 @@ Cổng: theo từng tính năng (`docs/14` §8).
 
 | Mã | FR | US/UF | Phụ thuộc | Nhạy cảm | Ngoài | Trạng thái |
 |---|---|---|---|---|---|---|
-| TIKTOK-CONNECTOR | FR-015 (đọc + trả lời bình luận; ẩn chỉ khi có API) | — | CONNECTOR-IFACE | S | **có** — quyền TikTok (Q5) | ⛔ |
+| TIKTOK-CONNECTOR | FR-015 (đọc + trả lời bình luận; ẩn chỉ khi có API) | — | CONNECTOR-IFACE | S | **có** — quyền TikTok (Q5) | ✅ Xong-mock (`feat-tiktok-connector`, Q-TT1; còn `TIKTOK-CHANNEL-CONNECT`, `TIKTOK-POLLING`) |
 | MESSENGER-WEBHOOK | FR-014 (webhook `messages`, gửi trong cửa sổ) | UF-6 | FB-OAUTH | S | **có** — Meta App Review | ✅ Xong-mock (`feat-messenger-webhook`, Q-MSW1; còn `MESSENGER-INGEST` cần migration làn b) |
 | IG-DM | FR-013 (tin nhắn Instagram) | UF-6 | IG-CONNECTOR | S | **có** — Meta | ⛔ |
 | MSG-INBOX | FR-047 (hội thoại: cửa sổ 24 giờ/7 ngày, AI theo hội thoại, tối đa lượt AI, chuyển người) | US-020–023 | MESSENGER-WEBHOOK | S | không | ⏳ |
 | PRIVATE-REPLY | FR-046 (nhắn riêng từ bình luận, 1 tin ≤ 7 ngày) | US-017 | MESSENGER-WEBHOOK | S | không | ✅ Xong-mock (logic thuần; nối DB/giao diện → `PRIVATE-REPLY-WIRE`) |
 | MSG-GREETINGS | FR-074 (tin chào, ngoài giờ, báo chuyển nhân viên theo ngôn ngữ) | — | MSG-INBOX | — | không | ✅ Xong-mock (`feat-msg-greetings`, Q-MSG1; còn `MSG-GREETINGS-WIRE` cần migration làn b + `MSG-GREETINGS-UI`) |
-| REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ |
+| REPORTS | FR-083 (báo cáo theo khoảng/kênh, CSV, email tuần) | US-062 | GĐ4 | — | không | ⏳ (logic chỉ số + CSV: Xong-mock `feat-reports-metrics`; còn `REPORTS-UI`, `REPORTS-WEEKLY-EMAIL`) |
 | PUSH-EMAIL | FR-084 (thông báo đẩy PWA + email, giờ yên lặng) | — | REPORTS | — | **có** — nhà cung cấp email (SMTP thật) | ⛔ |
 | ADMIN-REST | FR-104 (gói & mã giảm giá, nội dung hệ thống, quản trị viên), Admin Console tiếng Anh | — | ADMIN-SHELL | S | không | ⏳ |
 | ADMIN-IMPERSONATE | FR-105 ("Xem như khách": lý do, chỉ đọc, ≤ 30 phút, nhật ký; `admin_impersonations`) | US-082 | ADMIN-SHELL | S+DB | không | ⏳ |

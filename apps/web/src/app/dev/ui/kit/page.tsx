@@ -11,6 +11,7 @@ import { Breadcrumb, PageHeader } from '../../../../components/ui/page-header';
 import { SectionHead } from '../../../../components/ui/section-head';
 import { SplitLayout } from '../../../../components/ui/split-layout';
 import { Stat } from '../../../../components/ui/stat';
+import { Stepper } from '../../../../components/ui/stepper';
 import { Tabs } from '../../../../components/ui/tabs';
 
 /**
@@ -77,6 +78,36 @@ export default function DevUiKitPage() {
           items={[
             { key: 'a', href: '#kit-tabs', label: 'Bình luận', current: true },
             { key: 'b', href: '#kit-tabs', label: 'AI đã gửi', current: false },
+          ]}
+        />
+        <Tabs
+          variant="pill"
+          label="Tab viên thuốc mẫu"
+          items={[
+            { key: 'a', href: '#kit-tabs', label: 'Tất cả', current: true },
+            { key: 'b', href: '#kit-tabs', label: 'Facebook', current: false },
+          ]}
+        />
+        <Avatar badge="FB">NA</Avatar>
+        <Stepper
+          label="Các bước mẫu"
+          progress={50}
+          steps={[
+            { key: 'a', state: 'done', eyebrow: 'Bước 1', title: 'Kết nối', caption: 'Xong' },
+            {
+              key: 'b',
+              state: 'current',
+              eyebrow: 'Bước 2',
+              title: 'Kiến thức',
+              caption: 'Đang làm',
+            },
+            {
+              key: 'c',
+              state: 'todo',
+              eyebrow: 'Bước 3',
+              title: 'Bật AI',
+              caption: 'Chưa bắt đầu',
+            },
           ]}
         />
       </Card>

@@ -232,6 +232,12 @@ export { applyProductImport, type ProductImportResult } from './queries/product-
 export { type ActiveVariant, findActiveVariants } from './queries/products';
 export { loadReadinessSource, type ReadinessSourceData } from './queries/readiness';
 export {
+  type LoadReportRowsInput,
+  type LoadReportRowsResult,
+  loadReportRows,
+  REPORT_MAX_ROWS,
+} from './queries/reports';
+export {
   createSizeChartRow,
   deleteSizeChartRow,
   findSizeChartRows,

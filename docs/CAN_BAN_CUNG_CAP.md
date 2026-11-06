@@ -243,6 +243,14 @@ Bảng `core.plans` (migration 0054) đã nạp sẵn 5 gói CommentFlow theo `d
 ## 2x. `PRIVATE-REPLY` (FR-046) — cần Page Facebook thử + quyền Meta để thử thật
 Logic kiểm tra (1 tin, ≤ 7 ngày, chỉ nhân viên bấm Gửi) đã xong với fixture, CHƯA gọi Meta thật. Để thử thật bạn cần: Page Facebook thử đã kết nối, app Meta có quyền `pages_messaging` (cần App Review khi chạy thật) và một bình luận thử của tài khoản ngoài. Chưa có nơi gọi trong web/worker nên chưa ảnh hưởng người dùng. Kiểm tay mã KT-PRP.
 
+## 2w. Connector TikTok — `TIKTOK-CONNECTOR` (FR-015, Xong-mock)
+
+Code connector TikTok đã nối vào worker nhưng cờ **tắt mặc định**, chưa từng gọi TikTok thật (chỉ fixture viết tay theo tài liệu công khai). Để bật thật bạn cần cung cấp (dùng tài khoản thử, không dùng tài khoản khách):
+- Đăng ký **TikTok API for Business** (developer), xin quyền đọc/trả lời bình luận organic; một **tài khoản TikTok Business thử**. Một số khu vực (EU, Anh, Thụy Sĩ…) bị loại; chưa rõ Việt Nam có được cấp không (Q5).
+- Luồng OAuth TikTok lấy token tài khoản, lưu mã hóa như token Page — **chưa làm** (gap `TIKTOK-CHANNEL-CONNECT`, cần migration/route do làn khác).
+- Trên **máy chạy worker** đặt `TIKTOK_CONNECTOR_ENABLED=true`, `TIKTOK_CLIENT_SECRET`, `TOKEN_ENC_KEYS` (cùng khóa với web). Không commit giá trị.
+- Đối chiếu với tài khoản thật rồi sửa nếu lệch: tên endpoint/trường, mã lỗi, định dạng chữ ký webhook, có API ẩn bình luận hay không, giới hạn 150 ký tự/48 giờ. Kiểm tay: KT-TT.
+
 ## 2s. `UI-AUTH-FIDELITY` — không cần tài nguyên ngoài
 Chỉ đổi giao diện trang xác thực. Nút "Tiếp tục với Facebook" đang TẮT: muốn bật cần Meta OAuth đăng nhập thật (khóa `META_APP_ID`/`META_APP_SECRET` như mục Facebook) — việc riêng, chưa làm. Bạn **không** phải làm gì ở nhánh này.
 

@@ -75,6 +75,12 @@ export {
 export { type MessengerSendMode, messengerSendMode } from './messenger/window';
 export { type ConnectorRegistry, createConnectorRegistry } from './registry';
 export {
+  createTikTokConnector,
+  type TikTokConnector,
+  type TikTokConnectorOptions,
+  tiktokCommentId,
+} from './tiktok/connector';
+export {
   createTokenCipher,
   type EncryptedToken,
   type ParsedTokenKeys,

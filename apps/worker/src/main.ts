@@ -51,6 +51,7 @@ async function main(): Promise<void> {
     db,
     facebook: config.facebook,
     instagram: config.instagram,
+    tiktok: config.tiktok,
     tokenEncKeys: config.tokenEncKeys,
     logger,
   });
