@@ -96,6 +96,22 @@ export {
   planMergeBurst,
 } from './merge-burst';
 export {
+  LEAD_MAX_PER_CAPTURE,
+  LEAD_NAME_MAX,
+  LEAD_NOTE_MAX,
+  LEAD_STAGES,
+  type LeadContactDraft,
+  type LeadStage,
+  type LeadUpdate,
+  leadUpdateSchema,
+  maskedPhoneHint,
+  normalizeLeadEmail,
+  normalizeLeadPhone,
+  parseLeadUpdate,
+  phoneLast4,
+  planLeadsFromContacts,
+} from './lead-contact';
+export {
   type ExtractedContacts,
   extractPii,
   type MaskedText,
