@@ -1,0 +1,1 @@
+| Rate limit | `packages/saas-core/src/ratelimit/` | Bộ giới hạn theo cửa sổ cố định: khóa `sys:rl:<hành động>:<xô>:<HMAC>` (không email/IP thô), kho Valkey (`ioredis`, script Lua nguyên tử) + dự phòng bộ nhớ; đăng nhập/2FA dự phòng bộ nhớ, đăng ký/quên/gửi lại thì từ chối khi Valkey sập (ADR 004) | 13 §2 |

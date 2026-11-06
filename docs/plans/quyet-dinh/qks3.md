@@ -1,0 +1,1 @@
+| QKS3 | 06/11 | Embedding trong làn này | `packages/ai` chưa có interface embedding → thêm `Embedder` tối thiểu + bản fixture (băm trigram ký tự → 1024 chiều, chuẩn hóa); chưa nối LiteLLM thật (không gọi dịch vụ ngoài). Hàm DB nhận vector dựng sẵn (db không import ai) | Xây mock không chờ; giữ ranh giới gói | Thay bản fixture bằng bản LiteLLM khi có khóa, cùng interface |

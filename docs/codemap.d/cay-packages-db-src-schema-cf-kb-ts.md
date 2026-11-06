@@ -1,0 +1,1 @@
+| `packages/db/src/schema/cf/kb.ts` | Kiến thức (KB-SCHEMA, migration 0031, QKB1): `kbSources`, `kbVersions` (bất biến), `kbChunks` (`halfvec(1024)` + `tsv`; chỉ hệ thống ghi; FK ghép theo `workspace_id`); `halfvec1024`/`tsvector` là `customType`. Test: `packages/db/tests/kb-schema.int.test.ts` |

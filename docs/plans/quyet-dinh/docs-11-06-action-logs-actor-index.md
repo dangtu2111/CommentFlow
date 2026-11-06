@@ -1,0 +1,1 @@
+- 06/11 (ACTION-LOGS-ACTOR-INDEX, Q-AI1): `docs/10_Database_Design.md` §4 (đoạn migration 0029) — thay "theo dõi ở ACTION-LOGS-ACTOR-INDEX" bằng mô tả hai chỉ mục của migration 0031.

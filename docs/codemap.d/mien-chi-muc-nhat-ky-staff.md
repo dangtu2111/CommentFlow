@@ -1,0 +1,1 @@
+| Chỉ mục Nhật ký Staff | `migrations/0032_action_logs_actor_index.sql`, `schema/core/platform.ts` (`actionLogs`), `packages/db/tests/action-logs-actor-index.int.test.ts` | Hai chỉ mục một phần theo `actor_id` / `on_behalf_of`; không CONCURRENTLY (runner trong giao dịch → `lock_timeout`, Q-AI1) | 10 §4 |

@@ -1,0 +1,1 @@
+- **Owner cuối cùng** được trigger `members_guard_last_owner` giữ; lỗi `23514` + constraint `members_last_owner` → `AppError('CONFLICT')`. Dùng `members.id` (không phải user id) làm khóa trong form; id lạ/workspace khác → `NOT_FOUND` → web trả 404.

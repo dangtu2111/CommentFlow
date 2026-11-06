@@ -1,0 +1,1 @@
+- 06/11 (KB-SEARCH-FTS, QKS1–QKS6): `docs/10_Database_Design.md` §3 (dòng `products`: HNSW chưa tạo, GIN trigram ở 0037), §3.4 (`kb_chunks.search_norm` + trigger) và §5 (nhánh trigram, OR, bộ lọc thêm).

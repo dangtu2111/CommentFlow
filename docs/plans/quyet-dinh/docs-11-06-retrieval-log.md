@@ -1,0 +1,1 @@
+- 06/11 (RETRIEVAL-LOG, Q-RL1): `docs/10_Database_Design.md` dòng `retrieval_logs` (thêm `comment_id`, ghi quyền ghi/giữ 90 ngày, migration 0040) và `kb_gaps` (thêm `id`, `created_at`, `updated_at`, quyền, quy tắc gộp/mở lại).

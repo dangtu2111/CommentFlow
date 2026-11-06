@@ -1,0 +1,1 @@
+- **`cf_app` chỉ SELECT 7 cột `users`** (`id, email, name, image, locale, created_at, updated_at`); `email_verified`/`totp_enabled`/`is_admin` của người đang đăng nhập chỉ lấy từ phiên Better Auth phía server (`getCurrentUser`). Truy vấn `users` bằng `cf_app` phải chọn cột tường minh (`select()` toàn cột bị từ chối).

@@ -1,0 +1,1 @@
+| QC2 | 06/11 | `SEND-FIND-REPLY-BY-PARENT` | `findExistingReply` ưu tiên `fetchReplies(channel, mã bình luận cha)`; connector không có `fetchReplies` (connector giả) thì dùng `fetchComments` như cũ | Connector Facebook thật ném `UNKNOWN` ở `fetchComments` (quét cả Page, ADR 010 §3) | Xóa nhánh dự phòng khi mọi connector có `fetchReplies` |
