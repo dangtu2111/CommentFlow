@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, labeled] # labeled: gắn nhãn ci-full để ép chạy đủ
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -14,6 +15,29 @@ permissions:
   contents: read
 
 jobs:
+  # Không bắt buộc. Quyết định job nặng nào cần chạy theo đường dẫn đổi (docs/decisions/015-ci-path-filter.md).
+  # Node và gitleaks luôn chạy. Push vào main và PR gắn nhãn ci-full luôn chạy đủ.
+  changes:
+    name: Phạm vi thay đổi
+    runs-on: ubuntu-latest
+    outputs:
+      node: ${{ steps.filter.outputs.node }}
+      database: ${{ steps.filter.outputs.database }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - id: filter
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: node scripts/ci-changes.mjs
+
   node:
     name: Node (lint, typecheck, test, ranh giới, build)
     runs-on: ubuntu-latest
@@ -53,6 +77,8 @@ jobs:
 
   python:
     name: Python (ml)
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -68,6 +94,8 @@ jobs:
 
   database:
     name: Database (migration, RLS, test tích hợp)
+    needs: changes
+    if: needs.changes.outputs.database == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -148,6 +176,8 @@ jobs:
 
   e2e:
     name: E2E (Playwright + Chromium, Postgres, Valkey, Mailpit)
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
