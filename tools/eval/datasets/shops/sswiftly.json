@@ -1,0 +1,2798 @@
+{
+  "id": "sswiftly",
+  "voice": {
+    "shopPronoun": "shop",
+    "customerAddress": "you",
+    "do": [],
+    "dont": []
+  },
+  "products": [
+    {
+      "id": "4d0ddcad-09d9-44a0-a30a-94f74628cc5e",
+      "name": "100pcs Disposable Stretch Food Covers for Bowls and Plates",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 890,
+      "stock": 197,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "100pcs A"
+          },
+          "priceVnd": null,
+          "priceMinor": 890,
+          "stock": 98
+        },
+        {
+          "attrs": {
+            "Color": "100pcs B"
+          },
+          "priceVnd": null,
+          "priceMinor": 890,
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "id": "e593279a-5a2f-457a-ac04-75c10c8b83b6",
+      "name": "10/20 Sheets Tear-Off Dishwashing Cloths Thickened Absorbent Disposable Dishcloth Kitchen Rag, Home Use",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 1099,
+      "stock": 39996,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Purple--20Sheets"
+          },
+          "priceVnd": null,
+          "priceMinor": 1899,
+          "stock": 9999
+        },
+        {
+          "attrs": {
+            "Color": "Purple--10Sheets"
+          },
+          "priceVnd": null,
+          "priceMinor": 1099,
+          "stock": 9999
+        },
+        {
+          "attrs": {
+            "Color": "Green--20Sheets-Roll"
+          },
+          "priceVnd": null,
+          "priceMinor": 1899,
+          "stock": 9999
+        },
+        {
+          "attrs": {
+            "Color": "Green--10Sheets-Roll"
+          },
+          "priceVnd": null,
+          "priceMinor": 1099,
+          "stock": 9999
+        }
+      ]
+    },
+    {
+      "id": "29209063-3560-47ec-9ec4-fbbd8d3d3e20",
+      "name": "14-in-1 Pre-Assembled Foldable Dumbbell Bench with 6 Adjustable Levels, 1000 lbs Capacity for Full-Body Workouts",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 39800,
+      "stock": 4765,
+      "variants": [
+        {
+          "attrs": {
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 4765
+        }
+      ]
+    },
+    {
+      "id": "7b8c1c66-8da7-4008-8528-2b1f7853128b",
+      "name": "2 in1 Handheld Shower Set With Bracket, Three-way Water Distributor, Explosion-proof Hose & Round Small Overhead Shower Head Set (4 inch)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 19895,
+      "stock": 6,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Black",
+            "Ships From": "China Mainland",
+            "Shower Head Size": "4 inch"
+          },
+          "priceVnd": null,
+          "priceMinor": 19895,
+          "stock": 5
+        },
+        {
+          "attrs": {
+            "Color": "Sliver",
+            "Ships From": "China Mainland",
+            "Shower Head Size": "4 inch"
+          },
+          "priceVnd": null,
+          "priceMinor": 19895,
+          "stock": 1
+        }
+      ]
+    },
+    {
+      "id": "bef805d7-a5af-4e4f-a593-d3bc9a54d91c",
+      "name": "A4 Portable Thermal Document/Tattoo Paper Printer with Bluetooth Control, Compatible with Computers, Mobile Phones and Tablets",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 14800,
+      "stock": 432,
+      "variants": [
+        {
+          "attrs": {
+            "color": "WMT8050PAPER",
+            "Voltage/Plug Type": "USB Type-C"
+          },
+          "priceVnd": null,
+          "priceMinor": 14800,
+          "stock": 85
+        },
+        {
+          "attrs": {
+            "color": "MT80W",
+            "Voltage/Plug Type": "USB Type-C"
+          },
+          "priceVnd": null,
+          "priceMinor": 14800,
+          "stock": 86
+        },
+        {
+          "attrs": {
+            "color": "BMT8050PAPER",
+            "Voltage/Plug Type": "USB Type-C"
+          },
+          "priceVnd": null,
+          "priceMinor": 14800,
+          "stock": 85
+        },
+        {
+          "attrs": {
+            "color": "WMT802ROLL",
+            "Voltage/Plug Type": "USB Type-C"
+          },
+          "priceVnd": null,
+          "priceMinor": 14800,
+          "stock": 85
+        },
+        {
+          "attrs": {
+            "color": "BMT802ROLL",
+            "Voltage/Plug Type": "USB Type-C"
+          },
+          "priceVnd": null,
+          "priceMinor": 14800,
+          "stock": 6
+        },
+        {
+          "attrs": {
+            "color": "MT80B",
+            "Voltage/Plug Type": "USB Type-C"
+          },
+          "priceVnd": null,
+          "priceMinor": 14800,
+          "stock": 85
+        }
+      ]
+    },
+    {
+      "id": "09c6bd12-559f-44ba-b281-024f1e18253c",
+      "name": "Android 10 Quad-Core Mini Media Player TV Box with 2.4G WiFi, 4K Output, H313, RAM 1GB/2GB and ROM 8GB/16GB",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 4399,
+      "stock": 11,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "2GB 16GB"
+          },
+          "priceVnd": null,
+          "priceMinor": 4999,
+          "stock": 7
+        },
+        {
+          "attrs": {
+            "Color": "1GB 8GB"
+          },
+          "priceVnd": null,
+          "priceMinor": 4399,
+          "stock": 4
+        }
+      ]
+    },
+    {
+      "id": "2f3dc4dd-27b6-4f1c-bc0f-1c477422d48e",
+      "name": "Carbon Fiber 3D Front Lip and Side Skirt with Rear Spoiler Tail for Front Bumper",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 13899,
+      "stock": 65645,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "CS rear wing",
+            "style": "Carbon fiber"
+          },
+          "priceVnd": null,
+          "priceMinor": 13899,
+          "stock": 13133
+        },
+        {
+          "attrs": {
+            "Color": "3D rear lip",
+            "style": "Carbon fiber"
+          },
+          "priceVnd": null,
+          "priceMinor": 59899,
+          "stock": 14004
+        },
+        {
+          "attrs": {
+            "Color": "Modified M5 front bar 3D front",
+            "style": "Carbon fiber"
+          },
+          "priceVnd": null,
+          "priceMinor": 41099,
+          "stock": 12974
+        },
+        {
+          "attrs": {
+            "Color": "Real M5 3D front lip",
+            "style": "Carbon fiber"
+          },
+          "priceVnd": null,
+          "priceMinor": 41099,
+          "stock": 13403
+        },
+        {
+          "attrs": {
+            "Color": "MP side skirt",
+            "style": "Carbon fiber"
+          },
+          "priceVnd": null,
+          "priceMinor": 32599,
+          "stock": 12131
+        }
+      ]
+    },
+    {
+      "id": "1b39df48-dc15-4bf9-a20c-b6cd4e6c6d26",
+      "name": "Car Scratch Wax Scratch Removal Repair Agent (Scratch Wax) - 200g",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 1597,
+      "stock": 10745,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Scratch Wax"
+          },
+          "priceVnd": null,
+          "priceMinor": 1597,
+          "stock": 10745
+        }
+      ]
+    },
+    {
+      "id": "71cf28be-d165-4569-b193-491f480fda30",
+      "name": "Cartoon Children Electric Toothbrush with USB Power, Push Button Control (Food-Grade Silicone + PC)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 5008,
+      "stock": 241446,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Yellow owl",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 10998
+        },
+        {
+          "attrs": {
+            "Color": "Pink pig",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 12970
+        },
+        {
+          "attrs": {
+            "Color": "Azure Elk",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 10778
+        },
+        {
+          "attrs": {
+            "Color": "Yellow chick",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 14338
+        },
+        {
+          "attrs": {
+            "Color": "Blue pig",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 11935
+        },
+        {
+          "attrs": {
+            "Color": "Pink chick",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 11882
+        },
+        {
+          "attrs": {
+            "Color": "Blue pig",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7689,
+          "stock": 13415
+        },
+        {
+          "attrs": {
+            "Color": "Pink owl",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 14939
+        },
+        {
+          "attrs": {
+            "Color": "Yellow owl",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 11268
+        },
+        {
+          "attrs": {
+            "Color": "Yellow chick",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 13937
+        },
+        {
+          "attrs": {
+            "Color": "Pink chick",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 10699
+        },
+        {
+          "attrs": {
+            "Color": "Orange Elk",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 13427
+        },
+        {
+          "attrs": {
+            "Color": "Pink pig",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 11431
+        },
+        {
+          "attrs": {
+            "Color": "Spare brush head",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 5008,
+          "stock": 20000
+        },
+        {
+          "attrs": {
+            "Color": "Pink owl",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 13268
+        },
+        {
+          "attrs": {
+            "Color": "Orange Elk",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 14976
+        },
+        {
+          "attrs": {
+            "Color": "Azure Elk",
+            "Style": "S"
+          },
+          "priceVnd": null,
+          "priceMinor": 7897,
+          "stock": 11185
+        },
+        {
+          "attrs": {
+            "Color": "Spare brush head",
+            "Style": "M"
+          },
+          "priceVnd": null,
+          "priceMinor": 5027,
+          "stock": 20000
+        }
+      ]
+    },
+    {
+      "id": "baf293fb-1284-44cd-99d4-66ae7fa61088",
+      "name": "Creative Peculiar Banana Fruit Induction Rhythm Plush Doll for Parent-Child Interactive Music Play (Touch & Beat, 23cm/9in)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 2399,
+      "stock": 88,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "carrot"
+          },
+          "priceVnd": null,
+          "priceMinor": 2399,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Color": "strawberry"
+          },
+          "priceVnd": null,
+          "priceMinor": 2399,
+          "stock": 53
+        },
+        {
+          "attrs": {
+            "Color": "banana"
+          },
+          "priceVnd": null,
+          "priceMinor": 2399,
+          "stock": 10
+        }
+      ]
+    },
+    {
+      "id": "b38118c1-8707-4800-b088-799146afbc58",
+      "name": "Custom-fit Car Seat Cushion Covers for Renault Kadjar Fluence Talisman Megane 3/4 Koleos Captur | Luxury Auto Interior Accessories",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 27879,
+      "stock": 1581,
+      "variants": [
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Black Red|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Black Pink|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Martha Red|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Pink|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-wine red|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Martha Red|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Black|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Coffee|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Pink|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Brown|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 87
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Coffee|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Beige|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Black Pink|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Black Red|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Brown|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-Black|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 87
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "Full Set-Beige|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 39800,
+          "stock": 88
+        },
+        {
+          "attrs": {
+            "Special Features": "Basic Function",
+            "Applicable Season": "Four Seasons",
+            "Color|Ships From|Set Piece|Material": "1PC-wine red|China Mainland|1|Artificial leather"
+          },
+          "priceVnd": null,
+          "priceMinor": 27879,
+          "stock": 87
+        }
+      ]
+    },
+    {
+      "id": "e22babf4-b393-4d07-b656-ede4f9039603",
+      "name": "Dog Nail Scratch Board with Treat Drawer for Reward-Based Filing, Durable Wooden Nail Filing Interactive Toy (1pc)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 5890,
+      "stock": 18,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "1pc"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 18
+        }
+      ]
+    },
+    {
+      "id": "edf74fc5-9ab7-48b4-9bc8-10da2af51b57",
+      "name": "Electric Bird Food Shell Blowing Machine, Efficient Quiet Operation Bird Food Separator, Detachable Easy Cleaning",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 3599,
+      "stock": 19979,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 3599,
+          "stock": 9985
+        },
+        {
+          "attrs": {
+            "Color": "White"
+          },
+          "priceVnd": null,
+          "priceMinor": 3599,
+          "stock": 9994
+        }
+      ]
+    },
+    {
+      "id": "201e1fa9-cfe0-4c9c-b5cb-cbd8ab2e27fd",
+      "name": "Electric Massage Wrist Pads with Multi-Speed Temperature-Sensitive Mode, Skin-Friendly Breathable Hot Compress for Relief",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 6890,
+      "stock": 43,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "5pcs"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 9
+        },
+        {
+          "attrs": {
+            "Color": "3pcs"
+          },
+          "priceVnd": null,
+          "priceMinor": 13890,
+          "stock": 10
+        },
+        {
+          "attrs": {
+            "Color": "2pcs"
+          },
+          "priceVnd": null,
+          "priceMinor": 10890,
+          "stock": 10
+        },
+        {
+          "attrs": {
+            "Color": "1pc"
+          },
+          "priceVnd": null,
+          "priceMinor": 6890,
+          "stock": 14
+        }
+      ]
+    },
+    {
+      "id": "0911ba38-3504-40f7-ac36-cfddd530cdc6",
+      "name": "Electric Trapezius Massage Pillow, Wireless Car & Home Heating Massager for Waist, Neck, Legs & Cervical Shiatsu Kneading (Rechargeable, Type-C)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 19800,
+      "stock": 13369,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 5
+        },
+        {
+          "attrs": {
+            "Color": "White purple"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 6664
+        },
+        {
+          "attrs": {
+            "Color": "white grey"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 30
+        },
+        {
+          "attrs": {
+            "Color": "Upgrade New Brown"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 9
+        },
+        {
+          "attrs": {
+            "Color": "Gold"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 6661
+        }
+      ]
+    },
+    {
+      "id": "81d7810b-2168-45be-9603-73080f77f206",
+      "name": "Extra large automatic litter box with infrared scanning and anti-pinch",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 43999,
+      "stock": 58,
+      "variants": [
+        {
+          "attrs": {
+            "Ships From": "China Mainland"
+          },
+          "priceVnd": null,
+          "priceMinor": 43999,
+          "stock": 58
+        }
+      ]
+    },
+    {
+      "id": "9b93c88a-9c09-4dfe-82f0-814e04951391",
+      "name": "Gray Foldable Dirty Clothes Bin & Clothing Storage Bag for Moving, Unused Clothing (Expandable)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 990,
+      "stock": 35,
+      "variants": [
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "1pc"
+          },
+          "priceVnd": null,
+          "priceMinor": 1500,
+          "stock": 5
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "1pc"
+          },
+          "priceVnd": null,
+          "priceMinor": 1490,
+          "stock": 10
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "1pc"
+          },
+          "priceVnd": null,
+          "priceMinor": 1290,
+          "stock": 10
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "1pc"
+          },
+          "priceVnd": null,
+          "priceMinor": 990,
+          "stock": 10
+        }
+      ]
+    },
+    {
+      "id": "c9ef95c4-bfd3-4dab-86cf-c23d64813385",
+      "name": "Hair Curling Iron 32mm Deep Wave Hair Curler with 4 Temperature Settings, Fast 15-Second Heating, 40 Million Negative Ions, Crimping Wand for All Hair Styles",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 2699,
+      "stock": 266068,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "1PC",
+            "Electrical outlet": "UK"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 14978
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "2PCS",
+            "Electrical outlet": "AU"
+          },
+          "priceVnd": null,
+          "priceMinor": 4499,
+          "stock": 13156
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "3PCS",
+            "Electrical outlet": "US"
+          },
+          "priceVnd": null,
+          "priceMinor": 6399,
+          "stock": 6692
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "2PCS",
+            "Electrical outlet": "US"
+          },
+          "priceVnd": null,
+          "priceMinor": 4099,
+          "stock": 10070
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "1PC",
+            "Electrical outlet": "EU"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 14758
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "1PC",
+            "Electrical outlet": "UK"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 12192
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "2PCS",
+            "Electrical outlet": "UK"
+          },
+          "priceVnd": null,
+          "priceMinor": 4099,
+          "stock": 11521
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "2PCS",
+            "Electrical outlet": "EU"
+          },
+          "priceVnd": null,
+          "priceMinor": 4099,
+          "stock": 11429
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "1PC",
+            "Electrical outlet": "US"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 14451
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "1PC",
+            "Electrical outlet": "AU"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 14202
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "3PCS",
+            "Electrical outlet": "US"
+          },
+          "priceVnd": null,
+          "priceMinor": 6399,
+          "stock": 6824
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "1PC",
+            "Electrical outlet": "AU"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 11208
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "2PCS",
+            "Electrical outlet": "EU"
+          },
+          "priceVnd": null,
+          "priceMinor": 4099,
+          "stock": 11482
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "3PCS",
+            "Electrical outlet": "EU"
+          },
+          "priceVnd": null,
+          "priceMinor": 6399,
+          "stock": 7266
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "1PC",
+            "Electrical outlet": "US"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 11827
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "3PCS",
+            "Electrical outlet": "AU"
+          },
+          "priceVnd": null,
+          "priceMinor": 6499,
+          "stock": 7963
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "2PCS",
+            "Electrical outlet": "AU"
+          },
+          "priceVnd": null,
+          "priceMinor": 4499,
+          "stock": 14418
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "3PCS",
+            "Electrical outlet": "AU"
+          },
+          "priceVnd": null,
+          "priceMinor": 6499,
+          "stock": 9391
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "3PCS",
+            "Electrical outlet": "EU"
+          },
+          "priceVnd": null,
+          "priceMinor": 6399,
+          "stock": 5901
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "3PCS",
+            "Electrical outlet": "UK"
+          },
+          "priceVnd": null,
+          "priceMinor": 6499,
+          "stock": 9067
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "2PCS",
+            "Electrical outlet": "UK"
+          },
+          "priceVnd": null,
+          "priceMinor": 4099,
+          "stock": 12150
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "3PCS",
+            "Electrical outlet": "UK"
+          },
+          "priceVnd": null,
+          "priceMinor": 6399,
+          "stock": 7793
+        },
+        {
+          "attrs": {
+            "Color": "Purple",
+            "quantity": "2PCS",
+            "Electrical outlet": "US"
+          },
+          "priceVnd": null,
+          "priceMinor": 4099,
+          "stock": 14914
+        },
+        {
+          "attrs": {
+            "Color": "Pink",
+            "quantity": "1PC",
+            "Electrical outlet": "EU"
+          },
+          "priceVnd": null,
+          "priceMinor": 2699,
+          "stock": 12415
+        }
+      ]
+    },
+    {
+      "id": "5a6edd20-2b8e-42c4-8c53-697f52704caf",
+      "name": "Ladies Winter Hooded Lamb Velvet Zipper Kangaroo Pocket Cat Dog Mommy Outwear Sweatshirt, Comfortable Street Style Trendy Fashion",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 5890,
+      "stock": 1481,
+      "variants": [
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "Navy Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 24
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "light green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "army green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 22
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "Rose Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "light green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "Pink"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "Plaid"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "black"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "Khaki"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "Khaki"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 24
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "black"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "Navy Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 24
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "army green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "black"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 23
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "Navy Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "Navy Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "Plaid"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "Plaid"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "Pink"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "Rose Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "light green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "black"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "Rose Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "army green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "Pink"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 24
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "Plaid"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "army green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 23
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "Rose Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "Khaki"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "light green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "Pink"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "light green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "black"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "Navy Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 23
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "Khaki"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "army green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 24
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "Pink"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 23
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "Plaid"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "L",
+            "Color": "Khaki"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "Khaki"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 24
+        },
+        {
+          "attrs": {
+            "Size": "XXL",
+            "Color": "Pink"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "M",
+            "Color": "Plaid"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "army green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "Rose Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "Rose Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "S",
+            "Color": "Navy Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "Red"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "light green"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 25
+        },
+        {
+          "attrs": {
+            "Size": "XL",
+            "Color": "black"
+          },
+          "priceVnd": null,
+          "priceMinor": 5890,
+          "stock": 23
+        }
+      ]
+    },
+    {
+      "id": "f81ac791-977b-4561-bee6-024af3828384",
+      "name": "Lightweight Foldable Shopping Cart, 75Lbs Capacity, Removable Bag, Premium Wheels, Sage",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 19400,
+      "stock": 100,
+      "variants": [
+        {
+          "attrs": {
+            "Ships From": "CN"
+          },
+          "priceVnd": null,
+          "priceMinor": 19400,
+          "stock": 100
+        }
+      ]
+    },
+    {
+      "id": "15ca1384-2c33-4f8e-b538-13a1a578e162",
+      "name": "Long Electric Heated Socks for Charging Warm Foot, Skiing & Walking Sports, Unisex Men and Women",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 1936,
+      "stock": 384538,
+      "variants": [
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Black With 5000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 5048,
+          "stock": 11267
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Model B In Black With Box 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 2392,
+          "stock": 14459
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Black With 5000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 4735,
+          "stock": 11942
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "A Black With 4000mA2pcs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3186,
+          "stock": 11980
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Black With 4000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 4257,
+          "stock": 11474
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "A Black"
+          },
+          "priceVnd": null,
+          "priceMinor": 1936,
+          "stock": 13841
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Gray With Box 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 2392,
+          "stock": 10324
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Style C Gray"
+          },
+          "priceVnd": null,
+          "priceMinor": 2483,
+          "stock": 11387
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "A Black With Box 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 2209,
+          "stock": 11525
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Temperature adjustable gray"
+          },
+          "priceVnd": null,
+          "priceMinor": 2493,
+          "stock": 9844
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Gray With 5000 MA 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3977,
+          "stock": 12587
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Black With 4000 MA 2pc"
+          },
+          "priceVnd": null,
+          "priceMinor": 3829,
+          "stock": 14694
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Model B In Black"
+          },
+          "priceVnd": null,
+          "priceMinor": 2114,
+          "stock": 11103
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Model A Gray TypeA"
+          },
+          "priceVnd": null,
+          "priceMinor": 1936,
+          "stock": 10475
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Black With 4000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 4716,
+          "stock": 11023
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "A Black With 4000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 4073,
+          "stock": 13599
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Black With 5000 MA 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3664,
+          "stock": 12350
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Gray With 5000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 4735,
+          "stock": 13032
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Gray"
+          },
+          "priceVnd": null,
+          "priceMinor": 2114,
+          "stock": 13840
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Gray With 5000 MA 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3664,
+          "stock": 13534
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Type Black"
+          },
+          "priceVnd": null,
+          "priceMinor": 2483,
+          "stock": 13920
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Black With 5000 MA 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3977,
+          "stock": 11145
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Model A Gray With Box 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 2209,
+          "stock": 13562
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Black And4000mA Lithium 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3370,
+          "stock": 10850
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Gray With 4000 MA 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3829,
+          "stock": 13049
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Gray With 5000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 5048,
+          "stock": 11481
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Model A Gray With 4000 MA 2pcs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3186,
+          "stock": 12817
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "Style C Gray With Box 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 2742,
+          "stock": 14122
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "B Gray With 4000 MA 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 3370,
+          "stock": 11145
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Gray With 4000 MA 4PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 4716,
+          "stock": 14731
+        },
+        {
+          "attrs": {
+            "size": "Average Size",
+            "Color": "C Type Black With Box 2PCs"
+          },
+          "priceVnd": null,
+          "priceMinor": 2742,
+          "stock": 13436
+        }
+      ]
+    },
+    {
+      "id": "79f316c3-af89-48d0-abed-7b2afd228bdf",
+      "name": "MD Dual-Powered Nasal Irrigation System for Sinus Relief, Rechargeable with 30 Saline Packets, 2 Sets of Nose Pillows, Multi-User, Snoring Remedy",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 8400,
+      "stock": 30,
+      "variants": [
+        {
+          "attrs": {
+            "Ships From": "CN"
+          },
+          "priceVnd": null,
+          "priceMinor": 8400,
+          "stock": 30
+        }
+      ]
+    },
+    {
+      "id": "98da6429-7f54-484d-925d-83510a8afa70",
+      "name": "MERACH Foldable Dual Split-Track Ab Machine Core Trainer with Adjustable 4 Levels and LCD Display, Max 440 lbs Capacity for Home Small Space Fitness",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 9399,
+      "stock": 2681,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "WP-Dual track",
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 15800,
+          "stock": 294
+        },
+        {
+          "attrs": {
+            "Color": "BR-Dual track",
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 15800,
+          "stock": 311
+        },
+        {
+          "attrs": {
+            "Color": "WZ1-Dual track",
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 15800,
+          "stock": 290
+        },
+        {
+          "attrs": {
+            "Color": "BR-Single track",
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 9399,
+          "stock": 193
+        },
+        {
+          "attrs": {
+            "Color": "WP-Single track",
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 9399,
+          "stock": 897
+        },
+        {
+          "attrs": {
+            "Color": "WZ1-Single track",
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 9399,
+          "stock": 696
+        }
+      ]
+    },
+    {
+      "id": "66798adb-d41a-46a6-860e-18d443bce162",
+      "name": "Mini Fitness Massage Gun with LED Screen, 3 Gears, Brushed Motor, Low Noise below 36dB (Blue/Girl Pink/Noble Purple) + Waist Belt + Power Cord",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 2890,
+      "stock": 30725,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Noble Purple Chinese Manual"
+          },
+          "priceVnd": null,
+          "priceMinor": 2890,
+          "stock": 6064
+        },
+        {
+          "attrs": {
+            "Color": "Girl Pink Chinese Manual"
+          },
+          "priceVnd": null,
+          "priceMinor": 2890,
+          "stock": 9443
+        },
+        {
+          "attrs": {
+            "Color": "Blue Chinese Manual"
+          },
+          "priceVnd": null,
+          "priceMinor": 2890,
+          "stock": 6141
+        },
+        {
+          "attrs": {
+            "Color": "Blue Chinese Manual set"
+          },
+          "priceVnd": null,
+          "priceMinor": 19890,
+          "stock": 9077
+        }
+      ]
+    },
+    {
+      "id": "0b0feb46-a336-4527-9bb8-ee391e47caa4",
+      "name": "Neck Massager for Trapezius Kneading with Waist Support",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 19800,
+      "stock": 44883,
+      "variants": [
+        {
+          "attrs": {
+            "Specifications": "English Light Gray"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 9536
+        },
+        {
+          "attrs": {
+            "Specifications": "Chinese Light Gray"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 8991
+        },
+        {
+          "attrs": {
+            "Specifications": "Chinese Dark Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 9255
+        },
+        {
+          "attrs": {
+            "Specifications": "English Dark Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 5220
+        },
+        {
+          "attrs": {
+            "Specifications": "Chinese White Purple Color"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 5036
+        },
+        {
+          "attrs": {
+            "Specifications": "English White Purple Color"
+          },
+          "priceVnd": null,
+          "priceMinor": 19800,
+          "stock": 6845
+        }
+      ]
+    },
+    {
+      "id": "5389cc9d-d6c1-4efd-963c-19f6ea372af3",
+      "name": "Pet Silicone Feeding Balls for Dogs and Cats, Food-Leakage Slow Feeder Chewing & Teething Snack Toys",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 1890,
+      "stock": 49997,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Slow Feeder green"
+          },
+          "priceVnd": null,
+          "priceMinor": 1890,
+          "stock": 10000
+        },
+        {
+          "attrs": {
+            "Color": "set 2"
+          },
+          "priceVnd": null,
+          "priceMinor": 4390,
+          "stock": 10000
+        },
+        {
+          "attrs": {
+            "Color": "Pallet"
+          },
+          "priceVnd": null,
+          "priceMinor": 1890,
+          "stock": 10000
+        },
+        {
+          "attrs": {
+            "Color": "set 1"
+          },
+          "priceVnd": null,
+          "priceMinor": 4390,
+          "stock": 9997
+        },
+        {
+          "attrs": {
+            "Color": "Slow Feeder orange"
+          },
+          "priceVnd": null,
+          "priceMinor": 1890,
+          "stock": 10000
+        }
+      ]
+    },
+    {
+      "id": "970004e1-3283-4ef8-a520-2ba05c1db6fa",
+      "name": "Pheromone Pet Pee Pads for Indoor Puppy & Dog Training, Washable Absorbent Potty Pads for Home Use",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 4900,
+      "stock": 29,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Brown"
+          },
+          "priceVnd": null,
+          "priceMinor": 4900,
+          "stock": 9
+        },
+        {
+          "attrs": {
+            "Color": "Gray"
+          },
+          "priceVnd": null,
+          "priceMinor": 4900,
+          "stock": 10
+        },
+        {
+          "attrs": {
+            "Color": "White"
+          },
+          "priceVnd": null,
+          "priceMinor": 4900,
+          "stock": 10
+        }
+      ]
+    },
+    {
+      "id": "382a25e3-e797-40c2-9ee4-2c720186fc55",
+      "name": "Plug-Free Wireless Remote Control Sound and Light Doorbell for the Deaf and Elderly, Mute Available",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 4800,
+      "stock": 8000,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "C"
+          },
+          "priceVnd": null,
+          "priceMinor": 4800,
+          "stock": 2000
+        },
+        {
+          "attrs": {
+            "Color": "A"
+          },
+          "priceVnd": null,
+          "priceMinor": 4800,
+          "stock": 2000
+        },
+        {
+          "attrs": {
+            "Color": "D"
+          },
+          "priceVnd": null,
+          "priceMinor": 7890,
+          "stock": 2000
+        },
+        {
+          "attrs": {
+            "Color": "B"
+          },
+          "priceVnd": null,
+          "priceMinor": 7890,
+          "stock": 2000
+        }
+      ]
+    },
+    {
+      "id": "feb3f85c-61dd-4588-b408-6c36d5aa7f6f",
+      "name": "Portable Electric Fluffy Hairpin Curling Clip with Heating, Non-Slip Durable Volumizer, Type-C Charged Heated Hair Clip for Daily Use (Blue/Pink)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 1398,
+      "stock": 998,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Pink"
+          },
+          "priceVnd": null,
+          "priceMinor": 1398,
+          "stock": 498
+        },
+        {
+          "attrs": {
+            "Color": "Blue"
+          },
+          "priceVnd": null,
+          "priceMinor": 1398,
+          "stock": 500
+        }
+      ]
+    },
+    {
+      "id": "78d72fa9-6c19-474f-958d-109ad91af32a",
+      "name": "SafeTransit™ Protection",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 355,
+      "stock": null,
+      "variants": [
+        {
+          "attrs": {},
+          "priceVnd": null,
+          "priceMinor": 355,
+          "stock": null
+        }
+      ]
+    },
+    {
+      "id": "b3190c3f-0046-475b-bbbf-7f2b41f6cb73",
+      "name": "Sleep Support Device (ABS) – Includes 1 Sleep Aid",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 29500,
+      "stock": 5941,
+      "variants": [
+        {
+          "attrs": {
+            "quantity": "1PC"
+          },
+          "priceVnd": null,
+          "priceMinor": 29500,
+          "stock": 5941
+        }
+      ]
+    },
+    {
+      "id": "3f62365a-e41a-4265-925a-e563bcb8fc8c",
+      "name": "Small Portable Oil Change Machine – Oil Pump with 12V/24V Options, 2-3L/min Flow",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 9899,
+      "stock": 14216,
+      "variants": [
+        {
+          "attrs": {
+            "Rated Flow": "4m³",
+            "Rated Power": "8kw",
+            "Specifications": "24V"
+          },
+          "priceVnd": null,
+          "priceMinor": 10899,
+          "stock": 8939
+        },
+        {
+          "attrs": {
+            "Rated Flow": "4m³",
+            "Rated Power": "8kw",
+            "Specifications": "12V"
+          },
+          "priceVnd": null,
+          "priceMinor": 9899,
+          "stock": 5277
+        }
+      ]
+    },
+    {
+      "id": "ea10e6d7-4d32-4adc-a63e-6af039342baf",
+      "name": "Small Roller Brush",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 1499,
+      "stock": 8721,
+      "variants": [
+        {
+          "attrs": {
+            "capacity": "100g"
+          },
+          "priceVnd": null,
+          "priceMinor": 1499,
+          "stock": 8721
+        }
+      ]
+    },
+    {
+      "id": "290269ac-7831-4767-81b6-68ccbe95e0eb",
+      "name": "Smart Hand Wrist Strap",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 1099,
+      "stock": 97777,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "Wristband With AU"
+          },
+          "priceVnd": null,
+          "priceMinor": 6898,
+          "stock": 7371
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "Europlug"
+          },
+          "priceVnd": null,
+          "priceMinor": 2099,
+          "stock": 13412
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "40105 Battery Type"
+          },
+          "priceVnd": null,
+          "priceMinor": 6898,
+          "stock": 11931
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "Australian Standard Plug"
+          },
+          "priceVnd": null,
+          "priceMinor": 2099,
+          "stock": 12615
+        },
+        {
+          "attrs": {
+            "Color": "Black 2PCS",
+            "Specifications": "40105 Battery Type"
+          },
+          "priceVnd": null,
+          "priceMinor": 10898,
+          "stock": 9252
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "Wristband With US"
+          },
+          "priceVnd": null,
+          "priceMinor": 6898,
+          "stock": 9434
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "Wristband With UK"
+          },
+          "priceVnd": null,
+          "priceMinor": 6898,
+          "stock": 6035
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "American Standard Plug"
+          },
+          "priceVnd": null,
+          "priceMinor": 2099,
+          "stock": 10372
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "Wristband With EU"
+          },
+          "priceVnd": null,
+          "priceMinor": 6898,
+          "stock": 5403
+        },
+        {
+          "attrs": {
+            "Color": "Black",
+            "Specifications": "British Regulatory Plug"
+          },
+          "priceVnd": null,
+          "priceMinor": 1099,
+          "stock": 11952
+        }
+      ]
+    },
+    {
+      "id": "bee86d9c-91bc-4b42-9748-51382a2ab35e",
+      "name": "SSwiftly EcoCare™",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 355,
+      "stock": null,
+      "variants": [
+        {
+          "attrs": {},
+          "priceVnd": null,
+          "priceMinor": 355,
+          "stock": null
+        }
+      ]
+    },
+    {
+      "id": "e65119f9-52ad-43c7-8263-db67f0440712",
+      "name": "SSwiftly Gift Wrapping™",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 355,
+      "stock": null,
+      "variants": [
+        {
+          "attrs": {},
+          "priceVnd": null,
+          "priceMinor": 355,
+          "stock": null
+        }
+      ]
+    },
+    {
+      "id": "98525f17-820d-499a-a248-a2c0d88090b3",
+      "name": "Stainless Steel Cat Litter Box with Sifting Design and Three-Pan System",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 14800,
+      "stock": 20,
+      "variants": [
+        {
+          "attrs": {
+            "Ships From": "United States"
+          },
+          "priceVnd": null,
+          "priceMinor": 14800,
+          "stock": 20
+        }
+      ]
+    },
+    {
+      "id": "c1623da5-1a00-4cc0-8bbb-051b284ec5fe",
+      "name": "Tattoo Plasma Mole Removal Pen with Laser Technology for Facial Freckles, Dark Spots, Warts and Skin Tags",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 999,
+      "stock": 292407,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "12pinhead White",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 13862
+        },
+        {
+          "attrs": {
+            "Color": "12pinhead Gold",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 12835
+        },
+        {
+          "attrs": {
+            "Color": "9speed silver  white body",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 7681
+        },
+        {
+          "attrs": {
+            "Color": "Set",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 7998
+        },
+        {
+          "attrs": {
+            "Color": "12pinhead Silver",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 11365
+        },
+        {
+          "attrs": {
+            "Color": "Gold 3pcs",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 6899,
+          "stock": 47210
+        },
+        {
+          "attrs": {
+            "Color": "Silver 2PC",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 6899,
+          "stock": 9627
+        },
+        {
+          "attrs": {
+            "Color": "Gold 2pcs",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 6899,
+          "stock": 47364
+        },
+        {
+          "attrs": {
+            "Color": "White",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 40000
+        },
+        {
+          "attrs": {
+            "Color": "Silver",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 40001
+        },
+        {
+          "attrs": {
+            "Color": "Needle suit",
+            "Electrical outlet": "No"
+          },
+          "priceVnd": null,
+          "priceMinor": 999,
+          "stock": 14464
+        },
+        {
+          "attrs": {
+            "Color": "Gold",
+            "Electrical outlet": "USB"
+          },
+          "priceVnd": null,
+          "priceMinor": 5895,
+          "stock": 40000
+        }
+      ]
+    },
+    {
+      "id": "73007ff2-474e-4687-aacb-e2cd0b24b32c",
+      "name": "Wireless Magnetic Drive Cat Water Fountain with 100-Day Rechargeable Battery, Ultra Quiet 19dB, Filter-Free Suspension Pet Water Bowl",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 8890,
+      "stock": 350,
+      "variants": [
+        {
+          "attrs": {
+            "Color": "1 p",
+            "Voltage/Plug Type": "100V JP Plug"
+          },
+          "priceVnd": null,
+          "priceMinor": 8890,
+          "stock": 350
+        }
+      ]
+    },
+    {
+      "id": "6a13e0f7-03e6-4c27-9ac5-2b3a3b6cc27a",
+      "name": "XXXL Stainless Steel Litter Box, Extra Large 28\" L x 20\" W High-Sided Metal Litter Box for Big Cats & Multiple Cats (Gray/Black)",
+      "aliases": [],
+      "priceVnd": null,
+      "currencyCode": "USD",
+      "priceMinor": 11899,
+      "stock": 18,
+      "variants": [
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "black"
+          },
+          "priceVnd": null,
+          "priceMinor": 11899,
+          "stock": 14
+        },
+        {
+          "attrs": {
+            "Size": "XXXL",
+            "Color": "GRAY"
+          },
+          "priceVnd": null,
+          "priceMinor": 11899,
+          "stock": 4
+        }
+      ]
+    }
+  ],
+  "texts": [
+    {
+      "id": "policy:f03c866a-d9b5-4db9-9052-ee60fcc49004",
+      "kind": "policy",
+      "policyKind": "other",
+      "lang": "all",
+      "title": "Privacy policy",
+      "text": "Last updated: October 31, 2026\nSSwiftly operates this store and website, including all related information, content, features, tools, products and services, in order to provide you, the customer, with a curated shopping experience (the \"Services\"). SSwiftly is powered by Shopify, which enables us to provide the Services to you. This Privacy Policy describes how we collect, use, and disclose your personal information when you visit, use, or make a purchase or other transaction using the Services or otherwise communicate with us. If there is a conflict between our Terms of Service and this Privacy Policy, this Privacy Policy controls with respect to the collection, processing, and disclosure of your personal information.\nPlease read this Privacy Policy carefully. By using and accessing any of the Services, you acknowledge that you have read this Privacy Policy and understand the collection, use, and disclosure of your information as described in this Privacy Policy.\nPersonal Information We Collect or Process\nWhen we use the term \"personal information,\" we are referring to information that identifies or can reasonably be linked to you or another person. Personal information does not include information that is collected anonymously or that has been de-identified, so that it cannot identify or be reasonably linked to you. We may collect or process the following categories of personal information, including inferences drawn from this personal information, depending on how you interact with the Services, where you live, and as permitted or required by applicable law:\n- Contact details including your name, address, billing address, shipping address, phone number, and email address.\n- Financial information including credit card, debit card, and financial account numbers, payment card information, financial account information, transaction details, form of payment, payment confirmation and other payment details.\n- Account information including your username, password, security questions, preferences and settings.\n- Transaction information including the items you view, put in your cart, add to your wishlist, or purchase, return, exchange or cancel and your past transactions.\n- Communications with us including the information you include in communications with us, for example, when sending a customer support inquiry.\n- Device information including information about your device, browser, or network connection, your IP address, and other unique identifiers.\n- Usage information including information regarding your interaction with the Services, including how and when you interact with or navigate the Services.\nPersonal Information Sources\nWe may collect personal information from the following sources:\n- Directly from you including when you create an account, visit or use the Services, communicate with us, or otherwise provide us with your personal information;\n- Automatically through the Services including from your device when you use our products or services or visit our websites, and through the use of cookies and similar technologies;\n- From our service providers including when we engage them to enable certain technology and when they collect or process your personal information on our behalf;\n- From our partners or other third parties.\nHow We Use Your Personal Information\nDepending on how you interact with us or which of the Services you use, we may use personal information for the following purposes:\n- Provide, Tailor, and Improve the Services. We use your personal information to provide you with the Services, including to perform our contract with you, to process your payments, to fulfill your orders, to remember your preferences and items you are interested in, to send notifications to you related to your account, to process purchases, returns, exchanges or other transactions, to create, maintain and otherwise manage your account, to arrange for shipping, to facilitate any returns and exchanges, to enable you to post reviews, and to create a customized shopping experience for you, such as recommending products related to your purchases. This may include using your personal information to better tailor and improve the Services.\n- Marketing and Advertising. We use your personal information for marketing and promotional purposes, such as to send marketing, advertising and promotional communications by email, text message or postal mail, and to show you online advertisements for products or services on the Services or other websites, including based on items you previously have purchased or added to your cart and other activity on the Services.\n- Security and Fraud Prevention. We use your personal information to authenticate your account, to provide a secure payment and shopping experience, detect, investigate or take action regarding possible fraudulent, illegal, unsafe, or malicious activity, protect public safety, and to secure our services. If you choose to use the Services and register an account, you are responsible for keeping your account credentials safe. We highly recommend that you do not share your username, password or other access details with anyone else.\n- Communicating with You. We use your personal information to provide you with customer support, to be responsive to you, to provide effective services to you and to maintain our business relationship with you.\n- Legal Reasons. We use your personal information to comply with applicable law or respond to valid legal process, including requests from law enforcement or government agencies, to investigate or participate in civil discovery, potential or actual litigation, or other adversarial legal proceedings, and to enforce or investigate potential violations of our terms or policies.\nHow We Disclose Personal Information\nIn certain circumstances, we may disclose your personal information to third parties for legitimate purposes subject to this Privacy Policy. Such circumstances may include:\n- With Shopify, vendors and other third parties who perform services on our behalf (e.g. IT management, payment processing, data analytics, customer support, cloud storage, fulfillment and shipping).\n- With business and marketing partners to provide marketing services and advertise to you. For example, we use Shopify to support personalized advertising with third-party services based on your online activity with different merchants and websites. Our business and marketing partners will use your information in accordance with their own privacy notices. Depending on where you reside, you may have a right to direct us not to share information about you to show you targeted advertisements and marketing based on your online activity with different merchants and websites. You can exercise your rights to opt-out of those uses here .\n- When you direct, request us or otherwise consent to our disclosure of certain information to third parties, such as to ship you products or through your use of social media widgets or login integrations.\n- With our affiliates or otherwise within our corporate group.\n-\nIn connection with a business transaction such as a merger or bankruptcy, to comply with any applicable legal obligations (including to respond to subpoenas, search warrants and similar requests), to enforce any applicable terms of service or policies, and to protect or defend the Services, our rights, and the rights of our users or others.\nRelationship with Shopify\nThe Services are hosted by Shopify, which collects and processes personal information about your access to and use of the Services in order to provide and improve the Services for you. Information you submit to the Services will be transmitted to and shared with Shopify as well as third parties that may be located in countries other than where you reside, in order to provide and improve the Services for you. In addition, to help protect, grow, and improve our business, we use certain Shopify enhanced features that incorporate data and information obtained from"
+    },
+    {
+      "id": "policy:e656b330-bb2b-4975-94b1-8e86d0c06396",
+      "kind": "policy",
+      "policyKind": "return",
+      "lang": "all",
+      "title": "Refund policy",
+      "text": "Last updated: November 1, 2026\nReturns\nReturn eligibility depends on the items in your order.\nWhere returns are accepted, items must be returned in the same condition they were received, unworn or unused, with tags, and in their original packaging or as otherwise indicated in the return instructions. We may reduce your refund if the item has been used, damaged, or handled more than necessary.\nContact us to ask about return options and how to start a return.\nHow to start a return\nWhether return or cancellation requests are accepted depends on the terms above and your rights under applicable law.\nContact us before returning an item.\nUnless we state otherwise or applicable law requires otherwise, you are responsible for return shipping costs for change-of-mind returns.\nDamages and issues\nPlease inspect your order when you receive it and contact us immediately if an item is defective or damaged, or if you received the wrong item.\nExceptions and non-returnable items\nSome items may not be eligible for return, as stated in the return terms above or on the product listing, website, or in-store at the time of purchase.\nContact us if you have questions about whether a specific item can be returned.\nExchanges\nContact us to ask about exchange options before returning your item.\nRefunds\nWe will notify you after we receive and inspect your return and let you know whether the refund was approved. If approved, you will be refunded to your original payment method, unless otherwise stated. Your bank or payment provider may need additional time to process and post the refund.\nIf you do not see your refund within a reasonable period of time since your refund was approved, contact us.\nThis policy does not limit any rights you may have under applicable consumer protection laws, including rights that may apply if goods are defective, not as described, not delivered within the required or agreed timeframe, or otherwise do not comply with applicable law.\nContact\nTo request a cancellation, start a return, inquire about a return, ask about an exchange or report damaged items, please contact us at support@sswiftly.com or use the contact details in our contact information policy."
+    },
+    {
+      "id": "policy:0f9d405a-9503-4b47-8ea4-715351586a40",
+      "kind": "policy",
+      "policyKind": "shipping",
+      "lang": "all",
+      "title": "Shipping",
+      "text": "Last updated: October 23, 2026\nThank you for shopping with SSwiftly. This policy explains how we ship your order, what it costs, and what to expect after you buy.\nOrder Processing\nExcept as otherwise stated on our website, orders are processed within 1 business day (excluding holidays).\nOrders placed after noon or on weekends and holidays may begin processing the next business day.\nYou'll receive a confirmation email with tracking as soon as your order ships, if the shipping method supports it.\nShipping Methods & Delivery Times\nAvailable shipping methods and estimated delivery times are shown at checkout. Delivery times are estimates, not guarantees, and begin once your order ships. They may be affected by carrier delays, weather, or other events outside our control.\nShipping costs\nShipping charges are calculated at checkout based on your destination, order weight, and selected shipping method. Free standard shipping may be available on selected orders as displayed at checkout.\nOrder Tracking\nOnce your order ships, we'll email you a confirmation with a tracking number and link, if applicable. Please note tracking information may take time to update after you receive it.\nShipping destinations\nWe currently ship to United States.\nInternational orders may be subject to customs duties, import taxes, fees, and customs delays. Any applicable charges collected at checkout will be shown before you complete your purchase.\nAddress accuracy\nPlease check your shipping address at checkout. Contact us as soon as possible if you need to correct it.\nLost, damaged, or delayed packages\nIf your order is lost, damaged, or delayed, contact us and we will help you work with the carrier.\nOrder Changes & Cancellations\nNeed to change or cancel your order? Contact us as soon as possible. We may be able to accommodate changes before your order ships, but once it's in transit we're unable to modify it. Refunds for cancelled or delayed orders will be processed promptly to the original payment method where possible.\nQuestions?\nContact our team at support@sswiftly.com or use the contact details in our contact information policy."
+    },
+    {
+      "id": "policy:6917ee83-ceb7-45bc-8b91-c2469c2e57a8",
+      "kind": "policy",
+      "policyKind": "other",
+      "lang": "all",
+      "title": "Terms of service",
+      "text": "Overview\nWelcome to SSwiftly! The terms \"we\", \"us\" and \"our\" refer to SSwiftly. SSwiftly operates this store and website, including all related information, content, features, tools, products and services in order to provide you, the customer, with a curated shopping experience (the \"Services\"). SSwiftly is powered by Shopify Inc., Shopify Commerce Singapore Pte. Ltd or Shopify International Limited, depending on where SSwiftly is located, which enables us to provide the Services to you.\nThe below terms and conditions, together with any policies referenced herein (these \"Terms of Service\") describe your rights and responsibilities when you use the Services. Please read these Terms of Service carefully, as they include important information about your legal rights and cover areas such as warranty disclaimers and limitations of liability.\nBy visiting, interacting with or using our Services, you agree to be bound by these Terms of Service and our privacy policy. If you do not agree to these Terms of Service or Privacy Policy, you should not use or access our Services. These Terms of Service do not limit any rights you may have under applicable consumer protection laws or any other non-waivable statutory rights.\n1. Access and account\nBy agreeing to these Terms of Service, you represent that you are at least the age of majority in your state or province of residence, and you have given us your consent to allow any of your minor dependents to use the Services on devices you own, purchase or manage. To use the Services, including accessing or browsing our online stores or purchasing any of the products or services we offer, you may be asked to provide certain information, such as your email address, billing, payment, and shipping information. You represent and warrant that all the information you provide in our stores is correct, current and complete and that you have all rights necessary to provide this information. You are solely responsible for maintaining the security of your account credentials and for all of your account activity. You may not transfer, sell, assign, or license your account to any other person.\n2. Our products\nWe have made every effort to provide an accurate representation of our products and services in our online stores. However, please note that colors or product appearance may differ from how they may appear on your screen due to the type of device you use to access the store and your device settings and configuration. We do not warrant that the appearance or quality of any products or services purchased by you will meet your expectations or be the same as depicted or rendered in our online stores. All descriptions of products are subject to change at any time without notice at our sole discretion. We reserve the right to discontinue any product at any time and may limit the quantities of any products that we offer to any person, geographic region or jurisdiction, on a case-by-case basis.\n3. Orders\nWhen you place an order, you are making an offer to purchase and authorize us and our payment processors to charge your selected payment method for the total amount of your order. SSwiftly reserves the right to accept or decline your order for any reason at its discretion, subject to applicable law. Your order is not accepted until SSwiftly confirms acceptance. We must receive and process your payment before your order is accepted. Please review your order carefully before submitting, as SSwiftly may be unable to accommodate cancellation requests after an order is accepted. In the event that we do not accept, make a change to, or cancel an order, we may attempt to notify you by contacting the e‑mail, billing address, and/or phone number provided at the time the order was made. Your purchases are subject to return or exchange solely in accordance with our return and refund policy. This does not limit any rights you may have under applicable law. You represent and warrant that your purchases are for your own personal or household use and not for commercial resale or export.\n4. Prices and billing\nPrices, discounts and promotions are subject to change without notice. The price charged for a product or service will be the price in effect at the time the order is placed and will be set out in your order confirmation email. Unless otherwise expressly stated, posted prices do not include taxes, shipping, handling, customs or import charges. Prices posted in our online stores may be different from prices offered in physical stores or in online or other stores operated by third parties. We may offer, from time to time, promotions on the Services that may affect pricing and that are governed by terms and conditions separate from these Terms of Service. If there is a conflict between the terms for a promotion and these Terms of Service, the promotion terms will govern. You agree to provide current, complete and accurate purchase, payment and account information for all purchases made at our stores. You agree to promptly update your account and other information, including your email address, credit card numbers and expiration dates, so that we can complete your transactions and contact you as needed. You represent and warrant that (1) you are authorized to use the payment method you provide, (2) that the information you provide for such payment method is true, correct and complete, (3) charges incurred by you will be honored by the provider of your payment method, and (4) you will pay charges incurred by you at the posted prices, including shipping and handling charges and all applicable taxes, if any.\n5. Shipping and delivery\nExcept as otherwise stated, we are not liable for shipping and delivery delays. All delivery times are estimates only and are not guaranteed. We are not responsible for delays caused by shipping carriers, customs processing, or events outside our control. To the fullest extent permitted by applicable law, title and risk of loss pass to you when we transfer products to the carrier, unless applicable law provides otherwise. We are not responsible for delays or failures caused by events beyond our reasonable control, including carrier or customs delays, natural disasters, severe weather, labor disputes, supply shortages, utility or telecommunications outages, cyber incidents, governmental actions, or other similar events. See our shipping policy for more details.\n6. Intellectual property\nOur Services, including but not limited to all trademarks, brands, text, images, graphics, product reviews, video, and audio are owned by SSwiftly, its affiliates or licensors and are protected by U.S. and foreign trademark, copyright and other intellectual property laws. Similarly, the product listings are managed and owned by SSwiftly. The purchase or delivery of any product does not grant or confer any intellectual property rights, including any patent, copyright, trademark, or other proprietary right, in or to the product, its design, software, or underlying technology. All such rights remain exclusively with SSwiftly or the original rights holder. These Terms permit you to use the Services for your personal, non-commercial use only. You must not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store, or transmit any of the material on the Services without our prior written consent. Except as expressly provided herein, nothing in these Terms of Service grants or shall be construed as granting a license or other rights to you under any patent, trademark, copyright, or other intellectual property of SSwiftly, Shopify or any third party. Unauthorized use of the Services may violate applicable intellectual property or other laws. All rights not expressly granted herein are reserved by SSwiftly. SSwiftly's names, logos, product and service names, designs, and slogans are trademarks of SSwiftly or its affiliates or licensors. You must not use such trademarks without the prior writ"
+    }
+  ]
+}
