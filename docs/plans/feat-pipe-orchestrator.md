@@ -1,0 +1,106 @@
+# Kế hoạch `feat/pipe-orchestrator` — PIPE-ORCHESTRATOR (Bước 4 lõi AI, GĐ2: soạn gợi ý, KHÔNG gửi)
+
+**Trạng thái duyệt:** Đã duyệt (chủ dự án 07/11/2026, kèm 4 sửa đổi đã đưa vào các lát bên dưới: FR-011 backfill + nút "Soạn gợi ý"; gộp bình luận không mất tin; trừ lượt idempotent bằng khóa duy nhất ở DB; văn bản lưu đã che PII + đường poll cùng quy tắc ingest). Bật `PIPELINE_ENABLED` trên dev sau lát E được đồng ý, CHỈ workspace dev. **Lát C: gửi diff cho chủ dự án kiểm chéo trước khi merge.**
+
+## Việc
+
+Mã gap matrix: `PIPE-ORCHESTRATOR` (+ gỡ dần `USAGE-GATE-PIPE`, `RETRIEVAL-LOG-WIRE`, `DA-HOLDER-WIRE`, `DA-IMPERSONATION-WIRE`, `EMERGENCY-STOP-WIRE` ở mức đọc) · Spec: `docs/09` §4, §7.1, §7.1a, §9; FR-090, FR-141, FR-147, FR-148, FR-154, FR-155, FR-162.
+
+**Tóm tắt:** Hiện AI chỉ chạy trong ô Thử AI. Việc này dựng job `pipeline` ở worker: nhận bình luận thật đã lưu, chạy CÙNG một chuỗi xử lý với ô Thử AI (một hàm dùng chung, hai nơi gọi), đọc ngữ cảnh thật từ DB, chặn hạn mức và dừng khẩn cấp TRƯỚC khi gọi LLM, rồi ghi bản nháp (`drafts`), mức dùng AI (`ai_usage`), nhật ký tìm kiếm (`retrieval_logs`) và lỗ hổng kiến thức (`kb_gaps`). Bản nháp hiện trong chi tiết bình luận để nhân viên duyệt. **GĐ2 không gửi gì ra Facebook:** đường gửi, cổng tự gửi (`decideAutoSend`) và `sendRecheck` để sau, chờ bạn. Rủi ro chính: chi phí LLM chạy trên mọi bình luận thật (mặc định TẮT bằng cờ), và trừ lượt gói nhầm hai lần khi job thử lại.
+
+## Hiện trạng (đã kiểm trong code, để kế hoạch bám thực tế)
+
+- Đã có: lõi `runTryPipeline` + `evaluateTurnRisks` + `decideAction`; `insertDraft`; bảng `drafts`, `retrieval_logs`, `kb_gaps`, `ai_usage`; `LlmClient` ghi `ai_usage`; `createUsageMeter().consume()` (trừ lượt nguyên tử, chỉ đường `withJob`); `workspaces.emergency_stopped_at`; `getCurrentVersion` (kb_version đã xuất bản); builder `buildRetrievalLogRecord`/`buildKbGapRecord`; `comments.merged_into_id`, trạng thái `processing/pending_review/needs_human`; `workspaceJob` + `withJob`; trang `comments` + `comment-detail.tsx` + `lib/suggestion.ts` (đã sẵn chỗ hiện gợi ý).
+- Chưa có: job/hàng đợi `pipeline`; hàm đọc ngữ cảnh thật (chuỗi, người đang giữ, bài/caption, tên Page); cột cấu hình `merge_window_seconds` và `human_hold_minutes`; truy vấn ghi `retrieval_logs`/`kb_gaps`; bộ chuyển `LlmClient` sang đường `withJob` của worker; `consume()` chưa có khóa idempotent theo bình luận.
+
+## Điểm chưa rõ
+
+Không có thẻ chặn. Các quyết định tự chọn (khuyến nghị, đảo ngược được; sẽ ghi vào `docs/plans/quyet-dinh/` khi làm):
+1. **Lượt trúng cache vẫn trừ 1 lượt** (1 lượt = 1 bình luận được AI xử lý, FR-090). Đảo ngược: không trừ khi cache hit.
+2. **Hạn mức hết hoặc dừng khẩn cấp → KHÔNG gọi LLM**, bình luận sang `needs_human`, bản nháp ghi lý do (`quota_exhausted` / `emergency_stop`), không im lặng.
+3. **Cờ `PIPELINE_ENABLED` mặc định TẮT** (chỉ đúng chữ `true` mới bật). Bật ở dev khi bạn đồng ý (có chi phí LLM thật qua khóa ảo, trần 10 USD/30 ngày).
+4. Mạo danh/giá lệch caption/tồn cũ: nối đủ ở mức ĐỌC dữ liệu có sẵn (tên Page, caption bài, mốc đồng bộ); nguồn chưa có dữ liệu thì cờ tắt và ghi vào `context_refs` để biết.
+5. **Bình luận nào tự chạy pipeline (Q-POR1, đã đọc FR-011/FR-021–FR-024):** mọi bình luận vào `ingest` đều qua `webhook_events`, và `payload.source` cho biết nguồn: **không có `source` = webhook trực tiếp → tự chạy**; **`polling` = bù bình luận webhook rớt (FR-023, cửa sổ ≤ 7 ngày, bỏ bình luận mới hơn 5 phút) → tự chạy** (đó vẫn là bình luận mới của khách, chỉ đến trễ); **`backfill` = lấy ngược khi kết nối (FR-011, Owner chọn 3/7/30 ngày) → KHÔNG xếp job**, chỉ chạy khi nhân viên bấm "Soạn gợi ý" (hoặc theo tự động hóa, việc sau). Bình luận của chính Page (FR-022), đã xóa, và bị `ruleFilter` bỏ (FR-024: emoji/sticker/tag/dấu chấm → Bỏ qua, KHÔNG trừ lượt) không xếp job/không trừ lượt. Quyết định nằm ở MỘT chỗ (`ingest`), đường poll và webhook dùng chung nên không lệch nhau.
+6. **Văn bản lưu đã che PII (nguyên tắc #6):** `retrieval_logs.query`, `kb_gaps` (câu mẫu/chủ đề), `drafts.text`/`variants`/`extracted` chỉ chứa văn bản ĐÃ che; có test quét mọi cột đã ghi để không còn SĐT/email thô.
+7. **`PIPELINE_ENABLED` + danh sách workspace:** cờ mặc định TẮT (chỉ đúng chữ `true` mới bật) và thêm `PIPELINE_WORKSPACE_IDS` (danh sách id, rỗng = không workspace nào). Ingest và handler đều kiểm cả hai; dev chỉ điền workspace dev. Staging/production giữ trống.
+
+## Thứ tự bước (đúng docs/09 §4, MỘT chuỗi cho cả hai nơi gọi)
+
+`skipOwnPage` → `ruleFilter` → che PII + chuẩn hóa/nhận ngôn ngữ → **[chặn: dừng khẩn cấp → hạn mức (trừ lượt)]** → `cacheLookup` (chưa nối ở GĐ2, để trống có chủ đích) → `extract` → `rewriteQuery` → `route` → `retrieve` (sản phẩm → SQL giá/tồn → kiến thức hybrid, chỉ `kb_version` ĐÃ xuất bản) → `evaluateTurnRisks` → `decideAction` → `draft` → `guard` (tiền/xưng hô/nguồn) → độ tin cậy → `pickVariant` (chọn biến thể đầu, chưa Redis) → `persist`. **Không có `decideAutoSend`/gửi.** Ô Thử AI gọi cùng hàm `runPipeline` với các cổng đọc DB thay bằng mặc định (không bài, không Page, không chuỗi); worker gọi với cổng đọc DB thật. Cổng chặn (dừng khẩn cấp, hạn mức) nằm TRƯỚC `extract` nên không tốn token khi bị chặn.
+
+## Chia lát (mỗi lát một PR nhỏ, tuần tự, có test, tự merge khi CI xanh trừ lát nhạy cảm)
+
+**Lát A — Lõi một chuỗi, không đụng DB** (không migration): tách `runTryPipeline` thành `runPipeline(input, ports)`; `ports` = nguồn kiến thức, `extractor/rewriter/drafter`, `voices`, `risks` (nơi gọi cấp dữ liệu, mặc định như ô Thử AI), `thread` (`clarifyCount`, `repeatCount`, `humanHolding`), `gates` (chạy trước `extract`, trả `allow | blocked(reason)`). Kết quả mở rộng: mọi thứ `persist` cần (truy vấn tìm kiếm, nguồn kèm điểm, chủ đề thiếu, dữ liệu chụp giá). Ô Thử AI chuyển sang gọi hàm này; hành vi cũ giữ nguyên (bộ test hiện có là hàng rào). Nhẹ nhất, mở đường cho các lát sau.
+
+**Lát B — Đọc ngữ cảnh thật từ DB (chỉ đọc)** + migration CHỈ THÊM: `loadPipelineContext(tx, commentId)` trả bình luận, bài (caption, sản phẩm gắn), tên Page của kênh, chuỗi (cha/con, các lượt của cùng khách cùng bài), `clarifyCount`/`repeatCount` (đếm từ bản nháp/phản hồi trước trong chuỗi, FR-144/147), người đang giữ chuỗi (`humanHolding` từ phản hồi của nhân viên trong `human_hold_minutes`, FR-154), cờ mạo danh/giá lệch/tồn cũ qua `evaluateTurnRisks` (đã có luật), `kb_version` ĐÃ xuất bản. Migration `0072`: thêm `automation_settings.merge_window_seconds integer NOT NULL DEFAULT 30 CHECK 10–60` và `human_hold_minutes integer NOT NULL DEFAULT 120 CHECK ≥ 0` + quyền theo cột; đường lùi: DROP COLUMN. Thuộc loại tự merge theo Q-MRG2.
+
+**Lát C — Chặn trước khi gọi LLM (NHẠY CẢM — tự kiểm, KHÔNG tự merge; GỬI DIFF cho chủ dự án kiểm chéo trước khi merge):** cổng `emergency_stopped_at` (đọc `workspaces`, đang dừng → chặn) rồi trừ lượt hạn mức (FR-090: hết 100% → chặn, 80% → báo Owner một lần, đã có trong `ConsumeOutcome`). **Idempotent bằng khóa duy nhất ở DB (không chỉ dựa vào `comments.status`):** migration `0073` thêm bảng `cf.pipeline_turns` (`workspace_id`, `comment_id` UNIQUE, `charged_at`, `attempts`, `state`, `last_error`; RLS + policy mới; chỉ hệ thống ghi). Giao dịch ngắn T1: giành quyền xử lý (`comments.status new → processing`) + `INSERT … ON CONFLICT (comment_id) DO NOTHING` vào `pipeline_turns`; nếu chèn MỚI thì `consume()` chạy trong CÙNG giao dịch đó (qua bộ chuyển `withJob` dùng lại `tx`) — nên "đã trừ" và "đã ghi khóa" cùng sinh hoặc cùng mất; không chèn được (đã có khóa) → bỏ qua trừ lượt, xử lý tiếp. T1 commit rồi mới gọi LLM (không giữ giao dịch qua lời gọi LLM); T2 `persist` ở lát D. **Thử lại sau khi đã trừ → xử lý tiếp, KHÔNG trừ thêm (crash sau consume, trước persist vẫn đúng).** `attempts` tăng mỗi lần chạy; quá số lần thử (3, khớp retry của `pipeline`) → bình luận sang `needs_human` kèm bản nháp lý do `pipeline_failed`, **không kẹt `processing`**. Hết lượt/dừng khẩn cấp → không gọi LLM, `needs_human` với lý do (`quota_exhausted`/`emergency_stop`); hết lượt thì `consume()` không trừ (đã đúng sẵn). **Nhóm gộp (lát E) = 1 lượt**, khóa theo bình luận CUỐI của nhóm. Lỗi đọc cờ/hạn mức → chặn (không "mở khi lỗi"). Test (viết trước): dừng khẩn cấp, hết lượt, đúng 80% báo một lần, thử lại không trừ hai lần, **crash giữa T1 và persist rồi chạy lại**, hai job đồng thời cùng bình luận (chỉ một trừ), quá số lần thử → `needs_human` không kẹt.
+
+**Lát D — Ghi kết quả (`persist`):** trong MỘT giao dịch `withJob`: `insertDraft` (kèm biến thể, claims, chủ đề thiếu, `price_snapshot` từ nguồn sản phẩm — mục ngoại tệ không đưa vào snapshot vì `sendRecheck` chưa đọc được), `retrieval_logs`, `kb_gaps` (mở/cộng dồn theo chủ đề), cập nhật `comments` (nhãn, ngôn ngữ, văn bản chuẩn hóa, `needs_followup`, trạng thái `pending_review` hoặc `needs_human`). `ai_usage` do `LlmClient` ghi — cần bộ chuyển để `LlmClient` dùng `withJob` ở worker (hiện dùng `withWorkspace`). Lỗi AI/đầu ra không đọc được → bản nháp "Cần nhân viên" với lý do, KHÔNG ném làm job lặp vô hạn (FR-032, docs/09 §9). **Mọi văn bản ghi (`retrieval_logs.query`, `kb_gaps`, `drafts.text/variants/extracted`) là bản ĐÃ che PII** — test cho bình luận chứa SĐT/email rồi quét mọi cột đã ghi, không còn giá trị thô (nguyên tắc #6). Test tích hợp trên DB thật.
+
+**Lát E — Job `pipeline` + gộp bình luận (FR-148) không để mất bình luận:** hàng đợi `pipeline` (retry 3, concurrency 5, docs/09 §9), schema job (`commentId`, `trigger: auto|manual`), handler `workspaceJob`. **Chỉ MỘT nơi quyết định xếp job: `ingest`** (đường poll/backfill đi qua `ingest` nên cùng quy tắc): xếp khi bình luận MỚI được chèn và `source ≠ backfill`, không phải của Page, chưa xóa, cờ `PIPELINE_ENABLED` bật VÀ workspace nằm trong `PIPELINE_WORKSPACE_IDS` (Q-POR1). Xếp với `startAfter = merge_window_seconds` (lát B) để chờ gộp. **Không dựa vào `singletonKey` để đúng đắn:** pg-boss bỏ job mới khi job cùng khóa đang ACTIVE → bình luận đến giữa lúc job đang chạy có thể mất. Thay bằng: (a) quyền xử lý giành bằng cập nhật có điều kiện + khóa `pipeline_turns` (lát C) nên chạy trùng là vô hại; (b) **cuối mỗi job**: kiểm bình luận chưa xử lý (`new`, chưa gộp) cùng khách + bài còn lại thì xếp job mới (không dùng khóa trùng với job đang active); (c) **job quét định kỳ** (mỗi 5 phút) tìm bình luận kẹt `new` quá `merge_window + 1 phút` mà không có job, hoặc `processing` quá N phút (N=15, job chết/crash) → xếp lại; quá số lần thử → `needs_human`. Gộp: chữ các bình luận chưa xử lý cùng khách cùng bài theo thời gian thành một lượt (1 lượt trừ), bản nháp gắn vào bình luận cuối, các bình luận trước đặt `merged_into_id`. Test (viết trước): **bình luận đến giữa lúc job đang chạy vẫn được xử lý**; job chết giữa chừng được quét xếp lại; backfill không xếp job; polling xếp như webhook; workspace ngoài danh sách không xếp; cờ tắt không xếp.
+
+**Lát F — Hiện gợi ý + nút "Soạn gợi ý" + đường vàng:** `comment-detail.tsx` đọc bản nháp mới nhất (đã có `lib/suggestion.ts`; nhãn "gợi ý — chưa gửi", lý do chặn nếu có). **Nút "Soạn gợi ý"** cho bình luận CHƯA có bản nháp (đặc biệt bình luận nhập ngược `backfill`, FR-011): Server Action kiểm đăng nhập + quyền thành viên workspace (Owner/Staff, server-side), bình luận thuộc đúng workspace, chưa có bản nháp, rồi xếp job `pipeline` `trigger: manual` — **đi qua CÙNG cổng dừng khẩn cấp/hạn mức** của lát C (không đường tắt), có chống bấm đúp. Kiểm đường vàng: (1) test tích hợp vitest trên DB thật: webhook fixture (đã có fixture chữ ký) → `processIngestEvent` → handler `pipeline` với LLM giả → bản nháp đúng trạng thái/giá/nguồn/`ai_usage`/`retrieval_logs`/`kb_gaps`; (2) Playwright: bình luận + bản nháp có sẵn hiện trong chi tiết bình luận; bình luận backfill chưa có nháp hiện nút, bấm ra "đang soạn". Nếu job E2E của CI chưa chạy worker, thêm worker vào đó là việc riêng (ghi vào rủi ro) — không bắt buộc cho tiêu chí nghiệm thu.
+
+Thứ tự phụ thuộc: A → B → C → D → E → F. A, B, D, E, F tự merge khi CI xanh (B và C có migration chỉ thêm theo Q-MRG2, nhưng **C KHÔNG tự merge: gửi diff cho chủ dự án kiểm chéo**). Mỗi lát báo cáo ≤ 10 dòng.
+
+## Tiêu chí nghiệm thu (cho cả việc)
+
+1. Ô Thử AI và worker cùng gọi MỘT hàm `runPipeline`; toàn bộ test ô Thử AI hiện có vẫn xanh — kiểm bằng: bộ test `try-pipeline`/web `try-ai` không đổi kết quả.
+2. Đúng thứ tự docs/09 §4 và cổng chặn đứng TRƯỚC `extract` — kiểm bằng: test thứ tự gọi (mock đếm số lần gọi `extract`).
+3. Dừng khẩn cấp hoặc hết hạn mức → không gọi LLM, bình luận `needs_human`, bản nháp ghi lý do — kiểm bằng: test C.
+4. Mỗi bình luận trừ đúng 1 lượt dù job thử lại hoặc chạy đồng thời — kiểm bằng: test tích hợp C.
+5. Đọc từ DB đủ: `clarifyCount`/`repeatCount`, người đang giữ, cờ mạo danh/giá lệch/tồn cũ, `kb_version` ĐÃ xuất bản (bản nháp chưa xuất bản không bao giờ lọt vào luồng thật) — kiểm bằng: test tích hợp B.
+6. Ghi đủ `drafts`, `ai_usage`, `retrieval_logs`, `kb_gaps` trong một giao dịch, idempotent theo bình luận (chạy hai lần chỉ một bản nháp) — kiểm bằng: test tích hợp D.
+7. Lỗi AI → "Cần nhân viên", không ném vô hạn, không mất bình luận — kiểm bằng: test D.
+8. Gộp bình luận liên tiếp (cùng khách, cùng bài, trong cửa sổ) thành một lượt, trả lời gắn vào bình luận cuối — kiểm bằng: test E.
+9. Đường vàng bằng mock: webhook fixture → ingest → pipeline → drafts → gợi ý hiện trong chi tiết bình luận — kiểm bằng: test tích hợp + Playwright F.
+10. KHÔNG có đường gửi: không file nào của việc này gọi `send`/`decideAutoSend`/`sendRecheck` — kiểm bằng: test quét import (mẫu như `try-pipeline.test.ts` "không có import usage-meter") + đọc diff.
+11. Cờ `PIPELINE_ENABLED` mặc định tắt: tắt thì ingest không xếp job — kiểm bằng: test E.
+12. Bình luận nhập ngược (`source: backfill`) KHÔNG xếp job; `polling` và webhook xếp theo cùng một quy tắc ở `ingest` — kiểm bằng: test E.
+13. Nút "Soạn gợi ý": kiểm quyền server-side, chỉ bình luận cùng workspace và chưa có nháp, đi qua cổng hạn mức/dừng khẩn cấp, chống bấm đúp — kiểm bằng: test Server Action + Playwright F.
+14. Bình luận đến giữa lúc job gộp đang chạy vẫn được xử lý; job quét định kỳ xếp lại bình luận kẹt `new`/`processing`, quá số lần thử → `needs_human` — kiểm bằng: test E.
+15. Trừ lượt idempotent bằng khóa UNIQUE `comment_id` ở DB: thử lại sau khi đã trừ → xử lý tiếp không trừ thêm; **crash sau consume trước persist** vẫn đúng; hết số lần thử → `needs_human`, không kẹt `processing`; nhóm gộp = 1 lượt gắn bình luận cuối — kiểm bằng: test tích hợp C.
+16. Mọi văn bản ghi vào `retrieval_logs`/`kb_gaps`/`drafts` đã che PII (quét sau khi chạy với bình luận có SĐT/email) — kiểm bằng: test tích hợp D.
+17. `PIPELINE_ENABLED` tắt hoặc workspace ngoài `PIPELINE_WORKSPACE_IDS` → không xếp job và handler từ chối chạy — kiểm bằng: test E.
+18. `pnpm precheck` xanh mỗi lát; gói `ai` giữ coverage 100% lines/functions.
+
+## File sẽ đọc (≤ ~8 mỗi lát, kèm lý do)
+
+`packages/ai/src/try/try-pipeline.ts` (lõi), `packages/ai/src/decide/turn-risks.ts`, `apps/worker/src/jobs/{run-job,ingest}.ts` + `queue/definitions.ts` + `main.ts` (mẫu job), `packages/db/src/queries/{drafts,comments…}.ts`, `packages/saas-core/src/billing/usage-meter.ts`, `packages/shared/src/retrieval-log.ts`, `apps/web/src/components/comments/comment-detail.tsx` + `lib/suggestion.ts`.
+
+## File sẽ sửa / tạo
+
+Lát A: `ai/src/try/try-pipeline.ts` (tách `runPipeline`), test, `apps/web/src/server/try-ai.ts` (gọi hàm mới). Lát B: `db/src/queries/pipeline-context.ts` (mới), migration `0072_automation_settings_pipeline.sql` + journal + schema. Lát C: `ai/src/pipeline/gates.ts` (mới), migration `0073_pipeline_turns.sql` + schema `cf/pipeline-turns.ts` + journal, `db/src/queries/pipeline-turns.ts` (giành quyền + khóa + attempts), worker nối `consume` (qua bộ chuyển dùng lại `tx`)/`emergency_stopped_at`. Lát D: `db/src/queries/{retrieval-logs,kb-gaps}.ts` (mới), `apps/worker/src/jobs/pipeline-persist.ts` (mới), bộ chuyển `LlmClient`↔`withJob`. Lát E: `shared` (schema job `pipeline`), `worker/src/queue/definitions.ts`, `jobs/pipeline.ts` (mới), `jobs/pipeline-sweep.ts` (quét định kỳ, mới), `jobs/ingest.ts` (xếp job theo `payload.source`), `config.ts`/`main.ts` (`PIPELINE_ENABLED`, `PIPELINE_WORKSPACE_IDS`). Lát F: `comment-detail.tsx`, `lib/suggestion.ts`, Server Action "Soạn gợi ý" (`apps/web/src/app/app/(guarded)/comments/…`) + i18n vi/en, test tích hợp + `e2e/tests/…`. Tài liệu mỗi lát: Q-…, codemap, gap-matrix, handoff.
+
+## Migration
+
+Hai migration, đều CHỈ THÊM + đường lùi (Q-MRG2): **`0072` (lát B)** thêm 2 cột có mặc định vào `automation_settings` (`merge_window_seconds` 10–60 mặc định 30; `human_hold_minutes` ≥ 0 mặc định 120) + quyền theo cột; lùi: DROP COLUMN. **`0073` (lát C)** thêm bảng `cf.pipeline_turns` (`workspace_id`, `comment_id` UNIQUE, `charged_at`, `attempts`, `state`, `last_error`, thời gian) có `workspace_id` + RLS bật + policy mới (đọc: thành viên workspace; ghi: chỉ hệ thống/`withJob`), quyền tối thiểu theo cột; lùi: DROP TABLE (bảng mới, chưa có dữ liệu cần giữ). Lát C vì thuộc diện nhạy cảm nên dù chỉ-thêm vẫn **chờ chủ dự án kiểm chéo diff** trước khi merge. Không migration ở lát còn lại (`drafts`, `retrieval_logs`, `kb_gaps` đã có).
+
+## Test viết trước
+
+Từng lát viết test đỏ trước (đặc biệt C: logic hạn mức/dừng khẩn cấp theo quy tắc "logic quy tắc viết test trước"): thứ tự gọi, cổng chặn, idempotent trừ lượt, lỗi AI, gộp bình luận, ghi một giao dịch, cờ tắt, không import đường gửi.
+
+## Lệnh test phạm vi hẹp
+
+`pnpm --filter @flow/ai exec vitest run --coverage` · `pnpm --filter @flow/worker exec vitest run src/jobs` · `pnpm --filter @flow/db exec vitest run --config vitest.int.config.ts` (DB thật `cf_test`) · `pnpm --filter @flow/web exec vitest run src` · `pnpm precheck`
+
+## Cần kiểm chứng độc lập không?
+
+**Có, riêng lát C** (đếm lượt gói, khóa trừ lượt và dừng khẩn cấp thuộc diện thanh toán/an toàn; có migration bảng mới + RLS): tự kiểm theo `verify.md` (gồm mục B cho migration), gắn nhãn "tự kiểm, chưa có kiểm chứng độc lập", **không tự merge**, **gửi diff cho chủ dự án kiểm chéo** trước khi merge. Lát còn lại: diff thường, tự kiểm theo `verify.md` §A khi chạm ghi DB; lát nào có migration chỉ thêm tự merge theo Q-MRG2.
+
+## Rủi ro / câu hỏi cho chủ dự án
+
+- **Đã quyết định (chủ dự án 07/11):** bật `PIPELINE_ENABLED` trên dev sau lát E, CHỈ workspace dev (`PIPELINE_WORKSPACE_IDS`); chi phí LLM thật nhỏ, trần khóa ảo 10 USD/30 ngày. Staging/production giữ tắt.
+- Hạn mức hiện lấy từ `resolveAiTurnLimit` (env, Q-UMU1) vì gói cước thật chưa nối vào pipeline; lát C dùng đúng hàm đó, khi gói thật nối thì đổi một chỗ.
+- Cache (exact/semantic) chưa nối ở GĐ2 (Redis thật chưa có) — mỗi bình luận đều đi đủ chuỗi; ghi nhận là việc sau.
+- `sendRecheck` R5 + `price_snapshot` cho ngoại tệ, đường gửi, cổng tự gửi: ngoài phạm vi, chờ bạn.
+- Job E2E của CI có thể chưa chạy worker: đường vàng chính chạy bằng test tích hợp; thêm worker vào E2E là việc riêng nếu bạn muốn.
+
+## Đề xuất thay đổi
+
+Không có.
+
+## Complexity tracking
+
+Thêm một lớp `ports` cho hàm dùng chung (đi ngược "không trừu tượng hóa sớm") — được phép vì có ĐÚNG hai nơi gọi thật ngay từ đầu (ô Thử AI và worker), đúng điều kiện ngoại lệ của AGENTS.md.

@@ -25,6 +25,7 @@ export * from './kb-reembed';
 export * from './normalize';
 export * from './observability';
 export * from './pii';
+export * from './pipeline';
 export * from './private-reply';
 export * from './ratelimit';
 export * from './readiness';

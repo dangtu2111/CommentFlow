@@ -62,7 +62,7 @@ export function KbPlayground({ label, placeholder, submit, fullPageLabel }: Prop
           </p>
         ) : null}
 
-        {done?.ok && done.result.status === 'skipped' ? (
+        {done?.ok && done.result.status !== 'done' ? (
           <p className="font-body-md text-body-md text-on-surface-variant">{t('skipped')}</p>
         ) : null}
 
