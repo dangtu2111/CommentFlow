@@ -490,3 +490,85 @@ describe('brand_voice thật — pipeline chọn giọng theo ngôn ngữ nhận
     expect(await run('ship về Hà Nội bao nhiêu', undefined)).toBe(voice);
   });
 });
+
+describe('Shopify tiền tệ khác VND — sản phẩm chưa có giá thì AI chuyển hướng, không bịa/không quy đổi', () => {
+  const noPriceKnowledge = (priceUnknown: boolean) => ({
+    async matchProducts() {
+      return { ids: ['p1'], names: ['Áo thun'], missingAxes: [] };
+    },
+    async lookupProductFacts() {
+      return [
+        {
+          id: 'p1',
+          kind: 'product' as const,
+          title: 'Áo thun',
+          text: 'Áo thun: chưa có giá; còn 5.' as never,
+          score: 1,
+          topics: ['product_info' as const, 'size' as const],
+          ...(priceUnknown ? { priceUnknown: true } : {}),
+        },
+      ];
+    },
+    async searchKb() {
+      return [];
+    },
+  });
+  const ask = (text: string, asks: string[], label: 'price' | 'advice') =>
+    runTryPipeline(
+      { ...base, text },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: extract({ labels: [{ label }], asks, product_mentions: ['áo thun'] }),
+          },
+        ]),
+        drafter: createFixtureDrafter([
+          {
+            match: /./,
+            result: { ...shipReply, reply: 'Shop xin báo lại ạ', sources: [], claims: [] },
+          },
+        ]),
+        knowledge: noPriceKnowledge(true),
+      },
+    );
+
+  it('khách hỏi giá, sản phẩm chưa có giá → redirect (chủ đề chưa nguồn), cần người, không tự gửi', async () => {
+    const r = await ask('Áo thun giá bao nhiêu?', ['giá'], 'price');
+    if (r.status !== 'done') throw new Error('expected done');
+    expect(r.decision).toMatchObject({
+      action: 'redirect',
+      reason: 'topic_unsourced',
+      unansweredTopics: ['product_info'],
+    });
+    expect(r.autoSend.allowed).toBe(false);
+  });
+
+  it('khách hỏi tồn kho của sản phẩm chưa có giá → vẫn trả lời được (chỉ giá bị chặn)', async () => {
+    const r = await ask('Áo thun còn hàng không?', ['còn hàng'], 'advice');
+    if (r.status !== 'done') throw new Error('expected done');
+    expect(r.decision.action).toBe('answer');
+  });
+
+  it('sản phẩm CÓ giá → hỏi giá trả lời bình thường (không ảnh hưởng đường cũ)', async () => {
+    const r = await runTryPipeline(
+      { ...base, text: 'Áo thun giá bao nhiêu?' },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: extract({
+              labels: [{ label: 'price' }],
+              asks: ['giá'],
+              product_mentions: ['áo thun'],
+            }),
+          },
+        ]),
+        drafter: createFixtureDrafter([{ match: /./, result: shipReply }]),
+        knowledge: noPriceKnowledge(false),
+      },
+    );
+    if (r.status !== 'done') throw new Error('expected done');
+    expect(r.decision.action).toBe('answer');
+  });
+});

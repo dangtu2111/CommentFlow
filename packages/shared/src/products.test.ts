@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CARD_VALUE_MAX,
+  cleanCardText,
   normalizeAttrs,
   type ProductEmbeddingInput,
   parseProductCard,
@@ -40,6 +41,7 @@ describe('FR-058 parseProductCard (thẻ sản phẩm)', () => {
       warranty: '7 ngày',
       origin: 'Việt Nam',
       type: 'áo',
+      description: 'Áo thun cotton mềm, form rộng.',
       tags: ['hè', 'nữ'],
     };
     expect(parseProductCard(full)).toEqual({ ok: true, card: full });
@@ -80,5 +82,17 @@ describe('FR-056 productEmbeddingText (giá/tồn không vào vector)', () => {
   });
   it('thiếu danh mục/thẻ/biến thể vẫn chạy', () => {
     expect(productEmbeddingText({ name: 'Mũ' })).toBe('Mũ');
+  });
+});
+
+describe('FR-058 cleanCardText (nguyên tắc #4: không giá trong văn bản thẻ)', () => {
+  it('gộp khoảng trắng, loại câu có số tiền (không cắt giữa số), cắt ≤ 600 ký tự', () => {
+    expect(cleanCardText('  Áo   mềm.\nGiá 150.000đ! Giặt máy ok. Sale 99k. Nặng 5kg.  ')).toBe(
+      'Áo mềm. Giặt máy ok. Nặng 5kg.',
+    );
+    expect(cleanCardText('Chỉ 99k thôi')).toBe('');
+    const long = cleanCardText(`${'từ '.repeat(400)}hết`);
+    expect(long.length).toBeLessThanOrEqual(CARD_VALUE_MAX);
+    expect(long.endsWith('…')).toBe(true);
   });
 });

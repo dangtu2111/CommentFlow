@@ -4,7 +4,7 @@ import {
   loadTryProducts,
   type TryProduct,
 } from '@flow/db/runtime';
-import { unsafeMarkMasked } from '@flow/shared';
+import { cleanCardText, type ProductCard, unsafeMarkMasked } from '@flow/shared';
 import type { VariantAxis } from '../decide/decide-action';
 import type { TryCandidate, TryKnowledge } from './try-pipeline';
 
@@ -28,6 +28,10 @@ export function missingAxesOf(product: TryProduct): VariantAxis[] {
   return (['size', 'color'] as const).filter((axis) => distinct(axis) > 1);
 }
 
+/** Có ít nhất một giá (sản phẩm hoặc biến thể). Không có → không trả lời được câu hỏi giá (nguyên tắc #4, không quy đổi). */
+export const hasPrice = (product: TryProduct): boolean =>
+  product.priceVnd !== null || product.variants.some((v) => v.priceVnd !== null);
+
 const stockText = (stock: number | null): string | null =>
   stock === null ? null : stock > 0 ? `còn ${stock}` : 'hết hàng';
 
@@ -36,8 +40,36 @@ const variantLabel = (attrs: Record<string, string>): string =>
     .map(([name, value]) => `${name} ${value}`)
     .join(', ');
 
-/** Câu nguồn của một sản phẩm: tên, giá (hoặc khoảng giá), từng biến thể có giá/tồn. Hàm thuần. */
+/** Các trường thẻ đưa vào câu nguồn, theo thứ tự cố định, kèm nhãn tiếng Việt (loại/tag không cần cho trả lời). */
+const CARD_DETAIL_LABELS: ReadonlyArray<readonly [keyof ProductCard, string]> = [
+  ['material', 'chất liệu'],
+  ['care', 'cách giặt'],
+  ['sizeChart', 'bảng size'],
+  ['warranty', 'bảo hành'],
+  ['origin', 'xuất xứ'],
+  ['description', 'mô tả'],
+];
+
+/**
+ * Chi tiết từ thẻ sản phẩm (FR-058). Mỗi giá trị làm sạch lại ở đây (loại câu có số tiền): giá chỉ lấy từ `products`/
+ * `product_variants`, không từ văn bản tự do (nguyên tắc #4). Rỗng nếu thẻ không có gì dùng được.
+ */
+function cardDetailText(card: ProductCard | undefined): string {
+  if (!card) return '';
+  const parts = CARD_DETAIL_LABELS.flatMap(([field, label]) => {
+    const value = card[field];
+    const text = typeof value === 'string' ? cleanCardText(value) : '';
+    return text === '' ? [] : [`${label} ${text}`];
+  });
+  return parts.length === 0 ? '' : ` Chi tiết: ${parts.join('; ')}.`;
+}
+
+/** Câu nguồn của một sản phẩm: tên, giá (hoặc khoảng giá), từng biến thể có giá/tồn, rồi chi tiết thẻ. Hàm thuần. */
 export function productFactText(product: TryProduct): string {
+  return `${productCommerceText(product)}${cardDetailText(product.card)}`;
+}
+
+function productCommerceText(product: TryProduct): string {
   const prices = product.variants.flatMap((v) => (v.priceVnd === null ? [] : [v.priceVnd]));
   const base = product.priceVnd ?? (prices.length > 0 ? Math.min(...prices) : null);
   const head =
@@ -89,6 +121,7 @@ export function createDbProductKnowledge(tx: Database, workspaceId: string): DbP
           text: unsafeMarkMasked(productFactText(product)),
           score: 1,
           topics: ['product_info', 'size'],
+          ...(hasPrice(product) ? {} : { priceUnknown: true }),
         }),
       );
     },

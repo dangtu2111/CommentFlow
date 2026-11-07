@@ -55,6 +55,29 @@ describe('TRY-AI-REAL lát A — sản phẩm thật', () => {
     ).toBe('Túi: giá 99.000đ; còn 3.');
   });
 
+  it('FR-058 productFactText: thẻ sản phẩm thành chi tiết có nhãn; câu có số tiền trong thẻ bị loại; không thẻ → như cũ', () => {
+    const withCard = productFactText({
+      ...shirt,
+      card: {
+        material: '100% cotton',
+        care: 'Giặt tay',
+        sizeChart: 'M 50-58kg',
+        warranty: 'Đổi size 7 ngày',
+        origin: 'Việt Nam',
+        description: 'Áo mềm. Giá chỉ 99k hôm nay!',
+        type: 'Áo',
+        tags: ['hè'],
+      },
+    });
+    expect(withCard).toContain(
+      'Chi tiết: chất liệu 100% cotton; cách giặt Giặt tay; bảng size M 50-58kg;',
+    );
+    expect(withCard).toContain('bảo hành Đổi size 7 ngày; xuất xứ Việt Nam; mô tả Áo mềm.');
+    expect(withCard).not.toContain('99k');
+    expect(withCard.startsWith(productFactText(shirt).replace(/\.$/, ''))).toBe(true);
+    expect(productFactText({ ...shirt, card: {} })).toBe(productFactText(shirt));
+  });
+
   it('mentionsOfProducts: tên trọn vẹn, tên gần đúng, không liên quan', () => {
     const names = ['Áo thun basic', 'Váy hoa nhí vintage', 'Túi'];
     expect(mentionsOfProducts('Áo thun basic giá bao nhiêu?', names)).toEqual(['Áo thun basic']);

@@ -99,8 +99,10 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
     grantedScope = scopeOf(exchanged.scope);
     stage = 'catalog';
     const catalog = await deps.fetchCatalog(stored.shopDomain, accessToken);
+    const plan = deps.buildPlan(catalog);
     detail = {
-      ...(await deps.apply(deps.buildPlan(catalog))),
+      ...(await deps.apply(plan)),
+      ...currencyWarning(catalog.currencyCode, plan),
       ...(await syncPolicies(deps, stored.shopDomain, accessToken)),
       ...(grantedScope === null ? {} : { scope: grantedScope }),
     };
@@ -127,6 +129,25 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
   }
   await deps.record(result, detail);
   return result;
+}
+
+/**
+ * Cửa hàng dùng tiền tệ khác VND: giá để trống (đã làm ở `parseShopifyMoney`), KHÔNG quy đổi (nguyên tắc #4). Ghi mã tiền tệ
+ * (chỉ 3 chữ cái hoa, còn lại `OTHER`) và số biến thể chưa có giá để trang kết nối cảnh báo Owner. VND → không ghi gì.
+ */
+export function currencyWarning(
+  currencyCode: string,
+  plan: ReadonlyArray<{ variants: ReadonlyArray<{ priceVnd: number | null }> }>,
+): { currencyUnsupported: string; variantsWithoutPrice: number } | Record<string, never> {
+  if (currencyCode === 'VND') return {};
+  const variantsWithoutPrice = plan.reduce(
+    (sum, product) => sum + product.variants.filter((variant) => variant.priceVnd === null).length,
+    0,
+  );
+  return {
+    currencyUnsupported: /^[A-Z]{3}$/.test(currencyCode) ? currencyCode : 'OTHER',
+    variantsWithoutPrice,
+  };
 }
 
 /**
