@@ -28,6 +28,10 @@ export function missingAxesOf(product: TryProduct): VariantAxis[] {
   return (['size', 'color'] as const).filter((axis) => distinct(axis) > 1);
 }
 
+/** Có ít nhất một giá (sản phẩm hoặc biến thể). Không có → không trả lời được câu hỏi giá (nguyên tắc #4, không quy đổi). */
+export const hasPrice = (product: TryProduct): boolean =>
+  product.priceVnd !== null || product.variants.some((v) => v.priceVnd !== null);
+
 const stockText = (stock: number | null): string | null =>
   stock === null ? null : stock > 0 ? `còn ${stock}` : 'hết hàng';
 
@@ -117,6 +121,7 @@ export function createDbProductKnowledge(tx: Database, workspaceId: string): DbP
           text: unsafeMarkMasked(productFactText(product)),
           score: 1,
           topics: ['product_info', 'size'],
+          ...(hasPrice(product) ? {} : { priceUnknown: true }),
         }),
       );
     },

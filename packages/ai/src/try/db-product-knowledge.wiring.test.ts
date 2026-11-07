@@ -55,6 +55,21 @@ describe('TRY-AI-REAL createDbProductKnowledge (nối DB, hàm DB được giả
     expect(await knowledge.matchProducts(['xyz'])).toEqual({ ids: [], names: [], missingAxes: [] });
   });
 
+  it('sản phẩm chưa có giá (tiền tệ khác VND) → nguồn đánh dấu priceUnknown; có giá thì không', async () => {
+    const noPrice: TryProduct = {
+      ...shirt,
+      id: 'p9',
+      priceVnd: null,
+      variants: shirt.variants.map((v) => ({ ...v, priceVnd: null })),
+    };
+    loadTryProducts.mockResolvedValue([noPrice, shirt]);
+    const knowledge = createDbProductKnowledge(tx, 'ws1');
+    const facts = await knowledge.lookupProductFacts(['p9', 'p1']);
+    expect(facts[0]).toMatchObject({ id: 'p9', priceUnknown: true });
+    expect(facts[0]?.text).toContain('chưa có giá');
+    expect(facts[1]?.priceUnknown).toBeUndefined();
+  });
+
   it('lookupProductFacts → nguồn kiểu product, câu nguồn lấy từ dữ liệu', async () => {
     loadTryProducts.mockResolvedValue([shirt]);
     const knowledge = createDbProductKnowledge(tx, 'ws1');

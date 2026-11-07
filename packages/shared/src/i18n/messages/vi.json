@@ -1883,6 +1883,7 @@
         },
         "connectedLine": "Cửa hàng {domain} · chỉ đọc sản phẩm, giá, tồn kho",
         "lastSynced": "Đồng bộ lần cuối: {time}",
+        "currencyWarning": "Cửa hàng Shopify đang dùng tiền tệ {currency}. CommentFlow chỉ đọc giá bằng VND và KHÔNG tự quy đổi tiền tệ, nên {variants} biến thể chưa có giá; khi khách hỏi giá, AI sẽ chuyển hướng cho nhân viên thay vì tự báo giá. Tên, tồn kho và thông tin sản phẩm vẫn đồng bộ bình thường.",
         "connect": "Kết nối Shopify",
         "reconnect": "Nhập lại Client ID/secret",
         "disconnect": "Ngắt kết nối",

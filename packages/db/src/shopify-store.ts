@@ -29,6 +29,13 @@ export type ShopifySyncDetail = Partial<ShopifySyncSummary> & {
   /** Số chính sách cửa hàng đã nạp/cập nhật; `policiesSkipped` = bỏ qua (thiếu quyền read_legal_policies hoặc lỗi tạm). */
   policiesUpdated?: number;
   policiesSkipped?: true;
+  /**
+   * Cửa hàng dùng tiền tệ KHÁC VND (mã 3 chữ cái hoa, hoặc `OTHER`): giá để TRỐNG, không quy đổi (nguyên tắc #4); Owner được
+   * cảnh báo, AI chuyển hướng khi khách hỏi giá. Không có khóa này = VND.
+   */
+  currencyUnsupported?: string;
+  /** Số biến thể chưa có giá ở lần đồng bộ này (chỉ ghi kèm `currencyUnsupported`). */
+  variantsWithoutPrice?: number;
   reason?: string;
   /** Danh sách quyền token được cấp (`read_products,read_inventory…`, đã lọc ký tự) — để chẩn đoán thiếu quyền. */
   scope?: string;
