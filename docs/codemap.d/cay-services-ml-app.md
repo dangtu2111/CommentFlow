@@ -1,0 +1,1 @@
+| `services/ml/app/main.py` · `embedding.py` · `tests/test_embed.py` · `services/ml/Dockerfile` | Dịch vụ `ml`: `/health` và `POST /embed` (BAAI/bge-m3, 1024 chiều, nạp lười, Bearer tùy chọn `ML_API_TOKEN`, bật bằng `ML_EMBED_ENABLED=true`); `sentence-transformers` + `torch` bản CPU là extra `embed` (CI Python không cài); model cache ở volume `ml-models` | 09 §2 · 12 §8 |

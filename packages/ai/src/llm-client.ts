@@ -35,6 +35,10 @@ export type LlmCallInput = {
   messages: LlmMessage[];
   maxTokens?: number;
   temperature?: number;
+  /** Xin logprob của token đầu ra (nếu nhà cung cấp hỗ trợ) để tính `p_label` (docs/09 §6.0). */
+  logprobs?: boolean;
+  /** Structured output gốc (`response_format: json_schema`, strict) — LiteLLM bỏ nếu model không hỗ trợ (drop_params). */
+  responseFormat?: { name: string; schema: Record<string, unknown> };
   draftId?: string;
 };
 
@@ -47,6 +51,8 @@ export type LlmCallResult = {
   costUsd: number;
   cacheHit: boolean;
   usageId: string;
+  /** Logprob từng token đầu ra, chỉ khi đã xin và nhà cung cấp trả về. */
+  logprobs?: Array<{ token: string; logprob: number }>;
 };
 
 export type LlmClientOptions = {
@@ -79,12 +85,30 @@ const inputSchema = z.object({
     .min(1),
   maxTokens: z.number().int().positive().max(32_768).optional(),
   temperature: z.number().min(0).max(2).optional(),
+  logprobs: z.boolean().optional(),
+  responseFormat: z
+    .object({
+      name: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
+      schema: z.record(z.string(), z.unknown()),
+    })
+    .optional(),
   draftId: z.uuid().optional(),
 });
 
 const responseSchema = z.object({
   model: z.string().optional(),
-  choices: z.array(z.object({ message: z.object({ content: z.string().nullable() }) })).min(1),
+  choices: z
+    .array(
+      z.object({
+        message: z.object({ content: z.string().nullable() }),
+        logprobs: z
+          .object({
+            content: z.array(z.object({ token: z.string(), logprob: z.number() })).nullable(),
+          })
+          .nullish(),
+      }),
+    )
+    .min(1),
   usage: z
     .object({
       prompt_tokens: z.number().int().nonnegative().default(0),
@@ -139,6 +163,19 @@ export function createLlmClient(options: LlmClientOptions) {
             messages: input.messages.map(toWireMessage),
             ...(input.maxTokens !== undefined ? { max_tokens: input.maxTokens } : {}),
             ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
+            ...(input.logprobs ? { logprobs: true } : {}),
+            ...(input.responseFormat
+              ? {
+                  response_format: {
+                    type: 'json_schema',
+                    json_schema: {
+                      name: input.responseFormat.name,
+                      strict: true,
+                      schema: input.responseFormat.schema,
+                    },
+                  },
+                }
+              : {}),
             user: input.workspaceId,
             metadata: {
               workspace_id: input.workspaceId,
@@ -189,6 +226,9 @@ export function createLlmClient(options: LlmClientOptions) {
         costUsd: costFromHeaders(response.headers),
         // LiteLLM chỉ gắn x-litellm-cache-key khi trả từ cache.
         cacheHit: response.headers.has('x-litellm-cache-key'),
+        ...(body.choices[0]?.logprobs?.content
+          ? { logprobs: body.choices[0].logprobs.content }
+          : {}),
       };
 
       try {

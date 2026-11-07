@@ -10,9 +10,11 @@ import {
   maskPii,
   type RuleFilterReason,
   ruleFilter,
+  unsafeMarkMasked,
 } from '@flow/shared';
 import { primaryLabel } from '../classify/extract-result';
 import type { Extractor } from '../classify/extractor';
+import { resolveLabelProbability } from '../classify/label-signal';
 import { assessDraft } from '../confidence/assess-draft';
 import type { ConfidenceResult } from '../confidence/confidence';
 import {
@@ -25,7 +27,8 @@ import type { DraftSource, DraftVoice } from '../draft/draft-prompt';
 import type { DraftLang, DraftResult } from '../draft/draft-result';
 import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
 import { checkGuardMoney, type GuardViolation } from '../guard-money';
-import { normalizeAndDetectLang } from '../normalize/normalize-lang';
+import { checkReplyGuard, type ReplyGuardViolation } from '../guard-reply';
+import { type AbbreviationDict, normalizeAndDetectLang } from '../normalize/normalize-lang';
 import { executeRoute } from '../route/execute-route';
 import { type RouteKind, type RouteReason, routeQuery } from '../route/route';
 import { classifyAsk } from '../route/route-topics';
@@ -68,6 +71,11 @@ export type TryInput = {
   voice: DraftVoice;
   /** Cho biết kết quả "nếu Owner bật tự gửi". */
   autoSendEnabled: boolean;
+  /**
+   * Từ điển viết tắt (hệ thống + workspace, `loadAbbreviationEntries`) để mở "bn"→"bao nhiêu", "sz"→"size" trước khi
+   * extract/tìm kiếm. Thiếu → không mở viết tắt (nơi gọi chịu trách nhiệm nạp).
+   */
+  dict?: AbbreviationDict;
 };
 
 export type TryDeps = { extractor: Extractor; drafter: Drafter; knowledge: TryKnowledge };
@@ -80,7 +88,7 @@ export type TryResult =
       maskedText: string;
       lang: DraftLang | 'other';
       label: CommentLabel;
-      labels: ReadonlyArray<{ label: CommentLabel; confidence: number }>;
+      labels: ReadonlyArray<{ label: CommentLabel }>;
       route: RouteKind;
       routeReason: RouteReason;
       decision: ActionDecision;
@@ -90,7 +98,12 @@ export type TryResult =
       /** Mọi nguồn ứng viên theo điểm giảm dần; `used` = nằm trong `draft.sources`. */
       candidates: Array<TryCandidate & { used: boolean }>;
       confidence: ConfidenceResult;
-      guard: { ok: boolean; violations: GuardViolation[] };
+      guard: {
+        ok: boolean;
+        violations: GuardViolation[];
+        /** Vi phạm về nguồn của từng ý, ngôn ngữ, độ dài, xưng hô (docs/09 §4). */
+        replyViolations: ReplyGuardViolation[];
+      };
       autoSend: AutoSendPreview;
     };
 
@@ -119,10 +132,13 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
   if (filtered.skip) return { status: 'skipped', billed: false, reason: filtered.reason };
 
   const masked = maskPii(text);
-  const normalized = normalizeAndDetectLang({ text: masked });
+  const normalized = normalizeAndDetectLang({ text: masked, dict: input.dict });
   const lang: DraftLang | 'other' = normalized.lang;
 
-  const extract = await deps.extractor.extract({ workspaceId: input.workspaceId, text: masked });
+  // extract và tìm kiếm nhận văn bản ĐÃ chuẩn hóa (viết tắt "bn"→"bao nhiêu", "sz"→"size"…) SAU KHI che PII
+  // (docs/09 §4); câu soạn trả lời vẫn dựa trên bản đã che gốc để giữ giọng khách.
+  const forModel = unsafeMarkMasked(normalized.normalized);
+  const extract = await deps.extractor.extract({ workspaceId: input.workspaceId, text: forModel });
   const label = primaryLabel(extract);
   const products = await deps.knowledge.matchProducts(extract.product_mentions);
   const routed = routeQuery({ extract, resolvedProductIds: products.ids });
@@ -130,7 +146,7 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
   const outcome = await executeRoute(routed.route, {
     sql: () => deps.knowledge.lookupProductFacts(products.ids),
     hybrid: () =>
-      deps.knowledge.searchKb(masked, {
+      deps.knowledge.searchKb(forModel, {
         lang: lang === 'other' ? 'vi' : lang,
         productIds: products.ids,
       }),
@@ -165,10 +181,20 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   const guardResult = checkGuardMoney({ reply: draft.reply, sources: used.map((c) => c.text) });
+  const replyGuard = checkReplyGuard({
+    reply: draft.reply,
+    lang: lang === 'other' ? 'vi' : lang,
+    voice: input.voice,
+    claims: draft.claims,
+    allowedSourceIds: new Set(
+      found.filter((c) => c.score >= DEFAULT_MIN_RELEVANCE).map((c) => c.id),
+    ),
+  });
   const confidence = assessDraft({
     outcome: { ok: true, draft },
     signals: {
-      pLabel: extract.labels[0]?.confidence ?? null,
+      // `p_label` từ ml → logprob → tự nhất quán, KHÔNG từ số model tự ghi (docs/09 §6.0).
+      pLabel: resolveLabelProbability(extract.labelSignal).pLabel,
       sProduct: products.names.length === 1 ? 1 : products.names.length > 1 ? 0.5 : 0,
       sRetrievalTop1: found[0]?.score ?? null,
       sRetrievalTop2: found[1]?.score ?? null,
@@ -195,13 +221,17 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
     draft,
     candidates: found.map((c) => ({ ...c, used: usedIds.has(c.id) })),
     confidence,
-    guard: { ok: guardResult.ok, violations: guardResult.violations },
+    guard: {
+      ok: guardResult.ok && replyGuard.ok,
+      violations: guardResult.violations,
+      replyViolations: replyGuard.violations,
+    },
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,
       decision,
       draft,
       confidence,
-      guardOk: guardResult.ok,
+      guardOk: guardResult.ok && replyGuard.ok,
     }),
   };
 }

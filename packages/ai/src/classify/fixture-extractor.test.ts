@@ -9,7 +9,7 @@ describe('FR-027 bản mock theo fixture', () => {
   const extractor = createFixtureExtractor([
     {
       match: /giá/i,
-      result: { ...FIXTURE_EXTRACT_DEFAULT, labels: [{ label: 'price', confidence: 0.95 }] },
+      result: { ...FIXTURE_EXTRACT_DEFAULT, labels: [{ label: 'price' }] },
     },
   ]);
   it('khớp fixture → trả kết quả cố định', async () => {

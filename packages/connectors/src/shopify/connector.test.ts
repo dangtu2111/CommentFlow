@@ -309,6 +309,31 @@ describe('FR-052 Shopify connector — giới hạn tốc độ và lỗi', () =
     expect(error.message).not.toContain(SHOP_DOMAIN);
   });
 
+  it('ACCESS_DENIED kèm thông điệp → ghi tên trường + quyền bị thiếu (danh sách trắng); không lộ thông điệp thô', async () => {
+    const { connector } = harness([
+      jsonResponse({
+        errors: [
+          {
+            message:
+              'Access denied for onlineStoreUrl field. Required access: `read_publications` access scope. <script>x</script>',
+            extensions: { code: 'ACCESS_DENIED' },
+          },
+        ],
+      }),
+    ]);
+    const error = await failureOf(connector.fetchCatalog());
+    expect(error.code).toBe('PERMISSION');
+    expect(error.message).toBe(
+      'shopify_access_denied:field_onlineStoreUrl:scope_read_publications',
+    );
+    const lone = harness([
+      jsonResponse({
+        errors: [{ message: 'Access denied', extensions: { code: 'ACCESS_DENIED' } }],
+      }),
+    ]);
+    expect((await failureOf(lone.connector.fetchCatalog())).message).toBe('shopify_access_denied');
+  });
+
   it('FR-052 ACCESS_DENIED trong errors → PERMISSION; lỗi GraphQL khác → UNKNOWN', async () => {
     const { connector } = harness([
       jsonResponse({ errors: [{ extensions: { code: 'ACCESS_DENIED' } }] }),

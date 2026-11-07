@@ -12,7 +12,7 @@ function base(over: Partial<DecideActionInput> = {}): DecideActionInput {
   return {
     lang: 'vi',
     extract: {
-      labels: [{ label: 'price', confidence: 0.9 }],
+      labels: [{ label: 'price' }],
       refers_to_image: false,
       size: null,
       color: null,

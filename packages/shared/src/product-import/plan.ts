@@ -19,6 +19,8 @@ export type ImportProductPlan = {
   name: string;
   category: string | null;
   url: string | null;
+  /** Ảnh đại diện (URL https từ nguồn ngoài); thiếu/`null` = không có ảnh. */
+  imageUrl?: string | null;
   searchText: string;
   priceVnd: number | null;
   compareAtVnd: number | null;

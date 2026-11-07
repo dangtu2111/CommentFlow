@@ -48,9 +48,11 @@ export type DraftResult = z.output<typeof draftResultSchema>;
 
 const FENCE = /^```[a-z]*\s*|\s*```$/gi;
 
+export const DRAFT_UNREADABLE_MESSAGE = 'Câu trả lời soạn của AI không đọc được.';
+
 function unreadable(): AppError {
   // Không đính kèm đầu ra thô hay nội dung khách vào thông báo (nguyên tắc #6).
-  return new AppError('LLM_UNAVAILABLE', 'Câu trả lời soạn của AI không đọc được.');
+  return new AppError('LLM_UNAVAILABLE', DRAFT_UNREADABLE_MESSAGE);
 }
 
 /** Lấy object JSON đầu ra LLM (bỏ hàng rào ```json và chữ thừa), kiểm schema. */

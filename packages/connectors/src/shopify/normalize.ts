@@ -34,6 +34,12 @@ const httpUrlOrNull = (raw: string | null): string | null => {
   }
 };
 
+/** Ảnh chỉ nhận https (CDN Shopify); dạng khác → không có ảnh. */
+const httpsUrlOrNull = (raw: string | null): string | null => {
+  const url = httpUrlOrNull(raw);
+  return url !== null && url.startsWith('https://') ? url : null;
+};
+
 /** Tồn chỉ khi cửa hàng theo dõi tồn và số hợp lệ (≥ 0); ngược lại không biết → `null`. */
 const stockOf = (variant: ShopifyVariant): number | null =>
   variant.tracked &&
@@ -74,6 +80,7 @@ function toProduct(product: ShopifyProduct, currencyCode: string): ImportProduct
     name: product.title,
     category: product.productType === '' ? null : product.productType,
     url: httpUrlOrNull(product.onlineStoreUrl),
+    imageUrl: httpsUrlOrNull(product.imageUrl),
     // Chỉ tên + SKU + thuộc tính; KHÔNG giá/tồn (nguyên tắc #4, FR-056).
     searchText: productSearchText({
       name: product.title,

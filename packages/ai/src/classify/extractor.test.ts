@@ -1,14 +1,17 @@
 import { isAppError, maskPii } from '@flow/shared';
 import { describe, expect, it } from 'vitest';
 import type { LlmCallInput, LlmCallResult, LlmClient } from '../llm-client';
-import { createLlmExtractor, EXTRACT_PROMPT_VERSION, EXTRACT_STEP } from './extractor';
+import {
+  createLlmExtractor,
+  EXTRACT_PROMPT_VERSION,
+  EXTRACT_STEP,
+  type Extractor,
+  withSelfConsistency,
+} from './extractor';
 
 const WS = '11111111-1111-4111-8111-111111111111';
 const good = JSON.stringify({
-  labels: [
-    { label: 'price', confidence: 0.9 },
-    { label: 'complaint', confidence: 0.4 },
-  ],
+  labels: [{ label: 'price' }, { label: 'complaint' }],
   product_mentions: ['áo thun'],
   refers_to_image: true,
   size: 'M',
@@ -21,7 +24,7 @@ const good = JSON.stringify({
   asks: ['giá'],
 });
 
-function fakeLlm(text: string | Error) {
+function fakeLlm(text: string | Error, logprobs?: LlmCallResult['logprobs']) {
   const calls: LlmCallInput[] = [];
   const llm = {
     async call(input: LlmCallInput): Promise<LlmCallResult> {
@@ -36,6 +39,7 @@ function fakeLlm(text: string | Error) {
         costUsd: 0,
         cacheHit: false,
         usageId: 'u1',
+        ...(logprobs ? { logprobs } : {}),
       };
     },
   } as LlmClient;
@@ -96,5 +100,85 @@ describe('FR-027/FR-162 extractor LLM', () => {
     await expect(
       createLlmExtractor({ llm, model: 'm' }).extract({ workspaceId: WS, text: maskPii('x') }),
     ).rejects.toThrow('mạng');
+  });
+});
+
+describe('09 §6.0 p_label từ logprob / tự nhất quán (không dùng số model tự ghi)', () => {
+  it('có logprob → labelSignal.logprob = xác suất của giá trị nhãn chính, và xin logprobs', async () => {
+    const { llm, calls } = fakeLlm(good, [
+      { token: '{"labels":[{"label":"', logprob: -0.01 },
+      { token: 'price', logprob: Math.log(0.7) },
+      { token: '"}]}', logprob: -0.1 },
+    ]);
+    const r = await createLlmExtractor({ llm, model: 'nho' }).extract({
+      workspaceId: WS,
+      text: maskPii('giá bao nhiêu'),
+    });
+    expect(calls[0]?.logprobs).toBe(true);
+    expect(r.labelSignal?.logprob).toBeCloseTo(0.7, 5);
+  });
+
+  it('không có logprob → không có tín hiệu (không đoán)', async () => {
+    const { llm } = fakeLlm(good);
+    const r = await createLlmExtractor({ llm, model: 'nho' }).extract({
+      workspaceId: WS,
+      text: maskPii('giá bao nhiêu'),
+    });
+    expect(r.labelSignal).toBeUndefined();
+  });
+
+  const input = { workspaceId: WS, text: maskPii('ship bao lâu') };
+  const outcome = (label: 'price' | 'advice', signal?: object) =>
+    ({
+      ...JSON.parse(good),
+      labels: [{ label }],
+      ...(signal ? { labelSignal: signal } : {}),
+    }) as Awaited<ReturnType<Extractor['extract']>>;
+
+  it('withSelfConsistency: đã có logprob/ml → KHÔNG gọi thêm', async () => {
+    let calls = 0;
+    const base: Extractor = {
+      async extract() {
+        calls += 1;
+        return outcome('price', { logprob: 0.8 });
+      },
+    };
+    const r = await withSelfConsistency(base).extract(input);
+    expect(calls).toBe(1);
+    expect(r.labelSignal).toEqual({ logprob: 0.8 });
+  });
+
+  it('withSelfConsistency: thiếu tín hiệu → chạy thêm, consistency = tỉ lệ trùng nhãn chính', async () => {
+    const sequence = ['advice', 'price'] as const;
+    let i = 0;
+    const base: Extractor = {
+      async extract() {
+        return outcome(sequence[i++ % 2] as 'price' | 'advice');
+      },
+    };
+    const r = await withSelfConsistency(base).extract(input);
+    expect(r.labelSignal?.consistency).toBe(0.5);
+    expect(r.labels[0]?.label).toBe('advice');
+  });
+
+  it('withSelfConsistency: lần chạy phụ hỏng không làm hỏng kết quả (lần đó bị bỏ)', async () => {
+    let i = 0;
+    const base: Extractor = {
+      async extract() {
+        if (i++ > 0) throw new Error('boom');
+        return outcome('advice');
+      },
+    };
+    const r = await withSelfConsistency(base).extract(input);
+    expect(r.labelSignal?.consistency).toBe(1);
+  });
+
+  it('withSelfConsistency: lần chạy ĐẦU hỏng → ném lỗi (không nuốt)', async () => {
+    const base: Extractor = {
+      async extract() {
+        throw new Error('boom');
+      },
+    };
+    await expect(withSelfConsistency(base).extract(input)).rejects.toThrow('boom');
   });
 });

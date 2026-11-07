@@ -18,6 +18,7 @@ import {
   formToPolicy,
   formToShopProfile,
 } from '../../../../lib/kb-content-form';
+import { actionAllowed } from '../../../../server/action-guard';
 import { getDb } from '../../../../server/db';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -25,9 +26,15 @@ import { requireAppUser } from '../../../../server/require-app-user';
  * Nhập kiến thức tay (FR-050, FR-142) — chỉ Owner (Staff nhận 404 ở `requireAppUser`, gọi đầu MỖI action). Workspace và
  * người dùng lấy từ phiên, KHÔNG từ form; id mục từ form chỉ là lựa chọn (kiểm uuid; id lạ hoặc của workspace khác →
  * RLS giấu → `not_found`). Mọi kết thúc chuyển hướng về đúng trang kèm mã thông báo `n`
- * (saved | deleted | invalid | not_found | unavailable).
+ * (saved | deleted | invalid | not_found | unavailable | rate_limited).
  */
-export type KbNotice = 'saved' | 'deleted' | 'invalid' | 'not_found' | 'unavailable';
+export type KbNotice =
+  | 'saved'
+  | 'deleted'
+  | 'invalid'
+  | 'not_found'
+  | 'unavailable'
+  | 'rate_limited';
 
 type Session = { workspaceId: string; userId: string };
 type Tx = Parameters<Parameters<ReturnType<typeof getDb>['withActor']>[2]>[0];
@@ -49,6 +56,8 @@ async function write(
   run: (tx: Tx) => Promise<boolean>,
   done: KbNotice = 'saved',
 ): Promise<never> {
+  // Chống bấm đúp/spam: lần thứ hai trong cùng khoảnh khắc (hoặc quá 30 lần/phút) bị chặn, KHÔNG ghi gì.
+  if (!(await actionAllowed('uiWrite', session))) redirect(`${back}?n=rate_limited`);
   let notice: KbNotice;
   try {
     const found = await getDb().withActor(session.workspaceId, session.userId, run);

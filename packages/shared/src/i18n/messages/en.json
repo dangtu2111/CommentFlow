@@ -1876,7 +1876,66 @@
         "title": "Shopify store connection",
         "body": "Sync products, prices, stock and policies from Shopify.",
         "sync": "Sync now",
-        "scope": "Scope settings"
+        "scope": "Scope settings",
+        "status": {
+          "connected": "Connected",
+          "invalid": "Client ID/secret needs re-entry"
+        },
+        "connectedLine": "Store {domain} · read-only products, prices and stock",
+        "lastSynced": "Last synced: {time}",
+        "connect": "Connect Shopify",
+        "reconnect": "Re-enter Client ID/secret",
+        "disconnect": "Disconnect",
+        "result": {
+          "ok": "The last sync succeeded: {products} products, {variants} variants.",
+          "token_invalid": "Shopify rejected the Client ID/secret (wrong, app not installed or different organization). Re-enter them.",
+          "error": "The last sync hit a temporary error. Try again in a few minutes.",
+          "unavailable": "The server has not turned Shopify sync on, so no data was pulled."
+        },
+        "dialog": {
+          "title": "Connect a Shopify store",
+          "body": "Enter the store domain with the Client ID and Client secret of an app created in the Shopify Dev Dashboard. The Client secret is encrypted and never shown again.",
+          "domain": "Store domain",
+          "domainPlaceholder": "your-store.myshopify.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client secret",
+          "clientSecretHint": "The system uses this pair to get a read-only token (read_products, read_inventory) on every sync.",
+          "step1": "Open the Shopify Dev Dashboard, create an app, grant read_products and read_inventory, then release a version.",
+          "step2": "Install the app on the store (the app and the store must belong to the same organization).",
+          "step3": "Open the app’s Settings, copy the Client ID and Client secret and paste them above.",
+          "submit": "Save connection"
+        },
+        "disconnectDialog": {
+          "title": "Disconnect Shopify?",
+          "body": "The Client secret will be deleted and the system stops pulling data from Shopify. Products already loaded stay as they are. You can reconnect later.",
+          "confirm": "Disconnect"
+        },
+        "notice": {
+          "connected": "Shopify connection saved. Press \"Sync now\" to load products.",
+          "invalid": "The domain, Client ID or Client secret is not valid. The domain must look like your-store.myshopify.com.",
+          "not_configured": "The server has no encryption key (TOKEN_ENC_KEYS), so the Client secret cannot be saved.",
+          "forbidden": "Only the workspace Owner can connect Shopify.",
+          "unavailable": "Could not complete this right now. Please try again.",
+          "sync_queued": "Sync requested. The result appears here in a few seconds — reload to see it.",
+          "sync_recent": "A sync just finished, or there is no usable connection. Try again in about a minute.",
+          "disconnected": "Shopify disconnected. The token was deleted.",
+          "not_found": "There is no Shopify connection to disconnect.",
+          "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again.",
+          "invalid_credentials": "Shopify rejected the Client ID/secret. Check you copied the pair of ONE app (Dev Dashboard › app › Settings) with no extra spaces. Nothing was saved.",
+          "not_permitted": "Shopify says the app is not allowed for this store: the app and the store must belong to the SAME Dev Dashboard organization and the app must be installed on the store. Nothing was saved.",
+          "missing_scopes": "The Client ID/secret are correct but the token Shopify issued does NOT have read_products. In the Dev Dashboard release a version with read_products and read_inventory; then install/update the app permissions on the store and try again. Nothing was saved.",
+          "unreachable": "Could not check with Shopify right now (network or Shopify is busy). Please try again in a few minutes. Nothing was saved."
+        },
+        "reason": {
+          "cannotDecrypt": "The saved Client secret could not be decrypted (the server encryption key changed since it was saved). Re-enter the Client ID and Client secret.",
+          "invalidClient": "Shopify says the Client ID or Client secret is NOT correct. Check you copied the pair of ONE app (Dev Dashboard › app › Settings), with no extra spaces, and that the secret was not rotated.",
+          "exchangeRejected": "Shopify refused to issue a token. Usually the Client ID/secret is wrong, or the app is not installed on this store. Check both.",
+          "notPermitted": "Shopify says the app is not allowed for this store. The app and the store must belong to the SAME organization in the Dev Dashboard, and the app must be installed on the store.",
+          "catalogDenied": "A token was issued (Client ID and secret are CORRECT), but Shopify refused to read products. Usually the app lacks the read_products and read_inventory scopes, or no version with those scopes was released / the app was not reinstalled after the scope change. In Dev Dashboard › app › Versions: add the scopes, release a version, then reinstall the app on the store.",
+          "rateLimited": "Shopify is rate limiting. Try again in a few minutes.",
+          "temporary": "Temporary error talking to Shopify (network or Shopify server). Try again in a few minutes.",
+          "noScopesGranted": "Shopify issued a token but it carries NO scopes at all (empty scope list), so products cannot be read. The app declares scopes but they were not installed/updated on this store. In the Dev Dashboard release the version with the scopes; then in the store’s Shopify Admin › Settings › Apps and sales channels open the app and accept/update the permissions (or uninstall and reinstall the app)."
+        }
       },
       "notConnected": "Not connected",
       "tiles": {
@@ -1905,13 +1964,18 @@
         "hint": "Private note for the AI",
         "empty": "No products yet.",
         "import": "Import products",
-        "price": "{amount}₫"
+        "price": "{amount}₫",
+        "selling": "On sale",
+        "priceLocked": "Synced from the source (manual edits locked)",
+        "embedded": "Vector embeddings: created"
       },
       "playground": {
         "title": "AI playground",
         "body": "Simulate the AI’s reply with the current knowledge.",
-        "example": "Example: “Does the shop offer free shipping on 350k orders?”",
-        "run": "Open playground"
+        "run": "Test",
+        "full": "See full details on the Try AI page",
+        "label": "A customer question to try",
+        "placeholder": "Type a question customers often ask, for example about price, stock or delivery…"
       }
     }
   },
@@ -1924,15 +1988,23 @@
     "placeholder": "E.g. how much is the basic tee, size M, black?",
     "submit": "Try",
     "quota": "{used}/{limit} tries used today",
+    "llm": {
+      "off": "Intent detection and drafting: simulated (real AI is off)",
+      "extractor": "intent detection",
+      "drafter": "reply drafting",
+      "on": "Real AI is running for: {steps}; other steps are simulated"
+    },
     "knowledge": {
       "demo": "Source: sample knowledge (your shop's real knowledge is not connected)",
+      "shop": "Source: the shop’s real products (price/stock/variants read from the product store); policies are still sample text",
       "kb": "Source: your shop's published knowledge — the 0–1 score is the relevance computed by the system"
     },
     "errors": {
       "empty": "Enter a sample comment.",
       "too_long": "Comment is too long (max {max} characters).",
       "limit_reached": "You have used all of today's tries. Come back tomorrow.",
-      "unavailable": "Can't run the test right now. Try again later."
+      "unavailable": "Can't run the test right now. Try again later.",
+      "ai_invalid_output": "Handoff: the AI did not return a valid result. This question would go to a human."
     },
     "skipped": "The comment has only emoji/tags/punctuation, so AI skips it (no classification, no reply, no quota used).",
     "result": {
@@ -2228,7 +2300,8 @@
         "unavailable": "Could not complete this right now. Please try again.",
         "lang_saved": "Channel reply language saved.",
         "check_queued": "Check requested. Results appear on each channel in a few seconds — reload to see them.",
-        "check_recent": "A check just finished, please wait about a minute and try again."
+        "check_recent": "A check just finished, please wait about a minute and try again.",
+        "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again."
       }
     },
     "hub": {
@@ -2728,6 +2801,9 @@
       "channel_reconnected": "Channel reconnected",
       "channel_token_set": "Channel access token updated",
       "channel_token_cleared": "Channel access token removed",
+      "shopify_connected": "Shopify connected",
+      "shopify_reconnected": "Shopify credentials re-entered",
+      "shopify_disconnected": "Shopify disconnected",
       "comment_reply_requested": "Comment reply requested",
       "comment_hide_requested": "Comment hide requested",
       "comment_hide_cancelled": "Comment hide request cancelled",
@@ -2949,7 +3025,8 @@
       "deleted": "Deleted.",
       "invalid": "The information is not valid. Check the required fields (and the website must start with http or https).",
       "not_found": "This item was not found.",
-      "unavailable": "Could not complete this right now. Please try again."
+      "unavailable": "Could not complete this right now. Please try again.",
+      "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again."
     },
     "save": "Save",
     "delete": "Delete",

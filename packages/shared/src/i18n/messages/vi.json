@@ -1876,7 +1876,66 @@
         "title": "Kết nối Shopify Store",
         "body": "Đồng bộ sản phẩm, giá, tồn kho và chính sách từ Shopify.",
         "sync": "Đồng bộ ngay",
-        "scope": "Cài đặt phạm vi"
+        "scope": "Cài đặt phạm vi",
+        "status": {
+          "connected": "Đã kết nối",
+          "invalid": "Cần nhập lại Client ID/secret"
+        },
+        "connectedLine": "Cửa hàng {domain} · chỉ đọc sản phẩm, giá, tồn kho",
+        "lastSynced": "Đồng bộ lần cuối: {time}",
+        "connect": "Kết nối Shopify",
+        "reconnect": "Nhập lại Client ID/secret",
+        "disconnect": "Ngắt kết nối",
+        "result": {
+          "ok": "Lần đồng bộ gần nhất thành công: {products} sản phẩm, {variants} biến thể.",
+          "token_invalid": "Shopify từ chối Client ID/secret (sai, chưa cài ứng dụng hoặc khác tổ chức). Hãy nhập lại.",
+          "error": "Lần đồng bộ gần nhất gặp lỗi tạm thời. Thử lại sau ít phút.",
+          "unavailable": "Máy chủ chưa bật đồng bộ Shopify nên chưa kéo được dữ liệu."
+        },
+        "dialog": {
+          "title": "Kết nối cửa hàng Shopify",
+          "body": "Nhập tên miền cửa hàng cùng Client ID và Client secret của ứng dụng tạo trong Shopify Dev Dashboard. Client secret được mã hóa và không hiển thị lại.",
+          "domain": "Tên miền cửa hàng",
+          "domainPlaceholder": "ten-cua-hang.myshopify.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client secret",
+          "clientSecretHint": "Hệ thống dùng cặp này để lấy token chỉ đọc (read_products, read_inventory) mỗi lần đồng bộ.",
+          "step1": "Mở Shopify Dev Dashboard, tạo ứng dụng và cấp quyền read_products, read_inventory rồi phát hành phiên bản.",
+          "step2": "Cài ứng dụng vào cửa hàng (ứng dụng và cửa hàng phải thuộc cùng một tổ chức).",
+          "step3": "Vào Cài đặt của ứng dụng, sao chép Client ID và Client secret rồi dán vào các ô trên.",
+          "submit": "Lưu kết nối"
+        },
+        "disconnectDialog": {
+          "title": "Ngắt kết nối Shopify?",
+          "body": "Client secret sẽ bị xóa và hệ thống ngừng kéo dữ liệu từ Shopify. Sản phẩm đã nạp vẫn giữ nguyên. Bạn có thể kết nối lại sau.",
+          "confirm": "Ngắt kết nối"
+        },
+        "notice": {
+          "connected": "Đã lưu kết nối Shopify. Bấm \"Đồng bộ ngay\" để nạp sản phẩm.",
+          "invalid": "Tên miền, Client ID hoặc Client secret chưa hợp lệ. Tên miền phải có dạng ten-cua-hang.myshopify.com.",
+          "not_configured": "Máy chủ chưa cấu hình khóa mã hóa (TOKEN_ENC_KEYS) nên chưa lưu được Client secret.",
+          "forbidden": "Chỉ chủ workspace (Owner) mới kết nối được Shopify.",
+          "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
+          "sync_queued": "Đã gửi yêu cầu đồng bộ. Kết quả hiện ở đây sau vài giây — tải lại trang để xem.",
+          "sync_recent": "Vừa đồng bộ xong, hoặc chưa có kết nối đang dùng được. Thử lại sau khoảng 1 phút.",
+          "disconnected": "Đã ngắt kết nối Shopify. Token đã bị xóa.",
+          "not_found": "Chưa có kết nối Shopify nào để ngắt.",
+          "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại.",
+          "invalid_credentials": "Shopify từ chối Client ID/secret. Kiểm tra bạn đã sao chép đúng cặp của MỘT ứng dụng (Dev Dashboard › ứng dụng › Settings), không thừa khoảng trắng. Chưa lưu gì.",
+          "not_permitted": "Shopify báo ứng dụng không được phép dùng cho cửa hàng này: ứng dụng và cửa hàng phải thuộc CÙNG một tổ chức Dev Dashboard và ứng dụng phải đã cài vào cửa hàng. Chưa lưu gì.",
+          "missing_scopes": "Client ID/secret đúng nhưng token Shopify cấp KHÔNG có quyền read_products. Trong Dev Dashboard phát hành phiên bản có quyền read_products, read_inventory; rồi cài/cập nhật quyền ứng dụng trên cửa hàng và thử lại. Chưa lưu gì.",
+          "unreachable": "Chưa kiểm tra được với Shopify lúc này (mạng hoặc Shopify đang bận). Vui lòng thử lại sau ít phút. Chưa lưu gì."
+        },
+        "reason": {
+          "cannotDecrypt": "Không giải mã được Client secret đã lưu (khóa mã hóa ở máy chủ đã thay đổi so với lúc lưu). Hãy nhập lại Client ID và Client secret.",
+          "invalidClient": "Shopify báo Client ID hoặc Client secret KHÔNG đúng. Kiểm tra bạn đã sao chép đúng cặp của MỘT ứng dụng (Dev Dashboard › ứng dụng › Settings), không thừa khoảng trắng, và secret chưa bị xoay.",
+          "exchangeRejected": "Shopify từ chối cấp token. Thường do Client ID/secret sai, hoặc ứng dụng chưa được cài vào cửa hàng này. Kiểm tra lại cả hai.",
+          "notPermitted": "Shopify báo ứng dụng không được phép dùng cho cửa hàng này. Ứng dụng và cửa hàng phải thuộc CÙNG một tổ chức trong Dev Dashboard, và ứng dụng phải đã cài vào cửa hàng.",
+          "catalogDenied": "Đã đổi được token (Client ID và secret ĐÚNG), nhưng Shopify từ chối khi đọc sản phẩm. Thường là ứng dụng chưa được cấp quyền read_products và read_inventory, hoặc chưa phát hành phiên bản có các quyền đó / chưa cài lại sau khi đổi quyền. Vào Dev Dashboard › ứng dụng › Versions: thêm quyền, phát hành phiên bản, rồi cài lại ứng dụng vào cửa hàng.",
+          "rateLimited": "Shopify đang giới hạn tốc độ. Thử lại sau ít phút.",
+          "temporary": "Lỗi tạm thời khi nói chuyện với Shopify (mạng hoặc máy chủ Shopify). Thử lại sau ít phút.",
+          "noScopesGranted": "Shopify đã cấp token nhưng token này KHÔNG mang quyền nào (danh sách quyền rỗng), nên không đọc được sản phẩm. Ứng dụng đã khai báo quyền nhưng chưa được cài/cập nhật quyền trên cửa hàng này. Trong Dev Dashboard, phát hành phiên bản có quyền; rồi vào Shopify Admin của cửa hàng › Cài đặt › Ứng dụng và kênh bán hàng › mở ứng dụng và chấp nhận/cập nhật quyền (hoặc gỡ rồi cài lại ứng dụng)."
+        }
       },
       "notConnected": "Chưa kết nối",
       "tiles": {
@@ -1905,13 +1964,18 @@
         "hint": "Ghi chú riêng cho AI",
         "empty": "Chưa có sản phẩm nào.",
         "import": "Nhập sản phẩm",
-        "price": "{amount}₫"
+        "price": "{amount}₫",
+        "selling": "Đang bán",
+        "priceLocked": "Đồng bộ từ nguồn ngoài (khóa sửa tay)",
+        "embedded": "Vector Embeddings: Đã tạo"
       },
       "playground": {
         "title": "Chạy thử nghiệm AI",
         "body": "Mô phỏng câu AI trả lời với kiến thức hiện tại.",
-        "example": "Ví dụ: “Shop có freeship đơn 350k không?”",
-        "run": "Mở Chạy thử"
+        "run": "Kiểm thử",
+        "full": "Xem chi tiết đầy đủ ở trang Thử AI",
+        "label": "Câu hỏi của khách để thử",
+        "placeholder": "Nhập một câu khách hay hỏi, ví dụ về giá, tồn kho, giao hàng…"
       }
     }
   },
@@ -1924,15 +1988,23 @@
     "placeholder": "Ví dụ: áo thun basic size M màu đen giá bao nhiêu?",
     "submit": "Thử",
     "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
+    "llm": {
+      "off": "Nhận diện ý định và soạn câu: bản mô phỏng (chưa bật AI thật)",
+      "extractor": "nhận diện ý định",
+      "drafter": "soạn câu trả lời",
+      "on": "AI thật đang chạy ở bước: {steps}; các bước còn lại là bản mô phỏng"
+    },
     "knowledge": {
       "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
+      "shop": "Nguồn: sản phẩm thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm); chính sách vẫn là đoạn mẫu",
       "kb": "Nguồn: kiến thức đã xuất bản của shop — điểm 0–1 là độ liên quan do hệ thống tính"
     },
     "errors": {
       "empty": "Hãy nhập một bình luận mẫu.",
       "too_long": "Bình luận quá dài (tối đa {max} ký tự).",
       "limit_reached": "Hôm nay bạn đã dùng hết lượt thử. Hãy quay lại vào ngày mai.",
-      "unavailable": "Không thử được lúc này. Hãy thử lại sau."
+      "unavailable": "Không thử được lúc này. Hãy thử lại sau.",
+      "ai_invalid_output": "Chuyển người: AI không trả kết quả hợp lệ. Câu này sẽ được chuyển cho nhân viên xử lý."
     },
     "skipped": "Bình luận chỉ có biểu tượng/tag/dấu câu nên AI bỏ qua (không phân loại, không trả lời, không trừ lượt).",
     "result": {
@@ -2228,7 +2300,8 @@
         "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
         "lang_saved": "Đã lưu ngôn ngữ trả lời của kênh.",
         "check_queued": "Đã gửi yêu cầu kiểm tra. Kết quả hiện ở từng kênh sau vài giây — tải lại trang để xem.",
-        "check_recent": "Vừa kiểm tra xong, vui lòng đợi khoảng 1 phút rồi thử lại."
+        "check_recent": "Vừa kiểm tra xong, vui lòng đợi khoảng 1 phút rồi thử lại.",
+        "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại."
       }
     },
     "hub": {
@@ -2728,6 +2801,9 @@
       "channel_reconnected": "Kết nối lại kênh",
       "channel_token_set": "Cập nhật mã truy cập kênh",
       "channel_token_cleared": "Xóa mã truy cập kênh",
+      "shopify_connected": "Kết nối Shopify",
+      "shopify_reconnected": "Nhập lại thông tin Shopify",
+      "shopify_disconnected": "Ngắt kết nối Shopify",
       "comment_reply_requested": "Yêu cầu gửi trả lời bình luận",
       "comment_hide_requested": "Yêu cầu ẩn bình luận",
       "comment_hide_cancelled": "Đã hủy yêu cầu ẩn bình luận",
@@ -2949,7 +3025,8 @@
       "deleted": "Đã xóa.",
       "invalid": "Thông tin chưa hợp lệ. Kiểm tra lại các ô bắt buộc (và địa chỉ website phải bắt đầu bằng http hoặc https).",
       "not_found": "Không tìm thấy mục này.",
-      "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại."
+      "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
+      "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại."
     },
     "save": "Lưu",
     "delete": "Xóa",

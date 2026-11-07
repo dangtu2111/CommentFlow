@@ -14,7 +14,10 @@ export type RateAction =
   | 'inviteAccept'
   | 'workspaceCreate'
   | 'phoneOtpSend'
-  | 'phoneOtpVerify';
+  | 'phoneOtpVerify'
+  | 'uiWrite'
+  | 'uiSensitive'
+  | 'uiHeavy';
 
 /** Danh tính của một lần thử. Không có IP (dev không tin header nào) thì xô cần IP bị BỎ QUA — không có khóa chung "unknown". */
 export type RateIdentity = {
@@ -127,6 +130,34 @@ export const RATE_POLICIES: Record<
       { bucket: 'user-phone', needs: ['userId', 'phone'], max: 10, windowSeconds: 15 * 60 },
     ],
     onStoreFailure: 'deny',
+  },
+  // Chống BẤM ĐÚP và spam thao tác giao diện (Server Action của người đã đăng nhập). Ba nhóm; mỗi nhóm có xô "bấm đúp" (tối đa 1
+  // lần trong cửa sổ ngắn: lần thứ hai trong cùng khoảnh khắc bị chặn) cộng trần theo phút/giờ. Kho Valkey lỗi → dùng bộ nhớ
+  // tiến trình (không khóa người dùng vì lỗi hạ tầng). Thao tác ghi thường: sửa/thêm/xóa nội dung, ngôn ngữ trả lời.
+  uiWrite: {
+    buckets: [
+      { bucket: 'user-burst', needs: ['userId'], max: 1, windowSeconds: 1 },
+      { bucket: 'user', needs: ['userId'], max: 30, windowSeconds: 60 },
+      { bucket: 'workspace', needs: ['workspaceId'], max: 120, windowSeconds: 60 },
+    ],
+    onStoreFailure: 'memory',
+  },
+  // Thao tác nhạy cảm/khó hoàn tác: nhập thông tin xác thực nền tảng (Shopify), ngắt kết nối kênh/cửa hàng.
+  uiSensitive: {
+    buckets: [
+      { bucket: 'user-burst', needs: ['userId'], max: 1, windowSeconds: 2 },
+      { bucket: 'user', needs: ['userId'], max: 10, windowSeconds: 10 * 60 },
+    ],
+    onStoreFailure: 'memory',
+  },
+  // Thao tác NẶNG gọi nền tảng ngoài qua worker (đồng bộ Shopify, kiểm tra kết nối kênh): chặn đẩy dồn hàng đợi.
+  uiHeavy: {
+    buckets: [
+      { bucket: 'user-burst', needs: ['userId'], max: 1, windowSeconds: 3 },
+      { bucket: 'workspace', needs: ['workspaceId'], max: 1, windowSeconds: 30 },
+      { bucket: 'workspace-hour', needs: ['workspaceId'], max: 20, windowSeconds: 3600 },
+    ],
+    onStoreFailure: 'memory',
   },
   // Nhận lời mời (chống dò token): 10 lần/15 phút cho mỗi người dùng đã đăng nhập.
   inviteAccept: {

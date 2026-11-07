@@ -179,7 +179,7 @@ describe('FR-033 maskForTrace', () => {
 
 describe('FR-033 fillOrderIntentPhone', () => {
   const base = (orderIntent: ExtractResult['order_intent']): ExtractResult => ({
-    labels: [{ label: 'purchase', confidence: 0.9 }],
+    labels: [{ label: 'purchase' }],
     product_mentions: [],
     refers_to_image: false,
     size: null,

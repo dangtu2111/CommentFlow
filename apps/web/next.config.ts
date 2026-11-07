@@ -16,7 +16,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://cdn.shopify.com",
   "font-src 'self' data:",
   `connect-src 'self'${isProduction ? '' : ' ws: wss:'}`,
   "object-src 'none'",

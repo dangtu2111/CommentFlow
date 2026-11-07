@@ -94,6 +94,29 @@ beforeAll(async () => {
     `INSERT INTO cf.kb_sources (workspace_id, type, title, origin_url) VALUES ($1, 'url', 'Chính sách đổi trả', 'https://a.vn/doi-tra')`,
     [ws],
   );
+  // Dữ liệu MẪU (nhãn [MẪU], do seed dev tạo): trang tổng quan phải bỏ qua, chỉ đếm dữ liệu thật.
+  await admin.query(
+    `INSERT INTO cf.products (workspace_id, name, sku, price_vnd, stock) VALUES ($1, '[MẪU] Túi tote', 'MAU-1', 1, 1)`,
+    [ws],
+  );
+  await admin.query(
+    `INSERT INTO cf.kb_sources (workspace_id, type, title) VALUES ($1, 'faq', '[MẪU] Câu hỏi thường gặp')`,
+    [ws],
+  );
+  await db.withActor(ws, owner, async (tx) => {
+    await createFaqItem(
+      tx,
+      ws,
+      ok(parseFaqItem({ question: '[MẪU] Ship bao lâu?', answer: 'mẫu', lang: 'vi' })),
+    );
+    await createPolicyItem(
+      tx,
+      ws,
+      ok(
+        parsePolicyItem({ kind: 'other', lang: 'all', title: '[MẪU] Chính sách', content: 'mẫu' }),
+      ),
+    );
+  });
 });
 afterAll(async () => {
   await db.close();
@@ -103,7 +126,12 @@ afterAll(async () => {
 describe('đọc kiến thức nhập tay', () => {
   it('listFaqItems: chỉ của workspace, mới sửa trước, đủ trường', async () => {
     const rows = await db.withActor(ws, owner, (tx) => listFaqItems(tx, ws));
-    expect(rows.map((r) => r.question).sort()).toEqual(['Có đổi size không?', 'Ship bao lâu?']);
+    // Trang nhập tay liệt kê MỌI mục (kể cả mục mẫu có nhãn [MẪU]); chỉ trang tổng quan lọc dữ liệu mẫu.
+    expect(rows.map((r) => r.question).sort()).toEqual([
+      'Có đổi size không?',
+      'Ship bao lâu?',
+      '[MẪU] Ship bao lâu?',
+    ]);
     const ship = rows.find((r) => r.question === 'Ship bao lâu?');
     expect(ship).toMatchObject({ answer: '2-3 ngày', lang: 'vi', tags: ['ship'] });
     expect(ship?.updatedAt).toBeInstanceOf(Date);
@@ -120,8 +148,11 @@ describe('đọc kiến thức nhập tay', () => {
           await listBrandVoices(tx, ws),
         ] as const,
     );
-    expect(policies).toHaveLength(1);
-    expect(policies[0]).toMatchObject({ kind: 'return', lang: 'all', title: 'Đổi trả' });
+    expect(policies).toHaveLength(2);
+    expect(policies.find((p) => p.kind === 'return')).toMatchObject({
+      lang: 'all',
+      title: 'Đổi trả',
+    });
     expect(profiles).toHaveLength(1);
     expect(profiles[0]).toMatchObject({ lang: 'vi', name: 'Shop A', website: 'https://a.vn' });
     expect(voices).toHaveLength(1);
@@ -134,7 +165,7 @@ describe('đọc kiến thức nhập tay', () => {
     });
   });
 
-  it('loadKbOverview: đếm đúng (bỏ sản phẩm đã lưu trữ), nguồn và sản phẩm mẫu', async () => {
+  it('loadKbOverview: đếm đúng dữ liệu THẬT (bỏ sản phẩm đã lưu trữ và mọi dòng nhãn [MẪU]), nguồn và sản phẩm xem trước', async () => {
     const overview = await db.withActor(ws, owner, (tx) => loadKbOverview(tx, ws));
     expect(overview.counts).toEqual({
       products: 1,

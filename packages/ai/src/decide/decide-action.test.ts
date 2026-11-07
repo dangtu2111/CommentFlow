@@ -25,7 +25,7 @@ function base(over: Partial<DecideActionInput> = {}): DecideActionInput {
   return {
     lang: 'vi',
     extract: {
-      labels: [{ label: 'price', confidence: 0.9 }],
+      labels: [{ label: 'price' }],
       refers_to_image: false,
       size: null,
       color: null,
@@ -84,7 +84,7 @@ describe('FR-147 decideAction — bậc 2: hỏi lại khách (thiếu thông ti
   it('nhiều sản phẩm nhưng khách chỉ hỏi chính sách giao hàng → không hỏi mẫu, trả lời', () => {
     const d = decideAction(
       base({
-        extract: { ...base().extract, labels: [{ label: 'advice', confidence: 0.8 }] },
+        extract: { ...base().extract, labels: [{ label: 'advice' }] },
         products: { candidates: ['Áo A', 'Áo B'], missingAxes: [] },
         topics: [{ topic: 'shipping', sourced: true }],
       }),
@@ -120,7 +120,7 @@ describe('FR-147 decideAction — bậc 2: hỏi lại khách (thiếu thông ti
 
   it('hỏi size có bảng size nhưng thiếu chiều cao hoặc cân nặng → hỏi số đo (FR-149)', () => {
     const noMeasure = base({
-      extract: { ...base().extract, labels: [{ label: 'advice', confidence: 0.8 }] },
+      extract: { ...base().extract, labels: [{ label: 'advice' }] },
       topics: [{ topic: 'size', sourced: true }],
     });
     const d = decideAction(noMeasure);
@@ -357,10 +357,7 @@ describe('FR-147 decideAction — bậc 4: chuyển người khi có rủi ro (l
       {
         extract: {
           ...base().extract,
-          labels: [
-            { label: 'price', confidence: 0.7 },
-            { label: 'complaint', confidence: 0.3 },
-          ],
+          labels: [{ label: 'price' }, { label: 'complaint' }],
         },
       },
       'complaint',
@@ -420,10 +417,7 @@ describe('FR-147 FR-032 decideAction — đầu vào không đọc được → 
     ['không phải object', 'xin chào'],
     ['null', null],
     ['thiếu extract', { lang: 'vi' }],
-    [
-      'nhãn lạ',
-      broken({ extract: { ...base().extract, labels: [{ label: 'vip', confidence: 1 }] } }),
-    ],
+    ['nhãn lạ', broken({ extract: { ...base().extract, labels: [{ label: 'vip' }] } })],
     ['không có nhãn', broken({ extract: { ...base().extract, labels: [] } })],
     ['đếm âm', broken({ thread: { clarifyCount: -1, repeatCount: 0 } })],
     ['chủ đề lạ', broken({ topics: [{ topic: 'vat', sourced: true }] })],

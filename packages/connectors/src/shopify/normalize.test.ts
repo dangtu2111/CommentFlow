@@ -25,6 +25,7 @@ const product = (over: Partial<ShopifyProduct> = {}): ShopifyProduct => ({
   status: 'ACTIVE',
   productType: 'Áo',
   onlineStoreUrl: 'https://demo-shop.myshopify.com/products/ao-thun',
+  imageUrl: 'https://cdn.shopify.com/s/files/1/demo/ao-thun.jpg',
   variants: [variant()],
   ...over,
 });
@@ -185,6 +186,25 @@ describe('FR-052 buildShopifyImportPlan', () => {
     expect(plans[2]?.url).toBeNull();
     expect(plans[0]).toMatchObject({ url: null, category: null });
     expect(plans[1]?.url).toBeNull();
+  });
+
+  it('KB-PRODUCT-IMAGE ảnh chỉ nhận https; null/http/dạng lạ → không có ảnh', () => {
+    const plans = buildShopifyImportPlan(
+      catalog([
+        product({ id: 'a' }),
+        product({ id: 'b', imageUrl: null }),
+        product({ id: 'c', imageUrl: 'http://cdn.example.com/x.jpg' }),
+        product({ id: 'd', imageUrl: 'javascript:alert(1)' }),
+        product({ id: 'e', imageUrl: 'data:image/png;base64,AAAA' }),
+      ]),
+    );
+    expect(plans.map((p) => p.imageUrl)).toEqual([
+      'https://cdn.shopify.com/s/files/1/demo/ao-thun.jpg',
+      null,
+      null,
+      null,
+      null,
+    ]);
   });
 
   it('FR-052 search_text có tên/SKU/thuộc tính, KHÔNG có giá/tồn', () => {

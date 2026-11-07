@@ -3,6 +3,7 @@
  * `CF_LANE`), không bao giờ `cf_dev`. Hàm thuần — không đọc file, không in giá trị biến (chỉ nêu TÊN biến thiếu).
  */
 
+import { randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -80,6 +81,8 @@ export function buildE2eEnv(source, { port, lane }) {
     PHONE_VERIFY_ENABLED: 'true',
     NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED: 'true',
     SMS_MOCK_OUTBOX_FILE: join(tmpdir(), `cf-e2e-sms-outbox-${port}.jsonl`),
+    // Kết nối Shopify mã hóa Client secret bằng TOKEN_ENC_KEYS: E2E tự sinh khóa dùng một lần (không commit) khi môi trường chưa có.
+    TOKEN_ENC_KEYS: source.TOKEN_ENC_KEYS || `v1:${randomBytes(32).toString('hex')}`,
     BETTER_AUTH_URL: baseUrl,
     E2E_BASE_URL: baseUrl,
     PORT: String(port),

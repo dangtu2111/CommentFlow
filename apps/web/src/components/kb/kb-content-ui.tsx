@@ -9,7 +9,14 @@ import { TwSubmit } from '../settings/tw/dialog';
  * Thành phần dùng chung cho các trang nhập kiến thức tay (Thông tin cửa hàng, Chính sách, FAQ, Giọng văn). Trình bày
  * thuần bằng Tailwind (bọc trong `.tw`); dữ liệu và quyền do trang/Server Action quyết định.
  */
-const NOTICES = ['saved', 'deleted', 'invalid', 'not_found', 'unavailable'] as const;
+const NOTICES = [
+  'saved',
+  'deleted',
+  'invalid',
+  'not_found',
+  'unavailable',
+  'rate_limited',
+] as const;
 
 /** Mã thông báo `?n=` hợp lệ hoặc `null` (bỏ qua giá trị lạ). */
 export function kbNoticeOf(value: string | string[] | undefined): KbNotice | null {

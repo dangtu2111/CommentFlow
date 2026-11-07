@@ -21,7 +21,17 @@ describe('loadConfig', () => {
       kbReembedEnabled: false,
       messenger: { enabled: false },
       tiktok: { enabled: false },
+      shopify: { enabled: false, apiVersion: undefined },
     });
+  });
+
+  it('cờ SHOPIFY_ENABLED mặc định TẮT; chỉ đúng chữ "true" mới bật; đọc SHOPIFY_API_VERSION', () => {
+    const shopify = (value?: string, apiVersion?: string) =>
+      loadConfig({ DATABASE_WORKER_URL, SHOPIFY_ENABLED: value, SHOPIFY_API_VERSION: apiVersion })
+        .shopify;
+    expect(shopify()).toEqual({ enabled: false, apiVersion: undefined });
+    expect(shopify('1').enabled).toBe(false);
+    expect(shopify('true', ' 2026-01 ')).toEqual({ enabled: true, apiVersion: '2026-01' });
   });
 
   it('FR-094 cờ WORKSPACE_DELETE_ENABLED mặc định TẮT; chỉ đúng chữ "true" mới bật', () => {

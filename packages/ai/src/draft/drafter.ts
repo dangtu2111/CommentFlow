@@ -1,5 +1,6 @@
 import { REASON_HANDOFF_ACTION } from '../confidence/confidence';
 import type { LlmClient } from '../llm-client';
+import { DRAFT_RESPONSE_FORMAT } from '../llm-output';
 import { guardVariants } from '../variation/variation';
 import { type ActionBrief, buildDraftMessages, type DraftInput } from './draft-prompt';
 import {
@@ -57,7 +58,9 @@ export function createLlmDrafter(options: { llm: LlmClient; model: string }): Dr
         promptVersion: DRAFT_PROMPT_VERSION,
         messages: buildDraftMessages({ ...input, sources }),
         temperature: DRAFT_TEMPERATURE,
-        maxTokens: 1200,
+        // Đủ chỗ cho model suy luận + 3–5 biến thể; chỉ trả tiền phần dùng thật.
+        maxTokens: 3000,
+        responseFormat: DRAFT_RESPONSE_FORMAT,
         draftId: input.draftId,
       });
       const checked = enforceClaimSources(

@@ -45,10 +45,11 @@ export async function applyProductSourceSync(
   for (const product of plan) {
     const upserted = await tx.execute<{ id: string; inserted: boolean }>(sql`
       INSERT INTO cf.products AS p (workspace_id, source, external_id, name, price_vnd, compare_at_vnd, stock,
-                                    variants, url, category, search_text, locked_fields, updated_from_source_at)
+                                    variants, url, image_url, category, search_text, locked_fields,
+                                    updated_from_source_at)
       VALUES (${workspaceId}::uuid, ${source}, ${product.externalId}, ${product.name}, ${product.priceVnd},
               ${product.compareAtVnd}, ${product.stock}, ${JSON.stringify(product.variantsSnapshot)}::jsonb,
-              ${product.url}, ${product.category}, ${product.searchText}, ${locked}, ${at}::timestamptz)
+              ${product.url}, ${product.imageUrl ?? null}, ${product.category}, ${product.searchText}, ${locked}, ${at}::timestamptz)
       ON CONFLICT (workspace_id, source, external_id) DO UPDATE SET
         name = EXCLUDED.name,
         search_text = EXCLUDED.search_text,
@@ -56,8 +57,10 @@ export async function applyProductSourceSync(
         compare_at_vnd = EXCLUDED.compare_at_vnd,
         stock = EXCLUDED.stock,
         url = EXCLUDED.url,
+        image_url = EXCLUDED.image_url,
         category = EXCLUDED.category,
         variants = EXCLUDED.variants,
+        status = 'active',
         locked_fields = ARRAY(SELECT DISTINCT unnest(p.locked_fields || EXCLUDED.locked_fields)),
         updated_from_source_at = EXCLUDED.updated_from_source_at,
         updated_at = now()
@@ -88,4 +91,29 @@ export async function applyProductSourceSync(
     }
   }
   return result;
+}
+
+/**
+ * Lưu trữ (`status = 'archived'`, KHÔNG xóa) sản phẩm của nguồn ngoài đã biến mất khỏi lần lấy danh mục mới nhất — cùng ý với
+ * dự án tham chiếu (dọn nguồn không còn ở Shopify) nhưng an toàn hơn: giữ dòng + lịch sử, và sản phẩm quay lại sẽ được kích hoạt
+ * lại bởi `applyProductSourceSync`. Chốt an toàn: danh sách còn lại RỖNG (lỗi/cắt cụt) thì KHÔNG làm gì. PHẢI gọi trong một giao
+ * dịch có ngữ cảnh workspace (`withJob`/`withActor`) và chỉ SAU KHI đã lấy ĐỦ danh mục (connector ném lỗi khi vượt trần trang).
+ * Trả số sản phẩm vừa lưu trữ.
+ */
+export async function archiveMissingSourceProducts(
+  tx: Database,
+  workspaceId: string,
+  source: ExternalProductSource,
+  keepExternalIds: readonly string[],
+): Promise<number> {
+  if (keepExternalIds.length === 0) return 0;
+  const keep = sql`ARRAY[${sql.join(
+    keepExternalIds.map((id) => sql`${id}`),
+    sql`, `,
+  )}]::text[]`;
+  const result = await tx.execute(sql`
+    UPDATE cf.products SET status = 'archived', updated_at = now()
+     WHERE workspace_id = ${workspaceId}::uuid AND source = ${source} AND status = 'active'
+       AND external_id IS NOT NULL AND NOT (external_id = ANY(${keep}))`);
+  return result.rowCount ?? 0;
 }
