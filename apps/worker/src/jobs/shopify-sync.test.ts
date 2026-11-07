@@ -62,6 +62,48 @@ describe('reasonOf', () => {
   });
 });
 
+describe('runShopifySync — tiền tệ khác VND (không quy đổi, cảnh báo Owner)', () => {
+  const planWith = (prices: Array<number | null>) =>
+    [
+      {
+        externalId: 'p',
+        variants: prices.map((priceVnd, i) => ({ externalId: `v${i}`, priceVnd })),
+      },
+    ] as never;
+
+  it('cửa hàng USD → ghi currencyUnsupported + số biến thể chưa có giá; vẫn ok (đồng bộ tên/tồn)', async () => {
+    const { deps, record } = setup({
+      fetchCatalog: vi.fn().mockResolvedValue({ currencyCode: 'USD', products: [] }),
+      buildPlan: () => planWith([null, null, null]),
+    });
+    expect(await runShopifySync(deps)).toBe('ok');
+    expect(record).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ currencyUnsupported: 'USD', variantsWithoutPrice: 3 }),
+    );
+  });
+
+  it('mã tiền tệ lạ/không đúng 3 chữ cái hoa → ghi OTHER (không để lọt chuỗi tùy ý)', async () => {
+    const { deps, record } = setup({
+      fetchCatalog: vi.fn().mockResolvedValue({ currencyCode: 'usd<script>', products: [] }),
+      buildPlan: () => planWith([null]),
+    });
+    await runShopifySync(deps);
+    expect(record).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ currencyUnsupported: 'OTHER' }),
+    );
+  });
+
+  it('cửa hàng VND → không có cảnh báo tiền tệ', async () => {
+    const { deps, record } = setup({ buildPlan: () => planWith([150000, 99000]) });
+    await runShopifySync(deps);
+    const detail = record.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(detail).not.toHaveProperty('currencyUnsupported');
+    expect(detail).not.toHaveProperty('variantsWithoutPrice');
+  });
+});
+
 describe('runShopifySync', () => {
   it('thành công → nạp sản phẩm, ghi kết quả ok kèm số liệu', async () => {
     const { deps, record, apply, fetchCatalog, exchange } = setup();

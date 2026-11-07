@@ -1883,6 +1883,7 @@
         },
         "connectedLine": "Store {domain} · read-only products, prices and stock",
         "lastSynced": "Last synced: {time}",
+        "currencyWarning": "Your Shopify store uses {currency}. CommentFlow only reads prices in VND and does NOT convert currencies, so {variants} variants have no price; when a customer asks for a price, the AI hands over to your staff instead of quoting one. Names, stock and product details still sync as usual.",
         "connect": "Connect Shopify",
         "reconnect": "Re-enter Client ID/secret",
         "disconnect": "Disconnect",

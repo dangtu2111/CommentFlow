@@ -50,6 +50,11 @@ export type TryCandidate = {
   score: number;
   /** Chủ đề mà nguồn này trả lời được (để biết ý hỏi nào đã có nguồn). */
   topics: KbGapTopic[];
+  /**
+   * Sản phẩm CHƯA CÓ GIÁ (vd. cửa hàng Shopify dùng tiền tệ khác VND — không quy đổi, nguyên tắc #4): nguồn này KHÔNG được
+   * tính là trả lời câu hỏi giá (vẫn trả lời được tồn kho/size…). Thiếu = có giá.
+   */
+  priceUnknown?: boolean;
 };
 
 /** Ngữ cảnh lọc khi tìm kiến thức. */
@@ -140,9 +145,13 @@ export function topicOf(ask: string): KbGapTopic {
   return 'other';
 }
 
-function topicsOf(asks: readonly string[], label: CommentLabel): KbGapTopic[] {
-  const found = asks.map(topicOf);
-  if (found.length === 0 && label === 'price') return ['product_info'];
+/** Chủ đề từng ý hỏi, kèm cờ "đây là hỏi giá" (để biết nguồn chưa có giá có trả lời được ý đó không). */
+function askTopicsOf(
+  asks: readonly string[],
+  label: CommentLabel,
+): Array<{ topic: KbGapTopic; isPrice: boolean }> {
+  const found = asks.map((ask) => ({ topic: topicOf(ask), isPrice: classifyAsk(ask) === 'price' }));
+  if (found.length === 0 && label === 'price') return [{ topic: 'product_info', isPrice: true }];
   return found;
 }
 
@@ -189,9 +198,10 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
     lang,
     extract,
     products: { candidates: products.names, missingAxes: products.missingAxes },
-    topics: topicsOf(extract.asks, label).map((topic) => ({
+    topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
       topic,
-      sourced: usable.some((c) => c.topics.includes(topic)),
+      // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
+      sourced: usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown)),
     })),
     thread: { clarifyCount: 0, repeatCount: 0 },
     risks: { priceConflict: false, legalUnsourced: false, impersonation: false, stockStale: false },
