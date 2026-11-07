@@ -69,6 +69,8 @@ export const products = cf.table(
     nameEmbedding: halfvec1024('name_embedding'),
     /** Model đã tạo `name_embedding` (NULL = không rõ, ghi trước 0078): nhánh vector chỉ so cùng model. */
     nameEmbeddingModel: text('name_embedding_model'),
+    nameEmbeddingNext: halfvec1024('name_embedding_next'),
+    nameEmbeddingNextModel: text('name_embedding_next_model'),
     card: jsonb('card').notNull().default(sql`'{}'::jsonb`),
     rev: bigint('rev', { mode: 'number' }).notNull().default(1),
     status: text('status').notNull().default('active'),

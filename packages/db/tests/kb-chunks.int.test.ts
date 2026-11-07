@@ -11,7 +11,7 @@ import {
   upsertDraftChunks,
   validChunkFilter,
 } from '../src/queries/kb-chunks';
-import { createAdminPool, createAppDb, seedWorkspace } from './helpers';
+import { createAdminPool, createAppDb, seedWorkspace, setActiveEmbeddingModel } from './helpers';
 
 /**
  * KB-CHUNKING: ghi bản nháp đoạn kiến thức qua `withJob` (hệ thống) và bộ lọc hạn hiệu lực
@@ -53,6 +53,7 @@ async function insertSource(workspaceId: string): Promise<string> {
 
 beforeAll(async () => {
   admin = createAdminPool();
+  await setActiveEmbeddingModel(admin, 'mock-embed-v1');
   db = createAppDb(3);
   ws = await seedWorkspace(admin);
   other = await seedWorkspace(admin);

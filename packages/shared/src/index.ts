@@ -189,12 +189,7 @@ export {
   parsePublishNote,
   planKbVersion,
 } from './kb-publish';
-export {
-  KB_REEMBED_BATCH_MAX,
-  KB_REEMBED_QUEUE,
-  type KbReembedJob,
-  kbReembedJobSchema,
-} from './kb-reembed';
+export { KB_REEMBED_BATCH_MAX } from './kb-reembed';
 export { type KiotVietConfig, readKiotVietConfig } from './kiotviet-config';
 export {
   LEAD_MAX_PER_CAPTURE,

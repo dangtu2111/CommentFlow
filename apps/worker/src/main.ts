@@ -22,7 +22,6 @@ import {
   type IngestPipelineHook,
 } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
-import { createKbReembedHandler } from './jobs/kb-reembed';
 import { createPingHandler } from './jobs/ping';
 import { createPipelineHandler } from './jobs/pipeline-job';
 import { startPipelineSweep } from './jobs/pipeline-sweep';
@@ -39,7 +38,6 @@ import {
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
-  KB_REEMBED_QUEUE,
   PIPELINE_QUEUE,
   SEND_QUEUE,
   SHOPIFY_SYNC_QUEUE,
@@ -120,7 +118,7 @@ async function main(): Promise<void> {
         flagEnabled: true,
         allowedWorkspaceIds: config.pipeline.workspaceIds,
         turnLimit: config.pipeline.turnLimit,
-        // Cùng embedder với ô Thử AI và `kb-reembed` (trước đây job pipeline KHÔNG truyền → rơi về mock, lệch với dữ liệu bge-m3).
+        // Cùng embedder với ô Thử AI (trước đây job pipeline KHÔNG truyền → rơi về mock, lệch với dữ liệu bge-m3).
         ...(config.embedding.embedder ? { embedder: config.embedding.embedder } : {}),
       }),
     );
@@ -189,8 +187,6 @@ async function main(): Promise<void> {
     { batchSize: 1, localConcurrency: 1 },
     createKbPublishHandler({ db, logger }),
   );
-  // FR-133: kb-reembed — tạo lại embedding khi đổi model. KHÔNG có embedder giả khi chạy: cờ KB_REEMBED_ENABLED=true mà thiếu embedding thật
-  // (ML_EMBED_ENABLED=true + ML_URL) → LỖI RÕ khi khởi động (không âm thầm tạo vector giả làm lệch dữ liệu bge-m3).
   logger.info({ embedding: config.embedding.describe }, 'cấu hình embedding');
   // Kiểm lệch model embedding với dữ liệu đã lưu (FR-133): chỉ log; khi lệch, nhánh vector tự tắt ở từng lượt (không trộn vector khác model).
   await checkEmbeddingAtStartup({
@@ -199,18 +195,6 @@ async function main(): Promise<void> {
     count: (workspaceId) => db.withJob(workspaceId, (tx) => countEmbeddingModels(tx, workspaceId)),
     logger,
   });
-  if (config.kbReembedEnabled) {
-    if (config.embedding.kind !== 'ml') {
-      throw new Error(
-        'KB_REEMBED_ENABLED=true cần embedding thật: đặt ML_EMBED_ENABLED=true và ML_URL (sửa .env.local rồi khởi động lại; không có embedder giả).',
-      );
-    }
-    await boss.work(
-      KB_REEMBED_QUEUE,
-      { batchSize: 1, localConcurrency: 1 },
-      createKbReembedHandler({ db, logger, embedder: config.embedding.embedder }),
-    );
-  }
   // FR-094: xuất dữ liệu workspace — cờ DATA_EXPORT_ENABLED mặc định TẮT: tắt thì không đăng ký hàng đợi, không dọn tệp.
   const exportStore = config.dataExport.enabled
     ? createLocalExportStore(config.dataExport.dir)

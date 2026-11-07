@@ -20,7 +20,6 @@ describe('loadConfig', () => {
       workspaceDeleteEnabled: false,
       instagram: { enabled: false },
       dataExport: { enabled: false },
-      kbReembedEnabled: false,
       messenger: { enabled: false },
       tiktok: { enabled: false },
       shopify: { enabled: false, apiVersion: undefined },
