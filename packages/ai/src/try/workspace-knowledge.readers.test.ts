@@ -16,6 +16,7 @@ vi.mock('@flow/db/runtime', () => {
       lang === 'en' ? { sz: 'size', bn: 'how much' } : { bn: 'bao nhiêu' },
     ),
     listBrandVoices: rec('voices', []),
+    countEmbeddingModels: rec('embeddingCounts', { chunks: [], products: [] }),
   };
 });
 

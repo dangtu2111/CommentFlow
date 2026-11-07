@@ -157,6 +157,8 @@ export type ProductSearchQuery = {
   workspaceId: string;
   queryText: string;
   queryVector?: readonly number[];
+  /** Model đã tạo `queryVector`. THIẾU → bỏ nhánh vector (không bao giờ so vector không rõ model). */
+  embeddingModel?: string;
   limit?: number;
 };
 
@@ -202,17 +204,19 @@ export async function searchProducts(
              ORDER BY s DESC, p.id
              LIMIT ${limit}`)
         ).rows;
-  const semantic = input.queryVector
-    ? (
-        await tx.execute<{ id: string; name: string }>(sql`
+  const semantic =
+    input.queryVector && input.embeddingModel
+      ? (
+          await tx.execute<{ id: string; name: string }>(sql`
           SELECT p.id, p.name
             FROM cf.products p
            WHERE p.workspace_id = ${input.workspaceId}::uuid AND p.status = 'active'
              AND p.name_embedding IS NOT NULL
+             AND p.name_embedding_model = ${input.embeddingModel}
            ORDER BY p.name_embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024), p.id
            LIMIT ${limit}`)
-      ).rows
-    : [];
+        ).rows
+      : [];
   const similarityOf = new Map(trigram.map((row) => [row.id, Number(row.s)]));
   const nameOf = new Map([...trigram, ...semantic].map((row) => [row.id, row.name]));
   return reciprocalRankFusion([trigram.map((r) => r.id), semantic.map((r) => r.id)])
@@ -268,9 +272,10 @@ export async function setProductNameEmbedding(
   workspaceId: string,
   productId: string,
   embedding: readonly number[],
+  model: string,
 ): Promise<boolean> {
   const result = await tx.execute(sql`
-    UPDATE cf.products SET name_embedding = ${vectorLiteral(embedding)}::halfvec(1024)
+    UPDATE cf.products SET name_embedding = ${vectorLiteral(embedding)}::halfvec(1024), name_embedding_model = ${model}
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${productId}::uuid
     RETURNING id`);
   return result.rows.length > 0;

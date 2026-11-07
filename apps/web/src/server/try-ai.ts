@@ -4,6 +4,7 @@ import {
   createDemoExtractor,
   createDemoKnowledge,
   DEMO_ABBREVIATIONS,
+  type EmbeddingConsistency,
   isUnreadableAiOutput,
   type PipelineConvoInput,
   runTryPipeline,
@@ -13,11 +14,12 @@ import {
 } from '@flow/ai';
 import { z } from 'zod';
 import { TRY_AI_MAX_CHARS } from '../lib/try-ai-limits';
-import type {
-  KnowledgeRunner,
-  TryKnowledgeSource,
-  TryRunContext,
-  TrySession,
+import {
+  EMBEDDING_OFF,
+  type KnowledgeRunner,
+  type TryKnowledgeSource,
+  type TryRunContext,
+  type TrySession,
 } from './try-ai-knowledge';
 import type { TryLlmDeps } from './try-ai-llm';
 import { type PreviousTurn, parsePreviousTurns } from './try-ai-previous';
@@ -44,6 +46,8 @@ export type TryAiResult =
       quota: { used: number; limit: number };
       /** Nguồn kiến thức đã dùng: mẫu hay KB thật (cờ `TRY_AI_KB_REAL`). */
       knowledge: TryKnowledgeSource;
+      /** Model embedding so với dữ liệu (FR-133): `mismatch` → nhánh vector đã TẮT, giao diện báo "chạy kb:reembed". */
+      embedding: EmbeddingConsistency;
       /** Giọng văn đã dùng: `shop` = `brand_voice` thật của workspace (có cho ngôn ngữ nhận ra), `demo` = giọng mẫu. */
       voice: 'shop' | 'demo';
       /** Bước nào đang chạy bằng LLM thật (cờ `*_LLM_ENABLED` + LiteLLM); còn lại là bản mẫu. */
@@ -149,14 +153,19 @@ export function createTryAiAction(deps: TryAiDeps) {
         }
         return result;
       };
-      const { value, source } = deps.knowledgeRunner
+      const { value, source, embedding } = deps.knowledgeRunner
         ? await deps.knowledgeRunner(session, built.knowledge, runPipeline)
-        : { value: await runPipeline(built.knowledge), source: 'demo' as const };
+        : {
+            value: await runPipeline(built.knowledge),
+            source: 'demo' as const,
+            embedding: EMBEDDING_OFF,
+          };
       return {
         ok: true,
         result: value,
         quota: { used: taken.used, limit: taken.limit },
         knowledge: source,
+        embedding,
         voice: voiceSource,
         llm: {
           extractor: Boolean(deps.llm?.extractor),

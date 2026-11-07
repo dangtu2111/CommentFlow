@@ -1,6 +1,8 @@
 import {
   countActiveProducts,
+  countEmbeddingModels,
   type Database,
+  type EmbeddingModelCounts,
   type KbVersionRef,
   listBrandVoices,
   listTryProductNames,
@@ -9,6 +11,11 @@ import {
   type TryShopText,
 } from '@flow/db/runtime';
 import type { Embedder } from '../embedding/embedder';
+import {
+  type EmbeddingConsistency,
+  evaluateEmbeddingConsistency,
+  vectorBranchUsable,
+} from '../embedding/embedding-consistency';
 import { createDbKbSearcher } from '../retrieve/kb-searcher';
 import { type BrandVoiceRow, type DraftVoicesByLang, draftVoicesFromRows } from './brand-voice';
 import { createDbProductKnowledge } from './db-product-knowledge';
@@ -43,6 +50,8 @@ export type WorkspaceKnowledgeReaders = {
   shopTexts: (tx: Database, workspaceId: string) => Promise<TryShopText[]>;
   abbreviations: (tx: Database, workspaceId: string) => Promise<Record<string, string>>;
   brandVoices: (tx: Database, workspaceId: string) => Promise<BrandVoiceRow[]>;
+  /** Số vector đã lưu theo model (đoạn đã xuất bản + tên sản phẩm) — đầu vào của kiểm lệch model. */
+  embeddingCounts: (tx: Database, workspaceId: string) => Promise<EmbeddingModelCounts>;
 };
 
 export const defaultKnowledgeReaders: WorkspaceKnowledgeReaders = {
@@ -54,6 +63,7 @@ export const defaultKnowledgeReaders: WorkspaceKnowledgeReaders = {
     ...(await loadAbbreviationEntries(tx, ws, 'vi')),
   }),
   brandVoices: listBrandVoices,
+  embeddingCounts: countEmbeddingModels,
 };
 
 export type WorkspaceKnowledge = {
@@ -65,6 +75,8 @@ export type WorkspaceKnowledge = {
   bind: (tx: Database) => TryKnowledge;
   context: TryRunContext;
   source: Exclude<TryKnowledgeSource, 'demo'>;
+  /** Trạng thái model embedding so với dữ liệu: `mismatch` → nhánh vector đã TẮT (nơi gọi báo cho người dùng); `off` → chưa cấu hình embedding. */
+  embedding: EmbeddingConsistency;
 };
 
 export type WorkspaceKnowledgeParams = {
@@ -94,7 +106,14 @@ export async function loadWorkspaceKnowledge(
     abbreviations: await r.abbreviations(tx, workspaceId),
     voices: draftVoicesFromRows(await r.brandVoices(tx, workspaceId)),
   };
-  const embedder = params.embedder;
+  // Kiểm lệch model (FR-133): chỉ dùng nhánh vector khi model cấu hình KHỚP dữ liệu đã lưu; lệch → toàn văn/trigram, không trộn vector khác model.
+  const embedding = params.embedder
+    ? evaluateEmbeddingConsistency({
+        configuredModel: params.embedder.model,
+        ...(await r.embeddingCounts(tx, workspaceId)),
+      })
+    : evaluateEmbeddingConsistency({ configuredModel: null, chunks: [], products: [] });
+  const embedder = params.embedder && vectorBranchUsable(embedding) ? params.embedder : undefined;
   const bind = (t: Database): TryKnowledge => {
     const products = hasProducts ? createDbProductKnowledge(t, workspaceId) : base;
     if (!version) return { ...products, searchKb: createDbShopKnowledgeSearch(texts) };
@@ -104,5 +123,5 @@ export async function loadWorkspaceKnowledge(
       base: products,
     });
   };
-  return { knowledge: bind(tx), bind, context, source: version ? 'kb' : 'shop' };
+  return { knowledge: bind(tx), bind, context, source: version ? 'kb' : 'shop', embedding };
 }

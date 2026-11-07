@@ -162,6 +162,10 @@ export {
 } from './queries/data-export';
 export { insertDraft, type NewDraft } from './queries/drafts';
 export {
+  countEmbeddingModels,
+  type EmbeddingModelCounts,
+} from './queries/embedding-models';
+export {
   ACTIONABLE_COMMENT_STATUSES,
   countActionableComments,
   countCommentsByTab,

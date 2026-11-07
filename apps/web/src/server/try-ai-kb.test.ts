@@ -20,11 +20,31 @@ describe('FR-059 KB-TRYAI: nguồn kiến thức của hành động Thử AI', 
       knowledgeRunner: async (_s, base, fn) => ({
         value: await fn({ ...base, searchKb }, { productNames: [], abbreviations: {}, voices: {} }),
         source: 'kb',
+        embedding: { state: 'ok', configuredModel: 'bge-m3', mismatches: [] },
       }),
     });
     const r = await run({ workspaceId: 'ws1', userId: 'u1' }, 'ship về Hà Nội bao nhiêu');
-    expect(r).toMatchObject({ ok: true, knowledge: 'kb' });
+    expect(r).toMatchObject({ ok: true, knowledge: 'kb', embedding: { state: 'ok' } });
     expect(searchKb).toHaveBeenCalledTimes(1);
+  });
+
+  it('lệch model embedding → kết quả mang trạng thái mismatch để giao diện báo "chạy kb:reembed"', async () => {
+    const mismatch = {
+      state: 'mismatch' as const,
+      configuredModel: 'bge-m3',
+      mismatches: [{ source: 'kb_chunks' as const, model: 'fixture-trigram-1024', count: 3 }],
+    };
+    const run = createTryAiAction({
+      quota: createTryQuota({ limit: 3 }),
+      now,
+      knowledgeRunner: async (_s, base, fn) => ({
+        value: await fn(base, { productNames: [], abbreviations: {}, voices: {} }),
+        source: 'kb',
+        embedding: mismatch,
+      }),
+    });
+    const r = await run({ workspaceId: 'ws1', userId: 'u1' }, 'ship về Hà Nội bao nhiêu');
+    expect(r).toMatchObject({ ok: true, embedding: mismatch });
   });
 
   it('runner ném lỗi → unavailable, không lộ nội dung', async () => {
