@@ -127,3 +127,18 @@ export function splitNavByRole(role: NavRole): { allowed: NavItem[]; ownerOnly: 
   const ownerOnly = ENTRIES.filter((e) => !e.roles.includes(role)).map(strip);
   return { allowed, ownerOnly };
 }
+
+export type RoleAccessRow = { key: NavItemKey; href: string; owner: boolean; staff: boolean };
+
+/**
+ * Bảng "trang nào vai trò nào vào được" cho trang Thành viên. Suy ra từ cùng `ENTRIES` với thanh điều hướng và trang 403
+ * (không có bảng quyền tĩnh riêng nên không thể lệch quyền thật; việc chặn thật vẫn do `requireAppUser` ở từng trang).
+ */
+export function roleAccessRows(): RoleAccessRow[] {
+  return ENTRIES.map(({ key, href, roles }) => ({
+    key,
+    href,
+    owner: roles.includes('owner'),
+    staff: roles.includes('staff'),
+  }));
+}
