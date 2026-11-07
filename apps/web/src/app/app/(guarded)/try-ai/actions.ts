@@ -1,6 +1,6 @@
 'use server';
 
-import { createMlEmbedder, createTryQuota, loadMlEmbedderOptions } from '@flow/ai';
+import { createTryQuota, resolveEmbeddingConfig } from '@flow/ai';
 import { getDb } from '../../../../server/db';
 import { requireAppUser } from '../../../../server/require-app-user';
 import { createTryAiAction, type TryAiResult } from '../../../../server/try-ai';
@@ -27,11 +27,8 @@ const tryAi = createTryAiAction({
   knowledgeRunner: createKnowledgeRunner({
     enabled: isTryAiKbReal(process.env),
     productsEnabled: isTryAiProductsReal(process.env),
-    // Embedding thật (bge-m3 qua dịch vụ ml, miễn phí) chỉ khi ML_EMBED_ENABLED=true + ML_URL; mặc định fixture.
-    embedder: (() => {
-      const options = loadMlEmbedderOptions(process.env);
-      return options ? createMlEmbedder(options) : undefined;
-    })(),
+    // Cấu hình embedding DUY NHẤT (`resolveEmbeddingConfig`, dùng chung worker/EVAL): không tự chọn embedder ở đây.
+    embedder: resolveEmbeddingConfig(process.env).embedder ?? undefined,
     db: { withActor: (workspaceId, userId, fn) => getDb().withActor(workspaceId, userId, fn) },
   }),
 });

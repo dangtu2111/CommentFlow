@@ -7,6 +7,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { resolveEmbeddingConfig } from '@flow/ai';
+import { allowMockInThisProcess } from '@flow/shared';
 import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
 import { computeMetrics } from '../metrics';
@@ -33,7 +35,11 @@ const { values } = parseArgs({
   },
 });
 
+const embeddingInfo = resolveEmbeddingConfig(process.env).describe;
 const backend = values.backend as Backend;
+// EVAL chỉ đo model THẬT (LiteLLM + bge-m3). `--backend mock` (bản fixture chạy ở CI) phải tự khai báo và báo cáo ghi rõ "không phải số đo".
+if (backend === 'mock')
+  allowMockInThisProcess('EVAL --backend mock (fixture): không phải số đo chất lượng');
 if (!['litellm', 'mock'].includes(backend)) {
   console.error('--backend phải là litellm | mock');
   process.exit(2);
@@ -97,6 +103,11 @@ async function runOnce(variantCount: number) {
   const report = renderReport({
     title: `EVAL-RUNNER — ${backend}, ${variantCount + 1} phiên bản câu soạn`,
     config: {
+      ...(backend === 'mock'
+        ? {
+            NHÃN: 'MOCK (fixture) — KHÔNG phải số đo chất lượng; không dùng để so sánh hay chọn model',
+          }
+        : {}),
       'Bộ mẫu': `${values.dataset} (${samples.length} mẫu)`,
       'Cửa hàng': shop.id,
       Backend: backend,
@@ -104,6 +115,10 @@ async function runOnce(variantCount: number) {
       'Số biến thể': `${variantCount} khác + câu gốc = ${variantCount + 1} phiên bản`,
       'Trần chi tiêu': 'max_budget của khóa ảo LiteLLM (không có trần riêng trong runner)',
       'Từ điển viết tắt': 'bản mẫu (DEMO_ABBREVIATIONS), không phải từ điển hệ thống của DB',
+      // Ghi rõ embedder trong MỌI báo cáo (FR-133). Lấy từ ĐÚNG hàm cấu hình mà web/worker dùng (`resolveEmbeddingConfig`), không tự chọn.
+      'Embedder (cấu hình ứng dụng)': `${embeddingInfo.model ?? 'tắt'} — ${embeddingInfo.note}`,
+      'Embedder dùng trong lượt này':
+        'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',
     },
     samples,
     metrics,

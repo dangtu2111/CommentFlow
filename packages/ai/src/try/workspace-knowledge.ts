@@ -8,7 +8,6 @@ import {
   loadTryShopTexts,
   type TryShopText,
 } from '@flow/db/runtime';
-import { createFixtureEmbedder } from '../embedding';
 import type { Embedder } from '../embedding/embedder';
 import { createDbKbSearcher } from '../retrieve/kb-searcher';
 import { type BrandVoiceRow, type DraftVoicesByLang, draftVoicesFromRows } from './brand-voice';
@@ -76,7 +75,7 @@ export type WorkspaceKnowledgeParams = {
   productsEnabled: boolean;
   /** Nguồn nền (mẫu) khi workspace chưa có sản phẩm thật. */
   base: TryKnowledge;
-  /** Embedding thật khi bật `ML_EMBED_ENABLED`; mặc định bản fixture. */
+  /** Embedder thật (cấu hình `resolveEmbeddingConfig`); thiếu → KHÔNG có nhánh vector (toàn văn + trigram). Không có embedder giả khi chạy. */
   embedder?: Embedder;
   readers?: Partial<WorkspaceKnowledgeReaders>;
 };
@@ -95,13 +94,13 @@ export async function loadWorkspaceKnowledge(
     abbreviations: await r.abbreviations(tx, workspaceId),
     voices: draftVoicesFromRows(await r.brandVoices(tx, workspaceId)),
   };
-  const embedder = params.embedder ?? createFixtureEmbedder();
+  const embedder = params.embedder;
   const bind = (t: Database): TryKnowledge => {
     const products = hasProducts ? createDbProductKnowledge(t, workspaceId) : base;
     if (!version) return { ...products, searchKb: createDbShopKnowledgeSearch(texts) };
     return createKbTryKnowledge({
       searcher: createDbKbSearcher(t, { workspaceId, versionId: version.id }),
-      embedder,
+      ...(embedder ? { embedder } : {}),
       base: products,
     });
   };
