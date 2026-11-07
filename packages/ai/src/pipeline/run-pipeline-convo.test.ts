@@ -7,11 +7,13 @@ import type { DraftInput } from '../draft/draft-prompt';
 import type { DraftResult } from '../draft/draft-result';
 import type { Drafter } from '../draft/drafter';
 import {
+  MAX_DECISION_PRODUCT_NAME,
   type PipelineConvoInput,
   type PipelineDeps,
   type PipelineInput,
   type PipelineResult,
   runPipeline,
+  shortProductName,
   type TryCandidate,
   type TryKnowledge,
 } from './run-pipeline';
@@ -333,5 +335,34 @@ describe('lịch sử đầy đủ đi tới extract và bước soạn (đã ch
       parentComment: 'bình luận gốc',
       postCaption: 'Áo thun basic mùa hè',
     });
+  });
+});
+
+describe('tên sản phẩm DÀI (Shopify) không làm đầu vào quyết định thành "không đọc được"', () => {
+  const LONG =
+    'Mini Fitness Massage Gun with LED Screen, 3 Gears, Brushed Motor, Low Noise below 36dB (Blue/Girl Pink/Noble Purple) + Waist Belt + Power Cord';
+
+  it('tên 140 ký tự → vẫn quyết định theo nội dung (không phải handoff input_unreadable)', async () => {
+    expect(LONG.length).toBeGreaterThan(120);
+    const k: TryKnowledge = {
+      matchProducts: async () => ({ ids: [PRODUCT], names: [LONG], missingAxes: [] }),
+      lookupProductFacts: async () => [productCandidate],
+      searchKb: async () => [],
+    };
+    const h = harness([
+      extract({ labels: [{ label: 'price' }], product_mentions: ['massage gun'], asks: ['giá'] }),
+    ]);
+    const r = done(await runPipeline({ ...base, text: 'massage gun giá bn?' }, h.deps(k)));
+    expect(r.decision.reason).not.toBe('input_unreadable');
+    expect(r.decision.action).toBe('answer');
+  });
+
+  it('shortProductName: giữ nguyên tên ngắn, cắt tên dài ≤ 120 ký tự có "…", gộp khoảng trắng', () => {
+    expect(shortProductName('Áo thun basic')).toBe('Áo thun basic');
+    expect(shortProductName('  Áo   thun \n basic ')).toBe('Áo thun basic');
+    const cut = shortProductName(LONG);
+    expect(cut.length).toBeLessThanOrEqual(MAX_DECISION_PRODUCT_NAME);
+    expect(cut.endsWith('…')).toBe(true);
+    expect(LONG.startsWith(cut.slice(0, -1))).toBe(true);
   });
 });
