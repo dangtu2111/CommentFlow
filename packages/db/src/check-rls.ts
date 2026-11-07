@@ -356,6 +356,10 @@ const FORBIDDEN_COLUMN_PRIVILEGES: Array<
   ['cf_app', 'cf.post_products', 'status', 'UPDATE'],
   ['cf_app', 'cf.post_products', 'confirmed_by', 'UPDATE'],
   ['cf_app', 'cf.post_products', 'suggested_by_ai', 'UPDATE'],
+  // PIPELINE_TURNS (0073): định danh bất biến sau INSERT (khóa duy nhất theo bình luận); chỉ charged_at/attempts/state/last_error đổi được.
+  ['cf_app', 'cf.pipeline_turns', 'comment_id', 'UPDATE'],
+  ['cf_app', 'cf.pipeline_turns', 'workspace_id', 'UPDATE'],
+  ['cf_app', 'cf.pipeline_turns', 'created_at', 'UPDATE'],
   // DRAFTS (0046): nội dung soạn + ảnh chụp giá (R5) bất biến sau INSERT; chỉ cột xử lý được sửa
   ['cf_app', 'cf.drafts', 'workspace_id', 'UPDATE'],
   ['cf_app', 'cf.drafts', 'target_type', 'UPDATE'],
@@ -789,6 +793,10 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.drafts', 'w', 'is_workspace_member'],
   ['cf.drafts', 'w', 'is_system_context'],
   ['cf.drafts', 'r', 'is_workspace_member'],
+  // PIPELINE_TURNS (0073): INSERT/UPDATE chỉ hệ thống; đọc: thành viên hoặc không người dùng.
+  ['cf.pipeline_turns', 'a', 'is_system_context'],
+  ['cf.pipeline_turns', 'w', 'is_system_context'],
+  ['cf.pipeline_turns', 'r', 'is_workspace_member'],
   ['cf.comments', 'a', 'is_system_context'],
   ['cf.comments', 'w', 'is_workspace_member'], // + is_system_context (trigger chặn sửa dữ liệu nền tảng ở đường người dùng)
   ['cf.comments', 'r', 'is_workspace_member'],

@@ -272,6 +272,16 @@ export {
   loadPipelineContext,
   type PipelineContext,
 } from './queries/pipeline-context';
+export {
+  type BeginPipelineTurnResult,
+  beginPipelineTurn,
+  blockPipelineTurn,
+  completePipelineTurn,
+  DEFAULT_TURN_LEASE_SECONDS,
+  isWorkspaceEmergencyStopped,
+  markPipelineTurnCharged,
+  releasePipelineTurn,
+} from './queries/pipeline-turns';
 export { createPostNote } from './queries/post-notes';
 export { linkProductsToPosts } from './queries/post-products';
 export {

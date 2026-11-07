@@ -8,3 +8,9 @@ export {
   type PipelineThread,
   runPipeline,
 } from './run-pipeline';
+export {
+  createTurnGate,
+  type TurnBegin,
+  type TurnBlockReason,
+  type TurnPorts,
+} from './turn-gate';

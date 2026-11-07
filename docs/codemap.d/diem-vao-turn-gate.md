@@ -1,0 +1,1 @@
+| Cổng lượt của job pipeline: dừng khẩn cấp → giành quyền + khóa + trừ lượt idempotent, đóng-khi-lỗi (PIPE-ORCHESTRATOR lát C, Q-POR3/Q-POR5) | `createTurnGate` | `packages/ai/src/pipeline/turn-gate.ts` |

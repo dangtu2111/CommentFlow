@@ -1,0 +1,1 @@
+| Khóa duy nhất theo bình luận cho một lượt AI (giành quyền, lần thử, thuê, charged_at ghi một lần; migration 0073) | `beginPipelineTurn`, `markPipelineTurnCharged`, `blockPipelineTurn`, `releasePipelineTurn` | `packages/db/src/queries/pipeline-turns.ts` |
