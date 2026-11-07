@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import type { NavItemKey } from '../../lib/app-nav';
-import { KB_HOME, KB_SUBNAV_GROUPS } from '../../lib/kb-structure';
+import { KB_HOME, KB_SOON_ITEMS, KB_SUBNAV_GROUPS } from '../../lib/kb-structure';
 import type { IconName } from '../ui/icon';
 import { KbFrameView } from './kb-frame-view';
 
@@ -23,7 +23,18 @@ export const KB_RAIL_ICONS: Partial<Record<NavItemKey, IconName>> = {
   tryAi: 'science',
   kbTestset: 'flaky',
   kbPublish: 'history_edu',
+  kbShop: 'storefront',
+  kbPolicies: 'policy',
+  kbFaq: 'quiz',
+  kbVoice: 'record_voice_over',
 };
+
+/** Biểu tượng của mục "Sắp có" ở rail. */
+const KB_SOON_ICONS = {
+  kbDocs: 'description',
+  kbRules: 'rule',
+  kbDictionary: 'spellcheck',
+} as const satisfies Record<string, IconName>;
 
 /**
  * Khung trang Cơ sở kiến thức: thanh lệnh (tiêu đề, độ đầy đủ, lối tắt Kiểm thử/Xuất bản), rail "Cấu trúc tri thức /
@@ -73,13 +84,23 @@ export async function KbFrame({
         groups: KB_SUBNAV_GROUPS.map((group) => ({
           key: group.key,
           title: t(`groups.${group.key}`),
-          items: group.items.map((item) => ({
-            key: item.key,
-            href: item.href,
-            label: tn(item.key),
-            current: active === item.key,
-            ...(KB_RAIL_ICONS[item.key] ? { icon: KB_RAIL_ICONS[item.key] as IconName } : {}),
-          })),
+          items: [
+            ...group.items.map((item) => ({
+              key: item.key,
+              href: item.href,
+              label: tn(item.key),
+              current: active === item.key,
+              ...(KB_RAIL_ICONS[item.key] ? { icon: KB_RAIL_ICONS[item.key] as IconName } : {}),
+            })),
+            ...KB_SOON_ITEMS.filter((soon) => soon.group === group.key).map((soon) => ({
+              key: soon.key,
+              href: '#',
+              label: t(`soonItems.${soon.key}`),
+              current: false,
+              disabled: true,
+              icon: KB_SOON_ICONS[soon.key],
+            })),
+          ],
         })),
       }}
     >

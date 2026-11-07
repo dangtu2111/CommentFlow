@@ -1865,6 +1865,54 @@
     "error": {
       "title": "Không tải được tổng quan kiến thức",
       "body": "Đã có lỗi khi tải dữ liệu. Hãy tải lại trang sau ít phút."
+    },
+    "soonItems": {
+      "kbDocs": "Tài liệu",
+      "kbRules": "Quy tắc & Giới hạn",
+      "kbDictionary": "Từ điển viết tắt"
+    },
+    "hub": {
+      "shopify": {
+        "title": "Kết nối Shopify Store",
+        "body": "Đồng bộ sản phẩm, giá, tồn kho và chính sách từ Shopify.",
+        "sync": "Đồng bộ ngay",
+        "scope": "Cài đặt phạm vi"
+      },
+      "notConnected": "Chưa kết nối",
+      "tiles": {
+        "products": "Sản phẩm đang bán",
+        "policies": "Chính sách",
+        "faqs": "Hỏi – đáp (FAQ)"
+      },
+      "sources": {
+        "title": "Website & Nguồn URL",
+        "body": "Thông tin AI học từ các trang web của shop.",
+        "add": "Thêm liên kết mới",
+        "empty": "Chưa có nguồn nào.",
+        "colUrl": "Địa chỉ URL",
+        "colType": "Phân loại",
+        "colStatus": "Trạng thái",
+        "colUpdated": "Cập nhật",
+        "syncError": "Lỗi đồng bộ",
+        "neverSynced": "Chưa đồng bộ"
+      },
+      "product": {
+        "title": "Xem trước sản phẩm",
+        "body": "Giá và tồn kho đọc trực tiếp từ kho sản phẩm, không từ bộ nhớ của AI.",
+        "showing": "Hiển thị 1 trên {total} sản phẩm",
+        "stock": "Tồn kho: {count}",
+        "variants": "{count} biến thể",
+        "hint": "Ghi chú riêng cho AI",
+        "empty": "Chưa có sản phẩm nào.",
+        "import": "Nhập sản phẩm",
+        "price": "{amount}₫"
+      },
+      "playground": {
+        "title": "Chạy thử nghiệm AI",
+        "body": "Mô phỏng câu AI trả lời với kiến thức hiện tại.",
+        "example": "Ví dụ: “Shop có freeship đơn 350k không?”",
+        "run": "Mở Chạy thử"
+      }
     }
   },
   "tryAi": {
@@ -1968,7 +2016,11 @@
       "channels": "Kênh",
       "members": "Thành viên",
       "activity": "Nhật ký",
-      "settings": "Cài đặt"
+      "settings": "Cài đặt",
+      "kbShop": "Thông tin cửa hàng",
+      "kbPolicies": "Chính sách",
+      "kbFaq": "Hỏi – đáp FAQ",
+      "kbVoice": "Giọng văn thương hiệu"
     },
     "logout": "Đăng xuất",
     "navLabel": "Điều hướng chính",
@@ -2883,6 +2935,100 @@
     "automation": {
       "title": "Tự động hóa ca trực",
       "today": "{n} phản hồi tự động hôm nay"
+    }
+  },
+  "kbContent": {
+    "langLabel": "Ngôn ngữ áp dụng",
+    "lang": {
+      "vi": "Tiếng Việt",
+      "en": "English",
+      "all": "Cả hai ngôn ngữ"
+    },
+    "notice": {
+      "saved": "Đã lưu.",
+      "deleted": "Đã xóa.",
+      "invalid": "Thông tin chưa hợp lệ. Kiểm tra lại các ô bắt buộc (và địa chỉ website phải bắt đầu bằng http hoặc https).",
+      "not_found": "Không tìm thấy mục này.",
+      "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại."
+    },
+    "save": "Lưu",
+    "delete": "Xóa",
+    "add": "Thêm",
+    "empty": "Chưa có mục nào.",
+    "shop": {
+      "title": "Thông tin cửa hàng",
+      "subtitle": "Tên, mô tả, địa chỉ, giờ mở cửa, liên hệ của shop — AI dùng để trả lời. Không nhập giá hay tồn kho ở đây.",
+      "cardTitle": "Thông tin theo ngôn ngữ",
+      "name": "Tên cửa hàng",
+      "description": "Mô tả ngắn",
+      "address": "Địa chỉ",
+      "openingHours": "Giờ mở cửa",
+      "contact": "Liên hệ công khai",
+      "contactHint": "Chỉ nhập liên hệ shop muốn công khai cho khách.",
+      "website": "Website",
+      "newTitle": "Thêm thông tin cho ngôn ngữ khác"
+    },
+    "policies": {
+      "title": "Chính sách",
+      "subtitle": "Vận chuyển, đổi trả, bảo hành, thanh toán. AI chỉ trả lời theo nội dung bạn nhập.",
+      "kind": "Loại chính sách",
+      "kinds": {
+        "shipping": "Vận chuyển",
+        "return": "Đổi trả",
+        "warranty": "Bảo hành",
+        "payment": "Thanh toán",
+        "other": "Khác"
+      },
+      "titleLabel": "Tiêu đề",
+      "content": "Nội dung",
+      "newTitle": "Thêm chính sách"
+    },
+    "faq": {
+      "title": "Hỏi – đáp (FAQ)",
+      "subtitle": "Cặp câu hỏi và câu trả lời chuẩn. AI ưu tiên các cặp này khi khách hỏi đúng ý.",
+      "question": "Câu hỏi",
+      "answer": "Câu trả lời",
+      "tags": "Thẻ",
+      "tagsHint": "Cách nhau bằng dấu phẩy, ví dụ: vận chuyển, đổi trả.",
+      "newTitle": "Thêm câu hỏi – đáp"
+    },
+    "voice": {
+      "title": "Giọng văn thương hiệu",
+      "subtitle": "Cách AI xưng hô, giọng điệu và các câu mời chuyển người — theo từng ngôn ngữ.",
+      "tone": "Giọng điệu",
+      "greeting": "Câu chào",
+      "signOff": "Câu kết",
+      "doRules": "Nên làm",
+      "dontRules": "Không nên làm",
+      "rulesHint": "Mỗi dòng một quy tắc.",
+      "addressByName": "Gọi khách bằng tên khi biết",
+      "shopPronoun": "Shop xưng là",
+      "pronouns": {
+        "em": "Em",
+        "shop": "Shop",
+        "minh": "Mình",
+        "custom": "Tên riêng"
+      },
+      "shopPronounCustom": "Tên shop (khi chọn Tên riêng)",
+      "customerAddress": "Gọi khách là",
+      "addresses": {
+        "anh_chi": "Anh/Chị",
+        "ban": "Bạn",
+        "quy_khach": "Quý khách",
+        "you": "You"
+      },
+      "handoffTitle": "Câu mời chuyển người",
+      "handoffHint": "Cần nhập cả hai câu (trong giờ và ngoài giờ); chủ đề bỏ trống sẽ không được lưu.",
+      "topics": {
+        "shipping": "Vận chuyển",
+        "discount": "Giảm giá",
+        "order_status": "Tình trạng đơn",
+        "stock_check": "Kiểm tồn kho",
+        "other": "Khác"
+      },
+      "inHours": "Trong giờ làm việc",
+      "outHours": "Ngoài giờ làm việc",
+      "saveFor": "Lưu giọng văn {lang}"
     }
   }
 }

@@ -16,3 +16,10 @@
 
 - Cài đặt › Dữ liệu & Quyền riêng tư (trang trong ứng dụng, Owner): xuất dữ liệu, thời gian lưu, xóa workspace nhiều bước — `privacy-data-deletion.png` là trang công khai tra cứu xóa dữ liệu Meta, không phải trang này; hiện dựng bằng component sẵn có
 - Cài đặt › Thông báo: chưa có thiết kế; hiện là danh sách loại sự kiện + "Sắp có"
+
+# Màn thiếu thiết kế Stitch (feat-kb-wire-content, 07/11/2026)
+
+- Cơ sở kiến thức › Thông tin cửa hàng (`/app/kb/shop`): biểu mẫu theo ngôn ngữ — hiện dựng theo ngôn ngữ hình ảnh Stitch, chưa có màn riêng
+- Cơ sở kiến thức › Chính sách (`/app/kb/policies`): danh sách + thêm/sửa/xóa theo loại — chưa có màn riêng
+- Cơ sở kiến thức › Hỏi – đáp FAQ (`/app/kb/faq`): danh sách cặp hỏi–đáp + thẻ + ngôn ngữ — chưa có màn riêng
+- Cơ sở kiến thức › Giọng văn thương hiệu (`/app/kb/voice`): xưng hô, nên/không nên, câu mời chuyển người — chưa có màn riêng
