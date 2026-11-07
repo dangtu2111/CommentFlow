@@ -554,14 +554,20 @@ describe('FR-048 thứ tự sửa/xóa: lần sửa CŨ đến muộn không ghi
 
 describe('PIPE-ORCHESTRATOR lát E — ingest xếp job pipeline (một nơi quyết định, Q-POR1)', () => {
   const hooked = (over: { flag?: boolean; allowed?: string[] } = {}) => {
-    const sent: Array<{ commentId: string; trigger: string; startAfter: number }> = [];
+    const sent: Array<{
+      commentId: string;
+      trigger: string;
+      startAfter: number;
+      priority: number;
+    }> = [];
     const h = createIngestHandler({
       db,
       logger: quiet,
       pipeline: {
-        enqueue: async (j, startAfter) => {
-          sent.push({ commentId: j.commentId, trigger: j.trigger, startAfter });
+        enqueue: async (j, startAfter, priority) => {
+          sent.push({ commentId: j.commentId, trigger: j.trigger, startAfter, priority });
         },
+        priority: async () => 10,
         flagEnabled: over.flag ?? true,
         allowedWorkspaceIds: over.allowed ?? [ws],
         mergeWindowSeconds: async () => 30,
@@ -580,7 +586,7 @@ describe('PIPE-ORCHESTRATOR lát E — ingest xếp job pipeline (một nơi quy
     const { sent, h } = hooked();
     await h(job(ws, eventId));
     expect(sent).toHaveLength(1);
-    expect(sent[0]).toMatchObject({ trigger: 'auto', startAfter: 30 });
+    expect(sent[0]).toMatchObject({ trigger: 'auto', startAfter: 30, priority: 10 });
     expect(await idOf(channelId)).toContain(sent[0]?.commentId);
     await h(job(ws, eventId));
     expect(sent).toHaveLength(1);

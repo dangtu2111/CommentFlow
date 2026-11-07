@@ -86,3 +86,41 @@ describe('bộ synthetic', () => {
     expect(file).toBe(serializeDataset(samples));
   });
 });
+
+describe('mẫu nhiều lượt (thread, Q-POR12)', () => {
+  const line = (thread: unknown) =>
+    JSON.stringify({
+      id: 'mt1',
+      source: 'synthetic',
+      group: 'vi',
+      text: 'M đen',
+      thread,
+      expected: { lang: 'vi', label: 'advice', action: 'answer' },
+    });
+
+  it('đọc được thread (khách/shop); thiếu thread vẫn là mẫu một lượt', () => {
+    const [sample] = parseDataset(
+      line([
+        { from: 'customer', text: 'áo thun basic giá bn?' },
+        { from: 'shop', text: 'Dạ bạn chọn size và màu nào ạ?' },
+      ]),
+    );
+    expect(sample?.thread).toHaveLength(2);
+    const [single] = parseDataset(
+      JSON.stringify({
+        id: 's',
+        source: 'synthetic',
+        group: 'vi',
+        text: 'x',
+        expected: { lang: 'vi', label: 'price', action: 'answer' },
+      }),
+    );
+    expect(single?.thread).toBeUndefined();
+  });
+
+  it('từ chối thread quá 5 lượt hoặc sai người nói; lỗi nêu số dòng, không in nội dung', () => {
+    const six = Array.from({ length: 6 }, () => ({ from: 'customer', text: 'a' }));
+    expect(() => parseDataset(line(six))).toThrow(/Dòng 1/);
+    expect(() => parseDataset(line([{ from: 'bot', text: 'a' }]))).toThrow(/Dòng 1/);
+  });
+});

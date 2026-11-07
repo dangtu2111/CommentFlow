@@ -120,7 +120,11 @@ describe('loadPipelineContext — dữ liệu nền', () => {
     });
     expect(ctx?.post).toEqual({ id: post, caption: 'Áo thun mùa hè sale', isAd: true });
     expect(ctx?.pageNames).toEqual(['Shop Demo']);
-    expect(ctx?.settings).toEqual({ mergeWindowSeconds: 30, humanHoldMinutes: 120 });
+    expect(ctx?.settings).toEqual({
+      mergeWindowSeconds: 30,
+      humanHoldMinutes: 120,
+      maxAiRepliesPerCustomerPost: 3,
+    });
     expect(ctx?.kbVersion).toBeNull();
     expect(ctx?.postProductIds).toEqual([]);
   });
@@ -134,7 +138,11 @@ describe('loadPipelineContext — dữ liệu nền', () => {
       ws,
     ]);
     const ctx = await load(await addComment({}));
-    expect(ctx?.settings).toEqual({ mergeWindowSeconds: 45, humanHoldMinutes: 0 });
+    expect(ctx?.settings).toEqual({
+      mergeWindowSeconds: 45,
+      humanHoldMinutes: 0,
+      maxAiRepliesPerCustomerPost: 3,
+    });
     expect(ctx?.kbVersion?.number).toBe(3);
     await admin.query('DELETE FROM cf.automation_settings WHERE workspace_id = $1', [ws]);
     await admin.query('DELETE FROM cf.kb_versions WHERE workspace_id = $1', [ws]);

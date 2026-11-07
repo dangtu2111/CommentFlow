@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
 import { getCurrentVersion, type KbVersionRef } from './kb-publish';
+import { countCustomerPostReplies, loadPipelineConvo, type PipelineConvo } from './pipeline-convo';
 
 /**
  * Ngữ cảnh thật cho job `pipeline` (PIPE-ORCHESTRATOR lát B): CHỈ ĐỌC, mọi truy vấn lọc `workspace_id`; gọi trong
@@ -36,7 +37,16 @@ export type PipelineContext = {
   /** Tên Page của kênh (cho luật mạo danh, FR-155). */
   pageNames: string[];
   thread: { clarifyCount: number; repeatCount: number; humanHolding: boolean };
-  settings: { mergeWindowSeconds: number; humanHoldMinutes: number };
+  settings: {
+    mergeWindowSeconds: number;
+    humanHoldMinutes: number;
+    /** FR-167: số câu AI tối đa cho một khách dưới một bài trong 24 giờ (1–5, mặc định 3). */
+    maxAiRepliesPerCustomerPost: number;
+  };
+  /** Số câu AI đã soạn/gửi cho (khách, bài) trong 24 giờ, gộp mọi chuỗi + bình luận mới; không tính chính bình luận này (FR-167). */
+  customerPostReplies24h: number;
+  /** Ngữ cảnh hội thoại ĐÃ che PII (FR-137/144, Q-POR12). */
+  convo: PipelineConvo;
   /** Bản kiến thức mới nhất ĐÃ XUẤT BẢN (bản nháp không bao giờ vào luồng thật); chưa có → `null`. */
   kbVersion: KbVersionRef | null;
 };
@@ -44,6 +54,7 @@ export type PipelineContext = {
 /** Mặc định khi workspace chưa có dòng `automation_settings` (khớp mặc định cột, migration 0072). */
 export const DEFAULT_MERGE_WINDOW_SECONDS = 30;
 export const DEFAULT_HUMAN_HOLD_MINUTES = 120;
+export const DEFAULT_MAX_AI_REPLIES_PER_CUSTOMER_POST = 3;
 /** Số lượt trước tối đa đọc để đếm (chặn chuỗi dài bất thường). */
 const MAX_EARLIER = 100;
 const SENT_STATUSES = ['sent_as_is', 'edited', 'auto_sent'] as const;
@@ -101,12 +112,16 @@ export async function loadPipelineContext(
   const settingsRows = await tx.execute<{
     merge_window_seconds: number;
     human_hold_minutes: number;
+    max_ai_replies_per_customer_post: number;
   }>(sql`
-    SELECT merge_window_seconds, human_hold_minutes FROM cf.automation_settings
+    SELECT merge_window_seconds, human_hold_minutes, max_ai_replies_per_customer_post FROM cf.automation_settings
      WHERE workspace_id = ${workspaceId}::uuid`);
   const settings = {
     mergeWindowSeconds: settingsRows.rows[0]?.merge_window_seconds ?? DEFAULT_MERGE_WINDOW_SECONDS,
     humanHoldMinutes: settingsRows.rows[0]?.human_hold_minutes ?? DEFAULT_HUMAN_HOLD_MINUTES,
+    maxAiRepliesPerCustomerPost:
+      settingsRows.rows[0]?.max_ai_replies_per_customer_post ??
+      DEFAULT_MAX_AI_REPLIES_PER_CUSTOMER_POST,
   };
 
   const products = await tx.execute<{ product_id: string }>(sql`
@@ -183,6 +198,25 @@ export async function loadPipelineContext(
     pageNames: [row.channel_name],
     thread: { clarifyCount, repeatCount, humanHolding },
     settings,
+    customerPostReplies24h: await countCustomerPostReplies(
+      tx,
+      workspaceId,
+      row.post_id,
+      row.author_external_id,
+      now,
+      commentId,
+    ),
+    convo: await loadPipelineConvo(tx, {
+      workspaceId,
+      commentId,
+      postId: row.post_id,
+      authorExternalId: row.author_external_id,
+      parentExternalId: row.parent_external_id,
+      channelId: row.channel_id,
+      postCaption: row.post_message,
+      createdTime,
+      now,
+    }),
     kbVersion: await getCurrentVersion(tx, workspaceId),
   };
 }

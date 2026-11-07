@@ -5,6 +5,7 @@ import {
   createDemoKnowledge,
   DEMO_ABBREVIATIONS,
   isUnreadableAiOutput,
+  type PipelineConvoInput,
   runTryPipeline,
   type TryDeps,
   type TryQuota,
@@ -19,6 +20,7 @@ import type {
   TrySession,
 } from './try-ai-knowledge';
 import type { TryLlmDeps } from './try-ai-llm';
+import { type PreviousTurn, parsePreviousTurns } from './try-ai-previous';
 
 /**
  * Logic của hành động "Thử AI" (FR-059, FR-029, US-034), tách khỏi Server Action để test với phụ thuộc được tiêm.
@@ -62,6 +64,15 @@ export type TryAiDeps = {
 
 const textSchema = z.string().trim().min(1);
 
+function previousConvo(turns: readonly PreviousTurn[]): PipelineConvoInput {
+  return {
+    context: { turns: [...turns], otherQuestions: [] },
+    postProductIds: [],
+    postProductNames: [],
+    state: null,
+  };
+}
+
 const defaultDeps = (llm: TryLlmDeps = {}): TryDeps => ({
   extractor: llm.extractor ?? createDemoExtractor(),
   drafter: llm.drafter ?? createDemoDrafter(),
@@ -82,7 +93,11 @@ export function createTryAiAction(deps: TryAiDeps) {
   const build = deps.buildDeps ?? (() => defaultDeps(deps.llm));
   const warn = deps.warn ?? ((event) => console.error(JSON.stringify(event)));
 
-  return async function tryAiAction(session: TrySession, rawText: unknown): Promise<TryAiResult> {
+  return async function tryAiAction(
+    session: TrySession,
+    rawText: unknown,
+    rawPrevious?: unknown,
+  ): Promise<TryAiResult> {
     const parsed = textSchema.safeParse(rawText);
     if (!parsed.success) return { ok: false, reason: 'empty' };
     if (parsed.data.length > TRY_AI_MAX_CHARS) return { ok: false, reason: 'too_long' };
@@ -90,6 +105,7 @@ export function createTryAiAction(deps: TryAiDeps) {
     const taken = deps.quota.take(session.workspaceId, now());
     if (!taken.ok) return { ok: false, reason: 'limit_reached' };
 
+    const previous = parsePreviousTurns(rawPrevious);
     try {
       const built = build();
       const input = {
@@ -99,6 +115,8 @@ export function createTryAiAction(deps: TryAiDeps) {
         voice: { ...DEMO_VOICE, do: [], dont: [] },
         // Ô thử cho biết kết quả "nếu Owner bật tự gửi"; cổng thật chưa có (AUTO-SEND-GATE).
         autoSendEnabled: true,
+        // "Lượt trước" tùy chọn (Q-POR12 điểm 5): lịch sử đã che PII cho extract/rewrite/soạn câu; Thử AI không phát lại để lấy trạng thái.
+        ...(previous.length > 0 ? { convo: previousConvo(previous) } : {}),
       };
       let voiceSource: 'shop' | 'demo' = 'demo';
       const runPipeline = async (knowledge: TryDeps['knowledge'], context?: TryRunContext) => {

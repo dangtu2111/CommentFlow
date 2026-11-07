@@ -3,8 +3,11 @@ import {
   type Drafter,
   type Embedder,
   type Extractor,
+  evaluateReplyCap,
   loadWorkspaceKnowledge,
+  parseConversationState,
   type Rewriter,
+  selectCustomerContext,
   type TryKnowledge,
 } from '@flow/ai';
 import {
@@ -64,6 +67,11 @@ function perCallKnowledge(
     db.withJob(workspaceId, (tx) => fn(bind(tx)));
   return {
     matchProducts: (mentions) => run((k) => k.matchProducts(mentions)),
+    // Nhận sản phẩm theo id (lượt trước / gắn bài, Q-POR12): thiếu trong nguồn gốc thì không có đường dự phòng này.
+    resolveProducts: (ids) =>
+      run(async (k) =>
+        k.resolveProducts ? k.resolveProducts(ids) : { ids: [], names: [], missingAxes: [] },
+      ),
     lookupProductFacts: (ids) => run((k) => k.lookupProductFacts(ids)),
     searchKb: (query, context) => run((k) => k.searchKb(query, context)),
   };
@@ -98,13 +106,12 @@ export async function runPipelineJob(
     );
     if (group.mergedIds.length > 0) {
       mergedText = group.texts.join('\n');
-      if (group.mainId !== commentId) {
-        commentId = group.mainId;
-        context = await db.withJob(workspaceId, (tx) =>
-          loadPipelineContext(tx, workspaceId, commentId, now),
-        );
-        if (!context) return { kind: 'ignored', reason: 'comment_not_found' };
-      }
+      commentId = group.mainId;
+      // Nạp lại SAU khi gộp: bình luận đã gộp không còn là "lượt trước" riêng (đã nằm trong văn bản gộp).
+      context = await db.withJob(workspaceId, (tx) =>
+        loadPipelineContext(tx, workspaceId, commentId, now),
+      );
+      if (!context) return { kind: 'ignored', reason: 'comment_not_found' };
     }
   }
   const comment = context.comment;
@@ -138,11 +145,32 @@ export async function runPipelineJob(
   const voices = loaded?.context.voices ?? {};
   const abbreviations = loaded?.context.abbreviations ?? {};
 
+  // Ngữ cảnh hội thoại ĐÃ che PII (loader) → đầu vào của lõi; `selectCustomerContext` áp lại giới hạn ≤ 5 lượt / ≤ 3 câu bài khác / 7 ngày.
+  const convo = {
+    context: selectCustomerContext({
+      thread: context.convo.turns,
+      otherPosts: context.convo.otherQuestions,
+      currentPostId: context.post.id,
+      now,
+    }),
+    ...(context.convo.parentComment ? { parentComment: context.convo.parentComment } : {}),
+    ...(context.convo.postCaption ? { postCaption: context.convo.postCaption } : {}),
+    postProductIds: context.postProductIds,
+    postProductNames: context.convo.postProductNames,
+    state: parseConversationState(context.convo.stateRaw),
+  };
+  // FR-167: trần trả lời theo (khách, bài) trong 24 giờ.
+  const replyCap = {
+    count: context.customerPostReplies24h,
+    max: context.settings.maxAiRepliesPerCustomerPost,
+  };
+
   return runCommentPipeline({
     db,
     workspaceId,
     commentId,
     turn: { limit: config.turnLimit, timeZone: DEFAULT_USAGE_TIME_ZONE },
+    replyCapExceeded: evaluateReplyCap(replyCap) === 'exceeded',
     input: {
       workspaceId,
       text: mergedText ?? comment.text,
@@ -152,6 +180,8 @@ export async function runPipelineJob(
       autoSendEnabled: false,
       dict: createAbbreviationDict(abbreviations),
       thread: context.thread,
+      convo,
+      replyCap,
       attachmentTypes: comment.attachmentTypes,
       risks: {
         ...(comment.authorName

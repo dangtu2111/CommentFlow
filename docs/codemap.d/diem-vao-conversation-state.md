@@ -1,0 +1,1 @@
+| Trạng thái hội thoại có cấu trúc (sản phẩm đã nhận + ý đang chờ) và thừa hưởng ý khi khách trả lời ngắn (Q-POR12) | `nextConversationState`, `carryOverAsks`, `parseConversationState` | `packages/ai/src/pipeline/conversation-state.ts` |

@@ -13,8 +13,8 @@ import {
   ruleFilter,
   unsafeMarkMasked,
 } from '@flow/shared';
-import { type ExtractResult, primaryLabel } from '../classify/extract-result';
-import type { Extractor } from '../classify/extractor';
+import { type ExtractResult, extractResultSchema, primaryLabel } from '../classify/extract-result';
+import type { ExtractOutcome, Extractor } from '../classify/extractor';
 
 import { resolveLabelProbability } from '../classify/label-signal';
 import { assessDraft } from '../confidence/assess-draft';
@@ -32,12 +32,16 @@ import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
 import { checkGuardMoney, type GuardViolation } from '../guard-money';
 import { checkReplyGuard, type ReplyGuardViolation } from '../guard-reply';
 import { type AbbreviationDict, normalizeAndDetectLang } from '../normalize/normalize-lang';
+import type { PromptHistory } from '../prompt-history';
+import type { CustomerContext } from '../rewrite/customer-context';
 import type { Rewriter } from '../rewrite/rewriter';
 import { executeRoute } from '../route/execute-route';
 import { type RouteKind, type RouteReason, routeQuery } from '../route/route';
 import { classifyAsk } from '../route/route-topics';
 import { type AutoSendPreview, decideAutoSendPreview } from '../try/auto-send-preview';
 import type { DraftVoicesByLang } from '../try/brand-voice';
+import { type ConversationState, carryOverAsks, nextConversationState } from './conversation-state';
+import { evaluateReplyCap, replyCapClosingDecision } from './reply-cap';
 
 export const TRY_MAX_CHARS = 1000;
 
@@ -67,10 +71,15 @@ export type TryCandidate = {
 export type TrySearchContext = { lang: 'vi' | 'en'; productIds: string[] };
 
 /** Cổng kiến thức của ô Thử AI: bản mock (`createDemoKnowledge`) hoặc, sau này, bản nối KB/DB thật. */
+export type TryProductMatch = { ids: string[]; names: string[]; missingAxes: VariantAxis[] };
+
 export interface TryKnowledge {
-  matchProducts(
-    mentions: readonly string[],
-  ): Promise<{ ids: string[]; names: string[]; missingAxes: VariantAxis[] }>;
+  matchProducts(mentions: readonly string[]): Promise<TryProductMatch>;
+  /**
+   * Nhận sản phẩm theo id khi khách KHÔNG nêu tên (Q-POR12): sản phẩm ở lượt trước hoặc sản phẩm gắn bài (docs/10 §5.1). Thiếu = không
+   * có đường dự phòng này (ô Thử AI mẫu).
+   */
+  resolveProducts?(ids: readonly string[]): Promise<TryProductMatch>;
   /** Nhánh `sql`: giá/tồn đọc từ bảng sản phẩm (không vector). */
   lookupProductFacts(ids: readonly string[]): Promise<TryCandidate[]>;
   /** Nhánh `hybrid`: tìm kiến thức (đã biết ngôn ngữ + sản phẩm của bài để lọc, FR-057). */
@@ -106,7 +115,49 @@ export type TryInput = {
   risks?: PipelineRiskInputs;
   /** Loại tệp đính kèm của bình luận (`photo`, `video`, `sticker`…) cho luật ảnh/video (FR-143). Thiếu = không có. */
   attachmentTypes?: readonly string[];
+  /** Trần trả lời của (khách, bài) trong 24 giờ (FR-167): `count` = câu AI đã có (không tính bình luận này), `max` = ngưỡng 1–5. */
+  replyCap?: { count: number; max: number };
+  /** Ngữ cảnh hội thoại ĐÃ che PII (PIPE-CONVO-CONTEXT, Q-POR12): lượt trước, bình luận cha, caption, sản phẩm gắn bài, trạng thái. */
+  convo?: PipelineConvoInput;
 };
+
+export type PipelineConvoInput = {
+  context: CustomerContext;
+  parentComment?: MaskedText;
+  postCaption?: MaskedText;
+  /** Sản phẩm gắn bài ĐÃ xác nhận (id + tên; chính trước): ứng viên ưu tiên khi khách không nêu tên. */
+  postProductIds: readonly string[];
+  postProductNames: readonly string[];
+  /** Trạng thái có cấu trúc của lượt trước trong chuỗi (sản phẩm đã nhận, ý đang chờ). */
+  state: ConversationState | null;
+};
+
+/** Lịch sử cho prompt (extract/soạn): chỉ văn bản đã che PII. */
+function historyOf(convo: PipelineConvoInput | undefined): PromptHistory | undefined {
+  if (!convo) return undefined;
+  const { context } = convo;
+  return {
+    turns: context.turns.map((t) => ({ from: t.from, text: t.text })),
+    otherQuestions: context.otherQuestions.map((q) => q.text),
+    ...(convo.parentComment ? { parentComment: convo.parentComment } : {}),
+    ...(convo.postCaption ? { postCaption: convo.postCaption } : {}),
+  };
+}
+
+/** Kết quả `extract` rỗng cho câu CHỐT (không gọi LLM): nhãn trung tính, không sản phẩm, không ý hỏi. */
+const EMPTY_EXTRACT: ExtractOutcome = extractResultSchema.parse({
+  labels: [{ label: 'other' }],
+  product_mentions: [],
+  refers_to_image: false,
+  size: null,
+  color: null,
+  height_cm: null,
+  weight_kg: null,
+  qty: null,
+  cited_price_vnd: null,
+  order_intent: null,
+  asks: [],
+});
 
 /** Ngữ cảnh chuỗi (xem `TryInput.thread`). */
 export type PipelineThread = { clarifyCount: number; repeatCount: number; humanHolding?: boolean };
@@ -153,6 +204,10 @@ export type TryResult =
       maskedText: string;
       /** Văn bản ĐÃ che PII rồi chuẩn hóa (viết tắt, không dấu) — lưu `comments.text_normalized`. */
       normalizedText: string;
+      /** Sản phẩm đã nhận ra ở lượt này (id) — để ghi trạng thái hội thoại và `retrieval_logs`. */
+      resolvedProductIds: string[];
+      /** Trạng thái có cấu trúc cho lượt SAU (ghi vào `drafts.context_refs`, Q-POR12). */
+      conversationState: ConversationState;
       /** Object thô của bước `extract` (để bước ghi lưu `drafts.extracted`). */
       extract: ExtractResult;
       /** Ngữ cảnh chuỗi đã dùng để quyết định (mặc định 0/0/không). */
@@ -207,6 +262,26 @@ function askTopicsOf(
   return found;
 }
 
+const EMPTY_PRODUCTS: TryProductMatch = { ids: [], names: [], missingAxes: [] };
+
+/**
+ * Nhận sản phẩm của lượt: (1) khách nêu tên → so khớp như cũ; (2) KHÔNG nêu tên → sản phẩm lượt trước ("M đen" sau khi shop hỏi size
+ * của áo X → áo X), rồi sản phẩm gắn bài (docs/10 §5.1). Khách nêu tên mà không khớp thì KHÔNG dự phòng (tránh gán nhầm sản phẩm bài).
+ */
+async function resolveProductsFor(
+  extract: ExtractResult,
+  input: TryInput,
+  deps: TryDeps,
+): Promise<TryProductMatch> {
+  const matched = await deps.knowledge.matchProducts(extract.product_mentions);
+  if (matched.ids.length > 0 || extract.product_mentions.length > 0) return matched;
+  const fallbackIds = input.convo?.state?.productIds.length
+    ? input.convo.state.productIds
+    : (input.convo?.postProductIds ?? []);
+  if (fallbackIds.length === 0 || !deps.knowledge.resolveProducts) return matched;
+  return deps.knowledge.resolveProducts(fallbackIds);
+}
+
 export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryResult> {
   const text = input.text.slice(0, TRY_MAX_CHARS);
   const filtered = ruleFilter({ text });
@@ -226,28 +301,53 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       return { status: 'blocked', billed: false, reason: verdict.reason, maskedText: masked, lang };
     }
   }
-  const extract = await deps.extractor.extract({ workspaceId: input.workspaceId, text: forModel });
-  const label = primaryLabel(extract);
-  const products = await deps.knowledge.matchProducts(extract.product_mentions);
-  // `rewriteQuery` chạy SAU extract (cần biết đã nhận được sản phẩm chưa): chỉ tốn LLM khi câu ngắn/mơ hồ và chưa có sản phẩm.
-  const rewritten = deps.rewriter
-    ? await deps.rewriter.rewrite({
+  // FR-167: câu CHỐT (chạm trần) → không extract/tìm kiếm (không tốn token, không sự kiện): chỉ soạn câu mời nhắn tin theo mẫu shop.
+  const closing = input.replyCap !== undefined && evaluateReplyCap(input.replyCap) === 'closing';
+  const history = historyOf(input.convo);
+  const state = input.convo?.state ?? null;
+  const rawExtract = closing
+    ? EMPTY_EXTRACT
+    : await deps.extractor.extract({
         workspaceId: input.workspaceId,
-        comment: forModel,
-        productKnown: products.names.length > 0,
-      })
-    : null;
+        text: forModel,
+        ...(history ? { history } : {}),
+      });
+  // Khách trả lời ngắn ("M đen") mà lượt trước còn ý đang chờ → thừa hưởng ý đó (Q-POR12).
+  const extract = closing ? rawExtract : carryOverAsks(rawExtract, state);
+  const label = primaryLabel(extract);
+  const products = closing ? EMPTY_PRODUCTS : await resolveProductsFor(extract, input, deps);
+  // `rewriteQuery` chạy SAU extract (cần biết đã nhận được sản phẩm chưa): chỉ tốn LLM khi câu ngắn/mơ hồ và chưa có sản phẩm.
+  const rewritten =
+    deps.rewriter && !closing
+      ? await deps.rewriter.rewrite({
+          workspaceId: input.workspaceId,
+          comment: forModel,
+          productKnown: products.names.length > 0,
+          ...(input.convo
+            ? {
+                context: input.convo.context,
+                ...(input.convo.parentComment ? { parentComment: input.convo.parentComment } : {}),
+                ...(input.convo.postCaption ? { postCaption: input.convo.postCaption } : {}),
+                ...(input.convo.postProductNames[0]
+                  ? { productName: unsafeMarkMasked(input.convo.postProductNames[0]) }
+                  : {}),
+              }
+            : {}),
+        })
+      : null;
   const searchQuery = rewritten ? rewritten.searchQuery : forModel;
   const routed = routeQuery({ extract, resolvedProductIds: products.ids });
 
-  const outcome = await executeRoute(routed.route, {
-    sql: () => deps.knowledge.lookupProductFacts(products.ids),
-    hybrid: () =>
-      deps.knowledge.searchKb(searchQuery, {
-        lang: lang === 'other' ? 'vi' : lang,
-        productIds: products.ids,
-      }),
-  });
+  const outcome = closing
+    ? { sql: [], hybrid: [] }
+    : await executeRoute(routed.route, {
+        sql: () => deps.knowledge.lookupProductFacts(products.ids),
+        hybrid: () =>
+          deps.knowledge.searchKb(searchQuery, {
+            lang: lang === 'other' ? 'vi' : lang,
+            productIds: products.ids,
+          }),
+      });
   const found = [...(outcome.sql ?? []), ...(outcome.hybrid ?? [])].sort(
     (a, b) => b.score - a.score,
   );
@@ -265,24 +365,26 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     repeatCount: input.thread?.repeatCount ?? 0,
     humanHolding: input.thread?.humanHolding ?? false,
   };
-  const decision = decideAction({
-    lang,
-    extract,
-    products: {
-      candidates: products.names,
-      missingAxes: products.missingAxes,
-      mentionedCount: extract.product_mentions.length,
-    },
-    topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
-      topic,
-      // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
-      sourced: usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown)),
-    })),
-    thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
-    // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
-    comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
-    risks: turnRisks.risks,
-  });
+  const decision = closing
+    ? replyCapClosingDecision()
+    : decideAction({
+        lang,
+        extract,
+        products: {
+          candidates: products.names,
+          missingAxes: products.missingAxes,
+          mentionedCount: extract.product_mentions.length,
+        },
+        topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
+          topic,
+          // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
+          sourced: usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown)),
+        })),
+        thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
+        // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
+        comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
+        risks: turnRisks.risks,
+      });
 
   // Giọng văn: của workspace theo ngôn ngữ nhận ra (brand_voice thật); thiếu → giọng mặc định. Bộ soạn và bộ chặn dùng CÙNG giọng.
   const voice = (lang === 'other' ? undefined : input.voices?.[lang]) ?? input.voice;
@@ -295,6 +397,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     voice,
     sources: found.map((c) => ({ id: c.id, kind: c.kind, text: c.text, relevance: c.score })),
     decision,
+    ...(history ? { history } : {}),
   });
 
   const usedIds = new Set(draft.sources);
@@ -330,6 +433,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     billed: false,
     maskedText: masked,
     normalizedText: normalized.normalized,
+    resolvedProductIds: products.ids,
+    conversationState: nextConversationState({
+      action: decision.action,
+      productIds: products.ids,
+      asks: extract.asks,
+    }),
     extract,
     thread,
     searchQuery,

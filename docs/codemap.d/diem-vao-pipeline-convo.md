@@ -1,0 +1,1 @@
+| Ngữ cảnh hội thoại ĐÃ che PII + đếm câu AI cho (khách, bài) 24 giờ (FR-144/167) | `loadPipelineConvo`, `countCustomerPostReplies`, `countRepliesForCommentThread` | `packages/db/src/queries/pipeline-convo.ts` |

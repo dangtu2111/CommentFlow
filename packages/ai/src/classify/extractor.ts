@@ -6,7 +6,7 @@ import { consistencyOf, type LabelSignal, labelProbabilityFromLogprobs } from '.
 
 export const EXTRACT_STEP = 'extract';
 /** Đổi khi sửa prompt (ghi vào `ai_usage.prompt_version`). */
-export const EXTRACT_PROMPT_VERSION = 'extract@2'; // @2: bỏ điểm tin cậy tự ghi của LLM, nhãn chính đứng đầu
+export const EXTRACT_PROMPT_VERSION = 'extract@3'; // @3: nhận lịch sử hội thoại (khối <history>); @2: bỏ điểm tin cậy tự ghi của LLM
 
 export type { ExtractInput };
 

@@ -71,6 +71,10 @@
 
 Coverage mục tiêu ≥ 85% cho `packages/ai`, `packages/shared`, `packages/saas-core` (đã nâng từ 80% và thêm saas-core; ngưỡng thực thi ở CI xem §3 mục 8).
 
+### 2.x Trần trả lời theo (khách, bài) — FR-167 (bắt buộc)
+
+Cả ba kịch bản cho cùng kết quả: AI trả lời 2 câu, câu 3 là câu chốt (`redirect` + Cần hỗ trợ thêm), câu 4–5 `needs_human` lý do `customer_post_reply_cap`, không gọi LLM: (a) 5 câu trong MỘT chuỗi; (b) 5 bình luận mới riêng lẻ dưới cùng bài; (c) xen kẽ chuỗi + bình luận mới. (d) cùng khách ở BÀI KHÁC vẫn được trả lời; (e) sau 24 giờ được trả lời lại; (f) Owner đổi ngưỡng 1–5 có hiệu lực; (g) bình luận đầu tiên của khách dưới bài có priority cao hơn trong hàng đợi.
+
 ## 3. Test cô lập dữ liệu (bắt buộc, chặn merge)
 
 1. Script kiểm mọi bảng có `workspace_id` đều bật RLS và có policy.

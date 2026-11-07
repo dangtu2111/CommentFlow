@@ -1,6 +1,13 @@
 // API công khai của module pipeline. Thêm export mới ở ĐÂY (không sửa src/index.ts).
 
 export {
+  type ConversationState,
+  carryOverAsks,
+  EMPTY_CONVERSATION_STATE,
+  nextConversationState,
+  parseConversationState,
+} from './conversation-state';
+export {
   type CommentUpdate,
   commentUpdateOf,
   type DonePipelineResult,
@@ -11,6 +18,14 @@ export {
   toGapInputs,
   toRetrievalInput,
 } from './persist-records';
+export {
+  clampMaxAiReplies,
+  DEFAULT_MAX_AI_REPLIES,
+  evaluateReplyCap,
+  type ReplyCapVerdict,
+  replyCapClosingDecision,
+} from './reply-cap';
+export type { PipelineConvoInput } from './run-pipeline';
 export {
   type PipelineDeps,
   type PipelineGate,

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { runTryAiAction, type TryAiState } from '../../app/app/(guarded)/try-ai/actions';
-import { TRY_AI_MAX_CHARS } from '../../lib/try-ai-limits';
+import { MAX_PREVIOUS_RAW_CHARS, TRY_AI_MAX_CHARS } from '../../lib/try-ai-limits';
 import { llmStatusText } from './llm-status';
 import { TryAiResultView } from './try-ai-result';
 
@@ -30,6 +30,18 @@ export function TryAiForm({ initialText = '' }: { initialText?: string }) {
           defaultValue={initialText}
           required
         />
+        <label htmlFor="try-ai-previous" className="section-title">
+          {t('previousLabel')}
+        </label>
+        <textarea
+          id="try-ai-previous"
+          name="previous"
+          className="input"
+          rows={3}
+          maxLength={MAX_PREVIOUS_RAW_CHARS}
+          placeholder={t('previousPlaceholder')}
+        />
+        <p className="muted">{t('previousHelp')}</p>
         <div className="row">
           <button type="submit" className="btn btn-primary" disabled={pending}>
             {t('submit')}

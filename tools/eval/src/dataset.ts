@@ -31,12 +31,24 @@ const extractExpectation = z
   })
   .strict();
 
+/**
+ * Lượt TRƯỚC trong hội thoại nhiều lượt (Q-POR12): cũ → mới, ≤ 5; `shop` = câu shop đã trả lời. Mẫu nhiều lượt đo "hỏi lại rồi khách trả
+ * lời ngắn" (vd. "M đen" sau khi shop hỏi size/màu). Runner phát lại các lượt khách trước qua pipeline để có trạng thái hội thoại thật.
+ */
+export const threadTurnSchema = z.object({
+  from: z.enum(['customer', 'shop']),
+  text: z.string().min(1).max(1000),
+});
+export type ThreadTurn = z.infer<typeof threadTurnSchema>;
+
 export const evalSampleSchema = z.object({
   id: z.string().min(1).max(64),
   source: z.enum(['synthetic', 'real']),
   group: z.enum(LANG_GROUPS),
   category: z.enum(CATEGORIES).default('normal'),
   text: z.string().min(1).max(2000),
+  /** Các lượt trước (nhiều lượt); thiếu = mẫu một lượt như cũ. */
+  thread: z.array(threadTurnSchema).max(5).optional(),
   hasMedia: z.boolean().default(false),
   expected: z.object({
     lang: z.enum(['vi', 'en']),

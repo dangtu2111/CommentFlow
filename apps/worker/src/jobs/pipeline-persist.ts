@@ -13,7 +13,7 @@ import {
   type FlowDb,
   failPipelineTurn,
   finishCommentProcessing,
-  handoffCommentIfProcessing,
+  handoffCommentIfPending,
   insertDraft,
   insertRetrievalLog,
   lockCommentForPersist,
@@ -70,7 +70,7 @@ export async function persistHandoff(
 ): Promise<PersistOutcome> {
   return db.withJob(workspaceId, async (tx): Promise<PersistOutcome> => {
     await lockCommentForPersist(tx, ctx.commentId);
-    await handoffCommentIfProcessing(tx, workspaceId, ctx.commentId);
+    await handoffCommentIfPending(tx, workspaceId, ctx.commentId);
     if (options.markFailed) await failPipelineTurn(tx, workspaceId, ctx.commentId, reason);
     if (await commentHasDraft(tx, workspaceId, ctx.commentId)) return { written: false };
     const draftId = await insertDraft(tx, workspaceId, handoffDraftInput(reason, ctx));

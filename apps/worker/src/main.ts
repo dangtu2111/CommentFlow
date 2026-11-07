@@ -1,6 +1,11 @@
 import { createLlmDepsFromEnv } from '@flow/ai';
 import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
-import { createDb, DEFAULT_MERGE_WINDOW_SECONDS, getMergeWindowSeconds } from '@flow/db';
+import {
+  countRepliesForCommentThread,
+  createDb,
+  DEFAULT_MERGE_WINDOW_SECONDS,
+  getMergeWindowSeconds,
+} from '@flow/db';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
@@ -9,7 +14,11 @@ import { startHealthServer } from './health';
 import { createChannelCheckHandler } from './jobs/channel-check';
 import { createDataExportHandler } from './jobs/data-export';
 import { createHideHandler } from './jobs/hide';
-import { createIngestHandler, type IngestPipelineHook } from './jobs/ingest';
+import {
+  createIngestHandler,
+  FIRST_COMMENT_PRIORITY,
+  type IngestPipelineHook,
+} from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
 import { createKbReembedHandler } from './jobs/kb-reembed';
 import { pickReembedEmbedder } from './jobs/kb-reembed-embedder';
@@ -70,9 +79,16 @@ async function main(): Promise<void> {
   }
   const pipelineHook: IngestPipelineHook | undefined = pipelineOn
     ? {
-        enqueue: async (job, startAfterSeconds) => {
-          await boss.send(PIPELINE_QUEUE, job, { startAfter: startAfterSeconds });
+        enqueue: async (job, startAfterSeconds, priority) => {
+          await boss.send(PIPELINE_QUEUE, job, { startAfter: startAfterSeconds, priority });
         },
+        // FR-167: bình luận ĐẦU TIÊN của khách dưới bài (chưa có câu AI nào trong 24 giờ) được ưu tiên.
+        priority: (workspaceId, commentId) =>
+          db.withJob(workspaceId, async (tx) =>
+            (await countRepliesForCommentThread(tx, workspaceId, commentId, new Date())) === 0
+              ? FIRST_COMMENT_PRIORITY
+              : 0,
+          ),
         flagEnabled: true,
         allowedWorkspaceIds: config.pipeline.workspaceIds,
         mergeWindowSeconds: (workspaceId) =>

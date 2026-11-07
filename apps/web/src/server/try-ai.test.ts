@@ -1,4 +1,10 @@
-import { createDemoDrafter, createDemoKnowledge, createTryQuota } from '@flow/ai';
+import {
+  createDemoDrafter,
+  createDemoExtractor,
+  createDemoKnowledge,
+  createTryQuota,
+  type Extractor,
+} from '@flow/ai';
 import { describe, expect, it } from 'vitest';
 import { createTryAiAction, TRY_AI_MAX_CHARS } from './try-ai';
 
@@ -119,5 +125,38 @@ describe('brand_voice thật trong ô Thử AI', () => {
       dont: [],
     });
     expect(r.ok && r.voice).toBe('demo');
+  });
+});
+
+describe('Q-POR12 Thử AI — ô "lượt trước" (tùy chọn)', () => {
+  it('lượt trước đi tới bước extract dưới dạng lịch sử ĐÃ che PII; không có ô → không có lịch sử', async () => {
+    const seen: unknown[] = [];
+    const base = createDemoExtractor();
+    const extractor: Extractor = {
+      async extract(input) {
+        seen.push(input.history);
+        return base.extract(input);
+      },
+    };
+    const run = createTryAiAction({
+      quota: createTryQuota({ limit: 5 }),
+      now,
+      buildDeps: () => ({
+        extractor,
+        drafter: createDemoDrafter(),
+        knowledge: createDemoKnowledge(),
+      }),
+    });
+    await run(
+      session,
+      'M đen',
+      'Khách: áo thun basic giá bn? gọi 0912345678\nShop: Dạ bạn chọn size và màu nào ạ?',
+    );
+    await run(session, 'ship về Hà Nội bao nhiêu');
+    const withHistory = JSON.stringify(seen[0]);
+    expect(withHistory).toContain('áo thun basic giá bn?');
+    expect(withHistory).toContain('Dạ bạn chọn size và màu nào ạ?');
+    expect(withHistory).not.toContain('0912345678');
+    expect(seen[1]).toBeUndefined();
   });
 });

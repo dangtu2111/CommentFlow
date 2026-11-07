@@ -1987,6 +1987,9 @@
     "mockNote": "Running a simulation (no real AI call, sample knowledge). Results only preview the processing flow.",
     "label": "Sample customer comment",
     "placeholder": "E.g. how much is the basic tee, size M, black?",
+    "previousLabel": "Previous turns in the conversation (optional)",
+    "previousPlaceholder": "Customer: how much is the basic tee?\nShop: Which size and color would you like?",
+    "previousHelp": "One turn per line, prefix Customer: or Shop: (no prefix = customer). Last 5 turns only; phone numbers/emails are masked before reaching the AI. Use it to try short replies like M black.",
     "submit": "Try",
     "quota": "{used}/{limit} tries used today",
     "llm": {
