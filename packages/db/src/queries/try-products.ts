@@ -1,3 +1,4 @@
+import { type ProductCard, parseProductCard } from '@flow/shared';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
 
@@ -18,6 +19,8 @@ export type TryProduct = {
   priceVnd: number | null;
   stock: number | null;
   variants: TryProductVariant[];
+  /** Thẻ sản phẩm (FR-058); dữ liệu hỏng/khóa lạ → bỏ (không đoán). */
+  card?: ProductCard;
 };
 
 const uuidList = (ids: readonly string[]) =>
@@ -49,8 +52,9 @@ export async function loadTryProducts(
     name: string;
     price_vnd: string | null;
     stock: number | null;
+    card: unknown;
   }>(sql`
-    SELECT id, name, price_vnd, stock FROM cf.products
+    SELECT id, name, price_vnd, stock, card FROM cf.products
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND id IN (${uuidList(productIds)})
      ORDER BY name, id`);
   const variants = await tx.execute<{
@@ -74,13 +78,17 @@ export async function loadTryProducts(
     });
     byProduct.set(row.product_id, list);
   }
-  return products.rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    priceVnd: row.price_vnd === null ? null : Number(row.price_vnd),
-    stock: row.stock,
-    variants: byProduct.get(row.id) ?? [],
-  }));
+  return products.rows.map((row) => {
+    const parsed = parseProductCard(row.card);
+    return {
+      id: row.id,
+      name: row.name,
+      priceVnd: row.price_vnd === null ? null : Number(row.price_vnd),
+      stock: row.stock,
+      variants: byProduct.get(row.id) ?? [],
+      ...(parsed.ok && Object.keys(parsed.card).length > 0 ? { card: parsed.card } : {}),
+    };
+  });
 }
 
 /** Tên các sản phẩm đang bán (tối đa `limit`) để bộ nhận diện của ô Thử AI biết khách đang nhắc sản phẩm nào. */

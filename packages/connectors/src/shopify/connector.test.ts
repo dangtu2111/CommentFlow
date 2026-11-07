@@ -98,6 +98,38 @@ describe('FR-052 Shopify connector — cấu hình', () => {
   });
 });
 
+describe('FR-058 Shopify connector — mô tả, tag, metafield cho thẻ sản phẩm', () => {
+  it('truy vấn đọc description/tags/metafields (chỉ đọc) và trả về trong sản phẩm', async () => {
+    const node = productNode(1, {
+      description: 'Áo cotton mềm.',
+      tags: ['hè', 'nữ'],
+      metafields: {
+        nodes: [
+          { namespace: 'custom', key: 'material', type: 'single_line_text_field', value: 'cotton' },
+        ],
+      },
+    });
+    const { connector, calls } = harness([jsonResponse(productsPage([node], null))]);
+    const catalog = await connector.fetchCatalog();
+    expect(calls[0]?.body.query).toMatch(/description/);
+    expect(calls[0]?.body.query).toMatch(/tags/);
+    expect(calls[0]?.body.query).toMatch(/metafields\(first: \d+/);
+    expect(catalog.products[0]).toMatchObject({
+      description: 'Áo cotton mềm.',
+      tags: ['hè', 'nữ'],
+      metafields: [
+        { namespace: 'custom', key: 'material', type: 'single_line_text_field', value: 'cotton' },
+      ],
+    });
+  });
+
+  it('nút không có các trường này (phản hồi cũ/thiếu quyền) → mặc định rỗng, không làm hỏng đồng bộ', async () => {
+    const { connector } = harness([jsonResponse(productsPage([productNode(1)], null))]);
+    const catalog = await connector.fetchCatalog();
+    expect(catalog.products[0]).toMatchObject({ description: '', tags: [], metafields: [] });
+  });
+});
+
 describe('FR-052 Shopify connector — phân trang', () => {
   it('FR-052 duyệt hết sản phẩm qua nhiều trang bằng con trỏ after', async () => {
     const { connector, calls } = harness([

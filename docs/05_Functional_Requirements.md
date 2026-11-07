@@ -70,7 +70,7 @@
 | FR-055 | Lập chỉ mục: cắt đoạn theo loại, tiêu đề mục ở đầu đoạn (chi tiết `context_header`: FR-130), `content_hash` bỏ qua phần không đổi, embedding theo lô, ghi theo phiên bản rồi chuyển trong một giao dịch | Bắt buộc |
 | FR-056 | Giá/tồn kho **không** nằm trong văn bản vector hóa | Bắt buộc |
 | FR-057 | Tìm kết hợp vector + toàn văn (`tsv` theo ngôn ngữ đoạn: `simple`+`unaccent` cho vi, `english` cho en; `pg_trgm` cho lỗi gõ), trộn RRF (k=60), lọc workspace/kênh/phiên bản/ngày hiệu lực/ngôn ngữ, rerank tùy chọn, ngưỡng liên quan, trần ~3.000 token | Bắt buộc |
-| FR-058 | Thẻ sản phẩm gồm chất liệu, cách giặt, bảng size, bảo hành, xuất xứ, loại, tag (mỗi giá trị ≤ 600 ký tự) | Bắt buộc |
+| FR-058 | Thẻ sản phẩm gồm chất liệu, cách giặt, bảng size, bảo hành, xuất xứ, loại, mô tả, tag (mỗi giá trị ≤ 600 ký tự; văn bản tự do bị loại mọi câu có số tiền — giá chỉ đọc từ kho sản phẩm; Q-SPC1) | Bắt buộc |
 | FR-059 | Ô Thử AI hiển thị đoạn tìm được kèm điểm | Bắt buộc |
 
 ## FR-F — Bài viết

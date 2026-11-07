@@ -24,6 +24,9 @@ const product = (over: Partial<ShopifyProduct> = {}): ShopifyProduct => ({
   handle: 'ao-thun',
   status: 'ACTIVE',
   productType: 'Áo',
+  description: '',
+  tags: [],
+  metafields: [],
   onlineStoreUrl: 'https://demo-shop.myshopify.com/products/ao-thun',
   imageUrl: 'https://cdn.shopify.com/s/files/1/demo/ao-thun.jpg',
   variants: [variant()],
@@ -242,5 +245,42 @@ describe('FR-052 buildShopifyImportPlan', () => {
         },
       ),
     );
+  });
+});
+
+describe('FR-058 buildShopifyImportPlan — thẻ sản phẩm', () => {
+  it('mô tả/tag/loại/metafield → plan.card; không có gì → card rỗng', () => {
+    const [withCard] = buildShopifyImportPlan(
+      catalog([
+        product({
+          description: 'Áo cotton mềm. Giá chỉ 99k!',
+          tags: ['hè'],
+          metafields: [
+            {
+              namespace: 'custom',
+              key: 'material',
+              type: 'single_line_text_field',
+              value: 'cotton',
+            },
+          ],
+        }),
+      ]),
+    );
+    expect(withCard?.card).toEqual({
+      type: 'Áo',
+      tags: ['hè'],
+      description: 'Áo cotton mềm.',
+      material: 'cotton',
+    });
+    const [bare] = buildShopifyImportPlan(catalog([product({ productType: '' })]));
+    expect(bare?.card).toEqual({});
+  });
+
+  it('giá trong mô tả không bao giờ thành giá sản phẩm và không lọt vào thẻ', () => {
+    const [plan] = buildShopifyImportPlan(
+      catalog([product({ description: 'Chỉ 1.000đ hôm nay. Chất liệu cotton.' })], 'VND'),
+    );
+    expect(plan?.card?.description).toBe('Chất liệu cotton.');
+    expect(plan?.priceVnd).toBe(150000);
   });
 });

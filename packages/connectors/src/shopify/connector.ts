@@ -1,6 +1,7 @@
 import { DEFAULT_SHOPIFY_API_VERSION, isShopifyApiVersion } from '@flow/shared';
 import { z } from 'zod';
 import { isPlatformError, PlatformError, type PlatformErrorCode } from '../errors';
+import type { ShopifyMetafield } from './card';
 
 /**
  * Connector Shopify CHỈ ĐỌC (FR-052, docs/12 §4.1, Q-SHI1) qua Admin GraphQL. Quy ước như các connector khác
@@ -49,6 +50,9 @@ const PRODUCTS_QUERY = `query CfProducts($first: Int!, $after: String, $query: S
       handle
       status
       productType
+      description
+      tags
+      metafields(first: 30) { nodes { namespace key type value } }
       onlineStoreUrl
       featuredMedia { preview { image { url } } }
       variants(first: $variants) {
@@ -114,6 +118,21 @@ const productsDataSchema = z.object({
         handle: z.string(),
         status: z.string(),
         productType: z.string(),
+        // Dữ liệu cho thẻ sản phẩm (FR-058): tùy chọn — thiếu/hỏng KHÔNG được làm hỏng đồng bộ giá/tồn.
+        description: z.string().nullable().optional(),
+        tags: z.array(z.string()).optional(),
+        metafields: z
+          .object({
+            nodes: z.array(
+              z.object({
+                namespace: z.string(),
+                key: z.string(),
+                type: z.string(),
+                value: z.string(),
+              }),
+            ),
+          })
+          .optional(),
         onlineStoreUrl: z.string().nullable(),
         featuredMedia: z
           .object({
@@ -175,6 +194,11 @@ export type ShopifyProduct = {
   handle: string;
   status: string;
   productType: string;
+  /** Mô tả chữ thuần (`description`); rỗng nếu không có. */
+  description: string;
+  tags: string[];
+  /** Metafield của sản phẩm (chỉ để dựng thẻ FR-058; `card.ts` lọc namespace/kiểu). */
+  metafields: ShopifyMetafield[];
   onlineStoreUrl: string | null;
   /** Ảnh đại diện (`featuredMedia.preview.image.url`); `null` khi sản phẩm chưa có ảnh. */
   imageUrl: string | null;
@@ -454,6 +478,9 @@ export function createShopifyConnector(options: ShopifyConnectorOptions): Shopif
             handle: node.handle,
             status: node.status,
             productType: node.productType,
+            description: node.description ?? '',
+            tags: node.tags ?? [],
+            metafields: node.metafields?.nodes ?? [],
             onlineStoreUrl: node.onlineStoreUrl,
             imageUrl: node.featuredMedia?.preview?.image?.url ?? null,
             variants,

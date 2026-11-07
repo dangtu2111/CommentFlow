@@ -46,10 +46,11 @@ export async function applyProductSourceSync(
     const upserted = await tx.execute<{ id: string; inserted: boolean }>(sql`
       INSERT INTO cf.products AS p (workspace_id, source, external_id, name, price_vnd, compare_at_vnd, stock,
                                     variants, url, image_url, category, search_text, locked_fields,
-                                    updated_from_source_at)
+                                    card, updated_from_source_at)
       VALUES (${workspaceId}::uuid, ${source}, ${product.externalId}, ${product.name}, ${product.priceVnd},
               ${product.compareAtVnd}, ${product.stock}, ${JSON.stringify(product.variantsSnapshot)}::jsonb,
-              ${product.url}, ${product.imageUrl ?? null}, ${product.category}, ${product.searchText}, ${locked}, ${at}::timestamptz)
+              ${product.url}, ${product.imageUrl ?? null}, ${product.category}, ${product.searchText}, ${locked},
+              ${JSON.stringify(product.card ?? {})}::jsonb, ${at}::timestamptz)
       ON CONFLICT (workspace_id, source, external_id) DO UPDATE SET
         name = EXCLUDED.name,
         search_text = EXCLUDED.search_text,
@@ -60,6 +61,8 @@ export async function applyProductSourceSync(
         image_url = EXCLUDED.image_url,
         category = EXCLUDED.category,
         variants = EXCLUDED.variants,
+        -- Thẻ (FR-058): GỘP — khóa nguồn có giá trị thắng, khóa khác (người dùng tự nhập) giữ; nguồn không có thẻ → giữ nguyên.
+        card = p.card || EXCLUDED.card,
         status = 'active',
         locked_fields = ARRAY(SELECT DISTINCT unnest(p.locked_fields || EXCLUDED.locked_fields)),
         updated_from_source_at = EXCLUDED.updated_from_source_at,

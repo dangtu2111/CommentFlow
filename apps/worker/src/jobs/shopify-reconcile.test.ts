@@ -22,6 +22,9 @@ const catalog = (price: string): ShopifyCatalog => ({
       handle: 'ao-thun',
       status: 'ACTIVE',
       productType: '',
+      description: '',
+      tags: [],
+      metafields: [],
       onlineStoreUrl: null,
       imageUrl: null,
       variants: [
