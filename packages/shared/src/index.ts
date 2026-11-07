@@ -21,6 +21,11 @@ export {
   evaluateAdminSession,
   parseAdminAuditInput,
 } from './admin-audit';
+export {
+  DEFAULT_AI_TURN_LIMIT,
+  DEFAULT_USAGE_TIME_ZONE,
+  resolveAiTurnLimit,
+} from './ai-turn-limit';
 export { type BrandConfig, DEFAULT_BRAND, defaultMailFrom, loadBrandConfig } from './brand';
 export { COMMENT_LABELS, type CommentLabel, isCommentLabel } from './comment-labels';
 export * from './conversation-window';

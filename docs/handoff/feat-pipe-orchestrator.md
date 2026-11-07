@@ -6,7 +6,7 @@ Kế hoạch đã duyệt (kèm 4 sửa đổi) ở `docs/plans/feat-pipe-orches
 |---|---|
 | A — lõi `runPipeline` dùng chung | **Xong** (PR của nhánh này) |
 | B — đọc ngữ cảnh DB + migration 0072 | **Xong** (nhánh `feat/pipe-orchestrator-b`; `loadPipelineContext`, `comments.ingest_source`, Q-POR4) |
-| C — chặn dừng khẩn cấp/hạn mức + bảng `pipeline_turns` (migration 0073) | Chưa — **gửi diff cho chủ dự án kiểm chéo trước khi merge** |
+| C — chặn dừng khẩn cấp/hạn mức + bảng `pipeline_turns` (migration 0073) | **Xong, CHỜ chủ dự án kiểm chéo** (nhánh `feat/pipe-orchestrator-c`, không tự merge) |
 | D — ghi `drafts`/`ai_usage`/`retrieval_logs`/`kb_gaps` (đã che PII) | Chưa |
 | E — job `pipeline`, gộp bình luận, job quét, `PIPELINE_ENABLED` + `PIPELINE_WORKSPACE_IDS` | Chưa |
 | F — hiện gợi ý, nút "Soạn gợi ý", đường vàng | Chưa |
@@ -30,3 +30,27 @@ Kế hoạch đã duyệt (kèm 4 sửa đổi) ở `docs/plans/feat-pipe-orches
 ## Lưu ý cho lát C/E
 - `shouldAutoRunPipeline` (lát E) đọc `comments.ingest_source`; job quét chỉ nhặt bình luận hàm đó cho phép hoặc đã có `pipeline_turns`.
 - Nếu ai đó cần DB dev khớp sau khi sửa nội dung migration đã áp: `pnpm --filter @flow/db db:repair-dev <tên>` (xem `docs/workflows/db-drift.md`).
+
+## Lát C — chặn trước LLM + trừ lượt idempotent (CHỜ KIỂM CHÉO)
+**Làm gì:** `createTurnGate` (`packages/ai/src/pipeline/turn-gate.ts`) nối vào `runPipeline` qua `deps.gate`: dừng khẩn cấp → giành quyền + khóa + trừ lượt trong MỘT giao dịch ngắn (`createDbTurnPorts`, worker) → commit TRƯỚC khi gọi LLM. Bảng mới `cf.pipeline_turns` (migration 0073): `comment_id` khóa chính (duy nhất), `charged_at` ghi một lần (trigger), `attempts`, `state`, `locked_until` (thuê chống job trùng). Q-POR3, Q-POR5.
+
+**Số đo (DB thật):** test tích hợp cổng lượt 17 (worker) + 14 (DB) xanh; crash sau consume trước persist → xử lý tiếp không trừ thêm; 5 job đồng thời → trừ 1 lượt, 1 job chạy, 4 `busy`; hết lượt/dừng khẩn cấp → `extract`/`draft` đếm = 0 lần gọi.
+
+### Tự kiểm theo `verify.md` — tự kiểm, chưa có kiểm chứng độc lập
+- §A.1 cô lập workspace: mọi truy vấn mới lọc `workspace_id`; bảng mới bật RLS; test workspace khác không giành quyền/không thấy. ✔
+- §A.2 bí mật: không log; `last_error` chỉ mã lý do (CHECK ≤ 200 ký tự, không nội dung khách). ✔
+- §A.4 tự gửi: lát này KHÔNG chạm `decideAutoSend`/`sendRecheck`/đường gửi; không có import đường gửi. ✔ Lỗi đọc cờ dừng khẩn cấp/hạn mức → chặn (đóng khi lỗi). ✔
+- §A.5 số tiền: không chạm. §A.6 quyền: thành viên chỉ đọc, chỉ hệ thống ghi (policy + GRANT theo cột + `check-rls` kỳ vọng mới). ✔ §A.7 đầu vào: id ép kiểu `::uuid`, lý do cắt 200 ký tự. ✔
+- §B.1 RLS ✔ (`pnpm db:check-rls` đạt). §B.2 chỉ thêm bảng mới, không khóa bảng lớn, có đường lùi (`DROP TABLE`/`DROP FUNCTION`). ✔ §B.3 PK `comment_id` + chỉ mục `(workspace_id, state, updated_at)` cho job quét lát E. §B.4 `timestamptz`. ✔ §B.5 đã thêm bảng vào `docs/10`.
+
+### Điểm cần bạn nhìn kỹ khi kiểm chéo
+1. **Lượt đã trừ không hoàn khi lỗi hệ thống** (trừ ở ĐẦU lượt): bình luận kết thúc `needs_human` do lỗi sau khi đã trừ vẫn mất 1 lượt. Chọn thế vì an toàn hơn không trừ; hoàn lượt là việc thêm nếu bạn muốn (Q-POR5).
+2. **Thuê 120 giây:** job trùng/đồng thời nhận `busy` (bỏ qua, không đốt lần thử). Crash cứng: bình luận chờ thuê hết hạn (tối đa 120 giây) rồi job được giao lại/job quét (lát E) xử lý tiếp.
+3. **Giao dịch trừ lượt** giữ khóa dòng bình luận + dòng bộ đếm lượt chỉ trong thời gian rất ngắn (không có lời gọi LLM trong giao dịch); các bình luận khác nhau của cùng workspace tuần tự hóa qua dòng bộ đếm (vài mili giây mỗi lần).
+4. **`isWorkspaceEmergencyStopped`**: workspace không đọc được → coi là ĐANG DỪNG (đóng khi lỗi).
+5. **Hạn mức** vẫn lấy từ `resolveAiTurnLimit` (biến môi trường `AI_TURNS_PLAN_LIMIT`, Q-UMU1, mặc định 500) — chưa nối gói cước thật; nay hàm nằm ở `@flow/shared` dùng chung web/worker.
+6. **Sửa nội dung migration sau khi áp:** 0073 được sửa (thêm `locked_until`) sau khi áp lên `cf_dev`; đã dùng `db:repair-dev` — đã khớp.
+
+### Lưu ý cho lát D/E
+- Handler (lát E) phải xử lý `blocked` theo lý do: `busy` → bỏ qua (KHÔNG đánh `needs_human`); `gate_error` → ném để pg-boss thử lại; `quota_exhausted`/`emergency_stop`/`attempts_exhausted` → ghi bản nháp "Cần nhân viên" kèm lý do (lát D).
+- Lỗi có kiểm soát trong handler → gọi `releasePipelineTurn` để lần thử lại giành được ngay; xong → `completePipelineTurn`.
