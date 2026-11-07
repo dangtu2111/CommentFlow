@@ -273,6 +273,15 @@ export {
   type PipelineContext,
 } from './queries/pipeline-context';
 export {
+  type CommentFinish,
+  commentHasDraft,
+  extendPipelineTurnLease,
+  failPipelineTurn,
+  finishCommentProcessing,
+  handoffCommentIfProcessing,
+  lockCommentForPersist,
+} from './queries/pipeline-persist';
+export {
   type BeginPipelineTurnResult,
   beginPipelineTurn,
   blockPipelineTurn,

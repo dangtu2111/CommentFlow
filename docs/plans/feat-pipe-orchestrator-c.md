@@ -15,7 +15,7 @@ Không có. Quyết định: Q-POR5 (thuê chống trùng; lượt đã trừ kh
 ## Tiêu chí nghiệm thu
 
 1. Cổng chạy sau `ruleFilter`/che PII/chuẩn hóa và TRƯỚC `extract`; bị chặn → `extract`/`draft` KHÔNG được gọi — kiểm bằng: `run-pipeline.test.ts`, `pipeline-turn.int.test.ts` (đếm số lần gọi).
-2. Dừng khẩn cấp → chặn `emergency_stop`, không giành quyền, không trừ lượt; lỗi đọc cờ → chặn `gate_error` (đóng khi lỗi); workspace không đọc được → coi là đang dừng — kiểm bằng: `turn-gate.test.ts`, `pipeline-turns.int.test.ts`, `pipeline-turn.int.test.ts`.
+2. Dừng khẩn cấp → chặn `emergency_stop`, không giành quyền, không trừ lượt, **bình luận giữ `new`** (Q-POR7); lỗi đọc cờ → chặn `gate_error` (đóng khi lỗi); workspace không đọc được → coi là đang dừng — kiểm bằng: `turn-gate.test.ts`, `pipeline-turns.int.test.ts`, `pipeline-turn.int.test.ts`.
 3. Hết hạn mức → `quota_exhausted`: KHÔNG trừ, khóa `blocked`, bình luận `needs_human`; hạn mức 0 → chặn ngay — kiểm bằng: `pipeline-turn.int.test.ts`.
 4. Trừ lượt idempotent bằng khóa UNIQUE `comment_id`: thử lại sau khi đã trừ → xử lý tiếp, không trừ thêm; **crash sau consume trước persist**; lỗi giữa chừng khi trừ → hoàn tác cả khóa lẫn trạng thái (không khóa mồ côi) — kiểm bằng: `pipeline-turn.int.test.ts`.
 5. Nhiều job đồng thời cùng bình luận → trừ đúng 1 lượt, đúng 1 dòng khóa, một job chạy tiếp, còn lại `busy` (không tăng lần thử, không gọi LLM trùng); thuê hết hạn thì giành lại; nhả thuê khi lỗi có kiểm soát — kiểm bằng: `pipeline-turns.int.test.ts`, `pipeline-turn.int.test.ts`.

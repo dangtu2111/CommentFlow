@@ -4,7 +4,13 @@ import {
   loadTryProducts,
   type TryProduct,
 } from '@flow/db/runtime';
-import { cleanCardText, formatMinorAmount, type ProductCard, unsafeMarkMasked } from '@flow/shared';
+import {
+  cleanCardText,
+  formatMinorAmount,
+  type PriceSource,
+  type ProductCard,
+  unsafeMarkMasked,
+} from '@flow/shared';
 import type { VariantAxis } from '../decide/decide-action';
 import type { TryCandidate, TryKnowledge } from './try-pipeline';
 
@@ -130,6 +136,32 @@ function productCommerceText(product: TryProduct): string {
   return `${head}; biến thể: ${lines.join(' | ')}.`;
 }
 
+/** Giá/tồn CÓ CẤU TRÚC của sản phẩm + từng biến thể cho `drafts.price_snapshot` (FR-111); mục không có giá VND (ngoại tệ) sẽ bị `buildPriceSnapshot` bỏ. */
+export function priceSourcesOf(product: TryProduct): PriceSource[] {
+  return [
+    {
+      productId: product.id,
+      variantId: null,
+      priceVnd: product.priceVnd,
+      stock: product.stock,
+      updatedFromSourceAt: product.updatedFromSourceAt ?? null,
+    },
+    ...product.variants.flatMap((v) =>
+      v.id === undefined
+        ? []
+        : [
+            {
+              productId: product.id,
+              variantId: v.id,
+              priceVnd: v.priceVnd,
+              stock: v.stock,
+              updatedFromSourceAt: v.updatedFromSourceAt ?? null,
+            },
+          ],
+    ),
+  ];
+}
+
 export type DbProductKnowledge = Pick<TryKnowledge, 'matchProducts' | 'lookupProductFacts'>;
 
 export function createDbProductKnowledge(tx: Database, workspaceId: string): DbProductKnowledge {
@@ -163,6 +195,7 @@ export function createDbProductKnowledge(tx: Database, workspaceId: string): DbP
           topics: ['product_info', 'size'],
           ...(hasPrice(product) ? {} : { priceUnknown: true }),
           ...(usesForeignPrice(product) ? { foreignPrice: true } : {}),
+          priceSources: priceSourcesOf(product),
         }),
       );
     },

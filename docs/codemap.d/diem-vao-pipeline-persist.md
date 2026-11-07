@@ -1,0 +1,1 @@
+| Ghi kết quả một lượt pipeline trong MỘT giao dịch (bản nháp, nhật ký tìm kiếm, lỗ hổng kiến thức, nhãn bình luận; idempotent bằng CAS processing; "Cần nhân viên" cho lượt bị chặn/lỗi; Q-POR6) | `persistPipelineResult`, `persistHandoff` | `apps/worker/src/jobs/pipeline-persist.ts` |

@@ -8,6 +8,7 @@ import {
   type CommentLabel,
   type MaskedText,
   maskPii,
+  type PriceSource,
   type RuleFilterReason,
   ruleFilter,
   unsafeMarkMasked,
@@ -58,6 +59,8 @@ export type TryCandidate = {
   priceUnknown?: boolean;
   /** Nguồn này nêu giá theo tiền tệ GỐC khác VND (Q-SFP1): câu dùng nó không được tự gửi (kiểm giá lúc gửi chưa hỗ trợ). */
   foreignPrice?: boolean;
+  /** Dữ liệu giá/tồn CÓ CẤU TRÚC của nguồn sản phẩm (cho `drafts.price_snapshot`, FR-111); chỉ nguồn kind `product`. */
+  priceSources?: PriceSource[];
 };
 
 /** Ngữ cảnh lọc khi tìm kiến thức. */
@@ -148,6 +151,8 @@ export type TryResult =
       status: 'done';
       billed: false;
       maskedText: string;
+      /** Văn bản ĐÃ che PII rồi chuẩn hóa (viết tắt, không dấu) — lưu `comments.text_normalized`. */
+      normalizedText: string;
       /** Object thô của bước `extract` (để bước ghi lưu `drafts.extracted`). */
       extract: ExtractResult;
       /** Ngữ cảnh chuỗi đã dùng để quyết định (mặc định 0/0/không). */
@@ -324,6 +329,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     status: 'done',
     billed: false,
     maskedText: masked,
+    normalizedText: normalized.normalized,
     extract,
     thread,
     searchQuery,
