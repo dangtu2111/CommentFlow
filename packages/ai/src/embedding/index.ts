@@ -5,6 +5,13 @@ export {
   type EmbeddingDescription,
   resolveEmbeddingConfig,
 } from './embedding-config';
+export {
+  type EmbeddingConsistency,
+  type EmbeddingMismatch,
+  type EmbeddingModelCount,
+  evaluateEmbeddingConsistency,
+  vectorBranchUsable,
+} from './embedding-consistency';
 export { createFixtureEmbedder, FIXTURE_EMBEDDING_MODEL } from './fixture-embedder';
 export {
   createMlEmbedder,

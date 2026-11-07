@@ -15,7 +15,7 @@ describe('KB-TRYAI cờ + runner', () => {
     const runner = createKnowledgeRunner({ enabled: false, db: { withActor } });
     const base = createDemoKnowledge();
     const out = await runner({ workspaceId: 'w', userId: 'u' }, base, async (k) => k === base);
-    expect(out).toEqual({ value: true, source: 'demo' });
+    expect(out).toMatchObject({ value: true, source: 'demo' });
     expect(withActor).not.toHaveBeenCalled();
   });
 
@@ -38,7 +38,7 @@ describe('KB-TRYAI cờ + runner', () => {
       createDemoKnowledge(),
       async () => 1,
     );
-    expect(out).toEqual({ value: 1, source: 'demo' });
+    expect(out).toMatchObject({ value: 1, source: 'demo' });
   });
 
   it('cờ BẬT + có phiên bản → chạy trong withActor, nguồn kb', async () => {
@@ -54,7 +54,7 @@ describe('KB-TRYAI cờ + runner', () => {
     });
     const base = createDemoKnowledge();
     const out = await runner({ workspaceId: 'w', userId: 'u' }, base, async (k) => k !== base);
-    expect(out).toEqual({ value: true, source: 'kb' });
+    expect(out).toMatchObject({ value: true, source: 'kb' });
     expect(withActor).toHaveBeenCalledWith('w', 'u', expect.any(Function));
   });
   it('chỉ bật sản phẩm thật + workspace có sản phẩm → nguồn shop, kèm tên sản phẩm', async () => {
@@ -142,7 +142,7 @@ describe('KB-TRYAI cờ + runner', () => {
       createDemoKnowledge(),
       async (_k, ctx) => ctx.voices,
     );
-    expect(out).toEqual({ value: {}, source: 'demo' });
+    expect(out).toMatchObject({ value: {}, source: 'demo' });
   });
 
   it('bật sản phẩm thật nhưng workspace chưa có sản phẩm → demo', async () => {
@@ -158,7 +158,7 @@ describe('KB-TRYAI cờ + runner', () => {
       createDemoKnowledge(),
       async () => 1,
     );
-    expect(out).toEqual({ value: 1, source: 'demo' });
+    expect(out).toMatchObject({ value: 1, source: 'demo' });
   });
 
   it('isTryAiProductsReal: mặc định BẬT, chỉ tắt khi đúng "false"', () => {

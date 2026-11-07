@@ -2,6 +2,7 @@ import {
   type BrandVoiceRow,
   defaultKnowledgeReaders,
   type Embedder,
+  type EmbeddingConsistency,
   loadWorkspaceKnowledge,
   type TryKnowledge,
   type TryKnowledgeSource,
@@ -30,7 +31,14 @@ export type KnowledgeRunner = <T>(
   session: TrySession,
   base: TryKnowledge,
   run: (knowledge: TryKnowledge, context: TryRunContext) => Promise<T>,
-) => Promise<{ value: T; source: TryKnowledgeSource }>;
+) => Promise<{ value: T; source: TryKnowledgeSource; embedding: EmbeddingConsistency }>;
+
+/** Nguồn mẫu (không đụng DB): không có kiểm model embedding. */
+export const EMBEDDING_OFF: EmbeddingConsistency = {
+  state: 'off',
+  configuredModel: null,
+  mismatches: [],
+};
 
 export const isTryAiKbReal = (env: Record<string, string | undefined>): boolean =>
   env.TRY_AI_KB_REAL === 'true';
@@ -69,6 +77,7 @@ export function createKnowledgeRunner(options: {
     const demo = async () => ({
       value: await run(base, { productNames: [], abbreviations: {}, voices: {} }),
       source: 'demo' as const,
+      embedding: EMBEDDING_OFF,
     });
     if ((!options.enabled && !options.productsEnabled) || !session.userId) return demo();
     const userId = session.userId;
@@ -84,7 +93,11 @@ export function createKnowledgeRunner(options: {
         readers,
       });
       if (!loaded) return demo();
-      return { value: await run(loaded.knowledge, loaded.context), source: loaded.source };
+      return {
+        value: await run(loaded.knowledge, loaded.context),
+        source: loaded.source,
+        embedding: loaded.embedding,
+      };
     });
   };
 }

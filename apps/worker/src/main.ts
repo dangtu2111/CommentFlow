@@ -1,6 +1,7 @@
 import { createLlmDepsFromEnv } from '@flow/ai';
 import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
 import {
+  countEmbeddingModels,
   countRepliesForCommentThread,
   createDb,
   DEFAULT_MERGE_WINDOW_SECONDS,
@@ -9,6 +10,7 @@ import {
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
+import { checkEmbeddingAtStartup } from './embedding-startup-check';
 import { createLocalExportStore } from './export-store';
 import { startHealthServer } from './health';
 import { createChannelCheckHandler } from './jobs/channel-check';
@@ -190,6 +192,13 @@ async function main(): Promise<void> {
   // FR-133: kb-reembed — tạo lại embedding khi đổi model. KHÔNG có embedder giả khi chạy: cờ KB_REEMBED_ENABLED=true mà thiếu embedding thật
   // (ML_EMBED_ENABLED=true + ML_URL) → LỖI RÕ khi khởi động (không âm thầm tạo vector giả làm lệch dữ liệu bge-m3).
   logger.info({ embedding: config.embedding.describe }, 'cấu hình embedding');
+  // Kiểm lệch model embedding với dữ liệu đã lưu (FR-133): chỉ log; khi lệch, nhánh vector tự tắt ở từng lượt (không trộn vector khác model).
+  await checkEmbeddingAtStartup({
+    configuredModel: config.embedding.model,
+    workspaceIds: config.pipeline.workspaceIds,
+    count: (workspaceId) => db.withJob(workspaceId, (tx) => countEmbeddingModels(tx, workspaceId)),
+    logger,
+  });
   if (config.kbReembedEnabled) {
     if (config.embedding.kind !== 'ml') {
       throw new Error(

@@ -2035,6 +2035,10 @@
       "shop": "Source: the shop’s real products (price/stock/variants read from the product store); policies are still sample text",
       "kb": "Source: your shop's published knowledge — the 0–1 score is the relevance computed by the system"
     },
+    "embedding": {
+      "mismatch": "The search model differs from the stored data — run kb:reembed. Vector search is off (full-text/trigram only) until they match.",
+      "off": "Vector search is off (embedding is not enabled) — full-text/trigram only."
+    },
     "voice": {
       "shop": "Voice: the shop’s saved brand voice for this language",
       "demo": "Voice: sample (the shop has no saved brand voice for this language)"

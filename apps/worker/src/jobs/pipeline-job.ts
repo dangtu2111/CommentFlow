@@ -44,6 +44,8 @@ export type PipelineJobConfig = {
   /** Hạn mức lượt/tháng (`resolveAiTurnLimit`). */
   turnLimit: number;
   embedder?: Embedder;
+  /** Gọi khi model embedding lệch dữ liệu của workspace (nhánh vector đã tắt cho lượt này); không kèm nội dung kiến thức. */
+  onEmbeddingMismatch?: (workspaceId: string, mismatches: readonly unknown[]) => void;
   now?: () => Date;
 };
 
@@ -155,6 +157,9 @@ export async function runPipelineJob(
       ...(config.embedder ? { embedder: config.embedder } : {}),
     }),
   );
+  if (loaded?.embedding.state === 'mismatch') {
+    config.onEmbeddingMismatch?.(workspaceId, loaded.embedding.mismatches);
+  }
   const knowledge = loaded ? perCallKnowledge(db, workspaceId, loaded.bind) : EMPTY_KNOWLEDGE;
   const voices = loaded?.context.voices ?? {};
   const abbreviations = loaded?.context.abbreviations ?? {};
@@ -229,6 +234,14 @@ export async function runPipelineJob(
 export function createPipelineHandler(
   config: PipelineJobConfig & { logger: Pick<Logger, 'info' | 'error'> },
 ): BatchHandler {
+  const runConfig: PipelineJobConfig = {
+    ...config,
+    onEmbeddingMismatch: (workspaceId, mismatches) =>
+      config.logger.error(
+        { workspaceId, mismatches },
+        'Model tìm kiếm khác dữ liệu — chạy kb:reembed (nhánh vector tắt cho lượt này)',
+      ),
+  };
   return async (jobs) => {
     for (const job of jobs) {
       const parsed = pipelineJobSchema.safeParse(job.data);
@@ -236,7 +249,7 @@ export function createPipelineHandler(
         config.logger.error({ jobId: job.id }, 'pipeline: dữ liệu job không hợp lệ');
         continue;
       }
-      const outcome = await runPipelineJob(config, parsed.data);
+      const outcome = await runPipelineJob(runConfig, parsed.data);
       config.logger.info(
         {
           workspaceId: parsed.data.workspaceId,

@@ -59,6 +59,14 @@ export function TryAiForm({ initialText = '' }: { initialText?: string }) {
       {state.status === 'done' && state.ok ? (
         <>
           <p className="muted">{t(`knowledge.${state.knowledge}`)}</p>
+          {state.embedding.state === 'mismatch' ? (
+            <p role="alert" className="alert">
+              {t('embedding.mismatch')}
+            </p>
+          ) : null}
+          {state.embedding.state === 'off' && state.knowledge !== 'demo' ? (
+            <p className="muted">{t('embedding.off')}</p>
+          ) : null}
           <p className="muted">{t(`voice.${state.voice}`)}</p>
           <p className="muted">{llmStatusText(t, state.llm)}</p>
           <TryAiResultView result={state.result} />
