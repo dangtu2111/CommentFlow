@@ -25,6 +25,34 @@ const goodEnv = {
 };
 
 const pool = new pg.Pool({ connectionString: adminUrl, max: 1 });
+
+/**
+ * Thư mục migration TIỀN TỐ (N mục đầu của journal thật). Vì sao: mỗi câu lệnh migration là một vòng gọi mạng tới DB trên máy ảo (~5 ms/vòng, ~930
+ * câu cho cả lịch sử ⇒ ~7,5 giây một lần áp toàn bộ, tăng theo từng migration mới). Các test KIỂM LOGIC (lệch lịch sử, DB mới hơn mã) chỉ cần
+ * vài mục nên dùng tiền tố; chỉ MỘT test ("chạy thật") áp toàn bộ lịch sử thật. Nhờ vậy test không còn sát trần thời gian khi mạng chậm
+ * (gap FLAKY-DB-TIMEOUT) mà KHÔNG phải tăng timeout.
+ */
+function prefixMigrations(count: number): { folder: string; entries: typeof entries } {
+  const folder = mkdtempSync(join(tmpdir(), 'cf-prefix-migrations-'));
+  mkdirSync(join(folder, 'meta'));
+  const journal = JSON.parse(
+    readFileSync(new URL('../migrations/meta/_journal.json', import.meta.url), 'utf8'),
+  );
+  journal.entries = journal.entries.slice(0, count);
+  writeFileSync(join(folder, 'meta', '_journal.json'), JSON.stringify(journal));
+  for (const entry of journal.entries) {
+    copyFileSync(
+      new URL(`../migrations/${entry.tag}.sql`, import.meta.url),
+      join(folder, `${entry.tag}.sql`),
+    );
+  }
+  return { folder, entries: journal.entries };
+}
+
+const envFor = (migrationEntries: typeof entries) => ({
+  ...goodEnv,
+  CF_CONFIRM_STAGING_MIGRATE: expectedConfirmation(databaseName, migrationEntries),
+});
 afterAll(() => pool.end());
 
 async function hasMigrationTable(): Promise<boolean> {
@@ -80,13 +108,16 @@ describe('runStagingMigrate trên cf_test', () => {
   }, 30_000);
 
   it('lịch sử bị lệch (mục giữa chưa áp mà mục sau đã áp) → CONFLICT, không áp thêm', async () => {
-    await run({ env: goodEnv, dryRun: false, log: () => {} });
-    const middle = entries[1];
+    // Logic chỉ cần vài mục: dùng tiền tố 4 mục (xem `prefixMigrations`), không áp cả lịch sử qua mạng.
+    const small = prefixMigrations(4);
+    const env = envFor(small.entries);
+    await run({ env, dryRun: false, log: () => {}, migrationsFolder: small.folder });
+    const middle = small.entries[1];
     await pool.query('DELETE FROM drizzle.__drizzle_migrations WHERE created_at = $1', [
       middle?.when,
     ]);
     for (const dryRun of [true, false]) {
-      const result = run({ env: goodEnv, dryRun, log: () => {} });
+      const result = run({ env, dryRun, log: () => {}, migrationsFolder: small.folder });
       expect(await codeOf(result)).toBe('CONFLICT');
     }
   });
@@ -148,29 +179,20 @@ describe('runStagingMigrate trên cf_test', () => {
   });
 
   it('DB đã áp migration mới hơn mã → CONFLICT, không ghi', async () => {
-    await run({ env: goodEnv, dryRun: false, log: () => {} });
-    // Thư mục migration "cũ": journal chỉ có mục đầu (giả lập chạy nhầm bản mã cũ).
-    const folder = mkdtempSync(join(tmpdir(), 'cf-old-migrations-'));
-    mkdirSync(join(folder, 'meta'));
-    const journal = JSON.parse(
-      readFileSync(new URL('../migrations/meta/_journal.json', import.meta.url), 'utf8'),
-    );
-    journal.entries = journal.entries.slice(0, 1);
-    writeFileSync(join(folder, 'meta', '_journal.json'), JSON.stringify(journal));
-    const first = journal.entries[0].tag;
-    copyFileSync(
-      new URL(`../migrations/${first}.sql`, import.meta.url),
-      join(folder, `${first}.sql`),
-    );
-    const oldEnv = {
-      ...goodEnv,
-      CF_CONFIRM_STAGING_MIGRATE: expectedConfirmation(databaseName, journal.entries),
-    };
-    const result = run({
-      env: oldEnv,
+    // DB áp 3 mục; chạy nhầm bản mã "cũ" chỉ có 1 mục (giả lập chạy nhầm bản mã cũ). Chỉ cần tiền tố nhỏ cho cả hai.
+    const newer = prefixMigrations(3);
+    await run({
+      env: envFor(newer.entries),
       dryRun: false,
       log: () => {},
-      migrationsFolder: folder,
+      migrationsFolder: newer.folder,
+    });
+    const older = prefixMigrations(1);
+    const result = run({
+      env: envFor(older.entries),
+      dryRun: false,
+      log: () => {},
+      migrationsFolder: older.folder,
     });
     expect(await codeOf(result)).toBe('CONFLICT');
   });
