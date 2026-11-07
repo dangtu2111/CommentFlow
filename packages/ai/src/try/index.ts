@@ -7,6 +7,7 @@ export {
   type AutoSendPreviewInput,
   decideAutoSendPreview,
 } from './auto-send-preview';
+export { type BrandVoiceRow, type DraftVoicesByLang, draftVoicesFromRows } from './brand-voice';
 export {
   createDbProductKnowledge,
   type DbProductKnowledge,

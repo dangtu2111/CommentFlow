@@ -1,4 +1,4 @@
-import { createTryQuota } from '@flow/ai';
+import { createDemoDrafter, createDemoKnowledge, createTryQuota } from '@flow/ai';
 import { describe, expect, it } from 'vitest';
 import { createTryAiAction, TRY_AI_MAX_CHARS } from './try-ai';
 
@@ -66,5 +66,58 @@ describe('FR-059 US-034 BR-03 Thử AI (mock): đầu vào, giới hạn/ngày, 
       warn: () => {},
     });
     expect(await run(session, 'xin chào shop')).toEqual({ ok: false, reason: 'unavailable' });
+  });
+});
+
+describe('brand_voice thật trong ô Thử AI', () => {
+  const run = async (voices: Record<string, unknown>) => {
+    const seen: unknown[] = [];
+    const base = createDemoKnowledge();
+    const action = createTryAiAction({
+      quota: createTryQuota({ limit: 5 }),
+      now,
+      llm: {
+        drafter: {
+          draft: async (input) => {
+            seen.push(input.voice);
+            return createDemoDrafter().draft(input);
+          },
+        },
+      },
+      knowledgeRunner: async (_s, knowledge, fn) => ({
+        value: await fn(knowledge ?? base, {
+          productNames: [],
+          abbreviations: {},
+          voices: voices as never,
+        }),
+        source: 'shop',
+      }),
+    });
+    const r = await action(session, 'ship về Hà Nội bao nhiêu');
+    return { r, seen };
+  };
+
+  it('có giọng của workspace cho ngôn ngữ nhận ra → bộ soạn nhận giọng đó, kết quả ghi voice=shop', async () => {
+    const vi = {
+      do: ['Báo giá đúng'],
+      dont: [],
+      shopPronoun: 'shop',
+      customerAddress: 'ban',
+      tone: 'thân thiện',
+    };
+    const { r, seen } = await run({ vi });
+    expect(seen[0]).toEqual(vi);
+    expect(r.ok && r.voice).toBe('shop');
+  });
+
+  it('không có giọng → giọng mẫu, kết quả ghi voice=demo', async () => {
+    const { r, seen } = await run({});
+    expect(seen[0]).toMatchObject({
+      shopPronoun: 'shop',
+      customerAddress: 'ban',
+      do: [],
+      dont: [],
+    });
+    expect(r.ok && r.voice).toBe('demo');
   });
 });
