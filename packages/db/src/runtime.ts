@@ -232,6 +232,7 @@ export {
   lockKbPublish,
 } from './queries/kb-publish';
 export {
+  countChunksByEmbeddingModel,
   countChunksToReembed,
   listChunksToReembed,
   type ReembedChunk,

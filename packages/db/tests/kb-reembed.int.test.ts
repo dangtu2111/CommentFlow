@@ -2,6 +2,7 @@ import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FlowDb } from '../src/client';
 import {
+  countChunksByEmbeddingModel,
   countChunksToReembed,
   listChunksToReembed,
   writeReembeddedChunks,
@@ -95,6 +96,20 @@ describe('FR-133 tạo lại embedding (withJob)', () => {
     expect(
       await db.withJob(wsA, (tx) => countChunksToReembed(tx, wsA, 'new-m')),
     ).toBeGreaterThanOrEqual(2);
+  });
+
+  it('đếm đoạn theo mô hình embedding (NULL → chuỗi rỗng), không lẫn workspace khác', async () => {
+    await seedChunk(wsA, srcA, verA, 'cm-a1', { model: 'model-x', embedding: unit(1) });
+    await seedChunk(wsA, srcA, verA, 'cm-a2', { model: 'model-x', embedding: unit(2) });
+    await seedChunk(wsA, srcA, verA, 'cm-null', { model: null });
+    await seedChunk(wsB, srcB, null, 'cm-b', { model: 'model-x', embedding: unit(3) });
+    const rows = await db.withJob(wsA, (tx) => countChunksByEmbeddingModel(tx, wsA));
+    const count = (model: string) => rows.find((row) => row.model === model)?.count ?? 0;
+    expect(count('model-x')).toBeGreaterThanOrEqual(2);
+    expect(count('')).toBeGreaterThanOrEqual(1);
+    const other = await db.withJob(wsB, (tx) => countChunksByEmbeddingModel(tx, wsB));
+    expect(other.find((row) => row.model === 'model-x')?.count).toBeGreaterThanOrEqual(1);
+    expect(other.find((row) => row.model === '')?.count ?? 0).toBe(0);
   });
 
   it('ghi vector + mô hình; KHÔNG đổi content/hash/tsv/phiên bản/nháp (đoạn đã xuất bản và bản nháp)', async () => {

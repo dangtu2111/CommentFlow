@@ -1,4 +1,3 @@
-import { createMockEmbedder } from '@flow/ai';
 import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
 import { createDb } from '@flow/db';
 import { buildConnectorRegistry } from './channels/connector-registry';
@@ -12,6 +11,7 @@ import { createHideHandler } from './jobs/hide';
 import { createIngestHandler } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
 import { createKbReembedHandler } from './jobs/kb-reembed';
+import { pickReembedEmbedder } from './jobs/kb-reembed-embedder';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
@@ -115,7 +115,7 @@ async function main(): Promise<void> {
     await boss.work(
       KB_REEMBED_QUEUE,
       { batchSize: 1, localConcurrency: 1 },
-      createKbReembedHandler({ db, logger, embedder: createMockEmbedder() }),
+      createKbReembedHandler({ db, logger, embedder: pickReembedEmbedder(config) }),
     );
   }
   // FR-094: xuất dữ liệu workspace — cờ DATA_EXPORT_ENABLED mặc định TẮT: tắt thì không đăng ký hàng đợi, không dọn tệp.
