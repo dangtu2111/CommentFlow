@@ -32,3 +32,4 @@ Nhiều file → hợp các luật. Push vào `main` và PR có nhãn `ci-full` 
 - Ép: gắn nhãn `ci-full` vào PR.
 - Tắt hẳn: sửa `scripts/ci-changes.mjs` cho `decideJobs` luôn trả đủ, hoặc xóa dòng `needs`/`if` của ba job (job `changes` vô hại).
 - Nếu check bắt buộc không được tính thành công khi skipped: chuyển sang job luôn chạy, bước nặng bỏ qua bằng `if:` cấp bước.
+- Đã kiểm chứng 07/11/2026 bằng PR thử chỉ sửa tài liệu: xem kết quả check ở PR `chore/ci-skip-probe`.
