@@ -3,12 +3,12 @@
 //   pnpm --filter @flow/eval evaluate --backend mock            (không mạng, chi phí 0 — thử luồng)
 // Không in nội dung bình luận hay khóa; tệp kết quả (`out/`, không commit) chỉ có mã mẫu, số liệu và câu trả lời của AI.
 
-import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { parseDataset } from '../dataset';
+import { EVAL_WORKSPACE } from '../eval-workspace';
 import { computeMetrics } from '../metrics';
 import { costReport, renderReport } from '../report';
 import { type Backend, createRunner, runAll } from '../runner';
@@ -64,11 +64,13 @@ if (values['persist-usage']) {
   const { createDb } = await import('@flow/db');
   const { workspaces } = await import('@flow/db/schema/core');
   const db = createDb({ connectionString: url, max: 3 });
-  const workspaceId = randomUUID();
+  // MỘT workspace [EVAL] cố định, dùng lại mọi lần (tạo nếu chưa có; đã có → không làm gì).
+  const workspaceId = EVAL_WORKSPACE.id;
   await db.withWorkspace(workspaceId, (tx) =>
     tx
       .insert(workspaces)
-      .values({ id: workspaceId, name: '[EVAL] chạy đánh giá', slug: `eval-${workspaceId}` }),
+      .values({ id: workspaceId, name: EVAL_WORKSPACE.name, slug: EVAL_WORKSPACE.slug })
+      .onConflictDoNothing(),
   );
   persistUsage = { db, workspaceId, close: () => db.close() };
   console.log(`Ghi ai_usage thật vào cf_dev, workspace ${workspaceId}`);

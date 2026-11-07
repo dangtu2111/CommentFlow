@@ -16,7 +16,6 @@ import {
   createProductAlias,
   createSizeChartRow,
   createSpamRule,
-  getAutomationSettings,
   getCurrentVersion,
   getSubscription,
   getUsageCounter,
@@ -93,7 +92,6 @@ export type ContentCtx = {
   ownerId: string;
   staffIds: { staff: string; staff2: string };
   /** `true` khi nạp vào workspace có sẵn của Owner khác (không đụng cấu hình hiện có). */
-  intoExisting: boolean;
 };
 
 export type SeedCounts = Record<string, number>;
@@ -467,22 +465,10 @@ async function seedKnowledgeAndSettings(ctx: ContentCtx, ids: Ids): Promise<Seed
   const { deps, workspaceId, ownerId } = ctx;
   const counts: SeedCounts = {};
   await deps.appDb.withActor(workspaceId, ownerId, async (tx) => {
-    // Nạp vào workspace có sẵn: không ghi đè thông tin shop/giọng văn Owner đã tự nhập.
-    const has = async (table: 'shop_profiles' | 'brand_voice', lang: string) => {
-      if (!ctx.intoExisting) return false;
-      const r = await tx.execute(
-        table === 'shop_profiles'
-          ? sql`SELECT 1 FROM cf.shop_profiles WHERE workspace_id = ${workspaceId}::uuid AND lang = ${lang}`
-          : sql`SELECT 1 FROM cf.brand_voice WHERE workspace_id = ${workspaceId}::uuid AND lang = ${lang}`,
-      );
-      return r.rows.length > 0;
-    };
     for (const p of KB_SHOP_PROFILES) {
-      if (await has('shop_profiles', p.lang)) continue;
       await upsertShopProfile(tx, workspaceId, ok(parseShopProfile(p), `thông tin shop ${p.lang}`));
     }
     for (const v of KB_BRAND_VOICES) {
-      if (await has('brand_voice', v.lang)) continue;
       await upsertBrandVoice(tx, workspaceId, ok(parseBrandVoice(v), `giọng văn ${v.lang}`));
     }
     for (const p of KB_POLICIES) {
@@ -514,24 +500,21 @@ async function seedKnowledgeAndSettings(ctx: ContentCtx, ids: Ids): Promise<Seed
     }
     counts.spam_rules = DEMO_SPAM_RULES.length;
 
-    // Ma trận tự động hóa. Nạp vào workspace có sẵn: giữ cấu hình và ô của kênh thật, chỉ thêm ô của kênh mẫu.
-    const existing = ctx.intoExisting ? await getAutomationSettings(tx, workspaceId) : null;
-    const demoChannelIds = new Set(ids.channels.values());
+    // Ma trận tự động hóa của workspace [MẪU] (seed chỉ ghi vào workspace mẫu — Q-SDO1).
     const demoRules = DEMO_AUTOMATION.matrix.map((m) => ({
       channelId: must(ids.channels.get(m.channelKey), 'kênh'),
       target: m.target,
       label: m.label,
       mode: m.mode,
     }));
-    const kept = (existing?.rules ?? []).filter((r) => !demoChannelIds.has(r.channelId));
     await saveAutomationSettings(tx, workspaceId, ownerId, {
-      threshold: existing?.threshold ?? DEMO_AUTOMATION.threshold,
-      delaySeconds: existing?.delaySeconds ?? DEMO_AUTOMATION.delaySeconds,
-      dailyCap: existing?.dailyCap ?? DEMO_AUTOMATION.dailyCap,
-      activeHours: existing ? existing.activeHours : DEMO_AUTOMATION.activeHours,
-      blockedKeywords: existing?.blockedKeywords ?? [...DEMO_AUTOMATION.blockedKeywords],
-      signature: existing ? existing.signature : DEMO_AUTOMATION.signature,
-      rules: [...kept, ...demoRules],
+      threshold: DEMO_AUTOMATION.threshold,
+      delaySeconds: DEMO_AUTOMATION.delaySeconds,
+      dailyCap: DEMO_AUTOMATION.dailyCap,
+      activeHours: DEMO_AUTOMATION.activeHours,
+      blockedKeywords: [...DEMO_AUTOMATION.blockedKeywords],
+      signature: DEMO_AUTOMATION.signature,
+      rules: demoRules,
     });
     counts.automation_rules = demoRules.length;
   });

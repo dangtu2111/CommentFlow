@@ -1,4 +1,4 @@
-// pnpm dev:seed-demo [--reset | --refresh] [--into <email-owner>] — dữ liệu mẫu [MẪU] CHỈ cho DB dev `cf_dev` (Q-UIF1).
+// pnpm dev:seed-demo [--reset | --refresh] — dữ liệu mẫu [MẪU] CHỈ cho DB dev `cf_dev`, CHỈ ghi vào workspace [MẪU] (Q-SDO1)
 // Mật khẩu (chỉ của tài khoản MỚI tạo) in một lần, không lưu file.
 import { createDb } from '@flow/db/runtime';
 import { hashPassword } from '@flow/saas-core';
