@@ -14,13 +14,13 @@ Không có.
 
 ## Tiêu chí nghiệm thu
 
-1. `pnpm --filter @flow/eval evaluate` chạy bộ mẫu qua pipeline thật và in báo cáo: chỉ số §4.2 theo 4 nhóm ngôn ngữ + chi phí/1.000 lượt tách `extract/rewrite/draft` + kiểm token suy luận ≈ 0 + kết luận — kiểm bằng: test `report.test.ts`, `metrics.test.ts`; chạy thật `--backend openai-direct` (56 mẫu, 0 lỗi).
+1. `pnpm --filter @flow/eval evaluate` chạy bộ mẫu qua pipeline thật và in báo cáo: chỉ số §4.2 theo 4 nhóm ngôn ngữ + chi phí/1.000 lượt tách `extract/rewrite/draft` + kiểm token suy luận ≈ 0 + kết luận — kiểm bằng: test `report.test.ts`, `metrics.test.ts`; chạy thật `--backend litellm` (56 mẫu, 0 lỗi, khóa ảo; trước đó đã đo bằng đường gọi thẳng, nay đã bỏ).
 2. Bộ `synthetic` không bao giờ cho kết luận "đạt cổng" (n/a); chỉ bộ `real` đủ ≥ 30 mẫu/nhóm mới được kết luận — kiểm bằng: `report.test.ts`.
 3. Tổng chi phí > $2/1.000 lượt thì runner tự thử giảm biến thể 5 → 3 và in so sánh — kiểm bằng: `run.ts` (logic), `report.test.ts` (`overBudget`).
 4. `ai_usage.reasoning_tokens` được đọc từ `completion_tokens_details.reasoning_tokens` và ghi — kiểm bằng: `llm-client.test.ts`; cột có trên DB dev và `cf_app` có quyền.
-5. Runner dùng khóa trực tiếp có trần số lần gọi và chi phí, chỉ gọi `api.openai.com`, khóa chỉ ở header — kiểm bằng: `openai-direct.test.ts`.
+5. Runner chỉ đi qua LiteLLM bằng khóa ảo có `max_budget` (đã bỏ đường gọi thẳng OpenAI sau khi so số khớp) — kiểm bằng: `runner.test.ts`; chạy thật qua khóa ảo, `ai_usage` khớp chi tiêu khóa.
 6. Lớp nối promptfoo (bản ghim 0.125.1) chạy được và tổng hợp metric theo tên — kiểm bằng: chạy thật backend `mock` (56 test, 0 lỗi); `runner.test.ts`.
-7. Bí danh LiteLLM `cf-classify` (gpt-5-nano, minimal), `cf-draft` (gpt-5.6-luna, none), `cand-*` giữ nguyên — kiểm bằng: đọc `infra/litellm/config.yaml`.
+7. Bí danh LiteLLM `cf-classify` và `cf-draft` (cùng gpt-5.6-luna, none), `cand-*` giữ nguyên — kiểm bằng: đọc `infra/litellm/config.yaml`.
 8. Giấy phép promptfoo (MIT, 0.125.1) ghi ở `docs/decisions/016-promptfoo-eval.md`; rủi ro gpt-5-nano Deprecated ghi ở `Q-LLM1`; định dạng bộ thật ở `CAN_BAN_CUNG_CAP.md`.
 9. `pnpm precheck` xanh; gói `ai` giữ coverage 100% lines/functions.
 

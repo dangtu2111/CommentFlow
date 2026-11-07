@@ -11,7 +11,6 @@ import {
   type LlmClient,
 } from '@flow/ai';
 import type { EvalSample } from './dataset';
-import { createOpenAiDirectFetch, OPENAI_BASE_URL } from './openai-direct';
 import { noopUsageDb, recordUsage } from './recording-llm';
 import { type PipelineParts, runSample, type SampleOutcome } from './run-sample';
 import { buildShopKnowledge, type ShopFixture, shopVoice } from './shop';
@@ -19,11 +18,10 @@ import { buildShopKnowledge, type ShopFixture, shopVoice } from './shop';
 /**
  * Dựng bộ chạy theo backend:
  *  - `litellm`: gọi qua LiteLLM (đúng thiết kế, trần chi phí do `max_budget` của khóa ảo; chi phí lấy từ header LiteLLM);
- *  - `openai-direct`: gọi thẳng OpenAI bằng `OPENAI_API_KEY` khi chưa có LiteLLM (bộ chuyển đổi dịch tham số + trần riêng);
  *  - `mock`: bản mô phỏng theo từ khóa của ô Thử AI, KHÔNG gọi mạng, chi phí 0 — chỉ để thử luồng runner/promptfoo.
  * Tên model là BÍ DANH LiteLLM (`cf-classify`, `cf-draft`, hoặc `cand-*`): đổi model không sửa code.
  */
-export type Backend = 'litellm' | 'openai-direct' | 'mock';
+export type Backend = 'litellm' | 'mock';
 
 export type RunnerOptions = {
   backend: Backend;
@@ -31,15 +29,13 @@ export type RunnerOptions = {
   models: { classify: string; rewrite: string; draft: string };
   /** Số cách diễn đạt KHÁC của câu soạn (0–4); 4 = 5 phiên bản, 2 = 3 phiên bản. */
   variantCount?: number;
-  maxUsd: number;
-  maxCalls: number;
   shop: ShopFixture;
+  /** Ghi `ai_usage` thật (chỉ backend `litellm`): `db` của dev + workspace dành cho đánh giá. Không có → không ghi DB. */
+  persistUsage?: { db: unknown; workspaceId: string };
 };
 
 export type Runner = {
   run: (sample: EvalSample) => Promise<SampleOutcome>;
-  /** Chi tiêu ước tính của backend `openai-direct`; các backend khác `null` (chi phí nằm trong từng `UsageRecord`). */
-  spent: () => { calls: number; usd: number } | null;
 };
 
 function requireEnv(env: RunnerOptions['env'], name: string): string {
@@ -55,25 +51,11 @@ export function createRunner(options: RunnerOptions): Runner {
   const voice = shopVoice(options.shop);
 
   let client: LlmClient | null = null;
-  let direct: ReturnType<typeof createOpenAiDirectFetch> | null = null;
   if (options.backend === 'litellm') {
     client = createLlmClient({
-      db: noopUsageDb as never,
+      db: (options.persistUsage?.db ?? noopUsageDb) as never,
       baseUrl: requireEnv(options.env, 'LITELLM_BASE_URL'),
       apiKey: requireEnv(options.env, 'LITELLM_API_KEY'),
-    });
-  } else if (options.backend === 'openai-direct') {
-    const apiKey = requireEnv(options.env, 'OPENAI_API_KEY');
-    direct = createOpenAiDirectFetch({
-      apiKey,
-      maxCalls: options.maxCalls,
-      maxUsd: options.maxUsd,
-    });
-    client = createLlmClient({
-      db: noopUsageDb as never,
-      baseUrl: OPENAI_BASE_URL,
-      apiKey,
-      fetchImpl: direct,
     });
   }
 
@@ -83,6 +65,7 @@ export function createRunner(options: RunnerOptions): Runner {
         knowledge,
         voice,
         dict,
+        ...(options.persistUsage ? { workspaceId: options.persistUsage.workspaceId } : {}),
         ...(options.variantCount === undefined ? {} : { variantCount: options.variantCount }),
         build: (sink): PipelineParts => {
           if (!client) return { extractor: createDemoExtractor(), drafter: createDemoDrafter() };
@@ -94,7 +77,6 @@ export function createRunner(options: RunnerOptions): Runner {
           };
         },
       }),
-    spent: () => (direct ? direct.stats() : null),
   };
 }
 

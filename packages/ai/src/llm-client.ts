@@ -181,9 +181,10 @@ export function createLlmClient(options: LlmClientOptions) {
                   },
                 }
               : {}),
+            // LiteLLM từ chối `metadata.workspace_id` (coi là tham số xác thực phía client, 401) → dùng `cf_workspace_id`.
             user: input.workspaceId,
             metadata: {
-              workspace_id: input.workspaceId,
+              cf_workspace_id: input.workspaceId,
               step: input.step,
               prompt_version: input.promptVersion,
             },

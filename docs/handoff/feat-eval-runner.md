@@ -27,3 +27,24 @@ Gọi trực tiếp OpenAI (`--backend openai-direct`, trần $0,50), 56 mẫu, 
 - `AI-USAGE-DAILY-REASONING`: mang `reasoning_tokens` sang `ai_usage_daily` trong `compact_ai_usage`.
 - Nối `risks` thật (DA-RULES-LEGAL, injection…) và quy tắc "mơ hồ → clarify" vào pipeline (Bước 4, `PIPE-ORCHESTRATOR`); sau đó chạy lại để xem chỉ số hành động tăng.
 - Bước 2 `brand_voice` thật vào Thử AI; Bước 3 mô tả/metafield Shopify (FR-058) + cảnh báo tiền tệ ≠ VND; Bước 4 `PIPE-ORCHESTRATOR` → `drafts` → các `*-WIRE`.
+
+## Cập nhật 07/11 — chạy lại QUA LiteLLM (khóa ảo), luna cho cả hai bước
+
+Cấu hình: `cf-classify` = `cf-draft` = `gpt-5.6-luna` (reasoning `none`); khóa ảo dev chỉ cho `cf-classify`, `cf-draft`, `mock-llm`, `max_budget` 10 USD / `30d` (script `pnpm cf:dev:update-vkey`, chỉ dùng mã băm). 56 mẫu synthetic, 5 phiên bản câu soạn, 0 lần lỗi, `--persist-usage` ghi `ai_usage` thật vào `cf_dev`.
+
+| Bước | Số lần gọi | USD / 1.000 lượt (qua LiteLLM) | Lần đo thẳng OpenAI trước đó (luna→luna) |
+|---|---|---|---|
+| extract | 56 | 0,195 | 0,196 |
+| rewrite | 19 | 0,0141 | 0,0144 |
+| draft | 52 | 0,375 | 0,367 |
+| **Tổng** | | **0,584** | **0,577** |
+
+- Token suy luận = 0 ở mọi bước (TB 0,0/lần).
+- Đối chiếu chi phí: `ai_usage` của lần chạy đủ = 127 dòng, 0,03271 USD; chi tiêu khóa ảo ở LiteLLM sau tất cả (gồm lần smoke 4 mẫu ≈ 0,0025 và vài lần thăm dò) = 0,03522 USD → khớp. Chi phí lấy từ header LiteLLM khớp bảng giá cũ trong 1,2%.
+- Chỉ số hành động đúng vẫn ≈ 50–57% mỗi nhóm (lỗi ở code `risks`/`DA-RULES-*`, không phải model) — việc kế tiếp.
+
+### Lỗi sản phẩm thật tìm ra khi chạy qua LiteLLM (đã sửa + test)
+`LlmClient` gửi `metadata.workspace_id`; LiteLLM thật từ chối (HTTP 401 "workspace_id is not allowed in request body", coi là tham số xác thực phía client) → mọi lần gọi LLM thật qua LiteLLM sẽ lỗi `CONFIG_INVALID`. Đổi khóa thành `cf_workspace_id` (không bật `allow_client_side_credentials` vì kém an toàn). Trước đây chưa ai thấy vì chỉ có `mock-llm` (và test dùng fetch giả).
+
+### Đã bỏ đường gọi thẳng OpenAI
+Xóa `openai-direct` + bảng giá `pricing` + test khỏi `tools/eval`; runner chỉ còn `litellm | mock`. `OPENAI_API_KEY` chỉ còn ở container LiteLLM trên máy ảo. Chủ dự án có thể xóa dòng `OPENAI_API_KEY` khỏi `.env.local` máy code (và biến Windows cũ nếu có).

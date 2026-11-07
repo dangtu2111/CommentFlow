@@ -373,6 +373,9 @@ importers:
       '@flow/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@flow/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@flow/shared':
         specifier: workspace:*
         version: link:../../packages/shared

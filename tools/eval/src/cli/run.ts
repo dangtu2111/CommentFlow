@@ -1,8 +1,9 @@
 // EVAL-RUNNER: chạy bộ mẫu qua pipeline AI, in/ghi báo cáo chỉ số §4.2 + chi phí/1.000 lượt tách theo bước.
-//   pnpm --filter @flow/eval evaluate --backend openai-direct --max-usd 1
 //   pnpm --filter @flow/eval evaluate --backend litellm --classify-model cf-classify --draft-model cf-draft
 //   pnpm --filter @flow/eval evaluate --backend mock            (không mạng, chi phí 0 — thử luồng)
 // Không in nội dung bình luận hay khóa; tệp kết quả (`out/`, không commit) chỉ có mã mẫu, số liệu và câu trả lời của AI.
+
+import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,27 +25,54 @@ const { values } = parseArgs({
     'rewrite-model': { type: 'string', default: 'cf-classify' },
     'draft-model': { type: 'string', default: 'cf-draft' },
     variants: { type: 'string', default: '4' },
-    'max-usd': { type: 'string', default: '1' },
-    'max-calls': { type: 'string', default: '600' },
     limit: { type: 'string' },
     concurrency: { type: 'string', default: '3' },
     out: { type: 'string', default: resolve(ROOT, 'out') },
     'no-reduce': { type: 'boolean', default: false },
+    'persist-usage': { type: 'boolean', default: false },
   },
 });
 
 const backend = values.backend as Backend;
-if (!['litellm', 'openai-direct', 'mock'].includes(backend)) {
-  console.error('--backend phải là litellm | openai-direct | mock');
+if (!['litellm', 'mock'].includes(backend)) {
+  console.error('--backend phải là litellm | mock');
   process.exit(2);
 }
 
 const allSamples = parseDataset(readFileSync(values.dataset as string, 'utf8'));
 const samples = values.limit ? allSamples.slice(0, Number(values.limit)) : allSamples;
 const shop = shopFixtureSchema.parse(JSON.parse(readFileSync(values.shop as string, 'utf8')));
-const maxUsd = Number(values['max-usd']);
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 mkdirSync(values.out as string, { recursive: true });
+
+// --persist-usage: ghi `ai_usage` THẬT (qua LlmClient) vào DB dev để đối chiếu chi phí LiteLLM ↔ ai_usage. Chỉ APP_ENV=dev + DB cf_dev.
+let persistUsage: { db: unknown; workspaceId: string; close: () => Promise<void> } | undefined;
+if (values['persist-usage']) {
+  if (backend !== 'litellm') {
+    console.error('--persist-usage chỉ dùng với --backend litellm');
+    process.exit(2);
+  }
+  const url = process.env.DATABASE_URL ?? '';
+  let dbName = '';
+  try {
+    dbName = new URL(url).pathname.replace(/^\//, '');
+  } catch {}
+  if (process.env.APP_ENV !== 'dev' || dbName !== 'cf_dev') {
+    console.error('--persist-usage chỉ chạy khi APP_ENV=dev và DATABASE_URL trỏ database cf_dev.');
+    process.exit(2);
+  }
+  const { createDb } = await import('@flow/db');
+  const { workspaces } = await import('@flow/db/schema/core');
+  const db = createDb({ connectionString: url, max: 3 });
+  const workspaceId = randomUUID();
+  await db.withWorkspace(workspaceId, (tx) =>
+    tx
+      .insert(workspaces)
+      .values({ id: workspaceId, name: '[EVAL] chạy đánh giá', slug: `eval-${workspaceId}` }),
+  );
+  persistUsage = { db, workspaceId, close: () => db.close() };
+  console.log(`Ghi ai_usage thật vào cf_dev, workspace ${workspaceId}`);
+}
 
 async function runOnce(variantCount: number) {
   const runner = createRunner({
@@ -56,9 +84,8 @@ async function runOnce(variantCount: number) {
       draft: values['draft-model'] as string,
     },
     variantCount,
-    maxUsd,
-    maxCalls: Number(values['max-calls']),
     shop,
+    ...(persistUsage ? { persistUsage } : {}),
   });
   const outcomes = await runAll(samples, runner, Number(values.concurrency), (done, total) => {
     if (done % 10 === 0 || done === total) process.stderr.write(`  ${done}/${total}\r`);
@@ -73,7 +100,7 @@ async function runOnce(variantCount: number) {
       Backend: backend,
       'Model extract/rewrite/draft': `${values['classify-model']} / ${values['rewrite-model']} / ${values['draft-model']}`,
       'Số biến thể': `${variantCount} khác + câu gốc = ${variantCount + 1} phiên bản`,
-      'Trần chi tiêu runner': `${maxUsd} USD`,
+      'Trần chi tiêu': 'max_budget của khóa ảo LiteLLM (không có trần riêng trong runner)',
       'Từ điển viết tắt': 'bản mẫu (DEMO_ABBREVIATIONS), không phải từ điển hệ thống của DB',
     },
     samples,
@@ -87,17 +114,13 @@ async function runOnce(variantCount: number) {
     `${base}.jsonl`,
     `${[...outcomes.values()].map((outcome) => JSON.stringify(outcome)).join('\n')}\n`,
   );
-  return { report, cost, base, spent: runner.spent() };
+  return { report, cost, base };
 }
 
 const variantCount = Math.min(4, Math.max(0, Number(values.variants)));
 const first = await runOnce(variantCount);
 console.log(first.report);
 console.log(`\nĐã ghi: ${first.base}.md và .jsonl`);
-if (first.spent)
-  console.log(
-    `Chi tiêu ước tính (openai-direct): ${first.spent.calls} lần gọi, $${first.spent.usd.toFixed(4)}`,
-  );
 
 // Vượt trần $2/1.000 lượt → thử giảm số biến thể 5 → 3 trước (Q-LLM2) và ghi kết quả so sánh.
 if (first.cost.overBudget && variantCount > 2 && !values['no-reduce']) {
@@ -109,3 +132,5 @@ if (first.cost.overBudget && variantCount > 2 && !values['no-reduce']) {
   );
   console.log(`Đã ghi: ${reduced.base}.md và .jsonl`);
 }
+
+if (persistUsage) await persistUsage.close();

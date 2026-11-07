@@ -20,8 +20,6 @@ export type ProviderConfig = {
   rewriteModel?: string;
   draftModel?: string;
   variantCount?: number;
-  maxUsd?: number;
-  maxCalls?: number;
 };
 
 export type ProviderResult = {
@@ -46,8 +44,6 @@ export function createProvider(
       draft: config.draftModel ?? 'cf-draft',
     },
     ...(config.variantCount === undefined ? {} : { variantCount: config.variantCount }),
-    maxUsd: config.maxUsd ?? 1,
-    maxCalls: config.maxCalls ?? 600,
     shop,
   });
   return {

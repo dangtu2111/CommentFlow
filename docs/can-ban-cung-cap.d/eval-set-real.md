@@ -44,7 +44,7 @@ Cần thêm **một tệp cửa hàng** (`tools/eval/datasets/real/<shop>.json`,
 ```
 pnpm --filter @flow/eval evaluate --dataset tools/eval/datasets/real/<tên>.jsonl --shop tools/eval/datasets/real/<shop>.json --backend litellm --classify-model cf-classify --draft-model cf-draft
 ```
-(`--backend openai-direct` khi chưa có LiteLLM; thêm `--max-usd` để đặt trần.) Báo cáo ghi ở `tools/eval/out/` (không commit): chỉ số §4.2 theo nhóm ngôn ngữ, chi phí/1.000 lượt tách theo bước, kiểm token suy luận ≈ 0, kết luận đạt/không đạt.
+(Đã bỏ đường gọi thẳng OpenAI: mọi lần chạy đi qua LiteLLM, trần chi phí là `max_budget` của khóa ảo; thêm `--persist-usage` để ghi `ai_usage` thật vào DB dev.) Báo cáo ghi ở `tools/eval/out/` (không commit): chỉ số §4.2 theo nhóm ngôn ngữ, chi phí/1.000 lượt tách theo bước, kiểm token suy luận ≈ 0, kết luận đạt/không đạt.
 
 ### Lưu ý
 Nhãn chuẩn và hành động đúng là **quy ước của bạn theo spec**; runner chỉ đo AI có làm đúng quy ước đó không. Nếu quy ước đổi (ví dụ "hỏi phí ship" tính là `price` hay `advice`), phải gán lại nhãn cho cả bộ.

@@ -82,7 +82,7 @@ const codeOf = async (promise: Promise<unknown>) => {
 };
 
 describe('createLlmClient.call — yêu cầu gửi đi', () => {
-  it('POST /v1/chat/completions với khóa Bearer, model, tin nhắn và metadata theo dõi', async () => {
+  it('POST /v1/chat/completions với khóa Bearer, model, tin nhắn và metadata theo dõi (khóa cf_workspace_id: LiteLLM từ chối workspace_id)', async () => {
     const { db } = fakeDb();
     const { fetchImpl, calls } = fakeFetch(() => jsonResponse(okBody()));
     await client(db, fetchImpl).call(input({ maxTokens: 300, temperature: 0.2 }));
@@ -98,7 +98,7 @@ describe('createLlmClient.call — yêu cầu gửi đi', () => {
       max_tokens: 300,
       temperature: 0.2,
       user: WS,
-      metadata: { workspace_id: WS, step: 'classify', prompt_version: 'classify@1' },
+      metadata: { cf_workspace_id: WS, step: 'classify', prompt_version: 'classify@1' },
     });
     expect(body.messages).toHaveLength(2);
   });

@@ -16,8 +16,6 @@ const samples = parseDataset(
 );
 const base = {
   models: { classify: 'cf-classify', rewrite: 'cf-classify', draft: 'cf-draft' },
-  maxUsd: 1,
-  maxCalls: 10,
   shop,
 };
 
@@ -27,7 +25,6 @@ describe('EVAL-RUNNER bộ chạy theo backend', () => {
     const outcomes = await runAll(samples.slice(0, 8), runner, 3);
     expect(outcomes.size).toBe(8);
     for (const outcome of outcomes.values()) expect(outcome.usage).toEqual([]);
-    expect(runner.spent()).toBeNull();
   });
 
   it('runAll giữ thứ tự mẫu, báo tiến độ, tôn trọng mức song song và chịu mức song song vô lý', async () => {
@@ -53,25 +50,13 @@ describe('EVAL-RUNNER bộ chạy theo backend', () => {
     expect((await runAll(samples.slice(0, 2), runner as never, 0)).size).toBe(2);
   });
 
-  it('litellm / openai-direct thiếu biến môi trường → lỗi rõ ràng, không đoán', () => {
+  it('litellm thiếu biến môi trường → lỗi rõ ràng, không đoán', () => {
     expect(() => createRunner({ ...base, backend: 'litellm', env: {} })).toThrow(
       'LITELLM_BASE_URL',
     );
     expect(() =>
       createRunner({ ...base, backend: 'litellm', env: { LITELLM_BASE_URL: 'http://x' } }),
     ).toThrow('LITELLM_API_KEY');
-    expect(() => createRunner({ ...base, backend: 'openai-direct', env: {} })).toThrow(
-      'OPENAI_API_KEY',
-    );
-  });
-
-  it('openai-direct: dựng được bộ chạy khi có khóa; spent() bắt đầu từ 0', () => {
-    const runner = createRunner({
-      ...base,
-      backend: 'openai-direct',
-      env: { OPENAI_API_KEY: 'sk-test-khong-phai-khoa-that' },
-    });
-    expect(runner.spent()).toEqual({ calls: 0, usd: 0 });
   });
 });
 
