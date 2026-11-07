@@ -2003,7 +2003,8 @@
       "empty": "Hãy nhập một bình luận mẫu.",
       "too_long": "Bình luận quá dài (tối đa {max} ký tự).",
       "limit_reached": "Hôm nay bạn đã dùng hết lượt thử. Hãy quay lại vào ngày mai.",
-      "unavailable": "Không thử được lúc này. Hãy thử lại sau."
+      "unavailable": "Không thử được lúc này. Hãy thử lại sau.",
+      "ai_invalid_output": "Chuyển người: AI không trả kết quả hợp lệ. Câu này sẽ được chuyển cho nhân viên xử lý."
     },
     "skipped": "Bình luận chỉ có biểu tượng/tag/dấu câu nên AI bỏ qua (không phân loại, không trả lời, không trừ lượt).",
     "result": {

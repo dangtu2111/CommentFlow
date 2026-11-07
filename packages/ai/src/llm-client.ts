@@ -37,6 +37,8 @@ export type LlmCallInput = {
   temperature?: number;
   /** Xin logprob của token đầu ra (nếu nhà cung cấp hỗ trợ) để tính `p_label` (docs/09 §6.0). */
   logprobs?: boolean;
+  /** Structured output gốc (`response_format: json_schema`, strict) — LiteLLM bỏ nếu model không hỗ trợ (drop_params). */
+  responseFormat?: { name: string; schema: Record<string, unknown> };
   draftId?: string;
 };
 
@@ -84,6 +86,12 @@ const inputSchema = z.object({
   maxTokens: z.number().int().positive().max(32_768).optional(),
   temperature: z.number().min(0).max(2).optional(),
   logprobs: z.boolean().optional(),
+  responseFormat: z
+    .object({
+      name: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
+      schema: z.record(z.string(), z.unknown()),
+    })
+    .optional(),
   draftId: z.uuid().optional(),
 });
 
@@ -156,6 +164,18 @@ export function createLlmClient(options: LlmClientOptions) {
             ...(input.maxTokens !== undefined ? { max_tokens: input.maxTokens } : {}),
             ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
             ...(input.logprobs ? { logprobs: true } : {}),
+            ...(input.responseFormat
+              ? {
+                  response_format: {
+                    type: 'json_schema',
+                    json_schema: {
+                      name: input.responseFormat.name,
+                      strict: true,
+                      schema: input.responseFormat.schema,
+                    },
+                  },
+                }
+              : {}),
             user: input.workspaceId,
             metadata: {
               workspace_id: input.workspaceId,

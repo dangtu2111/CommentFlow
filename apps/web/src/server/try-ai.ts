@@ -4,6 +4,7 @@ import {
   createDemoExtractor,
   createDemoKnowledge,
   DEMO_ABBREVIATIONS,
+  isUnreadableAiOutput,
   runTryPipeline,
   type TryDeps,
   type TryQuota,
@@ -26,7 +27,13 @@ import type { TryLlmDeps } from './try-ai-llm';
  */
 export { TRY_AI_MAX_CHARS };
 
-export type TryAiFailure = 'empty' | 'too_long' | 'limit_reached' | 'unavailable';
+export type TryAiFailure =
+  | 'empty'
+  | 'too_long'
+  | 'limit_reached'
+  | 'unavailable'
+  /** AI trả đầu ra không đọc được/sai schema → chuyển người (FR-032), khác lỗi mạng/khóa. */
+  | 'ai_invalid_output';
 
 export type TryAiResult =
   | {
@@ -122,6 +129,10 @@ export function createTryAiAction(deps: TryAiDeps) {
         llm: { extractor: Boolean(deps.llm?.extractor), drafter: Boolean(deps.llm?.drafter) },
       };
     } catch (error) {
+      if (isUnreadableAiOutput(error)) {
+        warn({ event: 'try_ai_invalid_output' });
+        return { ok: false, reason: 'ai_invalid_output' };
+      }
       warn({ event: 'try_ai_failed', reason: error instanceof Error ? error.name : 'unknown' });
       return { ok: false, reason: 'unavailable' };
     }

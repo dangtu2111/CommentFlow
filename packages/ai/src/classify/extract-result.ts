@@ -62,9 +62,11 @@ export type ExtractResult = z.output<typeof extractResultSchema>;
 
 const FENCE = /^```[a-z]*\s*|\s*```$/gi;
 
+export const EXTRACT_UNREADABLE_MESSAGE = 'Kết quả phân loại của AI không đọc được.';
+
 function unreadable(): AppError {
   // Không đính kèm nội dung khách hay đầu ra thô vào thông báo (nguyên tắc #6).
-  return new AppError('LLM_UNAVAILABLE', 'Kết quả phân loại của AI không đọc được.');
+  return new AppError('LLM_UNAVAILABLE', EXTRACT_UNREADABLE_MESSAGE);
 }
 
 /** Lấy object JSON đầu ra LLM (bỏ hàng rào ```json và chữ thừa), kiểm schema. */

@@ -2003,7 +2003,8 @@
       "empty": "Enter a sample comment.",
       "too_long": "Comment is too long (max {max} characters).",
       "limit_reached": "You have used all of today's tries. Come back tomorrow.",
-      "unavailable": "Can't run the test right now. Try again later."
+      "unavailable": "Can't run the test right now. Try again later.",
+      "ai_invalid_output": "Handoff: the AI did not return a valid result. This question would go to a human."
     },
     "skipped": "The comment has only emoji/tags/punctuation, so AI skips it (no classification, no reply, no quota used).",
     "result": {

@@ -5,6 +5,7 @@ export {
   loadClassifyConfig,
 } from './classify-config';
 export {
+  EXTRACT_UNREADABLE_MESSAGE,
   type ExtractResult,
   extractResultSchema,
   hasLabel,

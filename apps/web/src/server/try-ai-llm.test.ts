@@ -1,4 +1,5 @@
-import { createTryQuota } from '@flow/ai';
+import { createTryQuota, EXTRACT_UNREADABLE_MESSAGE } from '@flow/ai';
+import { AppError } from '@flow/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createTryAiAction } from './try-ai';
 import { createTryLlmDeps } from './try-ai-llm';
@@ -74,5 +75,45 @@ describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố
       'ship bao nhiêu',
     );
     expect(result).toMatchObject({ ok: true, llm: { extractor: false, drafter: true } });
+  });
+});
+
+describe('FR-032 đầu ra AI không đọc được → "Chuyển người", khác lỗi mạng', () => {
+  const session = { workspaceId: '11111111-1111-4111-8111-111111111111' };
+  const extractor = {
+    async extract() {
+      throw new AppError('LLM_UNAVAILABLE', EXTRACT_UNREADABLE_MESSAGE);
+    },
+  };
+
+  it('JSON hỏng/sai schema → reason ai_invalid_output (có cảnh báo, không lộ nội dung)', async () => {
+    const warn = vi.fn();
+    const run = createTryAiAction({
+      quota: createTryQuota({ limit: 3 }),
+      now: () => new Date('2026-11-07T00:00:00Z'),
+      llm: { extractor },
+      warn,
+    });
+    expect(await run(session, 'ship bao nhiêu')).toEqual({
+      ok: false,
+      reason: 'ai_invalid_output',
+    });
+    expect(warn).toHaveBeenCalledWith({ event: 'try_ai_invalid_output' });
+  });
+
+  it('lỗi mạng/khóa vẫn là "unavailable" (không nhầm với đầu ra hỏng)', async () => {
+    const run = createTryAiAction({
+      quota: createTryQuota({ limit: 3 }),
+      now: () => new Date('2026-11-07T00:00:00Z'),
+      llm: {
+        extractor: {
+          async extract() {
+            throw new AppError('LLM_UNAVAILABLE', 'Không kết nối được dịch vụ AI.');
+          },
+        },
+      },
+      warn: () => {},
+    });
+    expect(await run(session, 'ship bao nhiêu')).toEqual({ ok: false, reason: 'unavailable' });
   });
 });

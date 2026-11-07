@@ -1,4 +1,5 @@
 import type { LlmClient } from '../llm-client';
+import { EXTRACT_RESPONSE_FORMAT } from '../llm-output';
 import { buildExtractMessages, type ExtractInput } from './extract-prompt';
 import { type ExtractResult, parseExtractOutput } from './extract-result';
 import { consistencyOf, type LabelSignal, labelProbabilityFromLogprobs } from './label-signal';
@@ -32,8 +33,10 @@ export function createLlmExtractor(options: { llm: LlmClient; model: string }): 
         promptVersion: EXTRACT_PROMPT_VERSION,
         messages: buildExtractMessages(input),
         temperature: 0,
-        maxTokens: 600,
+        // Đủ chỗ cho model suy luận (token suy luận tính vào trần); chỉ trả tiền phần dùng thật.
+        maxTokens: 2000,
         logprobs: true,
+        responseFormat: EXTRACT_RESPONSE_FORMAT,
       });
       const parsed = parseExtractOutput(result.text);
       const primary = parsed.labels[0]?.label;
