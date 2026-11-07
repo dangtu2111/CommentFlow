@@ -10,6 +10,10 @@ export type ImportVariantPlan = {
   attrsNorm: Record<string, string>;
   priceVnd: number | null;
   compareAtVnd: number | null;
+  /** Mã tiền tệ nguồn (mặc định `VND`). Khác VND: giá ở `priceMinor`/`compareAtMinor`, cột VND để `null` (Q-SFP1). */
+  currencyCode?: string;
+  priceMinor?: number | null;
+  compareAtMinor?: number | null;
   stock: number | null;
 };
 
@@ -26,6 +30,9 @@ export type ImportProductPlan = {
   searchText: string;
   priceVnd: number | null;
   compareAtVnd: number | null;
+  currencyCode?: string;
+  priceMinor?: number | null;
+  compareAtMinor?: number | null;
   stock: number | null;
   /** Bản gốc biến thể giữ để đối chiếu (`products.variants`). */
   variantsSnapshot: Array<

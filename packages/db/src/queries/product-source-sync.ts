@@ -46,11 +46,12 @@ export async function applyProductSourceSync(
     const upserted = await tx.execute<{ id: string; inserted: boolean }>(sql`
       INSERT INTO cf.products AS p (workspace_id, source, external_id, name, price_vnd, compare_at_vnd, stock,
                                     variants, url, image_url, category, search_text, locked_fields,
-                                    card, updated_from_source_at)
+                                    card, currency_code, price_minor, compare_at_minor, updated_from_source_at)
       VALUES (${workspaceId}::uuid, ${source}, ${product.externalId}, ${product.name}, ${product.priceVnd},
               ${product.compareAtVnd}, ${product.stock}, ${JSON.stringify(product.variantsSnapshot)}::jsonb,
               ${product.url}, ${product.imageUrl ?? null}, ${product.category}, ${product.searchText}, ${locked},
-              ${JSON.stringify(product.card ?? {})}::jsonb, ${at}::timestamptz)
+              ${JSON.stringify(product.card ?? {})}::jsonb, ${product.currencyCode ?? 'VND'},
+              ${product.priceMinor ?? null}, ${product.compareAtMinor ?? null}, ${at}::timestamptz)
       ON CONFLICT (workspace_id, source, external_id) DO UPDATE SET
         name = EXCLUDED.name,
         search_text = EXCLUDED.search_text,
@@ -63,6 +64,9 @@ export async function applyProductSourceSync(
         variants = EXCLUDED.variants,
         -- Thẻ (FR-058): GỘP — khóa nguồn có giá trị thắng, khóa khác (người dùng tự nhập) giữ; nguồn không có thẻ → giữ nguyên.
         card = p.card || EXCLUDED.card,
+        currency_code = EXCLUDED.currency_code,
+        price_minor = EXCLUDED.price_minor,
+        compare_at_minor = EXCLUDED.compare_at_minor,
         status = 'active',
         locked_fields = ARRAY(SELECT DISTINCT unnest(p.locked_fields || EXCLUDED.locked_fields)),
         updated_from_source_at = EXCLUDED.updated_from_source_at,
@@ -75,16 +79,21 @@ export async function applyProductSourceSync(
     for (const variant of product.variants) {
       const written = await tx.execute<{ inserted: boolean }>(sql`
         INSERT INTO cf.product_variants AS v (workspace_id, product_id, external_id, sku, attrs, attrs_norm,
-                                              price_vnd, compare_at_vnd, stock, updated_from_source_at)
+                                              price_vnd, compare_at_vnd, currency_code, price_minor,
+                                              compare_at_minor, stock, updated_from_source_at)
         VALUES (${workspaceId}::uuid, ${row.id}::uuid, ${variant.externalId}, ${variant.sku},
                 ${JSON.stringify(variant.attrs)}::jsonb, ${JSON.stringify(variant.attrsNorm)}::jsonb,
-                ${variant.priceVnd}, ${variant.compareAtVnd}, ${variant.stock}, ${at}::timestamptz)
+                ${variant.priceVnd}, ${variant.compareAtVnd}, ${variant.currencyCode ?? 'VND'},
+                ${variant.priceMinor ?? null}, ${variant.compareAtMinor ?? null}, ${variant.stock}, ${at}::timestamptz)
         ON CONFLICT (workspace_id, product_id, external_id) DO UPDATE SET
           sku = EXCLUDED.sku,
           attrs = EXCLUDED.attrs,
           attrs_norm = EXCLUDED.attrs_norm,
           price_vnd = EXCLUDED.price_vnd,
           compare_at_vnd = EXCLUDED.compare_at_vnd,
+          currency_code = EXCLUDED.currency_code,
+          price_minor = EXCLUDED.price_minor,
+          compare_at_minor = EXCLUDED.compare_at_minor,
           stock = EXCLUDED.stock,
           updated_from_source_at = EXCLUDED.updated_from_source_at,
           updated_at = now()

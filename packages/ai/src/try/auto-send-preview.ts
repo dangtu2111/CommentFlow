@@ -16,6 +16,7 @@ export const AUTO_SEND_BLOCK_REASONS = [
   'policy_never',
   'low_confidence',
   'guard_money',
+  'foreign_price',
   'empty_reply',
 ] as const;
 export type AutoSendBlockReason = (typeof AUTO_SEND_BLOCK_REASONS)[number];
@@ -27,6 +28,11 @@ export type AutoSendPreviewInput = {
   draft: { needs_human: boolean; reply: string; claims: ReadonlyArray<{ kind: string }> };
   confidence: { confidence: number; needsHuman: boolean };
   guardOk: boolean;
+  /**
+   * Câu soạn dùng giá theo tiền tệ gốc (khác VND, Q-SFP1): kiểm giá lúc gửi (`sendRecheck` R5) chỉ đọc giá VND nên chưa
+   * kiểm được loại giá này → KHÔNG tự gửi, để người duyệt. Thiếu = không dùng.
+   */
+  foreignPriceUsed?: boolean;
 };
 
 export type AutoSendPreview = { allowed: boolean; reasons: AutoSendBlockReason[] };
@@ -42,6 +48,7 @@ export function decideAutoSendPreview(input: AutoSendPreviewInput): AutoSendPrev
   if (policy === 'never') reasons.add('policy_never');
   if (input.confidence.confidence < AUTO_SEND_THRESHOLD) reasons.add('low_confidence');
   if (!input.guardOk) reasons.add('guard_money');
+  if (input.foreignPriceUsed) reasons.add('foreign_price');
   if (input.draft.reply.trim() === '') reasons.add('empty_reply');
 
   const list = AUTO_SEND_BLOCK_REASONS.filter((reason) => reasons.has(reason));

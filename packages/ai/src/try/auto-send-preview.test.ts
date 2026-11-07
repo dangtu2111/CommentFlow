@@ -18,6 +18,16 @@ describe('FR-059 US-034 decideAutoSendPreview (chỉ hiển thị, không phải
     expect(decideAutoSendPreview(ok)).toEqual({ allowed: true, reasons: [] });
   });
 
+  it('Q-SFP1 câu dùng giá ngoại tệ (kiểm giá lúc gửi chưa hỗ trợ) → chặn foreign_price; không dùng thì không chặn', () => {
+    const blocked = decideAutoSendPreview({ ...ok, foreignPriceUsed: true });
+    expect(blocked.allowed).toBe(false);
+    expect(blocked.reasons).toEqual(['foreign_price']);
+    expect(decideAutoSendPreview({ ...ok, foreignPriceUsed: false })).toEqual({
+      allowed: true,
+      reasons: [],
+    });
+  });
+
   it('Owner chưa bật tự gửi → chặn auto_send_off', () => {
     const r = decideAutoSendPreview({ ...ok, autoSendEnabled: false });
     expect(r.allowed).toBe(false);

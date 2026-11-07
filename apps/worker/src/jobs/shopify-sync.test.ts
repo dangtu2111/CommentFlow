@@ -62,24 +62,28 @@ describe('reasonOf', () => {
   });
 });
 
-describe('runShopifySync — tiền tệ khác VND (không quy đổi, cảnh báo Owner)', () => {
-  const planWith = (prices: Array<number | null>) =>
+describe('runShopifySync — tiền tệ khác VND (giữ giá gốc, không quy đổi; báo Owner)', () => {
+  const planWith = (prices: Array<number | null>, foreign = true) =>
     [
       {
         externalId: 'p',
-        variants: prices.map((priceVnd, i) => ({ externalId: `v${i}`, priceVnd })),
+        variants: prices.map((price, i) =>
+          foreign
+            ? { externalId: `v${i}`, priceVnd: null, priceMinor: price }
+            : { externalId: `v${i}`, priceVnd: price },
+        ),
       },
     ] as never;
 
-  it('cửa hàng USD → ghi currencyUnsupported + số biến thể chưa có giá; vẫn ok (đồng bộ tên/tồn)', async () => {
+  it('cửa hàng USD → ghi foreignCurrency + số biến thể chưa đọc được giá; vẫn ok', async () => {
     const { deps, record } = setup({
       fetchCatalog: vi.fn().mockResolvedValue({ currencyCode: 'USD', products: [] }),
-      buildPlan: () => planWith([null, null, null]),
+      buildPlan: () => planWith([1299, null, null]),
     });
     expect(await runShopifySync(deps)).toBe('ok');
     expect(record).toHaveBeenCalledWith(
       'ok',
-      expect.objectContaining({ currencyUnsupported: 'USD', variantsWithoutPrice: 3 }),
+      expect.objectContaining({ foreignCurrency: 'USD', variantsWithoutPrice: 2 }),
     );
   });
 
@@ -91,15 +95,15 @@ describe('runShopifySync — tiền tệ khác VND (không quy đổi, cảnh b�
     await runShopifySync(deps);
     expect(record).toHaveBeenCalledWith(
       'ok',
-      expect.objectContaining({ currencyUnsupported: 'OTHER' }),
+      expect.objectContaining({ foreignCurrency: 'OTHER' }),
     );
   });
 
   it('cửa hàng VND → không có cảnh báo tiền tệ', async () => {
-    const { deps, record } = setup({ buildPlan: () => planWith([150000, 99000]) });
+    const { deps, record } = setup({ buildPlan: () => planWith([150000, 99000], false) });
     await runShopifySync(deps);
     const detail = record.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(detail).not.toHaveProperty('currencyUnsupported');
+    expect(detail).not.toHaveProperty('foreignCurrency');
     expect(detail).not.toHaveProperty('variantsWithoutPrice');
   });
 });

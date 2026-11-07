@@ -1,14 +1,14 @@
 /**
- * Cảnh báo tiền tệ của kết nối Shopify (Q-SNV1). Cửa hàng dùng tiền tệ khác VND thì giá để TRỐNG (không quy đổi, nguyên tắc #4);
- * trang kết nối nói rõ cho Owner. `currencyUnsupported` do job đồng bộ ghi (đã lọc 3 chữ cái hoa hoặc `OTHER`) nhưng vẫn kiểm
- * lại khi đọc vì đây là dữ liệu jsonb. Hàm thuần.
+ * Thông báo tiền tệ của kết nối Shopify (Q-SFP1). Cửa hàng dùng tiền tệ khác VND thì giá được GIỮ theo tiền tệ gốc (không quy đổi,
+ * nguyên tắc #4); trang kết nối nói rõ cho Owner. `foreignCurrency` do job đồng bộ ghi (đã lọc 3 chữ cái hoa hoặc `OTHER`)
+ * nhưng vẫn kiểm lại khi đọc vì đây là dữ liệu jsonb. Hàm thuần.
  */
-export type ShopifyCurrencyWarning = { currency: string; variants: number };
+export type ShopifyCurrencyNotice = { currency: string; variants: number };
 
-export function shopifyCurrencyWarning(
+export function shopifyCurrencyNotice(
   summary: Readonly<Record<string, unknown>>,
-): ShopifyCurrencyWarning | null {
-  const code = summary.currencyUnsupported;
+): ShopifyCurrencyNotice | null {
+  const code = summary.foreignCurrency;
   if (typeof code !== 'string' || !/^(?:[A-Z]{3}|OTHER)$/.test(code)) return null;
   const count = summary.variantsWithoutPrice;
   return {

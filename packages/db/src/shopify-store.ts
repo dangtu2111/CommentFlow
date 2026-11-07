@@ -30,11 +30,11 @@ export type ShopifySyncDetail = Partial<ShopifySyncSummary> & {
   policiesUpdated?: number;
   policiesSkipped?: true;
   /**
-   * Cửa hàng dùng tiền tệ KHÁC VND (mã 3 chữ cái hoa, hoặc `OTHER`): giá để TRỐNG, không quy đổi (nguyên tắc #4); Owner được
-   * cảnh báo, AI chuyển hướng khi khách hỏi giá. Không có khóa này = VND.
+   * Cửa hàng dùng tiền tệ KHÁC VND (mã 3 chữ cái hoa, hoặc `OTHER`): giá được lưu theo đơn vị nhỏ nhất của tiền tệ gốc và AI báo giá
+   * đúng như nguồn, KHÔNG quy đổi (Q-SFP1). Không có khóa này = VND.
    */
-  currencyUnsupported?: string;
-  /** Số biến thể chưa có giá ở lần đồng bộ này (chỉ ghi kèm `currencyUnsupported`). */
+  foreignCurrency?: string;
+  /** Số biến thể chưa đọc được giá (chỉ ghi kèm `foreignCurrency`; giá sai dạng/quá độ chính xác thì để trống). */
   variantsWithoutPrice?: number;
   reason?: string;
   /** Danh sách quyền token được cấp (`read_products,read_inventory…`, đã lọc ký tự) — để chẩn đoán thiếu quyền. */

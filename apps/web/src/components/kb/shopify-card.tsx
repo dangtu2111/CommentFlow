@@ -8,7 +8,7 @@ import {
   syncShopifyAction,
 } from '../../app/app/(guarded)/kb/shopify-actions';
 import { cn } from '../../lib/cn';
-import { shopifyCurrencyWarning } from '../../lib/shopify-currency';
+import { shopifyCurrencyNotice } from '../../lib/shopify-currency';
 import { shopifyReasonKey } from '../../lib/shopify-reason';
 import { TwDialog, TwDialogTrigger, TwSubmit } from '../settings/tw/dialog';
 import { twBtn } from '../settings/tw/ui';
@@ -86,7 +86,7 @@ export async function ShopifyCard({
   const summary = store?.lastSyncSummary ?? {};
   const resultKey = store?.lastSyncResult ?? null;
   const reasonKey = resultKey === 'ok' ? null : shopifyReasonKey(summary.reason, summary.scope);
-  const currencyWarning = resultKey === 'ok' ? shopifyCurrencyWarning(summary) : null;
+  const currencyNotice = resultKey === 'ok' ? shopifyCurrencyNotice(summary) : null;
 
   return (
     <section className={CARD} aria-labelledby="hub-shopify">
@@ -179,9 +179,9 @@ export async function ShopifyCard({
         </p>
       ) : null}
 
-      {currencyWarning ? (
-        <p role="alert" className="mt-1 font-body-sm text-body-sm text-error">
-          {t('hub.shopify.currencyWarning', currencyWarning)}
+      {currencyNotice ? (
+        <p role="status" className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
+          {t('hub.shopify.currencyNotice', currencyNotice)}
         </p>
       ) : null}
 

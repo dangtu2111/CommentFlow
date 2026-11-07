@@ -10,6 +10,9 @@ export type TryProductVariant = {
   attrs: Record<string, string>;
   attrsNorm: Record<string, string>;
   priceVnd: number | null;
+  /** Mã tiền tệ nguồn; khác `VND` thì giá nằm ở `priceMinor` (đơn vị nhỏ nhất, Q-SFP1). Thiếu = `VND`. */
+  currencyCode?: string;
+  priceMinor?: number | null;
   stock: number | null;
 };
 
@@ -17,6 +20,8 @@ export type TryProduct = {
   id: string;
   name: string;
   priceVnd: number | null;
+  currencyCode?: string;
+  priceMinor?: number | null;
   stock: number | null;
   variants: TryProductVariant[];
   /** Thẻ sản phẩm (FR-058); dữ liệu hỏng/khóa lạ → bỏ (không đoán). */
@@ -53,8 +58,10 @@ export async function loadTryProducts(
     price_vnd: string | null;
     stock: number | null;
     card: unknown;
+    currency_code: string;
+    price_minor: string | null;
   }>(sql`
-    SELECT id, name, price_vnd, stock, card FROM cf.products
+    SELECT id, name, price_vnd, stock, card, currency_code, price_minor FROM cf.products
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND id IN (${uuidList(productIds)})
      ORDER BY name, id`);
   const variants = await tx.execute<{
@@ -63,8 +70,10 @@ export async function loadTryProducts(
     attrs_norm: Record<string, string>;
     price_vnd: string | null;
     stock: number | null;
+    currency_code: string;
+    price_minor: string | null;
   }>(sql`
-    SELECT product_id, attrs, attrs_norm, price_vnd, stock FROM cf.product_variants
+    SELECT product_id, attrs, attrs_norm, price_vnd, stock, currency_code, price_minor FROM cf.product_variants
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND product_id IN (${uuidList(productIds)})
      ORDER BY product_id, id`);
   const byProduct = new Map<string, TryProductVariant[]>();
@@ -74,6 +83,8 @@ export async function loadTryProducts(
       attrs: row.attrs,
       attrsNorm: row.attrs_norm,
       priceVnd: row.price_vnd === null ? null : Number(row.price_vnd),
+      currencyCode: row.currency_code,
+      priceMinor: row.price_minor === null ? null : Number(row.price_minor),
       stock: row.stock,
     });
     byProduct.set(row.product_id, list);
@@ -84,6 +95,8 @@ export async function loadTryProducts(
       id: row.id,
       name: row.name,
       priceVnd: row.price_vnd === null ? null : Number(row.price_vnd),
+      currencyCode: row.currency_code,
+      priceMinor: row.price_minor === null ? null : Number(row.price_minor),
       stock: row.stock,
       variants: byProduct.get(row.id) ?? [],
       ...(parsed.ok && Object.keys(parsed.card).length > 0 ? { card: parsed.card } : {}),

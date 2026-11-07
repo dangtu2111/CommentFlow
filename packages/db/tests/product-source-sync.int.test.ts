@@ -202,6 +202,78 @@ describe('FR-052 ghi đồng bộ nguồn Shopify', () => {
     );
   });
 
+  it('Q-SFP1 tiền tệ khác VND: lưu giá theo đơn vị nhỏ nhất + mã tiền tệ, cột VND null; đổi lại VND thì xóa giá ngoại tệ', async () => {
+    const usd = (priceMinor: number | null): ImportProductPlan[] =>
+      plan(1, 1).map((p) => ({
+        ...p,
+        externalId: 'gid://shopify/Product/usd',
+        priceVnd: null,
+        compareAtVnd: null,
+        currencyCode: 'USD',
+        priceMinor,
+        compareAtMinor: priceMinor === null ? null : priceMinor + 500,
+        variants: p.variants.map((v) => ({
+          ...v,
+          externalId: 'gid://shopify/ProductVariant/usd1',
+          priceVnd: null,
+          compareAtVnd: null,
+          currencyCode: 'USD',
+          priceMinor,
+          compareAtMinor: priceMinor === null ? null : priceMinor + 500,
+        })),
+      }));
+    const rows = async () => {
+      const where = `workspace_id = $1 AND external_id = 'gid://shopify/Product/usd'`;
+      const product = (
+        await admin.query(
+          `SELECT currency_code, price_vnd, price_minor, compare_at_minor FROM cf.products WHERE ${where}`,
+          [wsA],
+        )
+      ).rows[0];
+      const variant = (
+        await admin.query(
+          `SELECT currency_code, price_vnd, price_minor, compare_at_minor FROM cf.product_variants
+            WHERE product_id IN (SELECT id FROM cf.products WHERE ${where})`,
+          [wsA],
+        )
+      ).rows[0];
+      return { product, variant };
+    };
+    await db.withActor(wsA, owner, (tx) => applyProductSourceSync(tx, wsA, 'shopify', usd(1299)));
+    const first = await rows();
+    for (const row of [first.product, first.variant]) {
+      expect(row.currency_code).toBe('USD');
+      expect(row.price_vnd).toBeNull();
+      expect(Number(row.price_minor)).toBe(1299);
+      expect(Number(row.compare_at_minor)).toBe(1799);
+    }
+    // Cập nhật giá USD → ghi đè.
+    await db.withActor(wsA, owner, (tx) => applyProductSourceSync(tx, wsA, 'shopify', usd(1500)));
+    expect(Number((await rows()).product.price_minor)).toBe(1500);
+    // Cửa hàng đổi sang VND → ghi giá VND, xóa giá ngoại tệ, đặt lại mã tiền tệ.
+    const vnd: ImportProductPlan[] = plan(150000, 5).map((p) => ({
+      ...p,
+      externalId: 'gid://shopify/Product/usd',
+      variants: p.variants.map((v) => ({ ...v, externalId: 'gid://shopify/ProductVariant/usd1' })),
+    }));
+    await db.withActor(wsA, owner, (tx) => applyProductSourceSync(tx, wsA, 'shopify', vnd));
+    const back = await rows();
+    for (const row of [back.product, back.variant]) {
+      expect(row.currency_code).toBe('VND');
+      expect(Number(row.price_vnd)).toBe(150000);
+      expect(row.price_minor).toBeNull();
+      expect(row.compare_at_minor).toBeNull();
+    }
+    await admin.query(
+      `DELETE FROM cf.product_variants WHERE product_id IN (SELECT id FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/usd')`,
+      [wsA],
+    );
+    await admin.query(
+      `DELETE FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/usd'`,
+      [wsA],
+    );
+  });
+
   it('workspace khác không thấy dữ liệu; ghi vào B tạo hàng riêng của B', async () => {
     const seenFromB = await db.withActor(wsB, outsider, (tx) =>
       tx.execute(sql`SELECT id FROM cf.products WHERE source = 'shopify'`),

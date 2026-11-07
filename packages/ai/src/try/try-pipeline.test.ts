@@ -572,3 +572,80 @@ describe('Shopify tiền tệ khác VND — sản phẩm chưa có giá thì AI 
     expect(r.decision.action).toBe('answer');
   });
 });
+
+describe('Q-SFP1 giá theo tiền tệ gốc — AI trả lời đúng giá nguồn, không quy đổi, không tự gửi', () => {
+  const usdKnowledge = {
+    async matchProducts() {
+      return { ids: ['p1'], names: ['Áo thun'], missingAxes: [] };
+    },
+    async lookupProductFacts() {
+      return [
+        {
+          id: 'p1',
+          kind: 'product' as const,
+          title: 'Áo thun',
+          text: 'Áo thun: giá 12.99 USD; còn 5.' as never,
+          score: 1,
+          topics: ['product_info' as const, 'size' as const],
+          foreignPrice: true,
+        },
+      ];
+    },
+    async searchKb() {
+      return [];
+    },
+  };
+  const usdReply: DraftResult = {
+    reply: 'Dạ áo thun giá 12.99 USD ạ',
+    lang: 'vi',
+    sources: ['p1'],
+    claims: [{ text: 'Giá 12.99 USD', source_ids: ['p1'], kind: 'fact' }],
+    unanswered_topics: [],
+    needs_human: false,
+    reason: '',
+    variants: [],
+  };
+  const run = (reply: DraftResult) =>
+    runTryPipeline(
+      { ...base, text: 'Áo thun giá bao nhiêu?' },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: extract({
+              labels: [{ label: 'price' }],
+              asks: ['giá'],
+              product_mentions: ['áo thun'],
+            }),
+          },
+        ]),
+        drafter: createFixtureDrafter([{ match: /./, result: reply }]),
+        knowledge: usdKnowledge,
+      },
+    );
+
+  it('hỏi giá sản phẩm có giá USD → trả lời (answer) bằng giá nguồn; bộ chặn số tiền không bắt "12.99 USD"', async () => {
+    const r = await run(usdReply);
+    if (r.status !== 'done') throw new Error('expected done');
+    expect(r.decision.action).toBe('answer');
+    expect(r.reply).toContain('12.99 USD');
+    expect(r.guard.violations).toEqual([]);
+  });
+
+  it('câu có dùng giá ngoại tệ không được tự gửi (foreign_price) dù mọi điều kiện khác đạt', async () => {
+    const r = await run(usdReply);
+    if (r.status !== 'done') throw new Error('expected done');
+    expect(r.autoSend.allowed).toBe(false);
+    expect(r.autoSend.reasons).toContain('foreign_price');
+  });
+
+  it('AI bịa số khác giá nguồn (đã "quy đổi" ra đồng) → bộ chặn số tiền bắt', async () => {
+    const r = await run({
+      ...usdReply,
+      reply: 'Dạ áo thun giá 320.000đ ạ',
+      claims: [{ text: 'Giá 320.000đ', source_ids: ['p1'], kind: 'fact' }],
+    });
+    if (r.status !== 'done') throw new Error('expected done');
+    expect(r.guard.ok).toBe(false);
+  });
+});

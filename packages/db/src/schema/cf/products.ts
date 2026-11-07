@@ -51,6 +51,11 @@ export const products = cf.table(
     sku: text('sku'),
     priceVnd: bigint('price_vnd', { mode: 'number' }),
     compareAtVnd: bigint('compare_at_vnd', { mode: 'number' }),
+    /** Mã tiền tệ của nguồn (ISO 4217). `VND` = giá nằm ở `price_vnd`; khác VND = giá nằm ở `price_minor` (migration 0070, Q-SFP1). */
+    currencyCode: text('currency_code').notNull().default('VND'),
+    /** Giá theo đơn vị nhỏ nhất của `currency_code` (USD: cent) khi KHÁC VND; NULL khi VND. KHÔNG quy đổi. */
+    priceMinor: bigint('price_minor', { mode: 'number' }),
+    compareAtMinor: bigint('compare_at_minor', { mode: 'number' }),
     stock: integer('stock'),
     /** Bản gốc biến thể từ nguồn, giữ để đối chiếu; nguồn đúng là `product_variants`. */
     variants: jsonb('variants').notNull().default(sql`'[]'::jsonb`),
@@ -79,6 +84,11 @@ export const products = cf.table(
     check('products_card_object_check', sql`jsonb_typeof(${t.card}) = 'object'`),
     check('products_image_url_check', sql`${t.imageUrl} IS NULL OR ${t.imageUrl} ~ '^https?://'`),
     check('products_price_check', sql`${t.priceVnd} IS NULL OR ${t.priceVnd} >= 0`),
+    check('products_currency_code_check', sql`${t.currencyCode} ~ '^[A-Z]{3}$'`),
+    check(
+      'products_minor_price_check',
+      sql`(${t.priceMinor} IS NULL OR ${t.priceMinor} >= 0) AND (${t.compareAtMinor} IS NULL OR ${t.compareAtMinor} >= 0)`,
+    ),
     check('products_compare_at_check', sql`${t.compareAtVnd} IS NULL OR ${t.compareAtVnd} >= 0`),
     check('products_stock_check', sql`${t.stock} IS NULL OR ${t.stock} >= 0`),
   ],
@@ -102,6 +112,9 @@ export const productVariants = cf.table(
     attrsNorm: jsonb('attrs_norm').notNull().default(sql`'{}'::jsonb`),
     priceVnd: bigint('price_vnd', { mode: 'number' }),
     compareAtVnd: bigint('compare_at_vnd', { mode: 'number' }),
+    currencyCode: text('currency_code').notNull().default('VND'),
+    priceMinor: bigint('price_minor', { mode: 'number' }),
+    compareAtMinor: bigint('compare_at_minor', { mode: 'number' }),
     stock: integer('stock'),
     status: text('status').notNull().default('active'),
     updatedFromSourceAt: timestamptz('updated_from_source_at'),
@@ -123,6 +136,11 @@ export const productVariants = cf.table(
       sql`jsonb_typeof(${t.attrs}) = 'object' AND jsonb_typeof(${t.attrsNorm}) = 'object'`,
     ),
     check('product_variants_price_check', sql`${t.priceVnd} IS NULL OR ${t.priceVnd} >= 0`),
+    check('product_variants_currency_code_check', sql`${t.currencyCode} ~ '^[A-Z]{3}$'`),
+    check(
+      'product_variants_minor_price_check',
+      sql`(${t.priceMinor} IS NULL OR ${t.priceMinor} >= 0) AND (${t.compareAtMinor} IS NULL OR ${t.compareAtMinor} >= 0)`,
+    ),
     check(
       'product_variants_compare_at_check',
       sql`${t.compareAtVnd} IS NULL OR ${t.compareAtVnd} >= 0`,

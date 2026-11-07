@@ -2,6 +2,7 @@ import {
   type ImportProductPlan,
   type ImportVariantPlan,
   normalizeAttrs,
+  parseDecimalMinor,
   productSearchText,
 } from '@flow/shared';
 import { buildShopifyCard } from './card';
@@ -51,6 +52,7 @@ const stockOf = (variant: ShopifyVariant): number | null =>
     : null;
 
 function toVariant(variant: ShopifyVariant, currencyCode: string): ImportVariantPlan {
+  const foreign = currencyCode !== 'VND';
   const attrs: Record<string, string> = {};
   for (const option of variant.selectedOptions) {
     if (option.name === DEFAULT_OPTION.name && option.value === DEFAULT_OPTION.value) continue;
@@ -63,6 +65,10 @@ function toVariant(variant: ShopifyVariant, currencyCode: string): ImportVariant
     attrsNorm: normalizeAttrs(attrs),
     priceVnd: parseShopifyMoney(variant.price, currencyCode),
     compareAtVnd: parseShopifyMoney(variant.compareAtPrice, currencyCode),
+    currencyCode,
+    // Tiền tệ khác VND: giữ giá theo đơn vị nhỏ nhất của tiền tệ gốc, KHÔNG quy đổi (Q-SFP1); VND thì không dùng cột này.
+    priceMinor: foreign ? parseDecimalMinor(variant.price, currencyCode) : null,
+    compareAtMinor: foreign ? parseDecimalMinor(variant.compareAtPrice, currencyCode) : null,
     stock: stockOf(variant),
   };
 }
@@ -72,6 +78,13 @@ function toProduct(product: ShopifyProduct, currencyCode: string): ImportProduct
   const cheapest = variants.reduce<ImportVariantPlan | null>(
     (best, v) =>
       v.priceVnd !== null && (best === null || v.priceVnd < (best.priceVnd as number)) ? v : best,
+    null,
+  );
+  const cheapestMinor = variants.reduce<ImportVariantPlan | null>(
+    (best, v) =>
+      v.priceMinor != null && (best === null || v.priceMinor < (best.priceMinor as number))
+        ? v
+        : best,
     null,
   );
   const stocks = variants.map((v) => v.stock);
@@ -97,6 +110,9 @@ function toProduct(product: ShopifyProduct, currencyCode: string): ImportProduct
     }),
     priceVnd: cheapest?.priceVnd ?? null,
     compareAtVnd: cheapest?.compareAtVnd ?? null,
+    currencyCode,
+    priceMinor: cheapestMinor?.priceMinor ?? null,
+    compareAtMinor: cheapestMinor?.compareAtMinor ?? null,
     stock:
       stocks.length > 0 && stocks.every((s) => s !== null)
         ? stocks.reduce<number>((sum, s) => sum + (s ?? 0), 0)

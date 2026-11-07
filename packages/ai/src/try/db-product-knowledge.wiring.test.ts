@@ -70,6 +70,29 @@ describe('TRY-AI-REAL createDbProductKnowledge (nối DB, hàm DB được giả
     expect(facts[1]?.priceUnknown).toBeUndefined();
   });
 
+  it('Q-SFP1 sản phẩm có giá ngoại tệ → KHÔNG đánh dấu priceUnknown và đánh dấu foreignPrice (chặn tự gửi)', async () => {
+    const usd: TryProduct = {
+      ...shirt,
+      id: 'u1',
+      priceVnd: null,
+      currencyCode: 'USD',
+      priceMinor: 1299,
+      variants: shirt.variants.map((v) => ({
+        ...v,
+        priceVnd: null,
+        currencyCode: 'USD',
+        priceMinor: 1299,
+      })),
+    };
+    loadTryProducts.mockResolvedValue([usd, shirt]);
+    const knowledge = createDbProductKnowledge(tx, 'ws1');
+    const facts = await knowledge.lookupProductFacts(['u1', 'p1']);
+    expect(facts[0]?.text).toContain('12.99 USD');
+    expect(facts[0]?.priceUnknown).toBeUndefined();
+    expect(facts[0]?.foreignPrice).toBe(true);
+    expect(facts[1]?.foreignPrice).toBeUndefined();
+  });
+
   it('lookupProductFacts → nguồn kiểu product, câu nguồn lấy từ dữ liệu', async () => {
     loadTryProducts.mockResolvedValue([shirt]);
     const knowledge = createDbProductKnowledge(tx, 'ws1');
