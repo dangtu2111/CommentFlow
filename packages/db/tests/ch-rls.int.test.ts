@@ -84,8 +84,8 @@ beforeAll(async () => {
   );
   post = p.rows[0].id;
   const c = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text)
-     VALUES ($1, $2, $3, $4, 'u1', 'giá bao nhiêu?') RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', 'giá bao nhiêu?') RETURNING id`,
     [ws, channel, post, `cm-${newId()}`],
   );
   comment = c.rows[0].id;
@@ -247,8 +247,8 @@ describe('posts và comments', () => {
   it('comments INSERT: CHỈ hệ thống; UPDATE (đổi trạng thái/nhãn): thành viên đang hoạt động hoặc hệ thống', async () => {
     const insert = await matrix(
       (who) =>
-        `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text)
-         VALUES ('${ws}', '${channel}', '${post}', 'c-${who}-${newId()}', 'u', 't')`,
+        `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text)
+         VALUES ('webhook', '${ws}', '${channel}', '${post}', 'c-${who}-${newId()}', 'u', 't')`,
     );
     expectOnly(insert, ['system']);
     const update = await matrix(
@@ -337,8 +337,8 @@ describe('posts và comments', () => {
     ).rows[0].id;
     const otherComment = (
       await admin.query(
-        `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text)
-         VALUES ($1, $2, $3, $4, 'u', 't') RETURNING id`,
+        `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text)
+         VALUES ('webhook', $1, $2, $3, $4, 'u', 't') RETURNING id`,
         [other, channelOther, otherPost, `oc-${newId()}`],
       )
     ).rows[0].id;

@@ -31,8 +31,8 @@ let postA: string;
 async function comment(ws: string, ageDays: number): Promise<string> {
   const ch = ws === wsA ? channelA : null;
   const r = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, created_at)
-     VALUES ($1, $2, $3, $4, 'u1', 'nội dung', now() - make_interval(days => $5)) RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, created_at)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', 'nội dung', now() - make_interval(days => $5)) RETURNING id`,
     [ws, ch, postA, `cm-${newId()}`, ageDays],
   );
   return r.rows[0].id as string;

@@ -36,6 +36,10 @@ export const automationSettings = cf.table(
     activeHours: jsonb('active_hours'),
     blockedKeywords: text('blocked_keywords').array().notNull().default(sql`'{}'::text[]`),
     signature: text('signature'),
+    /** Cửa sổ gộp bình luận liên tiếp cùng khách cùng bài (FR-148), 10–60 giây (migration 0072). */
+    mergeWindowSeconds: integer('merge_window_seconds').notNull().default(30),
+    /** Sau khi nhân viên trả lời trong chuỗi, AI chỉ gợi ý trong N phút (FR-154); 0 = tắt (migration 0072). */
+    humanHoldMinutes: integer('human_hold_minutes').notNull().default(120),
     /** Người Owner lưu lần cuối (null = hệ thống / người dùng đã bị xóa). Chỉ được là chính người ghi. */
     updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
@@ -52,6 +56,8 @@ export const automationSettings = cf.table(
       'automation_settings_active_hours_check',
       sql`${t.activeHours} IS NULL OR jsonb_typeof(${t.activeHours}) = 'object'`,
     ),
+    check('automation_settings_merge_window_check', sql`${t.mergeWindowSeconds} BETWEEN 10 AND 60`),
+    check('automation_settings_human_hold_check', sql`${t.humanHoldMinutes} >= 0`),
     check('automation_settings_keywords_check', sql`cardinality(${t.blockedKeywords}) <= 50`),
     check(
       'automation_settings_signature_check',

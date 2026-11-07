@@ -22,8 +22,8 @@ let post: string;
 
 async function comment(text: string, deleted = false): Promise<string> {
   const r = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, created_time, status, deleted_at)
-     VALUES ($1, $2, $3, $4, 'u1', $5, now(), 'pending_review', $6) RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, created_time, status, deleted_at)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', $5, now(), 'pending_review', $6) RETURNING id`,
     [ws, channel, post, `cm-${randomUUID()}`, text, deleted ? new Date() : null],
   );
   return r.rows[0].id;
@@ -151,8 +151,8 @@ describe('FR-048 inbox bỏ bình luận đã xóa; chi tiết trả deletedAt',
     const add = async (text: string, deleted: boolean) =>
       (
         await admin.query(
-          `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, created_time, deleted_at)
-         VALUES ($1, $2, $3, $4, 'u', $5, now(), $6) RETURNING id`,
+          `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, created_time, deleted_at)
+         VALUES ('webhook', $1, $2, $3, $4, 'u', $5, now(), $6) RETURNING id`,
           [ws2, ch, p, `c-${randomUUID()}`, text, deleted ? new Date() : null],
         )
       ).rows[0].id as string;

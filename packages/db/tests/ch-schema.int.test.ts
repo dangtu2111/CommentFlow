@@ -54,8 +54,8 @@ const insertComment = (
   status = 'new',
 ) =>
   admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status)
-     VALUES ($1, $2, $3, $4, 'u', 't', $5) RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, status)
+     VALUES ('webhook', $1, $2, $3, $4, 'u', 't', $5) RETURNING id`,
     [ws, ch, post, external, status],
   );
 

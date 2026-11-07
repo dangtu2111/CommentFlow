@@ -12,7 +12,7 @@ import {
   schema,
   sql,
 } from '@flow/db';
-import { type IngestJob, ingestJobSchema } from '@flow/shared';
+import { type IngestJob, ingestJobSchema, ingestSourceOf } from '@flow/shared';
 import type { Logger } from '../logger';
 import { INGEST_RETRY_LIMIT } from '../queue/definitions';
 import { type BatchHandler, workspaceJob } from './run-job';
@@ -95,6 +95,8 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
           createdTime: c.createdAt,
           status: 'new',
           isOwn: false,
+          // Nguồn (webhook/polling/backfill) để quyết định bình luận nào tự chạy pipeline (Q-POR1).
+          ingestSource: ingestSourceOf(event.payload),
         })
         .onConflictDoNothing()
         .returning({ id: comments.id, deletedAt: comments.deletedAt });

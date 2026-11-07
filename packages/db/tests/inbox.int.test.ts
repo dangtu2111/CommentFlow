@@ -57,9 +57,9 @@ async function comment(input: {
   createdTime?: Date;
 }): Promise<string> {
   const r = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text,
        created_time, status, needs_followup, label)
-     VALUES ($1, $2, $3, $4, 'u1', $5, $6, $7, $8, $9, $10) RETURNING id`,
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', $5, $6, $7, $8, $9, $10) RETURNING id`,
     [
       input.ws,
       input.channelId,

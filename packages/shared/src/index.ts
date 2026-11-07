@@ -92,6 +92,7 @@ export {
   resolveLocale,
 } from './i18n/locales';
 export { flattenMessages, type MessageTree, placeholdersOf } from './i18n/message-utils';
+export { INGEST_SOURCES, type IngestSource, ingestSourceOf } from './ingest-source';
 export {
   canViewIntegrationHealth,
   evaluateProviderHealth,

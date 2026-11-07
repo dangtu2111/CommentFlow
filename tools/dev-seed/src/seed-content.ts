@@ -234,6 +234,8 @@ async function seedChannelsAndConversations(
         .insert(schema.comments)
         .values({
           workspaceId,
+          // Dữ liệu mẫu KHÔNG được tự chạy AI khi bật PIPELINE_ENABLED (Q-POR1): coi như bình luận nhập ngược.
+          ingestSource: 'backfill',
           channelId: channelOfPost(c.postKey),
           postId: must(ids.posts.get(c.postKey), 'bài'),
           externalId: c.externalId,
@@ -257,6 +259,8 @@ async function seedChannelsAndConversations(
       await tx.insert(schema.comments).values(
         batch.map((c, i) => ({
           workspaceId,
+          // Dữ liệu mẫu KHÔNG được tự chạy AI khi bật PIPELINE_ENABLED (Q-POR1): coi như bình luận nhập ngược.
+          ingestSource: 'backfill',
           channelId: channelOfPost(c.postKey),
           postId: must(ids.posts.get(c.postKey), 'bài'),
           externalId: c.externalId,

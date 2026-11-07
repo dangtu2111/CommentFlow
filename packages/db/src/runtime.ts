@@ -266,6 +266,12 @@ export {
   recordLeads,
   updateLead,
 } from './queries/leads';
+export {
+  DEFAULT_HUMAN_HOLD_MINUTES,
+  DEFAULT_MERGE_WINDOW_SECONDS,
+  loadPipelineContext,
+  type PipelineContext,
+} from './queries/pipeline-context';
 export { createPostNote } from './queries/post-notes';
 export { linkProductsToPosts } from './queries/post-products';
 export {

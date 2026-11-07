@@ -27,8 +27,8 @@ async function seedComment(
   p = post,
 ): Promise<string> {
   const r = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status, created_time)
-     VALUES ($1, $2, $3, $4, 'u1', 'Còn size M không shop?', $5, now()) RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, status, created_time)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', 'Còn size M không shop?', $5, now()) RETURNING id`,
     [workspace, ch, p, `cm-${randomUUID()}`, status],
   );
   return r.rows[0].id;

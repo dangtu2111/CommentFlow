@@ -25,8 +25,8 @@ const code = (error: unknown) => {
 
 async function comment(extId = `cm-${randomUUID()}`): Promise<{ id: string; ext: string }> {
   const r = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, text_normalized, created_time, status)
-     VALUES ($1, $2, $3, $4, 'fb-user-1', 'Nguyễn Văn A', 'Giá bao nhiêu? 0901234567', 'gia bao nhieu', now(), 'pending_review') RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, text_normalized, created_time, status)
+     VALUES ('webhook', $1, $2, $3, $4, 'fb-user-1', 'Nguyễn Văn A', 'Giá bao nhiêu? 0901234567', 'gia bao nhieu', now(), 'pending_review') RETURNING id`,
     [ws, channel, post, extId],
   );
   return { id: r.rows[0].id, ext: extId };
@@ -185,8 +185,8 @@ describe('FR-048 xóa trắng khi khách xóa bình luận', () => {
     const ext = `cm-${randomUUID()}`;
     const other = (
       await admin.query(
-        `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status)
-         VALUES ($1, $2, $3, $4, 'u', 'của workspace khác', 'new') RETURNING id`,
+        `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, status)
+         VALUES ('webhook', $1, $2, $3, $4, 'u', 'của workspace khác', 'new') RETURNING id`,
         [ws2, ch2, p2, ext],
       )
     ).rows[0].id;

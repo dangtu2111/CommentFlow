@@ -59,8 +59,8 @@ async function seedRequest(
     [ws, channelId, `post-${newId()}`],
   );
   const comment = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, status)
-     VALUES ($1, $2, $3, $4, 'u1', 'Khách', 'Giá?', 'pending_review') RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, status)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', 'Khách', 'Giá?', 'pending_review') RETURNING id`,
     [ws, channelId, post.rows[0].id, `cm-${newId()}`],
   );
   const commentId = comment.rows[0].id as string;
