@@ -27,6 +27,18 @@ describe('FR-027 FR-029 bản mock theo từ khóa cho ô Thử AI', () => {
     expect(r.asks).toEqual(expect.arrayContaining(['giá', 'tồn kho']));
   });
 
+  it('"ship … bao nhiêu" / "giảm giá" là hỏi phí/khuyến mãi, KHÔNG thêm ý "giá" sản phẩm (như model thật)', async () => {
+    const ex = createDemoExtractor();
+    for (const [text, expected] of [
+      ['ship về Hà Nội bao nhiêu', ['phí ship']],
+      ['giảm giá không shop', ['giảm giá']],
+      ['áo này bao nhiêu', ['giá']],
+    ] as const) {
+      const r = await ex.extract({ workspaceId: 'w', text: unsafeMarkMasked(text) });
+      expect(r.asks).toEqual(expected);
+    }
+  });
+
   it('không gọi LLM/mạng: kết quả xác định', async () => {
     const a = await extractor.extract(q('ship về hà nội'));
     const b = await extractor.extract(q('ship về hà nội'));

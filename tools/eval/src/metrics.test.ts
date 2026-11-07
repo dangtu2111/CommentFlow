@@ -30,13 +30,15 @@ const outcome = (over: Partial<Extract<SampleOutcome, { ok: true }>> = {}): Samp
   id: 's',
   label: 'price',
   action: 'answer',
+  reason: 'answer',
+  unansweredTopics: [],
   lang: 'vi',
   reply: 'Dạ áo giá 150.000đ ạ',
   variants: [],
   confidence: 0.9,
   moneyViolations: 0,
   replyViolations: [],
-  extract: { product_mentions: ['áo thun basic'], size: 'M', color: 'đen', qty: null },
+  extract: { product_mentions: ['áo thun basic'], size: 'M', color: 'đen', qty: null, asks: [] },
   searchQuery: 'q',
   rewriteSource: null,
   usage: [],
@@ -74,7 +76,13 @@ describe('EVAL-RUNNER chấm một mẫu (docs/14 §4.2)', () => {
       }),
       outcome({
         reply: 'giá 150.000đ',
-        extract: { product_mentions: ['Áo thun basic'], size: null, color: 'đen', qty: null },
+        extract: {
+          product_mentions: ['Áo thun basic'],
+          size: null,
+          color: 'đen',
+          qty: null,
+          asks: [],
+        },
       }),
     );
     expect(checks.facts).toBe(true);

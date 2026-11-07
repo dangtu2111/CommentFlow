@@ -24,6 +24,7 @@ import {
   type KbGapTopic,
   type VariantAxis,
 } from '../decide/decide-action';
+import { evaluateTurnRisks, type TurnRisks } from '../decide/turn-risks';
 import type { DraftSource, DraftVoice } from '../draft/draft-prompt';
 import type { DraftLang, DraftResult } from '../draft/draft-result';
 import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
@@ -106,6 +107,8 @@ export type TryResult =
       route: RouteKind;
       routeReason: RouteReason;
       decision: ActionDecision;
+      /** Lý do các cờ rủi ro đang bật (pháp lý/chèn lệnh/mạo danh) — để chẩn đoán và hiển thị. */
+      riskReasons: TurnRisks['reasons'];
       reply: string;
       variants: string[];
       draft: DraftResult;
@@ -179,16 +182,26 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
   );
 
   const usable = found.filter((c) => c.score >= DEFAULT_MIN_RELEVANCE);
+  // Cờ rủi ro do lõi dùng chung tính (pháp lý FR-160, chèn lệnh); giá lệch caption/tồn cũ/mạo danh cần dữ liệu bài/Page nên
+  // ô Thử AI (không có bài, không có Page) để tắt — worker thật sẽ truyền vào cùng hàm này.
+  const turnRisks = evaluateTurnRisks({
+    text: masked,
+    sources: usable.map((c) => ({ id: c.id, text: c.text })),
+  });
   const decision = decideAction({
     lang,
     extract,
-    products: { candidates: products.names, missingAxes: products.missingAxes },
+    products: {
+      candidates: products.names,
+      missingAxes: products.missingAxes,
+      mentionedCount: extract.product_mentions.length,
+    },
     topics: topicsOf(extract.asks, label).map((topic) => ({
       topic,
       sourced: usable.some((c) => c.topics.includes(topic)),
     })),
     thread: { clarifyCount: 0, repeatCount: 0 },
-    risks: { priceConflict: false, legalUnsourced: false, impersonation: false, stockStale: false },
+    risks: turnRisks.risks,
   });
 
   const draft = await deps.drafter.draft({
@@ -242,6 +255,7 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
     route: routed.route,
     routeReason: routed.reason,
     decision,
+    riskReasons: turnRisks.reasons,
     reply: draft.reply,
     variants: draft.variants ?? [],
     draft,

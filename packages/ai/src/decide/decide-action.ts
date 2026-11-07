@@ -42,6 +42,8 @@ export const DECISION_REASONS = [
   'clarify_limit',
   'image_product',
   'product_ambiguous',
+  'product_unknown',
+  'injection_suspected',
   'variant_missing',
   'body_measure_missing',
   'question_vague',
@@ -100,6 +102,8 @@ export const decideActionInputSchema = z.object({
     candidates: z.array(z.string().trim().min(1).max(120)).max(20),
     /** Trục biến thể còn khác giá/tồn giữa các biến thể của sản phẩm đã nhận (do bước tra DB cấp). */
     missingAxes: z.array(z.enum(VARIANT_AXES)),
+    /** Số tên sản phẩm khách NÊU (kể cả không khớp kho); 0 = khách chưa nói sản phẩm nào. Thiếu = 0. */
+    mentionedCount: nonNegativeInt.optional(),
   }),
   /** Mỗi ý khách hỏi theo chủ đề; `sourced` = bước tìm kiếm có nguồn trả lời được. */
   topics: z.array(z.object({ topic: z.enum(KB_GAP_TOPICS), sourced: z.boolean() })),
@@ -125,6 +129,8 @@ export const decideActionInputSchema = z.object({
     legalUnsourced: z.boolean(),
     impersonation: z.boolean(),
     stockStale: z.boolean(),
+    /** Nghi chèn lệnh vào bình luận (`scanInjection`): chuyển người, không soạn theo lệnh của khách. */
+    injectionSuspected: z.boolean(),
   }),
 });
 
@@ -180,6 +186,7 @@ function handoff(reason: DecisionReason, askedBefore = false): ActionDecision {
 function riskReason(input: ParsedInput): DecisionReason | null {
   if (input.lang === 'other') return 'lang_other';
   if (input.extract.labels.some((item) => item.label === 'complaint')) return 'complaint';
+  if (input.risks.injectionSuspected) return 'injection_suspected';
   if (input.risks.impersonation) return 'impersonation';
   if (input.risks.priceConflict) return 'price_conflict';
   if (input.risks.legalUnsourced) return 'legal_unsourced';
@@ -270,6 +277,19 @@ function clarifyNeed(
       needsHuman: false,
     };
   }
+  // Hỏi về sản phẩm (giá/tồn/size) mà chưa nhận ra sản phẩm nào và chưa có nguồn chung trả lời → hỏi "mẫu nào" (FR-147 mục 2),
+  // không chuyển hướng. Câu chung đã có nguồn (vd. bảng size) thì không vào đây.
+  if (
+    candidates.length === 0 &&
+    (input.products.mentionedCount ?? 0) === 0 &&
+    (unanswered.includes('product_info') || unanswered.includes('size'))
+  ) {
+    return {
+      reason: 'product_unknown',
+      clarify: { ask: 'product', axes: [], options: [] },
+      needsHuman: false,
+    };
+  }
   if (productResolved) {
     const axes = axesToAsk(input);
     if (axes.length > 0) {
@@ -282,7 +302,12 @@ function clarifyNeed(
   }
   // Hỏi size có bảng size (nguồn) nhưng thiếu số đo (FR-149); không có bảng → bậc 3 xử lý.
   const sizeSourced = answered.includes('size');
-  if (sizeSourced && (input.extract.height_cm === null || input.extract.weight_kg === null)) {
+  // Khách đã nêu size cụ thể ('M') thì không cần số đo để gợi ý size.
+  if (
+    sizeSourced &&
+    input.extract.size === null &&
+    (input.extract.height_cm === null || input.extract.weight_kg === null)
+  ) {
     return {
       reason: 'body_measure_missing',
       clarify: { ask: 'body_measure', axes: [], options: [] },

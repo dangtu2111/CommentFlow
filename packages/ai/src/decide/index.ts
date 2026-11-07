@@ -85,3 +85,4 @@ export {
   type StockFreshness,
   type StockOutcome,
 } from './stock-rules';
+export { evaluateTurnRisks, type TurnRiskInput, type TurnRisks } from './turn-risks';

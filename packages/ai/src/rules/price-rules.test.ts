@@ -180,7 +180,13 @@ describe('FR-150 evaluatePriceRisk — cờ cho decideAction + cảnh báo Owner
       products: { candidates: ['Áo A'], missingAxes: [] },
       topics: [{ topic: 'product_info', sourced: true }],
       thread: { clarifyCount: 0, repeatCount: 0 },
-      risks: { priceConflict, legalUnsourced: false, impersonation: false, stockStale: false },
+      risks: {
+        priceConflict,
+        legalUnsourced: false,
+        impersonation: false,
+        stockStale: false,
+        injectionSuspected: false,
+      },
     });
     expect(d).toMatchObject({ action: 'handoff', reason: 'price_conflict', needsHuman: true });
   });
@@ -282,6 +288,7 @@ describe('FR-158 buildPriceQuote — khoảng giá khi chưa rõ biến thể', 
         legalUnsourced: false,
         impersonation: false,
         stockStale: false,
+        injectionSuspected: false,
       },
     });
     expect(d).toMatchObject({ action: 'clarify', reason: 'variant_missing' });

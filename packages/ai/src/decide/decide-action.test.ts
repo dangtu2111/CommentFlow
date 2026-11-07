@@ -18,6 +18,7 @@ const NO_RISK = {
   legalUnsourced: false,
   impersonation: false,
   stockStale: false,
+  injectionSuspected: false,
 } as const;
 
 /** Ca mốc: một sản phẩm đã nhận, khách hỏi giá, nguồn có → trả lời. */
@@ -504,6 +505,7 @@ describe('FR-147 FR-141 decideAction — property-based', () => {
     legalUnsourced: fc.boolean(),
     impersonation: fc.boolean(),
     stockStale: fc.boolean(),
+    injectionSuspected: fc.boolean(),
   });
   const inputArb: fc.Arbitrary<DecideActionInput> = fc.record({
     lang: fc.constantFrom('vi' as const, 'en' as const, 'other' as const),
@@ -618,5 +620,79 @@ describe('FR-147 FR-141 decideAction — property-based', () => {
       }),
       { seed: SEED, numRuns: 300 },
     );
+  });
+});
+
+describe('DA-RULES-WIRE — ca hành động đo được bằng EVAL-RUNNER', () => {
+  it('hỏi giá/tồn mà chưa nhận ra sản phẩm nào và chưa có nguồn → hỏi lại sản phẩm (không chuyển hướng)', () => {
+    for (const topic of ['product_info', 'size'] as const) {
+      const d = decideAction(
+        base({
+          products: { candidates: [], missingAxes: [] },
+          topics: [{ topic, sourced: false }],
+        }),
+      );
+      expect(d).toMatchObject({ action: 'clarify', reason: 'product_unknown', needsHuman: false });
+      expect(d.clarify).toEqual({ ask: 'product', axes: [], options: [] });
+    }
+  });
+
+  it('khách đã nêu size cụ thể → không hỏi số đo cơ thể dù có ý "size" và bảng size', () => {
+    const d = decideAction(
+      base({
+        extract: { ...base().extract, size: 'M' },
+        topics: [
+          { topic: 'product_info', sourced: true },
+          { topic: 'size', sourced: true },
+        ],
+      }),
+    );
+    expect(d.action).toBe('answer');
+  });
+
+  it('khách ĐÃ nêu tên sản phẩm nhưng shop không có → chuyển hướng (hỏi "mẫu nào" là vô nghĩa)', () => {
+    const d = decideAction(
+      base({
+        products: { candidates: [], missingAxes: [], mentionedCount: 1 },
+        topics: [{ topic: 'product_info', sourced: false }],
+      }),
+    );
+    expect(d).toMatchObject({ action: 'redirect', reason: 'topic_unsourced' });
+  });
+
+  it('chưa nhận ra sản phẩm nhưng câu hỏi chung ĐÃ có nguồn (bảng size) → vẫn trả lời, không hỏi sản phẩm', () => {
+    const d = decideAction(
+      base({
+        products: { candidates: [], missingAxes: [] },
+        topics: [{ topic: 'size', sourced: true }],
+        extract: { ...base().extract, height_cm: 170, weight_kg: 60 },
+      }),
+    );
+    expect(d.action).toBe('answer');
+  });
+
+  it('chưa nhận ra sản phẩm, chủ đề khác (ship) chưa nguồn → vẫn chuyển hướng như cũ', () => {
+    const d = decideAction(
+      base({
+        products: { candidates: [], missingAxes: [] },
+        topics: [{ topic: 'shipping', sourced: false }],
+      }),
+    );
+    expect(d).toMatchObject({ action: 'redirect', reason: 'topic_unsourced' });
+  });
+
+  it('nghi chèn lệnh (injection) → chuyển người, không tự gửi, thắng cả khi mọi thứ khác ổn', () => {
+    const d = decideAction(base({ risks: { ...NO_RISK, injectionSuspected: true } }));
+    expect(d).toMatchObject({
+      action: 'handoff',
+      reason: 'injection_suspected',
+      needsHuman: true,
+      autoSendPolicy: 'never',
+    });
+  });
+
+  it('thiếu cờ injectionSuspected → không đọc được đầu vào → chuyển người (không mở khi lỗi)', () => {
+    const { injectionSuspected: _drop, ...partial } = NO_RISK;
+    expect(decideAction(base({ risks: partial as never })).reason).toBe('input_unreadable');
   });
 });

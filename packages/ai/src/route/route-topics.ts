@@ -17,7 +17,10 @@ const OTHER_INTENT =
   /\b(ship|van chuyen|giao|phi|doi|tra hang|hoan|bao hanh|thanh toan|cod|giam gia|khuyen mai|voucher|ma giam|tang|shipping|delivery|return|refund|warranty|discount|coupon)\b/;
 
 const TOPIC_PATTERNS: ReadonlyArray<readonly [AskTopic, RegExp]> = [
-  ['stock', /\b(con hang|het hang|con khong|con ko|con k|in stock|stock|available)\b/],
+  [
+    'stock',
+    /\b(con hang|het hang|con khong|con ko|con k|ton kho|so luong ton|in stock|stock|available|availability|inventory)\b/,
+  ],
   ['size', /\b(size|kich co|kich thuoc|sz)\b/],
   ['color', /\b(mau|color|colour)\b/],
   ['price', /\b(gia|bao nhieu|nhieu tien|price|how much|cost)\b/],

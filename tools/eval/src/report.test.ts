@@ -22,6 +22,8 @@ const ok = (id: string, records: UsageRecord[]): SampleOutcome => ({
   id,
   label: 'price',
   action: 'answer',
+  reason: 'answer',
+  unansweredTopics: [],
   lang: 'vi',
   reply: 'giá 150.000đ',
   variants: [],
