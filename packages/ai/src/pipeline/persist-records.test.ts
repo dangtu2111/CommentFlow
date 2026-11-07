@@ -88,7 +88,7 @@ const done = (over: Partial<Done> = {}): Done =>
         ],
       },
       {
-        id: CHUNK,
+        id: `kb:${CHUNK}`,
         kind: 'kb',
         title: 'Ship',
         text: 'Phí ship 20.000đ' as never,
@@ -184,7 +184,9 @@ describe('toRetrievalInput — nhật ký tìm kiếm (chỉ id dạng uuid; tru
   it('route, kbVersion, đoạn đã dùng (uuid), sản phẩm nhận ra; ứng viên không phải uuid (chính sách…) bị bỏ', () => {
     const r = toRetrievalInput(
       done({
-        candidates: done().candidates.map((c) => (c.id === CHUNK ? { ...c, used: true } : c)),
+        candidates: done().candidates.map((c) =>
+          c.id === `kb:${CHUNK}` ? { ...c, used: true } : c,
+        ),
       }),
       CTX,
       12,
