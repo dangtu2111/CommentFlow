@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { getMessages } from '../i18n/messages';
-import { isNavActive, navGroupsFor, sectionTabsFor, splitNavByRole } from './app-nav';
+import {
+  isNavActive,
+  navGroupsFor,
+  roleAccessRows,
+  sectionTabsFor,
+  splitNavByRole,
+} from './app-nav';
 
 describe('FR-040 trang 403: chia mục điều hướng theo vai trò (docs/08 §7.8)', () => {
   it('FR-040 Staff: "dùng được" khớp điều hướng của Staff; "chỉ Owner" là phần còn lại', () => {
@@ -136,5 +142,19 @@ describe('FR-040 isNavActive', () => {
     for (const [pathname, href, expected] of cases) {
       expect(isNavActive(pathname, href), `${pathname} ~ ${href}`).toBe(expected);
     }
+  });
+});
+
+describe('GĐ0-TENANCY bảng quyền theo vai trò lấy từ bảng quyền thật (ENTRIES)', () => {
+  it('mỗi hàng khớp navGroupsFor/splitNavByRole; Owner có mọi mục; Thành viên chỉ Owner', () => {
+    const rows = roleAccessRows();
+    const staffKeys = splitNavByRole('staff').allowed.map((i) => i.key);
+    const ownerKeys = splitNavByRole('owner').allowed.map((i) => i.key);
+    expect(rows.filter((r) => r.staff).map((r) => r.key)).toEqual(staffKeys);
+    expect(rows.filter((r) => r.owner).map((r) => r.key)).toEqual(ownerKeys);
+    expect(rows.every((r) => r.owner)).toBe(true);
+    const members = rows.find((r) => r.key === 'members');
+    expect(members).toMatchObject({ owner: true, staff: false });
+    expect(rows.find((r) => r.key === 'comments')).toMatchObject({ owner: true, staff: true });
   });
 });

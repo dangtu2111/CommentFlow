@@ -80,18 +80,6 @@ export function InviteForm() {
           <p className="font-body-sm text-body-sm text-on-surface-variant">{t('roleHint')}</p>
         </div>
       </div>
-      <div className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low opacity-70">
-        <div className="flex items-center gap-2.5">
-          <span className="text-secondary">
-            <Icon name="visibility_off" size={20} />
-          </span>
-          <div>
-            <div className="font-title-sm text-title-sm text-on-surface">{t('maskTitle')}</div>
-            <div className="font-body-sm text-body-sm text-on-surface-variant">{t('maskBody')}</div>
-          </div>
-        </div>
-        <span className="font-label-sm text-label-sm text-primary font-medium">{t('soon')}</span>
-      </div>
       <div className="flex items-center justify-end gap-2 pt-1">
         <button type="reset" className={twBtn({ tone: 'soft' })}>
           {t('cancel')}
