@@ -44,6 +44,21 @@ export type CommentDetail = {
   } | null;
   /** Người đang giữ khóa còn hạn (kể cả chính mình); `null` nếu không ai giữ hoặc đã hết hạn. */
   lock: { holderId: string; holderName: string | null; until: Date; heldByMe: boolean } | null;
+  /**
+   * Câu gợi ý AI MỚI NHẤT của bình luận (FR-043, PIPE-ORCHESTRATOR lát F). Bản cũ giữ làm lịch sử, chi tiết chỉ hiện bản mới nhất
+   * (Q-POR11); `null` nếu chưa có hoặc bản mới nhất là "Cần nhân viên" (chỗ giữ chỗ, xem `aiDraft`). Văn bản đã che PII khi AI soạn.
+   */
+  suggestion: {
+    text: string;
+    sourceIds: string[];
+    /** id nguồn → tên (sản phẩm / đoạn kiến thức); nguồn không tra được thì không có khóa. */
+    sourceTitles: Record<string, string>;
+    needsHuman: boolean;
+  } | null;
+  /** Thông tin bản nháp mới nhất để giải thích với nhân viên ("gợi ý — chưa gửi", lý do cần nhân viên). */
+  aiDraft: { action: string; reason: string | null; createdAt: Date } | null;
+  /** Trạng thái khóa lượt của pipeline (`processing`/`done`/`blocked`/`failed`); `null` nếu bình luận chưa từng vào pipeline. */
+  aiTurnState: string | null;
 };
 
 type Row = {
@@ -77,6 +92,13 @@ type Row = {
   locked_until: Date | null;
   lock_active: boolean | null;
   holder_name: string | null;
+  draft_text: string | null;
+  draft_sources: unknown;
+  draft_needs_human: boolean | null;
+  draft_action: string | null;
+  draft_reason: string | null;
+  draft_created_at: Date | null;
+  turn_state: string | null;
 };
 
 export async function getCommentDetail(
@@ -92,7 +114,9 @@ export async function getCommentDetail(
            lh.id AS hide_id, lh.action AS hide_action, lh.status AS hide_status, lh.error_code AS hide_error_code,
            lr.id AS reply_id, lr.status AS reply_status, lr.text AS reply_text,
            lr.error_code AS reply_error_code, lr.sent_at AS reply_sent_at,
-           c.locked_by, c.locked_until, (c.locked_until > now()) AS lock_active, u.name AS holder_name
+           c.locked_by, c.locked_until, (c.locked_until > now()) AS lock_active, u.name AS holder_name,
+           ld.text AS draft_text, ld.sources AS draft_sources, ld.needs_human AS draft_needs_human, ld.action AS draft_action,
+           ld.reason AS draft_reason, ld.created_at AS draft_created_at, pt.state AS turn_state
       FROM cf.comments c
       JOIN cf.channels ch ON ch.workspace_id = c.workspace_id AND ch.id = c.channel_id
       JOIN cf.posts p ON p.workspace_id = c.workspace_id AND p.id = c.post_id
@@ -105,6 +129,14 @@ export async function getCommentDetail(
          LIMIT 1
       ) lr ON true
       LEFT JOIN LATERAL (
+        SELECT d.text, d.sources, d.needs_human, d.action, d.reason, d.created_at
+          FROM cf.drafts d
+         WHERE d.workspace_id = c.workspace_id AND d.target_type = 'comment' AND d.target_id = c.id
+         ORDER BY d.created_at DESC, d.id DESC
+         LIMIT 1
+      ) ld ON true
+      LEFT JOIN cf.pipeline_turns pt ON pt.workspace_id = c.workspace_id AND pt.comment_id = c.id
+      LEFT JOIN LATERAL (
         SELECT h.id, h.action, h.status, h.error_code
           FROM cf.comment_hides h
          WHERE h.workspace_id = c.workspace_id AND h.comment_id = c.id
@@ -114,7 +146,30 @@ export async function getCommentDetail(
      WHERE c.workspace_id = ${workspaceId}::uuid AND c.id = ${commentId}::uuid`);
   const row = result.rows[0];
   if (!row) return null;
+  const sourceIds = Array.isArray(row.draft_sources)
+    ? row.draft_sources.filter((x): x is string => typeof x === 'string')
+    : [];
+  const sourceTitles = sourceIds.length > 0 ? await sourceTitlesOf(tx, workspaceId, sourceIds) : {};
   return {
+    // Bản "Cần nhân viên" (action `handoff`) chỉ là chỗ giữ chỗ, KHÔNG phải câu gợi ý: không đưa vào ô soạn; lý do hiện qua `aiDraft`.
+    suggestion:
+      row.draft_text === null || row.draft_action === 'handoff'
+        ? null
+        : {
+            text: row.draft_text,
+            sourceIds,
+            sourceTitles,
+            needsHuman: row.draft_needs_human === true,
+          },
+    aiDraft:
+      row.draft_text === null || row.draft_action === null || row.draft_created_at === null
+        ? null
+        : {
+            action: row.draft_action,
+            reason: row.draft_reason,
+            createdAt: new Date(row.draft_created_at),
+          },
+    aiTurnState: row.turn_state,
     id: row.id,
     status: row.status,
     text: row.text,
@@ -161,4 +216,40 @@ export async function getCommentDetail(
           }
         : null,
   };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Tên hiển thị của nguồn bản nháp: sản phẩm (id uuid) hoặc đoạn kiến thức (`kb:<uuid>`; tiêu đề ngữ cảnh hoặc mã đoạn). Nguồn không tra được
+ * (chính sách/FAQ mẫu, id lạ) → bỏ qua, giao diện dùng nhãn chung. Chỉ đọc, lọc `workspace_id`.
+ */
+async function sourceTitlesOf(
+  tx: Database,
+  workspaceId: string,
+  sourceIds: readonly string[],
+): Promise<Record<string, string>> {
+  const raw = (id: string): string => id.replace(/^kb:/, '');
+  const ids = [...new Set(sourceIds.map(raw).filter((id) => UUID.test(id)))];
+  if (ids.length === 0) return {};
+  const list = sql.join(
+    ids.map((id) => sql`${id}::uuid`),
+    sql`, `,
+  );
+  const [products, chunks] = await Promise.all([
+    tx.execute<{ id: string; title: string }>(
+      sql`SELECT id, name AS title FROM cf.products WHERE workspace_id = ${workspaceId}::uuid AND id IN (${list})`,
+    ),
+    tx.execute<{ id: string; title: string }>(
+      sql`SELECT id, coalesce(context_header, chunk_key) AS title FROM cf.kb_chunks WHERE workspace_id = ${workspaceId}::uuid AND id IN (${list})`,
+    ),
+  ]);
+  const byRaw = new Map<string, string>();
+  for (const r of [...products.rows, ...chunks.rows]) byRaw.set(r.id, r.title);
+  return Object.fromEntries(
+    sourceIds.flatMap((id) => {
+      const title = byRaw.get(raw(id));
+      return title === undefined ? [] : [[id, title]];
+    }),
+  );
 }

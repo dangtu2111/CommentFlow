@@ -9,6 +9,7 @@ import { replyErrorKey } from '../../lib/reply-errors';
 import { deriveReplyUi, type ReplyUiDetail } from '../../lib/reply-state';
 import type { SuggestionView } from '../../lib/suggestion';
 import { userInitials } from '../../lib/user-initials';
+import { canRequestSuggestion } from '../../server/suggestion-request';
 import { Avatar } from '../ui/avatar';
 import { Icon } from '../ui/icon';
 import { Kbd } from '../ui/kbd';
@@ -20,6 +21,7 @@ import { LabelChip, StatusChip } from './label-chip';
 import { RelabelSelect } from './relabel-select';
 import { ReplyComposer } from './reply-composer';
 import { ReplyProgress } from './reply-progress';
+import { RequestSuggestionButton } from './request-suggestion-button';
 import { QuoteBlock, StateNote } from './state-note';
 
 /** Thẻ trong cột chi tiết (Stitch: `rounded-xl bg-surface-container-lowest p-4 shadow-sm space-y-3`). */
@@ -50,6 +52,8 @@ export type CommentDetailView = {
   lock: { holderName: string | null; heldByMe: boolean } | null;
   /** Gợi ý AI (FR-043). Chưa có nguồn dữ liệu (bảng `drafts`, SUGGEST-UI-PERSIST) → không truyền. */
   suggestion?: SuggestionView | null;
+  /** Bản nháp AI mới nhất (lý do cần nhân viên khi là "Cần nhân viên"); `null`/thiếu = chưa có. */
+  aiDraft?: { action: string; reason: string | null; createdAt: Date } | null;
   /** Dữ liệu bổ sung của thiết kế (sản phẩm đính kèm, CRM, độ tin cậy) — chưa có nguồn thật, chỉ trang xem mẫu truyền. */
   extras?: CommentDetailExtras;
 };
@@ -59,6 +63,14 @@ export type CommentDetailExtras = {
   customer?: { badge: string; meta: string; history: string; purchase: string };
   ai?: { confidence: string; reason: string };
 };
+
+/** Lý do "Cần nhân viên" do hệ thống ghi (bản nháp giữ chỗ); lý do khác (quyết định của AI) hiện câu chung. */
+const AI_REASONS = [
+  'quota_exhausted',
+  'attempts_exhausted',
+  'ai_invalid_output',
+  'customer_post_reply_cap',
+];
 
 const STATUSES = [
   'new',
@@ -138,6 +150,51 @@ export async function CommentDetailPanel({
   const composePrefill =
     reply.mode === 'compose' && reply.prefill === '' ? (comment.suggestion?.text ?? '') : '';
   const soonKey = (key: string) => t('reply.shortcutSoon', { key });
+  // Trạng thái AI cho nhân viên (PIPE-ORCHESTRATOR lát F): "đang soạn", lý do cần nhân viên, nút "Soạn gợi ý" (chưa có nháp / cần nhân viên).
+  const aiReason = comment.status === 'needs_human' ? (comment.aiDraft?.reason ?? null) : null;
+  const askable = canRequestSuggestion({ status: comment.status, deletedAt: comment.deletedAt });
+  const pipelineOn = process.env.PIPELINE_ENABLED?.trim() === 'true';
+  const aiNote = (
+    <div
+      className="space-y-2 rounded-xl bg-surface-container-lowest p-3 shadow-sm"
+      aria-live="polite"
+    >
+      {comment.status === 'processing' ? (
+        <p className="font-body-sm text-body-sm text-on-surface-variant" role="status">
+          {t('ai.working')}
+        </p>
+      ) : null}
+      {comment.suggestion ? (
+        <p className="font-label-sm text-label-sm text-on-surface-variant">
+          {t('ai.draftCaption')}
+        </p>
+      ) : null}
+      {aiReason !== null ? (
+        <p className="rounded bg-tertiary-fixed px-2.5 py-1.5 font-body-sm text-body-sm text-on-tertiary-fixed-variant">
+          {t(`ai.reasons.${AI_REASONS.includes(aiReason) ? aiReason : 'other'}`)}
+        </p>
+      ) : null}
+      {askable && !isDeleted && pipelineOn ? (
+        <RequestSuggestionButton
+          commentId={comment.id}
+          labels={{
+            request: t('ai.request'),
+            working: t('ai.requesting'),
+            requested: t('ai.requested'),
+            failures: {
+              not_found: t('ai.failures.not_found'),
+              not_eligible: t('ai.failures.not_eligible'),
+              pipeline_off: t('ai.failures.pipeline_off'),
+              unavailable: t('ai.failures.unavailable'),
+            },
+          }}
+        />
+      ) : null}
+      {askable && !isDeleted && !pipelineOn ? (
+        <p className="font-body-sm text-body-sm text-on-surface-variant">{t('ai.off')}</p>
+      ) : null}
+    </div>
+  );
   const hideButton =
     hideUi.mode === 'can' ? (
       <HideButton
@@ -402,6 +459,7 @@ export async function CommentDetailPanel({
             </p>
           ) : null}
         </div>
+        {aiNote}
         <section className="flex flex-1 flex-col gap-3" aria-label={t('reply.field')}>
           {reply.mode === 'compose' ? (
             <ReplyComposer

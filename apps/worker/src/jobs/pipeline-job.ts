@@ -17,6 +17,7 @@ import {
   getMergeWindowSeconds,
   loadPipelineContext,
   mergeCommentGroup,
+  requestManualPipelineRun,
 } from '@flow/db';
 import {
   DEFAULT_USAGE_TIME_ZONE,
@@ -85,6 +86,19 @@ export async function runPipelineJob(
   const { workspaceId } = job;
   let commentId = job.commentId;
   const now = (config.now ?? (() => new Date()))();
+
+  // Chạy lại THỦ CÔNG ("Soạn gợi ý", Q-POR8/Q-POR11): đưa bình luận + khóa lượt về trạng thái xử lý được và ghi `action_logs` (ai bấm). Vẫn
+  // qua đúng cổng dừng khẩn cấp/hạn mức/trần phía dưới (không đường tắt). Thiếu người yêu cầu / không đủ điều kiện → bỏ qua.
+  let draftSince: Date | undefined;
+  if (job.trigger === 'manual') {
+    if (!job.requestedBy) return { kind: 'ignored', reason: 'missing_requester' };
+    const requestedBy = job.requestedBy;
+    const rerun = await db.withJob(workspaceId, (tx) =>
+      requestManualPipelineRun(tx, workspaceId, commentId, requestedBy),
+    );
+    if (!rerun.eligible) return { kind: 'ignored', reason: rerun.reason };
+    draftSince = rerun.startedAt;
+  }
 
   let context = await db.withJob(workspaceId, (tx) =>
     loadPipelineContext(tx, workspaceId, commentId, now),
@@ -171,6 +185,7 @@ export async function runPipelineJob(
     commentId,
     turn: { limit: config.turnLimit, timeZone: DEFAULT_USAGE_TIME_ZONE },
     replyCapExceeded: evaluateReplyCap(replyCap) === 'exceeded',
+    ...(draftSince ? { draftSince } : {}),
     input: {
       workspaceId,
       text: mergedText ?? comment.text,

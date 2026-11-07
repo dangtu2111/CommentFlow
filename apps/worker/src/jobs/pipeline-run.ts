@@ -47,6 +47,8 @@ export type RunCommentConfig = {
   persist: PersistContext;
   /** Khách đã VƯỢT trần trả lời của (khách, bài) trong 24 giờ (FR-167): chặn TRƯỚC giành quyền/trừ lượt/extract. */
   replyCapExceeded?: boolean;
+  /** Chạy lại THỦ CÔNG (Q-POR11): bản nháp "Cần nhân viên" chỉ tính trùng nếu tạo từ mốc này (bản cũ giữ làm lịch sử). */
+  draftSince?: Date;
   now?: () => number;
 };
 
@@ -102,6 +104,7 @@ export async function runCommentPipeline(config: RunCommentConfig): Promise<RunC
     if (isUnreadableAiOutput(error)) {
       await persistHandoff(db, workspaceId, 'ai_invalid_output', config.persist, {
         markFailed: true,
+        ...(config.draftSince ? { since: config.draftSince } : {}),
       });
       return { kind: 'handoff', reason: 'ai_invalid_output' };
     }
@@ -124,7 +127,13 @@ export async function runCommentPipeline(config: RunCommentConfig): Promise<RunC
       case 'quota_exhausted':
       case 'attempts_exhausted':
       case 'customer_post_reply_cap':
-        await persistHandoff(db, workspaceId, result.reason, config.persist);
+        await persistHandoff(
+          db,
+          workspaceId,
+          result.reason,
+          config.persist,
+          config.draftSince ? { since: config.draftSince } : {},
+        );
         return { kind: 'handoff', reason: result.reason };
       default:
         // gate_error và lý do lạ: chặn an toàn → thử lại (không nuốt lỗi).

@@ -75,3 +75,10 @@ Kế hoạch đã duyệt (kèm 4 sửa đổi) ở `docs/plans/feat-pipe-orches
 **Phát hiện nhờ test DB thật:** bọc `perCallKnowledge` của worker làm rơi `resolveProducts` → lượt 2 hỏi lại `product_unknown`; đã sửa. Mẫu giống hệt lặp 5 lần kích `repeat_limit` → test dùng câu khác nhau.
 **Số đo:** ai 1894 test, coverage 100%; worker int: pipeline-cap 6, pipeline-convo 2, ingest 25; db int pipeline-convo 7; eval 51+; web server 303.
 **Chưa làm / việc sau:** UI Owner chỉnh ngưỡng 1–5 (lát F/Cài đặt); hoãn gộp tối đa 2× (PIPE-MERGE-DEBOUNCE); E2E worker thật (E2E-WORKER); bật `PIPELINE_ENABLED` cho workspace dev (cần cấu hình LLM trong `.env.local` do chủ dự án).
+
+## Lát F — hiện gợi ý, "Soạn gợi ý", Owner chỉnh trần (nhánh `feat/pipe-orchestrator-f`)
+
+**Làm gì:** (1) `getCommentDetail` trả bản nháp MỚI NHẤT (`suggestion`, bản "Cần nhân viên" không thành câu gợi ý), `aiDraft` (lý do), `aiTurnState`, tên nguồn. (2) Nút "Soạn gợi ý" (`requestSuggestionAction`): web chỉ kiểm điều kiện + đẩy job `pipeline` thủ công kèm `requestedBy` (khóa đơn nhất 60 giây); worker `requestManualPipelineRun` kiểm thành viên đang hoạt động, đưa bình luận về `new` + khóa lượt về `processing` (`attempts = 1`, giữ `charged_at`), ghi `action_logs`, rồi qua đúng cổng; bản nháp MỚI nhờ mốc `startedAt` (bản "Cần nhân viên" cũ giữ làm lịch sử). (3) Thẻ Owner chỉnh trần 1–5 ở Cài đặt › Tự động hóa + migration 0077 (quyền theo cột). (4) KT-PIPE thêm bước nút/trần/Staff.
+**Điểm tự kiểm (verify.md §A):** chạy lại thủ công KHÔNG trừ lượt hai lần (test: đã trừ → vẫn 1; chưa trừ → trừ); không đường tắt qua dừng khẩn cấp/hạn mức/trần (test dừng khẩn cấp → bình luận ở `new`, không nháp, có log); người bấm phải là thành viên đang hoạt động (test người ngoài/đình chỉ); Staff không ghi được trần (RLS); không PII mới. Nhãn: tự kiểm, chưa có kiểm chứng độc lập.
+**Số đo:** worker int pipeline-manual 9; db int automation-settings 14 (5 mới), comment-detail-draft 5; web 812; suggestion-request 6, reply-cap-settings 3.
+**Chưa làm / việc sau:** Playwright cho nút (gộp vào `E2E-WORKER`); hoàn lượt khi lỗi hệ thống (`USAGE-REFUND-SYSTEM-FAIL`, GĐ3); hoãn gộp 2× (`PIPE-MERGE-DEBOUNCE`).

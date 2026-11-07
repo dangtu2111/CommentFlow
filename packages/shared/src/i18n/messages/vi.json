@@ -997,6 +997,27 @@
       "filteredTitle": "Không có bình luận khớp",
       "filteredBody": "Thử đổi tab hoặc xóa bớt bộ lọc."
     },
+    "ai": {
+      "working": "AI đang soạn gợi ý…",
+      "draftCaption": "Gợi ý của AI — chưa gửi. Bạn xem lại rồi mới gửi.",
+      "request": "Soạn gợi ý",
+      "requesting": "Đang gửi yêu cầu…",
+      "requested": "Đã gửi yêu cầu soạn gợi ý",
+      "off": "AI chưa được bật cho workspace này nên chưa soạn gợi ý được.",
+      "reasons": {
+        "quota_exhausted": "Đã hết lượt AI trong kỳ nên AI không soạn gợi ý cho bình luận này. Bạn trả lời tay hoặc bấm Soạn gợi ý sau khi có thêm lượt.",
+        "attempts_exhausted": "AI đã thử nhiều lần mà chưa soạn được. Bạn trả lời tay hoặc bấm Soạn gợi ý để thử lại.",
+        "ai_invalid_output": "AI trả về kết quả không đọc được. Bạn trả lời tay hoặc bấm Soạn gợi ý để thử lại.",
+        "customer_post_reply_cap": "Khách này đã đủ số câu AI được trả lời dưới bài này trong 24 giờ. Bạn xem và trả lời tay.",
+        "other": "AI cần người xem câu này (ví dụ khiếu nại, thông tin chưa có trong kiến thức). Bạn trả lời tay hoặc bấm Soạn gợi ý để thử lại."
+      },
+      "failures": {
+        "not_found": "Không tìm thấy bình luận này.",
+        "not_eligible": "Bình luận này không soạn gợi ý được lúc này (đang xử lý hoặc đã có gợi ý).",
+        "pipeline_off": "AI chưa được bật nên chưa soạn gợi ý được.",
+        "unavailable": "Chưa gửi được yêu cầu, thử lại sau ít phút."
+      }
+    },
     "detail": {
       "title": "Chi tiết bình luận",
       "empty": "Chọn một bình luận để xem chi tiết.",
@@ -1201,6 +1222,16 @@
     }
   },
   "automation": {
+    "replyCap": {
+      "title": "Giới hạn câu trả lời AI cho mỗi khách",
+      "body": "Để AI không trả lời một khách mãi dưới cùng một bài, đặt số câu tối đa AI được soạn cho một khách dưới một bài trong 24 giờ (gộp mọi chuỗi và bình luận mới). Câu cuối cùng sẽ mời khách nhắn tin cho shop; vượt giới hạn thì chuyển nhân viên. Bài khác không bị ảnh hưởng.",
+      "label": "Số câu tối đa mỗi khách, mỗi bài, trong 24 giờ",
+      "option": "{count} câu",
+      "hint": "Hiện tại: {count} câu. Câu thứ {count} là câu mời nhắn tin; từ câu kế tiếp chuyển nhân viên.",
+      "save": "Lưu giới hạn",
+      "saved": "Đã lưu giới hạn câu trả lời AI cho mỗi khách.",
+      "error": "Không lưu được: chọn một số từ 1 đến 5."
+    },
     "pageTitle": "Tự động hóa AI",
     "title": "Tự động hóa AI",
     "subtitle": "Trung tâm điều phối & giám sát luồng phản hồi thông minh thời gian thực",

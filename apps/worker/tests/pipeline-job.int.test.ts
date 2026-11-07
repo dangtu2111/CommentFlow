@@ -19,6 +19,7 @@ let admin: pg.Pool;
 let ws: string;
 let channel: string;
 let post: string;
+let staff: string;
 
 beforeAll(async () => {
   const url = process.env.TEST_DATABASE_WORKER_URL;
@@ -40,6 +41,17 @@ beforeEach(async () => {
     'Shop job',
     `shop-${ws}`,
   ]);
+  // Người bấm "Soạn gợi ý" (đường thủ công) phải là thành viên đang hoạt động.
+  staff = (
+    await admin.query('INSERT INTO core.users (email, name) VALUES ($1, $2) RETURNING id', [
+      `nv-${randomUUID()}@example.test`,
+      'nv',
+    ])
+  ).rows[0].id;
+  await admin.query(
+    "INSERT INTO core.members (workspace_id, user_id, role, status) VALUES ($1, $2, 'staff', 'active')",
+    [ws, staff],
+  );
   channel = (
     await admin.query(
       "INSERT INTO cf.channels (workspace_id, platform, external_id, name) VALUES ($1, 'facebook', $2, 'Trang Shop') RETURNING id",
@@ -120,6 +132,7 @@ const job = (commentId: string, trigger: 'auto' | 'manual' = 'auto') => ({
   workspaceId: ws,
   commentId,
   trigger,
+  ...(trigger === 'manual' ? { requestedBy: staff } : {}),
 });
 const draftsOf = async (id: string) =>
   (await admin.query('SELECT * FROM cf.drafts WHERE target_id = $1', [id])).rows;

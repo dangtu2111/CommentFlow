@@ -42,10 +42,13 @@ export async function commentHasDraft(
   tx: Database,
   workspaceId: string,
   commentId: string,
+  /** Chỉ tính bản nháp TẠO TỪ mốc này (chạy lại thủ công, Q-POR11); thiếu = mọi bản nháp (đường tự động giữ idempotent). */
+  since?: Date,
 ): Promise<boolean> {
   const r = await tx.execute(sql`
     SELECT 1 FROM cf.drafts WHERE workspace_id = ${workspaceId}::uuid AND target_type = 'comment'
-       AND target_id = ${commentId}::uuid LIMIT 1`);
+       AND target_id = ${commentId}::uuid
+       ${since ? sql`AND created_at >= ${since.toISOString()}::timestamptz` : sql``} LIMIT 1`);
   return r.rows.length > 0;
 }
 
@@ -91,4 +94,60 @@ export async function extendPipelineTurnLease(
      WHERE workspace_id = ${workspaceId}::uuid AND comment_id = ${commentId}::uuid AND state = 'processing' AND attempts = ${attempt}
     RETURNING comment_id`);
   return r.rows.length > 0;
+}
+
+/**
+ * Đường CHẠY LẠI THỦ CÔNG của nút "Soạn gợi ý" (PIPE-ORCHESTRATOR lát F, Q-POR8/Q-POR11). Chạy trong `withJob` của worker khi nhận job
+ * `pipeline` `trigger: manual`. KHÔNG tự chạy pipeline và KHÔNG bỏ qua cổng: chỉ đưa bình luận/khóa lượt về trạng thái XỬ LÝ ĐƯỢC rồi để
+ * cổng dừng khẩn cấp/hạn mức/trần như mọi lượt (chưa trừ lượt thì trừ; đã trừ — `charged_at` giữ nguyên — thì không trừ thêm).
+ *
+ *  - Chỉ nhận người yêu cầu là thành viên ĐANG HOẠT ĐỘNG của đúng workspace (job không tin `requestedBy` mù quáng).
+ *  - Chỉ bình luận `new` hoặc `needs_human`, không phải của Page, chưa xóa, chưa gộp. Trạng thái khác (đang xử lý, đã có bản chờ duyệt…) → không làm gì.
+ *  - `needs_human` → `new`; khóa lượt (nếu có) về `processing` với `attempts = 1` (CHECK ≥ 1; lần giành quyền kế là 2 nên còn 2 lần thử trong trần 3), nhả thuê (GIỮ `charged_at`, `last_error` xóa).
+ *  - Ghi `action_logs` (người dùng yêu cầu, bình luận nào, trạng thái + lý do TRƯỚC đó; không nội dung khách).
+ * Bản nháp cũ GIỮ NGUYÊN làm lịch sử; `startedAt` là mốc để ghi bản nháp MỚI dù bình luận đã có bản "Cần nhân viên" cũ (Q-POR11).
+ */
+export type ManualRerunResult =
+  | { eligible: true; startedAt: Date; previousStatus: string; previousReason: string | null }
+  | { eligible: false; reason: 'not_member' | 'not_eligible' };
+
+export async function requestManualPipelineRun(
+  tx: Database,
+  workspaceId: string,
+  commentId: string,
+  requestedBy: string,
+): Promise<ManualRerunResult> {
+  const member = await tx.execute(sql`
+    SELECT 1 FROM core.members
+     WHERE workspace_id = ${workspaceId}::uuid AND user_id = ${requestedBy}::uuid AND status = 'active'`);
+  if (member.rows.length === 0) return { eligible: false, reason: 'not_member' };
+
+  const found = await tx.execute<{ status: string; reason: string | null; started_at: Date }>(sql`
+    SELECT c.status, now() AS started_at,
+           (SELECT d.reason FROM cf.drafts d
+             WHERE d.workspace_id = c.workspace_id AND d.target_type = 'comment' AND d.target_id = c.id
+             ORDER BY d.created_at DESC, d.id DESC LIMIT 1) AS reason
+      FROM cf.comments c
+     WHERE c.workspace_id = ${workspaceId}::uuid AND c.id = ${commentId}::uuid
+       AND c.status IN ('new', 'needs_human') AND c.is_own = false AND c.deleted_at IS NULL AND c.merged_into_id IS NULL
+     FOR UPDATE OF c`);
+  const row = found.rows[0];
+  if (!row) return { eligible: false, reason: 'not_eligible' };
+
+  await tx.execute(sql`
+    UPDATE cf.comments SET status = 'new', updated_at = now()
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${commentId}::uuid AND status = 'needs_human'`);
+  await tx.execute(sql`
+    UPDATE cf.pipeline_turns SET state = 'processing', attempts = 1, locked_until = NULL, last_error = NULL, updated_at = now()
+     WHERE workspace_id = ${workspaceId}::uuid AND comment_id = ${commentId}::uuid`);
+  await tx.execute(sql`
+    INSERT INTO core.action_logs (workspace_id, actor_type, actor_id, on_behalf_of, action, target_type, target_id, after)
+    VALUES (${workspaceId}::uuid, 'system', NULL, ${requestedBy}::uuid, 'comment.ai_rerun_requested', 'comment', ${commentId},
+            jsonb_build_object('previous_status', ${row.status}::text, 'previous_reason', ${row.reason}::text, 'requested_by', ${requestedBy}::text))`);
+  return {
+    eligible: true,
+    startedAt: new Date(row.started_at),
+    previousStatus: row.status,
+    previousReason: row.reason,
+  };
 }

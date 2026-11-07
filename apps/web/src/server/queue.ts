@@ -35,8 +35,15 @@ function runtime(): Runtime {
 }
 
 /** Đẩy một job vào hàng đợi (worker xử lý idempotent nên đẩy trùng không sao). */
-export async function enqueueJob(queue: string, data: object): Promise<void> {
+/** Tùy chọn gửi job: khóa đơn nhất theo khóa trong một cửa sổ giây (chống bấm đúp — job trùng khóa trong cửa sổ bị bỏ). */
+export type EnqueueOptions = { singletonKey?: string; singletonSeconds?: number };
+
+export async function enqueueJob(
+  queue: string,
+  data: object,
+  options?: EnqueueOptions,
+): Promise<void> {
   const { boss, started } = runtime();
   await started;
-  await boss.send(queue, data);
+  await boss.send(queue, data, options ?? {});
 }

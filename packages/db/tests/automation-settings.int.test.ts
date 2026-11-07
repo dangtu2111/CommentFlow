@@ -6,7 +6,9 @@ import type { FlowDb } from '../src/client';
 import {
   type AutomationSettingsInput,
   getAutomationSettings,
+  getMaxAiRepliesPerCustomerPost,
   saveAutomationSettings,
+  saveMaxAiRepliesPerCustomerPost,
 } from '../src/queries/automation-settings';
 import {
   createAdminPool,
@@ -254,5 +256,92 @@ describe('FR-070/071 lưu cấu hình tự gửi', () => {
     );
     const row = await db.withActor(ws, staff, (tx) => getAutomationSettings(tx, ws));
     expect(row?.rules).toEqual([cell]);
+  });
+});
+
+describe('FR-167 Owner chỉnh trần câu AI cho mỗi khách dưới mỗi bài (migration 0077)', () => {
+  it('chưa lưu → mặc định 3; Owner lưu 1–5 rồi đọc lại; Staff đọc được cùng giá trị', async () => {
+    const ws2 = await seedWorkspace(admin);
+    const o = await seedUser(admin, 'capOwner');
+    const st = await seedUser(admin, 'capStaff');
+    await seedMember(admin, ws2, o, 'owner');
+    await seedMember(admin, ws2, st, 'staff');
+    expect(await db.withActor(ws2, o, (tx) => getMaxAiRepliesPerCustomerPost(tx, ws2))).toBe(3);
+    for (const v of [1, 5, 2]) {
+      await db.withActor(ws2, o, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws2, o, v));
+      expect(await db.withActor(ws2, st, (tx) => getMaxAiRepliesPerCustomerPost(tx, ws2))).toBe(v);
+    }
+    // Chỉ MỘT dòng cài đặt; các cột khác giữ mặc định; updated_by = Owner.
+    const row = (
+      await admin.query(
+        'SELECT threshold, daily_cap, updated_by FROM cf.automation_settings WHERE workspace_id = $1',
+        [ws2],
+      )
+    ).rows;
+    expect(row).toHaveLength(1);
+    expect(row[0]?.updated_by).toBe(o);
+  });
+
+  it('giữ nguyên các cột cấu hình khác khi chỉ đổi trần (không ghi đè ma trận/ngưỡng đã lưu)', async () => {
+    await db.withActor(ws, owner, (tx) =>
+      saveAutomationSettings(tx, ws, owner, config({ threshold: 0.95, dailyCap: 77 })),
+    );
+    await db.withActor(ws, owner, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws, owner, 4));
+    const row = await db.withActor(ws, owner, (tx) => getAutomationSettings(tx, ws));
+    expect(row).toMatchObject({ threshold: 0.95, dailyCap: 77 });
+    expect(await db.withActor(ws, owner, (tx) => getMaxAiRepliesPerCustomerPost(tx, ws))).toBe(4);
+  });
+
+  it('Staff, người ngoài, Owner workspace khác và withWorkspace trần KHÔNG ghi được (RLS 42501)', async () => {
+    await expectRejectCode(
+      db.withActor(ws, staff, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws, staff, 2)),
+      RLS,
+    );
+    await expectRejectCode(
+      db.withActor(ws, stranger, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws, stranger, 2)),
+      RLS,
+    );
+    await expectRejectCode(
+      db.withActor(ws, otherOwner, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws, otherOwner, 2)),
+      RLS,
+    );
+    await expectRejectCode(
+      db.withWorkspace(ws, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws, owner, 2)),
+      RLS,
+    );
+  });
+
+  it('không giả danh người ghi: updated_by khác chính Owner bị RLS chặn', async () => {
+    await expectRejectCode(
+      db.withActor(ws, owner, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws, staff, 2)),
+      RLS,
+    );
+  });
+
+  it('ngoài 1–5 bị từ chối: trước DB (RangeError) và ở DB (CHECK 23514)', async () => {
+    for (const bad of [0, 6, -1, 2.5, Number.NaN]) {
+      await expect(
+        db.withActor(ws, owner, (tx) => saveMaxAiRepliesPerCustomerPost(tx, ws, owner, bad)),
+      ).rejects.toThrow(RangeError);
+    }
+    await expectRejectCode(
+      db.withActor(ws, owner, (tx) =>
+        tx.execute(
+          sql`UPDATE cf.automation_settings SET max_ai_replies_per_customer_post = 6 WHERE workspace_id = ${ws}::uuid`,
+        ),
+      ),
+      CHECK,
+    );
+  });
+
+  it('cf_app KHÔNG có quyền ghi các cột khác ngoài danh sách đã cấp (vẫn chặn workspace_id)', async () => {
+    await expectRejectCode(
+      db.withActor(ws, owner, (tx) =>
+        tx.execute(
+          sql`UPDATE cf.automation_settings SET workspace_id = ${other}::uuid WHERE workspace_id = ${ws}::uuid`,
+        ),
+      ),
+      RLS,
+    );
   });
 });

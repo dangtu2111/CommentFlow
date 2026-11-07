@@ -997,6 +997,27 @@
       "filteredTitle": "No matching comments",
       "filteredBody": "Try another tab or clear some filters."
     },
+    "ai": {
+      "working": "AI is drafting a suggestion…",
+      "draftCaption": "AI suggestion — not sent. Review it before you send.",
+      "request": "Draft suggestion",
+      "requesting": "Sending request…",
+      "requested": "Suggestion requested",
+      "off": "AI is not enabled for this workspace, so no suggestion can be drafted.",
+      "reasons": {
+        "quota_exhausted": "The AI turns for this period are used up, so AI did not draft a suggestion. Reply manually or press Draft suggestion once more turns are available.",
+        "attempts_exhausted": "AI tried several times and could not draft one. Reply manually or press Draft suggestion to retry.",
+        "ai_invalid_output": "AI returned an unreadable result. Reply manually or press Draft suggestion to retry.",
+        "customer_post_reply_cap": "This customer already received the maximum number of AI replies under this post in 24 hours. Review and reply manually.",
+        "other": "AI needs a person to look at this (for example a complaint, or information not in the knowledge base). Reply manually or press Draft suggestion to retry."
+      },
+      "failures": {
+        "not_found": "This comment was not found.",
+        "not_eligible": "A suggestion cannot be drafted for this comment right now (already processing or already has one).",
+        "pipeline_off": "AI is not enabled, so no suggestion can be drafted.",
+        "unavailable": "The request could not be sent, try again in a few minutes."
+      }
+    },
     "detail": {
       "title": "Comment details",
       "empty": "Select a comment to see its details.",
@@ -1201,6 +1222,16 @@
     }
   },
   "automation": {
+    "replyCap": {
+      "title": "AI reply limit per customer",
+      "body": "So AI does not keep answering one customer under the same post, set the maximum number of replies AI may draft for one customer under one post within 24 hours (all threads and new comments combined). The last reply invites the customer to message the shop; beyond the limit the comment goes to staff. Other posts are not affected.",
+      "label": "Maximum replies per customer, per post, in 24 hours",
+      "option": "{count, plural, one {# reply} other {# replies}}",
+      "hint": "Currently {count, plural, one {# reply} other {# replies}}. Reply number {count} is the invitation to message; after that, comments go to staff.",
+      "save": "Save limit",
+      "saved": "AI reply limit per customer saved.",
+      "error": "Could not save: choose a number from 1 to 5."
+    },
     "pageTitle": "AI automation",
     "title": "AI automation",
     "subtitle": "Control center for real-time monitoring of the smart reply flow",
