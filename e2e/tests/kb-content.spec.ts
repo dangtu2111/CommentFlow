@@ -41,6 +41,8 @@ function runScenarios(locale: Locale) {
     await page.goto(path);
     return { context, page };
   }
+  /** Chờ qua cửa sổ chống bấm đúp (uiWrite 1 giây, uiSensitive 2 giây) giữa hai thao tác ghi liên tiếp — người dùng thật không bấm nhanh hơn. */
+  const pace = (page: Page, ms: number) => page.waitForTimeout(ms);
   const card = (page: Page, text: string) => page.locator('section').filter({ hasText: text });
 
   test('Owner: đăng ký, workspace, bật 2FA', async ({ browser }) => {
@@ -78,6 +80,15 @@ function runScenarios(locale: Locale) {
       }
       await expect(page.getByText(t('kb.hub.sources.empty'))).toBeVisible();
       await expect(page.getByText(t('kb.hub.product.empty'))).toBeVisible();
+
+      // Ô chạy thử nhận CÂU HỎI THẬT của Owner và trả lời NGAY TRONG TRANG (không chuyển sang trang Thử AI).
+      const overviewUrl = page.url();
+      await page
+        .getByLabel(t('kb.hub.playground.label'), { exact: true })
+        .fill('Giá áo thun size M bao nhiêu?');
+      await page.getByRole('button', { name: t('kb.hub.playground.run') }).click();
+      await expect(page.getByText(t('tryAi.result.reply'))).toBeVisible();
+      expect(page.url()).toBe(overviewUrl);
     } finally {
       await context.close();
     }
@@ -86,6 +97,7 @@ function runScenarios(locale: Locale) {
   test('FAQ: thêm, sửa, xóa; dữ liệu hiện ở tổng quan', async ({ browser }) => {
     const { context, page } = await open(browser, '/app/kb/faq');
     try {
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
       const question = `Ship bao lâu? ${tag}`;
       const form = page
         .locator('form')
@@ -116,6 +128,7 @@ function runScenarios(locale: Locale) {
       await expect(page.locator('.kb-slot a[href="/app/kb/faq"]')).toContainText('1');
 
       await page.goto('/app/kb/faq');
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp sau thao tác sửa ngay trước (uiWrite 1 giây)
       await card(page, question)
         .getByRole('button', { name: t('kbContent.delete'), exact: true })
         .click();
@@ -128,9 +141,45 @@ function runScenarios(locale: Locale) {
     }
   });
 
+  test('chống bấm đúp: gửi biểu mẫu thêm FAQ hai lần liên tiếp chỉ tạo MỘT mục', async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, '/app/kb/faq');
+    try {
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
+      const question = `Bấm đúp ${tag}`;
+      const form = page
+        .locator('form')
+        .filter({ has: page.locator('textarea[name=answer]') })
+        .first();
+      await form.getByLabel(t('kbContent.faq.question'), { exact: true }).fill(question);
+      await form.getByLabel(t('kbContent.faq.answer'), { exact: true }).fill('một lần thôi');
+      // Mô phỏng bấm đúp bỏ qua việc nút bị khóa: hai yêu cầu gần như đồng thời.
+      await form.evaluate((node) => {
+        (node as HTMLFormElement).requestSubmit();
+        (node as HTMLFormElement).requestSubmit();
+      });
+      await expect(page).toHaveURL(/n=/);
+      await page.goto('/app/kb/faq');
+      await expect(page.locator(`input[name=question][value="${question}"]`)).toHaveCount(1);
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp sau thao tác thêm ngay trước (uiWrite 1 giây)
+      await page
+        .locator('section')
+        .filter({ has: page.locator(`input[name=question][value="${question}"]`) })
+        .getByRole('button', { name: t('kbContent.delete'), exact: true })
+        .click();
+      await expect(
+        page.getByRole('status').filter({ hasText: t('kbContent.notice.deleted') }),
+      ).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
+
   test('Chính sách: thêm rồi xóa; nội dung rỗng bị từ chối', async ({ browser }) => {
     const { context, page } = await open(browser, '/app/kb/policies');
     try {
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
       const title = `Đổi trả ${tag}`;
       const form = page
         .locator('form')
@@ -154,6 +203,7 @@ function runScenarios(locale: Locale) {
         page.getByLabel(t('kbContent.policies.titleLabel'), { exact: true }).first(),
       ).toHaveValue(title);
 
+      await pace(page, 1200);
       // Tiêu đề nằm trong ô nhập (không phải chữ trong thẻ) nên tìm thẻ theo giá trị ô `title`.
       await page
         .locator('section')
@@ -171,6 +221,7 @@ function runScenarios(locale: Locale) {
   test('Thông tin cửa hàng: lưu; website không phải http(s) bị từ chối', async ({ browser }) => {
     const { context, page } = await open(browser, '/app/kb/shop');
     try {
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
       const form = page
         .locator('form')
         .filter({ has: page.locator('input[name=name]') })
@@ -194,6 +245,7 @@ function runScenarios(locale: Locale) {
   test('Giọng văn: lưu theo ngôn ngữ; câu mời chỉ lưu khi đủ hai câu', async ({ browser }) => {
     const { context, page } = await open(browser, '/app/kb/voice');
     try {
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
       const voiceCard = page.locator('section').filter({ has: page.locator('#voice-vi') });
       await voiceCard.getByLabel(t('kbContent.voice.tone'), { exact: true }).fill('thân thiện');
       await voiceCard
@@ -220,6 +272,68 @@ function runScenarios(locale: Locale) {
         'Em chuyển bạn nhé',
       );
       await expect(saved.locator('textarea[name="handoff.discount.inHours"]')).toHaveValue('');
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('Shopify: kết nối bằng Client ID + secret, secret không hiện lại, ngắt kết nối', async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, '/app/kb');
+    try {
+      await pace(page, 2200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
+      const secret = `shpss_e2e_${tag}_secret`;
+      const clientId = `e2eclient${tag}`;
+      await expect(page.getByText(t('kb.hub.notConnected'), { exact: true })).toBeVisible();
+
+      // Sai tên miền → bị từ chối, chưa lưu gì.
+      await page.getByRole('button', { name: t('kb.hub.shopify.connect') }).click();
+      let dialog = page.locator('dialog[open]');
+      await dialog.getByLabel(t('kb.hub.shopify.dialog.domain'), { exact: true }).fill('evil.com');
+      await dialog.getByLabel(t('kb.hub.shopify.dialog.clientId'), { exact: true }).fill(clientId);
+      await dialog
+        .getByLabel(t('kb.hub.shopify.dialog.clientSecret'), { exact: true })
+        .fill(secret);
+      await dialog.getByRole('button', { name: t('kb.hub.shopify.dialog.submit') }).click();
+      await expect(
+        page.getByRole('alert').filter({ hasText: t('kb.hub.shopify.notice.invalid') }),
+      ).toBeVisible();
+      await expect(page.getByText(t('kb.hub.notConnected'), { exact: true })).toBeVisible();
+
+      await pace(page, 2200);
+      // Hợp lệ → đã kết nối; tên miền hiện, Client secret KHÔNG hiện lại ở bất cứ đâu.
+      await page.getByRole('button', { name: t('kb.hub.shopify.connect') }).click();
+      dialog = page.locator('dialog[open]');
+      await dialog
+        .getByLabel(t('kb.hub.shopify.dialog.domain'), { exact: true })
+        .fill(`https://E2E-${tag}.myshopify.com/admin`);
+      await dialog.getByLabel(t('kb.hub.shopify.dialog.clientId'), { exact: true }).fill(clientId);
+      await dialog
+        .getByLabel(t('kb.hub.shopify.dialog.clientSecret'), { exact: true })
+        .fill(secret);
+      await dialog.getByRole('button', { name: t('kb.hub.shopify.dialog.submit') }).click();
+      await expect(
+        page.getByRole('status').filter({ hasText: t('kb.hub.shopify.notice.connected') }),
+      ).toBeVisible();
+      await expect(
+        page.getByText(t('kb.hub.shopify.status.connected'), { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByText(`e2e-${tag}.myshopify.com`)).toBeVisible();
+      expect(await page.content()).not.toContain(secret);
+      await expect(page.getByRole('button', { name: t('kb.hub.shopify.sync') })).toBeVisible();
+
+      await pace(page, 2200);
+      // Ngắt kết nối: xóa secret, quay về "chưa kết nối".
+      await page.getByRole('button', { name: t('kb.hub.shopify.disconnect') }).click();
+      await page
+        .locator('dialog[open]')
+        .getByRole('button', { name: t('kb.hub.shopify.disconnectDialog.confirm') })
+        .click();
+      await expect(
+        page.getByRole('status').filter({ hasText: t('kb.hub.shopify.notice.disconnected') }),
+      ).toBeVisible();
+      await expect(page.getByText(t('kb.hub.notConnected'), { exact: true })).toBeVisible();
     } finally {
       await context.close();
     }

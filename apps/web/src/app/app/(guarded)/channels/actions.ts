@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { isCheckThrottled } from '../../../../lib/channel-check';
 import { connectSummaryQuery } from '../../../../lib/fb-connect-view';
+import { actionAllowed } from '../../../../server/action-guard';
 import { getAuthRuntime } from '../../../../server/auth';
 import { createDisconnectChannelAction } from '../../../../server/channel-disconnect';
 import { getDb } from '../../../../server/db';
@@ -89,6 +90,9 @@ const disconnectChannel = createDisconnectChannelAction({
  */
 export async function disconnectChannelAction(formData: FormData): Promise<void> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
+  if (!(await actionAllowed('uiSensitive', { userId: user.id, workspaceId: workspace.id }))) {
+    redirect(`${BACK}?ch=rate_limited`);
+  }
   const result = await disconnectChannel(
     { workspaceId: workspace.id, userId: user.id },
     formData.get('channelId'),
@@ -107,6 +111,9 @@ const replyLanguage = createReplyLanguageAction({
 /** Owner đổi ngôn ngữ trả lời của một kênh ngay từ hộp "Cài đặt nâng cao" (FR-120); cùng quy tắc với trang Cài đặt. */
 export async function setChannelLanguageAction(formData: FormData): Promise<void> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
+  if (!(await actionAllowed('uiWrite', { userId: user.id, workspaceId: workspace.id }))) {
+    redirect(`${BACK}?ch=rate_limited`);
+  }
   const result = await replyLanguage(
     { workspaceId: workspace.id, userId: user.id },
     formData.get('channelId'),
@@ -124,6 +131,10 @@ export async function setChannelLanguageAction(formData: FormData): Promise<void
  */
 export async function checkConnectionsAction(): Promise<void> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
+  // Atomic (bộ giới hạn đếm trước khi làm): hai lần bấm gần như đồng thời không cùng đẩy job (isCheckThrottled bên dưới chỉ là lớp phụ).
+  if (!(await actionAllowed('uiHeavy', { userId: user.id, workspaceId: workspace.id }))) {
+    redirect(`${BACK}?ch=check_recent`);
+  }
   const channels = await getDb().withActor(workspace.id, user.id, (tx) =>
     listChannels(tx, workspace.id),
   );

@@ -25,6 +25,13 @@ export const HIDE_QUEUE = 'hide';
 
 /** Hàng đợi "Kiểm tra toàn bộ kết nối" của một workspace (Owner bấm ở Cài đặt → Kênh). */
 export const CHANNEL_CHECK_QUEUE = 'channel-check';
+
+/** Hàng đợi "Đồng bộ ngay" Shopify của một workspace (Owner bấm ở Cơ sở kiến thức › Nguồn dữ liệu). */
+export const SHOPIFY_SYNC_QUEUE = 'shopify-sync';
+/** Khóa ngữ cảnh mã hóa (AAD) token Shopify: một cửa hàng mỗi workspace. Web mã hóa và worker giải mã phải dùng CÙNG giá trị. */
+export const SHOPIFY_TOKEN_KEY = 'shopify';
+export const shopifySyncJobSchema = z.object({ workspaceId: z.uuid() });
+export type ShopifySyncJob = z.infer<typeof shopifySyncJobSchema>;
 export const channelCheckJobSchema = z.object({ workspaceId: z.uuid() });
 export type ChannelCheckJob = z.infer<typeof channelCheckJobSchema>;
 

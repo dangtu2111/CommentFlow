@@ -6,12 +6,37 @@ model_list:
       model: openai/mock-llm
       api_key: mock-not-a-real-key
       mock_response: "Đây là phản hồi giả để kiểm thử."
+  # ỨNG VIÊN LLM theo spec 12 §8 (chốt 02/11): KHÔNG chốt cứng một model — chọn theo kết quả bộ đánh giá (14 §4, EVAL-RUNNER).
+  # Mỗi ứng viên là một bí danh `cand-*`; app chọn bằng CLASSIFY_LLM_MODEL / DRAFT_LLM_MODEL (đổi model KHÔNG sửa code,
+  # chỉ đổi biến môi trường). Ứng viên nào thiếu khóa nhà cung cấp thì không gọi được (lỗi 401 ở bước gọi) — chỉ điền khóa
+  # của nhà cung cấp bạn muốn đo. Kiểm lại tên model trên tài liệu nhà cung cấp/LiteLLM trước khi dùng.
+  - model_name: cand-claude-haiku
+    litellm_params:
+      model: anthropic/claude-haiku-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: cand-gpt-nano
+    litellm_params:
+      model: openai/gpt-5-nano
+      api_key: os.environ/OPENAI_API_KEY
+      reasoning_effort: minimal # model suy luận: giảm token suy luận để vừa nhanh vừa rẻ cho tác vụ phân loại/soạn ngắn
+  - model_name: cand-gpt-mini
+    litellm_params:
+      model: openai/gpt-5-mini
+      api_key: os.environ/OPENAI_API_KEY
+      reasoning_effort: minimal # model suy luận: giảm token suy luận để vừa nhanh vừa rẻ cho tác vụ phân loại/soạn ngắn
+  - model_name: cand-gemini-flash-lite
+    litellm_params:
+      model: gemini/gemini-2.5-flash-lite
+      api_key: os.environ/GEMINI_API_KEY
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   database_url: os.environ/DATABASE_URL
 
 litellm_settings:
+  # Bỏ tham số mà model không hỗ trợ (temperature khác mặc định, logprobs, response_format…) thay vì báo lỗi 400 — app xin
+  # logprobs/structured output cho mọi model, bộ đọc Zod vẫn kiểm lại đầu ra (docs/09 §4).
+  drop_params: true
   # Cache dùng Valkey; mọi khóa có tiền tố theo môi trường (dev:… / staging:…).
   cache: true
   cache_params:

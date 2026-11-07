@@ -1,4 +1,4 @@
-import { createMockEmbedder } from '@flow/ai';
+import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
 import { createDb } from '@flow/db';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
@@ -11,9 +11,11 @@ import { createHideHandler } from './jobs/hide';
 import { createIngestHandler } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
 import { createKbReembedHandler } from './jobs/kb-reembed';
+import { pickReembedEmbedder } from './jobs/kb-reembed-embedder';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
+import { createShopifySyncHandler } from './jobs/shopify-sync';
 import { startSweep } from './jobs/sweep';
 import { startWorkspaceDeletion } from './jobs/workspace-deletion';
 import { createLogger } from './logger';
@@ -26,6 +28,7 @@ import {
   KB_PUBLISH_QUEUE,
   KB_REEMBED_QUEUE,
   SEND_QUEUE,
+  SHOPIFY_SYNC_QUEUE,
   SYSTEM_PING_QUEUE,
 } from './queue/definitions';
 
@@ -80,6 +83,20 @@ async function main(): Promise<void> {
       logger,
     }),
   );
+  // Nút "Đồng bộ ngay" Shopify (SHOPIFY-CONNECT-STORE): cờ SHOPIFY_ENABLED tắt → ghi kết quả `unavailable`, không gọi Shopify.
+  await boss.work(
+    SHOPIFY_SYNC_QUEUE,
+    { batchSize: 1, localConcurrency: 1 },
+    createShopifySyncHandler({
+      db,
+      cipher: config.tokenEncKeys
+        ? createTokenCipher(parseTokenKeys(config.tokenEncKeys))
+        : undefined,
+      enabled: config.shopify.enabled,
+      ...(config.shopify.apiVersion ? { apiVersion: config.shopify.apiVersion } : {}),
+      logger,
+    }),
+  );
   // FR-044: hide — ẩn/bỏ ẩn bình luận; kiểm lại trước khi gọi nền tảng, ẩn lặp lại idempotent. Dùng chung sổ với `send`.
   await boss.work(
     HIDE_QUEUE,
@@ -98,7 +115,7 @@ async function main(): Promise<void> {
     await boss.work(
       KB_REEMBED_QUEUE,
       { batchSize: 1, localConcurrency: 1 },
-      createKbReembedHandler({ db, logger, embedder: createMockEmbedder() }),
+      createKbReembedHandler({ db, logger, embedder: pickReembedEmbedder(config) }),
     );
   }
   // FR-094: xuất dữ liệu workspace — cờ DATA_EXPORT_ENABLED mặc định TẮT: tắt thì không đăng ký hàng đợi, không dọn tệp.

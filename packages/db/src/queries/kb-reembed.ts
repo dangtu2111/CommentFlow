@@ -34,6 +34,21 @@ export async function countChunksToReembed(
   return Number(result.rows[0]?.n ?? 0);
 }
 
+/**
+ * Số đoạn của workspace theo `embedding_model` (NULL gộp thành chuỗi rỗng) — để kiểm sau khi tạo lại embedding:
+ * mô hình đích phải chiếm toàn bộ. Chỉ chạy trong `withJob`.
+ */
+export async function countChunksByEmbeddingModel(
+  tx: Database,
+  workspaceId: string,
+): Promise<Array<{ model: string; count: number }>> {
+  const result = await tx.execute(sql`
+    SELECT coalesce(embedding_model, '') AS model, count(*)::int AS n FROM cf.kb_chunks
+    WHERE workspace_id = ${workspaceId}::uuid
+    GROUP BY 1 ORDER BY n DESC, model`);
+  return result.rows.map((row) => ({ model: row.model as string, count: Number(row.n) }));
+}
+
 /** Một lô đoạn cần tạo lại (id tăng dần). Đoạn đã ghi xong rời khỏi điều kiện nên lần gọi sau tự sang lô kế. */
 export async function listChunksToReembed(
   tx: Database,

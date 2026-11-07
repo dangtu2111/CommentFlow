@@ -98,7 +98,7 @@ describe('FR-054 runTestSet', () => {
     const out = await runTestSet([c()], async (t) => {
       const r = await run(t);
       if (r.status !== 'done') throw new Error('x');
-      return { ...r, guard: { ok: false, violations: [] } };
+      return { ...r, guard: { ok: false, violations: [], replyViolations: [] } };
     });
     expect(out.results[0]?.failures).toContain('guard_failed');
   });

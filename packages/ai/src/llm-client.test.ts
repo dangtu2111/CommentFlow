@@ -326,3 +326,52 @@ describe('createLlmClient.call — kiểm tra đầu vào (trước khi gọi m�
     expect(calls).toHaveLength(0);
   });
 });
+
+describe('createLlmClient.call — logprobs (docs/09 §6.0)', () => {
+  it('chỉ gửi logprobs khi được xin; trả logprob từng token khi nhà cung cấp có', async () => {
+    const { db } = fakeDb();
+    const withLogprobs = okBody({
+      choices: [
+        {
+          message: { role: 'assistant', content: 'x' },
+          logprobs: { content: [{ token: 'x', logprob: -0.1 }] },
+        },
+      ],
+    });
+    const asked = fakeFetch(() => jsonResponse(withLogprobs));
+    const result = await client(db, asked.fetchImpl).call(input({ logprobs: true }));
+    expect(JSON.parse(String(asked.calls[0]?.init.body)).logprobs).toBe(true);
+    expect(result.logprobs).toEqual([{ token: 'x', logprob: -0.1 }]);
+
+    const notAsked = fakeFetch(() => jsonResponse(okBody()));
+    const plain = await client(db, notAsked.fetchImpl).call(input());
+    expect('logprobs' in JSON.parse(String(notAsked.calls[0]?.init.body))).toBe(false);
+    expect(plain.logprobs).toBeUndefined();
+  });
+});
+
+describe('createLlmClient.call — structured output (response_format json_schema)', () => {
+  it('gửi response_format strict khi có responseFormat; không gửi khi không có', async () => {
+    const { db } = fakeDb();
+    const schema = { type: 'object', additionalProperties: false, properties: {}, required: [] };
+    const a = fakeFetch(() => jsonResponse(okBody()));
+    await client(db, a.fetchImpl).call(input({ responseFormat: { name: 'cf_test', schema } }));
+    expect(JSON.parse(String(a.calls[0]?.init.body)).response_format).toEqual({
+      type: 'json_schema',
+      json_schema: { name: 'cf_test', strict: true, schema },
+    });
+    const b = fakeFetch(() => jsonResponse(okBody()));
+    await client(db, b.fetchImpl).call(input());
+    expect('response_format' in JSON.parse(String(b.calls[0]?.init.body))).toBe(false);
+  });
+
+  it('tên schema không hợp lệ → VALIDATION_FAILED, không gọi mạng', async () => {
+    const { db } = fakeDb();
+    const { fetchImpl, calls } = fakeFetch(() => jsonResponse(okBody()));
+    const code = await codeOf(
+      client(db, fetchImpl).call(input({ responseFormat: { name: 'tên sai!', schema: {} } })),
+    );
+    expect(code).toBe('VALIDATION_FAILED');
+    expect(calls).toHaveLength(0);
+  });
+});

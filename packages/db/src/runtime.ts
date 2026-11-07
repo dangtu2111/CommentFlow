@@ -232,6 +232,7 @@ export {
   lockKbPublish,
 } from './queries/kb-publish';
 export {
+  countChunksByEmbeddingModel,
   countChunksToReembed,
   listChunksToReembed,
   type ReembedChunk,
@@ -290,6 +291,7 @@ export {
 export { applyProductImport, type ProductImportResult } from './queries/product-import';
 export {
   applyProductSourceSync,
+  archiveMissingSourceProducts,
   type ExternalProductSource,
   type ProductSourceSyncResult,
 } from './queries/product-source-sync';
@@ -301,6 +303,12 @@ export {
   loadReportRows,
   REPORT_MAX_ROWS,
 } from './queries/reports';
+export {
+  applyShopifyPolicies,
+  type ShopifyPolicyApplyResult,
+  type ShopifyPolicyInput,
+  shopifyPolicyKind,
+} from './queries/shopify-policies';
 export {
   createSizeChartRow,
   deleteSizeChartRow,
@@ -326,6 +334,15 @@ export {
   type SpamRuleRow,
   setSpamRuleEnabled,
 } from './queries/spam-rules';
+export {
+  countActiveProducts,
+  listTryProductNames,
+  loadTryProducts,
+  loadTryShopTexts,
+  type TryProduct,
+  type TryProductVariant,
+  type TryShopText,
+} from './queries/try-products';
 export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,
@@ -358,6 +375,20 @@ export {
 } from './retrieval-logs';
 export { type RawTimestamp, timestampFromRow } from './row-timestamp';
 export { schema } from './schema';
+export {
+  disconnectShopifyStore,
+  getShopifyStore,
+  readShopifyStoreCredentials,
+  recordShopifySync,
+  requestShopifySync,
+  type ShopifyStoreCredentials,
+  type ShopifyStoreRow,
+  type ShopifyStoreStatus,
+  type ShopifySyncDetail,
+  type ShopifySyncResult,
+  type ShopifySyncSummary,
+  saveShopifyStore,
+} from './shopify-store';
 export {
   listStuckOutbox,
   type StuckOutboxKind,

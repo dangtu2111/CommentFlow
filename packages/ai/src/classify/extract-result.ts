@@ -21,26 +21,23 @@ const textList = z
 
 const optionalNumber = z.number().positive().nullable();
 
-const labelScoreSchema = z.object({
-  label: z.enum(COMMENT_LABELS),
-  confidence: z.number().min(0).max(1),
-});
+/**
+ * Nhãn do LLM trả: CHỈ tên nhãn. Số `confidence` mà mô hình tự ghi (nếu có) bị BỎ — không được dùng làm `p_label`
+ * (docs/09 §6.0, FR-163: "không dùng số model tự ghi"). Xác suất nhãn lấy từ ml → logprob → tự nhất quán
+ * (`label-signal.ts`), không từ đây.
+ */
+const labelSchema = z
+  .object({ label: z.enum(COMMENT_LABELS) })
+  .transform(({ label }): { label: CommentLabel } => ({ label }));
 
-/** Gộp nhãn trùng (giữ điểm cao nhất), sắp giảm dần; hòa điểm giữ thứ tự mô hình trả. */
-function normalizeLabels(
-  labels: z.infer<typeof labelScoreSchema>[],
-): z.infer<typeof labelScoreSchema>[] {
-  const best = new Map<CommentLabel, number>();
-  for (const { label, confidence } of labels) {
-    best.set(label, Math.max(best.get(label) ?? 0, confidence));
-  }
-  return [...best]
-    .map(([label, confidence]) => ({ label, confidence }))
-    .sort((a, b) => b.confidence - a.confidence);
+/** Gộp nhãn trùng, giữ THỨ TỰ mô hình trả (nhãn đầu = nhãn chính, FR-145). */
+function normalizeLabels(labels: { label: CommentLabel }[]): { label: CommentLabel }[] {
+  const seen = new Set<CommentLabel>();
+  return labels.filter(({ label }) => (seen.has(label) ? false : (seen.add(label), true)));
 }
 
 export const extractResultSchema = z.object({
-  labels: z.array(labelScoreSchema).min(1).transform(normalizeLabels),
+  labels: z.array(labelSchema).min(1).transform(normalizeLabels),
   product_mentions: textList,
   refers_to_image: z.boolean(),
   size: optionalText,
@@ -65,9 +62,11 @@ export type ExtractResult = z.output<typeof extractResultSchema>;
 
 const FENCE = /^```[a-z]*\s*|\s*```$/gi;
 
+export const EXTRACT_UNREADABLE_MESSAGE = 'Kết quả phân loại của AI không đọc được.';
+
 function unreadable(): AppError {
   // Không đính kèm nội dung khách hay đầu ra thô vào thông báo (nguyên tắc #6).
-  return new AppError('LLM_UNAVAILABLE', 'Kết quả phân loại của AI không đọc được.');
+  return new AppError('LLM_UNAVAILABLE', EXTRACT_UNREADABLE_MESSAGE);
 }
 
 /** Lấy object JSON đầu ra LLM (bỏ hàng rào ```json và chữ thừa), kiểm schema. */

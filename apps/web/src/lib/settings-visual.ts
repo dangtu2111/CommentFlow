@@ -43,7 +43,7 @@ export function activityTone(action: string): ActivityTone {
   if (action === 'comment.reply_requested') return 'reply';
   if (/^comment\.(un)?hid/.test(action)) return 'moderation';
   if (action.startsWith('member.') || action.startsWith('invitation.')) return 'team';
-  if (action.startsWith('channel.')) return 'channel';
+  if (action.startsWith('channel.') || action.startsWith('shopify.')) return 'channel';
   return 'neutral';
 }
 

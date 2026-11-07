@@ -30,6 +30,9 @@ const KNOWN_ACTIONS = [
   'security.avatar_removed',
   'security.phone_otp_sent',
   'security.phone_verified',
+  'shopify.connected',
+  'shopify.reconnected',
+  'shopify.disconnected',
 ] as const;
 
 /** Khóa nhãn dịch: next-intl cấm dấu chấm trong tên khóa nên `member.left` → `member_left`. */

@@ -16,6 +16,16 @@ const base = {
 };
 
 describe('buildE2eEnv', () => {
+  it('TOKEN_ENC_KEYS: dùng khóa có sẵn; thiếu thì tự sinh khóa v1 hợp lệ, mỗi lần một khác', () => {
+    expect(buildE2eEnv({ ...base, TOKEN_ENC_KEYS: 'v1:abc' }, { port: 3123 }).TOKEN_ENC_KEYS).toBe(
+      'v1:abc',
+    );
+    const a = buildE2eEnv(base, { port: 3123 }).TOKEN_ENC_KEYS;
+    const b = buildE2eEnv(base, { port: 3123 }).TOKEN_ENC_KEYS;
+    expect(a).toMatch(/^v1:[0-9a-f]{64}$/);
+    expect(a).not.toBe(b);
+  });
+
   it('đưa web về DB test, không dùng cf_dev, và đặt URL/cổng/APP_ENV', () => {
     const env = buildE2eEnv(base, { port: 3123 });
     expect(databaseNameOf(env.DATABASE_URL)).toBe('cf_test');

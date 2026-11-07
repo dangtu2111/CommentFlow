@@ -1,9 +1,9 @@
 import type { ExtractResult } from './extract-result';
-import type { ExtractInput, Extractor } from './extractor';
+import type { ExtractInput, ExtractOutcome, Extractor } from './extractor';
 
 /** Kết quả mặc định của bản mock khi không khớp fixture nào: nhãn `other`. */
-export const FIXTURE_EXTRACT_DEFAULT: ExtractResult = {
-  labels: [{ label: 'other', confidence: 0.5 }],
+export const FIXTURE_EXTRACT_DEFAULT: ExtractOutcome = {
+  labels: [{ label: 'other' }],
   product_mentions: [],
   refers_to_image: false,
   size: null,
@@ -14,6 +14,8 @@ export const FIXTURE_EXTRACT_DEFAULT: ExtractResult = {
   cited_price_vnd: null,
   order_intent: null,
   asks: [],
+  // Bản MOCK: thay cho xác suất nhãn của `ml` (chưa có), không phải số model tự ghi.
+  labelSignal: { ml: 0.5 },
 };
 
 export type ExtractFixture = { match: RegExp; result: ExtractResult };

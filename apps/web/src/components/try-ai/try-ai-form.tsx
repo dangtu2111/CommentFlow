@@ -4,12 +4,13 @@ import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { runTryAiAction, type TryAiState } from '../../app/app/(guarded)/try-ai/actions';
 import { TRY_AI_MAX_CHARS } from '../../lib/try-ai-limits';
+import { llmStatusText } from './llm-status';
 import { TryAiResultView } from './try-ai-result';
 
 const IDLE: TryAiState = { status: 'idle' };
 
 /** Form "Thử AI" (FR-059): gõ bình luận mẫu → kết quả cả pipeline (mock), không trừ lượt gói. */
-export function TryAiForm() {
+export function TryAiForm({ initialText = '' }: { initialText?: string }) {
   const t = useTranslations('tryAi');
   const [state, action, pending] = useActionState(runTryAiAction, IDLE);
 
@@ -26,6 +27,7 @@ export function TryAiForm() {
           rows={3}
           maxLength={TRY_AI_MAX_CHARS}
           placeholder={t('placeholder')}
+          defaultValue={initialText}
           required
         />
         <div className="row">
@@ -45,6 +47,7 @@ export function TryAiForm() {
       {state.status === 'done' && state.ok ? (
         <>
           <p className="muted">{t(`knowledge.${state.knowledge}`)}</p>
+          <p className="muted">{llmStatusText(t, state.llm)}</p>
           <TryAiResultView result={state.result} />
         </>
       ) : null}

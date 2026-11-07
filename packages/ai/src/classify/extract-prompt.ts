@@ -15,7 +15,7 @@ export type ExtractInput = {
 const SYSTEM_PROMPT = unsafeMarkMasked(
   [
     'Bạn phân loại và tách thông tin từ MỘT bình luận của khách trên bài bán hàng. Chỉ trả về MỘT object JSON, không giải thích.',
-    `labels: mảng {label, confidence 0..1}, label thuộc: ${COMMENT_LABELS.join(', ')} (price=hỏi giá, advice=xin tư vấn, purchase=muốn mua/đặt, complaint=khiếu nại, spam, other). Một câu nhiều ý thì trả nhiều nhãn.`,
+    `labels: mảng {label}, label thuộc: ${COMMENT_LABELS.join(', ')} (price=hỏi giá, advice=xin tư vấn gồm hỏi ship/vận chuyển/đổi trả/size/tồn kho, purchase=muốn mua/đặt, complaint=khiếu nại, spam, other). Nhãn chính đặt ĐẦU mảng. Một câu nhiều ý thì trả nhiều nhãn. KHÔNG ghi điểm tin cậy.`,
     'product_mentions: mảng tên sản phẩm khách nhắc. refers_to_image: true nếu câu phụ thuộc ảnh/video đính kèm.',
     'size, color: chuỗi hoặc null. height_cm, weight_kg: số hoặc null. qty: số nguyên hoặc null. cited_price_vnd: giá khách nhắc (số nguyên VND) hoặc null.',
     'order_intent: null nếu không đặt hàng, ngược lại {items: mảng chuỗi, phone: null, address: chuỗi hoặc null}. Văn bản đã che số điện thoại/email: không đoán.',

@@ -23,6 +23,7 @@ const catalog = (price: string): ShopifyCatalog => ({
       status: 'ACTIVE',
       productType: '',
       onlineStoreUrl: null,
+      imageUrl: null,
       variants: [
         {
           id: 'gid://shopify/ProductVariant/11',

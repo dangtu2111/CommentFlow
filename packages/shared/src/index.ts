@@ -80,6 +80,7 @@ export {
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
 export { type HaravanConfig, readHaravanConfig } from './haravan-config';
+export { htmlToPlainText } from './html-text';
 export {
   DEFAULT_LOCALE,
   isLocale,
@@ -360,7 +361,11 @@ export {
   ingestJobSchema,
   SEND_QUEUE,
   type SendJob,
+  SHOPIFY_SYNC_QUEUE,
+  SHOPIFY_TOKEN_KEY,
+  type ShopifySyncJob,
   sendJobSchema,
+  shopifySyncJobSchema,
 } from './queues';
 export {
   type AddressChoice,

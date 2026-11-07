@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { hasLabel, parseExtractOutput, primaryLabel } from './extract-result';
 
 const base = {
-  labels: [{ label: 'price', confidence: 0.9 }],
+  labels: [{ label: 'price' }],
   product_mentions: [],
   refers_to_image: false,
   size: null,
@@ -59,7 +59,7 @@ describe('FR-162 đọc đầu ra extract', () => {
       json({ qty: 1.5 }),
       json({ height_cm: 'cao' }),
       json({ labels: [{ label: 'giá', confidence: 0.5 }] }),
-      json({ labels: [{ label: 'price', confidence: 1.5 }] }),
+      json({ labels: [] }),
     ]) {
       const e = failure(text);
       expect(isAppError(e) && e.code).toBe('LLM_UNAVAILABLE');
@@ -103,26 +103,36 @@ describe('FR-145 labels[]', () => {
     parseExtractOutput(json({ labels: list.map(([label, confidence]) => ({ label, confidence })) }))
       .labels;
 
-  it('sắp giảm dần theo độ tin cậy, nhãn chính là phần tử đầu', () => {
+  it('giữ thứ tự mô hình trả, nhãn chính là phần tử đầu', () => {
+    const r = parseExtractOutput(
+      json({
+        labels: [{ label: 'advice' }, { label: 'purchase' }],
+      }),
+    );
+    expect(r.labels.map((l) => l.label)).toEqual(['advice', 'purchase']);
+    expect(primaryLabel(r)).toBe('advice');
+  });
+
+  it('số `confidence` mô hình tự ghi bị BỎ, không ảnh hưởng thứ tự và không có trong kết quả (09 §6.0)', () => {
     const r = parseExtractOutput(
       json({
         labels: [
-          { label: 'advice', confidence: 0.3 },
-          { label: 'purchase', confidence: 0.8 },
+          { label: 'advice', confidence: 0.1 },
+          { label: 'purchase', confidence: 0.99 },
         ],
       }),
     );
-    expect(r.labels.map((l) => l.label)).toEqual(['purchase', 'advice']);
-    expect(primaryLabel(r)).toBe('purchase');
+    expect(r.labels).toEqual([{ label: 'advice' }, { label: 'purchase' }]);
+    expect(JSON.stringify(r.labels)).not.toContain('confidence');
   });
 
-  it('khử trùng, giữ độ tin cậy cao nhất', () => {
+  it('khử trùng, giữ lần xuất hiện đầu', () => {
     expect(
       labels([
         ['price', 0.2],
         ['price', 0.7],
       ]),
-    ).toEqual([{ label: 'price', confidence: 0.7 }]);
+    ).toEqual([{ label: 'price' }]);
   });
 
   it('hòa điểm giữ thứ tự mô hình trả', () => {
@@ -142,10 +152,7 @@ describe('FR-145 labels[]', () => {
   it('hasLabel thấy Khiếu nại ở bất kỳ vị trí nào', () => {
     const r = parseExtractOutput(
       json({
-        labels: [
-          { label: 'price', confidence: 0.9 },
-          { label: 'complaint', confidence: 0.2 },
-        ],
+        labels: [{ label: 'price' }, { label: 'complaint' }],
       }),
     );
     expect(hasLabel(r, 'complaint')).toBe(true);

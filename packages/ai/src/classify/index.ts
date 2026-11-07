@@ -5,6 +5,7 @@ export {
   loadClassifyConfig,
 } from './classify-config';
 export {
+  EXTRACT_UNREADABLE_MESSAGE,
   type ExtractResult,
   extractResultSchema,
   hasLabel,
@@ -16,10 +17,20 @@ export {
   EXTRACT_PROMPT_VERSION,
   EXTRACT_STEP,
   type ExtractInput,
+  type ExtractOutcome,
   type Extractor,
+  withSelfConsistency,
 } from './extractor';
 export {
   createFixtureExtractor,
   type ExtractFixture,
   FIXTURE_EXTRACT_DEFAULT,
 } from './fixture-extractor';
+export {
+  consistencyOf,
+  type LabelProbability,
+  type LabelSignal,
+  labelProbabilityFromLogprobs,
+  resolveLabelProbability,
+  type TokenLogprob,
+} from './label-signal';
