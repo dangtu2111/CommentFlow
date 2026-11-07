@@ -224,4 +224,63 @@ function runScenarios(locale: Locale) {
       await context.close();
     }
   });
+
+  test('Shopify: kết nối bằng Client ID + secret, secret không hiện lại, ngắt kết nối', async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, '/app/kb');
+    try {
+      const secret = `shpss_e2e_${tag}_secret`;
+      const clientId = `e2eclient${tag}`;
+      await expect(page.getByText(t('kb.hub.notConnected'), { exact: true })).toBeVisible();
+
+      // Sai tên miền → bị từ chối, chưa lưu gì.
+      await page.getByRole('button', { name: t('kb.hub.shopify.connect') }).click();
+      let dialog = page.locator('dialog[open]');
+      await dialog.getByLabel(t('kb.hub.shopify.dialog.domain'), { exact: true }).fill('evil.com');
+      await dialog.getByLabel(t('kb.hub.shopify.dialog.clientId'), { exact: true }).fill(clientId);
+      await dialog
+        .getByLabel(t('kb.hub.shopify.dialog.clientSecret'), { exact: true })
+        .fill(secret);
+      await dialog.getByRole('button', { name: t('kb.hub.shopify.dialog.submit') }).click();
+      await expect(
+        page.getByRole('alert').filter({ hasText: t('kb.hub.shopify.notice.invalid') }),
+      ).toBeVisible();
+      await expect(page.getByText(t('kb.hub.notConnected'), { exact: true })).toBeVisible();
+
+      // Hợp lệ → đã kết nối; tên miền hiện, Client secret KHÔNG hiện lại ở bất cứ đâu.
+      await page.getByRole('button', { name: t('kb.hub.shopify.connect') }).click();
+      dialog = page.locator('dialog[open]');
+      await dialog
+        .getByLabel(t('kb.hub.shopify.dialog.domain'), { exact: true })
+        .fill(`https://E2E-${tag}.myshopify.com/admin`);
+      await dialog.getByLabel(t('kb.hub.shopify.dialog.clientId'), { exact: true }).fill(clientId);
+      await dialog
+        .getByLabel(t('kb.hub.shopify.dialog.clientSecret'), { exact: true })
+        .fill(secret);
+      await dialog.getByRole('button', { name: t('kb.hub.shopify.dialog.submit') }).click();
+      await expect(
+        page.getByRole('status').filter({ hasText: t('kb.hub.shopify.notice.connected') }),
+      ).toBeVisible();
+      await expect(
+        page.getByText(t('kb.hub.shopify.status.connected'), { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByText(`e2e-${tag}.myshopify.com`)).toBeVisible();
+      expect(await page.content()).not.toContain(secret);
+      await expect(page.getByRole('button', { name: t('kb.hub.shopify.sync') })).toBeVisible();
+
+      // Ngắt kết nối: xóa secret, quay về "chưa kết nối".
+      await page.getByRole('button', { name: t('kb.hub.shopify.disconnect') }).click();
+      await page
+        .locator('dialog[open]')
+        .getByRole('button', { name: t('kb.hub.shopify.disconnectDialog.confirm') })
+        .click();
+      await expect(
+        page.getByRole('status').filter({ hasText: t('kb.hub.shopify.notice.disconnected') }),
+      ).toBeVisible();
+      await expect(page.getByText(t('kb.hub.notConnected'), { exact: true })).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
 }

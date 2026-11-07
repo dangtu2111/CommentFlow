@@ -1,4 +1,5 @@
 import { createMockEmbedder } from '@flow/ai';
+import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
 import { createDb } from '@flow/db';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
@@ -14,6 +15,7 @@ import { createKbReembedHandler } from './jobs/kb-reembed';
 import { createPingHandler } from './jobs/ping';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
+import { createShopifySyncHandler } from './jobs/shopify-sync';
 import { startSweep } from './jobs/sweep';
 import { startWorkspaceDeletion } from './jobs/workspace-deletion';
 import { createLogger } from './logger';
@@ -26,6 +28,7 @@ import {
   KB_PUBLISH_QUEUE,
   KB_REEMBED_QUEUE,
   SEND_QUEUE,
+  SHOPIFY_SYNC_QUEUE,
   SYSTEM_PING_QUEUE,
 } from './queue/definitions';
 
@@ -77,6 +80,20 @@ async function main(): Promise<void> {
         const check = connector?.checkConnection?.bind(connector);
         return check ? { checkConnection: check } : undefined;
       },
+      logger,
+    }),
+  );
+  // Nút "Đồng bộ ngay" Shopify (SHOPIFY-CONNECT-STORE): cờ SHOPIFY_ENABLED tắt → ghi kết quả `unavailable`, không gọi Shopify.
+  await boss.work(
+    SHOPIFY_SYNC_QUEUE,
+    { batchSize: 1, localConcurrency: 1 },
+    createShopifySyncHandler({
+      db,
+      cipher: config.tokenEncKeys
+        ? createTokenCipher(parseTokenKeys(config.tokenEncKeys))
+        : undefined,
+      enabled: config.shopify.enabled,
+      ...(config.shopify.apiVersion ? { apiVersion: config.shopify.apiVersion } : {}),
       logger,
     }),
   );

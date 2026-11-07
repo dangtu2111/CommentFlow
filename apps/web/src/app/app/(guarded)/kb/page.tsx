@@ -1,7 +1,8 @@
-import { loadKbOverview } from '@flow/db/runtime';
+import { getShopifyStore, loadKbOverview } from '@flow/db/runtime';
 import Link from 'next/link';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
+import { ShopifyCard, shopifyNoticeOf } from '../../../../components/kb/shopify-card';
 import { Icon, type IconName } from '../../../../components/ui/icon';
 import { cn } from '../../../../lib/cn';
 import { getBrand } from '../../../../server/brand';
@@ -21,31 +22,37 @@ const SOON_BTN = `${SOFT_BTN} cursor-not-allowed opacity-60`;
 
 const SHORT_DATE_TIME = { dateStyle: 'short', timeStyle: 'short' } as const;
 
-const TILES = [
-  { key: 'products', icon: 'inventory_2', href: '/app/products/import' },
-  { key: 'policies', icon: 'policy', href: '/app/kb/policies' },
-  { key: 'faqs', icon: 'quiz', href: '/app/kb/faq' },
-] as const satisfies ReadonlyArray<{ key: string; icon: IconName; href: string }>;
-
 /**
  * Cơ sở kiến thức — trang "Nguồn dữ liệu" (design/stitch/knowledge-base.png, QUKP1): chỉ Owner. Số liệu THẬT từ
  * `loadReadiness` và `loadKbOverview` (đếm theo bảng, nguồn `kb_sources`, một sản phẩm mẫu). Khối thiết kế chưa có chức
  * năng (kết nối Shopify, thêm/đồng bộ URL, ghi chú riêng cho AI) vẫn hiện, nút vô hiệu + "Sắp có" — không số liệu bịa.
  */
-export default async function KbHubPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function KbHubPage({ searchParams }: { searchParams: SearchParams }) {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
-  const [t, locale, format] = await Promise.all([
+  const [t, locale, format, query] = await Promise.all([
     getTranslations('kb'),
     getLocale(),
     getFormatter(),
+    searchParams,
   ]);
 
   let readiness: Awaited<ReturnType<typeof loadReadiness>> | null = null;
   let overview: Awaited<ReturnType<typeof loadKbOverview>> | null = null;
+  let shopify: Awaited<ReturnType<typeof getShopifyStore>> = null;
   try {
-    [readiness, overview] = await Promise.all([
+    [readiness, [overview, shopify]] = await Promise.all([
       loadReadiness(workspace.id, user.id, readinessLangOf(locale)),
-      getDb().withActor(workspace.id, user.id, (tx) => loadKbOverview(tx, workspace.id)),
+      getDb().withActor(
+        workspace.id,
+        user.id,
+        async (tx) =>
+          [
+            await loadKbOverview(tx, workspace.id),
+            await getShopifyStore(tx, workspace.id),
+          ] as const,
+      ),
     ]);
   } catch {
     readiness = null;
@@ -72,63 +79,11 @@ export default async function KbHubPage() {
         }}
       >
         <div className="tw space-y-space-lg">
-          <section className={CARD} aria-labelledby="hub-shopify">
-            <div className="flex flex-col gap-space-md lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-center gap-space-md">
-                <span className="grid size-12 place-items-center rounded-xl bg-surface-container text-primary">
-                  <Icon name="shopping_cart" size={24} />
-                </span>
-                <div>
-                  <h2
-                    id="hub-shopify"
-                    className="flex flex-wrap items-center gap-2 font-title-md text-title-md text-on-surface"
-                  >
-                    {t('hub.shopify.title')}
-                    <span className="rounded-full bg-surface-container-high px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
-                      {t('hub.notConnected')}
-                    </span>
-                  </h2>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    {t('hub.shopify.body')}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={SOON_BTN} aria-disabled="true" title={t('soon')}>
-                  <Icon name="sync" size={16} />
-                  {t('hub.shopify.sync')}
-                  <span className="text-on-surface-variant">· {t('soon')}</span>
-                </span>
-                <span className={SOON_BTN} aria-disabled="true" title={t('soon')}>
-                  <Icon name="tune" size={16} />
-                  {t('hub.shopify.scope')}
-                  <span className="text-on-surface-variant">· {t('soon')}</span>
-                </span>
-              </div>
-            </div>
-            <ul className="mt-space-md grid gap-space-md sm:grid-cols-3">
-              {TILES.map((tile) => (
-                <li key={tile.key}>
-                  <Link
-                    href={tile.href}
-                    className="flex items-center gap-space-md rounded-xl bg-surface-container-low p-space-md transition-colors hover:bg-surface-container"
-                  >
-                    <span className="grid size-10 place-items-center rounded-lg bg-surface-container-lowest text-primary">
-                      <Icon name={tile.icon} size={20} />
-                    </span>
-                    <span>
-                      <span className="block font-headline-sm text-headline-sm text-on-surface">
-                        {format.number(overview.counts[tile.key])}
-                      </span>
-                      <span className="block font-body-sm text-body-sm text-on-surface-variant">
-                        {t(`hub.tiles.${tile.key}`)}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <ShopifyCard
+            store={shopify}
+            counts={overview.counts}
+            notice={shopifyNoticeOf(query.sh)}
+          />
 
           <section className={CARD} aria-labelledby="hub-sources">
             <div className="flex flex-wrap items-center justify-between gap-space-md">

@@ -127,6 +127,11 @@ export {
 export { buildSapoImportPlan, parseSapoMoney } from './sapo/normalize';
 export { signSapoBody, verifySapoWebhook } from './sapo/webhook';
 export {
+  exchangeShopifyClientCredentials,
+  type ShopifyAccessToken,
+  type ShopifyClientCredentialsOptions,
+} from './shopify/auth';
+export {
   createShopifyConnector,
   DEFAULT_SHOPIFY_API_VERSION,
   type ShopifyCatalog,

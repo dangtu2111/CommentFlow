@@ -8,6 +8,7 @@ import {
   DATA_EXPORT_QUEUE,
   KB_PUBLISH_QUEUE,
   KB_REEMBED_QUEUE,
+  SHOPIFY_SYNC_QUEUE,
 } from '@flow/shared';
 
 export {
@@ -18,6 +19,7 @@ export {
   KB_PUBLISH_QUEUE,
   KB_REEMBED_QUEUE,
   SEND_QUEUE,
+  SHOPIFY_SYNC_QUEUE,
 } from '@flow/shared';
 
 export type QueueDefinition = { name: string; retryLimit?: number; retryBackoff?: boolean };
@@ -55,6 +57,8 @@ export const QUEUES: QueueDefinition[] = [
   { name: DATA_EXPORT_QUEUE, retryLimit: 1, retryBackoff: true },
   // Nút "Kiểm tra toàn bộ kết nối": gọi nền tảng bằng token Page; lỗi từng kênh được ghi vào kết quả, không ném; chạy lại an toàn.
   { name: CHANNEL_CHECK_QUEUE, retryLimit: 1, retryBackoff: true },
+  // Nút "Đồng bộ ngay" Shopify: upsert theo external_id nên chạy lại an toàn; lỗi từng lần thành KẾT QUẢ, không ném.
+  { name: SHOPIFY_SYNC_QUEUE, retryLimit: 1, retryBackoff: true },
   // FR-133: kb-reembed — tạo lại embedding khi đổi mô hình; idempotent (xong rồi → 0 đoạn) nên thử lại an toàn.
   { name: KB_REEMBED_QUEUE, retryLimit: 2, retryBackoff: true },
 ];

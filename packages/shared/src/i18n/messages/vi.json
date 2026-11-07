@@ -1876,7 +1876,51 @@
         "title": "Kết nối Shopify Store",
         "body": "Đồng bộ sản phẩm, giá, tồn kho và chính sách từ Shopify.",
         "sync": "Đồng bộ ngay",
-        "scope": "Cài đặt phạm vi"
+        "scope": "Cài đặt phạm vi",
+        "status": {
+          "connected": "Đã kết nối",
+          "invalid": "Cần nhập lại Client ID/secret"
+        },
+        "connectedLine": "Cửa hàng {domain} · chỉ đọc sản phẩm, giá, tồn kho",
+        "lastSynced": "Đồng bộ lần cuối: {time}",
+        "connect": "Kết nối Shopify",
+        "reconnect": "Nhập lại Client ID/secret",
+        "disconnect": "Ngắt kết nối",
+        "result": {
+          "ok": "Lần đồng bộ gần nhất thành công: {products} sản phẩm, {variants} biến thể.",
+          "token_invalid": "Shopify từ chối Client ID/secret (sai, chưa cài ứng dụng hoặc khác tổ chức). Hãy nhập lại.",
+          "error": "Lần đồng bộ gần nhất gặp lỗi tạm thời. Thử lại sau ít phút.",
+          "unavailable": "Máy chủ chưa bật đồng bộ Shopify nên chưa kéo được dữ liệu."
+        },
+        "dialog": {
+          "title": "Kết nối cửa hàng Shopify",
+          "body": "Nhập tên miền cửa hàng cùng Client ID và Client secret của ứng dụng tạo trong Shopify Dev Dashboard. Client secret được mã hóa và không hiển thị lại.",
+          "domain": "Tên miền cửa hàng",
+          "domainPlaceholder": "ten-cua-hang.myshopify.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client secret",
+          "clientSecretHint": "Hệ thống dùng cặp này để lấy token chỉ đọc (read_products, read_inventory) mỗi lần đồng bộ.",
+          "step1": "Mở Shopify Dev Dashboard, tạo ứng dụng và cấp quyền read_products, read_inventory rồi phát hành phiên bản.",
+          "step2": "Cài ứng dụng vào cửa hàng (ứng dụng và cửa hàng phải thuộc cùng một tổ chức).",
+          "step3": "Vào Cài đặt của ứng dụng, sao chép Client ID và Client secret rồi dán vào các ô trên.",
+          "submit": "Lưu kết nối"
+        },
+        "disconnectDialog": {
+          "title": "Ngắt kết nối Shopify?",
+          "body": "Client secret sẽ bị xóa và hệ thống ngừng kéo dữ liệu từ Shopify. Sản phẩm đã nạp vẫn giữ nguyên. Bạn có thể kết nối lại sau.",
+          "confirm": "Ngắt kết nối"
+        },
+        "notice": {
+          "connected": "Đã lưu kết nối Shopify. Bấm \"Đồng bộ ngay\" để nạp sản phẩm.",
+          "invalid": "Tên miền, Client ID hoặc Client secret chưa hợp lệ. Tên miền phải có dạng ten-cua-hang.myshopify.com.",
+          "not_configured": "Máy chủ chưa cấu hình khóa mã hóa (TOKEN_ENC_KEYS) nên chưa lưu được Client secret.",
+          "forbidden": "Chỉ chủ workspace (Owner) mới kết nối được Shopify.",
+          "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
+          "sync_queued": "Đã gửi yêu cầu đồng bộ. Kết quả hiện ở đây sau vài giây — tải lại trang để xem.",
+          "sync_recent": "Vừa đồng bộ xong, hoặc chưa có kết nối đang dùng được. Thử lại sau khoảng 1 phút.",
+          "disconnected": "Đã ngắt kết nối Shopify. Token đã bị xóa.",
+          "not_found": "Chưa có kết nối Shopify nào để ngắt."
+        }
       },
       "notConnected": "Chưa kết nối",
       "tiles": {
@@ -2728,6 +2772,9 @@
       "channel_reconnected": "Kết nối lại kênh",
       "channel_token_set": "Cập nhật mã truy cập kênh",
       "channel_token_cleared": "Xóa mã truy cập kênh",
+      "shopify_connected": "Kết nối Shopify",
+      "shopify_reconnected": "Nhập lại thông tin Shopify",
+      "shopify_disconnected": "Ngắt kết nối Shopify",
       "comment_reply_requested": "Yêu cầu gửi trả lời bình luận",
       "comment_hide_requested": "Yêu cầu ẩn bình luận",
       "comment_hide_cancelled": "Đã hủy yêu cầu ẩn bình luận",

@@ -154,6 +154,8 @@ export type WorkerConfig = {
   kbReembedEnabled: boolean;
   messenger: MessengerConnectorConfig;
   tiktok: TikTokConnectorConfig;
+  /** Đồng bộ Shopify thật: cờ `SHOPIFY_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); bật thì cần `TOKEN_ENC_KEYS`. */
+  shopify: { enabled: boolean; apiVersion: string | undefined };
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -173,5 +175,9 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     kbReembedEnabled: source.KB_REEMBED_ENABLED?.trim() === 'true',
     messenger: loadMessengerConfig(source),
     tiktok: loadTikTokConfig(source),
+    shopify: {
+      enabled: source.SHOPIFY_ENABLED?.trim() === 'true',
+      apiVersion: source.SHOPIFY_API_VERSION?.trim() || undefined,
+    },
   };
 }

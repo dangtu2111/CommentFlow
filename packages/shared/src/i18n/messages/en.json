@@ -1876,7 +1876,51 @@
         "title": "Shopify store connection",
         "body": "Sync products, prices, stock and policies from Shopify.",
         "sync": "Sync now",
-        "scope": "Scope settings"
+        "scope": "Scope settings",
+        "status": {
+          "connected": "Connected",
+          "invalid": "Client ID/secret needs re-entry"
+        },
+        "connectedLine": "Store {domain} · read-only products, prices and stock",
+        "lastSynced": "Last synced: {time}",
+        "connect": "Connect Shopify",
+        "reconnect": "Re-enter Client ID/secret",
+        "disconnect": "Disconnect",
+        "result": {
+          "ok": "The last sync succeeded: {products} products, {variants} variants.",
+          "token_invalid": "Shopify rejected the Client ID/secret (wrong, app not installed or different organization). Re-enter them.",
+          "error": "The last sync hit a temporary error. Try again in a few minutes.",
+          "unavailable": "The server has not turned Shopify sync on, so no data was pulled."
+        },
+        "dialog": {
+          "title": "Connect a Shopify store",
+          "body": "Enter the store domain with the Client ID and Client secret of an app created in the Shopify Dev Dashboard. The Client secret is encrypted and never shown again.",
+          "domain": "Store domain",
+          "domainPlaceholder": "your-store.myshopify.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client secret",
+          "clientSecretHint": "The system uses this pair to get a read-only token (read_products, read_inventory) on every sync.",
+          "step1": "Open the Shopify Dev Dashboard, create an app, grant read_products and read_inventory, then release a version.",
+          "step2": "Install the app on the store (the app and the store must belong to the same organization).",
+          "step3": "Open the app’s Settings, copy the Client ID and Client secret and paste them above.",
+          "submit": "Save connection"
+        },
+        "disconnectDialog": {
+          "title": "Disconnect Shopify?",
+          "body": "The Client secret will be deleted and the system stops pulling data from Shopify. Products already loaded stay as they are. You can reconnect later.",
+          "confirm": "Disconnect"
+        },
+        "notice": {
+          "connected": "Shopify connection saved. Press \"Sync now\" to load products.",
+          "invalid": "The domain, Client ID or Client secret is not valid. The domain must look like your-store.myshopify.com.",
+          "not_configured": "The server has no encryption key (TOKEN_ENC_KEYS), so the Client secret cannot be saved.",
+          "forbidden": "Only the workspace Owner can connect Shopify.",
+          "unavailable": "Could not complete this right now. Please try again.",
+          "sync_queued": "Sync requested. The result appears here in a few seconds — reload to see it.",
+          "sync_recent": "A sync just finished, or there is no usable connection. Try again in about a minute.",
+          "disconnected": "Shopify disconnected. The token was deleted.",
+          "not_found": "There is no Shopify connection to disconnect."
+        }
       },
       "notConnected": "Not connected",
       "tiles": {
@@ -2728,6 +2772,9 @@
       "channel_reconnected": "Channel reconnected",
       "channel_token_set": "Channel access token updated",
       "channel_token_cleared": "Channel access token removed",
+      "shopify_connected": "Shopify connected",
+      "shopify_reconnected": "Shopify credentials re-entered",
+      "shopify_disconnected": "Shopify disconnected",
       "comment_reply_requested": "Comment reply requested",
       "comment_hide_requested": "Comment hide requested",
       "comment_hide_cancelled": "Comment hide request cancelled",

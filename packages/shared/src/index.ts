@@ -360,7 +360,11 @@ export {
   ingestJobSchema,
   SEND_QUEUE,
   type SendJob,
+  SHOPIFY_SYNC_QUEUE,
+  SHOPIFY_TOKEN_KEY,
+  type ShopifySyncJob,
   sendJobSchema,
+  shopifySyncJobSchema,
 } from './queues';
 export {
   type AddressChoice,

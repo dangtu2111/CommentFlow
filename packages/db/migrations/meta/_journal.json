@@ -449,6 +449,20 @@
       "when": 1793995000000,
       "tag": "0063_channel_health_check",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1794000000000,
+      "tag": "0064_shopify_stores",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1794000500000,
+      "tag": "0065_shopify_client_credentials",
+      "breakpoints": true
     }
   ]
 }

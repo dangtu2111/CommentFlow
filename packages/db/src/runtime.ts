@@ -359,6 +359,19 @@ export {
 export { type RawTimestamp, timestampFromRow } from './row-timestamp';
 export { schema } from './schema';
 export {
+  disconnectShopifyStore,
+  getShopifyStore,
+  readShopifyStoreCredentials,
+  recordShopifySync,
+  requestShopifySync,
+  type ShopifyStoreCredentials,
+  type ShopifyStoreRow,
+  type ShopifyStoreStatus,
+  type ShopifySyncResult,
+  type ShopifySyncSummary,
+  saveShopifyStore,
+} from './shopify-store';
+export {
   listStuckOutbox,
   type StuckOutboxKind,
   type StuckOutboxOptions,
