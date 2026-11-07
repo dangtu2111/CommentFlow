@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { runTryAiAction, type TryAiState } from '../../app/app/(guarded)/try-ai/actions';
 import { TRY_AI_MAX_CHARS } from '../../lib/try-ai-limits';
+import { llmStatusText } from '../try-ai/llm-status';
 import { Icon } from '../ui/icon';
 
 const IDLE: TryAiState = { status: 'idle' };
@@ -69,6 +70,9 @@ export function KbPlayground({ label, placeholder, submit, fullPageLabel }: Prop
           <div className="space-y-space-sm rounded-xl bg-surface-container-low p-space-md">
             <p className="font-label-sm text-label-sm text-on-surface-variant">
               {t(`knowledge.${done.knowledge}`)}
+            </p>
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              {llmStatusText(t, done.llm)}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-primary-container px-2.5 py-0.5 font-label-sm text-label-sm text-on-primary">

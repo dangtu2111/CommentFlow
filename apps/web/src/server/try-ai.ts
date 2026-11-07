@@ -15,6 +15,7 @@ import type {
   TryRunContext,
   TrySession,
 } from './try-ai-knowledge';
+import type { TryLlmDeps } from './try-ai-llm';
 
 /**
  * Logic của hành động "Thử AI" (FR-059, FR-029, US-034), tách khỏi Server Action để test với phụ thuộc được tiêm.
@@ -32,6 +33,8 @@ export type TryAiResult =
       quota: { used: number; limit: number };
       /** Nguồn kiến thức đã dùng: mẫu hay KB thật (cờ `TRY_AI_KB_REAL`). */
       knowledge: TryKnowledgeSource;
+      /** Bước nào đang chạy bằng LLM thật (cờ `*_LLM_ENABLED` + LiteLLM); còn lại là bản mẫu. */
+      llm: { extractor: boolean; drafter: boolean };
     }
   | { ok: false; reason: TryAiFailure };
 
@@ -41,14 +44,16 @@ export type TryAiDeps = {
   buildDeps?: () => TryDeps;
   /** Chọn nguồn kiến thức (mặc định: mẫu). Bản KB thật chạy trong giao dịch `withActor`. */
   knowledgeRunner?: KnowledgeRunner;
+  /** LLM thật cho từng bước (TRY-AI-REAL lát C); thiếu bước nào thì bước đó dùng bản mẫu. */
+  llm?: TryLlmDeps;
   warn?: (event: { event: string; reason?: string }) => void;
 };
 
 const textSchema = z.string().trim().min(1);
 
-const defaultDeps = (): TryDeps => ({
-  extractor: createDemoExtractor(),
-  drafter: createDemoDrafter(),
+const defaultDeps = (llm: TryLlmDeps = {}): TryDeps => ({
+  extractor: llm.extractor ?? createDemoExtractor(),
+  drafter: llm.drafter ?? createDemoDrafter(),
   knowledge: createDemoKnowledge(),
 });
 
@@ -62,7 +67,7 @@ const DEMO_VOICE = {
 
 export function createTryAiAction(deps: TryAiDeps) {
   const now = deps.now ?? (() => new Date());
-  const build = deps.buildDeps ?? defaultDeps;
+  const build = deps.buildDeps ?? (() => defaultDeps(deps.llm));
   const warn = deps.warn ?? ((event) => console.error(JSON.stringify(event)));
 
   return async function tryAiAction(session: TrySession, rawText: unknown): Promise<TryAiResult> {
@@ -89,7 +94,7 @@ export function createTryAiAction(deps: TryAiDeps) {
           knowledge,
           // Có sản phẩm thật → bộ nhận diện mẫu nhận ra đúng tên sản phẩm của shop (thay danh sách mẫu cố định).
           extractor:
-            context && context.productNames.length > 0 && !deps.buildDeps
+            context && context.productNames.length > 0 && !deps.buildDeps && !deps.llm?.extractor
               ? createDemoExtractor({ productNames: context.productNames })
               : built.extractor,
         });
@@ -101,6 +106,7 @@ export function createTryAiAction(deps: TryAiDeps) {
         result: value,
         quota: { used: taken.used, limit: taken.limit },
         knowledge: source,
+        llm: { extractor: Boolean(deps.llm?.extractor), drafter: Boolean(deps.llm?.drafter) },
       };
     } catch (error) {
       warn({ event: 'try_ai_failed', reason: error instanceof Error ? error.name : 'unknown' });

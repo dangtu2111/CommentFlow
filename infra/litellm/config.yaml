@@ -6,6 +6,17 @@ model_list:
       model: openai/mock-llm
       api_key: mock-not-a-real-key
       mock_response: "Đây là phản hồi giả để kiểm thử."
+  # Gemini thật (TRY-AI-REAL lát C). Tên `cf-classify`/`cf-draft` là bí danh ổn định app gọi tới (CLASSIFY_LLM_MODEL /
+  # DRAFT_LLM_MODEL); đổi model chỉ cần sửa dòng `model:` bên dưới. Cần GEMINI_API_KEY ở máy ảo; khóa ảo của app
+  # (LITELLM_API_KEY) tạo trong LiteLLM kèm max_budget để chặn chi phí. Kiểm lại tên model trên tài liệu Google/LiteLLM.
+  - model_name: cf-classify
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+  - model_name: cf-draft
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

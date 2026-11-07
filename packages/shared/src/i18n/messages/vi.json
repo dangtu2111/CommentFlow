@@ -1988,6 +1988,12 @@
     "placeholder": "Ví dụ: áo thun basic size M màu đen giá bao nhiêu?",
     "submit": "Thử",
     "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
+    "llm": {
+      "off": "Nhận diện ý định và soạn câu: bản mô phỏng (chưa bật AI thật)",
+      "extractor": "nhận diện ý định",
+      "drafter": "soạn câu trả lời",
+      "on": "AI thật (Gemini) đang chạy ở bước: {steps}; các bước còn lại là bản mô phỏng"
+    },
     "knowledge": {
       "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
       "shop": "Nguồn: sản phẩm thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm); chính sách vẫn là đoạn mẫu",

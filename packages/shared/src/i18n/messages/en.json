@@ -1988,6 +1988,12 @@
     "placeholder": "E.g. how much is the basic tee, size M, black?",
     "submit": "Try",
     "quota": "{used}/{limit} tries used today",
+    "llm": {
+      "off": "Intent detection and drafting: simulated (real AI is off)",
+      "extractor": "intent detection",
+      "drafter": "reply drafting",
+      "on": "Real AI (Gemini) is running for: {steps}; other steps are simulated"
+    },
     "knowledge": {
       "demo": "Source: sample knowledge (your shop's real knowledge is not connected)",
       "shop": "Source: the shop’s real products (price/stock/variants read from the product store); policies are still sample text",

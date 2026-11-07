@@ -160,6 +160,8 @@ services:
       REDIS_PORT: "6379"
       REDIS_PASSWORD: ${VALKEY_PASSWORD:?}
       CACHE_NAMESPACE: ${CACHE_NAMESPACE:?}
+      # Khóa Gemini (tùy chọn; để trống thì chỉ dùng được mock-llm). Chỉ có trên máy ảo, không bao giờ commit.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       LANGFUSE_HOST: http://langfuse-web:3000
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_INIT_PROJECT_PUBLIC_KEY:?}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_INIT_PROJECT_SECRET_KEY:?}
