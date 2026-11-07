@@ -208,7 +208,7 @@
 | FR-157 | **Mẫu đã ngưng/hết hàng:** sản phẩm `archived` hoặc mọi biến thể hết hàng (dữ liệu còn tươi) → nói rõ hết mẫu; Owner bật gợi ý thay thế → tối đa 2 mẫu đang bán cùng danh mục, có giá từ `product_variants` | Bắt buộc (GĐ4) |
 | FR-158 | **Khoảng giá khi chưa rõ biến thể:** biến thể khác giá mà khách chưa nói size/màu → trả lời khoảng "từ X đến Y tùy size" (min/max do code lấy) kèm câu hỏi lại biến thể (FR-147 bậc 2) | Bắt buộc (GĐ2) |
 | FR-159 | **Ngôn ngữ ngoài vi/en:** nhận diện chữ viết/ngôn ngữ khác (Trung, Thái, Hàn, Nhật, Nga…) → `lang = other`, chuyển người, không trả lời bằng ngôn ngữ đoán | Bắt buộc (GĐ2) |
-| FR-160 | **Cam kết pháp lý/uy tín:** câu hỏi chính hãng, hóa đơn VAT, bảo hành, nguồn gốc, hoàn tiền → bắt buộc có nguồn; không có → chuyển hướng hoặc chuyển người; bộ đánh giá có nhóm câu này | Bắt buộc (GĐ2) |
+| FR-160 | **Cam kết pháp lý/uy tín:** câu hỏi chính hãng, hóa đơn VAT, bảo hành, nguồn gốc, hoàn tiền, **và tuyên bố quy định/y tế/an toàn (FDA, cấp phép, chữa bệnh, an toàn cho bà bầu/trẻ em… — Q-EV2-6, 08/11)** → bắt buộc có nguồn ĐÚNG chủ đề (chính sách đổi trả KHÔNG là nguồn cho hoàn tiền — Q-EV2-2); không có → chuyển người (hoàn tiền, quy định/y tế) hoặc chuyển hướng; câu nghi ngờ uy tín ("legit or scam?") → chuyển người; bộ đánh giá có nhóm câu này | Bắt buộc (GĐ2) |
 
 ## FR-R — Lõi pipeline: tách thông tin, độ tin cậy, đa dạng câu, an toàn nguồn, bộ đánh giá (bổ sung 02/11, không thay chức năng cũ)
 
