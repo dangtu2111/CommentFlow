@@ -2,10 +2,10 @@ import { getShopifyStore, loadKbOverview } from '@flow/db/runtime';
 import Link from 'next/link';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
+import { KbPlayground } from '../../../../components/kb/kb-playground';
 import { ShopifyCard, shopifyNoticeOf } from '../../../../components/kb/shopify-card';
 import { Icon, type IconName } from '../../../../components/ui/icon';
 import { cn } from '../../../../lib/cn';
-import { TRY_AI_MAX_CHARS } from '../../../../lib/try-ai-limits';
 import { getBrand } from '../../../../server/brand';
 import { getDb } from '../../../../server/db';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
@@ -180,28 +180,71 @@ export default async function KbHubPage({ searchParams }: { searchParams: Search
               </span>
             </div>
             {product ? (
-              <div className="mt-space-md rounded-xl bg-surface-container-low p-space-md space-y-space-sm">
-                <h3 className="font-title-md text-title-md text-on-surface">{product.name}</h3>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  {[product.sku ? `SKU: ${product.sku}` : null, product.category]
-                    .filter(Boolean)
-                    .join(' • ')}
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  {product.priceVnd !== null ? (
-                    <span className="rounded-lg bg-surface-container-lowest px-3 py-1.5 font-title-md text-title-md text-primary">
-                      {t('hub.product.price', { amount: format.number(product.priceVnd) })}
-                    </span>
-                  ) : null}
-                  {product.stock !== null ? (
-                    <span className="rounded-lg bg-surface-container-lowest px-3 py-1.5 font-title-sm text-title-sm text-on-surface">
-                      {t('hub.product.stock', { count: product.stock })}
-                    </span>
-                  ) : null}
-                  {product.variantCount > 0 ? (
-                    <span className="rounded-lg bg-surface-container-lowest px-3 py-1.5 font-title-sm text-title-sm text-on-surface">
-                      {t('hub.product.variants', { count: product.variantCount })}
-                    </span>
+              <div className="mt-space-md rounded-xl bg-surface-container-low p-space-lg space-y-space-md">
+                <div className="flex flex-col justify-between gap-space-lg md:flex-row md:items-start">
+                  <div className="flex items-start gap-space-md">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        className="h-24 w-20 shrink-0 rounded-lg object-cover shadow-sm"
+                      />
+                    ) : null}
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-title-md text-title-md text-on-surface">
+                          {product.name}
+                        </span>
+                        <span className="rounded-full bg-primary-container px-2 py-0.5 font-label-sm text-label-sm text-on-primary">
+                          {t('hub.product.selling')}
+                        </span>
+                      </div>
+                      <div className="font-body-sm text-body-sm text-on-surface-variant">
+                        {[product.sku ? `SKU: ${product.sku}` : null, product.category]
+                          .filter(Boolean)
+                          .join(' • ')}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 pt-1">
+                        {product.priceVnd !== null ? (
+                          <div className="flex items-center gap-1 rounded bg-surface-container-lowest px-2.5 py-1 text-on-surface shadow-sm">
+                            <span className="font-title-sm text-title-sm font-bold text-primary">
+                              {t('hub.product.price', { amount: format.number(product.priceVnd) })}
+                            </span>
+                            {product.source !== 'manual' ? (
+                              <span
+                                className="text-on-surface-variant"
+                                title={t('hub.product.priceLocked')}
+                              >
+                                <Icon name="lock" size={14} />
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        {product.stock !== null ? (
+                          <div className="rounded bg-surface-container-lowest px-2.5 py-1 font-body-sm text-body-sm text-on-surface shadow-sm">
+                            {t('hub.product.stock', { count: product.stock })}
+                          </div>
+                        ) : null}
+                        {product.variantCount > 0 ? (
+                          <div className="rounded bg-surface-container-lowest px-2.5 py-1 font-body-sm text-body-sm text-on-surface shadow-sm">
+                            {t('hub.product.variants', { count: product.variantCount })}
+                            {product.variantOptions.length > 0
+                              ? `: ${product.variantOptions.map((o) => `${o.name} ${o.values.join(', ')}`).join(' · ')}`
+                              : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                  {product.hasEmbedding ? (
+                    <div className="flex shrink-0 items-center gap-2 self-end md:self-auto">
+                      <span className="flex items-center gap-1 rounded-full bg-secondary-fixed px-2.5 py-1 font-label-sm text-label-sm text-on-secondary-fixed">
+                        <Icon name="auto_awesome" size={14} />
+                        {t('hub.product.embedded')}
+                      </span>
+                    </div>
                   ) : null}
                 </div>
                 <div className="rounded-lg bg-surface-container-lowest p-space-md">
@@ -239,31 +282,12 @@ export default async function KbHubPage({ searchParams }: { searchParams: Search
                 </p>
               </div>
             </div>
-            <form
-              action="/app/try-ai"
-              method="get"
-              className="mt-space-md flex flex-col gap-space-sm sm:flex-row sm:items-center"
-            >
-              <label htmlFor="hub-try-question" className="sr-only">
-                {t('hub.playground.label')}
-              </label>
-              <input
-                id="hub-try-question"
-                name="q"
-                required
-                maxLength={TRY_AI_MAX_CHARS}
-                autoComplete="off"
-                placeholder={t('hub.playground.placeholder')}
-                className="flex-1 rounded-lg bg-surface-container-low px-3 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60"
-              />
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-secondary px-4 py-2.5 font-title-sm text-title-sm text-on-secondary shadow-sm"
-              >
-                <Icon name="play_arrow" size={16} />
-                {t('hub.playground.run')}
-              </button>
-            </form>
+            <KbPlayground
+              label={t('hub.playground.label')}
+              placeholder={t('hub.playground.placeholder')}
+              submit={t('hub.playground.run')}
+              fullPageLabel={t('hub.playground.full')}
+            />
           </section>
         </div>
       </KbFrame>

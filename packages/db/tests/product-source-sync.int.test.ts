@@ -107,6 +107,32 @@ describe('FR-052 ghi đồng bộ nguồn Shopify', () => {
     expect(variant.rows[0].stock).toBe(1);
   });
 
+  it('KB-PRODUCT-IMAGE lưu ảnh nguồn, cập nhật khi đổi, xóa về null khi nguồn bỏ ảnh; URL không phải http(s) bị CSDL từ chối', async () => {
+    const withImage = (imageUrl: string | null): ImportProductPlan[] =>
+      plan(150000, 5).map((p) => ({ ...p, externalId: 'gid://shopify/Product/img', imageUrl }));
+    const read = async () =>
+      (
+        await admin.query(
+          "SELECT image_url FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/img'",
+          [wsA],
+        )
+      ).rows[0]?.image_url;
+    const sync = (p: ImportProductPlan[]) =>
+      db.withActor(wsA, owner, (tx) => applyProductSourceSync(tx, wsA, 'shopify', p));
+
+    await sync(withImage('https://cdn.shopify.com/s/files/1/a.jpg'));
+    expect(await read()).toBe('https://cdn.shopify.com/s/files/1/a.jpg');
+    await sync(withImage('https://cdn.shopify.com/s/files/1/b.jpg'));
+    expect(await read()).toBe('https://cdn.shopify.com/s/files/1/b.jpg');
+    await sync(withImage(null));
+    expect(await read()).toBeNull();
+    await expect(sync(withImage('javascript:alert(1)'))).rejects.toThrow();
+    await admin.query(
+      "DELETE FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/img'",
+      [wsA],
+    ); // dọn để không làm lệch test đếm dòng bên dưới
+  });
+
   it('giữ khóa trường do người dùng thêm (hợp nhất, không mất)', async () => {
     await admin.query(
       `UPDATE cf.products SET locked_fields = locked_fields || ARRAY['url'] WHERE workspace_id = $1`,

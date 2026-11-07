@@ -470,6 +470,20 @@
       "when": 1794001000000,
       "tag": "0066_shopify_sync_keep_connected",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1794002000000,
+      "tag": "0067_policy_items_external_key",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1794003000000,
+      "tag": "0068_products_image_url",
+      "breakpoints": true
     }
   ]
 }

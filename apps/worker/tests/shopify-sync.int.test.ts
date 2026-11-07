@@ -6,6 +6,7 @@ import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   jsonResponse,
+  policiesResponse,
   productNode,
   productsPage,
 } from '../../../packages/connectors/src/shopify/fixtures';
@@ -37,6 +38,7 @@ type Seen = { url: string; headers: Record<string, string>; body: string };
 function fakeShopify(options: {
   token?: () => Response;
   graphql?: () => Response;
+  policies?: () => Response;
   seen?: Seen[];
 }): typeof fetch {
   return ((url: string | URL, init?: RequestInit) => {
@@ -51,6 +53,9 @@ function fakeShopify(options: {
         options.token?.() ??
           jsonResponse({ access_token: EXCHANGED, scope: 'read_products', expires_in: 86399 }),
       );
+    }
+    if (String(init?.body ?? '').includes('shopPolicies')) {
+      return Promise.resolve(options.policies?.() ?? jsonResponse(policiesResponse));
     }
     return Promise.resolve(
       options.graphql?.() ?? jsonResponse(productsPage([productNode(1), productNode(2)], null)),
@@ -132,6 +137,72 @@ describe('đồng bộ Shopify đầu-cuối (client credentials)', () => {
     expect(row.last_sync_summary).toMatchObject({ productsCreated: 2, variantsCreated: 4 });
     await handler(fakeShopify({}))(job(ws));
     expect(await productCount()).toBe(2);
+  });
+
+  it('sản phẩm biến mất trên Shopify → LƯU TRỮ (không xóa); xuất hiện lại → hoạt động lại; danh mục rỗng → KHÔNG lưu trữ gì', async () => {
+    const statusOf = async (name: string) =>
+      (
+        await admin.query(
+          'SELECT status FROM cf.products WHERE workspace_id = $1 AND source = $2 AND name = $3',
+          [ws, 'shopify', name],
+        )
+      ).rows[0]?.status as string | undefined;
+    // Chỉ còn sản phẩm 1 trên Shopify.
+    await handler(
+      fakeShopify({ graphql: () => jsonResponse(productsPage([productNode(1)], null)) }),
+    )(job(ws));
+    expect(await statusOf('Áo thun 1')).toBe('active');
+    expect(await statusOf('Áo thun 2')).toBe('archived');
+    expect((await storeRow()).last_sync_summary).toMatchObject({ productsArchived: 1 });
+    // Sản phẩm 2 quay lại.
+    await handler(fakeShopify({}))(job(ws));
+    expect(await statusOf('Áo thun 2')).toBe('active');
+    // Danh mục RỖNG (lỗi/cắt cụt) không bao giờ làm lưu trữ hàng loạt.
+    await handler(fakeShopify({ graphql: () => jsonResponse(productsPage([], null)) }))(job(ws));
+    expect(await statusOf('Áo thun 1')).toBe('active');
+    expect(await statusOf('Áo thun 2')).toBe('active');
+  });
+
+  it('chính sách cửa hàng: HTML → văn bản thuần vào policy_items (external_key), mục rỗng bị bỏ; chạy lại không nhân đôi; mục nhập tay giữ nguyên', async () => {
+    await admin.query(
+      "INSERT INTO cf.policy_items (workspace_id, kind, lang, title, content) VALUES ($1, 'warranty', 'vi', 'Bảo hành nhập tay', 'Của Owner')",
+      [ws],
+    );
+    await handler(fakeShopify({}))(job(ws));
+    await handler(fakeShopify({}))(job(ws));
+    const rows = (
+      await admin.query(
+        'SELECT kind, title, content, external_key FROM cf.policy_items WHERE workspace_id = $1 ORDER BY title',
+        [ws],
+      )
+    ).rows as Array<{ kind: string; title: string; content: string; external_key: string | null }>;
+    expect(rows.filter((r) => r.external_key !== null)).toEqual([
+      {
+        kind: 'return',
+        title: 'Chính sách đổi trả',
+        content: 'Đổi trả trong 7 ngày.',
+        external_key: 'shopify:refund_policy',
+      },
+    ]);
+    expect(rows.find((r) => r.external_key === null)?.title).toBe('Bảo hành nhập tay');
+    expect((await storeRow()).last_sync_summary).toMatchObject({ policiesUpdated: 1 });
+  });
+
+  it('chính sách bị từ chối (ACCESS_DENIED) → vẫn nạp sản phẩm, kết quả ok + policiesSkipped', async () => {
+    const denied = () =>
+      jsonResponse({
+        errors: [
+          {
+            message: 'Access denied for shopPolicies field.',
+            extensions: { code: 'ACCESS_DENIED' },
+          },
+        ],
+      });
+    await handler(fakeShopify({ policies: denied }))(job(ws));
+    const row = await storeRow();
+    expect(row.last_sync_result).toBe('ok');
+    expect(row.last_sync_summary).toMatchObject({ policiesSkipped: true });
+    expect(await productCount()).toBeGreaterThanOrEqual(2);
   });
 
   it('gửi Client ID + secret chỉ ở THÂN yêu cầu đổi token; GraphQL dùng token vừa đổi; secret không lưu dạng rõ', async () => {

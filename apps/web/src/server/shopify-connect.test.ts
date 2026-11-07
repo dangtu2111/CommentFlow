@@ -78,6 +78,69 @@ describe('connect', () => {
   });
 });
 
+describe('connect — kiểm tra kết nối ngay khi lưu (verify)', () => {
+  const okVerify = () =>
+    Promise.resolve({ status: 'ok' as const, scope: 'read_products,read_inventory' });
+
+  it('verify ok → lưu; verify nhận đúng tên miền + Client ID + secret ĐÃ chuẩn hóa', async () => {
+    const verify = vi.fn(okVerify);
+    const { service, save } = setup({ verify });
+    expect(
+      await service.connect(SESSION, 'https://Demo-Shop.myshopify.com/admin', CLIENT_ID, SECRET),
+    ).toBe('ok');
+    expect(verify).toHaveBeenCalledWith({
+      shopDomain: 'demo-shop.myshopify.com',
+      clientId: CLIENT_ID,
+      clientSecret: SECRET,
+    });
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['invalid_credentials', 'invalid_credentials'],
+    ['not_permitted', 'not_permitted'],
+    ['unreachable', 'unreachable'],
+  ] as const)('verify báo %s → trả %s, KHÔNG mã hóa, KHÔNG lưu', async (status, expected) => {
+    const { service, save, encrypt } = setup({ verify: async () => ({ status }) });
+    expect(await service.connect(SESSION, 'demo-shop', CLIENT_ID, SECRET)).toBe(expected);
+    expect(encrypt).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('token đổi được nhưng THIẾU read_products → missing_scopes, không lưu', async () => {
+    const { service, save } = setup({
+      verify: async () => ({ status: 'ok' as const, scope: 'read_orders' }),
+    });
+    expect(await service.connect(SESSION, 'demo-shop', CLIENT_ID, SECRET)).toBe('missing_scopes');
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('scope rỗng (token không mang quyền nào) → missing_scopes', async () => {
+    const { service } = setup({ verify: async () => ({ status: 'ok' as const, scope: '' }) });
+    expect(await service.connect(SESSION, 'demo-shop', CLIENT_ID, SECRET)).toBe('missing_scopes');
+  });
+
+  it('verify ném lỗi bất ngờ → unreachable; log không chứa secret', async () => {
+    const { service, warn } = setup({ verify: () => Promise.reject(new Error(`boom ${SECRET}`)) });
+    expect(await service.connect(SESSION, 'demo-shop', CLIENT_ID, SECRET)).toBe('unreachable');
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(SECRET);
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('boom');
+  });
+
+  it('không có verify (cờ SHOPIFY_ENABLED tắt) → lưu như cũ, không gọi Shopify', async () => {
+    const { service, save } = setup();
+    expect(await service.connect(SESSION, 'demo-shop', CLIENT_ID, SECRET)).toBe('ok');
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('thiếu khóa mã hóa → not_configured TRƯỚC khi gọi Shopify', async () => {
+    const verify = vi.fn(okVerify);
+    const { service } = setup({ verify, encrypt: undefined });
+    expect(await service.connect(SESSION, 'demo-shop', CLIENT_ID, SECRET)).toBe('not_configured');
+    expect(verify).not.toHaveBeenCalled();
+  });
+});
+
 describe('sync', () => {
   it('được phép → đẩy đúng một job của workspace', async () => {
     const { service, enqueue } = setup();

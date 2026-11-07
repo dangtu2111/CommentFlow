@@ -4,11 +4,14 @@ import {
   exchangeShopifyClientCredentials,
   isPlatformError,
   type ShopifyCatalog,
+  type ShopifyPolicy,
   type TokenCipher,
   TokenDecryptError,
 } from '@flow/connectors';
 import {
   applyProductSourceSync,
+  applyShopifyPolicies,
+  archiveMissingSourceProducts,
   type FlowDb,
   readShopifyStoreCredentials,
   recordShopifySync,
@@ -18,6 +21,7 @@ import {
 } from '@flow/db';
 import {
   AppError,
+  htmlToPlainText,
   type ImportProductPlan,
   SHOPIFY_TOKEN_KEY,
   shopifySyncJobSchema,
@@ -46,6 +50,11 @@ export type ShopifySyncDeps = {
     clientSecret: string,
   ) => Promise<{ accessToken: string; scope: string }>;
   fetchCatalog: (shopDomain: string, accessToken: string) => Promise<ShopifyCatalog>;
+  /** Chính sách cửa hàng (cần quyền read_legal_policies); LỖI không làm hỏng việc nạp sản phẩm. */
+  fetchPolicies: (shopDomain: string, accessToken: string) => Promise<ShopifyPolicy[]>;
+  applyPolicies: (
+    policies: Array<{ type: string; title: string; content: string }>,
+  ) => Promise<{ policiesUpdated: number; policiesRemoved: number }>;
   buildPlan: (catalog: ShopifyCatalog) => ImportProductPlan[];
   apply: (plan: ImportProductPlan[]) => Promise<ShopifySyncSummary>;
   record: (result: ShopifySyncResult, summary: ShopifySyncDetail) => Promise<void>;
@@ -92,6 +101,7 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
     const catalog = await deps.fetchCatalog(stored.shopDomain, accessToken);
     detail = {
       ...(await deps.apply(deps.buildPlan(catalog))),
+      ...(await syncPolicies(deps, stored.shopDomain, accessToken)),
       ...(grantedScope === null ? {} : { scope: grantedScope }),
     };
     result = 'ok';
@@ -117,6 +127,34 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
   }
   await deps.record(result, detail);
   return result;
+}
+
+/**
+ * Nạp chính sách cửa hàng (đổi trả, vận chuyển…) — làm TỐT NHẤT CÓ THỂ như dự án tham chiếu: thiếu quyền `read_legal_policies`
+ * hay lỗi tạm chỉ đánh dấu `policiesSkipped`, KHÔNG làm hỏng việc nạp sản phẩm. HTML → văn bản thuần trước khi lưu.
+ */
+async function syncPolicies(
+  deps: ShopifySyncDeps,
+  shopDomain: string,
+  accessToken: string,
+): Promise<{ policiesUpdated: number } | { policiesSkipped: true }> {
+  try {
+    const policies = await deps.fetchPolicies(shopDomain, accessToken);
+    const applied = await deps.applyPolicies(
+      policies.map((policy) => ({
+        type: policy.type,
+        title: policy.title,
+        content: htmlToPlainText(policy.body),
+      })),
+    );
+    return { policiesUpdated: applied.policiesUpdated };
+  } catch (error) {
+    deps.warn({
+      event: 'shopify_policies_skipped',
+      reason: isPlatformError(error) ? error.code : 'unknown',
+    });
+    return { policiesSkipped: true };
+  }
 }
 
 /** Danh sách quyền token được cấp, lọc ký tự (chỉ chữ thường, số, `_`, `,`) và cắt 300 ký tự — an toàn để lưu và hiển thị. */
@@ -174,9 +212,28 @@ export function createShopifySyncHandler(deps: {
             ...(deps.apiVersion ? { apiVersion: deps.apiVersion } : {}),
             ...(deps.fetchImpl ? { fetch: deps.fetchImpl } : {}),
           }).fetchCatalog(),
+        fetchPolicies: (shopDomain, accessToken) =>
+          createShopifyConnector({
+            shopDomain,
+            getAccessToken: async () => accessToken,
+            ...(deps.apiVersion ? { apiVersion: deps.apiVersion } : {}),
+            ...(deps.fetchImpl ? { fetch: deps.fetchImpl } : {}),
+          }).fetchPolicies(),
+        applyPolicies: (policies) =>
+          db.withJob(workspaceId, (tx) => applyShopifyPolicies(tx, workspaceId, policies)),
         buildPlan: buildShopifyImportPlan,
         apply: (plan) =>
-          db.withJob(workspaceId, (tx) => applyProductSourceSync(tx, workspaceId, 'shopify', plan)),
+          db.withJob(workspaceId, async (tx) => {
+            const written = await applyProductSourceSync(tx, workspaceId, 'shopify', plan);
+            // Lấy ĐỦ danh mục mới tới được đây (connector ném lỗi khi cắt cụt); danh mục rỗng → hàm không làm gì.
+            const productsArchived = await archiveMissingSourceProducts(
+              tx,
+              workspaceId,
+              'shopify',
+              plan.map((product) => product.externalId),
+            );
+            return { ...written, productsArchived };
+          }),
         record: (result, summary) =>
           db.withJob(workspaceId, (tx) => recordShopifySync(tx, result, summary)),
         warn: (event) => logger.warn(event, 'đồng bộ Shopify'),

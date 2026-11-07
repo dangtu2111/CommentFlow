@@ -300,6 +300,14 @@ export type KbSampleProduct = {
   priceVnd: number | null;
   stock: number | null;
   variantCount: number;
+  /** Tên các loại biến thể theo thuộc tính (ví dụ Size: S, M, L), đọc từ bản gốc biến thể; rỗng khi sản phẩm không có thuộc tính. */
+  variantOptions: Array<{ name: string; values: string[] }>;
+  /** Ảnh đại diện từ nguồn ngoài (URL https); `null` khi chưa có. */
+  imageUrl: string | null;
+  /** Nguồn dữ liệu (`manual`, `shopify`…): khác `manual` thì giá/tồn do nguồn ngoài giữ (khóa sửa tay). */
+  source: string;
+  /** Đã có vector tên sản phẩm (FR-127). */
+  hasEmbedding: boolean;
 };
 
 export type KbOverview = {
@@ -317,6 +325,23 @@ export type KbOverview = {
 };
 
 /** Số liệu THẬT cho trang tổng quan "Nguồn dữ liệu": đếm theo bảng, danh sách nguồn (chưa xóa), một sản phẩm mẫu. */
+/** Gom thuộc tính của các biến thể (`products.variants[].attrs`) thành `{tên thuộc tính → các giá trị khác nhau}`, giữ thứ tự gặp. Hàm thuần. */
+export function variantOptionsOf(variants: unknown): Array<{ name: string; values: string[] }> {
+  if (!Array.isArray(variants)) return [];
+  const byName = new Map<string, Set<string>>();
+  for (const variant of variants) {
+    const attrs = (variant as { attrs?: unknown } | null)?.attrs;
+    if (typeof attrs !== 'object' || attrs === null) continue;
+    for (const [name, value] of Object.entries(attrs)) {
+      if (typeof value !== 'string' || value.trim() === '') continue;
+      const values = byName.get(name) ?? new Set<string>();
+      values.add(value.trim());
+      byName.set(name, values);
+    }
+  }
+  return [...byName].map(([name, values]) => ({ name, values: [...values] }));
+}
+
 export async function loadKbOverview(tx: Database, workspaceId: string): Promise<KbOverview> {
   const [counts, sources, sample] = await Promise.all([
     tx.execute<{
@@ -354,8 +379,12 @@ export async function loadKbOverview(tx: Database, workspaceId: string): Promise
       price_vnd: string | null;
       stock: number | null;
       variants: unknown;
+      image_url: string | null;
+      source: string;
+      has_embedding: boolean;
     }>(sql`
-      SELECT id, name, sku, category, price_vnd, stock, variants FROM cf.products
+      SELECT id, name, sku, category, price_vnd, stock, variants, image_url, source,
+             name_embedding IS NOT NULL AS has_embedding FROM cf.products
        WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND NOT starts_with(name, ${SAMPLE_LABEL})
        ORDER BY updated_at DESC, id LIMIT 1`),
   ]);
@@ -388,6 +417,10 @@ export async function loadKbOverview(tx: Database, workspaceId: string): Promise
           priceVnd: product.price_vnd === null ? null : Number(product.price_vnd),
           stock: product.stock,
           variantCount: Array.isArray(product.variants) ? product.variants.length : 0,
+          variantOptions: variantOptionsOf(product.variants),
+          imageUrl: product.image_url,
+          source: product.source,
+          hasEmbedding: product.has_embedding,
         }
       : null,
   };

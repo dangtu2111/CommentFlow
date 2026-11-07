@@ -33,6 +33,9 @@ export const productNode = (n: number, over: Record<string, unknown> = {}) => ({
   status: 'ACTIVE',
   productType: 'Áo',
   onlineStoreUrl: `https://demo-shop.myshopify.com/products/ao-thun-${n}`,
+  featuredMedia: {
+    preview: { image: { url: `https://cdn.shopify.com/s/files/1/demo/ao-thun-${n}.jpg` } },
+  },
   variants: {
     pageInfo: { hasNextPage: false, endCursor: null },
     nodes: [variantNode(n * 10 + 1), variantNode(n * 10 + 2, { compareAtPrice: '200000.00' })],

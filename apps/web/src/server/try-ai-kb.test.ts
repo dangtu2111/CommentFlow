@@ -18,7 +18,7 @@ describe('FR-059 KB-TRYAI: nguồn kiến thức của hành động Thử AI', 
       quota: createTryQuota({ limit: 3 }),
       now,
       knowledgeRunner: async (_s, base, fn) => ({
-        value: await fn({ ...base, searchKb }),
+        value: await fn({ ...base, searchKb }, { productNames: [] }),
         source: 'kb',
       }),
     });

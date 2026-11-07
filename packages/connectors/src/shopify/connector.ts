@@ -50,6 +50,7 @@ const PRODUCTS_QUERY = `query CfProducts($first: Int!, $after: String, $query: S
       status
       productType
       onlineStoreUrl
+      featuredMedia { preview { image { url } } }
       variants(first: $variants) {
         pageInfo { hasNextPage endCursor }
         nodes {${VARIANT_FIELDS}
@@ -114,6 +115,12 @@ const productsDataSchema = z.object({
         status: z.string(),
         productType: z.string(),
         onlineStoreUrl: z.string().nullable(),
+        featuredMedia: z
+          .object({
+            preview: z.object({ image: z.object({ url: z.string() }).nullable() }).nullable(),
+          })
+          .nullable()
+          .optional(),
         variants: variantConnectionSchema,
       }),
     ),
@@ -169,6 +176,8 @@ export type ShopifyProduct = {
   status: string;
   productType: string;
   onlineStoreUrl: string | null;
+  /** Ảnh đại diện (`featuredMedia.preview.image.url`); `null` khi sản phẩm chưa có ảnh. */
+  imageUrl: string | null;
   variants: ShopifyVariant[];
 };
 
@@ -446,6 +455,7 @@ export function createShopifyConnector(options: ShopifyConnectorOptions): Shopif
             status: node.status,
             productType: node.productType,
             onlineStoreUrl: node.onlineStoreUrl,
+            imageUrl: node.featuredMedia?.preview?.image?.url ?? null,
             variants,
           });
         }

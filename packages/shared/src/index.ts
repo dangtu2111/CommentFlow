@@ -80,6 +80,7 @@ export {
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
 export { type HaravanConfig, readHaravanConfig } from './haravan-config';
+export { htmlToPlainText } from './html-text';
 export {
   DEFAULT_LOCALE,
   isLocale,

@@ -24,6 +24,10 @@ const NOTICES: readonly ShopifyNotice[] = [
   'disconnected',
   'not_found',
   'rate_limited',
+  'invalid_credentials',
+  'not_permitted',
+  'missing_scopes',
+  'unreachable',
 ];
 const GOOD: readonly ShopifyNotice[] = ['connected', 'sync_queued', 'disconnected'];
 

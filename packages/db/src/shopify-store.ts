@@ -17,6 +17,8 @@ export type ShopifySyncSummary = {
   productsUpdated: number;
   variantsCreated: number;
   variantsUpdated: number;
+  /** Sản phẩm vắng mặt trên Shopify vừa được lưu trữ ở lần đồng bộ này. */
+  productsArchived?: number;
 };
 
 /**
@@ -24,6 +26,9 @@ export type ShopifySyncSummary = {
  * `exchange:shopify_invalid_credentials:invalid_client`, `decrypt_failed`.
  */
 export type ShopifySyncDetail = Partial<ShopifySyncSummary> & {
+  /** Số chính sách cửa hàng đã nạp/cập nhật; `policiesSkipped` = bỏ qua (thiếu quyền read_legal_policies hoặc lỗi tạm). */
+  policiesUpdated?: number;
+  policiesSkipped?: true;
   reason?: string;
   /** Danh sách quyền token được cấp (`read_products,read_inventory…`, đã lọc ký tự) — để chẩn đoán thiếu quyền. */
   scope?: string;

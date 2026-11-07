@@ -20,7 +20,11 @@ export type ShopifyNotice =
   | 'sync_recent'
   | 'disconnected'
   | 'not_found'
-  | 'rate_limited';
+  | 'rate_limited'
+  | 'invalid_credentials'
+  | 'not_permitted'
+  | 'missing_scopes'
+  | 'unreachable';
 
 const BACK = '/app/kb';
 

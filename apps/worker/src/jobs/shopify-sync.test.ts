@@ -15,6 +15,12 @@ function setup(over: Partial<ShopifySyncDeps> = {}) {
   const record = vi.fn().mockResolvedValue(undefined);
   const apply = vi.fn().mockResolvedValue(SUMMARY);
   const fetchCatalog = vi.fn().mockResolvedValue(CATALOG);
+  const fetchPolicies = vi
+    .fn()
+    .mockResolvedValue([
+      { type: 'REFUND_POLICY', title: 'Hoàn tiền', body: '<p>7 ngày</p>', url: 'https://x/p' },
+    ]);
+  const applyPolicies = vi.fn().mockResolvedValue({ policiesUpdated: 1, policiesRemoved: 0 });
   const exchange = vi.fn().mockResolvedValue({
     accessToken: 'shpat_exchanged_token',
     scope: 'read_products,read_inventory',
@@ -27,13 +33,15 @@ function setup(over: Partial<ShopifySyncDeps> = {}) {
     decrypt: () => 'shpss_client_secret',
     exchange,
     fetchCatalog,
+    fetchPolicies,
+    applyPolicies,
     buildPlan: () => [],
     apply,
     record,
     warn,
     ...over,
   };
-  return { deps, record, apply, fetchCatalog, warn, exchange };
+  return { deps, record, apply, fetchCatalog, warn, exchange, fetchPolicies, applyPolicies };
 }
 
 describe('scopeOf', () => {
@@ -67,8 +75,43 @@ describe('runShopifySync', () => {
     expect(apply).toHaveBeenCalledTimes(1);
     expect(record).toHaveBeenCalledWith('ok', {
       ...SUMMARY,
+      policiesUpdated: 1,
       scope: 'read_products,read_inventory',
     });
+  });
+
+  it('chính sách: tải bằng token vừa đổi, đổi HTML sang văn bản thuần rồi nạp; ghi số mục đã cập nhật', async () => {
+    const { deps, applyPolicies, fetchPolicies } = setup();
+    await runShopifySync(deps);
+    expect(fetchPolicies).toHaveBeenCalledWith('demo-shop.myshopify.com', 'shpat_exchanged_token');
+    expect(applyPolicies).toHaveBeenCalledWith([
+      { type: 'REFUND_POLICY', title: 'Hoàn tiền', content: '7 ngày' },
+    ]);
+  });
+
+  it('chính sách lỗi (thiếu quyền read_legal_policies, mạng…) KHÔNG làm hỏng việc nạp sản phẩm: vẫn ok, đánh dấu bỏ qua', async () => {
+    const { deps, record, apply, warn } = setup({
+      fetchPolicies: async () => {
+        throw new PlatformError('PERMISSION');
+      },
+    });
+    expect(await runShopifySync(deps)).toBe('ok');
+    expect(apply).toHaveBeenCalledTimes(1);
+    expect(record).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ ...SUMMARY, policiesSkipped: true }),
+    );
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('read_legal_policies');
+  });
+
+  it('nạp chính sách vào DB lỗi → cũng chỉ bỏ qua chính sách', async () => {
+    const { deps, record } = setup({
+      applyPolicies: async () => {
+        throw new Error('boom');
+      },
+    });
+    expect(await runShopifySync(deps)).toBe('ok');
+    expect(record).toHaveBeenCalledWith('ok', expect.objectContaining({ policiesSkipped: true }));
   });
 
   it('cờ tắt → unavailable, KHÔNG đọc thông tin xác thực, KHÔNG gọi Shopify', async () => {

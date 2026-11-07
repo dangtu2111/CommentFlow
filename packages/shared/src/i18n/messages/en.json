@@ -1920,7 +1920,11 @@
           "sync_recent": "A sync just finished, or there is no usable connection. Try again in about a minute.",
           "disconnected": "Shopify disconnected. The token was deleted.",
           "not_found": "There is no Shopify connection to disconnect.",
-          "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again."
+          "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again.",
+          "invalid_credentials": "Shopify rejected the Client ID/secret. Check you copied the pair of ONE app (Dev Dashboard › app › Settings) with no extra spaces. Nothing was saved.",
+          "not_permitted": "Shopify says the app is not allowed for this store: the app and the store must belong to the SAME Dev Dashboard organization and the app must be installed on the store. Nothing was saved.",
+          "missing_scopes": "The Client ID/secret are correct but the token Shopify issued does NOT have read_products. In the Dev Dashboard release a version with read_products and read_inventory; then install/update the app permissions on the store and try again. Nothing was saved.",
+          "unreachable": "Could not check with Shopify right now (network or Shopify is busy). Please try again in a few minutes. Nothing was saved."
         },
         "reason": {
           "cannotDecrypt": "The saved Client secret could not be decrypted (the server encryption key changed since it was saved). Re-enter the Client ID and Client secret.",
@@ -1960,12 +1964,16 @@
         "hint": "Private note for the AI",
         "empty": "No products yet.",
         "import": "Import products",
-        "price": "{amount}₫"
+        "price": "{amount}₫",
+        "selling": "On sale",
+        "priceLocked": "Synced from the source (manual edits locked)",
+        "embedded": "Vector embeddings: created"
       },
       "playground": {
         "title": "AI playground",
         "body": "Simulate the AI’s reply with the current knowledge.",
-        "run": "Open playground",
+        "run": "Test",
+        "full": "See full details on the Try AI page",
         "label": "A customer question to try",
         "placeholder": "Type a question customers often ask, for example about price, stock or delivery…"
       }
@@ -1982,6 +1990,7 @@
     "quota": "{used}/{limit} tries used today",
     "knowledge": {
       "demo": "Source: sample knowledge (your shop's real knowledge is not connected)",
+      "shop": "Source: the shop’s real products (price/stock/variants read from the product store); policies are still sample text",
       "kb": "Source: your shop's published knowledge — the 0–1 score is the relevance computed by the system"
     },
     "errors": {

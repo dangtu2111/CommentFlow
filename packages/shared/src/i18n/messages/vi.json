@@ -1920,7 +1920,11 @@
           "sync_recent": "Vừa đồng bộ xong, hoặc chưa có kết nối đang dùng được. Thử lại sau khoảng 1 phút.",
           "disconnected": "Đã ngắt kết nối Shopify. Token đã bị xóa.",
           "not_found": "Chưa có kết nối Shopify nào để ngắt.",
-          "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại."
+          "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại.",
+          "invalid_credentials": "Shopify từ chối Client ID/secret. Kiểm tra bạn đã sao chép đúng cặp của MỘT ứng dụng (Dev Dashboard › ứng dụng › Settings), không thừa khoảng trắng. Chưa lưu gì.",
+          "not_permitted": "Shopify báo ứng dụng không được phép dùng cho cửa hàng này: ứng dụng và cửa hàng phải thuộc CÙNG một tổ chức Dev Dashboard và ứng dụng phải đã cài vào cửa hàng. Chưa lưu gì.",
+          "missing_scopes": "Client ID/secret đúng nhưng token Shopify cấp KHÔNG có quyền read_products. Trong Dev Dashboard phát hành phiên bản có quyền read_products, read_inventory; rồi cài/cập nhật quyền ứng dụng trên cửa hàng và thử lại. Chưa lưu gì.",
+          "unreachable": "Chưa kiểm tra được với Shopify lúc này (mạng hoặc Shopify đang bận). Vui lòng thử lại sau ít phút. Chưa lưu gì."
         },
         "reason": {
           "cannotDecrypt": "Không giải mã được Client secret đã lưu (khóa mã hóa ở máy chủ đã thay đổi so với lúc lưu). Hãy nhập lại Client ID và Client secret.",
@@ -1960,12 +1964,16 @@
         "hint": "Ghi chú riêng cho AI",
         "empty": "Chưa có sản phẩm nào.",
         "import": "Nhập sản phẩm",
-        "price": "{amount}₫"
+        "price": "{amount}₫",
+        "selling": "Đang bán",
+        "priceLocked": "Đồng bộ từ nguồn ngoài (khóa sửa tay)",
+        "embedded": "Vector Embeddings: Đã tạo"
       },
       "playground": {
         "title": "Chạy thử nghiệm AI",
         "body": "Mô phỏng câu AI trả lời với kiến thức hiện tại.",
-        "run": "Mở Chạy thử",
+        "run": "Kiểm thử",
+        "full": "Xem chi tiết đầy đủ ở trang Thử AI",
         "label": "Câu hỏi của khách để thử",
         "placeholder": "Nhập một câu khách hay hỏi, ví dụ về giá, tồn kho, giao hàng…"
       }
@@ -1982,6 +1990,7 @@
     "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
     "knowledge": {
       "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
+      "shop": "Nguồn: sản phẩm thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm); chính sách vẫn là đoạn mẫu",
       "kb": "Nguồn: kiến thức đã xuất bản của shop — điểm 0–1 là độ liên quan do hệ thống tính"
     },
     "errors": {

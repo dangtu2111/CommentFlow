@@ -4,7 +4,11 @@ import { createTryQuota } from '@flow/ai';
 import { getDb } from '../../../../server/db';
 import { requireAppUser } from '../../../../server/require-app-user';
 import { createTryAiAction, type TryAiResult } from '../../../../server/try-ai';
-import { createKnowledgeRunner, isTryAiKbReal } from '../../../../server/try-ai-knowledge';
+import {
+  createKnowledgeRunner,
+  isTryAiKbReal,
+  isTryAiProductsReal,
+} from '../../../../server/try-ai-knowledge';
 
 /** Trạng thái form (đọc bằng `useActionState`). */
 export type TryAiState = { status: 'idle' } | ({ status: 'done' } & TryAiResult);
@@ -15,6 +19,7 @@ const tryAi = createTryAiAction({
   // Cờ TRY_AI_KB_REAL mặc định TẮT (KB-TRYAI): tắt thì không đụng DB, dùng kiến thức mẫu.
   knowledgeRunner: createKnowledgeRunner({
     enabled: isTryAiKbReal(process.env),
+    productsEnabled: isTryAiProductsReal(process.env),
     db: { withActor: (workspaceId, userId, fn) => getDb().withActor(workspaceId, userId, fn) },
   }),
 });

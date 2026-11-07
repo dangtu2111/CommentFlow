@@ -14,7 +14,7 @@ const fold = (text: string) =>
   text.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/gi, 'd').toLowerCase();
 
 const PRODUCT_NAMES = ['áo thun basic', 'váy hoa nhí'] as const;
-const COLORS = ['đen', 'trắng', 'xanh'] as const;
+const COLORS = ['đen', 'trắng', 'xanh', 'đỏ', 'vàng', 'hồng', 'xám', 'nâu', 'tím', 'be'] as const;
 
 const ASK_RULES: ReadonlyArray<readonly [string, RegExp]> = [
   ['giá', /\b(gia|bao nhieu|nhieu tien|price|how much)\b/],
@@ -39,7 +39,34 @@ function labelOf(text: string): ExtractResult['labels'] {
   return [{ label: 'other', confidence: 0.5 }];
 }
 
-export function createDemoExtractor(): Extractor {
+const tokensOf = (text: string) =>
+  fold(text)
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 3);
+
+/**
+ * Sản phẩm khách nhắc tới: tên nằm trọn trong câu → chắc chắn. Không thì chấm theo số từ (≥ 3 ký tự) của TÊN SẢN PHẨM xuất
+ * hiện trong câu; khách hay gõ tên rút gọn nên tên dài chỉ cần ≥ 3 từ trùng (tên ngắn: trùng hết, tối thiểu 2). Chỉ giữ các
+ * sản phẩm điểm CAO NHẤT (hòa → nhiều ứng viên, việc chọn/loại mơ hồ do `findProductMatch` + `decideAction`). Hàm thuần.
+ */
+export function mentionsOfProducts(text: string, names: readonly string[]): string[] {
+  const folded = fold(text);
+  const asked = new Set(tokensOf(text));
+  const exact = names.filter((name) => folded.includes(fold(name)));
+  if (exact.length > 0) return [...exact];
+  const scored = names.flatMap((name) => {
+    const own = new Set(tokensOf(name));
+    if (own.size < 2) return [];
+    const shared = [...own].filter((token) => asked.has(token)).length;
+    const needed = Math.min(3, own.size);
+    return shared >= needed ? [{ name, shared }] : [];
+  });
+  const best = Math.max(0, ...scored.map((entry) => entry.shared));
+  return scored.filter((entry) => entry.shared === best).map((entry) => entry.name);
+}
+
+export function createDemoExtractor(options: { productNames?: readonly string[] } = {}): Extractor {
+  const productNames = options.productNames ?? PRODUCT_NAMES;
   return {
     async extract(input) {
       const text = fold(input.text);
@@ -48,7 +75,7 @@ export function createDemoExtractor(): Extractor {
       return {
         ...FIXTURE_EXTRACT_DEFAULT,
         labels: labelOf(text),
-        product_mentions: PRODUCT_NAMES.filter((name) => text.includes(fold(name))),
+        product_mentions: mentionsOfProducts(input.text, productNames),
         size,
         color,
         asks: ASK_RULES.filter(([, rule]) => rule.test(text)).map(([ask]) => ask),

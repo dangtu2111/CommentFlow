@@ -55,6 +55,8 @@ export const products = cf.table(
     /** Bản gốc biến thể từ nguồn, giữ để đối chiếu; nguồn đúng là `product_variants`. */
     variants: jsonb('variants').notNull().default(sql`'[]'::jsonb`),
     url: text('url'),
+    /** Ảnh đại diện từ nguồn ngoài (URL http(s) trên CDN của nguồn; migration 0068). */
+    imageUrl: text('image_url'),
     lockedFields: text('locked_fields').array().notNull().default(sql`'{}'::text[]`),
     updatedFromSourceAt: timestamptz('updated_from_source_at'),
     searchText: text('search_text').notNull().default(''),
@@ -75,6 +77,7 @@ export const products = cf.table(
     check('products_source_check', sql`${t.source} IN (${sqlList(PRODUCT_SOURCES)})`),
     check('products_status_check', sql`${t.status} IN (${sqlList(PRODUCT_STATUSES)})`),
     check('products_card_object_check', sql`jsonb_typeof(${t.card}) = 'object'`),
+    check('products_image_url_check', sql`${t.imageUrl} IS NULL OR ${t.imageUrl} ~ '^https?://'`),
     check('products_price_check', sql`${t.priceVnd} IS NULL OR ${t.priceVnd} >= 0`),
     check('products_compare_at_check', sql`${t.compareAtVnd} IS NULL OR ${t.compareAtVnd} >= 0`),
     check('products_stock_check', sql`${t.stock} IS NULL OR ${t.stock} >= 0`),

@@ -290,6 +290,7 @@ export {
 export { applyProductImport, type ProductImportResult } from './queries/product-import';
 export {
   applyProductSourceSync,
+  archiveMissingSourceProducts,
   type ExternalProductSource,
   type ProductSourceSyncResult,
 } from './queries/product-source-sync';
@@ -301,6 +302,12 @@ export {
   loadReportRows,
   REPORT_MAX_ROWS,
 } from './queries/reports';
+export {
+  applyShopifyPolicies,
+  type ShopifyPolicyApplyResult,
+  type ShopifyPolicyInput,
+  shopifyPolicyKind,
+} from './queries/shopify-policies';
 export {
   createSizeChartRow,
   deleteSizeChartRow,
@@ -326,6 +333,15 @@ export {
   type SpamRuleRow,
   setSpamRuleEnabled,
 } from './queries/spam-rules';
+export {
+  countActiveProducts,
+  listTryProductNames,
+  loadTryProducts,
+  loadTryShopTexts,
+  type TryProduct,
+  type TryProductVariant,
+  type TryShopText,
+} from './queries/try-products';
 export {
   listWebhookSilentChannels,
   WEBHOOK_SILENT_WINDOW_HOURS,

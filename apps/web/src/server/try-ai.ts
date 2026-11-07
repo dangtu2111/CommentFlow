@@ -9,7 +9,12 @@ import {
 } from '@flow/ai';
 import { z } from 'zod';
 import { TRY_AI_MAX_CHARS } from '../lib/try-ai-limits';
-import type { KnowledgeRunner, TryKnowledgeSource, TrySession } from './try-ai-knowledge';
+import type {
+  KnowledgeRunner,
+  TryKnowledgeSource,
+  TryRunContext,
+  TrySession,
+} from './try-ai-knowledge';
 
 /**
  * Logic của hành động "Thử AI" (FR-059, FR-029, US-034), tách khỏi Server Action để test với phụ thuộc được tiêm.
@@ -78,8 +83,16 @@ export function createTryAiAction(deps: TryAiDeps) {
         // Ô thử cho biết kết quả "nếu Owner bật tự gửi"; cổng thật chưa có (AUTO-SEND-GATE).
         autoSendEnabled: true,
       };
-      const runPipeline = (knowledge: TryDeps['knowledge']) =>
-        runTryPipeline(input, { ...built, knowledge });
+      const runPipeline = (knowledge: TryDeps['knowledge'], context?: TryRunContext) =>
+        runTryPipeline(input, {
+          ...built,
+          knowledge,
+          // Có sản phẩm thật → bộ nhận diện mẫu nhận ra đúng tên sản phẩm của shop (thay danh sách mẫu cố định).
+          extractor:
+            context && context.productNames.length > 0 && !deps.buildDeps
+              ? createDemoExtractor({ productNames: context.productNames })
+              : built.extractor,
+        });
       const { value, source } = deps.knowledgeRunner
         ? await deps.knowledgeRunner(session, built.knowledge, runPipeline)
         : { value: await runPipeline(built.knowledge), source: 'demo' as const };
