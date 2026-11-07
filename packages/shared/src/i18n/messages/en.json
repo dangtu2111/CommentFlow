@@ -1929,7 +1929,8 @@
           "notPermitted": "Shopify says the app is not allowed for this store. The app and the store must belong to the SAME organization in the Dev Dashboard, and the app must be installed on the store.",
           "catalogDenied": "A token was issued (Client ID and secret are CORRECT), but Shopify refused to read products. Usually the app lacks the read_products and read_inventory scopes, or no version with those scopes was released / the app was not reinstalled after the scope change. In Dev Dashboard › app › Versions: add the scopes, release a version, then reinstall the app on the store.",
           "rateLimited": "Shopify is rate limiting. Try again in a few minutes.",
-          "temporary": "Temporary error talking to Shopify (network or Shopify server). Try again in a few minutes."
+          "temporary": "Temporary error talking to Shopify (network or Shopify server). Try again in a few minutes.",
+          "noScopesGranted": "Shopify issued a token but it carries NO scopes at all (empty scope list), so products cannot be read. The app declares scopes but they were not installed/updated on this store. In the Dev Dashboard release the version with the scopes; then in the store’s Shopify Admin › Settings › Apps and sales channels open the app and accept/update the permissions (or uninstall and reinstall the app)."
         }
       },
       "notConnected": "Not connected",

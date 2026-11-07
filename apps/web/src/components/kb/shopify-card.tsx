@@ -80,7 +80,7 @@ export async function ShopifyCard({
       : t('hub.notConnected');
   const summary = store?.lastSyncSummary ?? {};
   const resultKey = store?.lastSyncResult ?? null;
-  const reasonKey = resultKey === 'ok' ? null : shopifyReasonKey(summary.reason);
+  const reasonKey = resultKey === 'ok' ? null : shopifyReasonKey(summary.reason, summary.scope);
 
   return (
     <section className={CARD} aria-labelledby="hub-shopify">

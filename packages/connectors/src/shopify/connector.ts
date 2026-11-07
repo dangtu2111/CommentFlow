@@ -132,7 +132,12 @@ const policiesDataSchema = z.object({
 const envelopeSchema = z.object({
   data: z.unknown().optional(),
   errors: z
-    .array(z.object({ extensions: z.object({ code: z.string() }).partial().optional() }))
+    .array(
+      z.object({
+        message: z.string().optional(),
+        extensions: z.object({ code: z.string() }).partial().optional(),
+      }),
+    )
     .optional(),
   extensions: z
     .object({
@@ -319,12 +324,27 @@ export function createShopifyConnector(options: ShopifyConnectorOptions): Shopif
     return fail('UNKNOWN', 'shopify_http_error');
   }
 
+  /**
+   * Trường và quyền mà Shopify báo thiếu trong lỗi ACCESS_DENIED (ví dụ "Access denied for onlineStoreUrl field. Required access:
+   * \`read_publications\`") → hậu tố `:field_<tên>:scope_<quyền>` để Owner biết cần sửa gì. CHỈ nhận tên trường/tên quyền theo
+   * danh sách trắng ký tự; không bao giờ đưa nguyên thông điệp vào lỗi/log.
+   */
+  function accessDeniedDetail(envelope: Envelope): string {
+    const message =
+      (envelope.errors ?? []).find((e) => e.extensions?.code === 'ACCESS_DENIED')?.message ?? '';
+    const field = /Access denied for ([A-Za-z0-9_]{1,60}) field/.exec(message)?.[1];
+    const scope = /`((?:read|write)_[a-z0-9_]{1,60})`/.exec(message)?.[1];
+    return `${field ? `:field_${field}` : ''}${scope ? `:scope_${scope}` : ''}`;
+  }
+
   function failureOfGraphql(envelope: Envelope): PlatformError {
     const codes = (envelope.errors ?? []).map((e) => e.extensions?.code);
     if (codes.includes('THROTTLED')) {
       return fail('RATE_LIMIT', 'shopify_throttled', throttledRetrySeconds(envelope));
     }
-    if (codes.includes('ACCESS_DENIED')) return fail('PERMISSION', 'shopify_access_denied');
+    if (codes.includes('ACCESS_DENIED')) {
+      return fail('PERMISSION', `shopify_access_denied${accessDeniedDetail(envelope)}`);
+    }
     return fail('UNKNOWN', 'shopify_graphql_error');
   }
 

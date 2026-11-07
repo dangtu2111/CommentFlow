@@ -1,6 +1,6 @@
 import { PlatformError, TokenDecryptError, TokenKeyMissingError } from '@flow/connectors';
 import { describe, expect, it, vi } from 'vitest';
-import { reasonOf, runShopifySync, type ShopifySyncDeps } from './shopify-sync';
+import { reasonOf, runShopifySync, type ShopifySyncDeps, scopeOf } from './shopify-sync';
 
 const STORED = {
   shopDomain: 'demo-shop.myshopify.com',
@@ -15,7 +15,10 @@ function setup(over: Partial<ShopifySyncDeps> = {}) {
   const record = vi.fn().mockResolvedValue(undefined);
   const apply = vi.fn().mockResolvedValue(SUMMARY);
   const fetchCatalog = vi.fn().mockResolvedValue(CATALOG);
-  const exchange = vi.fn().mockResolvedValue('shpat_exchanged_token');
+  const exchange = vi.fn().mockResolvedValue({
+    accessToken: 'shpat_exchanged_token',
+    scope: 'read_products,read_inventory',
+  });
   const warn = vi.fn();
   const deps: ShopifySyncDeps = {
     enabled: true,
@@ -32,6 +35,14 @@ function setup(over: Partial<ShopifySyncDeps> = {}) {
   };
   return { deps, record, apply, fetchCatalog, warn, exchange };
 }
+
+describe('scopeOf', () => {
+  it('giữ chữ thường/số/_/, và lọc mọi ký tự lạ; cắt 300 ký tự', () => {
+    expect(scopeOf('read_products,Read_Inventory')).toBe('read_products,read_inventory');
+    expect(scopeOf('read_products <script>x</script>')).toBe('read_productsscriptxscript');
+    expect(scopeOf('a'.repeat(500))).toHaveLength(300);
+  });
+});
 
 describe('reasonOf', () => {
   it('ghép bước:mã, lọc ký tự lạ (không để lọt secret/dấu cách) và cắt tối đa 120 ký tự', () => {
@@ -54,7 +65,10 @@ describe('runShopifySync', () => {
     );
     expect(fetchCatalog).toHaveBeenCalledWith('demo-shop.myshopify.com', 'shpat_exchanged_token');
     expect(apply).toHaveBeenCalledTimes(1);
-    expect(record).toHaveBeenCalledWith('ok', SUMMARY);
+    expect(record).toHaveBeenCalledWith('ok', {
+      ...SUMMARY,
+      scope: 'read_products,read_inventory',
+    });
   });
 
   it('cờ tắt → unavailable, KHÔNG đọc thông tin xác thực, KHÔNG gọi Shopify', async () => {
@@ -86,7 +100,10 @@ describe('runShopifySync', () => {
     });
     expect(await runShopifySync(deps)).toBe(expected);
     expect(apply).not.toHaveBeenCalled();
-    expect(record).toHaveBeenCalledWith(expected, { reason: `catalog:${code}` });
+    expect(record).toHaveBeenCalledWith(expected, {
+      reason: `catalog:${code}`,
+      scope: 'read_products,read_inventory',
+    });
   });
 
   it.each([
@@ -130,7 +147,10 @@ describe('runShopifySync', () => {
       },
     });
     expect(await runShopifySync(deps)).toBe('error');
-    expect(record).toHaveBeenCalledWith('error', { reason: 'catalog:unknown' });
+    expect(record).toHaveBeenCalledWith('error', {
+      reason: 'catalog:unknown',
+      scope: 'read_products,read_inventory',
+    });
     const logged = JSON.stringify(warn.mock.calls);
     expect(logged).not.toContain('shpss_client_secret');
     expect(logged).not.toContain('shpat_exchanged_token');

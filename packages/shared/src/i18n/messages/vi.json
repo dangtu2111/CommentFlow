@@ -1929,7 +1929,8 @@
           "notPermitted": "Shopify báo ứng dụng không được phép dùng cho cửa hàng này. Ứng dụng và cửa hàng phải thuộc CÙNG một tổ chức trong Dev Dashboard, và ứng dụng phải đã cài vào cửa hàng.",
           "catalogDenied": "Đã đổi được token (Client ID và secret ĐÚNG), nhưng Shopify từ chối khi đọc sản phẩm. Thường là ứng dụng chưa được cấp quyền read_products và read_inventory, hoặc chưa phát hành phiên bản có các quyền đó / chưa cài lại sau khi đổi quyền. Vào Dev Dashboard › ứng dụng › Versions: thêm quyền, phát hành phiên bản, rồi cài lại ứng dụng vào cửa hàng.",
           "rateLimited": "Shopify đang giới hạn tốc độ. Thử lại sau ít phút.",
-          "temporary": "Lỗi tạm thời khi nói chuyện với Shopify (mạng hoặc máy chủ Shopify). Thử lại sau ít phút."
+          "temporary": "Lỗi tạm thời khi nói chuyện với Shopify (mạng hoặc máy chủ Shopify). Thử lại sau ít phút.",
+          "noScopesGranted": "Shopify đã cấp token nhưng token này KHÔNG mang quyền nào (danh sách quyền rỗng), nên không đọc được sản phẩm. Ứng dụng đã khai báo quyền nhưng chưa được cài/cập nhật quyền trên cửa hàng này. Trong Dev Dashboard, phát hành phiên bản có quyền; rồi vào Shopify Admin của cửa hàng › Cài đặt › Ứng dụng và kênh bán hàng › mở ứng dụng và chấp nhận/cập nhật quyền (hoặc gỡ rồi cài lại ứng dụng)."
         }
       },
       "notConnected": "Chưa kết nối",

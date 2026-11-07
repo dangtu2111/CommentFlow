@@ -23,6 +23,17 @@ describe('shopifyReasonKey', () => {
     expect(shopifyReasonKey(reason)).toBe(expected);
   });
 
+  it('token đổi được nhưng scope RỖNG + bị từ chối đọc → noScopesGranted; có scope → catalogDenied', () => {
+    expect(shopifyReasonKey('catalog:shopify_access_denied:field_products', '')).toBe(
+      'noScopesGranted',
+    );
+    expect(shopifyReasonKey('catalog:shopify_access_denied:field_products', 'read_orders')).toBe(
+      'catalogDenied',
+    );
+    expect(shopifyReasonKey('catalog:shopify_access_denied')).toBe('catalogDenied');
+    expect(shopifyReasonKey('catalog:shopify_http_error', '')).toBe('temporary');
+  });
+
   it('không có / không nhận ra → null (giao diện dùng thông điệp chung)', () => {
     expect(shopifyReasonKey(undefined)).toBeNull();
     expect(shopifyReasonKey('')).toBeNull();

@@ -40,7 +40,11 @@ export type ShopifySyncDeps = {
   /** Giải mã Client secret (AES-GCM, AAD = workspace + khóa "shopify"). */
   decrypt: (ciphertext: Buffer, keyVersion: number) => string;
   /** Đổi Client ID + Client secret lấy token Admin API (luồng client credentials; token sống ~24 giờ nên đổi mỗi lần). */
-  exchange: (shopDomain: string, clientId: string, clientSecret: string) => Promise<string>;
+  exchange: (
+    shopDomain: string,
+    clientId: string,
+    clientSecret: string,
+  ) => Promise<{ accessToken: string; scope: string }>;
   fetchCatalog: (shopDomain: string, accessToken: string) => Promise<ShopifyCatalog>;
   buildPlan: (catalog: ShopifyCatalog) => ImportProductPlan[];
   apply: (plan: ImportProductPlan[]) => Promise<ShopifySyncSummary>;
@@ -66,6 +70,7 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
 
   let result: ShopifySyncResult = 'error';
   let detail: ShopifySyncDetail = {};
+  let grantedScope: string | null = null; // null = chưa đổi được token; '' = token KHÔNG có quyền nào
   let stage: 'decrypt' | 'exchange' | 'catalog' = 'decrypt';
   try {
     let clientSecret: string;
@@ -80,19 +85,30 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
       throw error;
     }
     stage = 'exchange';
-    const accessToken = await deps.exchange(stored.shopDomain, stored.clientId, clientSecret);
+    const exchanged = await deps.exchange(stored.shopDomain, stored.clientId, clientSecret);
+    const accessToken = exchanged.accessToken;
+    grantedScope = scopeOf(exchanged.scope);
     stage = 'catalog';
     const catalog = await deps.fetchCatalog(stored.shopDomain, accessToken);
-    detail = await deps.apply(deps.buildPlan(catalog));
+    detail = {
+      ...(await deps.apply(deps.buildPlan(catalog))),
+      ...(grantedScope === null ? {} : { scope: grantedScope }),
+    };
     result = 'ok';
   } catch (error) {
     detail = {};
     if (isPlatformError(error) && (error.code === 'TOKEN_EXPIRED' || error.code === 'PERMISSION')) {
       result = 'token_invalid';
-      detail = { reason: reasonOf(stage, error.message) };
+      detail = {
+        reason: reasonOf(stage, error.message),
+        ...(grantedScope === null ? {} : { scope: grantedScope }),
+      };
     } else {
       result = 'error';
-      detail = { reason: reasonOf(stage, isPlatformError(error) ? error.code : 'unknown') };
+      detail = {
+        reason: reasonOf(stage, isPlatformError(error) ? error.code : 'unknown'),
+        ...(grantedScope === null ? {} : { scope: grantedScope }),
+      };
       deps.warn({
         event: 'shopify_sync_failed',
         reason: isPlatformError(error) ? error.code : 'unknown',
@@ -101,6 +117,14 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
   }
   await deps.record(result, detail);
   return result;
+}
+
+/** Danh sách quyền token được cấp, lọc ký tự (chỉ chữ thường, số, `_`, `,`) và cắt 300 ký tự — an toàn để lưu và hiển thị. */
+export function scopeOf(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9_,]/g, '')
+    .slice(0, 300);
 }
 
 /**
@@ -136,15 +160,13 @@ export function createShopifySyncHandler(deps: {
             workspaceId,
             channelId: SHOPIFY_TOKEN_KEY,
           }),
-        exchange: async (shopDomain, clientId, clientSecret) =>
-          (
-            await exchangeShopifyClientCredentials({
-              shopDomain,
-              clientId,
-              clientSecret,
-              ...(deps.fetchImpl ? { fetch: deps.fetchImpl } : {}),
-            })
-          ).accessToken,
+        exchange: (shopDomain, clientId, clientSecret) =>
+          exchangeShopifyClientCredentials({
+            shopDomain,
+            clientId,
+            clientSecret,
+            ...(deps.fetchImpl ? { fetch: deps.fetchImpl } : {}),
+          }).then((token) => ({ accessToken: token.accessToken, scope: token.scope })),
         fetchCatalog: (shopDomain, accessToken) =>
           createShopifyConnector({
             shopDomain,

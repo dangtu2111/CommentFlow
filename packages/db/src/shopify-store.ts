@@ -23,7 +23,11 @@ export type ShopifySyncSummary = {
  * Phần ghi kèm kết quả: số liệu khi `ok`, hoặc `reason` (mã lý do KHÔNG chứa bí mật, đã lọc ký tự) khi lỗi — ví dụ
  * `exchange:shopify_invalid_credentials:invalid_client`, `decrypt_failed`.
  */
-export type ShopifySyncDetail = Partial<ShopifySyncSummary> & { reason?: string };
+export type ShopifySyncDetail = Partial<ShopifySyncSummary> & {
+  reason?: string;
+  /** Danh sách quyền token được cấp (`read_products,read_inventory…`, đã lọc ký tự) — để chẩn đoán thiếu quyền. */
+  scope?: string;
+};
 
 export type ShopifyStoreRow = {
   shopDomain: string;
