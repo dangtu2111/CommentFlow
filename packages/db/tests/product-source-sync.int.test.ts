@@ -4,6 +4,7 @@ import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FlowDb } from '../src/client';
 import { applyProductSourceSync } from '../src/queries/product-source-sync';
+import { loadTryProducts } from '../src/queries/try-products';
 import {
   createAdminPool,
   createAppDb,
@@ -142,6 +143,63 @@ describe('FR-052 ghi đồng bộ nguồn Shopify', () => {
       applyProductSourceSync(tx, wsA, 'shopify', plan(99000, 1)),
     );
     expect((await productRows(wsA)).rows[0].locked_fields).toContain('url');
+  });
+
+  it('FR-058 thẻ sản phẩm: ghi từ nguồn, GỘP (khóa nguồn thắng, khóa khác giữ), không có card thì không xóa thẻ', async () => {
+    const withCard = (card: ImportProductPlan['card']): ImportProductPlan[] =>
+      plan(150000, 5).map((p) => ({ ...p, externalId: 'gid://shopify/Product/card', card }));
+    const cardOf = async () =>
+      (
+        await admin.query(
+          `SELECT card FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/card'`,
+          [wsA],
+        )
+      ).rows[0].card;
+    await db.withActor(wsA, owner, (tx) =>
+      applyProductSourceSync(
+        tx,
+        wsA,
+        'shopify',
+        withCard({ material: 'cotton', origin: 'Việt Nam' }),
+      ),
+    );
+    expect(await cardOf()).toEqual({ material: 'cotton', origin: 'Việt Nam' });
+    // Người dùng tự thêm một khóa (bảo hành) — đồng bộ sau không được xóa nó.
+    await admin.query(
+      `UPDATE cf.products SET card = card || '{"warranty":"7 ngày"}'::jsonb
+        WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/card'`,
+      [wsA],
+    );
+    await db.withActor(wsA, owner, (tx) =>
+      applyProductSourceSync(tx, wsA, 'shopify', withCard({ material: 'lụa' })),
+    );
+    expect(await cardOf()).toEqual({ material: 'lụa', origin: 'Việt Nam', warranty: '7 ngày' });
+    await db.withActor(wsA, owner, (tx) =>
+      applyProductSourceSync(tx, wsA, 'shopify', withCard(undefined)),
+    );
+    expect(await cardOf()).toEqual({ material: 'lụa', origin: 'Việt Nam', warranty: '7 ngày' });
+    // Đường đọc cho AI (`loadTryProducts`): có thẻ hợp lệ → trả thẻ; thẻ hỏng (khóa lạ) → bỏ, không ném.
+    const id = (
+      await admin.query(
+        `SELECT id FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/card'`,
+        [wsA],
+      )
+    ).rows[0].id as string;
+    const loaded = await db.withActor(wsA, owner, (tx) => loadTryProducts(tx, wsA, [id]));
+    expect(loaded[0]?.card).toEqual({ material: 'lụa', origin: 'Việt Nam', warranty: '7 ngày' });
+    await admin.query(`UPDATE cf.products SET card = '{"khoa_la":"x"}'::jsonb WHERE id = $1`, [id]);
+    const junk = await db.withActor(wsA, owner, (tx) => loadTryProducts(tx, wsA, [id]));
+    expect(junk[0]).toBeDefined();
+    expect(junk[0]?.card).toBeUndefined();
+    // Dọn: các test sau đếm số sản phẩm của workspace A.
+    await admin.query(
+      `DELETE FROM cf.product_variants WHERE product_id IN (SELECT id FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/card')`,
+      [wsA],
+    );
+    await admin.query(
+      `DELETE FROM cf.products WHERE workspace_id = $1 AND external_id = 'gid://shopify/Product/card'`,
+      [wsA],
+    );
   });
 
   it('workspace khác không thấy dữ liệu; ghi vào B tạo hàng riêng của B', async () => {

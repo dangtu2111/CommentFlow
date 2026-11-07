@@ -4,6 +4,7 @@ import {
   normalizeAttrs,
   productSearchText,
 } from '@flow/shared';
+import { buildShopifyCard } from './card';
 import type { ShopifyCatalog, ShopifyProduct, ShopifyVariant } from './connector';
 
 /** Tối đa 12 chữ số (≈ 10^12 đồng) — chặn số vô lý trước khi ghi cột integer. */
@@ -81,6 +82,13 @@ function toProduct(product: ShopifyProduct, currencyCode: string): ImportProduct
     category: product.productType === '' ? null : product.productType,
     url: httpUrlOrNull(product.onlineStoreUrl),
     imageUrl: httpsUrlOrNull(product.imageUrl),
+    // Thẻ sản phẩm (FR-058): mô tả/tag/loại/metafield; câu có số tiền đã bị loại (giá chỉ lấy từ biến thể).
+    card: buildShopifyCard({
+      description: product.description,
+      tags: product.tags,
+      productType: product.productType,
+      metafields: product.metafields,
+    }),
     // Chỉ tên + SKU + thuộc tính; KHÔNG giá/tồn (nguyên tắc #4, FR-056).
     searchText: productSearchText({
       name: product.title,

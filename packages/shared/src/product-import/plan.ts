@@ -1,4 +1,4 @@
-import { normalizeAttrs } from '../products';
+import { normalizeAttrs, type ProductCard } from '../products';
 import { productSearchText } from '../search';
 import type { ImportRecord } from './validate';
 
@@ -21,6 +21,8 @@ export type ImportProductPlan = {
   url: string | null;
   /** Ảnh đại diện (URL https từ nguồn ngoài); thiếu/`null` = không có ảnh. */
   imageUrl?: string | null;
+  /** Thẻ sản phẩm (FR-058) từ nguồn ngoài; Excel không có. Đồng bộ GỘP vào `products.card` (khóa nguồn thắng, khóa khác giữ). */
+  card?: ProductCard;
   searchText: string;
   priceVnd: number | null;
   compareAtVnd: number | null;

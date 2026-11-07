@@ -71,7 +71,7 @@ export function normalizeAttrs(attrs: Record<string, string>): Record<string, st
 
 const cardText = z.string().max(CARD_VALUE_MAX);
 
-/** Thẻ sản phẩm (FR-058): chất liệu, cách giặt, bảng size, bảo hành, xuất xứ, loại, tag; mỗi giá trị ≤ 600 ký tự. */
+/** Thẻ sản phẩm (FR-058): chất liệu, cách giặt, bảng size, bảo hành, xuất xứ, loại, mô tả, tag; mỗi giá trị ≤ 600 ký tự. */
 export const productCardSchema = z
   .object({
     material: cardText,
@@ -80,6 +80,8 @@ export const productCardSchema = z
     warranty: cardText,
     origin: cardText,
     type: cardText,
+    /** Mô tả ngắn dạng chữ thuần (đồng bộ từ nguồn ngoài, đã loại câu có số tiền); không dùng để lấy giá. */
+    description: cardText,
     tags: z.array(cardText),
   })
   .partial()
@@ -93,6 +95,28 @@ export function parseProductCard(
   const parsed = productCardSchema.safeParse(input);
   if (parsed.success) return { ok: true, card: parsed.data };
   return { ok: false, error: parsed.error.issues.map((issue) => issue.message).join('; ') };
+}
+
+/** Số tiền: `150.000đ`, `99k`, `2tr`, `120 USD`, `$20`… ("5kg" không phải vì `k` đứng liền chữ khác). */
+const MONEY =
+  /(?:\d[\d.,]*\s*(?:đ|₫|vnd|vnđ|nghìn|ngàn|triệu|usd|k|tr)(?![\p{L}\p{N}]))|(?:[$₫€£]\s*\d)/iu;
+
+const collapseSpaces = (text: string): string => text.replace(/\s+/g, ' ').trim();
+
+/**
+ * Làm sạch một giá trị văn bản của thẻ (FR-058): gộp khoảng trắng, LOẠI mọi câu có số tiền (nguyên tắc #4: giá chỉ đọc từ
+ * `products`/`product_variants`, không từ văn bản tự do), cắt ≤ `CARD_VALUE_MAX` ký tự ở ranh giới từ. Hàm thuần.
+ */
+export function cleanCardText(raw: string): string {
+  // Tách câu ở dấu chấm/!/?/; theo sau là khoảng trắng — không tách giữa số ("150.000đ").
+  const kept = collapseSpaces(raw)
+    .split(/(?<=[.!?;])\s+/)
+    .filter((sentence) => !MONEY.test(sentence));
+  const text = collapseSpaces(kept.join(' '));
+  if (text.length <= CARD_VALUE_MAX) return text;
+  const cut = text.slice(0, CARD_VALUE_MAX - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > CARD_VALUE_MAX / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
 }
 
 export type ProductEmbeddingInput = {
@@ -110,7 +134,14 @@ export function productEmbeddingText(product: ProductEmbeddingInput): string {
   const parts: string[] = [product.name];
   if (product.category) parts.push(product.category);
   const card = product.card ?? {};
-  for (const value of [card.type, card.material, card.care, card.sizeChart, card.origin]) {
+  for (const value of [
+    card.type,
+    card.material,
+    card.care,
+    card.sizeChart,
+    card.origin,
+    card.description,
+  ]) {
     if (value) parts.push(value);
   }
   if (card.tags) parts.push(...card.tags);

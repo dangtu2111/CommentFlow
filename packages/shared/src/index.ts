@@ -341,6 +341,7 @@ export {
 } from './product-import/validate';
 export {
   CARD_VALUE_MAX,
+  cleanCardText,
   foldText,
   normalizeAttrs,
   type ProductCard,
