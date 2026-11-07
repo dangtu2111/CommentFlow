@@ -1,11 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
 import { TryAiForm } from '../../../../components/try-ai/try-ai-form';
+import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('tryAi'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('tryAi');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 /**

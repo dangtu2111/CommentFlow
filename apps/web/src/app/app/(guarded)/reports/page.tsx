@@ -3,12 +3,13 @@ import { ReportBody, ReportHead } from '../../../../components/reports/report-bo
 import { TwPage } from '../../../../components/ui/tw-parts';
 import { parseReportRange } from '../../../../lib/report-view';
 import { showSampleData } from '../../../../lib/sample-data';
+import { getBrand } from '../../../../server/brand';
 import { loadReport } from '../../../../server/reports';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('reports'), getTranslations('shell')]);
-  return { title: `${t('title')} · ${tb('brand')}` };
+  const t = await getTranslations('reports');
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 /**

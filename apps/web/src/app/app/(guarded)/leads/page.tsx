@@ -2,12 +2,13 @@ import { getTranslations } from 'next-intl/server';
 import { LeadsView } from '../../../../components/leads/leads-view';
 import { TwPage } from '../../../../components/ui/tw-parts';
 import { showSampleData } from '../../../../lib/sample-data';
+import { getBrand } from '../../../../server/brand';
 import { loadLeadsBoard } from '../../../../server/leads';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('leads'), getTranslations('shell')]);
-  return { title: `${t('title')} · ${tb('brand')}` };
+  const t = await getTranslations('leads');
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 /**

@@ -1,12 +1,13 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
 import { ReadinessView } from '../../../../components/readiness/readiness-view';
+import { getBrand } from '../../../../server/brand';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('readiness'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('readiness');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 /**

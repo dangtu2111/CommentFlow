@@ -2,12 +2,13 @@ import { getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
 import { KbPublishForm } from '../../../../components/kb-publish/kb-publish-form';
 import { PageHeader } from '../../../../components/ui/page-header';
+import { getBrand } from '../../../../server/brand';
 import { kbPublish } from '../../../../server/kb-publish';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('kbPublish'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('kbPublish');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 /**

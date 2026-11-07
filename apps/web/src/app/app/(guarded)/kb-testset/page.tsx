@@ -2,11 +2,12 @@ import { getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
 import { KbTestSetForm } from '../../../../components/kb-testset/kb-testset-form';
 import { PageHeader } from '../../../../components/ui/page-header';
+import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('kbTestset'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('kbTestset');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 /**

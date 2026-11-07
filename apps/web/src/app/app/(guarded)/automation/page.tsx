@@ -6,11 +6,12 @@ import { automationFormDefaults } from '../../../../lib/automation-form';
 import { AUTOMATION_SAMPLE_METRICS } from '../../../../lib/automation-sample';
 import { showSampleData } from '../../../../lib/sample-data';
 import { automationSettings } from '../../../../server/automation-settings';
+import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('automation'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('automation');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;

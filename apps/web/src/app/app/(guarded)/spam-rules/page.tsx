@@ -3,11 +3,12 @@ import { parseSpamView, SpamRulesView } from '../../../../components/spam-rules/
 import { Notice } from '../../../../components/ui/tw-form';
 import { TwPage } from '../../../../components/ui/tw-parts';
 import { showSampleData } from '../../../../lib/sample-data';
+import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('spamRules'), getTranslations('shell')]);
-  return { title: `${t('title')} · ${tb('brand')}` };
+  const t = await getTranslations('spamRules');
+  return { title: `${t('title')} · ${getBrand().name}` };
 }
 
 const BASE_PATH = '/app/spam-rules';

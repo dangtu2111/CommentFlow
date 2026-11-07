@@ -14,6 +14,7 @@ import { UsageMeterCard } from '../../../../components/settings/usage-meter-card
 import { Icon } from '../../../../components/ui/icon';
 import { parseThemeChoice } from '../../../../lib/theme';
 import { getAuthRuntime } from '../../../../server/auth';
+import { getBrand } from '../../../../server/brand';
 import { getDb } from '../../../../server/db';
 import { isAvatarUploadEnabled, resolvePhoneVerify } from '../../../../server/profile-config';
 import { requestContext } from '../../../../server/request-context';
@@ -22,8 +23,8 @@ import { loadSettingsCounts } from '../../../../server/settings-counts';
 import { loadUsageMeterView } from '../../../../server/usage-meter';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('settings'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('settings');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;

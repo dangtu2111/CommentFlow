@@ -1,11 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
 import { ImportWizard } from '../../../../../components/products/import-wizard';
+import { getBrand } from '../../../../../server/brand';
 import { requireAppUser } from '../../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('productImport'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('productImport');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 /** Nhập sản phẩm Excel/CSV (FR-051, US-003): chỉ Owner; Staff nhận 404. */
