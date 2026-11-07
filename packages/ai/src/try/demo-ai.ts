@@ -24,6 +24,13 @@ const ASK_RULES: ReadonlyArray<readonly [string, RegExp]> = [
   ['giảm giá', /\b(giam gia|khuyen mai|voucher|discount|coupon)\b/],
 ];
 
+/** Câu hỏi phí ship/đổi trả/khuyến mãi KHÔNG phải hỏi giá sản phẩm dù có "bao nhiêu"/"giá" (như model thật hiểu). */
+function asksOf(text: string): string[] {
+  const found = ASK_RULES.filter(([, rule]) => rule.test(text)).map(([ask]) => ask);
+  const other = found.some((ask) => ask === 'phí ship' || ask === 'giảm giá' || ask === 'đổi trả');
+  return other ? found.filter((ask) => ask !== 'giá') : found;
+}
+
 function labelOf(text: string): ExtractResult['labels'] {
   if (/\b(loi|te|toi te|lua dao|hoan tien|khieu nai|that vong|complaint)\b/.test(text)) {
     return [{ label: 'complaint' }];
@@ -80,7 +87,7 @@ export function createDemoExtractor(options: { productNames?: readonly string[] 
         product_mentions: mentionsOfProducts(input.text, productNames),
         size,
         color,
-        asks: ASK_RULES.filter(([, rule]) => rule.test(text)).map(([ask]) => ask),
+        asks: asksOf(text),
       };
     },
   };

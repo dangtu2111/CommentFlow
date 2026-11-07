@@ -296,6 +296,7 @@ describe('FR-151 nối decideAction', () => {
     legalUnsourced: false,
     impersonation: false,
     stockStale,
+    injectionSuspected: false,
   });
 
   it('anyStockStale: rỗng → false; có một cũ → true', () => {

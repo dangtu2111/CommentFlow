@@ -38,6 +38,8 @@ export type ExtractSnapshot = {
   size: string | null;
   color: string | null;
   qty: number | null;
+  /** Các ý hỏi model tách ra (chẩn đoán chủ đề). */
+  asks: string[];
 };
 
 export type SampleOutcome =
@@ -46,6 +48,9 @@ export type SampleOutcome =
       id: string;
       label: string;
       action: string;
+      /** Lý do `decideAction` (chẩn đoán lệch hành động). */
+      reason: string;
+      unansweredTopics: string[];
       lang: string;
       reply: string;
       variants: string[];
@@ -85,6 +90,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
           size: result.size,
           color: result.color,
           qty: result.qty,
+          asks: [...result.asks],
         };
         return result;
       },
@@ -113,6 +119,8 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       id: sample.id,
       label: result.label,
       action: result.decision.action,
+      reason: result.decision.reason,
+      unansweredTopics: [...result.decision.unansweredTopics],
       lang: result.draft.lang,
       reply: result.reply,
       variants: result.variants,

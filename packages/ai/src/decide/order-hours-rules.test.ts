@@ -117,6 +117,7 @@ describe('FR-153 withOrderStatusTopic', () => {
         legalUnsourced: false,
         impersonation: false,
         stockStale: false,
+        injectionSuspected: false,
       },
     });
     expect(decision).toMatchObject({

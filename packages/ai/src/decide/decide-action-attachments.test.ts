@@ -6,6 +6,7 @@ const NO_RISK = {
   legalUnsourced: false,
   impersonation: false,
   stockStale: false,
+  injectionSuspected: false,
 } as const;
 
 function base(over: Partial<DecideActionInput> = {}): DecideActionInput {

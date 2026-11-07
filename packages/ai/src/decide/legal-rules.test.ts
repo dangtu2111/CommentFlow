@@ -109,6 +109,7 @@ describe('FR-160 evaluateLegalRules — khách hỏi, nguồn phải có', () =>
         legalUnsourced: risk.legalUnsourced,
         impersonation: false,
         stockStale: false,
+        injectionSuspected: false,
       },
     });
     expect(decision).toMatchObject({ action: 'handoff', reason: 'legal_unsourced' });

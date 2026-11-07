@@ -31,6 +31,11 @@ describe('FR-136 classifyAsk — chủ đề của một ý hỏi', () => {
     ['còn hàng không', 'stock'],
     ['hết hàng chưa', 'stock'],
     ['is it in stock', 'stock'],
+    // Model extract hay rút ý hỏi thành cụm danh từ ngắn (đo thật bằng EVAL-RUNNER): phải vẫn ra chủ đề tồn kho.
+    ['tồn kho', 'stock'],
+    ['số lượng tồn', 'stock'],
+    ['inventory', 'stock'],
+    ['availability', 'stock'],
   ])('%s → %s', (ask, topic) => {
     expect(classifyAsk(ask)).toBe(topic);
   });

@@ -11,7 +11,7 @@ function action(limit = 3) {
 
 describe('FR-054 US-034 bộ câu kiểm thử (mock): đầu vào, hạn mức, kết quả', () => {
   it('chạy cả bộ bằng mock, không trừ lượt gói, báo cổng đạt', async () => {
-    const r = await action()(session, 'ship về Hà Nội bao nhiêu | redirect | 20.000đ');
+    const r = await action()(session, 'ship về Hà Nội bao nhiêu | answer | 20.000đ');
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.summary).toEqual({ total: 1, passed: 1, failed: 0, errored: 0, gate: 'pass' });
