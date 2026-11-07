@@ -1,9 +1,12 @@
 import {
+  type BrandVoiceRow,
   createDbKbSearcher,
   createDbProductKnowledge,
   createDbShopKnowledgeSearch,
   createFixtureEmbedder,
   createKbTryKnowledge,
+  type DraftVoicesByLang,
+  draftVoicesFromRows,
   type Embedder,
   type TryKnowledge,
 } from '@flow/ai';
@@ -12,6 +15,7 @@ import {
   type Database,
   getCurrentVersion,
   type KbVersionRef,
+  listBrandVoices,
   listTryProductNames,
   loadAbbreviationEntries,
   loadTryShopTexts,
@@ -35,6 +39,8 @@ export type TryRunContext = {
   productNames: readonly string[];
   /** Từ điển viết tắt (hệ thống + workspace) để mở "bn", "sz"… trước khi extract/tìm kiếm; rỗng → dùng bản mẫu. */
   abbreviations: Readonly<Record<string, string>>;
+  /** Giọng văn THẬT của workspace theo ngôn ngữ (`brand_voice`); rỗng/thiếu ngôn ngữ → giọng mặc định của ô thử. */
+  voices: DraftVoicesByLang;
 };
 
 export type KnowledgeRunner = <T>(
@@ -68,6 +74,7 @@ export function createKnowledgeRunner(options: {
   productNames?: (tx: Database, workspaceId: string) => Promise<string[]>;
   shopTexts?: (tx: Database, workspaceId: string) => Promise<TryShopText[]>;
   abbreviations?: (tx: Database, workspaceId: string) => Promise<Record<string, string>>;
+  brandVoices?: (tx: Database, workspaceId: string) => Promise<BrandVoiceRow[]>;
   /** Embedding thật (bge-m3 qua `ml`) khi bật `ML_EMBED_ENABLED`; mặc định bản fixture. */
   embedder?: Embedder;
 }): KnowledgeRunner {
@@ -83,9 +90,10 @@ export function createKnowledgeRunner(options: {
       ...(await loadAbbreviationEntries(tx, ws, 'en')),
       ...(await loadAbbreviationEntries(tx, ws, 'vi')),
     }));
+  const brandVoices = options.brandVoices ?? listBrandVoices;
   return async (session, base, run) => {
     const demo = async () => ({
-      value: await run(base, { productNames: [], abbreviations: {} }),
+      value: await run(base, { productNames: [], abbreviations: {}, voices: {} }),
       source: 'demo' as const,
     });
     if ((!options.enabled && !options.productsEnabled) || !session.userId) return demo();
@@ -101,13 +109,18 @@ export function createKnowledgeRunner(options: {
       const products = hasProducts ? createDbProductKnowledge(tx, session.workspaceId) : base;
       const names = hasProducts ? await productNames(tx, session.workspaceId) : [];
       const abbreviationEntries = await abbreviations(tx, session.workspaceId);
+      const voices = draftVoicesFromRows(await brandVoices(tx, session.workspaceId));
       if (!version) {
         const knowledge: TryKnowledge = {
           ...products,
           searchKb: createDbShopKnowledgeSearch(texts),
         };
         return {
-          value: await run(knowledge, { productNames: names, abbreviations: abbreviationEntries }),
+          value: await run(knowledge, {
+            productNames: names,
+            abbreviations: abbreviationEntries,
+            voices,
+          }),
           source: 'shop' as const,
         };
       }
@@ -120,7 +133,11 @@ export function createKnowledgeRunner(options: {
         base: products,
       });
       return {
-        value: await run(knowledge, { productNames: names, abbreviations: abbreviationEntries }),
+        value: await run(knowledge, {
+          productNames: names,
+          abbreviations: abbreviationEntries,
+          voices,
+        }),
         source: 'kb' as const,
       };
     });

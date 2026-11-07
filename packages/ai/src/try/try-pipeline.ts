@@ -35,6 +35,7 @@ import { executeRoute } from '../route/execute-route';
 import { type RouteKind, type RouteReason, routeQuery } from '../route/route';
 import { classifyAsk } from '../route/route-topics';
 import { type AutoSendPreview, decideAutoSendPreview } from './auto-send-preview';
+import type { DraftVoicesByLang } from './brand-voice';
 
 export const TRY_MAX_CHARS = 1000;
 
@@ -71,6 +72,11 @@ export type TryInput = {
   text: string;
   kbVersion: string;
   voice: DraftVoice;
+  /**
+   * Giọng văn THẬT của workspace theo ngôn ngữ (`draftVoicesFromRows`). Ngôn ngữ nhận ra có giọng → dùng giọng đó;
+   * thiếu → quay về `voice` (mặc định). Không truyền = luôn `voice`.
+   */
+  voices?: DraftVoicesByLang;
   /** Cho biết kết quả "nếu Owner bật tự gửi". */
   autoSendEnabled: boolean;
   /**
@@ -191,13 +197,15 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
     risks: { priceConflict: false, legalUnsourced: false, impersonation: false, stockStale: false },
   });
 
+  // Giọng văn: của workspace theo ngôn ngữ nhận ra (brand_voice thật); thiếu → giọng mặc định. Bộ soạn và bộ chặn dùng CÙNG giọng.
+  const voice = (lang === 'other' ? undefined : input.voices?.[lang]) ?? input.voice;
   const draft = await deps.drafter.draft({
     workspaceId: input.workspaceId,
     question: masked,
     lang: lang === 'other' ? 'vi' : lang,
     kbVersion: input.kbVersion,
     ...(input.variantCount === undefined ? {} : { variantCount: input.variantCount }),
-    voice: input.voice,
+    voice,
     sources: found.map((c) => ({ id: c.id, kind: c.kind, text: c.text, relevance: c.score })),
     decision,
   });
@@ -208,7 +216,7 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
   const replyGuard = checkReplyGuard({
     reply: draft.reply,
     lang: lang === 'other' ? 'vi' : lang,
-    voice: input.voice,
+    voice,
     claims: draft.claims,
     allowedSourceIds: new Set(
       found.filter((c) => c.score >= DEFAULT_MIN_RELEVANCE).map((c) => c.id),

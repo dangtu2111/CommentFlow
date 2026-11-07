@@ -47,6 +47,7 @@ export function TryAiForm({ initialText = '' }: { initialText?: string }) {
       {state.status === 'done' && state.ok ? (
         <>
           <p className="muted">{t(`knowledge.${state.knowledge}`)}</p>
+          <p className="muted">{t(`voice.${state.voice}`)}</p>
           <p className="muted">{llmStatusText(t, state.llm)}</p>
           <TryAiResultView result={state.result} />
         </>

@@ -2000,6 +2000,10 @@
       "shop": "Nguồn: sản phẩm thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm); chính sách vẫn là đoạn mẫu",
       "kb": "Nguồn: kiến thức đã xuất bản của shop — điểm 0–1 là độ liên quan do hệ thống tính"
     },
+    "voice": {
+      "shop": "Giọng văn: của shop (đọc từ mục Giọng văn đã lưu cho ngôn ngữ này)",
+      "demo": "Giọng văn: mẫu (shop chưa lưu giọng văn cho ngôn ngữ này)"
+    },
     "errors": {
       "empty": "Hãy nhập một bình luận mẫu.",
       "too_long": "Bình luận quá dài (tối đa {max} ký tự).",
