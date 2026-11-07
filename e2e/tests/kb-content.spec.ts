@@ -162,6 +162,7 @@ function runScenarios(locale: Locale) {
       await expect(page).toHaveURL(/n=/);
       await page.goto('/app/kb/faq');
       await expect(page.locator(`input[name=question][value="${question}"]`)).toHaveCount(1);
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp sau thao tác thêm ngay trước (uiWrite 1 giây)
       await page
         .locator('section')
         .filter({ has: page.locator(`input[name=question][value="${question}"]`) })
