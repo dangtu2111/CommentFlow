@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type ActionBrief,
   buildDraftMessages,
+  clampVariantCount,
   type DraftInput,
   describeAddress,
 } from './draft-prompt';
@@ -222,5 +223,30 @@ describe('FR-029 đầu vào đã che PII', () => {
     const user =
       buildDraftMessages(base({ question: maskPii('a'.repeat(5000)) }))[2]?.content ?? '';
     expect(user.length).toBeLessThan(2500);
+  });
+});
+
+describe('Q-LLM2 số biến thể cấu hình được (variantCount)', () => {
+  const userBlock = (over: Partial<DraftInput>) =>
+    String(buildDraftMessages(base(over)).at(-1)?.content);
+
+  it('không đặt → prompt không có dòng "Số biến thể" (mặc định 2–4 ở khối hệ thống)', () => {
+    expect(userBlock({})).not.toContain('Số biến thể');
+    expect(String(buildDraftMessages(base())[0]?.content)).toContain('2–4');
+  });
+
+  it('đặt n → dòng "Số biến thể: n" nằm ở khối người dùng (khối hệ thống vẫn cố định để trúng cache)', () => {
+    expect(userBlock({ variantCount: 2 })).toContain('Số biến thể: 2');
+    expect(String(buildDraftMessages(base({ variantCount: 2 }))[0]?.content)).toBe(
+      String(buildDraftMessages(base({ variantCount: 4 }))[0]?.content),
+    );
+  });
+
+  it('kẹp về 0–4, làm tròn xuống, giá trị lạ → 0', () => {
+    expect(clampVariantCount(9)).toBe(4);
+    expect(clampVariantCount(-3)).toBe(0);
+    expect(clampVariantCount(2.9)).toBe(2);
+    expect(clampVariantCount(Number.NaN)).toBe(0);
+    expect(userBlock({ variantCount: 99 })).toContain('Số biến thể: 4');
   });
 });

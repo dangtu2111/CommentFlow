@@ -35,6 +35,8 @@ export const aiUsage = cf.table(
     inputTokens: integer('input_tokens').notNull().default(0),
     outputTokens: integer('output_tokens').notNull().default(0),
     cachedTokens: integer('cached_tokens').notNull().default(0),
+    /** Token suy luận (đã nằm trong `outputTokens`); để kiểm `reasoning_effort` thấp nhất cho ≈ 0 (migration 0069). */
+    reasoningTokens: integer('reasoning_tokens').notNull().default(0),
     costUsd: numeric('cost_usd', { precision: 12, scale: 6 }).notNull().default('0'),
     cacheHit: boolean('cache_hit').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

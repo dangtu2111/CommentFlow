@@ -24,6 +24,7 @@ const result = (costUsd = 0.02): LlmCallResult => ({
   inputTokens: 10,
   outputTokens: 10,
   cachedTokens: 0,
+  reasoningTokens: 0,
   costUsd,
   cacheHit: false,
   usageId: 'u1',

@@ -48,6 +48,8 @@ export type LlmCallResult = {
   inputTokens: number;
   outputTokens: number;
   cachedTokens: number;
+  /** Token suy luận (đã nằm trong `outputTokens`); 0 nếu nhà cung cấp không trả. */
+  reasoningTokens: number;
   costUsd: number;
   cacheHit: boolean;
   usageId: string;
@@ -115,6 +117,9 @@ const responseSchema = z.object({
       completion_tokens: z.number().int().nonnegative().default(0),
       prompt_tokens_details: z
         .object({ cached_tokens: z.number().int().nonnegative().optional() })
+        .nullish(),
+      completion_tokens_details: z
+        .object({ reasoning_tokens: z.number().int().nonnegative().optional() })
         .nullish(),
     })
     .optional(),
@@ -223,6 +228,7 @@ export function createLlmClient(options: LlmClientOptions) {
         inputTokens: body.usage?.prompt_tokens ?? 0,
         outputTokens: body.usage?.completion_tokens ?? 0,
         cachedTokens: body.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+        reasoningTokens: body.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
         costUsd: costFromHeaders(response.headers),
         // LiteLLM chỉ gắn x-litellm-cache-key khi trả từ cache.
         cacheHit: response.headers.has('x-litellm-cache-key'),
@@ -244,6 +250,7 @@ export function createLlmClient(options: LlmClientOptions) {
               inputTokens: result.inputTokens,
               outputTokens: result.outputTokens,
               cachedTokens: result.cachedTokens,
+              reasoningTokens: result.reasoningTokens,
               costUsd: result.costUsd.toFixed(6),
               cacheHit: result.cacheHit,
             })
