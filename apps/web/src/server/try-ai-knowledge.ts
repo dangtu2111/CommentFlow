@@ -4,6 +4,7 @@ import {
   createDbShopKnowledgeSearch,
   createFixtureEmbedder,
   createKbTryKnowledge,
+  type Embedder,
   type TryKnowledge,
 } from '@flow/ai';
 import {
@@ -67,6 +68,8 @@ export function createKnowledgeRunner(options: {
   productNames?: (tx: Database, workspaceId: string) => Promise<string[]>;
   shopTexts?: (tx: Database, workspaceId: string) => Promise<TryShopText[]>;
   abbreviations?: (tx: Database, workspaceId: string) => Promise<Record<string, string>>;
+  /** Embedding thật (bge-m3 qua `ml`) khi bật `ML_EMBED_ENABLED`; mặc định bản fixture. */
+  embedder?: Embedder;
 }): KnowledgeRunner {
   const currentVersion = options.currentVersion ?? getCurrentVersion;
   const countProducts =
@@ -113,7 +116,7 @@ export function createKnowledgeRunner(options: {
           workspaceId: session.workspaceId,
           versionId: version.id,
         }),
-        embedder: createFixtureEmbedder(),
+        embedder: options.embedder ?? createFixtureEmbedder(),
         base: products,
       });
       return {

@@ -189,7 +189,15 @@ services:
       context: ../services/ml
     image: cf/ml:local
     restart: unless-stopped
-    mem_limit: 512m
+    # bge-m3 (embedding) cần ~2,5–3 GB RAM khi nạp; không bật ML_EMBED_ENABLED thì dịch vụ chỉ dùng vài chục MB.
+    mem_limit: 3g
+    environment:
+      # Mặc định TẮT: không nạp model nặng ngoài ý muốn. Bật bằng ML_EMBED_ENABLED=true trong .env.cf-dev.
+      ML_EMBED_ENABLED: ${ML_EMBED_ENABLED:-false}
+      # Tùy chọn: đặt thì /embed bắt buộc `Authorization: Bearer <token>` (app dùng cùng giá trị ở ML_API_TOKEN).
+      ML_API_TOKEN: ${ML_API_TOKEN:-}
+    volumes:
+      - ml-models:/models
     healthcheck:
       test:
         [
@@ -255,3 +263,4 @@ volumes:
   chdata:
   chlogs:
   s3data:
+  ml-models: # cache mô hình bge-m3 (tải một lần ~2,3 GB)
