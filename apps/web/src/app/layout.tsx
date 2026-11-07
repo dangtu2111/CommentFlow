@@ -26,6 +26,9 @@ import '../styles/tailwind.css';
 import '../styles/theme-dark.css';
 import { parseThemeChoice, THEME_COOKIE, THEME_INIT_SCRIPT, themeAttrFor } from '../lib/theme';
 
+/** Tên chiến lược nạp script của next/script (hằng số để quy tắc i18n không coi là chuỗi hiển thị). */
+const THEME_SCRIPT_STRATEGY = 'beforeInteractive' as const;
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const [locale, cookieStore] = await Promise.all([getLocale(), cookies()]);
   const theme = themeAttrFor(parseThemeChoice(cookieStore.get(THEME_COOKIE)?.value));
@@ -34,7 +37,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang={locale} data-theme={theme} suppressHydrationWarning>
       <body>
         {/* beforeInteractive: Next chèn vào <head> khi render phía máy chủ; thẻ <script> thường trong component gây cảnh báo React 19 */}
-        <Script id="theme-init" strategy="beforeInteractive">
+        <Script id="theme-init" strategy={THEME_SCRIPT_STRATEGY}>
           {THEME_INIT_SCRIPT}
         </Script>
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
