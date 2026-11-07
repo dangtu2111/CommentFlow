@@ -9,6 +9,7 @@ import {
   seedMember,
   seedUser,
   seedWorkspace,
+  setActiveEmbeddingModel,
 } from './helpers';
 
 /**
@@ -35,6 +36,7 @@ const vec = (n: number, x = 0.1): string => `[${Array.from({ length: n }, () => 
 
 beforeAll(async () => {
   admin = createAdminPool();
+  await setActiveEmbeddingModel(admin, 'test-model');
   db = createAppDb(3);
   ws = await seedWorkspace(admin);
   other = await seedWorkspace(admin);

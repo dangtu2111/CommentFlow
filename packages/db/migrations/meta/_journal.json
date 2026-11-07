@@ -554,6 +554,13 @@
       "when": 1794781600000,
       "tag": "0078_products_name_embedding_model",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1794868000000,
+      "tag": "0079_embedding_active_model",
+      "breakpoints": true
     }
   ]
 }

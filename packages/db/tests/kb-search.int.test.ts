@@ -17,6 +17,7 @@ import {
   seedMember,
   seedUser,
   seedWorkspace,
+  setActiveEmbeddingModel,
 } from './helpers';
 
 /** KB-SEARCH-FTS (FR-057, FR-127, FR-135): trigger tsv/search_norm, tìm lai RRF, tìm sản phẩm, cache theo rev. */
@@ -114,6 +115,7 @@ const search = (
 
 beforeAll(async () => {
   admin = createAdminPool();
+  await setActiveEmbeddingModel(admin, 'bge-m3');
   db = createAppDb();
   wsA = await seedWorkspace(admin);
   wsB = await seedWorkspace(admin);
