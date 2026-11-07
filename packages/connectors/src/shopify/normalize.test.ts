@@ -153,12 +153,57 @@ describe('FR-052 buildShopifyImportPlan', () => {
     expect(plan?.variants.map((v) => v.stock)).toEqual([null, null]);
   });
 
-  it('FR-052 tiền tệ khác VND → mọi giá null (AI không tự quy đổi)', () => {
+  it('Q-SFP1 tiền tệ khác VND → cột VND để null (không quy đổi), giá nằm ở đơn vị nhỏ nhất của tiền tệ gốc', () => {
     const [plan] = buildShopifyImportPlan(
-      catalog([product({ variants: [variant({ compareAtPrice: '20.00' })] })], 'USD'),
+      catalog(
+        [
+          product({
+            variants: [
+              variant({
+                id: 'gid://shopify/ProductVariant/1',
+                price: '12.99',
+                compareAtPrice: '20.00',
+              }),
+              variant({ id: 'gid://shopify/ProductVariant/2', price: '9.5', compareAtPrice: null }),
+            ],
+          }),
+        ],
+        'USD',
+      ),
     );
-    expect(plan).toMatchObject({ priceVnd: null, compareAtVnd: null });
-    expect(plan?.variants[0]).toMatchObject({ priceVnd: null, compareAtVnd: null });
+    expect(plan).toMatchObject({
+      currencyCode: 'USD',
+      priceVnd: null,
+      compareAtVnd: null,
+      priceMinor: 950, // thấp nhất
+      compareAtMinor: null,
+    });
+    expect(plan?.variants[0]).toMatchObject({
+      currencyCode: 'USD',
+      priceVnd: null,
+      compareAtVnd: null,
+      priceMinor: 1299,
+      compareAtMinor: 2000,
+    });
+    expect(plan?.variants[1]).toMatchObject({ priceMinor: 950, compareAtMinor: null });
+  });
+
+  it('Q-SFP1 giá USD sai dạng/quá độ chính xác → priceMinor null (không làm tròn ngầm)', () => {
+    const [plan] = buildShopifyImportPlan(
+      catalog([product({ variants: [variant({ price: '12.999' })] })], 'USD'),
+    );
+    expect(plan?.variants[0]).toMatchObject({ priceMinor: null, priceVnd: null });
+    expect(plan?.priceMinor).toBeNull();
+  });
+
+  it('Q-SFP1 cửa hàng VND → currencyCode VND và KHÔNG có giá đơn vị nhỏ nhất', () => {
+    const [plan] = buildShopifyImportPlan(catalog([product()], 'VND'));
+    expect(plan).toMatchObject({ currencyCode: 'VND', priceMinor: null, compareAtMinor: null });
+    expect(plan?.variants[0]).toMatchObject({
+      currencyCode: 'VND',
+      priceVnd: 150000,
+      priceMinor: null,
+    });
   });
 
   it('FR-052 bỏ tùy chọn mặc định "Default Title"; biến thể không thuộc tính', () => {

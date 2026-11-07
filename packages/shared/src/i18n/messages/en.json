@@ -1883,7 +1883,7 @@
         },
         "connectedLine": "Store {domain} · read-only products, prices and stock",
         "lastSynced": "Last synced: {time}",
-        "currencyWarning": "Your Shopify store uses {currency}. CommentFlow only reads prices in VND and does NOT convert currencies, so {variants} variants have no price; when a customer asks for a price, the AI hands over to your staff instead of quoting one. Names, stock and product details still sync as usual.",
+        "currencyNotice": "Your Shopify store uses {currency}. CommentFlow keeps prices exactly as Shopify has them and does NOT convert to VND: the AI quotes that figure with its currency code. Because the send-time price check does not support foreign currencies yet, replies that quote a {currency} price are not auto-sent and wait for staff approval. {variants} variants have no readable price.",
         "connect": "Connect Shopify",
         "reconnect": "Re-enter Client ID/secret",
         "disconnect": "Disconnect",
@@ -2060,6 +2060,7 @@
       "policy_never": "This kind of reply is never auto-sent",
       "low_confidence": "Confidence is below the threshold",
       "guard_money": "Contains a price/date/link/phone not in the sources",
+      "foreign_price": "Quotes a foreign-currency price — needs staff approval (send-time price check not supported yet)",
       "empty_reply": "No reply drafted"
     }
   },

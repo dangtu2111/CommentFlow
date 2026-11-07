@@ -4,7 +4,7 @@
 
 ## Việc
 
-Mã gap matrix: `SHOPIFY-NON-VND` (mới) · Spec: FR-052, FR-129, nguyên tắc #4.
+Mã gap matrix: `SHOPIFY-FOREIGN-PRICE` (mới) · Spec: FR-052, FR-129, nguyên tắc #4.
 
 **Tóm tắt:** Cửa hàng Shopify dùng USD/EUR… hiện được đồng bộ với giá trống nhưng Owner không được báo và AI có thể trả lời câu hỏi giá bằng "chưa có giá". Nhánh này (1) báo Owner trên thẻ Shopify, (2) làm AI chuyển hướng cho nhân viên khi khách hỏi giá mà sản phẩm chưa có giá, không quy đổi tỷ giá. Rủi ro thấp: thêm cảnh báo + chặn trả lời; không migration.
 

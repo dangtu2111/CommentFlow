@@ -4,7 +4,7 @@ import {
   loadTryProducts,
   type TryProduct,
 } from '@flow/db/runtime';
-import { cleanCardText, type ProductCard, unsafeMarkMasked } from '@flow/shared';
+import { cleanCardText, formatMinorAmount, type ProductCard, unsafeMarkMasked } from '@flow/shared';
 import type { VariantAxis } from '../decide/decide-action';
 import type { TryCandidate, TryKnowledge } from './try-pipeline';
 
@@ -30,7 +30,36 @@ export function missingAxesOf(product: TryProduct): VariantAxis[] {
 
 /** Có ít nhất một giá (sản phẩm hoặc biến thể). Không có → không trả lời được câu hỏi giá (nguyên tắc #4, không quy đổi). */
 export const hasPrice = (product: TryProduct): boolean =>
-  product.priceVnd !== null || product.variants.some((v) => v.priceVnd !== null);
+  product.priceVnd !== null ||
+  product.variants.some((v) => v.priceVnd !== null) ||
+  foreignPrices(product).length > 0;
+
+/** Cửa hàng nguồn dùng tiền tệ khác VND (Q-SFP1): giá theo đơn vị nhỏ nhất của tiền tệ đó, không quy đổi. */
+const isForeign = (currencyCode: string | undefined): currencyCode is string =>
+  currencyCode !== undefined && currencyCode !== 'VND';
+
+/** Mọi giá ngoại tệ có thật của sản phẩm (cấp sản phẩm + biến thể). */
+function foreignPrices(product: TryProduct): number[] {
+  if (!isForeign(product.currencyCode)) return [];
+  return [product.priceMinor, ...product.variants.map((v) => v.priceMinor)].filter(
+    (value): value is number => typeof value === 'number',
+  );
+}
+
+/** Giá hiển thị của MỘT mức giá: VND → `150.000đ`; ngoại tệ → `12.99 USD`; thiếu/hỏng → `null` (không bịa số). */
+function priceLabel(
+  currencyCode: string | undefined,
+  priceVnd: number | null,
+  priceMinor: number | null | undefined,
+): string | null {
+  if (isForeign(currencyCode)) {
+    return typeof priceMinor === 'number' ? formatMinorAmount(priceMinor, currencyCode) : null;
+  }
+  return priceVnd === null ? null : formatVnd(priceVnd);
+}
+
+/** Có dùng giá ngoại tệ trong câu nguồn không (để chặn tự gửi). */
+export const usesForeignPrice = (product: TryProduct): boolean => foreignPrices(product).length > 0;
 
 const stockText = (stock: number | null): string | null =>
   stock === null ? null : stock > 0 ? `còn ${stock}` : 'hết hàng';
@@ -70,19 +99,30 @@ export function productFactText(product: TryProduct): string {
 }
 
 function productCommerceText(product: TryProduct): string {
-  const prices = product.variants.flatMap((v) => (v.priceVnd === null ? [] : [v.priceVnd]));
-  const base = product.priceVnd ?? (prices.length > 0 ? Math.min(...prices) : null);
+  const currency = product.currencyCode;
+  const foreign = isForeign(currency);
+  // Mỗi mức giá (sản phẩm hoặc biến thể) đổi sang chữ MỘT lần; hỏng/thiếu → `null` (không bịa số).
+  const levelText = (priceVnd: number | null, priceMinor: number | null | undefined) =>
+    priceLabel(currency, priceVnd, priceMinor);
+  const amounts = product.variants.flatMap((v) => {
+    const value = foreign ? v.priceMinor : v.priceVnd;
+    return typeof value === 'number' ? [value] : [];
+  });
+  const own = foreign ? product.priceMinor : product.priceVnd;
+  const base = typeof own === 'number' ? own : amounts.length > 0 ? Math.min(...amounts) : null;
+  const baseText = base === null ? null : foreign ? levelText(null, base) : levelText(base, null);
   const head =
-    base === null ? `${product.name}: chưa có giá` : `${product.name}: giá ${formatVnd(base)}`;
+    baseText === null ? `${product.name}: chưa có giá` : `${product.name}: giá ${baseText}`;
   const detailed = product.variants.filter((v) => Object.keys(v.attrs).length > 0);
   if (detailed.length === 0) {
     const stock = stockText(product.stock);
     return stock === null ? `${head}.` : `${head}; ${stock}.`;
   }
   const lines = detailed.map((v) => {
+    const price = levelText(v.priceVnd, v.priceMinor);
     const parts = [
       variantLabel(v.attrs),
-      v.priceVnd === null ? null : `giá ${formatVnd(v.priceVnd)}`,
+      price === null ? null : `giá ${price}`,
       stockText(v.stock),
     ].filter((part): part is string => part !== null);
     return parts.join(' ');
@@ -122,6 +162,7 @@ export function createDbProductKnowledge(tx: Database, workspaceId: string): DbP
           score: 1,
           topics: ['product_info', 'size'],
           ...(hasPrice(product) ? {} : { priceUnknown: true }),
+          ...(usesForeignPrice(product) ? { foreignPrice: true } : {}),
         }),
       );
     },

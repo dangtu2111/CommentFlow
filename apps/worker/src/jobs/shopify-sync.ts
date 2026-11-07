@@ -132,20 +132,20 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
 }
 
 /**
- * Cửa hàng dùng tiền tệ khác VND: giá để trống (đã làm ở `parseShopifyMoney`), KHÔNG quy đổi (nguyên tắc #4). Ghi mã tiền tệ
- * (chỉ 3 chữ cái hoa, còn lại `OTHER`) và số biến thể chưa có giá để trang kết nối cảnh báo Owner. VND → không ghi gì.
+ * Cửa hàng dùng tiền tệ khác VND: giá được GIỮ theo tiền tệ gốc (đơn vị nhỏ nhất), KHÔNG quy đổi (nguyên tắc #4, Q-SFP1). Ghi mã tiền tệ
+ * (chỉ 3 chữ cái hoa, còn lại `OTHER`) và số biến thể chưa đọc được giá để trang kết nối thông báo Owner. VND → không ghi gì.
  */
 export function currencyWarning(
   currencyCode: string,
-  plan: ReadonlyArray<{ variants: ReadonlyArray<{ priceVnd: number | null }> }>,
-): { currencyUnsupported: string; variantsWithoutPrice: number } | Record<string, never> {
+  plan: ReadonlyArray<{ variants: ReadonlyArray<{ priceMinor?: number | null }> }>,
+): { foreignCurrency: string; variantsWithoutPrice: number } | Record<string, never> {
   if (currencyCode === 'VND') return {};
   const variantsWithoutPrice = plan.reduce(
-    (sum, product) => sum + product.variants.filter((variant) => variant.priceVnd === null).length,
+    (sum, product) => sum + product.variants.filter((variant) => variant.priceMinor == null).length,
     0,
   );
   return {
-    currencyUnsupported: /^[A-Z]{3}$/.test(currencyCode) ? currencyCode : 'OTHER',
+    foreignCurrency: /^[A-Z]{3}$/.test(currencyCode) ? currencyCode : 'OTHER',
     variantsWithoutPrice,
   };
 }

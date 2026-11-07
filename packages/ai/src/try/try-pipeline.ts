@@ -56,6 +56,8 @@ export type TryCandidate = {
    * tính là trả lời câu hỏi giá (vẫn trả lời được tồn kho/size…). Thiếu = có giá.
    */
   priceUnknown?: boolean;
+  /** Nguồn này nêu giá theo tiền tệ GỐC khác VND (Q-SFP1): câu dùng nó không được tự gửi (kiểm giá lúc gửi chưa hỗ trợ). */
+  foreignPrice?: boolean;
 };
 
 /** Ngữ cảnh lọc khi tìm kiến thức. */
@@ -290,6 +292,7 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
       draft,
       confidence,
       guardOk: guardResult.ok && replyGuard.ok,
+      foreignPriceUsed: used.some((candidate) => candidate.foreignPrice === true),
     }),
   };
 }

@@ -78,6 +78,52 @@ describe('TRY-AI-REAL lát A — sản phẩm thật', () => {
     expect(productFactText({ ...shirt, card: {} })).toBe(productFactText(shirt));
   });
 
+  it('Q-SFP1 productFactText: tiền tệ khác VND → báo giá đúng như nguồn kèm mã tiền tệ, không quy đổi, không dùng định dạng đồng', () => {
+    const usd = (minor: number | null, stock: number | null = 4) => ({
+      attrs: { size: 'M' },
+      attrsNorm: { size: 'm' },
+      priceVnd: null,
+      currencyCode: 'USD',
+      priceMinor: minor,
+      stock,
+    });
+    const product: TryProduct = {
+      id: 'u1',
+      name: 'Bird Food Blower',
+      priceVnd: null,
+      currencyCode: 'USD',
+      priceMinor: 1299,
+      stock: 9,
+      variants: [usd(1299), { ...usd(1500, 0), attrs: { size: 'L' }, attrsNorm: { size: 'l' } }],
+    };
+    const text = productFactText(product);
+    expect(text).toContain('Bird Food Blower: giá 12.99 USD');
+    expect(text).toContain('size M giá 12.99 USD còn 4');
+    expect(text).toContain('size L giá 15.00 USD hết hàng');
+    expect(text).not.toMatch(/đ(?![\p{L}])|chưa có giá/u);
+    // Sản phẩm không biến thể thật.
+    expect(
+      productFactText({ ...product, variants: [{ ...usd(1299), attrs: {}, attrsNorm: {} }] }),
+    ).toBe('Bird Food Blower: giá 12.99 USD; còn 9.');
+  });
+
+  it('Q-SFP1 productFactText: giá ngoại tệ hỏng/thiếu → chưa có giá (không bịa số); VND không đổi', () => {
+    expect(
+      productFactText({
+        id: 'u2',
+        name: 'Túi',
+        priceVnd: null,
+        currencyCode: 'USD',
+        priceMinor: null,
+        stock: null,
+        variants: [],
+      }),
+    ).toBe('Túi: chưa có giá.');
+    expect(productFactText({ ...shirt, currencyCode: 'VND', priceMinor: null })).toBe(
+      productFactText(shirt),
+    );
+  });
+
   it('mentionsOfProducts: tên trọn vẹn, tên gần đúng, không liên quan', () => {
     const names = ['Áo thun basic', 'Váy hoa nhí vintage', 'Túi'];
     expect(mentionsOfProducts('Áo thun basic giá bao nhiêu?', names)).toEqual(['Áo thun basic']);

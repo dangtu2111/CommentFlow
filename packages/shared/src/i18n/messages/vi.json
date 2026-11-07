@@ -1883,7 +1883,7 @@
         },
         "connectedLine": "Cửa hàng {domain} · chỉ đọc sản phẩm, giá, tồn kho",
         "lastSynced": "Đồng bộ lần cuối: {time}",
-        "currencyWarning": "Cửa hàng Shopify đang dùng tiền tệ {currency}. CommentFlow chỉ đọc giá bằng VND và KHÔNG tự quy đổi tiền tệ, nên {variants} biến thể chưa có giá; khi khách hỏi giá, AI sẽ chuyển hướng cho nhân viên thay vì tự báo giá. Tên, tồn kho và thông tin sản phẩm vẫn đồng bộ bình thường.",
+        "currencyNotice": "Cửa hàng Shopify đang dùng tiền tệ {currency}. CommentFlow giữ giá đúng như Shopify và KHÔNG quy đổi sang VND: AI báo giá đúng con số đó kèm mã tiền tệ. Vì kiểm giá lúc gửi chưa hỗ trợ ngoại tệ, câu trả lời có báo giá {currency} sẽ không tự gửi mà chờ nhân viên duyệt. {variants} biến thể chưa đọc được giá.",
         "connect": "Kết nối Shopify",
         "reconnect": "Nhập lại Client ID/secret",
         "disconnect": "Ngắt kết nối",
@@ -2060,6 +2060,7 @@
       "policy_never": "Loại câu này không bao giờ tự gửi",
       "low_confidence": "Độ tin cậy dưới ngưỡng",
       "guard_money": "Có số tiền/ngày/link/SĐT không có trong nguồn",
+      "foreign_price": "Câu có báo giá ngoại tệ — chờ nhân viên duyệt (kiểm giá lúc gửi chưa hỗ trợ)",
       "empty_reply": "Không có câu trả lời"
     }
   },
