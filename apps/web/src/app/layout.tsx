@@ -3,6 +3,7 @@ import '@fontsource/be-vietnam-pro/500.css';
 import '@fontsource/be-vietnam-pro/600.css';
 import '@fontsource/be-vietnam-pro/700.css';
 import { cookies } from 'next/headers';
+import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -31,11 +32,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     // `data-theme` được script trong <head> đặt lại trước khi vẽ (chế độ "theo hệ thống") nên cần bỏ qua cảnh báo hydrate.
     <html lang={locale} data-theme={theme} suppressHydrationWarning>
-      <head>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: hằng số tĩnh, không ghép dữ liệu người dùng nào */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
       <body>
+        {/* beforeInteractive: Next chèn vào <head> khi render phía máy chủ; thẻ <script> thường trong component gây cảnh báo React 19 */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
