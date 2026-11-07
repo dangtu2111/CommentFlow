@@ -11,23 +11,37 @@ export const KB_HOME: { key: NavItemKey; href: string } = { key: 'kb', href: '/a
 export type KbSubnavGroupKey = 'structure' | 'tuning';
 export type KbSubnavItem = { key: NavItemKey; href: string; group: KbSubnavGroupKey };
 
+/** Mục có trong thiết kế nhưng chưa có trang/chức năng: hiện ở rail dạng vô hiệu ("Sắp có"), không phải liên kết. */
+export type KbSoonItem = { key: 'kbDocs' | 'kbRules' | 'kbDictionary'; group: KbSubnavGroupKey };
+
 export const KB_SUBNAV_GROUPS: ReadonlyArray<{ key: KbSubnavGroupKey; items: KbSubnavItem[] }> = [
   {
     key: 'structure',
     items: [
+      { key: 'kbShop', href: '/app/kb/shop', group: 'structure' },
       { key: 'productImport', href: '/app/products/import', group: 'structure' },
+      { key: 'kbPolicies', href: '/app/kb/policies', group: 'structure' },
+      { key: 'kbFaq', href: '/app/kb/faq', group: 'structure' },
       { key: 'kbGaps', href: '/app/kb-gaps', group: 'structure' },
     ],
   },
   {
     key: 'tuning',
     items: [
+      { key: 'kbVoice', href: '/app/kb/voice', group: 'tuning' },
       { key: 'readiness', href: '/app/readiness', group: 'tuning' },
       { key: 'tryAi', href: '/app/try-ai', group: 'tuning' },
       { key: 'kbTestset', href: '/app/kb-testset', group: 'tuning' },
       { key: 'kbPublish', href: '/app/kb-publish', group: 'tuning' },
     ],
   },
+];
+
+/** Mục "Sắp có" của thiết kế, chèn vào rail đúng nhóm (Tài liệu; Quy tắc & Giới hạn; Từ điển viết tắt). */
+export const KB_SOON_ITEMS: readonly KbSoonItem[] = [
+  { key: 'kbDocs', group: 'structure' },
+  { key: 'kbRules', group: 'tuning' },
+  { key: 'kbDictionary', group: 'tuning' },
 ];
 
 export function kbSubnavFor(): KbSubnavItem[] {

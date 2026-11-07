@@ -125,3 +125,267 @@ function textArray(values: readonly string[]) {
     sql`, `,
   )}]::text[]`;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Đọc cho trang Cơ sở kiến thức (Owner). Gọi trong `withActor`; RLS cô lập workspace. Không đọc chunk/embedding.
+// ---------------------------------------------------------------------------------------------------------------
+
+export type KbContentLang = 'vi' | 'en' | 'all';
+
+export type KbFaqRow = {
+  id: string;
+  question: string;
+  answer: string;
+  lang: KbContentLang;
+  tags: string[];
+  updatedAt: Date;
+};
+
+export type KbPolicyRow = {
+  id: string;
+  kind: 'shipping' | 'return' | 'warranty' | 'payment' | 'other';
+  lang: KbContentLang;
+  title: string;
+  content: string;
+  updatedAt: Date;
+};
+
+export type KbShopProfileRow = {
+  lang: KbContentLang;
+  name: string;
+  description: string | null;
+  address: string | null;
+  openingHours: string | null;
+  contact: string | null;
+  website: string | null;
+};
+
+export type KbBrandVoiceRow = {
+  lang: 'vi' | 'en';
+  tone: string | null;
+  greeting: string | null;
+  signOff: string | null;
+  doRules: string[];
+  dontRules: string[];
+  addressByName: boolean;
+  shopPronoun: string;
+  shopPronounCustom: string | null;
+  customerAddress: string;
+  handoffTemplates: Record<string, { inHours: string; outHours: string }>;
+};
+
+const asDate = (value: string | Date): Date => (value instanceof Date ? value : new Date(value));
+
+export async function listFaqItems(tx: Database, workspaceId: string): Promise<KbFaqRow[]> {
+  const r = await tx.execute<{
+    id: string;
+    question: string;
+    answer: string;
+    lang: KbContentLang;
+    tags: string[];
+    updated_at: string | Date;
+  }>(sql`
+    SELECT id, question, answer, lang, tags, updated_at FROM cf.faq_items
+     WHERE workspace_id = ${workspaceId}::uuid ORDER BY updated_at DESC, id`);
+  return r.rows.map((row) => ({
+    id: row.id,
+    question: row.question,
+    answer: row.answer,
+    lang: row.lang,
+    tags: row.tags,
+    updatedAt: asDate(row.updated_at),
+  }));
+}
+
+export async function listPolicyItems(tx: Database, workspaceId: string): Promise<KbPolicyRow[]> {
+  const r = await tx.execute<{
+    id: string;
+    kind: KbPolicyRow['kind'];
+    lang: KbContentLang;
+    title: string;
+    content: string;
+    updated_at: string | Date;
+  }>(sql`
+    SELECT id, kind, lang, title, content, updated_at FROM cf.policy_items
+     WHERE workspace_id = ${workspaceId}::uuid ORDER BY kind, updated_at DESC, id`);
+  return r.rows.map((row) => ({
+    id: row.id,
+    kind: row.kind,
+    lang: row.lang,
+    title: row.title,
+    content: row.content,
+    updatedAt: asDate(row.updated_at),
+  }));
+}
+
+export async function listShopProfiles(
+  tx: Database,
+  workspaceId: string,
+): Promise<KbShopProfileRow[]> {
+  const r = await tx.execute<{
+    lang: KbContentLang;
+    name: string;
+    description: string | null;
+    address: string | null;
+    opening_hours: string | null;
+    contact: string | null;
+    website: string | null;
+  }>(sql`
+    SELECT lang, name, description, address, opening_hours, contact, website FROM cf.shop_profiles
+     WHERE workspace_id = ${workspaceId}::uuid ORDER BY lang`);
+  return r.rows.map((row) => ({
+    lang: row.lang,
+    name: row.name,
+    description: row.description,
+    address: row.address,
+    openingHours: row.opening_hours,
+    contact: row.contact,
+    website: row.website,
+  }));
+}
+
+export async function listBrandVoices(
+  tx: Database,
+  workspaceId: string,
+): Promise<KbBrandVoiceRow[]> {
+  const r = await tx.execute<{
+    lang: 'vi' | 'en';
+    tone: string | null;
+    greeting: string | null;
+    sign_off: string | null;
+    do: string[];
+    dont: string[];
+    address_by_name: boolean;
+    shop_pronoun: string;
+    shop_pronoun_custom: string | null;
+    customer_address: string;
+    handoff_templates: KbBrandVoiceRow['handoffTemplates'];
+  }>(sql`
+    SELECT lang, tone, greeting, sign_off, "do", dont, address_by_name, shop_pronoun, shop_pronoun_custom,
+           customer_address, handoff_templates
+      FROM cf.brand_voice WHERE workspace_id = ${workspaceId}::uuid ORDER BY lang`);
+  return r.rows.map((row) => ({
+    lang: row.lang,
+    tone: row.tone,
+    greeting: row.greeting,
+    signOff: row.sign_off,
+    doRules: row.do,
+    dontRules: row.dont,
+    addressByName: row.address_by_name,
+    shopPronoun: row.shop_pronoun,
+    shopPronounCustom: row.shop_pronoun_custom,
+    customerAddress: row.customer_address,
+    handoffTemplates: row.handoff_templates,
+  }));
+}
+
+export type KbSourceRow = {
+  id: string;
+  type: string;
+  title: string;
+  originUrl: string | null;
+  status: string;
+  lastSyncedAt: Date | null;
+  syncError: string | null;
+};
+
+export type KbSampleProduct = {
+  id: string;
+  name: string;
+  sku: string | null;
+  category: string | null;
+  priceVnd: number | null;
+  stock: number | null;
+  variantCount: number;
+};
+
+export type KbOverview = {
+  counts: {
+    products: number;
+    policies: number;
+    faqs: number;
+    shopProfiles: number;
+    brandVoices: number;
+    sources: number;
+  };
+  sources: KbSourceRow[];
+  /** Sản phẩm đang bán mới cập nhật gần nhất (giá/tồn đọc từ `products`, không từ vector — nguyên tắc #4). */
+  sampleProduct: KbSampleProduct | null;
+};
+
+/** Số liệu THẬT cho trang tổng quan "Nguồn dữ liệu": đếm theo bảng, danh sách nguồn (chưa xóa), một sản phẩm mẫu. */
+export async function loadKbOverview(tx: Database, workspaceId: string): Promise<KbOverview> {
+  const [counts, sources, sample] = await Promise.all([
+    tx.execute<{
+      products: string;
+      policies: string;
+      faqs: string;
+      shop_profiles: string;
+      brand_voices: string;
+      sources: string;
+    }>(sql`
+      SELECT
+        (SELECT count(*) FROM cf.products WHERE workspace_id = ${workspaceId}::uuid AND status = 'active') AS products,
+        (SELECT count(*) FROM cf.policy_items WHERE workspace_id = ${workspaceId}::uuid) AS policies,
+        (SELECT count(*) FROM cf.faq_items WHERE workspace_id = ${workspaceId}::uuid) AS faqs,
+        (SELECT count(*) FROM cf.shop_profiles WHERE workspace_id = ${workspaceId}::uuid) AS shop_profiles,
+        (SELECT count(*) FROM cf.brand_voice WHERE workspace_id = ${workspaceId}::uuid) AS brand_voices,
+        (SELECT count(*) FROM cf.kb_sources WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL) AS sources`),
+    tx.execute<{
+      id: string;
+      type: string;
+      title: string;
+      origin_url: string | null;
+      status: string;
+      last_synced_at: string | Date | null;
+      sync_error: string | null;
+    }>(sql`
+      SELECT id, type, title, origin_url, status, last_synced_at, sync_error FROM cf.kb_sources
+       WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL
+       ORDER BY created_at DESC, id LIMIT 50`),
+    tx.execute<{
+      id: string;
+      name: string;
+      sku: string | null;
+      category: string | null;
+      price_vnd: string | null;
+      stock: number | null;
+      variants: unknown;
+    }>(sql`
+      SELECT id, name, sku, category, price_vnd, stock, variants FROM cf.products
+       WHERE workspace_id = ${workspaceId}::uuid AND status = 'active'
+       ORDER BY updated_at DESC, id LIMIT 1`),
+  ]);
+  const c = counts.rows[0];
+  const product = sample.rows[0];
+  return {
+    counts: {
+      products: Number(c?.products ?? 0),
+      policies: Number(c?.policies ?? 0),
+      faqs: Number(c?.faqs ?? 0),
+      shopProfiles: Number(c?.shop_profiles ?? 0),
+      brandVoices: Number(c?.brand_voices ?? 0),
+      sources: Number(c?.sources ?? 0),
+    },
+    sources: sources.rows.map((row) => ({
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      originUrl: row.origin_url,
+      status: row.status,
+      lastSyncedAt: row.last_synced_at === null ? null : asDate(row.last_synced_at),
+      syncError: row.sync_error,
+    })),
+    sampleProduct: product
+      ? {
+          id: product.id,
+          name: product.name,
+          sku: product.sku,
+          category: product.category,
+          priceVnd: product.price_vnd === null ? null : Number(product.price_vnd),
+          stock: product.stock,
+          variantCount: Array.isArray(product.variants) ? product.variants.length : 0,
+        }
+      : null,
+  };
+}

@@ -1865,6 +1865,54 @@
     "error": {
       "title": "Could not load the knowledge overview",
       "body": "Something went wrong while loading. Please reload in a few minutes."
+    },
+    "soonItems": {
+      "kbDocs": "Documents",
+      "kbRules": "Rules & limits",
+      "kbDictionary": "Abbreviation dictionary"
+    },
+    "hub": {
+      "shopify": {
+        "title": "Shopify store connection",
+        "body": "Sync products, prices, stock and policies from Shopify.",
+        "sync": "Sync now",
+        "scope": "Scope settings"
+      },
+      "notConnected": "Not connected",
+      "tiles": {
+        "products": "Products on sale",
+        "policies": "Policies",
+        "faqs": "FAQ"
+      },
+      "sources": {
+        "title": "Website & URL sources",
+        "body": "Information the AI learns from the shop’s web pages.",
+        "add": "Add new link",
+        "empty": "No sources yet.",
+        "colUrl": "URL",
+        "colType": "Type",
+        "colStatus": "Status",
+        "colUpdated": "Updated",
+        "syncError": "Sync error",
+        "neverSynced": "Never synced"
+      },
+      "product": {
+        "title": "Product preview",
+        "body": "Price and stock are read straight from the product store, never from the AI’s memory.",
+        "showing": "Showing 1 of {total} products",
+        "stock": "Stock: {count}",
+        "variants": "{count} variants",
+        "hint": "Private note for the AI",
+        "empty": "No products yet.",
+        "import": "Import products",
+        "price": "{amount}₫"
+      },
+      "playground": {
+        "title": "AI playground",
+        "body": "Simulate the AI’s reply with the current knowledge.",
+        "example": "Example: “Does the shop offer free shipping on 350k orders?”",
+        "run": "Open playground"
+      }
     }
   },
   "tryAi": {
@@ -1968,7 +2016,11 @@
       "channels": "Channels",
       "members": "Members",
       "activity": "Activity log",
-      "settings": "Settings"
+      "settings": "Settings",
+      "kbShop": "Shop information",
+      "kbPolicies": "Policies",
+      "kbFaq": "FAQ",
+      "kbVoice": "Brand voice"
     },
     "logout": "Sign out",
     "navLabel": "Main navigation",
@@ -2883,6 +2935,100 @@
     "automation": {
       "title": "Shift automation",
       "today": "{n} automatic replies today"
+    }
+  },
+  "kbContent": {
+    "langLabel": "Applies to language",
+    "lang": {
+      "vi": "Tiếng Việt",
+      "en": "English",
+      "all": "Both languages"
+    },
+    "notice": {
+      "saved": "Saved.",
+      "deleted": "Deleted.",
+      "invalid": "The information is not valid. Check the required fields (and the website must start with http or https).",
+      "not_found": "This item was not found.",
+      "unavailable": "Could not complete this right now. Please try again."
+    },
+    "save": "Save",
+    "delete": "Delete",
+    "add": "Add",
+    "empty": "No items yet.",
+    "shop": {
+      "title": "Shop information",
+      "subtitle": "The shop’s name, description, address, opening hours and contact — the AI answers from it. Do not enter prices or stock here.",
+      "cardTitle": "Information by language",
+      "name": "Shop name",
+      "description": "Short description",
+      "address": "Address",
+      "openingHours": "Opening hours",
+      "contact": "Public contact",
+      "contactHint": "Only enter contact details the shop wants customers to see.",
+      "website": "Website",
+      "newTitle": "Add information for another language"
+    },
+    "policies": {
+      "title": "Policies",
+      "subtitle": "Shipping, returns, warranty, payment. The AI only answers from what you enter.",
+      "kind": "Policy type",
+      "kinds": {
+        "shipping": "Shipping",
+        "return": "Returns",
+        "warranty": "Warranty",
+        "payment": "Payment",
+        "other": "Other"
+      },
+      "titleLabel": "Title",
+      "content": "Content",
+      "newTitle": "Add a policy"
+    },
+    "faq": {
+      "title": "FAQ",
+      "subtitle": "Standard question and answer pairs. The AI prefers these when a customer asks the same thing.",
+      "question": "Question",
+      "answer": "Answer",
+      "tags": "Tags",
+      "tagsHint": "Separated by commas, for example: shipping, returns.",
+      "newTitle": "Add a question and answer"
+    },
+    "voice": {
+      "title": "Brand voice",
+      "subtitle": "How the AI addresses people, its tone and the handoff phrases — per language.",
+      "tone": "Tone",
+      "greeting": "Greeting",
+      "signOff": "Sign-off",
+      "doRules": "Do",
+      "dontRules": "Don’t",
+      "rulesHint": "One rule per line.",
+      "addressByName": "Use the customer’s name when known",
+      "shopPronoun": "The shop refers to itself as",
+      "pronouns": {
+        "em": "Em",
+        "shop": "Shop",
+        "minh": "Mình",
+        "custom": "Custom name"
+      },
+      "shopPronounCustom": "Shop name (when Custom name is chosen)",
+      "customerAddress": "Address the customer as",
+      "addresses": {
+        "anh_chi": "Anh/Chị",
+        "ban": "Bạn",
+        "quy_khach": "Quý khách",
+        "you": "You"
+      },
+      "handoffTitle": "Handoff phrases",
+      "handoffHint": "Both phrases (in hours and out of hours) are required; empty topics are not saved.",
+      "topics": {
+        "shipping": "Shipping",
+        "discount": "Discounts",
+        "order_status": "Order status",
+        "stock_check": "Stock check",
+        "other": "Other"
+      },
+      "inHours": "During working hours",
+      "outHours": "Outside working hours",
+      "saveFor": "Save {lang} voice"
     }
   }
 }

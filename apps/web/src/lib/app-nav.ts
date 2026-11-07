@@ -23,6 +23,10 @@ export type NavItemKey =
   | 'kbGaps'
   | 'kbPublish'
   | 'kbTestset'
+  | 'kbShop'
+  | 'kbPolicies'
+  | 'kbFaq'
+  | 'kbVoice'
   | 'spamRules'
   | 'channels'
   | 'members'
@@ -63,6 +67,11 @@ const ENTRIES: readonly Entry[] = [
   { key: 'kbGaps', href: '/app/kb-gaps', group: 'system', roles: OWNER, parent: 'kb' },
   { key: 'kbPublish', href: '/app/kb-publish', group: 'system', roles: OWNER, parent: 'kb' },
   { key: 'kbTestset', href: '/app/kb-testset', group: 'system', roles: OWNER, parent: 'kb' },
+  // Kiến thức nhập tay (FR-050, FR-142): thông tin cửa hàng, chính sách, FAQ, giọng văn — chỉ Owner.
+  { key: 'kbShop', href: '/app/kb/shop', group: 'system', roles: OWNER, parent: 'kb' },
+  { key: 'kbPolicies', href: '/app/kb/policies', group: 'system', roles: OWNER, parent: 'kb' },
+  { key: 'kbFaq', href: '/app/kb/faq', group: 'system', roles: OWNER, parent: 'kb' },
+  { key: 'kbVoice', href: '/app/kb/voice', group: 'system', roles: OWNER, parent: 'kb' },
   // Cài đặt tự gửi (FR-070/071): chỉ Owner, Staff nhận 404.
   { key: 'automation', href: '/app/automation', group: 'system', roles: OWNER },
   // Quy tắc spam (FR-080, US-050): chỉ Owner.
