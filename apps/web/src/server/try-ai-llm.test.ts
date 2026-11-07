@@ -6,7 +6,7 @@ import { createTryLlmDeps } from './try-ai-llm';
 const db = { withWorkspace: vi.fn() };
 const base = { LITELLM_BASE_URL: 'http://litellm.local:4000', LITELLM_API_KEY: 'virtual-key' };
 
-describe('TRY-AI-REAL lát C — cấu hình LLM (Gemini qua LiteLLM)', () => {
+describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố định)', () => {
   it('mặc định TẮT: không cờ → không bước nào dùng LLM', () => {
     expect(createTryLlmDeps({ env: {}, db })).toEqual({});
     expect(createTryLlmDeps({ env: base, db })).toEqual({});
@@ -35,7 +35,7 @@ describe('TRY-AI-REAL lát C — cấu hình LLM (Gemini qua LiteLLM)', () => {
   it('lỗi mạng khi gọi LLM → ném lỗi (ô Thử AI báo "không thử được"), không lộ khóa/nội dung', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new Error('boom sk-secret'));
     const llm = createTryLlmDeps({
-      env: { ...base, CLASSIFY_LLM_ENABLED: 'true', CLASSIFY_LLM_MODEL: 'cf-classify' },
+      env: { ...base, CLASSIFY_LLM_ENABLED: 'true', CLASSIFY_LLM_MODEL: 'cand-claude-haiku' },
       db,
       fetchImpl,
     });

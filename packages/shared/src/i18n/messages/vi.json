@@ -1992,7 +1992,7 @@
       "off": "Nhận diện ý định và soạn câu: bản mô phỏng (chưa bật AI thật)",
       "extractor": "nhận diện ý định",
       "drafter": "soạn câu trả lời",
-      "on": "AI thật (Gemini) đang chạy ở bước: {steps}; các bước còn lại là bản mô phỏng"
+      "on": "AI thật đang chạy ở bước: {steps}; các bước còn lại là bản mô phỏng"
     },
     "knowledge": {
       "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",

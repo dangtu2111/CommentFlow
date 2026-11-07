@@ -17,7 +17,7 @@ export type TryAiState = { status: 'idle' } | ({ status: 'done' } & TryAiResult)
 // Bộ đếm lượt thử/ngày trong bộ nhớ tiến trình (Q-ATB1).
 const tryAi = createTryAiAction({
   quota: createTryQuota(),
-  // LLM thật (Gemini qua LiteLLM) chỉ khi bật cờ `CLASSIFY_LLM_ENABLED`/`DRAFT_LLM_ENABLED` + có LITELLM_*; mặc định TẮT.
+  // LLM thật (qua LiteLLM, model đổi bằng biến môi trường) chỉ khi bật cờ `CLASSIFY_LLM_ENABLED`/`DRAFT_LLM_ENABLED` + có LITELLM_*; mặc định TẮT.
   llm: createTryLlmDeps({
     env: process.env,
     // Lazy: không dựng kết nối DB lúc nạp module (next build không có DATABASE_URL).

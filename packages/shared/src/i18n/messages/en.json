@@ -1992,7 +1992,7 @@
       "off": "Intent detection and drafting: simulated (real AI is off)",
       "extractor": "intent detection",
       "drafter": "reply drafting",
-      "on": "Real AI (Gemini) is running for: {steps}; other steps are simulated"
+      "on": "Real AI is running for: {steps}; other steps are simulated"
     },
     "knowledge": {
       "demo": "Source: sample knowledge (your shop's real knowledge is not connected)",

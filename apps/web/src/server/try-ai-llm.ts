@@ -10,7 +10,7 @@ import {
 } from '@flow/ai';
 
 /**
- * Nối LLM THẬT (Gemini qua LiteLLM) vào ô Thử AI (TRY-AI-REAL lát C, FR-027/029/162). Mỗi bước có cờ riêng, MẶC ĐỊNH TẮT
+ * Nối LLM THẬT (qua LiteLLM; nhà cung cấp/model KHÔNG cố định — chọn theo bộ đánh giá, spec 12 §8) vào ô Thử AI (TRY-AI-REAL lát C, FR-027/029/162). Mỗi bước có cờ riêng, MẶC ĐỊNH TẮT
  * (`CLASSIFY_LLM_ENABLED` / `DRAFT_LLM_ENABLED`, chỉ đúng chữ `true`); bật mà thiếu `LITELLM_BASE_URL`/`LITELLM_API_KEY`
  * thì vẫn dùng bản mẫu (không bao giờ gọi mạng thiếu cấu hình). Mọi lần gọi đi qua `createLlmClient`: ghi `ai_usage`
  * (nguyên tắc #7), chỉ nhận văn bản đã che PII (#6); hạn mức tiền do khóa ảo của LiteLLM (`max_budget`) chặn.
