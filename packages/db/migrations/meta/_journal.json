@@ -526,6 +526,13 @@
       "when": 1794436000000,
       "tag": "0074_pending_pipeline_sweep",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1794522400000,
+      "tag": "0075_pipeline_sweep_index",
+      "breakpoints": true
     }
   ]
 }
