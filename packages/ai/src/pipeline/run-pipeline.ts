@@ -262,6 +262,19 @@ function askTopicsOf(
   return found;
 }
 
+/**
+ * Tên sản phẩm đưa vào `decideAction` (và gợi ý lựa chọn khi hỏi lại): schema chỉ nhận ≤ 120 ký tự, mà tên sản phẩm từ Shopify/Haravan
+ * thường dài hơn (tiêu đề SEO 150–255 ký tự). Tên quá dài KHÔNG được làm cả đầu vào "không đọc được" (→ chuyển người oan mọi câu hỏi về
+ * sản phẩm đó): cắt gọn ở đây, có dấu "…". Tên đầy đủ vẫn nằm trong nguồn sản phẩm (câu nguồn) để soạn câu.
+ */
+export const MAX_DECISION_PRODUCT_NAME = 120;
+export function shortProductName(name: string): string {
+  const clean = name.replace(/\s+/g, ' ').trim();
+  return clean.length <= MAX_DECISION_PRODUCT_NAME
+    ? clean
+    : `${clean.slice(0, MAX_DECISION_PRODUCT_NAME - 1).trimEnd()}…`;
+}
+
 const EMPTY_PRODUCTS: TryProductMatch = { ids: [], names: [], missingAxes: [] };
 
 /**
@@ -371,7 +384,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         lang,
         extract,
         products: {
-          candidates: products.names,
+          candidates: products.names.map(shortProductName),
           missingAxes: products.missingAxes,
           mentionedCount: extract.product_mentions.length,
         },
