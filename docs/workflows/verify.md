@@ -1,6 +1,6 @@
 # Quy trình kiểm chứng độc lập
 
-Người kiểm chứng phải là agent **không viết** đoạn code đó (ví dụ Codex viết → Claude `verifier-security` kiểm; Claude viết → Codex kiểm). Chỉ đọc, không sửa.
+Chủ dự án chốt 07/11/2026: không dùng multi-agent. Người kiểm chứng là chính phiên đang làm, đọc lại diff cuối nhánh như người lạ và đi từng mục dưới đây; kết quả gắn nhãn "tự kiểm". Chỉ đọc diff + mục spec, không sửa trong lúc kiểm; muốn kiểm chéo thật thì nhờ chủ dự án hoặc Codex.
 
 ## A. Bảo mật / logic nhạy cảm
 

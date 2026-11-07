@@ -15,7 +15,7 @@ Việc: `<mã gap matrix>` (người dùng cung cấp)
    - **Tiêu chí nghiệm thu** — mỗi tiêu chí kiểm được (test, lệnh, hoặc bước thủ công có kết quả quan sát được) kèm cách kiểm
    - **File sẽ đọc** (tối đa ~8; mỗi file kèm lý do) · **File sẽ sửa / tạo**
    - **Migration** (nếu có) · **Test viết trước** (cho logic quy tắc) · **Lệnh test phạm vi hẹp**
-   - **Cần kiểm chứng độc lập không?** — chỉ khi diff thuộc diện nhạy cảm (AGENTS.md § Phối hợp nhiều agent); không thì "Không"
+   - **Cần tự kiểm nhạy cảm không?** — chỉ khi diff thuộc diện nhạy cảm (AGENTS.md § Phối hợp nhiều agent); không thì "Không"
    - **Rủi ro / câu hỏi cho chủ dự án** · **Đề xuất thay đổi** (docs/ADR; bằng lời)
    - **Complexity tracking** — mọi chỗ plan đi ngược nguyên tắc của `AGENTS.md` (thêm thư viện, tầng trừu tượng khi chưa có ≥ 2 nơi dùng, tái cấu trúc rộng…): nguyên tắc nào · vì sao cần · phương án đơn giản hơn đã loại. Không có → "Không có"
    - **Checklist plan** — agent tự tick các ô trước khi trình duyệt
