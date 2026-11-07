@@ -2,6 +2,7 @@ import { listInvoices } from '@flow/db/runtime';
 import { getTranslations } from 'next-intl/server';
 import { BillingView } from '../../../../../components/settings/billing-view';
 import { buildInvoiceRows } from '../../../../../lib/billing-view';
+import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import {
   defaultPaymentDeps,
@@ -15,8 +16,8 @@ import { loadUsageMeterView } from '../../../../../server/usage-meter';
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('settings'), getTranslations('shell')]);
-  return { title: `${t('billing.title')} · ${tb('brand')}` };
+  const t = await getTranslations('settings');
+  return { title: `${t('billing.title')} · ${getBrand().name}` };
 }
 
 /** Lỗi đọc/dựng QR không được làm hỏng cả trang Cài đặt: coi như "chưa sẵn sàng". */

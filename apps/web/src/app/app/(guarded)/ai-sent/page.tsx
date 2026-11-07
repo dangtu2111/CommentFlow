@@ -7,11 +7,12 @@ import {
   parseAiSentFilter,
 } from '../../../../lib/ai-sent-form';
 import { aiSentHistory } from '../../../../server/ai-sent-history';
+import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('aiSent'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('aiSent');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;

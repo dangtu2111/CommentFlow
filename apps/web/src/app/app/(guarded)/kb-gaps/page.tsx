@@ -5,12 +5,13 @@ import { KbFrame } from '../../../../components/kb/kb-frame';
 import { KbGapRow } from '../../../../components/kb-gaps/kb-gap-row';
 import { PageHeader } from '../../../../components/ui/page-header';
 import { groupGapsByTopic, parseKbGapFilter, toKbGapViews } from '../../../../lib/kb-gaps-form';
+import { getBrand } from '../../../../server/brand';
 import { kbGaps } from '../../../../server/kb-gaps';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('kbGaps'), getTranslations('shell')]);
-  return { title: `${t('pageTitle')} · ${tb('brand')}` };
+  const t = await getTranslations('kbGaps');
+  return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;

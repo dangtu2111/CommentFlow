@@ -1,11 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { NotificationsView } from '../../../../../components/settings/notifications-view';
+import { getBrand } from '../../../../../server/brand';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import { loadSettingsCounts } from '../../../../../server/settings-counts';
 
 export async function generateMetadata() {
-  const [t, tb] = await Promise.all([getTranslations('settings'), getTranslations('shell')]);
-  return { title: `${t('notifications.title')} · ${tb('brand')}` };
+  const t = await getTranslations('settings');
+  return { title: `${t('notifications.title')} · ${getBrand().name}` };
 }
 
 /** Thông báo: mọi vai trò (chỉ giao diện "Sắp có", không dữ liệu workspace). */
