@@ -195,6 +195,52 @@ describe('handler pipeline — một bình luận thật', () => {
   });
 });
 
+describe('gộp bình luận (FR-148) — 1 lượt cho cả nhóm', () => {
+  it('3 bình luận cùng khách + bài sát nhau → 1 bản nháp gắn vào bình luận CUỐI, 1 lượt trừ, các bình luận trước merged_into_id', async () => {
+    const a = await addComment('webhook', 'áo thun basic');
+    const b = await addComment('webhook', 'giá bao nhiêu');
+    const c = await addComment('webhook', 'ship nội thành');
+    await admin.query(
+      "UPDATE cf.comments SET created_time = now() - interval '20 seconds' WHERE id = $1",
+      [a],
+    );
+    await admin.query(
+      "UPDATE cf.comments SET created_time = now() - interval '10 seconds' WHERE id = $1",
+      [b],
+    );
+    // Job của bình luận ĐẦU chạy trước: nhóm được gộp và xử lý ở bình luận cuối.
+    const out = await runPipelineJob(config(), job(a));
+    expect(out.kind).toBe('written');
+    expect(await draftsOf(c)).toHaveLength(1);
+    expect(await draftsOf(a)).toHaveLength(0);
+    const merged = (
+      await admin.query('SELECT id, merged_into_id FROM cf.comments WHERE id IN ($1, $2)', [a, b])
+    ).rows;
+    expect(merged.map((r) => r.merged_into_id)).toEqual([c, c]);
+    expect(await used()).toBe(1);
+    // Job của các bình luận còn lại (đến muộn) → bỏ qua, không trừ thêm.
+    expect((await runPipelineJob(config(), job(b))).kind).toBe('ignored');
+    expect((await runPipelineJob(config(), job(c))).kind).not.toBe('written');
+    expect(await used()).toBe(1);
+  });
+
+  it('khách khác nhau hoặc backfill KHÔNG bị gộp', async () => {
+    const a = await addComment('webhook', 'câu một');
+    const b = await addComment('webhook', 'câu hai');
+    await admin.query("UPDATE cf.comments SET author_external_id = 'u2' WHERE id = $1", [b]);
+    const back = await addComment('backfill', 'cũ');
+    await runPipelineJob(config(), job(a));
+    const rows = (
+      await admin.query('SELECT id, merged_into_id FROM cf.comments WHERE id IN ($1, $2, $3)', [
+        a,
+        b,
+        back,
+      ])
+    ).rows;
+    expect(rows.every((r) => r.merged_into_id === null)).toBe(true);
+  });
+});
+
 describe('ai_usage qua withJob (nguyên tắc #7)', () => {
   it('LLM dựng từ biến môi trường ghi một dòng ai_usage dưới ngữ cảnh job của worker', async () => {
     const reply = JSON.stringify({ ...FIXTURE_EXTRACT_DEFAULT, labels: [{ label: 'advice' }] });

@@ -551,3 +551,87 @@ describe('FR-048 thứ tự sửa/xóa: lần sửa CŨ đến muộn không ghi
     expect(new Date(row.deleted_at).getTime()).toBe(7_000_000);
   });
 });
+
+describe('PIPE-ORCHESTRATOR lát E — ingest xếp job pipeline (một nơi quyết định, Q-POR1)', () => {
+  const hooked = (over: { flag?: boolean; allowed?: string[] } = {}) => {
+    const sent: Array<{ commentId: string; trigger: string; startAfter: number }> = [];
+    const h = createIngestHandler({
+      db,
+      logger: quiet,
+      pipeline: {
+        enqueue: async (j, startAfter) => {
+          sent.push({ commentId: j.commentId, trigger: j.trigger, startAfter });
+        },
+        flagEnabled: over.flag ?? true,
+        allowedWorkspaceIds: over.allowed ?? [ws],
+        mergeWindowSeconds: async () => 30,
+      },
+    });
+    return { sent, h };
+  };
+  const idOf = async (channelId: string) =>
+    (await admin.query('SELECT id FROM cf.comments WHERE channel_id = $1', [channelId])).rows.map(
+      (r) => r.id as string,
+    );
+
+  it('bình luận webhook MỚI → xếp 1 job auto với startAfter = cửa sổ gộp; chạy lại (đã có) → không xếp thêm', async () => {
+    const { pageId, channelId } = await seedPage();
+    const eventId = await record(pageId, change(pageId));
+    const { sent, h } = hooked();
+    await h(job(ws, eventId));
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ trigger: 'auto', startAfter: 30 });
+    expect(await idOf(channelId)).toContain(sent[0]?.commentId);
+    await h(job(ws, eventId));
+    expect(sent).toHaveLength(1);
+  });
+
+  it('backfill, cờ tắt, workspace ngoài danh sách → KHÔNG xếp; bình luận vẫn được lưu `new`', async () => {
+    const a = await seedPage();
+    const backfill = await record(a.pageId, change(a.pageId), 'backfill');
+    const x = hooked();
+    await x.h(job(ws, backfill));
+    expect(x.sent).toHaveLength(0);
+    expect(await commentsOf(a.channelId)).toHaveLength(1);
+
+    const b = await seedPage();
+    const ev = await record(b.pageId, change(b.pageId));
+    const off = hooked({ flag: false });
+    await off.h(job(ws, ev));
+    expect(off.sent).toHaveLength(0);
+
+    const c = await seedPage();
+    const ev2 = await record(c.pageId, change(c.pageId));
+    const other = hooked({ allowed: [randomUUID()] });
+    await other.h(job(ws, ev2));
+    expect(other.sent).toHaveLength(0);
+  });
+
+  it('bình luận do chính Page viết → không lưu, không xếp job', async () => {
+    const { pageId } = await seedPage();
+    const ev = await record(pageId, change(pageId, { from: { id: pageId, name: 'Page' } }));
+    const { sent, h } = hooked();
+    await h(job(ws, ev));
+    expect(sent).toHaveLength(0);
+  });
+
+  it('xếp job lỗi KHÔNG làm hỏng ingest (bình luận đã lưu, sự kiện done; job quét sẽ nhặt lại)', async () => {
+    const { pageId, channelId } = await seedPage();
+    const ev = await record(pageId, change(pageId));
+    const h = createIngestHandler({
+      db,
+      logger: quiet,
+      pipeline: {
+        enqueue: async () => {
+          throw new Error('boss down');
+        },
+        flagEnabled: true,
+        allowedWorkspaceIds: [ws],
+        mergeWindowSeconds: async () => 30,
+      },
+    });
+    await h(job(ws, ev));
+    expect((await eventRow(ev)).status).toBe('done');
+    expect(await commentsOf(channelId)).toHaveLength(1);
+  });
+});

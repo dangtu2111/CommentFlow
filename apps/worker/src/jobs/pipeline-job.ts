@@ -7,7 +7,14 @@ import {
   type Rewriter,
   type TryKnowledge,
 } from '@flow/ai';
-import { type Database, type FlowDb, loadPipelineContext } from '@flow/db';
+import {
+  type Database,
+  DEFAULT_MERGE_WINDOW_SECONDS,
+  type FlowDb,
+  getMergeWindowSeconds,
+  loadPipelineContext,
+  mergeCommentGroup,
+} from '@flow/db';
 import {
   DEFAULT_USAGE_TIME_ZONE,
   type IngestSource,
@@ -67,15 +74,40 @@ export async function runPipelineJob(
   job: PipelineJob,
 ): Promise<PipelineJobOutcome> {
   const { db } = config;
-  const { workspaceId, commentId } = job;
+  const { workspaceId } = job;
+  let commentId = job.commentId;
   const now = (config.now ?? (() => new Date()))();
 
-  const context = await db.withJob(workspaceId, (tx) =>
+  let context = await db.withJob(workspaceId, (tx) =>
     loadPipelineContext(tx, workspaceId, commentId, now),
   );
   if (!context) return { kind: 'ignored', reason: 'comment_not_found' };
+  if (context.comment.mergedIntoId) return { kind: 'ignored', reason: 'merged' };
+
+  // Gộp (FR-148): chỉ đường TỰ ĐỘNG. Các bình luận chưa xử lý cùng khách + bài trong cửa sổ gộp thành MỘT lượt gắn vào bình luận
+  // CUỐI nhóm; chữ các bình luận theo thời gian. Chạy lại không gộp thêm (đã `merged_into_id`).
+  let mergedText: string | null = null;
+  if (job.trigger === 'auto') {
+    const group = await db.withJob(workspaceId, async (tx) =>
+      mergeCommentGroup(
+        tx,
+        workspaceId,
+        commentId,
+        await getMergeWindowSeconds(tx, workspaceId, DEFAULT_MERGE_WINDOW_SECONDS),
+      ),
+    );
+    if (group.mergedIds.length > 0) {
+      mergedText = group.texts.join('\n');
+      if (group.mainId !== commentId) {
+        commentId = group.mainId;
+        context = await db.withJob(workspaceId, (tx) =>
+          loadPipelineContext(tx, workspaceId, commentId, now),
+        );
+        if (!context) return { kind: 'ignored', reason: 'comment_not_found' };
+      }
+    }
+  }
   const comment = context.comment;
-  if (comment.mergedIntoId) return { kind: 'ignored', reason: 'merged' };
 
   // Đường TỰ ĐỘNG phải qua đúng hàm quyết định dùng chung với `ingest`/job quét (không điều kiện thứ hai).
   if (
@@ -113,7 +145,7 @@ export async function runPipelineJob(
     turn: { limit: config.turnLimit, timeZone: DEFAULT_USAGE_TIME_ZONE },
     input: {
       workspaceId,
-      text: comment.text,
+      text: mergedText ?? comment.text,
       kbVersion: context.kbVersion ? `v${context.kbVersion.number}` : 'none',
       voice: { ...DEFAULT_VOICE, do: [], dont: [] },
       ...(Object.keys(voices).length > 0 ? { voices } : {}),

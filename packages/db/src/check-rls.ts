@@ -1059,11 +1059,11 @@ async function checkWorkerDirectPrivileges(
          LATERAL aclexplode(t.attacl) a, w
     WHERE t.attacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
     UNION ALL
-    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox, core.consume_usage, hàm hóa đơn, hàm gói cước, hàm dọn dữ liệu, hàm xóa workspace của worker)'
+    SELECT n.nspname || '.' || p.proname, 'quyền ' || a.privilege_type || ' trên hàm (chỉ được read_channel_token, list_stuck_outbox, list_pending_pipeline_comments, core.consume_usage, hàm hóa đơn, hàm gói cước, hàm dọn dữ liệu, hàm xóa workspace của worker)'
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
-      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox')
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox', 'list_pending_pipeline_comments')
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('create_invoice', 'confirm_invoice_payment', 'void_invoice')
@@ -1148,9 +1148,20 @@ async function checkWebhookFunction(db: Queryable, violations: RlsViolation[]): 
  * dùng/ngữ cảnh job hoặc session_user khác) — nếu không, đường khác liệt kê được yêu cầu của mọi workspace.
  * Phần thân chỉ kiểm bằng chuỗi con của prosrc; logic được kiểm bằng test tích hợp stuck-outbox.int.test.ts.
  */
+/** Hàm quét cross-workspace chỉ-đọc dành cho worker: list_stuck_outbox (0031) và list_pending_pipeline_comments (0074, PIPE-ORCHESTRATOR). */
+const SWEEP_FUNCTIONS = ['list_stuck_outbox', 'list_pending_pipeline_comments'] as const;
+
 async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
+  for (const fn of SWEEP_FUNCTIONS) await checkSweepFunction(db, violations, fn);
+}
+
+async function checkSweepFunction(
+  db: Queryable,
+  violations: RlsViolation[],
+  fn: (typeof SWEEP_FUNCTIONS)[number],
+): Promise<void> {
   const found = await db.query(`/* stuck-outbox-function */
-    SELECT 'cf.list_stuck_outbox' AS name,
+    SELECT 'cf.${fn}' AS name,
       CASE
         WHEN p.oid IS NULL THEN 'hàm không tồn tại'
         WHEN NOT p.prosecdef THEN 'phải là SECURITY DEFINER'
@@ -1161,7 +1172,7 @@ async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[
         ELSE 'thân hàm phải từ chối khi có workspace, người dùng, ngữ cảnh job hoặc session_user khác cf_worker (chỉ ngữ cảnh trần của worker)'
       END AS problem
     FROM (SELECT 1) AS one
-    LEFT JOIN pg_proc p ON p.pronamespace = 'cf'::regnamespace AND p.proname = 'list_stuck_outbox'
+    LEFT JOIN pg_proc p ON p.pronamespace = 'cf'::regnamespace AND p.proname = '${fn}'
     WHERE p.oid IS NULL
       OR NOT p.prosecdef
       OR has_function_privilege('public', p.oid, 'EXECUTE')

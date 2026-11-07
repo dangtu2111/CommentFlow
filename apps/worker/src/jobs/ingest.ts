@@ -12,7 +12,14 @@ import {
   schema,
   sql,
 } from '@flow/db';
-import { type IngestJob, ingestJobSchema, ingestSourceOf } from '@flow/shared';
+import {
+  type IngestJob,
+  type IngestSource,
+  ingestJobSchema,
+  ingestSourceOf,
+  type PipelineJob,
+  shouldAutoRunPipeline,
+} from '@flow/shared';
 import type { Logger } from '../logger';
 import { INGEST_RETRY_LIMIT } from '../queue/definitions';
 import { type BatchHandler, workspaceJob } from './run-job';
@@ -27,18 +34,22 @@ const { webhookEvents, channels, posts, comments } = schema;
  * chỉ tăng khi bình luận thực sự mới. Bình luận do chính Page viết KHÔNG được lưu (chống vòng lặp, nguyên tắc #5).
  * Sửa/xóa bình luận (FR-048): cập nhật nội dung / đặt `deleted_at` (xem `applyEdit`, `applyDelete`).
  */
-export async function processIngestEvent(tx: Database, job: IngestJob): Promise<void> {
+/** Bình luận MỚI vừa được chèn (để nơi gọi quyết định xếp job `pipeline` SAU khi giao dịch commit). */
+export type IngestedComment = { id: string; ingestSource: IngestSource };
+
+export async function processIngestEvent(tx: Database, job: IngestJob): Promise<IngestedComment[]> {
+  const newComments: IngestedComment[] = [];
   const [event] = await tx
     .select({ id: webhookEvents.id, status: webhookEvents.status, payload: webhookEvents.payload })
     .from(webhookEvents)
     .where(and(eq(webhookEvents.id, job.eventId), eq(webhookEvents.workspaceId, job.workspaceId)));
-  if (!event || event.status === 'done' || event.status === 'dead') return;
+  if (!event || event.status === 'done' || event.status === 'dead') return newComments;
 
   const parsed = deserializeEvent(event.payload);
   if (!parsed) {
     // Dữ liệu hỏng: thử lại vô ích → dead ngay, mã lỗi không chứa nội dung.
     await finish(tx, event.id, { status: 'dead', error: 'invalid_payload' });
-    return;
+    return newComments;
   }
 
   const [channel] = await tx
@@ -80,6 +91,7 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
         )[0]?.id;
       if (!postId) throw new Error('post_not_found');
 
+      const source = ingestSourceOf(event.payload);
       const inserted = await tx
         .insert(comments)
         .values({
@@ -96,7 +108,7 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
           status: 'new',
           isOwn: false,
           // Nguồn (webhook/polling/backfill) để quyết định bình luận nào tự chạy pipeline (Q-POR1).
-          ingestSource: ingestSourceOf(event.payload),
+          ingestSource: source,
         })
         .onConflictDoNothing()
         .returning({ id: comments.id, deletedAt: comments.deletedAt });
@@ -104,6 +116,7 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
       // Dòng sinh ra ĐÃ XÓA (dấu xóa đến trước, migration 0026): đã xóa trắng bởi trigger; không tính vào số đếm bài.
       if (born?.deletedAt) await logSystemAction(tx, job.workspaceId, 'comment.deleted', born.id);
       else if (born) {
+        newComments.push({ id: born.id, ingestSource: source });
         await tx
           .update(posts)
           .set({
@@ -117,6 +130,7 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
   }
   // Kênh đã ngắt/không còn connected (bình luận mới), bình luận của Page, hoặc không có gì để đồng bộ → xong.
   await finish(tx, event.id, { status: 'done', error: null });
+  return newComments;
 }
 
 /**
@@ -223,18 +237,32 @@ async function markFailed(db: FlowDb, job: IngestJob, error: unknown): Promise<v
  * Handler của hàng đợi `ingest`. Mỗi job một giao dịch (`withJob`); nếu lỗi, giao dịch bị hoàn tác nên việc đánh dấu
  * `failed`/`dead` + `attempts` chạy ở giao dịch RIÊNG rồi ném lại để pg-boss thử lại (backoff mũ).
  */
+/** Xếp job `pipeline` cho bình luận mới (sau khi `ingest` commit). Cấu hình tắt → không xếp. */
+export type IngestPipelineHook = {
+  enqueue: (job: PipelineJob, startAfterSeconds: number) => Promise<void>;
+  flagEnabled: boolean;
+  allowedWorkspaceIds: readonly string[];
+  /** Cửa sổ gộp của workspace (giây). */
+  mergeWindowSeconds: (workspaceId: string) => Promise<number>;
+};
+
 export function createIngestHandler(options: {
   db: FlowDb;
   logger: Pick<Logger, 'error'>;
+  pipeline?: IngestPipelineHook;
 }): BatchHandler {
-  const { db, logger } = options;
+  const { db, logger, pipeline } = options;
+  let created: IngestedComment[] = [];
   const inner = workspaceJob({
     db,
     schema: ingestJobSchema,
-    handler: ({ tx, payload }) => processIngestEvent(tx, payload),
+    handler: async ({ tx, payload }) => {
+      created = await processIngestEvent(tx, payload);
+    },
   });
   return async (jobs) => {
     for (const job of jobs) {
+      created = [];
       try {
         await inner([job]);
       } catch (error) {
@@ -245,6 +273,43 @@ export function createIngestHandler(options: {
         }
         throw error;
       }
+      // MỘT nơi quyết định xếp job: ở đây (và job quét, cùng `shouldAutoRunPipeline`). Xếp lỗi KHÔNG làm hỏng ingest: bình luận đã
+      // lưu ở `new` và job quét sẽ nhặt lại.
+      const parsed = ingestJobSchema.safeParse(job.data);
+      if (pipeline && parsed.success) {
+        await enqueueNew(pipeline, parsed.data.workspaceId, created, logger);
+      }
     }
   };
+}
+
+async function enqueueNew(
+  hook: IngestPipelineHook,
+  workspaceId: string,
+  created: readonly IngestedComment[],
+  logger: Pick<Logger, 'error'>,
+): Promise<void> {
+  for (const comment of created) {
+    if (
+      !shouldAutoRunPipeline({
+        workspaceId,
+        ingestSource: comment.ingestSource,
+        isOwn: false,
+        deleted: false,
+        flagEnabled: hook.flagEnabled,
+        allowedWorkspaceIds: hook.allowedWorkspaceIds,
+      })
+    ) {
+      continue;
+    }
+    try {
+      const window = await hook.mergeWindowSeconds(workspaceId);
+      await hook.enqueue({ workspaceId, commentId: comment.id, trigger: 'auto' }, window);
+    } catch (error) {
+      logger.error(
+        { commentId: comment.id, error: safeErrorCode(error) },
+        'ingest: không xếp được job pipeline',
+      );
+    }
+  }
 }

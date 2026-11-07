@@ -1,5 +1,5 @@
 import { loadMlEmbedderOptions, type MlEmbedderOptions } from '@flow/ai';
-import { parseEnv } from '@flow/shared';
+import { parseEnv, parsePipelineWorkspaceIds, resolveAiTurnLimit } from '@flow/shared';
 import { z } from 'zod';
 
 /** Tên role đăng nhập của worker — khớp migration 0030 (`session_user = 'cf_worker'`). */
@@ -159,6 +159,11 @@ export type WorkerConfig = {
   tiktok: TikTokConnectorConfig;
   /** Đồng bộ Shopify thật: cờ `SHOPIFY_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); bật thì cần `TOKEN_ENC_KEYS`. */
   shopify: { enabled: boolean; apiVersion: string | undefined };
+  /**
+   * PIPE-ORCHESTRATOR (Q-POR1): cờ `PIPELINE_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); `PIPELINE_WORKSPACE_IDS` = danh sách workspace
+   * được tự chạy (rỗng = không workspace nào). Tắt → không đăng ký hàng đợi/job quét, ingest không xếp job.
+   */
+  pipeline: { enabled: boolean; workspaceIds: string[]; turnLimit: number };
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -176,6 +181,11 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     instagram: loadInstagramConfig(source),
     dataExport: loadDataExportConfig(source),
     kbReembedEnabled: source.KB_REEMBED_ENABLED?.trim() === 'true',
+    pipeline: {
+      enabled: source.PIPELINE_ENABLED?.trim() === 'true',
+      workspaceIds: parsePipelineWorkspaceIds(source.PIPELINE_WORKSPACE_IDS),
+      turnLimit: resolveAiTurnLimit(source),
+    },
     mlEmbedder: loadMlEmbedderOptions(source),
     messenger: loadMessengerConfig(source),
     tiktok: loadTikTokConfig(source),
