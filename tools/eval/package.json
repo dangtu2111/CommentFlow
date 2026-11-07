@@ -10,17 +10,20 @@
     "evaluate": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/run.ts",
     "promptfoo": "pnpm dlx promptfoo@0.125.1 eval -c promptfoo/promptfooconfig.yaml --no-cache",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "export-shop": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/export-shop.ts"
   },
   "dependencies": {
     "@flow/ai": "workspace:*",
     "@flow/db": "workspace:*",
     "@flow/shared": "workspace:*",
+    "pg": "8.23.1",
     "tsx": "4.23.15",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@types/pg": "8.23.1",
     "vitest": "5.0.5"
   }
 }

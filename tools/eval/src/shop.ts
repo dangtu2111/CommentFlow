@@ -19,12 +19,16 @@ const productSchema = z.object({
   /** Cách khách gọi khác (tên tiếng Anh, tên rút gọn). */
   aliases: z.array(z.string()).default([]),
   priceVnd: z.number().int().nonnegative().nullable(),
+  /** Cửa hàng dùng tiền tệ khác VND (Q-SFP1, vd. Shopify USD): giá nằm ở `priceMinor` (đơn vị nhỏ nhất, vd. cent); `priceVnd` = null. */
+  currencyCode: z.string().min(3).max(3).default('VND'),
+  priceMinor: z.number().int().nonnegative().nullable().default(null),
   stock: z.number().int().nonnegative().nullable(),
   variants: z
     .array(
       z.object({
         attrs: z.record(z.string(), z.string()),
         priceVnd: z.number().int().nonnegative().nullable(),
+        priceMinor: z.number().int().nonnegative().nullable().default(null),
         stock: z.number().int().nonnegative().nullable(),
       }),
     )
@@ -79,11 +83,15 @@ const toTryProduct = (product: ShopFixture['products'][number]) => ({
   id: product.id,
   name: product.name,
   priceVnd: product.priceVnd,
+  currencyCode: product.currencyCode,
+  priceMinor: product.priceMinor,
   stock: product.stock,
   variants: product.variants.map((variant) => ({
     attrs: variant.attrs,
     attrsNorm: normalizeAttrs(variant.attrs),
     priceVnd: variant.priceVnd,
+    currencyCode: product.currencyCode,
+    priceMinor: variant.priceMinor,
     stock: variant.stock,
   })),
 });
