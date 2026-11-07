@@ -2,7 +2,7 @@
 
 1. Chạy lint, typecheck và test **phạm vi đã đổi**, cùng `pnpm check:plans` và `pnpm docs:build` (ghép tài liệu + kiểm định dạng/trùng mã của file nhỏ); chỉ in lỗi. Đỏ → sửa, không gọi agent nào.
 2. **Đối chiếu tiêu chí nghiệm thu** (mục trong `docs/plans/<nhánh>.md`): với từng tiêu chí ghi bằng chứng (tên test hoặc lệnh đã chạy và kết quả). Tiêu chí chưa đạt → sửa tiếp, hoặc nêu rõ trong `docs/handoff/<nhánh>.md` mục "Còn lại" và trong báo cáo; không báo "xong" khi còn tiêu chí chưa có bằng chứng. Nhánh `mech/*`, `ops/*`, `fix/*` không có plan thì bỏ qua bước này (cổng `check:plans` đã miễn). Plan có mục "Complexity tracking" → xác nhận mọi vi phạm trong diff đều đã được ghi ở đó.
-3. Xanh → xem `git diff --stat`. Diff thuộc diện nhạy cảm → cần **một** lần kiểm chứng theo `docs/workflows/verify.md` (Claude Code: agent `verifier-security`/`verifier-db`; hoặc agent khác với agent đã viết code). Không thuộc diện → bỏ qua.
+3. Xanh → xem `git diff --stat`. Diff thuộc diện nhạy cảm → chạy **một** lần tự kiểm theo `docs/workflows/verify.md` (không dùng subagent; ghi "tự kiểm, chưa có kiểm chứng độc lập" trong báo cáo, và không tự merge — chờ chủ dự án). Không thuộc diện → bỏ qua.
 4. Sửa các mục "Chặn merge" của verifier; chạy lại test phạm vi hẹp. Không gọi verifier lần hai trừ khi sửa chạm lại đúng phần nhạy cảm.
 5. Cập nhật trong cùng commit:
    - `docs/gap-matrix.md`: dòng của việc → ✅ Xong + nhánh.

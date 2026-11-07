@@ -1,5 +1,7 @@
 # Chạy song song nhiều nhánh (làn)
 
+> **Tạm dừng (chủ dự án chốt 07/11/2026: không multi-agent).** Chỉ một phiên, một nhánh tại một thời điểm; tài liệu dưới đây giữ lại để dùng khi chủ dự án bật lại chạy song song.
+
 Một **làn** = một thư mục làm việc `git worktree` + một phiên Claude + (nếu cần DB) một DB test riêng `cf_test_<làn>`. Có **3 làn**: `a`, `b`, `c`. Làn chỉ tách công cụ; quy tắc "một nhánh, một agent" trong `AGENTS.md` vẫn đúng.
 
 ## Tạo làn

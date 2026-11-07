@@ -1,0 +1,1 @@
+| Bảng quyền theo vai trò (Thành viên & Phân quyền, Q-WMEM1) | `roleAccessRows` | `apps/web/src/lib/app-nav.ts` (nguồn `ENTRIES`) · dùng ở `components/app/members-view.tsx` · E2E `e2e/tests/settings-members.spec.ts` |

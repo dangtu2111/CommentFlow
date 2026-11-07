@@ -1,5 +1,7 @@
 # Bộ điều phối nhiều làn (`tools/orchestrator`)
 
+> **Tạm dừng (07/11/2026: không multi-agent).** Không chạy orchestrator/driver nền khi chủ dự án chưa bật lại.
+
 Chạy hàng đợi việc trên nhiều làn song song: mỗi việc = một agent Claude làm trong worktree của làn → mở PR → bộ điều phối chờ CI **xong thật** → merge, hoặc gọi agent sửa (tối đa 2 lần/PR) → hoặc báo **KẸT**. Chỉ dùng stdlib Node (không thêm phụ thuộc). Căn cứ: `docs/decisions/012-orchestrator-kit.md`; quy tắc làn/DB: `docs/workflows/parallel.md`.
 
 ## Thiết lập (một lần cho mỗi dự án)

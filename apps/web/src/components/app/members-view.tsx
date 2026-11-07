@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
+import { roleAccessRows } from '../../lib/app-nav';
 import { cn } from '../../lib/cn';
 import { userInitials } from '../../lib/user-initials';
 import { SettingsFrame, type SettingsFrameScope } from '../settings/settings-frame';
@@ -30,32 +32,16 @@ const INVITE_TITLE_ID = 'invite-title';
 const LIST_TITLE_ID = 'members-title';
 const MATRIX_TITLE_ID = 'matrix-title';
 const PENDING_TITLE_ID = 'pending-title';
-const MATRIX_ROWS = ['connect', 'kb', 'rules', 'stop', 'leads', 'billing'] as const;
-/** Ô ma trận quyền: `yes` có quyền, `no` không, `mask` có nhưng che số điện thoại, `alert` quyền khẩn cấp ai cũng có. */
-type Cell = 'yes' | 'no' | 'mask' | 'alert';
-const MATRIX: Record<(typeof MATRIX_ROWS)[number], { owner: Cell; staff: Cell }> = {
-  connect: { owner: 'yes', staff: 'no' },
-  kb: { owner: 'yes', staff: 'no' },
-  rules: { owner: 'yes', staff: 'no' },
-  stop: { owner: 'alert', staff: 'alert' },
-  leads: { owner: 'yes', staff: 'mask' },
-  billing: { owner: 'yes', staff: 'no' },
-};
+const ACCESS_ROWS = roleAccessRows();
+const OWNER_ACCESS = ACCESS_ROWS.filter((row) => row.owner).length;
+const STAFF_ACCESS = ACCESS_ROWS.filter((row) => row.staff).length;
 
-async function MatrixCell({ cell }: { cell: Cell }) {
+async function AccessCell({ allowed }: { allowed: boolean }) {
   const t = await getTranslations('members.matrix');
-  if (cell === 'mask') {
-    return (
-      <span className="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary">
-        <Icon name="visibility_off" size={14} /> {t('mask')}
-      </span>
-    );
-  }
-  const tone = { yes: 'text-primary', no: 'text-outline-variant', alert: 'text-error' }[cell];
   return (
-    <span className={cn('inline-flex', tone)}>
-      <Icon name={cell === 'no' ? 'cancel' : 'check_circle'} size={16} />
-      <span className="sr-only">{t(cell === 'no' ? 'denied' : 'allowed')}</span>
+    <span className={cn('inline-flex', allowed ? 'text-primary' : 'text-outline-variant')}>
+      <Icon name={allowed ? 'check_circle' : 'cancel'} size={16} />
+      <span className="sr-only">{t(allowed ? 'allowed' : 'denied')}</span>
     </span>
   );
 }
@@ -74,7 +60,11 @@ export async function MembersView({
   members: MemberRowView[];
   invitations: InvitationRowView[];
 }) {
-  const [t, format] = await Promise.all([getTranslations('members'), getFormatter()]);
+  const [t, format, tn] = await Promise.all([
+    getTranslations('members'),
+    getFormatter(),
+    getTranslations('shell.nav'),
+  ]);
   const activeOwners = members.filter((m) => m.role === 'owner' && m.status === 'active').length;
   return (
     <SettingsFrame
@@ -176,7 +166,10 @@ export async function MembersView({
                             : 'text-on-surface-variant',
                         )}
                       >
-                        {t(`permissions.${member.role}`)}
+                        {t('permissions.count', {
+                          count: member.role === 'owner' ? OWNER_ACCESS : STAFF_ACCESS,
+                          total: ACCESS_ROWS.length,
+                        })}
                       </span>
                     </td>
                     <td className="py-3 px-3">
@@ -200,12 +193,20 @@ export async function MembersView({
                     </td>
                     <td className="py-3 px-3 text-right">
                       {isSelf ? (
-                        <span
-                          title={t('list.selfNote')}
-                          className="font-label-sm text-label-sm text-on-surface-variant italic"
-                        >
-                          {t('list.locked')}
-                        </span>
+                        <div className="inline-flex flex-col items-end gap-1">
+                          <span
+                            title={t('list.selfNote')}
+                            className="font-label-sm text-label-sm text-on-surface-variant italic"
+                          >
+                            {t('list.locked')}
+                          </span>
+                          <Link
+                            href="/app/leave"
+                            className="p-1 rounded hover:bg-error-container text-error font-label-sm text-label-sm"
+                          >
+                            {t('list.leave')}
+                          </Link>
+                        </div>
                       ) : (
                         <MemberActions
                           memberId={member.memberId}
@@ -237,51 +238,31 @@ export async function MembersView({
               {t('matrix.title')}
             </h3>
           </div>
-          <span className="font-label-sm text-label-sm text-on-surface-variant">
-            {t('matrix.version')}
-          </span>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">{t('matrix.note')}</p>
         </div>
         <div className="overflow-x-auto rounded-lg">
           <table className="w-full text-left">
             <thead className="bg-surface-container font-label-sm text-label-sm text-on-surface uppercase">
               <tr>
-                <th className="py-2 px-3">{t('matrix.task')}</th>
+                <th className="py-2 px-3">{t('matrix.page')}</th>
                 <th className="py-2 px-3 text-center">{t('roles.owner')}</th>
                 <th className="py-2 px-3 text-center">{t('roles.staff')}</th>
-                <th className="py-2 px-3">{t('matrix.rule')}</th>
               </tr>
             </thead>
             <tbody className="font-body-sm text-body-sm text-on-surface">
-              {MATRIX_ROWS.map((row, index) => (
+              {ACCESS_ROWS.map((row, index) => (
                 <tr
-                  key={row}
+                  key={row.key}
                   className={
                     index % 2 === 1 ? 'bg-surface-container-low/40' : 'bg-surface-container-lowest'
                   }
                 >
-                  <td
-                    className={cn(
-                      'py-2.5 px-3',
-                      MATRIX[row].staff === 'alert' && 'font-semibold text-error',
-                    )}
-                  >
-                    {t(`matrix.rows.${row}.task`)}
+                  <td className="py-2.5 px-3">{tn(row.key)}</td>
+                  <td className="py-2.5 px-3 text-center">
+                    <AccessCell allowed={row.owner} />
                   </td>
                   <td className="py-2.5 px-3 text-center">
-                    <MatrixCell cell={MATRIX[row].owner} />
-                  </td>
-                  <td className="py-2.5 px-3 text-center">
-                    <MatrixCell cell={MATRIX[row].staff} />
-                  </td>
-                  <td
-                    className={cn(
-                      'py-2.5 px-3',
-                      MATRIX[row].staff === 'alert'
-                        ? 'text-error font-medium'
-                        : 'text-on-surface-variant',
-                    )}
-                  >
-                    {t(`matrix.rows.${row}.rule`)}
+                    <AccessCell allowed={row.staff} />
                   </td>
                 </tr>
               ))}
