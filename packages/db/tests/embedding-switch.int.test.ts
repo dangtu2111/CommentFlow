@@ -93,8 +93,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   // Đổi model là TOÀN CỤC (đòi 100% dòng của mọi workspace): dọn vector còn sót từ các file test trước (DB test, chạy tuần tự).
-  await admin.query('DELETE FROM cf.kb_chunks');
-  await admin.query('DELETE FROM cf.products');
+  await admin.query('TRUNCATE cf.kb_chunks, cf.products CASCADE');
   await admin.query('UPDATE cf.kb_chunks SET embedding_next = NULL, embedding_next_model = NULL');
   await admin.query(
     'UPDATE cf.products SET name_embedding_next = NULL, name_embedding_next_model = NULL',

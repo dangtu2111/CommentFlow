@@ -19,8 +19,9 @@ export type DraftChunkState = {
 
 export type DraftChunkWrite = ChunkDraft & {
   contentHash: string;
-  embedding: number[];
-  embeddingModel: string;
+  /** `null` = chưa có embedding (chưa kích hoạt model/dịch vụ tắt): đoạn vẫn tìm được bằng toàn văn/trigram. Có vector thì PHẢI kèm model đang hoạt động (trigger DB, FR-133). */
+  embedding: number[] | null;
+  embeddingModel: string | null;
   /** Kết quả quét cài lệnh (FR-164). Thiếu = không nghi ngờ. */
   injectionSuspected?: boolean;
   injectionReason?: string | null;
@@ -76,7 +77,7 @@ export async function upsertDraftChunks(
         embedding, tsv, is_draft, context_header, product_id, valid_from, valid_until, embedding_model,
         injection_suspected, injection_reason)
       VALUES (${workspaceId}::uuid, ${sourceId}::uuid, NULL, ${row.chunkKey}, ${row.content}, ${row.lang},
-        ${row.contentHash}, ${vectorLiteral(row.embedding)}::halfvec, ${tsvExpression(row)}, true,
+        ${row.contentHash}, ${row.embedding ? vectorLiteral(row.embedding) : null}::halfvec, ${tsvExpression(row)}, true,
         ${row.contextHeader}, ${row.productId}::uuid, ${row.validFrom}, ${row.validUntil}, ${row.embeddingModel},
         ${row.injectionSuspected ?? false}, ${row.injectionReason ?? null})
       ON CONFLICT ON CONSTRAINT kb_chunks_key_unique DO UPDATE SET

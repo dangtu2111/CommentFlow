@@ -24,6 +24,10 @@ export type MlEmbedderOptions = {
   token?: string;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  /**
+   * Model đang hoạt động ở DB (FR-133): dịch vụ trả model KHÁC → từ chối dùng. Mặc định `bge-m3`. Env KHÔNG chọn model.
+   */
+  expectedModel?: string;
 };
 
 function failure(message: string, cause?: unknown): AppError {
@@ -36,6 +40,7 @@ export function createMlEmbedder(options: MlEmbedderOptions): Embedder {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
   const fetchImpl = options.fetchImpl ?? fetch;
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const expectedModel = options.expectedModel ?? ML_EMBEDDING_MODEL;
 
   async function embedBatch(texts: string[]): Promise<number[][]> {
     let response: Response;
@@ -59,11 +64,16 @@ export function createMlEmbedder(options: MlEmbedderOptions): Embedder {
     if (!parsed.success || parsed.data.vectors.length !== texts.length) {
       throw failure('Phản hồi của dịch vụ embedding không đúng định dạng.');
     }
+    if (parsed.data.model !== expectedModel) {
+      throw failure(
+        `Dịch vụ embedding trả model "${parsed.data.model}", khác model đang hoạt động "${expectedModel}" — từ chối dùng.`,
+      );
+    }
     return parsed.data.vectors;
   }
 
   return {
-    model: ML_EMBEDDING_MODEL,
+    model: expectedModel,
     async embed(texts) {
       const clipped = texts.map((text) => (text === '' ? ' ' : text.slice(0, MAX_CHARS_PER_TEXT)));
       const vectors: number[][] = [];

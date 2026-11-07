@@ -25,8 +25,9 @@ export type ExistingChunk = {
 
 export type HashedDraft = ChunkDraft & { contentHash: string };
 export type ChunkRow = HashedDraft & {
-  embedding: number[];
-  embeddingModel: string;
+  /** `null` = không có embedder (chưa kích hoạt model/dịch vụ tắt). */
+  embedding: number[] | null;
+  embeddingModel: string | null;
   /** Kết quả quét cài lệnh (FR-164): true → không xuất bản tự động, vào hàng chờ duyệt. */
   injectionSuspected: boolean;
   injectionReason: string | null;
@@ -111,7 +112,7 @@ export async function embedInBatches(
 export function planChunkIndexing(input: {
   drafts: ChunkDraft[];
   existing: ExistingChunk[];
-  model: string;
+  model: string | null;
 }): IndexingPlan {
   const known = new Map(input.existing.map((chunk) => [chunk.chunkKey, chunk]));
   const seen = new Set<string>();
@@ -138,7 +139,8 @@ export function planChunkIndexing(input: {
 export async function buildChunkRows(input: {
   drafts: ChunkDraft[];
   existing: ExistingChunk[];
-  embedder: Embedder;
+  /** Thiếu → KHÔNG tạo vector (đoạn chỉ tìm bằng toàn văn/trigram); không có embedder giả khi chạy. */
+  embedder?: Embedder;
   batchSize?: number;
   /** Miền của shop: link tới đó không bị coi là link lạ khi quét cài lệnh (FR-164). */
   allowedDomains?: readonly string[];
@@ -151,19 +153,21 @@ export async function buildChunkRows(input: {
   const plan = planChunkIndexing({
     drafts: input.drafts,
     existing: input.existing,
-    model: input.embedder.model,
+    model: input.embedder?.model ?? null,
   });
-  const vectors = await embedInBatches(
-    input.embedder,
-    plan.toEmbed.map((chunk) => indexText(chunk)),
-    input.batchSize,
-  );
+  const vectors = input.embedder
+    ? await embedInBatches(
+        input.embedder,
+        plan.toEmbed.map((chunk) => indexText(chunk)),
+        input.batchSize,
+      )
+    : [];
   // Quét cài lệnh chỉ cho đoạn mới/đổi; đoạn không đổi giữ cờ (kể cả đã được chủ shop duyệt) trong DB.
   const annotated = annotateInjection(plan.toEmbed, { allowedDomains: input.allowedDomains });
   const rows = annotated.map((chunk, i) => ({
     ...chunk,
-    embedding: vectors[i] as number[],
-    embeddingModel: input.embedder.model,
+    embedding: input.embedder ? (vectors[i] as number[]) : null,
+    embeddingModel: input.embedder?.model ?? null,
   }));
   return {
     rows,

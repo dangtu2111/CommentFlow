@@ -11,16 +11,15 @@ export type StartupEmbeddingState = 'off' | 'ok' | 'empty' | 'mismatch' | 'unkno
 
 export async function checkEmbeddingAtStartup(deps: {
   configuredModel: string | null;
+  /** Lý do tắt (từ `EmbeddingConfig.describe.note`): dịch vụ tắt hay DB chưa kích hoạt model. */
+  offNote?: string;
   workspaceIds: readonly string[];
   count: (workspaceId: string) => Promise<EmbeddingModelCounts>;
   logger: Pick<Logger, 'info' | 'warn' | 'error'>;
 }): Promise<Array<{ workspaceId: string | null; state: StartupEmbeddingState }>> {
   const { configuredModel, logger } = deps;
   if (configuredModel === null) {
-    logger.warn(
-      {},
-      'embedding TẮT (chưa bật ML_EMBED_ENABLED=true + ML_URL): không có nhánh vector, chỉ toàn văn/trigram',
-    );
+    logger.warn({}, deps.offNote ?? 'embedding TẮT: không có nhánh vector, chỉ toàn văn/trigram');
     return [{ workspaceId: null, state: 'off' }];
   }
   const results: Array<{ workspaceId: string | null; state: StartupEmbeddingState }> = [];

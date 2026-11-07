@@ -205,3 +205,25 @@ describe('FR-055 buildChunkRows', () => {
     expect(result.rows).toEqual([]);
   });
 });
+
+describe('buildChunkRows — không có embedder (chưa kích hoạt model / dịch vụ tắt)', () => {
+  it('không tạo vector giả: embedding/model = null, đoạn vẫn có hash để tìm toàn văn', async () => {
+    const result = await buildChunkRows({
+      drafts: [
+        {
+          chunkKey: 'k#0',
+          content: 'Đổi trả trong 7 ngày',
+          contextHeader: null,
+          lang: 'vi',
+          productId: null,
+          validFrom: null,
+          validUntil: null,
+        },
+      ],
+      existing: [],
+    });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({ embedding: null, embeddingModel: null });
+    expect(result.rows[0]?.contentHash).toBeTruthy();
+  });
+});

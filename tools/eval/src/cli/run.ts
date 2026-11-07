@@ -7,8 +7,9 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { resolveEmbeddingConfig } from '@flow/ai';
+import { loadEmbeddingService, resolveEmbeddingConfig } from '@flow/ai';
 import { allowMockInThisProcess } from '@flow/shared';
+import pg from 'pg';
 import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
 import { computeMetrics } from '../metrics';
@@ -35,7 +36,28 @@ const { values } = parseArgs({
   },
 });
 
-const embeddingInfo = resolveEmbeddingConfig(process.env).describe;
+// Model embedding hoạt động nằm ở DB (`cf.embedding_state`); env chỉ bật/tắt dịch vụ ml (FR-133). Báo cáo ghi cả hai; không đọc được DB → ghi rõ.
+async function readActiveEmbeddingModel(): Promise<string | null | undefined> {
+  const url = process.env.DATABASE_URL;
+  if (!url) return undefined;
+  const pool = new pg.Pool({ connectionString: url, max: 1 });
+  try {
+    const result = await pool.query('SELECT active_model FROM cf.embedding_state');
+    return (result.rows[0]?.active_model as string | null | undefined) ?? null;
+  } catch {
+    return undefined;
+  } finally {
+    await pool.end();
+  }
+}
+const activeEmbeddingModel = await readActiveEmbeddingModel();
+const embeddingInfo =
+  activeEmbeddingModel === undefined
+    ? {
+        model: null,
+        note: 'không đọc được model hoạt động từ DB (thiếu DATABASE_URL hoặc lỗi kết nối)',
+      }
+    : resolveEmbeddingConfig(loadEmbeddingService(process.env), activeEmbeddingModel).describe;
 const backend = values.backend as Backend;
 // EVAL chỉ đo model THẬT (LiteLLM + bge-m3). `--backend mock` (bản fixture chạy ở CI) phải tự khai báo và báo cáo ghi rõ "không phải số đo".
 if (backend === 'mock')
