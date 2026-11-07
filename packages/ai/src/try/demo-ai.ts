@@ -26,17 +26,16 @@ const ASK_RULES: ReadonlyArray<readonly [string, RegExp]> = [
 
 function labelOf(text: string): ExtractResult['labels'] {
   if (/\b(loi|te|toi te|lua dao|hoan tien|khieu nai|that vong|complaint)\b/.test(text)) {
-    return [{ label: 'complaint', confidence: 0.9 }];
+    return [{ label: 'complaint' }];
   }
-  if (/\b(chot|dat hang|mua|order|lay)\b/.test(text))
-    return [{ label: 'purchase', confidence: 0.9 }];
+  if (/\b(chot|dat hang|mua|order|lay)\b/.test(text)) return [{ label: 'purchase' }];
   if (/\b(gia|bao nhieu|nhieu tien|price|how much)\b/.test(text)) {
-    return [{ label: 'price', confidence: 0.9 }];
+    return [{ label: 'price' }];
   }
   if (/\b(ship|giao|doi|tra|size|tu van|bao hanh|con hang|giam)\b/.test(text)) {
-    return [{ label: 'advice', confidence: 0.9 }];
+    return [{ label: 'advice' }];
   }
-  return [{ label: 'other', confidence: 0.5 }];
+  return [{ label: 'other' }];
 }
 
 const tokensOf = (text: string) =>
@@ -72,9 +71,12 @@ export function createDemoExtractor(options: { productNames?: readonly string[] 
       const text = fold(input.text);
       const size = /\bsize\s*([sml]|xl)\b/i.exec(input.text)?.[1]?.toUpperCase() ?? null;
       const color = COLORS.find((c) => text.includes(fold(c))) ?? null;
+      const labels = labelOf(text);
       return {
         ...FIXTURE_EXTRACT_DEFAULT,
-        labels: labelOf(text),
+        labels,
+        // Bản MOCK: thay cho xác suất nhãn của `ml` (chưa có). Nhãn rõ → 0,9; `other` → 0,5. Không phải số model tự ghi.
+        labelSignal: { ml: labels[0]?.label === 'other' ? 0.5 : 0.9 },
         product_mentions: mentionsOfProducts(input.text, productNames),
         size,
         color,

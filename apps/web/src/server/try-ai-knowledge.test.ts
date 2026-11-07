@@ -49,6 +49,7 @@ describe('KB-TRYAI cờ + runner', () => {
       enabled: true,
       db: { withActor: withActor as never },
       currentVersion: async () => ({ id: 'v1', number: 1 }),
+      abbreviations: async () => ({}),
     });
     const base = createDemoKnowledge();
     const out = await runner({ workspaceId: 'w', userId: 'u' }, base, async (k) => k !== base);
@@ -63,15 +64,22 @@ describe('KB-TRYAI cờ + runner', () => {
       countProducts: async () => 3,
       shopTexts: async () => [],
       productNames: async () => ['Áo A', 'Váy B'],
+      abbreviations: async () => ({ bn: 'bao nhiêu' }),
     });
     const base = createDemoKnowledge();
     const out = await runner({ workspaceId: 'w', userId: 'u' }, base, async (k, ctx) => ({
       names: ctx.productNames,
+      abbreviations: ctx.abbreviations,
       sameBase: k === base,
       usesDemoKb: k.searchKb === base.searchKb,
     }));
     expect(out.source).toBe('shop');
-    expect(out.value).toEqual({ names: ['Áo A', 'Váy B'], sameBase: false, usesDemoKb: false });
+    expect(out.value).toEqual({
+      names: ['Áo A', 'Váy B'],
+      abbreviations: { bn: 'bao nhiêu' },
+      sameBase: false,
+      usesDemoKb: false,
+    });
   });
 
   it('bật sản phẩm thật nhưng workspace chưa có sản phẩm → demo', async () => {

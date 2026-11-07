@@ -14,6 +14,7 @@ export {
   productFactText,
 } from './db-product-knowledge';
 export { createDbShopKnowledgeSearch, searchShopTexts } from './db-shop-knowledge';
+export { DEMO_ABBREVIATIONS } from './demo-abbreviations';
 export { createDemoDrafter, createDemoExtractor } from './demo-ai';
 export { createDemoKnowledge } from './demo-knowledge';
 export { createKbTryKnowledge, type KbTryKnowledgeDeps } from './kb-try-knowledge';

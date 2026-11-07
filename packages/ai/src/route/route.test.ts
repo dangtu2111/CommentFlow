@@ -11,7 +11,7 @@ const PRODUCT = ['p-1'];
 function extract(over: Partial<RouteExtract> & { label?: CommentLabel } = {}): RouteExtract {
   const { label, ...rest } = over;
   return {
-    labels: [{ label: label ?? 'price', confidence: 0.9 }],
+    labels: [{ label: label ?? 'price' }],
     size: null,
     color: null,
     asks: [],
@@ -95,10 +95,7 @@ describe('FR-136 routeQuery — nhánh sql', () => {
   it('nhãn phụ (advice) bên cạnh price không chặn sql', () => {
     const result = routeQuery({
       extract: extract({
-        labels: [
-          { label: 'price', confidence: 0.9 },
-          { label: 'advice', confidence: 0.4 },
-        ],
+        labels: [{ label: 'price' }, { label: 'advice' }],
       }),
       resolvedProductIds: PRODUCT,
     });
@@ -165,10 +162,7 @@ describe('FR-136 routeQuery — nhánh hybrid', () => {
   it.each(['complaint', 'spam'] as const)('nhãn %s ở bất kỳ vị trí → hybrid', (bad) => {
     const result = routeQuery({
       extract: extract({
-        labels: [
-          { label: 'price', confidence: 0.9 },
-          { label: bad, confidence: 0.3 },
-        ],
+        labels: [{ label: 'price' }, { label: bad }],
         size: 'M',
       }),
       resolvedProductIds: PRODUCT,

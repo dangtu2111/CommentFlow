@@ -5,6 +5,9 @@ import { createFixtureExtractor, FIXTURE_EXTRACT_DEFAULT } from '../classify/fix
 import { type DraftResult, needsHumanResult } from '../draft/draft-result';
 import type { Drafter } from '../draft/drafter';
 import { createFixtureDrafter } from '../draft/fixture-drafter';
+import { createAbbreviationDict } from '../normalize/normalize-lang';
+import { DEMO_ABBREVIATIONS } from './demo-abbreviations';
+import { createDemoExtractor } from './demo-ai';
 import { createDemoKnowledge } from './demo-knowledge';
 import { runTryPipeline, type TryInput } from './try-pipeline';
 
@@ -28,7 +31,7 @@ const extract = (patch: Partial<ExtractResult>): ExtractResult => ({
 });
 
 const shipExtract = extract({
-  labels: [{ label: 'advice', confidence: 0.95 }],
+  labels: [{ label: 'advice' }],
   asks: ['phí ship'],
 });
 const shipReply: DraftResult = {
@@ -115,7 +118,7 @@ describe('FR-059 FR-029 US-034 runTryPipeline', () => {
         extractor: createFixtureExtractor([
           {
             match: /lỗi/,
-            result: extract({ labels: [{ label: 'complaint', confidence: 0.9 }], asks: ['ship'] }),
+            result: extract({ labels: [{ label: 'complaint' }], asks: ['ship'] }),
           },
         ]),
         drafter: { draft: async () => needsHumanResult('Hành động chuyển người') },
@@ -146,7 +149,7 @@ describe('FR-059 FR-029 US-034 runTryPipeline', () => {
           {
             match: /áo thun/,
             result: extract({
-              labels: [{ label: 'price', confidence: 0.95 }],
+              labels: [{ label: 'price' }],
               product_mentions: ['áo thun basic'],
               size: 'M',
               color: 'đen',
@@ -187,5 +190,75 @@ describe('FR-059 FR-029 US-034 runTryPipeline', () => {
     const { readFileSync } = await import('node:fs');
     const src = readFileSync(new URL('./try-pipeline.ts', import.meta.url), 'utf8');
     expect(src).not.toMatch(/usage-meter|consume\(/);
+  });
+});
+
+describe('Bước 0 — extract/tìm kiếm nhận văn bản ĐÃ chuẩn hóa; p_label không lấy từ số model tự ghi', () => {
+  const run = async (text: string, extractor: Extractor = createDemoExtractor()) => {
+    const seen: string[] = [];
+    const spy: Extractor = {
+      async extract(input) {
+        seen.push(input.text);
+        return extractor.extract(input);
+      },
+    };
+    const knowledge = createDemoKnowledge();
+    const searched: string[] = [];
+    const result = await runTryPipeline(
+      { ...base, text, dict: createAbbreviationDict(DEMO_ABBREVIATIONS) },
+      {
+        extractor: spy,
+        drafter: createFixtureDrafter(),
+        knowledge: {
+          ...knowledge,
+          searchKb: async (query, ctx) => {
+            searched.push(query);
+            return knowledge.searchKb(query, ctx);
+          },
+        },
+      },
+    );
+    return { result, seen, searched };
+  };
+
+  it('"ship bao lâu" KHÔNG bị gán nhãn price (hỏi vận chuyển là advice)', async () => {
+    const { result } = await run('ship bao lâu');
+    expect(result.status).toBe('done');
+    if (result.status === 'done') expect(result.label).not.toBe('price');
+    if (result.status === 'done') expect(result.label).toBe('advice');
+  });
+
+  it('"gia bn sz M": viết tắt được mở trước khi extract → nhãn price + size M', async () => {
+    const { result, seen } = await run('áo thun basic gia bn sz M');
+    expect(seen[0]).toContain('bao nhiêu');
+    expect(seen[0]).toContain('size');
+    expect(seen[0]).not.toMatch(/bn|sz/);
+    expect(result.status).toBe('done');
+    if (result.status === 'done') expect(result.label).toBe('price');
+  });
+
+  it('tìm kiếm cũng nhận câu đã chuẩn hóa; PII đã che trước khi chuẩn hóa', async () => {
+    const { searched, seen } = await run('ship ve ha noi bn, sdt 0901234567');
+    expect(searched[0]).toContain('bao nhiêu');
+    expect(searched[0]).not.toContain('0901234567');
+    expect(seen[0]).not.toContain('0901234567');
+  });
+
+  it('p_label đến từ labelSignal; không có tín hiệu → null (thấp hơn có tín hiệu), KHÔNG dùng số tự ghi', async () => {
+    const withSignal: Extractor = {
+      async extract() {
+        return { ...shipExtract, labelSignal: { logprob: 0.95 } };
+      },
+    };
+    const { labelSignal: _drop, ...bare } = shipExtract as typeof shipExtract & {
+      labelSignal?: unknown;
+    };
+    const noSignal: Extractor = { extract: async () => bare };
+    const a = await run('ship về Hà Nội bao nhiêu', withSignal);
+    const b = await run('ship về Hà Nội bao nhiêu', noSignal);
+    if (a.result.status !== 'done' || b.result.status !== 'done') throw new Error('phải chạy xong');
+    expect(a.result.confidence.components?.p_label).toBeGreaterThan(0);
+    expect(b.result.confidence.components?.p_label).toBe(0);
+    expect(a.result.confidence.confidence).toBeGreaterThan(b.result.confidence.confidence);
   });
 });

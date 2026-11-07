@@ -170,7 +170,7 @@ describe('FR-150 evaluatePriceRisk — cờ cho decideAction + cảnh báo Owner
     const d = decideAction({
       lang: 'vi',
       extract: {
-        labels: [{ label: 'price', confidence: 0.9 }],
+        labels: [{ label: 'price' }],
         refers_to_image: false,
         size: null,
         color: null,
@@ -267,7 +267,7 @@ describe('FR-158 buildPriceQuote — khoảng giá khi chưa rõ biến thể', 
     const d = decideAction({
       lang: 'vi',
       extract: {
-        labels: [{ label: 'price', confidence: 0.9 }],
+        labels: [{ label: 'price' }],
         refers_to_image: false,
         size: null,
         color: null,

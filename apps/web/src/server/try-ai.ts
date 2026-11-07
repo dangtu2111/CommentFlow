@@ -1,7 +1,9 @@
 import {
+  createAbbreviationDict,
   createDemoDrafter,
   createDemoExtractor,
   createDemoKnowledge,
+  DEMO_ABBREVIATIONS,
   runTryPipeline,
   type TryDeps,
   type TryQuota,
@@ -89,15 +91,26 @@ export function createTryAiAction(deps: TryAiDeps) {
         autoSendEnabled: true,
       };
       const runPipeline = (knowledge: TryDeps['knowledge'], context?: TryRunContext) =>
-        runTryPipeline(input, {
-          ...built,
-          knowledge,
-          // Có sản phẩm thật → bộ nhận diện mẫu nhận ra đúng tên sản phẩm của shop (thay danh sách mẫu cố định).
-          extractor:
-            context && context.productNames.length > 0 && !deps.buildDeps && !deps.llm?.extractor
-              ? createDemoExtractor({ productNames: context.productNames })
-              : built.extractor,
-        });
+        runTryPipeline(
+          {
+            ...input,
+            // Từ điển thật (hệ thống + workspace) khi có DB; không thì bản mẫu — để "bn"/"sz" được mở trước khi extract.
+            dict: createAbbreviationDict(
+              context && Object.keys(context.abbreviations).length > 0
+                ? context.abbreviations
+                : DEMO_ABBREVIATIONS,
+            ),
+          },
+          {
+            ...built,
+            knowledge,
+            // Có sản phẩm thật → bộ nhận diện mẫu nhận ra đúng tên sản phẩm của shop (thay danh sách mẫu cố định).
+            extractor:
+              context && context.productNames.length > 0 && !deps.buildDeps && !deps.llm?.extractor
+                ? createDemoExtractor({ productNames: context.productNames })
+                : built.extractor,
+          },
+        );
       const { value, source } = deps.knowledgeRunner
         ? await deps.knowledgeRunner(session, built.knowledge, runPipeline)
         : { value: await runPipeline(built.knowledge), source: 'demo' as const };

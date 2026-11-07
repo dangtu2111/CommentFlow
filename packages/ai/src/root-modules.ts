@@ -9,6 +9,14 @@ export {
   type GuardViolation,
 } from './guard-money';
 export {
+  checkReplyGuard,
+  REPLY_MAX_CHARS,
+  type ReplyGuardCode,
+  type ReplyGuardInput,
+  type ReplyGuardResult,
+  type ReplyGuardViolation,
+} from './guard-reply';
+export {
   buildChunkRows,
   type ChunkRow,
   contentHash,

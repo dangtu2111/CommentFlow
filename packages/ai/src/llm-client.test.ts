@@ -326,3 +326,26 @@ describe('createLlmClient.call — kiểm tra đầu vào (trước khi gọi m�
     expect(calls).toHaveLength(0);
   });
 });
+
+describe('createLlmClient.call — logprobs (docs/09 §6.0)', () => {
+  it('chỉ gửi logprobs khi được xin; trả logprob từng token khi nhà cung cấp có', async () => {
+    const { db } = fakeDb();
+    const withLogprobs = okBody({
+      choices: [
+        {
+          message: { role: 'assistant', content: 'x' },
+          logprobs: { content: [{ token: 'x', logprob: -0.1 }] },
+        },
+      ],
+    });
+    const asked = fakeFetch(() => jsonResponse(withLogprobs));
+    const result = await client(db, asked.fetchImpl).call(input({ logprobs: true }));
+    expect(JSON.parse(String(asked.calls[0]?.init.body)).logprobs).toBe(true);
+    expect(result.logprobs).toEqual([{ token: 'x', logprob: -0.1 }]);
+
+    const notAsked = fakeFetch(() => jsonResponse(okBody()));
+    const plain = await client(db, notAsked.fetchImpl).call(input());
+    expect('logprobs' in JSON.parse(String(notAsked.calls[0]?.init.body))).toBe(false);
+    expect(plain.logprobs).toBeUndefined();
+  });
+});

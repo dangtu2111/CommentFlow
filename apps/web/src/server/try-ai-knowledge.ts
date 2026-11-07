@@ -12,6 +12,7 @@ import {
   getCurrentVersion,
   type KbVersionRef,
   listTryProductNames,
+  loadAbbreviationEntries,
   loadTryShopTexts,
   type TryShopText,
 } from '@flow/db/runtime';
@@ -29,7 +30,11 @@ export type TryKnowledgeSource = 'demo' | 'shop' | 'kb';
 export type TrySession = { workspaceId: string; userId?: string };
 
 /** Thông tin thêm cho bộ nhận diện: tên sản phẩm thật để nhận ra khách đang nhắc sản phẩm nào. */
-export type TryRunContext = { productNames: readonly string[] };
+export type TryRunContext = {
+  productNames: readonly string[];
+  /** Từ điển viết tắt (hệ thống + workspace) để mở "bn", "sz"… trước khi extract/tìm kiếm; rỗng → dùng bản mẫu. */
+  abbreviations: Readonly<Record<string, string>>;
+};
 
 export type KnowledgeRunner = <T>(
   session: TrySession,
@@ -61,6 +66,7 @@ export function createKnowledgeRunner(options: {
   countProducts?: (tx: Database, workspaceId: string) => Promise<number>;
   productNames?: (tx: Database, workspaceId: string) => Promise<string[]>;
   shopTexts?: (tx: Database, workspaceId: string) => Promise<TryShopText[]>;
+  abbreviations?: (tx: Database, workspaceId: string) => Promise<Record<string, string>>;
 }): KnowledgeRunner {
   const currentVersion = options.currentVersion ?? getCurrentVersion;
   const countProducts =
@@ -68,9 +74,15 @@ export function createKnowledgeRunner(options: {
   const productNames =
     options.productNames ?? ((tx, ws) => listTryProductNames(tx, ws, SAMPLE_LABEL));
   const shopTexts = options.shopTexts ?? ((tx, ws) => loadTryShopTexts(tx, ws, SAMPLE_LABEL));
+  const abbreviations =
+    options.abbreviations ??
+    (async (tx: Database, ws: string) => ({
+      ...(await loadAbbreviationEntries(tx, ws, 'en')),
+      ...(await loadAbbreviationEntries(tx, ws, 'vi')),
+    }));
   return async (session, base, run) => {
     const demo = async () => ({
-      value: await run(base, { productNames: [] }),
+      value: await run(base, { productNames: [], abbreviations: {} }),
       source: 'demo' as const,
     });
     if ((!options.enabled && !options.productsEnabled) || !session.userId) return demo();
@@ -85,13 +97,14 @@ export function createKnowledgeRunner(options: {
       if (!version && !hasShopData) return demo();
       const products = hasProducts ? createDbProductKnowledge(tx, session.workspaceId) : base;
       const names = hasProducts ? await productNames(tx, session.workspaceId) : [];
+      const abbreviationEntries = await abbreviations(tx, session.workspaceId);
       if (!version) {
         const knowledge: TryKnowledge = {
           ...products,
           searchKb: createDbShopKnowledgeSearch(texts),
         };
         return {
-          value: await run(knowledge, { productNames: names }),
+          value: await run(knowledge, { productNames: names, abbreviations: abbreviationEntries }),
           source: 'shop' as const,
         };
       }
@@ -103,7 +116,10 @@ export function createKnowledgeRunner(options: {
         embedder: createFixtureEmbedder(),
         base: products,
       });
-      return { value: await run(knowledge, { productNames: names }), source: 'kb' as const };
+      return {
+        value: await run(knowledge, { productNames: names, abbreviations: abbreviationEntries }),
+        source: 'kb' as const,
+      };
     });
   };
 }
