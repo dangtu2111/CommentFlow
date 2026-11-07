@@ -1,0 +1,1 @@
+| Chuỗi xử lý MỘT lượt dùng chung (ô Thử AI + worker; cổng chặn trước LLM, ngữ cảnh chuỗi/rủi ro/đính kèm; PIPE-ORCHESTRATOR lát A) | `runPipeline` (alias `runTryPipeline`) | `packages/ai/src/pipeline/run-pipeline.ts` |

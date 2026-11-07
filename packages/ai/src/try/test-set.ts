@@ -77,7 +77,8 @@ const fold = (text: string) =>
 
 function evaluate(index: number, testCase: TestCase, result: TryResult): TestCaseResult {
   const base = { index, question: testCase.question, expected: testCase.expectAction };
-  if (result.status === 'skipped') {
+  // `blocked` chỉ xảy ra khi nơi gọi truyền cổng chặn (worker); bộ câu kiểm thử không truyền nên chỉ có `skipped` — gộp để an toàn.
+  if (result.status !== 'done') {
     const failures: TestFailure[] = testCase.expectAction === 'skip' ? [] : ['action_mismatch'];
     return {
       ...base,

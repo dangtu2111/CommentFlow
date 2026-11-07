@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 export function TryAiResultView({ result }: { result: TryResult }) {
   const t = useTranslations('tryAi');
 
-  if (result.status === 'skipped') {
+  if (result.status !== 'done') {
     return (
       <section className="card stack" aria-live="polite">
         <p>{t('skipped')}</p>

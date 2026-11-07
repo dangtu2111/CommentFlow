@@ -112,8 +112,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
         ...(parts.rewriter ? { rewriter: parts.rewriter } : {}),
       },
     );
-    if (result.status === 'skipped')
-      return { ok: false, id: sample.id, errorKind: 'skipped', usage };
+    if (result.status !== 'done') return { ok: false, id: sample.id, errorKind: 'skipped', usage };
     return {
       ok: true,
       id: sample.id,
