@@ -13,12 +13,13 @@ model_list:
   # CẤU HÌNH ĐÁNH GIÁ BAN ĐẦU (Q-LLM2, chỉ có khóa OpenAI): app gọi theo bí danh ổn định `cf-classify` (extract + rewrite)
   # và `cf-draft` (soạn câu) qua CLASSIFY_LLM_MODEL / REWRITE_LLM_MODEL / DRAFT_LLM_MODEL. Đổi model = đổi dòng `model:`.
   # reasoning_effort THẤP NHẤT mà model hỗ trợ; kiểm bằng ai_usage.reasoning_tokens ≈ 0.
-  # RỦI RO (Q-LLM1): gpt-5-nano đã Deprecated, tắt hẳn 11/12/2026 — chỉ để so sánh, đổi trước hạn (OpenAI đề nghị gpt-5.6-luna).
+  # Luna cho CẢ HAI bước (chủ dự án chốt 07/11, Q-LLM2): đo thật trên bộ synthetic cho nhãn 56/56 so với 35/56 của nano.
+  # RỦI RO (Q-LLM1): gpt-5-nano đã Deprecated, tắt hẳn 11/12/2026 — chỉ còn là `cand-gpt-nano` để so sánh, KHÔNG dùng cho bí danh chính.
   - model_name: cf-classify
     litellm_params:
-      model: openai/gpt-5-nano
+      model: openai/gpt-5.6-luna
       api_key: os.environ/OPENAI_API_KEY
-      reasoning_effort: minimal
+      reasoning_effort: none
   - model_name: cf-draft
     litellm_params:
       model: openai/gpt-5.6-luna

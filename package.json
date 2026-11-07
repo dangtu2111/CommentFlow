@@ -30,6 +30,7 @@
     "depcruise": "depcruise apps packages --config .dependency-cruiser.cjs",
     "lint:i18n": "pnpm --filter @flow/web run lint:i18n",
     "cf:dev": "node scripts/cf-dev.mjs",
+    "cf:dev:update-vkey": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/cf-dev-update-virtual-key.mjs",
     "stack:check": "node scripts/stack-check.mjs",
     "e2e": "node scripts/e2e.mjs",
     "test:db": "pnpm -r --workspace-concurrency=1 --if-present run test:db",
