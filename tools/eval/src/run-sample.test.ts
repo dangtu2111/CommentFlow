@@ -4,10 +4,13 @@ import {
   createDemoExtractor,
   createDemoKnowledge,
   DEMO_ABBREVIATIONS,
+  type Drafter,
   EXTRACT_UNREADABLE_MESSAGE,
   type Extractor,
+  FIXTURE_EXTRACT_DEFAULT,
+  type TryKnowledge,
 } from '@flow/ai';
-import { AppError } from '@flow/shared';
+import { AppError, unsafeMarkMasked } from '@flow/shared';
 import { describe, expect, it } from 'vitest';
 import type { EvalSample } from './dataset';
 import type { UsageRecord } from './recording-llm';
@@ -133,5 +136,113 @@ describe('EVAL-RUNNER chạy một mẫu qua pipeline', () => {
       workspaceId: '00000000-0000-4000-8000-000000000002',
     });
     expect(outcome.ok).toBe(true);
+  });
+});
+
+describe('EVAL-RUNNER mẫu nhiều lượt (Q-POR12): phát lại lượt khách trước để có trạng thái thật', () => {
+  const PRODUCT = '22222222-2222-4222-8222-222222222222';
+  const productKnowledge: TryKnowledge = {
+    matchProducts: async (mentions) =>
+      mentions.length > 0
+        ? { ids: [PRODUCT], names: ['Áo thun basic'], missingAxes: ['size', 'color'] }
+        : { ids: [], names: [], missingAxes: [] },
+    resolveProducts: async (ids) =>
+      ids.includes(PRODUCT)
+        ? { ids: [PRODUCT], names: ['Áo thun basic'], missingAxes: ['size', 'color'] }
+        : { ids: [], names: [], missingAxes: [] },
+    lookupProductFacts: async (ids) =>
+      ids.includes(PRODUCT)
+        ? [
+            {
+              id: PRODUCT,
+              kind: 'product' as const,
+              title: 'Áo thun basic',
+              text: unsafeMarkMasked('Áo thun basic: giá 150.000đ'),
+              score: 1,
+              topics: ['product_info' as const, 'size' as const],
+            },
+          ]
+        : [],
+    searchKb: async () => [],
+  };
+  const multiTurnExtractor: Extractor = {
+    async extract(input) {
+      const text = String(input.text);
+      if (/áo thun/.test(text)) {
+        return {
+          ...FIXTURE_EXTRACT_DEFAULT,
+          labels: [{ label: 'price' }],
+          product_mentions: ['áo thun basic'],
+          asks: ['giá'],
+        };
+      }
+      return {
+        ...FIXTURE_EXTRACT_DEFAULT,
+        labels: [{ label: 'advice' }],
+        size: 'M',
+        color: 'đen',
+        asks: [],
+      };
+    },
+  };
+  const drafter: Drafter = {
+    async draft(input) {
+      return input.decision?.action === 'clarify'
+        ? {
+            reply: 'Dạ bạn chọn size và màu nào ạ?',
+            lang: 'vi',
+            sources: [],
+            claims: [],
+            unanswered_topics: [],
+            needs_human: false,
+            reason: '',
+            variants: [],
+          }
+        : {
+            reply: 'Dạ áo thun basic giá 150.000đ ạ',
+            lang: 'vi',
+            sources: [PRODUCT],
+            claims: [{ text: 'Giá 150.000đ', source_ids: [PRODUCT], kind: 'fact' }],
+            unanswered_topics: [],
+            needs_human: false,
+            reason: '',
+            variants: [],
+          };
+    },
+  };
+  const multiCtx = (): RunContext => ({
+    ...context(() => ({ extractor: multiTurnExtractor, drafter })),
+    knowledge: productKnowledge,
+    dict: undefined,
+  });
+
+  it('thread có lượt khách trước → lượt cuối "M đen" TRẢ LỜI 150.000đ (không hỏi lại), snapshot là của lượt CUỐI', async () => {
+    const outcome = await runSample(
+      sample('M đen', {
+        thread: [
+          { from: 'customer', text: 'áo thun basic giá bn?' },
+          { from: 'shop', text: 'Dạ bạn chọn size và màu nào ạ?' },
+        ],
+        expected: {
+          lang: 'vi',
+          label: 'advice',
+          action: 'answer',
+          extract: { size: 'M' },
+          mustContain: ['150.000'],
+          forbidden: [],
+        },
+      }),
+      multiCtx(),
+    );
+    expect(outcome).toMatchObject({ ok: true, action: 'answer' });
+    if (outcome.ok) {
+      expect(outcome.reply).toContain('150.000');
+      expect(outcome.extract).toMatchObject({ size: 'M', color: 'đen' });
+    }
+  });
+
+  it('KHÔNG có thread → "M đen" đứng một mình không trả lời được (chứng minh cần ngữ cảnh)', async () => {
+    const outcome = await runSample(sample('M đen'), multiCtx());
+    expect(outcome.ok && outcome.action).not.toBe('answer');
   });
 });

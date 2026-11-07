@@ -103,6 +103,27 @@ describe('TRY-AI-REAL createDbProductKnowledge (nối DB, hàm DB được giả
   });
 });
 
+describe('Q-POR12 resolveProducts — nhận sản phẩm theo id (lượt trước / gắn bài)', () => {
+  it('một sản phẩm → trục biến thể còn thiếu; nhiều sản phẩm → không chọn trục; không có → rỗng', async () => {
+    const knowledge = createDbProductKnowledge(tx, 'ws1');
+    loadTryProducts.mockResolvedValue([shirt]);
+    expect(await knowledge.resolveProducts?.(['p1'])).toEqual({
+      ids: ['p1'],
+      names: ['Áo thun'],
+      missingAxes: ['size'],
+    });
+    expect(loadTryProducts).toHaveBeenCalledWith(tx, 'ws1', ['p1']);
+    loadTryProducts.mockResolvedValue([shirt, { ...shirt, id: 'p2', name: 'Áo sơ mi' }]);
+    expect((await knowledge.resolveProducts?.(['p1', 'p2']))?.missingAxes).toEqual([]);
+    loadTryProducts.mockResolvedValue([]);
+    expect(await knowledge.resolveProducts?.(['gone'])).toEqual({
+      ids: [],
+      names: [],
+      missingAxes: [],
+    });
+  });
+});
+
 describe('TRY-AI-REAL createDbShopKnowledgeSearch', () => {
   it('bọc searchShopTexts thành cổng searchKb async', async () => {
     const search = createDbShopKnowledgeSearch([

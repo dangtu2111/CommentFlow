@@ -42,6 +42,10 @@ const tryAi = createTryAiAction({
  */
 export async function runTryAiAction(_prev: TryAiState, formData: FormData): Promise<TryAiState> {
   const { workspace, user } = await requireAppUser({ role: 'owner' });
-  const result = await tryAi({ workspaceId: workspace.id, userId: user.id }, formData.get('text'));
+  const result = await tryAi(
+    { workspaceId: workspace.id, userId: user.id },
+    formData.get('text'),
+    formData.get('previous'),
+  );
   return { status: 'done', ...result };
 }

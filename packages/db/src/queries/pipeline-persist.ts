@@ -49,15 +49,18 @@ export async function commentHasDraft(
   return r.rows.length > 0;
 }
 
-/** Bình luận đang `processing` → `needs_human` (không đụng trạng thái khác). */
-export async function handoffCommentIfProcessing(
+/**
+ * Bình luận đang `processing` (hoặc `new` — bị chặn trước khi giành quyền, vd. vượt trần FR-167) → `needs_human`; không đụng trạng
+ * thái khác.
+ */
+export async function handoffCommentIfPending(
   tx: Database,
   workspaceId: string,
   commentId: string,
 ): Promise<void> {
   await tx.execute(sql`
     UPDATE cf.comments SET status = 'needs_human', updated_at = now()
-     WHERE workspace_id = ${workspaceId}::uuid AND id = ${commentId}::uuid AND status = 'processing'`);
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${commentId}::uuid AND status IN ('new', 'processing')`);
 }
 
 /** Khóa lượt `failed` kèm lý do (AI lỗi/đầu ra không đọc được). */

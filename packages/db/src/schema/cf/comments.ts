@@ -103,6 +103,8 @@ export const comments = cf.table(
     }).onDelete('set null'),
     index('comments_workspace_status_created_idx').on(t.workspaceId, t.status, t.createdTime),
     index('comments_post_id_idx').on(t.postId),
+    // FR-167 (0076): đếm câu AI của (khách, bài).
+    index('comments_customer_post_idx').on(t.workspaceId, t.postId, t.authorExternalId),
     // PIPE-ORCHESTRATOR (0075): job quét chỉ nhìn bình luận CÒN CHỜ, không backfill — chỉ mục nhỏ, không phình theo lịch sử.
     index('comments_pipeline_pending_idx')
       .on(sql`coalesce(${t.createdTime}, ${t.createdAt})`, t.id)

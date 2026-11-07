@@ -75,7 +75,7 @@ const ctxOf = (commentId: string): PersistContext => ({
   commentId,
   kbVersionNumber: null,
   model: 'cf-draft',
-  promptVersion: 'draft@4',
+  promptVersion: 'draft@5',
   traceId: null,
 });
 

@@ -45,6 +45,8 @@ export type RunCommentConfig = {
   input: PipelineInput;
   deps: Omit<PipelineDeps, 'gate'>;
   persist: PersistContext;
+  /** Khách đã VƯỢT trần trả lời của (khách, bài) trong 24 giờ (FR-167): chặn TRƯỚC giành quyền/trừ lượt/extract. */
+  replyCapExceeded?: boolean;
   now?: () => number;
 };
 
@@ -52,7 +54,7 @@ export async function runCommentPipeline(config: RunCommentConfig): Promise<RunC
   const { db, workspaceId, commentId } = config;
   const now = config.now ?? Date.now;
   const ports = createDbTurnPorts({ db, workspaceId, commentId, ...config.turn });
-  const gate = createTurnGate(ports);
+  const gate = createTurnGate(ports, { replyCapExceeded: config.replyCapExceeded === true });
   // Gia hạn CHỈ khi còn là chủ thuê (token = số lần thử của chính job); mất thuê → dừng, không ghi, không đụng thuê của job khác.
   const extend = async () => {
     const attempt = ports.attempt();
@@ -121,6 +123,7 @@ export async function runCommentPipeline(config: RunCommentConfig): Promise<RunC
         return { kind: 'deferred', reason: result.reason };
       case 'quota_exhausted':
       case 'attempts_exhausted':
+      case 'customer_post_reply_cap':
         await persistHandoff(db, workspaceId, result.reason, config.persist);
         return { kind: 'handoff', reason: result.reason };
       default:

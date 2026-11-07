@@ -17,7 +17,7 @@ const CTX = {
   commentId: COMMENT,
   kbVersionNumber: 4,
   model: 'cf-draft',
-  promptVersion: 'draft@4',
+  promptVersion: 'draft@5',
   traceId: 'trace-1',
 };
 
@@ -29,6 +29,8 @@ const done = (over: Partial<Done> = {}): Done =>
     billed: false,
     maskedText: 'Áo thun giá bao nhiêu, sđt [sđt]',
     normalizedText: 'áo thun giá bao nhiêu sđt [sđt]',
+    resolvedProductIds: [PRODUCT],
+    conversationState: { productIds: [PRODUCT], pendingAsks: ['giá'] },
     extract: {
       ...FIXTURE_EXTRACT_DEFAULT,
       labels: [{ label: 'price' }],
@@ -125,7 +127,7 @@ describe('toDraftInput — kết quả pipeline → bản ghi `drafts`', () => {
       needsHuman: false,
       reason: 'all_sourced',
       model: 'cf-draft',
-      promptVersion: 'draft@4',
+      promptVersion: 'draft@5',
       kbVersion: 4,
       action: 'answer',
       variants: ['Áo thun giá 150.000đ nha bạn'],
@@ -142,6 +144,12 @@ describe('toDraftInput — kết quả pipeline → bản ghi `drafts`', () => {
       },
     ]);
     expect(d.extracted).toMatchObject({ asks: ['giá'] });
+    // Trạng thái hội thoại có cấu trúc cho lượt sau (Q-POR12).
+    expect(d.contextRefs).toContainEqual({
+      type: 'state',
+      productIds: [PRODUCT],
+      pendingAsks: ['giá'],
+    });
   });
 
   it('cần người (do quyết định/bản nháp/độ tin cậy) → needsHuman; câu trống → câu giữ chỗ; ngôn ngữ lạ → vi', () => {

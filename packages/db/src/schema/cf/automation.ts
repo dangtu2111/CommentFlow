@@ -40,6 +40,8 @@ export const automationSettings = cf.table(
     mergeWindowSeconds: integer('merge_window_seconds').notNull().default(30),
     /** Sau khi nhân viên trả lời trong chuỗi, AI chỉ gợi ý trong N phút (FR-154); 0 = tắt (migration 0072). */
     humanHoldMinutes: integer('human_hold_minutes').notNull().default(120),
+    /** FR-167: số câu AI tối đa cho MỘT khách dưới MỘT bài trong 24 giờ (1–5, mặc định 3; migration 0076). */
+    maxAiRepliesPerCustomerPost: integer('max_ai_replies_per_customer_post').notNull().default(3),
     /** Người Owner lưu lần cuối (null = hệ thống / người dùng đã bị xóa). Chỉ được là chính người ghi. */
     updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
@@ -58,6 +60,10 @@ export const automationSettings = cf.table(
     ),
     check('automation_settings_merge_window_check', sql`${t.mergeWindowSeconds} BETWEEN 10 AND 60`),
     check('automation_settings_human_hold_check', sql`${t.humanHoldMinutes} >= 0`),
+    check(
+      'automation_settings_reply_cap_check',
+      sql`${t.maxAiRepliesPerCustomerPost} BETWEEN 1 AND 5`,
+    ),
     check('automation_settings_keywords_check', sql`cardinality(${t.blockedKeywords}) <= 50`),
     check(
       'automation_settings_signature_check',

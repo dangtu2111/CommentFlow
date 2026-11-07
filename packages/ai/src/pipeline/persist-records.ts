@@ -74,6 +74,8 @@ export function toDraftInput(result: DonePipelineResult, ctx: PersistContext): N
         repeat_count: result.thread.repeatCount,
         human_holding: result.thread.humanHolding,
       },
+      // Trạng thái hội thoại có cấu trúc cho lượt SAU (Q-POR12): sản phẩm đã nhận + ý đang chờ.
+      { type: 'state', ...result.conversationState },
     ],
   };
 }

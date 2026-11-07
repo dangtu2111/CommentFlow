@@ -1987,6 +1987,9 @@
     "mockNote": "Đang chạy bản mô phỏng (không gọi AI thật, kiến thức mẫu). Kết quả chỉ để xem trước luồng xử lý.",
     "label": "Bình luận mẫu của khách",
     "placeholder": "Ví dụ: áo thun basic size M màu đen giá bao nhiêu?",
+    "previousLabel": "Lượt trước trong hội thoại (tùy chọn)",
+    "previousPlaceholder": "Khách: áo thun basic giá bn?\nShop: Dạ bạn chọn size và màu nào ạ?",
+    "previousHelp": "Mỗi dòng một lượt, tiền tố Khách: hoặc Shop: (thiếu tiền tố = khách). Tối đa 5 lượt cuối; số điện thoại/email được che trước khi gửi AI. Dùng để thử câu trả lời ngắn như M đen.",
     "submit": "Thử",
     "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
     "llm": {

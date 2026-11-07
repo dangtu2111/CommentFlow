@@ -1,6 +1,7 @@
 import type { DraftVoice } from '@flow/ai';
 import {
   type AbbreviationDict,
+  type ConversationState,
   type Drafter,
   type Extractor,
   isUnreadableAiOutput,
@@ -8,7 +9,7 @@ import {
   runTryPipeline,
   type TryKnowledge,
 } from '@flow/ai';
-import { isAppError } from '@flow/shared';
+import { isAppError, type MaskedText, maskPii } from '@flow/shared';
 import type { EvalSample } from './dataset';
 import type { UsageRecord } from './recording-llm';
 
@@ -77,6 +78,17 @@ export type SampleOutcome =
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000e01';
 
+type ConvoTurnInput = { from: 'customer' | 'shop'; text: MaskedText; at: Date };
+
+function convoOf(turns: readonly ConvoTurnInput[], state: ConversationState | null) {
+  return {
+    context: { turns: [...turns], otherQuestions: [] },
+    postProductIds: [] as string[],
+    postProductNames: [] as string[],
+    state,
+  };
+}
+
 export async function runSample(sample: EvalSample, context: RunContext): Promise<SampleOutcome> {
   const usage: UsageRecord[] = [];
   let snapshot: ExtractSnapshot | null = null;
@@ -95,22 +107,46 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
         return result;
       },
     };
+    const pipelineDeps = {
+      extractor,
+      drafter: parts.drafter,
+      knowledge: context.knowledge,
+      ...(parts.rewriter ? { rewriter: parts.rewriter } : {}),
+    };
+    const baseInput = {
+      workspaceId: context.workspaceId ?? WORKSPACE,
+      kbVersion: 'eval',
+      voice: context.voice,
+      autoSendEnabled: true,
+      ...(context.dict ? { dict: context.dict } : {}),
+      ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
+    };
+    // Mẫu nhiều lượt: phát lại các lượt KHÁCH trước (theo thứ tự) để có trạng thái hội thoại thật, rồi chạy lượt cuối với lịch sử.
+    const thread = sample.thread ?? [];
+    const turns: ConvoTurnInput[] = [];
+    let state: ConversationState | null = null;
+    for (const turn of thread) {
+      if (turn.from === 'customer') {
+        const prior = await runTryPipeline(
+          { ...baseInput, text: turn.text, convo: convoOf(turns, state) },
+          pipelineDeps,
+        );
+        if (prior.status === 'done') state = prior.conversationState;
+      }
+      turns.push({
+        from: turn.from,
+        text: maskPii(turn.text),
+        at: new Date(turns.length * 60_000),
+      });
+    }
+    snapshot = null; // ảnh chụp chỉ của lượt CUỐI (đáp án đúng gắn với lượt cuối)
     const result = await runTryPipeline(
       {
-        workspaceId: context.workspaceId ?? WORKSPACE,
+        ...baseInput,
         text: sample.text,
-        kbVersion: 'eval',
-        voice: context.voice,
-        autoSendEnabled: true,
-        ...(context.dict ? { dict: context.dict } : {}),
-        ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
+        ...(thread.length > 0 ? { convo: convoOf(turns, state) } : {}),
       },
-      {
-        extractor,
-        drafter: parts.drafter,
-        knowledge: context.knowledge,
-        ...(parts.rewriter ? { rewriter: parts.rewriter } : {}),
-      },
+      pipelineDeps,
     );
     if (result.status !== 'done') return { ok: false, id: sample.id, errorKind: 'skipped', usage };
     return {

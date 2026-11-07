@@ -33,12 +33,23 @@ export type TurnBlockReason =
   | 'attempts_exhausted'
   | 'already_handled'
   | 'busy'
+  /** Khách đã đủ số câu AI dưới bài này trong 24 giờ (FR-167): không gọi LLM, không giành quyền, không trừ lượt. */
+  | 'customer_post_reply_cap'
   | 'gate_error';
 
-export function createTurnGate(ports: TurnPorts): PipelineGate {
+export type TurnGateOptions = {
+  /**
+   * Khách đã VƯỢT trần trả lời của (khách, bài) trong 24 giờ (FR-167, Q-POR14): chặn SAU dừng khẩn cấp (dừng thì giữ nguyên bình luận)
+   * và TRƯỚC `begin` (không giành quyền, không trừ lượt, không tốn token).
+   */
+  replyCapExceeded?: boolean;
+};
+
+export function createTurnGate(ports: TurnPorts, options: TurnGateOptions = {}): PipelineGate {
   return async () => {
     try {
       if (await ports.emergencyStopped()) return { allow: false, reason: 'emergency_stop' };
+      if (options.replyCapExceeded) return { allow: false, reason: 'customer_post_reply_cap' };
       const turn = await ports.begin();
       switch (turn.outcome) {
         case 'proceed':

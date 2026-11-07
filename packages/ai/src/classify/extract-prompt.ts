@@ -1,5 +1,6 @@
 import { COMMENT_LABELS, type MaskedText, unsafeMarkMasked } from '@flow/shared';
 import type { LlmMessage } from '../llm-client';
+import { HISTORY_GUIDANCE, type PromptHistory, renderHistoryBlock } from '../prompt-history';
 
 const MAX_TEXT_CHARS = 2000;
 
@@ -9,6 +10,8 @@ export type ExtractInput = {
   text: MaskedText;
   /** Khách đính kèm ảnh/video/sticker (FR-143) — giúp đánh dấu `refers_to_image`. */
   hasMedia?: boolean;
+  /** Lịch sử hội thoại ĐÃ che PII (Q-POR12): để hiểu câu ngắn như "M đen" sau khi shop hỏi size/màu. */
+  history?: PromptHistory;
 };
 
 // Chuỗi CỐ ĐỊNH (không chứa nội dung khách) nên được đánh dấu đã che.
@@ -28,8 +31,13 @@ const SYSTEM_PROMPT = unsafeMarkMasked(
 export function buildExtractMessages(input: ExtractInput): LlmMessage[] {
   const body = input.text.slice(0, MAX_TEXT_CHARS);
   const media = input.hasMedia ? '\n[Khách có đính kèm ảnh/video]' : '';
+  const history = renderHistoryBlock(input.history);
+  const prefix = history === null ? '' : `${HISTORY_GUIDANCE}\n${history}\n`;
   return [
     { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: unsafeMarkMasked(`Bình luận:\n${body}${media}`) as MaskedText },
+    {
+      role: 'user',
+      content: unsafeMarkMasked(`${prefix}Bình luận:\n${body}${media}`) as MaskedText,
+    },
   ];
 }

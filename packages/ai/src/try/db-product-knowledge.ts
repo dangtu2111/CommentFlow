@@ -162,7 +162,10 @@ export function priceSourcesOf(product: TryProduct): PriceSource[] {
   ];
 }
 
-export type DbProductKnowledge = Pick<TryKnowledge, 'matchProducts' | 'lookupProductFacts'>;
+export type DbProductKnowledge = Pick<
+  TryKnowledge,
+  'matchProducts' | 'lookupProductFacts' | 'resolveProducts'
+>;
 
 export function createDbProductKnowledge(tx: Database, workspaceId: string): DbProductKnowledge {
   return {
@@ -177,6 +180,14 @@ export function createDbProductKnowledge(tx: Database, workspaceId: string): DbP
       }
       const unique = [...new Set(ids)];
       const products = await loadTryProducts(tx, workspaceId, unique);
+      return {
+        ids: products.map((p) => p.id),
+        names: products.map((p) => p.name),
+        missingAxes: products.length === 1 ? missingAxesOf(products[0] as TryProduct) : [],
+      };
+    },
+    async resolveProducts(ids) {
+      const products = await loadTryProducts(tx, workspaceId, ids);
       return {
         ids: products.map((p) => p.id),
         names: products.map((p) => p.name),

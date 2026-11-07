@@ -268,10 +268,20 @@ export {
 } from './queries/leads';
 export {
   DEFAULT_HUMAN_HOLD_MINUTES,
+  DEFAULT_MAX_AI_REPLIES_PER_CUSTOMER_POST,
   DEFAULT_MERGE_WINDOW_SECONDS,
   loadPipelineContext,
   type PipelineContext,
 } from './queries/pipeline-context';
+export {
+  type ConvoOtherQuestion,
+  type ConvoTurn,
+  countCustomerPostReplies,
+  countRepliesForCommentThread,
+  loadPipelineConvo,
+  type PipelineConvo,
+  REPLY_CAP_WINDOW_HOURS,
+} from './queries/pipeline-convo';
 export {
   getMergeWindowSeconds,
   listPendingPipelineComments,
@@ -285,7 +295,7 @@ export {
   extendPipelineTurnLease,
   failPipelineTurn,
   finishCommentProcessing,
-  handoffCommentIfProcessing,
+  handoffCommentIfPending,
   lockCommentForPersist,
 } from './queries/pipeline-persist';
 export {

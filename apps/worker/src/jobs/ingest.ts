@@ -239,12 +239,20 @@ async function markFailed(db: FlowDb, job: IngestJob, error: unknown): Promise<v
  */
 /** Xếp job `pipeline` cho bình luận mới (sau khi `ingest` commit). Cấu hình tắt → không xếp. */
 export type IngestPipelineHook = {
-  enqueue: (job: PipelineJob, startAfterSeconds: number) => Promise<void>;
+  enqueue: (job: PipelineJob, startAfterSeconds: number, priority: number) => Promise<void>;
   flagEnabled: boolean;
   allowedWorkspaceIds: readonly string[];
   /** Cửa sổ gộp của workspace (giây). */
   mergeWindowSeconds: (workspaceId: string) => Promise<number>;
+  /**
+   * Độ ưu tiên hàng đợi (FR-167): bình luận ĐẦU TIÊN của khách dưới bài (chưa có câu AI nào trong 24 giờ) cao hơn (số lớn hơn = ưu tiên
+   * hơn, pg-boss). Lỗi/thiếu → 0.
+   */
+  priority?: (workspaceId: string, commentId: string) => Promise<number>;
 };
+
+/** Độ ưu tiên của bình luận đầu tiên của khách dưới bài. */
+export const FIRST_COMMENT_PRIORITY = 10;
 
 export function createIngestHandler(options: {
   db: FlowDb;
@@ -304,7 +312,8 @@ async function enqueueNew(
     }
     try {
       const window = await hook.mergeWindowSeconds(workspaceId);
-      await hook.enqueue({ workspaceId, commentId: comment.id, trigger: 'auto' }, window);
+      const priority = hook.priority ? await hook.priority(workspaceId, comment.id) : 0;
+      await hook.enqueue({ workspaceId, commentId: comment.id, trigger: 'auto' }, window, priority);
     } catch (error) {
       logger.error(
         { commentId: comment.id, error: safeErrorCode(error) },

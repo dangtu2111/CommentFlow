@@ -84,7 +84,7 @@ describe('FR-029/FR-138 drafter LLM', () => {
     );
     const r = await createLlmDrafter({ llm, model: 'soan' }).draft(input());
     expect(calls).toHaveLength(1);
-    expect(DRAFT_PROMPT_VERSION).toBe('draft@4');
+    expect(DRAFT_PROMPT_VERSION).toBe('draft@5');
     expect(r.variants).toEqual([
       good.reply,
       'Áo này đang giá 199.000đ nha bạn.',
@@ -242,6 +242,6 @@ describe('FR-147 FR-141 drafter theo hành động đã chọn', () => {
   });
 
   it('prompt_version đổi khi thêm khối hành động', () => {
-    expect(DRAFT_PROMPT_VERSION).toBe('draft@4');
+    expect(DRAFT_PROMPT_VERSION).toBe('draft@5');
   });
 });

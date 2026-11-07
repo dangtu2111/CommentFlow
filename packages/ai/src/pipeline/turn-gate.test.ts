@@ -78,4 +78,31 @@ describe('PIPE-ORCHESTRATOR lát C — cổng lượt (dừng khẩn cấp → g
     await gate(ctx);
     expect(order).toEqual(['emergency', 'begin']);
   });
+
+  it('FR-167: vượt trần → chặn customer_post_reply_cap, KHÔNG begin (không giành quyền, không trừ lượt); dừng khẩn cấp vẫn ưu tiên', async () => {
+    const order: string[] = [];
+    const ports = (stopped: boolean) => ({
+      emergencyStopped: async () => {
+        order.push('emergency');
+        return stopped;
+      },
+      begin: async () => {
+        order.push('begin');
+        return { outcome: 'proceed' as const, charged: true };
+      },
+    });
+    expect(await createTurnGate(ports(false), { replyCapExceeded: true })(ctx)).toEqual({
+      allow: false,
+      reason: 'customer_post_reply_cap',
+    });
+    expect(order).toEqual(['emergency']);
+    expect(await createTurnGate(ports(true), { replyCapExceeded: true })(ctx)).toEqual({
+      allow: false,
+      reason: 'emergency_stop',
+    });
+    // Chưa vượt trần → như cũ.
+    expect(await createTurnGate(ports(false), { replyCapExceeded: false })(ctx)).toEqual({
+      allow: true,
+    });
+  });
 });

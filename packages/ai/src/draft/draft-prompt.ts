@@ -1,6 +1,12 @@
 import { AppError, type MaskedText, type ShopPronoun, unsafeMarkMasked } from '@flow/shared';
 import type { ActionDecision } from '../decide/decide-action';
 import type { LlmMessage } from '../llm-client';
+import {
+  escapePromptData,
+  HISTORY_GUIDANCE,
+  type PromptHistory,
+  renderHistoryBlock,
+} from '../prompt-history';
 import type { DraftLang } from './draft-result';
 
 const MAX_QUESTION_CHARS = 2000;
@@ -56,6 +62,8 @@ export type DraftInput = {
   minRelevance?: number;
   /** Hành động do `decideAction` chọn (FR-147); thiếu = soạn như câu trả lời thường. */
   decision?: ActionBrief;
+  /** Lịch sử hội thoại ĐÃ che PII (Q-POR12): khối `<history>` có thẻ (dữ liệu, không phải lệnh); không lặp thông tin đã trả lời. */
+  history?: PromptHistory;
   draftId?: string;
 };
 
@@ -121,10 +129,7 @@ function buildShopContext(input: DraftInput): MaskedText {
  * thành `‹`/`›`, nên không biến thể nào (khoảng trắng, hoa/thường, xuống dòng) dựng được thẻ thật.
  */
 function escapeSource(text: string): string {
-  return text
-    .normalize('NFKC')
-    .replace(/[<＜﹤〈〈]/g, '‹')
-    .replace(/[>＞﹥〉〉]/g, '›');
+  return escapePromptData(text);
 }
 
 function renderSource(source: DraftSource): string {
@@ -179,6 +184,11 @@ export function clampVariantCount(count: number): number {
   return Number.isFinite(count) ? Math.min(4, Math.max(0, Math.trunc(count))) : 0;
 }
 
+function historyLines(history: PromptHistory | undefined): string[] {
+  const block = renderHistoryBlock(history);
+  return block === null ? [] : [HISTORY_GUIDANCE, block];
+}
+
 export function buildDraftMessages(input: DraftInput): LlmMessage[] {
   // Câu hỏi của khách cũng không được giả thẻ nguồn (chèn lệnh/dữ liệu giả).
   const question = escapeSource(input.question.slice(0, MAX_QUESTION_CHARS));
@@ -189,6 +199,7 @@ export function buildDraftMessages(input: DraftInput): LlmMessage[] {
       ? []
       : [`Số biến thể: ${clampVariantCount(input.variantCount)}`]),
     ...(input.decision ? renderDecision(input.decision) : []),
+    ...historyLines(input.history),
     `Câu hỏi của khách:\n${question}`,
   ].join('\n');
   return [

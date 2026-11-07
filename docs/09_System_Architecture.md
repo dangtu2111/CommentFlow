@@ -119,6 +119,7 @@ flowchart LR
 | `skipOwnPage` | Bỏ bình luận/tin do chính Page/tài khoản viết (chống vòng lặp) | 0 |
 | `ruleFilter` | Quy tắc spam, emoji-only, tag bạn bè → bỏ qua/nghi spam | 0 |
 | `normalizeAndDetectLang` | Chuẩn hóa (viết tắt, không dấu), nhận ngôn ngữ (§5), che PII | ml |
+| **Chặn trần (FR-167)** | SAU `ruleFilter`/che PII, TRƯỚC `extract`: đếm câu AI đã soạn/gửi cho (khách, bài) trong 24 giờ (mọi chuỗi + bình luận mới) so với `max_ai_replies_per_customer_post` (mặc định 3, Owner 1–5). Lần chạm trần → `redirect` câu chốt mời nhắn tin (mẫu shop, không sự kiện) + "Cần hỗ trợ thêm"; vượt trần → `needs_human` lý do `customer_post_reply_cap`, KHÔNG gọi LLM. Bài khác không bị ảnh hưởng; qua 24 giờ trả lời lại | 0 |
 | `cacheLookup` | Exact cache (Redis, khóa có `workspace_id` + `kb_version`), rồi semantic cache; giá trị cache có `product_revs`, lệch `products.rev` → trượt (FR-135) | Redis |
 | `classify` → **`extract`** | ml trước; độ tin cậy thấp → LLM nhỏ; trả `labels[]` nhiều nhãn (FR-145); đánh dấu câu phụ thuộc ảnh (FR-143). **Từ 02/11 gộp thành `extract` (FR-162):** cùng lần gọi trả object tách thông tin (sản phẩm nhắc tới, size, màu, chiều cao/cân nặng, số lượng, giá khách nhắc, ý đặt hàng, các ý hỏi) — bước sau chỉ đọc object này | ml / LLM rẻ |
 | `rewriteQuery` | Ghép ngữ cảnh khách (≤ 5 lượt cùng chuỗi + ≤ 3 câu hỏi của khách ở bài khác trong 7 ngày — FR-144) + caption bài rút gọn + sản phẩm gắn bài → `search_query`; LLM rẻ chỉ khi câu ≤ 6 từ/nhiều nghĩa và chưa nhận được sản phẩm (FR-137) | 0 / LLM rẻ |

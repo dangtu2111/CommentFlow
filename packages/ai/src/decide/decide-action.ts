@@ -50,6 +50,8 @@ export const DECISION_REASONS = [
   'topic_unsourced',
   'stock_stale',
   'order_status',
+  /** FR-167: câu CHỐT khi khách chạm trần số câu AI dưới bài trong 24 giờ (mời nhắn tin, không chứa sự kiện). */
+  'customer_post_reply_cap',
 ] as const;
 export type DecisionReason = (typeof DECISION_REASONS)[number];
 
