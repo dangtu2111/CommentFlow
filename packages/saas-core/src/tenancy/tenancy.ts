@@ -23,6 +23,15 @@ export type MemberListItem = {
 const nameSchema = z.string().trim().min(1).max(80);
 const uuidSchema = z.uuid();
 const langSchema = z.enum(['vi', 'en']);
+export const USER_THEMES = ['light', 'dark', 'system'] as const;
+export type UserTheme = (typeof USER_THEMES)[number];
+const themeSchema = z.enum(USER_THEMES);
+/** Đường dẫn ảnh đại diện: https hoặc đường dẫn tuyệt đối của app, ≤ 500 ký tự; null = không có ảnh. */
+const imageSchema = z
+  .string()
+  .max(500)
+  .regex(/^(https:\/\/|\/(?!\/))[^\s]*$/)
+  .nullable();
 
 export const DEFAULT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 /**
@@ -149,6 +158,53 @@ export function createTenancy(db: FlowDb) {
       const value = parse(langSchema, locale, 'Ngôn ngữ phải là vi hoặc en.');
       await db.withUser(uid, (tx) =>
         tx.update(users).set({ locale: value, updatedAt: new Date() }).where(eq(users.id, uid)),
+      );
+    },
+
+    /**
+     * Lưu hồ sơ của CHÍNH người dùng (họ tên, múi giờ, giao diện). Chỉ ghi trường được gửi; `cf_app` qua `withUser`
+     * chỉ UPDATE được các cột này (migration 0010/0062) và chỉ dòng của mình (policy `users_app_update`). Email, SĐT,
+     * 2FA không đi đường này.
+     */
+    async setUserProfile(
+      userId: string,
+      input: { name?: string; timezone?: string; theme?: UserTheme },
+    ): Promise<void> {
+      const uid = parse(uuidSchema, userId, 'userId không hợp lệ.');
+      const values: { name?: string; timezone?: string; theme?: UserTheme } = {};
+      if (input.name !== undefined) {
+        values.name = parse(nameSchema, input.name, 'Họ tên phải từ 1 đến 80 ký tự.');
+      }
+      if (input.timezone !== undefined) {
+        if (!isValidTimeZone(input.timezone)) {
+          throw new AppError('VALIDATION_FAILED', 'Múi giờ không hợp lệ.');
+        }
+        values.timezone = input.timezone;
+      }
+      if (input.theme !== undefined) {
+        values.theme = parse(
+          themeSchema,
+          input.theme,
+          'Giao diện phải là sáng, tối hoặc theo hệ thống.',
+        );
+      }
+      if (Object.keys(values).length === 0) {
+        throw new AppError('VALIDATION_FAILED', 'Không có thay đổi nào để lưu.');
+      }
+      await db.withUser(uid, (tx) =>
+        tx
+          .update(users)
+          .set({ ...values, updatedAt: new Date() })
+          .where(eq(users.id, uid)),
+      );
+    },
+
+    /** Ảnh đại diện của chính người dùng (`null` = xóa). `image` đã được `cf_app` ghi từ migration 0010. */
+    async setUserImage(userId: string, image: string | null): Promise<void> {
+      const uid = parse(uuidSchema, userId, 'userId không hợp lệ.');
+      const value = parse(imageSchema, image, 'Đường dẫn ảnh không hợp lệ.');
+      await db.withUser(uid, (tx) =>
+        tx.update(users).set({ image: value, updatedAt: new Date() }).where(eq(users.id, uid)),
       );
     },
 

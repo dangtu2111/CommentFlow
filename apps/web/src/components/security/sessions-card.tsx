@@ -11,6 +11,8 @@ export type SessionRow = {
   os: string;
   current: boolean;
   lastUsedAt: Date;
+  /** IP đã che (`113.161.x.x`) — KHÔNG bao giờ là IP thô. */
+  maskedIp?: string | null;
   /** Thời điểm đăng nhập (tạo phiên). */
   createdAt?: Date;
 };
@@ -77,6 +79,11 @@ export async function SessionsCard({ sessions }: { sessions: SessionRow[] }) {
                   ) : null}
                 </div>
                 <div className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-3 flex-wrap">
+                  <span data-testid="session-ip">
+                    {session.maskedIp
+                      ? t('sessions.ip', { ip: session.maskedIp })
+                      : t('sessions.ipUnknown')}
+                  </span>
                   <span>{t('sessions.lastUsed', { date: when(session.lastUsedAt) })}</span>
                   {session.createdAt ? (
                     <span>

@@ -33,7 +33,12 @@ export default async function SecurityPage() {
       <p className="auth-subtitle">{t('subtitle')}</p>
       {mustEnable ? <Banner variant="warning">{t('requiredBanner')}</Banner> : null}
       {/* Giữ nguyên vị trí TwoFactorCard trong cây: đổi vị trí/key làm nó mount lại và mất state `enrolling` (mã dự phòng biến mất). */}
-      <TwoFactorCard enabled={overview.twoFactorEnabled} required={overview.required} />
+      <TwoFactorCard
+        enabled={overview.twoFactorEnabled}
+        required={overview.required}
+        backupRemaining={overview.backupCodesRemaining}
+        backupTotal={overview.backupCodesTotal}
+      />
       <TwCard className="p-space-md">
         <ChangePasswordCard />
       </TwCard>

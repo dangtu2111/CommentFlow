@@ -15,6 +15,13 @@ export const users = core.table(
     // Tên thuộc tính theo plugin 2FA của Better Auth (`twoFactorEnabled`); cột SQL vẫn là totp_enabled (docs/10 §3.1).
     twoFactorEnabled: boolean('totp_enabled').notNull().default(false),
     locale: text('locale').notNull().default('vi'),
+    /** Múi giờ IANA của người dùng (migration 0062); `cf_app` ghi được, KHÔNG đọc được (giữ 7 cột đọc của 0012). */
+    timezone: text('timezone').notNull().default('Asia/Ho_Chi_Minh'),
+    /** SĐT E.164; chỉ `cf_auth` ghi, sau khi OTP đúng (0062). */
+    phone: text('phone'),
+    phoneVerifiedAt: timestamptz('phone_verified_at'),
+    /** `light` | `dark` | `system` (0062). */
+    theme: text('theme').notNull().default('system'),
     isAdmin: boolean('is_admin').notNull().default(false),
     adminRole: text('admin_role'),
     createdAt: createdAt(),
@@ -22,6 +29,13 @@ export const users = core.table(
   },
   (t) => [
     check('users_locale_check', sql`${t.locale} in ('vi', 'en')`),
+    check('users_timezone_check', sql`char_length(${t.timezone}) between 1 and 64`),
+    check('users_theme_check', sql`${t.theme} in ('light', 'dark', 'system')`),
+    check('users_phone_check', sql`${t.phone} is null or ${t.phone} ~ '^\\+[1-9][0-9]{7,14}$'`),
+    check(
+      'users_phone_verified_check',
+      sql`${t.phoneVerifiedAt} is null or ${t.phone} is not null`,
+    ),
     check(
       'users_admin_role_check',
       sql`${t.adminRole} is null or ${t.adminRole} in ('super', 'support', 'finance')`,
@@ -90,6 +104,29 @@ export const verifications = core.table(
     updatedAt: updatedAt(),
   },
   (t) => [index('verifications_identifier_idx').on(t.identifier)],
+);
+
+/**
+ * Thử thách OTP xác minh SĐT (migration 0062): một dòng/người dùng, mã lưu BĂM HMAC. Chỉ role cf_auth trong
+ * app.ctx = 'auth'; cf_app không có quyền nào.
+ */
+export const phoneVerifications = core.table(
+  'phone_verifications',
+  {
+    userId: uuid('user_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    phone: text('phone').notNull(),
+    codeHash: text('code_hash').notNull(),
+    expiresAt: timestamptz('expires_at').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    sentAt: timestamptz('sent_at').notNull().defaultNow(),
+  },
+  (t) => [
+    check('phone_verifications_phone_check', sql`${t.phone} ~ '^\\+[1-9][0-9]{7,14}$'`),
+    check('phone_verifications_hash_check', sql`${t.codeHash} ~ '^[0-9a-f]{64}$'`),
+    check('phone_verifications_attempts_check', sql`${t.attempts} between 0 and 10`),
+  ],
 );
 
 /**

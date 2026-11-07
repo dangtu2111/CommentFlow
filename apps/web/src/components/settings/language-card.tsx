@@ -1,17 +1,26 @@
 import { LOCALES } from '@flow/shared';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { setLocale } from '../../app/actions';
+import { setThemeAction } from '../../app/app/(guarded)/settings/profile-actions';
 import { cn } from '../../lib/cn';
+import type { ThemeChoice } from '../../lib/theme';
 import { Icon } from '../ui/icon';
 import { TwCard, TwCardHead } from './tw/ui';
 
 const TITLE_ID = 'language-title';
 
+const THEME_OPTIONS = [
+  { value: 'light', icon: 'light_mode', labelKey: 'light' },
+  { value: 'dark', icon: 'dark_mode', labelKey: 'dark' },
+  { value: 'system', icon: 'computer', labelKey: 'system' },
+] as const;
+
 /**
  * Thẻ "Tùy chọn hiển thị & Ngôn ngữ" ở Cài đặt (FR-119; design/stitch/settings-security.html). Ngôn ngữ lưu cookie qua
- * `setLocale` (ngôn ngữ đang dùng bị khóa). Chế độ giao diện: Sáng đang dùng; Tối chưa có → khóa + "Sắp ra mắt" (Q-UISET2).
+ * `setLocale` (ngôn ngữ đang dùng bị khóa). Chế độ giao diện Sáng/Tối/Theo hệ thống: `setThemeAction` lưu `users.theme` + cookie
+ * `cf-theme` (Q-WPROF1); token tối hiện áp cho khung Cài đặt (`styles/theme-dark.css`).
  */
-export async function LanguageCard() {
+export async function LanguageCard({ theme }: { theme: ThemeChoice }) {
   const [t, tl, current] = await Promise.all([
     getTranslations('settings.display'),
     getTranslations('language'),
@@ -52,40 +61,37 @@ export async function LanguageCard() {
           </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant">{t('languageHint')}</p>
         </form>
-        <fieldset className="space-y-2 border-0 p-0 m-0 min-w-0">
-          <legend className="font-title-sm text-title-sm text-on-surface mb-2">
-            {t('themeLabel')}
-          </legend>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              aria-pressed="true"
-              disabled
-              className="p-2.5 rounded-lg bg-primary-container text-on-primary flex items-center justify-between shadow-sm"
-            >
-              <span className="flex items-center gap-2 font-title-sm text-title-sm">
-                <Icon name="light_mode" size={16} />
-                {t('light')}
-              </span>
-              <Icon name="check" size={16} />
-            </button>
-            <button
-              type="button"
-              aria-pressed="false"
-              aria-disabled="true"
-              disabled
-              className="p-2.5 rounded-lg bg-surface-container-low text-on-surface-variant flex items-center justify-between opacity-70"
-            >
-              <span className="flex items-center gap-2 font-title-sm text-title-sm">
-                <Icon name="dark_mode" size={16} />
-                {t('dark')}
-              </span>
-              <span className="font-label-sm text-label-sm text-primary font-medium">
-                {t('soon')}
-              </span>
-            </button>
+        <form action={setThemeAction} aria-label={t('themeLabel')} className="space-y-2">
+          <p className="font-title-sm text-title-sm text-on-surface">{t('themeLabel')}</p>
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map(({ value, icon, labelKey }) => {
+              const selected = theme === value;
+              return (
+                <button
+                  key={value}
+                  type="submit"
+                  name="theme"
+                  value={value}
+                  aria-pressed={selected}
+                  disabled={selected}
+                  className={cn(
+                    'p-2.5 rounded-lg flex items-center justify-between gap-1 font-title-sm text-title-sm transition-colors',
+                    selected
+                      ? 'bg-primary-container text-on-primary shadow-sm'
+                      : 'bg-surface-container-low text-on-surface hover:bg-surface-container',
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <Icon name={icon} size={16} />
+                    {t(labelKey)}
+                  </span>
+                  {selected ? <Icon name="check" size={16} /> : null}
+                </button>
+              );
+            })}
           </div>
-        </fieldset>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">{t('themeHint')}</p>
+        </form>
       </div>
     </TwCard>
   );

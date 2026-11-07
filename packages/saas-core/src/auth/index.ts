@@ -7,6 +7,7 @@ export {
   MIN_PASSWORD_LENGTH,
 } from './auth';
 export { type AuthHandle, openAuthDb } from './auth-db';
+export { BACKUP_CODES_TOTAL } from './backup-codes';
 export {
   type ChangePasswordFlow,
   type ChangePasswordResult,
@@ -23,6 +24,7 @@ export {
   type ResetResult,
   type SignInResult,
 } from './flows';
+export { maskIp } from './ip-mask';
 export {
   createAccountTokenHooks,
   createOAuthTokenVault,
@@ -39,6 +41,20 @@ export {
   type PasswordPolicyWarning,
   type PasswordVerdict,
 } from './password-policy';
+export { maskPhone, normalizePhoneE164 } from './phone';
+export {
+  createPhoneVerifyFlows,
+  OTP_MAX_ATTEMPTS,
+  OTP_RESEND_SECONDS,
+  OTP_TTL_SECONDS,
+  type PhoneChallenge,
+  type PhoneChallengeStore,
+  type PhoneVerifyFlows,
+  type SmsProvider,
+  type StartPhoneVerifyResult,
+  type VerifyPhoneResult,
+} from './phone-verify';
+export { type AuthProfile, type AuthProfileStore, createAuthProfileStore } from './profile-store';
 export * from './recovery';
 export {
   changePasswordAndRevokeAll,
@@ -56,6 +72,7 @@ export {
   SESSION_UPDATE_AGE_SECONDS,
 } from './session-policy';
 export { createSignedValueCodec, deriveKey, type SignedValueCodec } from './signed-value';
+export { createMockSmsProvider } from './sms-mock';
 export {
   type AppPrincipal,
   createTwoFactorFlows,
