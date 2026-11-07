@@ -159,6 +159,7 @@ export {
 export { assertTokenKeysCoverVersions } from './token-startup-check';
 export {
   type ChannelRef,
+  type ConnectionHealth,
   type ConversationRef,
   type NormalizedComment,
   type NormalizedEvent,

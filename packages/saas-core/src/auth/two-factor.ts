@@ -6,7 +6,7 @@ import type { RateLimiter } from '../ratelimit';
 import type { Auth } from './auth';
 import { MAX_PASSWORD_LENGTH } from './auth';
 import { type AuthHandle, unwrapAuthDb } from './auth-db';
-import { BACKUP_CODES_TOTAL, countRemainingBackupCodes } from './backup-codes';
+import { BACKUP_CODES_TOTAL, countRemainingBackupCodes, readBackupCodes } from './backup-codes';
 import { type CookieSpec, cookiesFromResponse } from './cookies';
 import { maskIp } from './ip-mask';
 import { bindingOf, signPending, verifyPending } from './pending';
@@ -433,6 +433,37 @@ export function createTwoFactorFlows(options: {
           if (wrongPassword(error)) return { status: 'wrong_password' };
           throw new AppError('INTERNAL', 'Không tắt được 2FA.', { cause: error });
         }
+      });
+    },
+
+    /**
+     * Xem lại các mã dự phòng CHƯA dùng (cần mật khẩu, cùng hạn mức thử như tạo lại mã). Mật khẩu được kiểm bằng
+     * `getTOTPURI` của plugin (không đổi gì ở máy chủ); đúng mới giải mã cột `two_factors.backup_codes`.
+     */
+    async viewBackupCodes(input: {
+      password: string;
+      headers: Headers;
+    }): Promise<ReauthResult<{ backupCodes: string[] }>> {
+      const user = await currentUser(input.headers);
+      if (!user) return { status: 'unauthenticated' };
+      if (tooLong(input.password)) return { status: 'wrong_password' };
+      if (!user.twoFactorEnabled) return { status: 'wrong_password' };
+      return guarded(user.id, async (): Promise<ReauthResult<{ backupCodes: string[] }>> => {
+        try {
+          await auth.api.getTOTPURI({ body: { password: input.password }, headers: input.headers });
+        } catch (error) {
+          if (wrongPassword(error)) return { status: 'wrong_password' };
+          throw new AppError('INTERNAL', 'Không xem lại được mã dự phòng.', { cause: error });
+        }
+        const rows = await unwrapAuthDb(authDb).transaction((tx) =>
+          tx
+            .select({ backupCodes: twoFactors.backupCodes, verified: twoFactors.verified })
+            .from(twoFactors)
+            .where(eq(twoFactors.userId, user.id)),
+        );
+        const row = rows[0];
+        const backupCodes = row?.verified ? await readBackupCodes(secret, row.backupCodes) : [];
+        return { status: 'ok', backupCodes };
       });
     },
 

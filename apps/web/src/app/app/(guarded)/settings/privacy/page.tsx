@@ -25,7 +25,7 @@ export default async function PrivacyPage({ searchParams }: { searchParams: Sear
   return (
     <main className="app-page app-page-settings">
       <PrivacyView
-        frame={{ viewerRole: workspace.role, counts }}
+        frame={{ viewerRole: workspace.role, counts, workspaceName: workspace.name }}
         workspaceName={workspace.name}
         notice={parsePrivacyNotice(notice)}
         actions={{ exportData: requestExportAction, requestDeletion: requestDeletionAction }}

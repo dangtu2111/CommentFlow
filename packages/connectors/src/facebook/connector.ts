@@ -487,6 +487,11 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       return { subscribed: mine !== undefined, fields: mine?.subscribed_fields ?? [] };
     },
 
+    async checkConnection(channel) {
+      const subscription = await connector.getPageSubscription(channel);
+      return { webhookSubscribed: subscription.subscribed };
+    },
+
     async subscribePage(channel, fields = ['feed']) {
       expectSuccess(
         await call(channel, 'POST', `${graphId(channel.externalId)}/subscribed_apps`, {

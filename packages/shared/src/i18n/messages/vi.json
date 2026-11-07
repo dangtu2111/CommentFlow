@@ -314,6 +314,32 @@
         "disabled": "Xác minh số điện thoại chưa được bật ở môi trường này.",
         "generic": "Có lỗi xảy ra, vui lòng thử lại."
       }
+    },
+    "pages": {
+      "security": {
+        "title": "Tài khoản & Bảo mật",
+        "subtitle": "Quản lý xác thực 2 bước, các phiên đăng nhập và ngôn ngữ giao diện của riêng bạn."
+      },
+      "channels": {
+        "title": "Quản lý kênh đã kết nối",
+        "subtitle": "Các kênh Facebook, Instagram, TikTok của workspace “{workspace}”. Chỉ Owner kết nối được."
+      },
+      "members": {
+        "title": "Thành viên & Phân quyền",
+        "subtitle": "Quản lý người cùng làm việc trong workspace “{workspace}”. Chỉ Owner thấy trang này."
+      },
+      "billing": {
+        "title": "Gói & Thanh toán",
+        "subtitle": "Xem gói, lượt AI trong tháng và lịch sử hóa đơn của workspace “{workspace}”."
+      },
+      "notifications": {
+        "title": "Thông báo",
+        "subtitle": "Chọn sự kiện nào cần báo cho bạn trong workspace “{workspace}”. Phần chọn kênh nhận thông báo đang được hoàn thiện."
+      },
+      "privacy": {
+        "title": "Dữ liệu & Quyền riêng tư",
+        "subtitle": "Xuất dữ liệu, xem thời gian lưu và gửi yêu cầu xóa workspace “{workspace}”."
+      }
     }
   },
   "auth": {
@@ -499,7 +525,7 @@
         "copy": "Sao chép tất cả",
         "copied": "Đã sao chép",
         "downloadTxt": "Tải file .txt",
-        "backupBlockTitle": "Mã khôi phục dự phòng",
+        "backupBlockTitle": "Mã khôi phục dự phòng (Backup Recovery Codes)",
         "backupBlockBody": "Mã dự phòng dùng một lần để đăng nhập khi bạn không mang theo điện thoại hoặc mất quyền truy cập ứng dụng xác thực. Vì lý do bảo mật, mã chỉ hiện một lần lúc tạo — hãy tạo lại nếu bạn không còn bản lưu.",
         "justEnabledTitle": "Kích hoạt xác thực 2 bước thành công",
         "justEnabledBody": "Tài khoản của bạn giờ được bảo vệ thêm bằng mã từ ứng dụng xác thực (TOTP). Mọi lần đăng nhập mới đều cần mã 6 chữ số.",
@@ -546,7 +572,11 @@
         "viewCodes": "Xem lại mã",
         "maskedLabel": "Mã dự phòng đã ẩn",
         "maskedNote": "Mã dự phòng chỉ hiện một lần khi tạo; mã đã tạo không xem lại được. Muốn có mã mới, hãy tạo lại bộ mã.",
-        "soon": "Sắp có"
+        "soon": "Sắp có",
+        "backupRemainingPill": "Còn {remaining}/{total} mã chưa dùng",
+        "regenButton": "Tạo lại {total} mã mới",
+        "viewBody": "Nhập mật khẩu để xem các mã dự phòng còn dùng được. Chỉ xem ở nơi riêng tư, không chia sẻ mã cho ai.",
+        "viewEmpty": "Không còn mã dự phòng nào dùng được. Hãy tạo lại bộ mã mới."
       },
       "sessions": {
         "title": "Thiết bị đang đăng nhập",
@@ -2169,7 +2199,108 @@
       "limit": "Vượt số kênh tối đa của gói hiện tại. Hãy bớt Page đã chọn hoặc nâng gói.",
       "none": "Hãy chọn ít nhất một Page.",
       "unavailable": "Tính năng kết nối Facebook đang được cấu hình lại. Hãy báo quản trị hệ thống.",
-      "expiredSession": "Phiên chọn Page đã hết hạn. Hãy bấm Kết nối Facebook để bắt đầu lại."
+      "expiredSession": "Phiên chọn Page đã hết hạn. Hãy bấm Kết nối Facebook để bắt đầu lại.",
+      "ch": {
+        "disconnected": "Đã ngắt kết nối kênh. Token đã bị xóa; bạn có thể kết nối lại bất cứ lúc nào.",
+        "not_found": "Không tìm thấy kênh này.",
+        "forbidden": "Chỉ chủ workspace (Owner) mới ngắt kết nối được kênh.",
+        "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
+        "lang_saved": "Đã lưu ngôn ngữ trả lời của kênh.",
+        "check_queued": "Đã gửi yêu cầu kiểm tra. Kết quả hiện ở từng kênh sau vài giây — tải lại trang để xem.",
+        "check_recent": "Vừa kiểm tra xong, vui lòng đợi khoảng 1 phút rồi thử lại."
+      }
+    },
+    "hub": {
+      "title": "Quản lý kênh đã kết nối",
+      "soon": "Sắp có",
+      "disabled": "Kết nối kênh đang tắt ở môi trường này",
+      "checkAll": "Kiểm tra toàn bộ kết nối",
+      "addChannel": "Thêm kênh mới",
+      "stats": {
+        "quota": {
+          "title": "Kênh đang kết nối",
+          "unit": "kênh trực tuyến",
+          "upsellQuestion": "Cần thêm Page bán lẻ?",
+          "upsell": "Nâng gói"
+        },
+        "oauth": {
+          "title": "Tình trạng kết nối OAuth",
+          "stable": "ổn định",
+          "errors": "lỗi",
+          "allOk": "Tất cả kênh đang ổn định.",
+          "needReauth": "{count} kênh cần cấp lại quyền."
+        },
+        "today": {
+          "title": "Tương tác tiếp nhận hôm nay",
+          "comments": "Bình luận",
+          "dm": "Hộp thư (DM)",
+          "total": "{count} tương tác",
+          "sub": "Bình luận và tin nhắn khách gửi tới trong 24 giờ qua."
+        },
+        "ai": {
+          "title": "AI tự động phản hồi",
+          "body": "{auto} / {total} bình luận 7 ngày qua do AI tự trả lời.",
+          "value": "{percent}%",
+          "empty": "Chưa có bình luận trong 7 ngày qua."
+        }
+      },
+      "alert": {
+        "title": "Cảnh báo: có {count} kênh bị ngắt kết nối (đầu tiên: \"{name}\")",
+        "body": "Token truy cập đã hết hiệu lực nên CommentFlow AI không thể nhận bình luận và tự động trả lời trên kênh này. Cấp lại quyền để khôi phục.",
+        "details": "Xem chi tiết lỗi",
+        "reauth": "Cấp lại quyền OAuth"
+      },
+      "groups": {
+        "count": "{count} kênh",
+        "beta": "Thử nghiệm",
+        "empty": "Chưa có kênh {platform} nào.",
+        "facebook": {
+          "title": "Meta Facebook Fanpages",
+          "sub": "Graph API: lắng nghe bình luận và tin nhắn của Page"
+        },
+        "instagram": {
+          "title": "Instagram Professional Business",
+          "sub": "Liên kết qua Meta Business Suite (tin nhắn trực tiếp và bình luận)"
+        },
+        "tiktok": {
+          "title": "TikTok for Business / TikTok Shop",
+          "sub": "TikTok Open API (bình luận video) — đang thử nghiệm"
+        }
+      },
+      "row": {
+        "webhookOk": "Webhook đang hoạt động",
+        "sync": "Đồng bộ lại",
+        "advanced": "Cài đặt nâng cao",
+        "disconnect": "Ngắt kết nối",
+        "comments24h": "Bình luận 24 giờ qua: {count}",
+        "lastComment": "Bình luận gần nhất: {time}",
+        "noComment": "Chưa có bình luận nào",
+        "advancedTitle": "Cài đặt nâng cao — {name}",
+        "replyLanguage": "Ngôn ngữ trả lời của AI",
+        "replyLanguageHint": "\"Tự nhận\" = AI trả lời cùng ngôn ngữ với khách.",
+        "save": "Lưu",
+        "disconnectTitle": "Ngắt kết nối \"{name}\"?",
+        "disconnectBody": "Token của kênh sẽ bị xóa và CommentFlow AI ngừng nhận bình luận, tin nhắn mới từ kênh này. Dữ liệu cũ vẫn giữ nguyên. Bạn có thể kết nối lại sau.",
+        "disconnectConfirm": "Ngắt kết nối",
+        "alreadyDisconnected": "Kênh đã được ngắt kết nối.",
+        "checkOk": "Kết nối ổn định",
+        "checkWebhookMissing": "Token ổn, nhưng chưa đăng ký webhook",
+        "checkTokenInvalid": "Token không còn hiệu lực — cần cấp lại quyền",
+        "checkError": "Lần kiểm gần nhất gặp lỗi tạm thời",
+        "checkUnavailable": "Chưa kiểm được (kết nối nền tảng đang tắt ở máy chủ)",
+        "checkedAt": "Kiểm tra lúc {time}",
+        "neverChecked": "Chưa kiểm tra lần nào"
+      },
+      "policy": {
+        "title": "Chính sách dữ liệu & ngắt kết nối",
+        "body": "Xem cách CommentFlow AI lưu giữ, xuất và xóa dữ liệu bình luận, tin nhắn và khách tiềm năng khi bạn ngắt một kênh.",
+        "link": "Dữ liệu & Quyền riêng tư"
+      },
+      "option": {
+        "auto": "Tự nhận theo khách",
+        "vi": "Tiếng Việt",
+        "en": "English"
+      }
     }
   },
   "posts": {
@@ -2586,6 +2717,7 @@
       "security_two_factor_enabled": "Bật xác thực hai bước",
       "security_two_factor_disabled": "Tắt xác thực hai bước",
       "security_backup_codes_regenerated": "Tạo lại mã dự phòng",
+      "security_backup_codes_viewed": "Xem lại mã dự phòng",
       "security_session_revoked": "Đăng xuất một thiết bị",
       "security_other_sessions_revoked": "Đăng xuất các thiết bị khác",
       "security_profile_updated": "Cập nhật thông tin cá nhân",

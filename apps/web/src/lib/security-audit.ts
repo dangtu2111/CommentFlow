@@ -8,6 +8,7 @@ export const SECURITY_EVENTS = [
   'two_factor_enabled',
   'two_factor_disabled',
   'backup_codes_regenerated',
+  'backup_codes_viewed',
   'session_revoked',
   'other_sessions_revoked',
   'profile_updated',

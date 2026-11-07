@@ -235,7 +235,12 @@ function runScenarios(locale: Locale) {
     const { context, page } = await openSettings(browser);
     try {
       await expect(
-        page.getByText(t('auth.security.twoFactor.tiles.codesValue', { remaining: 10, total: 10 })),
+        page.getByText(
+          t('auth.security.twoFactor.tiles.codesValue', { remaining: 10, total: 10 }),
+          {
+            exact: true,
+          },
+        ),
       ).toBeVisible();
       // Phiên hiện tại: IP đã che hoặc "không xác định" (máy thử không có IP tin cậy); không bao giờ IP thô.
       const ip = page.getByTestId('session-ip').first();

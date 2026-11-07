@@ -14,7 +14,7 @@ import type { UsageMeterView } from '../../lib/usage-meter-view';
 import type { PaymentCard } from '../../server/invoice-payment';
 import { Icon } from '../ui/icon';
 import { PaymentQrCard } from './payment-qr-card';
-import { SettingsFrame, type SettingsFrameScope, TwPageHeader } from './settings-frame';
+import { SettingsFrame, type SettingsFrameScope } from './settings-frame';
 import { TwCard, TwChip, TwSoonButton } from './tw/ui';
 
 const CURRENT_ID = 'billing-current';
@@ -97,12 +97,7 @@ export async function BillingView({
   const soon = t('soon');
   const counts = frame.counts;
   return (
-    <SettingsFrame
-      {...frame}
-      active="billing"
-      variant="tabs"
-      header={<TwPageHeader title={t('billing.title')} subtitle={t('billing.subtitle')} />}
-    >
+    <SettingsFrame {...frame} active="billing" variant="tabs">
       <TwCard labelledBy={CURRENT_ID} className="relative overflow-hidden p-space-lg lg:p-space-xl">
         <div
           aria-hidden="true"

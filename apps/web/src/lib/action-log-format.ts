@@ -22,6 +22,7 @@ const KNOWN_ACTIONS = [
   'security.two_factor_enabled',
   'security.two_factor_disabled',
   'security.backup_codes_regenerated',
+  'security.backup_codes_viewed',
   'security.session_revoked',
   'security.other_sessions_revoked',
   'security.profile_updated',

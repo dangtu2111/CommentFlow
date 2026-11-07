@@ -91,6 +91,26 @@ export async function regenerateBackupCodesAction(
   return { status: 'codes', backupCodes: result.backupCodes };
 }
 
+export async function viewBackupCodesAction(
+  _previous: SecurityState,
+  data: FormData,
+): Promise<SecurityState> {
+  const { user, workspace } = await requireAppUser(SECURITY_ACCESS);
+  const password = parseSecurityInput('password', data);
+  if (!password.ok) return password.state;
+  const result = await flows().viewBackupCodes({
+    password: password.value,
+    headers: (await requestContext()).headers,
+  });
+  if (result.status === 'unauthenticated') redirect('/login');
+  if (result.status !== 'ok') return reauthFailureToState(result);
+  await recordSecurityEvent('backup_codes_viewed', {
+    workspaceId: workspace?.id ?? null,
+    userId: user.id,
+  });
+  return { status: 'codes', backupCodes: result.backupCodes };
+}
+
 export async function disableTwoFactorAction(
   _previous: SecurityState,
   data: FormData,

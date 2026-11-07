@@ -20,7 +20,12 @@ const ICONS: Record<SettingsNavKey, IconName> = {
 };
 
 /** Phần khung do trang cha cung cấp (vai trò + số đếm cột trái); view tự đặt `active` và `header`. */
-export type SettingsFrameScope = { viewerRole: SettingsRole; counts: SettingsCounts | null };
+export type SettingsFrameScope = {
+  viewerRole: SettingsRole;
+  counts: SettingsCounts | null;
+  /** Tên workspace đang xem, dùng trong mô tả đầu trang (`settings.pages.<tab>.subtitle`). */
+  workspaceName?: string;
+};
 
 /** Đầu trang Tailwind theo Stitch: tiêu đề + mô tả bên trái, khe bên phải (chip trạng thái…). */
 export function TwPageHeader({
@@ -65,7 +70,9 @@ export async function SettingsFrame({
   viewerRole,
   active,
   counts,
+  workspaceName = '',
   header,
+  headerEnd,
   variant = 'sidebar',
   sideNote,
   children,
@@ -73,8 +80,12 @@ export async function SettingsFrame({
   viewerRole: SettingsRole;
   active: SettingsNavKey;
   counts: SettingsCounts | null;
-  /** Đầu trang của trang con; nằm trên cả cột trái lẫn nội dung. */
-  header: ReactNode;
+  /** Tên workspace cho mô tả đầu trang. */
+  workspaceName?: string;
+  /** Khe bên phải đầu trang chung (chip trạng thái, nút hành động…). */
+  headerEnd?: ReactNode;
+  /** Ghi đè đầu trang chung (chỉ trang đặc biệt); mặc định: tiêu đề + mô tả theo `active` từ `settings.pages`. */
+  header?: ReactNode;
   /** `sidebar`: cột trái (Bảo mật, Kênh…); `tabs`: thanh tab ngang (Thành viên, Gói — như Stitch). */
   variant?: 'sidebar' | 'tabs';
   /** Hộp ghi chú dưới cột trái (chỉ ở `sidebar`). */
@@ -106,7 +117,13 @@ export async function SettingsFrame({
           {t(`nav.${active}`)}
         </span>
       </nav>
-      {header}
+      {header ?? (
+        <TwPageHeader
+          title={t(`pages.${active}.title`)}
+          subtitle={t(`pages.${active}.subtitle`, { workspace: workspaceName })}
+          end={headerEnd}
+        />
+      )}
       <div
         className={
           tabs ? 'flex flex-col gap-gutter' : 'grid grid-cols-1 xl:grid-cols-12 gap-gutter'

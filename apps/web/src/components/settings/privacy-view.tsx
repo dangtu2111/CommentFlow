@@ -1,7 +1,6 @@
 import { Download, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import type { PrivacyNotice } from '../../lib/data-privacy';
-import { PageHeader } from '../ui/page-header';
 import { SectionHead } from '../ui/section-head';
 import { SettingsFrame, type SettingsFrameScope } from './settings-frame';
 
@@ -28,11 +27,7 @@ export async function PrivacyView({
 }) {
   const t = await getTranslations('settings');
   return (
-    <SettingsFrame
-      {...frame}
-      active="privacy"
-      header={<PageHeader title={t('privacy.title')} subtitle={t('privacy.subtitle')} />}
-    >
+    <SettingsFrame {...frame} active="privacy" variant="tabs">
       {notice ? (
         <div className="banner banner-warning" role="status">
           <div>{t(`privacy.notices.${notice}`)}</div>
