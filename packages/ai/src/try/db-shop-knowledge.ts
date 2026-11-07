@@ -165,7 +165,8 @@ export function searchShopTexts(
       .slice(0, 2);
     for (const entry of picked) {
       candidates.push({
-        id: `${item.kind}:${item.id}#${entry.index}`,
+        // Mã nguồn đi vào prompt soạn nên PHẢI khớp `SOURCE_ID` của draft-prompt: [A-Za-z0-9_:.-]{1,64} (không có `#`).
+        id: `${item.kind}:${item.id}.${entry.index}`,
         kind: 'kb',
         title: item.title,
         text: unsafeMarkMasked(entry.passage),

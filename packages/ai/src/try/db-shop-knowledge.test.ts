@@ -1,5 +1,7 @@
 import type { TryShopText } from '@flow/db/runtime';
+import { unsafeMarkMasked } from '@flow/shared';
 import { describe, expect, it } from 'vitest';
+import { buildDraftMessages } from '../draft/draft-prompt';
 import { searchShopTexts, splitPassages } from './db-shop-knowledge';
 
 const items: TryShopText[] = [
@@ -38,7 +40,7 @@ const items: TryShopText[] = [
 ];
 
 const ctx = { lang: 'vi' as const };
-const first = (hits: { id: string }[]) => hits[0]?.id.split('#')[0];
+const first = (hits: { id: string }[]) => hits[0]?.id.split('.')[0];
 
 describe('TRY-AI-REAL lát B — chính sách/FAQ thật', () => {
   it('hỏi ship → ra đúng chính sách vận chuyển của shop, không phải mục khác', () => {
@@ -98,7 +100,7 @@ describe('TRY-AI-REAL lát B — chính sách/FAQ thật', () => {
         text: 'We collect your data.',
       },
     ];
-    const ids = (q: string) => searchShopTexts(shopify, q, ctx).map((h) => h.id.split('#')[0]);
+    const ids = (q: string) => searchShopTexts(shopify, q, ctx).map((h) => h.id.split('.')[0]);
     expect(ids('Phí ship về Hà Nội bao nhiêu?')).toEqual(['policy:s']);
     expect(ids('Bên mình đổi trả thế nào?')).toEqual(['policy:r']);
     expect(ids('Bao nhiêu vậy shop?')).toEqual([]);
@@ -132,5 +134,49 @@ describe('TRY-AI-REAL lát B — chính sách/FAQ thật', () => {
       },
     ];
     expect(searchShopTexts(doc, 'Phí ship về Hà Nội bao nhiêu?', ctx)).toEqual([]);
+  });
+});
+
+describe('mã nguồn hợp lệ với bước soạn (draft-prompt SOURCE_ID)', () => {
+  it('mọi đoạn tìm được đi qua buildDraftMessages không bị từ chối', () => {
+    const uuid = '123e4567-e89b-42d3-a456-426614174000';
+    const doc: TryShopText[] = [
+      {
+        id: uuid,
+        kind: 'policy',
+        policyKind: 'shipping',
+        lang: 'all',
+        title: 'Shipping',
+        text: 'Orders ship in 3 days.',
+      },
+      {
+        id: uuid,
+        kind: 'faq',
+        policyKind: null,
+        lang: 'vi',
+        title: 'Ship bao lâu?',
+        text: 'Giao hàng 2–4 ngày ship nhanh.',
+      },
+    ];
+    const hits = searchShopTexts(doc, 'Phí ship bao nhiêu? ship bao lâu', ctx);
+    expect(hits.length).toBeGreaterThan(0);
+    for (const hit of hits) {
+      expect(hit.id).toMatch(/^[A-Za-z0-9_:.-]{1,64}$/);
+    }
+    expect(() =>
+      buildDraftMessages({
+        workspaceId: '00000000-0000-4000-8000-000000000001',
+        question: unsafeMarkMasked('Phí ship bao nhiêu?'),
+        lang: 'vi',
+        kbVersion: 'v1',
+        voice: { do: [], dont: [], shopPronoun: 'shop', customerAddress: 'ban' },
+        sources: hits.map((hit) => ({
+          id: hit.id,
+          kind: hit.kind,
+          text: hit.text,
+          relevance: hit.score,
+        })),
+      }),
+    ).not.toThrow();
   });
 });

@@ -1,0 +1,97 @@
+{
+  "id": "demo-shop",
+  "voice": { "shopPronoun": "shop", "customerAddress": "ban", "do": [], "dont": [] },
+  "products": [
+    {
+      "id": "p-ao-thun",
+      "name": "Áo thun basic",
+      "aliases": ["basic t-shirt", "t-shirt", "ao thun basic"],
+      "priceVnd": 150000,
+      "stock": 26,
+      "variants": [
+        { "attrs": { "Size": "S", "Màu": "Đen" }, "priceVnd": 150000, "stock": 5 },
+        { "attrs": { "Size": "M", "Màu": "Đen" }, "priceVnd": 150000, "stock": 12 },
+        { "attrs": { "Size": "M", "Màu": "Trắng" }, "priceVnd": 150000, "stock": 0 },
+        { "attrs": { "Size": "L", "Màu": "Trắng" }, "priceVnd": 150000, "stock": 9 }
+      ]
+    },
+    {
+      "id": "p-vay-hoa",
+      "name": "Váy hoa nhí",
+      "aliases": ["floral dress", "vay hoa nhi"],
+      "priceVnd": 320000,
+      "stock": 3,
+      "variants": [{ "attrs": { "Size": "M", "Màu": "Xanh" }, "priceVnd": 320000, "stock": 3 }]
+    },
+    {
+      "id": "p-tui-tote",
+      "name": "Túi tote canvas",
+      "aliases": ["canvas tote bag", "tote bag", "tui tote canvas"],
+      "priceVnd": 99000,
+      "stock": 25,
+      "variants": []
+    },
+    {
+      "id": "p-quan-jean",
+      "name": "Quần jean ống rộng",
+      "aliases": ["wide leg jeans", "jeans", "quan jean ong rong"],
+      "priceVnd": 420000,
+      "stock": 10,
+      "variants": [
+        { "attrs": { "Size": "28" }, "priceVnd": 420000, "stock": 4 },
+        { "attrs": { "Size": "29" }, "priceVnd": 420000, "stock": 3 },
+        { "attrs": { "Size": "30" }, "priceVnd": 420000, "stock": 3 }
+      ]
+    }
+  ],
+  "texts": [
+    {
+      "id": "t-ship-vi",
+      "kind": "policy",
+      "policyKind": "shipping",
+      "lang": "vi",
+      "title": "Phí vận chuyển",
+      "text": "Phí ship nội thành 20.000đ, toàn quốc 30.000đ. Giao hàng trong 2–4 ngày làm việc."
+    },
+    {
+      "id": "t-ship-en",
+      "kind": "policy",
+      "policyKind": "shipping",
+      "lang": "en",
+      "title": "Shipping fee",
+      "text": "Shipping is 20.000đ within the city and 30.000đ nationwide. Delivery takes 2–4 business days."
+    },
+    {
+      "id": "t-return-vi",
+      "kind": "policy",
+      "policyKind": "return",
+      "lang": "vi",
+      "title": "Chính sách đổi trả",
+      "text": "Đổi trả trong 7 ngày nếu sản phẩm còn tem mác và chưa giặt."
+    },
+    {
+      "id": "t-return-en",
+      "kind": "policy",
+      "policyKind": "return",
+      "lang": "en",
+      "title": "Return policy",
+      "text": "Returns are accepted within 7 days if the item still has its tags and is unwashed."
+    },
+    {
+      "id": "t-warranty-vi",
+      "kind": "policy",
+      "policyKind": "warranty",
+      "lang": "vi",
+      "title": "Bảo hành",
+      "text": "Bảo hành đường may 3 tháng kể từ ngày nhận hàng."
+    },
+    {
+      "id": "t-warranty-en",
+      "kind": "policy",
+      "policyKind": "warranty",
+      "lang": "en",
+      "title": "Warranty",
+      "text": "Seams are under warranty for 3 months from the delivery date."
+    }
+  ]
+}

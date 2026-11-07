@@ -33,6 +33,14 @@ describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố
     expect(createTryLlmDeps({ env: { ...base, DRAFT_LLM_ENABLED: '1' }, db })).toEqual({});
   });
 
+  it('REWRITE_LLM_ENABLED=true → có bộ viết lại (rewriter) dù chưa bật extract/draft', () => {
+    const llm = createTryLlmDeps({ env: { ...base, REWRITE_LLM_ENABLED: 'true' }, db });
+    expect(llm.rewriter).toBeDefined();
+    expect(llm.extractor).toBeUndefined();
+    expect(llm.drafter).toBeUndefined();
+    expect(createTryLlmDeps({ env: { ...base, REWRITE_LLM_ENABLED: '1' }, db })).toEqual({});
+  });
+
   it('lỗi mạng khi gọi LLM → ném lỗi (ô Thử AI báo "không thử được"), không lộ khóa/nội dung', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new Error('boom sk-secret'));
     const llm = createTryLlmDeps({

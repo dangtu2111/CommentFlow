@@ -1,0 +1,23 @@
+# EVAL-RUNNER qua promptfoo (docs/14 §4; promptfoo 0.125.1, giấy phép MIT — chạy bằng `pnpm dlx`, KHÔNG thêm vào lockfile).
+# Dùng: pnpm --filter @flow/eval gen:promptfoo && pnpm --filter @flow/eval promptfoo
+# Mỗi nhà cung cấp dưới đây là MỘT cấu hình model so sánh; thêm Anthropic/Gemini sau = thêm một mục (bí danh `cand-*`),
+# không sửa code. Bộ `synthetic` chỉ để chạy thử — không dùng để chọn model hay báo đạt cổng (xem docs/CAN_BAN_CUNG_CAP.md).
+description: CommentFlow EVAL-RUNNER (docs/14 §4.2)
+
+prompts:
+  - "{{text}}"
+
+providers:
+  - id: file://provider.mjs
+    label: mock (không mạng, chi phí 0 — chỉ thử luồng)
+    config:
+      backend: mock
+  # Bỏ chú thích để so sánh model thật qua LiteLLM (cần LITELLM_BASE_URL/LITELLM_API_KEY và khóa nhà cung cấp trên máy ảo):
+  # - id: file://provider.mjs
+  #   label: nano (extract) + luna (draft)
+  #   config: { backend: litellm, classifyModel: cf-classify, rewriteModel: cf-classify, draftModel: cf-draft, variantCount: 4 }
+  # - id: file://provider.mjs
+  #   label: luna (extract + draft)
+  #   config: { backend: litellm, classifyModel: cand-gpt-luna, rewriteModel: cand-gpt-luna, draftModel: cf-draft, variantCount: 4 }
+
+tests: file://tests.json

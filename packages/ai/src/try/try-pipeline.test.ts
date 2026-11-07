@@ -1,3 +1,4 @@
+import type { MaskedText } from '@flow/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { ExtractResult } from '../classify/extract-result';
 import type { Extractor } from '../classify/extractor';
@@ -6,6 +7,7 @@ import { type DraftResult, needsHumanResult } from '../draft/draft-result';
 import type { Drafter } from '../draft/drafter';
 import { createFixtureDrafter } from '../draft/fixture-drafter';
 import { createAbbreviationDict } from '../normalize/normalize-lang';
+import type { Rewriter } from '../rewrite/rewriter';
 import { DEMO_ABBREVIATIONS } from './demo-abbreviations';
 import { createDemoExtractor } from './demo-ai';
 import { createDemoKnowledge } from './demo-knowledge';
@@ -262,5 +264,78 @@ describe('Bước 0 — extract/tìm kiếm nhận văn bản ĐÃ chuẩn hóa;
     expect(a.result.confidence.components?.p_label).toBeGreaterThan(0);
     expect(b.result.confidence.components?.p_label).toBe(0);
     expect(a.result.confidence.confidence).toBeGreaterThan(b.result.confidence.confidence);
+  });
+});
+
+describe('Q-LLM2 rewriteQuery trong pipeline + variantCount', () => {
+  const setup = (rewriter?: Rewriter, over: Partial<TryInput> = {}) => {
+    const searched: string[] = [];
+    const drafts: Array<{ variantCount?: number }> = [];
+    const knowledge = createDemoKnowledge();
+    const drafter: Drafter = {
+      async draft(input) {
+        drafts.push({ variantCount: input.variantCount });
+        return createFixtureDrafter().draft(input);
+      },
+    };
+    const run = () =>
+      runTryPipeline(
+        {
+          ...base,
+          text: 'còn không shop',
+          dict: createAbbreviationDict(DEMO_ABBREVIATIONS),
+          ...over,
+        },
+        {
+          extractor: createDemoExtractor(),
+          drafter,
+          knowledge: {
+            ...knowledge,
+            searchKb: async (query, ctx) => {
+              searched.push(query);
+              return knowledge.searchKb(query, ctx);
+            },
+          },
+          ...(rewriter ? { rewriter } : {}),
+        },
+      );
+    return { run, searched, drafts };
+  };
+
+  it('không có rewriter → tìm bằng câu đã chuẩn hóa, rewriteSource = null', async () => {
+    const { run, searched } = setup();
+    const result = await run();
+    expect(searched).toEqual(['còn không shop']);
+    expect(result.status === 'done' && result.rewriteSource).toBe(null);
+    expect(result.status === 'done' && result.searchQuery).toBe('còn không shop');
+  });
+
+  it('có rewriter → searchKb nhận câu đã viết lại; kết quả ghi nguồn rule/llm; rewriter biết sản phẩm chưa', async () => {
+    const seen: Array<{ comment: string; productKnown: boolean }> = [];
+    const rewriter: Rewriter = {
+      async rewrite(input) {
+        seen.push({ comment: input.comment, productKnown: input.productKnown });
+        return {
+          original: input.comment,
+          searchQuery: 'phí ship nội thành' as MaskedText,
+          source: 'llm',
+        };
+      },
+    };
+    const { run, searched } = setup(rewriter);
+    const result = await run();
+    expect(searched).toEqual(['phí ship nội thành']);
+    expect(seen).toEqual([{ comment: 'còn không shop', productKnown: false }]);
+    expect(result.status === 'done' && result.rewriteSource).toBe('llm');
+    expect(result.status === 'done' && result.searchQuery).toBe('phí ship nội thành');
+  });
+
+  it('variantCount được chuyển cho bộ soạn; không đặt thì không có khóa', async () => {
+    const withCount = setup(undefined, { variantCount: 2 });
+    await withCount.run();
+    expect(withCount.drafts[0]?.variantCount).toBe(2);
+    const without = setup();
+    await without.run();
+    expect(without.drafts[0]?.variantCount).toBeUndefined();
   });
 });
