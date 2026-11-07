@@ -115,8 +115,8 @@ Không chờ khóa/tài nguyên của chủ dự án. Việc cần Meta OAuth/we
 - **Một nhánh, một agent tại một thời điểm.** Không để hai agent cùng sửa một nhánh. Đổi agent chỉ ở điểm dừng: sau khi commit và ghi `docs/handoff/<nhánh>.md`.
 - **Trạng thái nằm trong repo, không trong trí nhớ phiên:** `docs/plans/<nhánh>.md` (kế hoạch đã duyệt), `docs/handoff/<nhánh>.md` (đã làm, file đã đọc + điều rút ra, việc còn lại, agent vừa làm), `docs/codemap.md`, `docs/gap-matrix.md`. Agent nhận việc đọc các file này trước, không đọc lại source đã được ghi.
 - **Không lập lại kế hoạch, không làm lại việc đã commit.** Thấy kế hoạch sai → ghi đề xuất sửa vào `docs/plans/<nhánh>.md` mục "Đề xuất thay đổi" và dừng chờ chủ dự án.
-- **Chạy song song nhiều nhánh:** xem `docs/workflows/parallel.md` (mỗi làn một worktree + `CF_LANE`). Tự động hóa hàng đợi việc/PR/CI/merge: `tools/orchestrator` — `docs/workflows/orchestrator.md`, ADR 012.
-- **Kiểm chứng chéo chỉ cho diff nhạy cảm** (auth, phiên, token, chữ ký webhook, RLS/`withWorkspace`, thanh toán, cổng tự gửi, `sendRecheck`, che PII, migration): agent **không viết** đoạn đó kiểm chứng theo `docs/workflows/verify.md`, chỉ nhận diff + mục spec. Diff thường không cần agent thứ hai.
+- **Chạy song song nhiều nhánh: TẠM DỪNG (07/11/2026, không multi-agent) — mỗi lần một phiên, một nhánh.** Tài liệu để dùng khi bật lại: xem `docs/workflows/parallel.md` (mỗi làn một worktree + `CF_LANE`). Tự động hóa hàng đợi việc/PR/CI/merge: `tools/orchestrator` — `docs/workflows/orchestrator.md`, ADR 012.
+- **Diff nhạy cảm** (auth, phiên, token, chữ ký webhook, RLS/`withWorkspace`, thanh toán, cổng tự gửi, `sendRecheck`, che PII, migration): phiên chính tự kiểm theo `docs/workflows/verify.md` (không subagent), gắn nhãn "tự kiểm", không tự merge — chủ dự án hoặc Codex kiểm chéo khi muốn. Diff thường không cần.
 - Ghi agent đã làm vào cột "Nhánh" của gap matrix, ví dụ `feat/ai-usage (codex)`.
 
 ## Hai máy: máy chính (việc nặng) và máy phụ (việc nhẹ, chạy staging)
@@ -124,7 +124,7 @@ Không chờ khóa/tài nguyên của chủ dự án. Việc cần Meta OAuth/we
 | | Máy chính (máy code) | Máy phụ (máy chạy thật) |
 |---|---|---|
 | Model mặc định | `sonnet` (`.claude/settings.json`); `opusplan` cho việc khó | `haiku` — đặt trong `.claude/settings.local.json` của máy phụ (không commit) |
-| Việc | Lập kế hoạch, viết tính năng, logic nhạy cảm (cổng tự gửi, `sendRecheck`, RLS, auth, thanh toán, prompt AI), sửa lỗi khó, **kiểm chứng độc lập** bằng subagent `verifier-*` khi `/finish` | Deploy staging + kiểm sức khỏe, chạy E2E/contract test, thao tác thử với Page/IG thật, đọc log và tóm lỗi thành issue, việc cơ học kiểm được bằng công cụ (tách chuỗi `vi.json`/`en.json`, dịch chuỗi giao diện, đổi tên theo danh sách, cập nhật `codemap`/`gap-matrix`) |
+| Việc | Lập kế hoạch, viết tính năng, logic nhạy cảm (cổng tự gửi, `sendRecheck`, RLS, auth, thanh toán, prompt AI), sửa lỗi khó, **tự kiểm** theo `verify.md` khi `/finish` (không subagent) | Deploy staging + kiểm sức khỏe, chạy E2E/contract test, thao tác thử với Page/IG thật, đọc log và tóm lỗi thành issue, việc cơ học kiểm được bằng công cụ (tách chuỗi `vi.json`/`en.json`, dịch chuỗi giao diện, đổi tên theo danh sách, cập nhật `codemap`/`gap-matrix`) |
 | Nhánh được tạo | `feat/*`, `fix/*`, `chore/*` | `mech/*` (việc cơ học), `ops/*` (hạ tầng), commit `docs/staging/*` |
 | Không được | Chạy migration/lệnh ghi lên staging | Sửa logic nghiệp vụ trong `apps/`, `packages/`, `services/`; lập kế hoạch tính năng; kiểm chứng diff nhạy cảm |
 | Lệnh chính | `/feature`, `/finish`, `/fix-issues` | `/staging-verify <nhánh>`, `/mech <việc>` |
