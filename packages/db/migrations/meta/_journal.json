@@ -463,6 +463,13 @@
       "when": 1794000500000,
       "tag": "0065_shopify_client_credentials",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1794001000000,
+      "tag": "0066_shopify_sync_keep_connected",
+      "breakpoints": true
     }
   ]
 }

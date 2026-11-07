@@ -48,6 +48,20 @@ function retryAfterOf(headers: Headers): number | undefined {
   return Math.min(Math.ceil(seconds), MAX_RETRY_AFTER_SECONDS);
 }
 
+/**
+ * Mã lỗi OAuth của Shopify (`{"error":"invalid_client"}`, `shop_not_permitted`…) để biết VÌ SAO từ chối. Chỉ nhận chuỗi theo danh
+ * sách trắng ký tự (không bao giờ đưa nguyên thân phản hồi vào lỗi/log); không đọc được → chuỗi rỗng.
+ */
+async function errorCodeOf(response: Response): Promise<string> {
+  try {
+    const parsed: unknown = JSON.parse(await readBounded(response));
+    const code = (parsed as { error?: unknown } | null)?.error;
+    return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,60}$/.test(code) ? code : '';
+  } catch {
+    return '';
+  }
+}
+
 async function readBounded(response: Response): Promise<string> {
   const text = await response.text();
   if (text.length > MAX_RESPONSE_BYTES) throw fail('UNKNOWN', 'shopify_bad_response');
@@ -87,12 +101,15 @@ export async function exchangeShopifyClientCredentials(
     throw fail('RATE_LIMIT', 'shopify_rate_limited', retryAfterOf(response.headers));
   }
   if (response.status === 400 || response.status === 401) {
-    await response.body?.cancel();
-    throw fail('TOKEN_EXPIRED', 'shopify_invalid_credentials');
+    const detail = await errorCodeOf(response);
+    throw fail(
+      'TOKEN_EXPIRED',
+      detail ? `shopify_invalid_credentials:${detail}` : 'shopify_invalid_credentials',
+    );
   }
   if (response.status === 403) {
-    await response.body?.cancel();
-    throw fail('PERMISSION', 'shopify_not_permitted');
+    const detail = await errorCodeOf(response);
+    throw fail('PERMISSION', detail ? `shopify_not_permitted:${detail}` : 'shopify_not_permitted');
   }
   if (response.status !== 200) {
     await response.body?.cancel();

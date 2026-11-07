@@ -174,6 +174,9 @@ export type KbBrandVoiceRow = {
   handoffTemplates: Record<string, { inHours: string; outHours: string }>;
 };
 
+/** Nhãn của dữ liệu MẪU do seed dev tạo (AGENTS.md § Thiết kế giao diện): trang tổng quan KHÔNG đếm/hiển thị các dòng này. */
+export const SAMPLE_LABEL = '[MẪU]';
+
 const asDate = (value: string | Date): Date => (value instanceof Date ? value : new Date(value));
 
 export async function listFaqItems(tx: Database, workspaceId: string): Promise<KbFaqRow[]> {
@@ -325,12 +328,12 @@ export async function loadKbOverview(tx: Database, workspaceId: string): Promise
       sources: string;
     }>(sql`
       SELECT
-        (SELECT count(*) FROM cf.products WHERE workspace_id = ${workspaceId}::uuid AND status = 'active') AS products,
-        (SELECT count(*) FROM cf.policy_items WHERE workspace_id = ${workspaceId}::uuid) AS policies,
-        (SELECT count(*) FROM cf.faq_items WHERE workspace_id = ${workspaceId}::uuid) AS faqs,
-        (SELECT count(*) FROM cf.shop_profiles WHERE workspace_id = ${workspaceId}::uuid) AS shop_profiles,
+        (SELECT count(*) FROM cf.products WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND NOT starts_with(name, ${SAMPLE_LABEL})) AS products,
+        (SELECT count(*) FROM cf.policy_items WHERE workspace_id = ${workspaceId}::uuid AND NOT starts_with(title, ${SAMPLE_LABEL})) AS policies,
+        (SELECT count(*) FROM cf.faq_items WHERE workspace_id = ${workspaceId}::uuid AND NOT starts_with(question, ${SAMPLE_LABEL})) AS faqs,
+        (SELECT count(*) FROM cf.shop_profiles WHERE workspace_id = ${workspaceId}::uuid AND NOT starts_with(name, ${SAMPLE_LABEL})) AS shop_profiles,
         (SELECT count(*) FROM cf.brand_voice WHERE workspace_id = ${workspaceId}::uuid) AS brand_voices,
-        (SELECT count(*) FROM cf.kb_sources WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL) AS sources`),
+        (SELECT count(*) FROM cf.kb_sources WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL AND NOT starts_with(title, ${SAMPLE_LABEL})) AS sources`),
     tx.execute<{
       id: string;
       type: string;
@@ -341,7 +344,7 @@ export async function loadKbOverview(tx: Database, workspaceId: string): Promise
       sync_error: string | null;
     }>(sql`
       SELECT id, type, title, origin_url, status, last_synced_at, sync_error FROM cf.kb_sources
-       WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL
+       WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL AND NOT starts_with(title, ${SAMPLE_LABEL})
        ORDER BY created_at DESC, id LIMIT 50`),
     tx.execute<{
       id: string;
@@ -353,7 +356,7 @@ export async function loadKbOverview(tx: Database, workspaceId: string): Promise
       variants: unknown;
     }>(sql`
       SELECT id, name, sku, category, price_vnd, stock, variants FROM cf.products
-       WHERE workspace_id = ${workspaceId}::uuid AND status = 'active'
+       WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND NOT starts_with(name, ${SAMPLE_LABEL})
        ORDER BY updated_at DESC, id LIMIT 1`),
   ]);
   const c = counts.rows[0];

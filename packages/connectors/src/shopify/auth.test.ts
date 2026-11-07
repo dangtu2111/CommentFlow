@@ -101,6 +101,27 @@ describe('exchangeShopifyClientCredentials', () => {
     expect((await failureOf(run())).code).toBe(code);
   });
 
+  it('400/403 kèm mã lỗi của Shopify → mã đó nằm trong thông điệp (để biết vì sao); thân lạ/mã lạ → không kèm', async () => {
+    const invalid = harness(() => new Response('{"error":"invalid_client"}', { status: 400 }));
+    expect((await failureOf(invalid.run())).message).toBe(
+      'shopify_invalid_credentials:invalid_client',
+    );
+    const forbidden = harness(
+      () => new Response('{"error":"shop_not_permitted"}', { status: 403 }),
+    );
+    expect((await failureOf(forbidden.run())).message).toBe(
+      'shopify_not_permitted:shop_not_permitted',
+    );
+    const weird = harness(
+      () => new Response('{"error":"có dấu <script> và khoảng trắng"}', { status: 400 }),
+    );
+    expect((await failureOf(weird.run())).message).toBe('shopify_invalid_credentials');
+    const notJson = harness(() => new Response('<html>', { status: 403 }));
+    expect((await failureOf(notJson.run())).message).toBe('shopify_not_permitted');
+    const notString = harness(() => new Response('{"error":42}', { status: 401 }));
+    expect((await failureOf(notString.run())).message).toBe('shopify_invalid_credentials');
+  });
+
   it('429 → RATE_LIMIT kèm Retry-After (có chặn trần)', async () => {
     const { run } = harness(
       () => new Response('{}', { status: 429, headers: { 'retry-after': '7' } }),

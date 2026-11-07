@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { actionAllowed } from '../../../../server/action-guard';
 import { requireAppUser } from '../../../../server/require-app-user';
 import { shopifyConnect } from '../../../../server/shopify-runtime';
 
@@ -18,7 +19,8 @@ export type ShopifyNotice =
   | 'sync_queued'
   | 'sync_recent'
   | 'disconnected'
-  | 'not_found';
+  | 'not_found'
+  | 'rate_limited';
 
 const BACK = '/app/kb';
 
@@ -29,6 +31,8 @@ const field = (data: FormData, key: string): string => {
 
 export async function connectShopifyAction(data: FormData): Promise<never> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
+  const who = { userId: user.id, workspaceId: workspace.id };
+  if (!(await actionAllowed('uiSensitive', who))) redirect(`${BACK}?sh=rate_limited`);
   const result = await shopifyConnect().connect(
     { workspaceId: workspace.id, userId: user.id },
     field(data, 'domain'),
@@ -40,6 +44,10 @@ export async function connectShopifyAction(data: FormData): Promise<never> {
 
 export async function syncShopifyAction(): Promise<never> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
+  // Đồng bộ là thao tác NẶNG qua worker: chặn bấm đúp/dồn ở đây VÀ giữ thời gian chờ nguyên tử ở DB (lớp thứ hai).
+  if (!(await actionAllowed('uiHeavy', { userId: user.id, workspaceId: workspace.id }))) {
+    redirect(`${BACK}?sh=rate_limited`);
+  }
   const result = await shopifyConnect().sync({ workspaceId: workspace.id, userId: user.id });
   redirect(
     `${BACK}?sh=${result === 'queued' ? 'sync_queued' : result === 'recent' ? 'sync_recent' : result}`,
@@ -48,6 +56,9 @@ export async function syncShopifyAction(): Promise<never> {
 
 export async function disconnectShopifyAction(): Promise<never> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
+  if (!(await actionAllowed('uiSensitive', { userId: user.id, workspaceId: workspace.id }))) {
+    redirect(`${BACK}?sh=rate_limited`);
+  }
   const result = await shopifyConnect().disconnect({
     workspaceId: workspace.id,
     userId: user.id,

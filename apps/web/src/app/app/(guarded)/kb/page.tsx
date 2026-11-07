@@ -5,6 +5,7 @@ import { KbFrame } from '../../../../components/kb/kb-frame';
 import { ShopifyCard, shopifyNoticeOf } from '../../../../components/kb/shopify-card';
 import { Icon, type IconName } from '../../../../components/ui/icon';
 import { cn } from '../../../../lib/cn';
+import { TRY_AI_MAX_CHARS } from '../../../../lib/try-ai-limits';
 import { getBrand } from '../../../../server/brand';
 import { getDb } from '../../../../server/db';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
@@ -238,18 +239,31 @@ export default async function KbHubPage({ searchParams }: { searchParams: Search
                 </p>
               </div>
             </div>
-            <div className="mt-space-md flex flex-col gap-space-sm sm:flex-row sm:items-center">
-              <p className="flex-1 rounded-lg bg-surface-container-low px-3 py-2.5 font-body-md text-body-md text-on-surface-variant">
-                {t('hub.playground.example')}
-              </p>
-              <Link
-                href="/app/try-ai"
+            <form
+              action="/app/try-ai"
+              method="get"
+              className="mt-space-md flex flex-col gap-space-sm sm:flex-row sm:items-center"
+            >
+              <label htmlFor="hub-try-question" className="sr-only">
+                {t('hub.playground.label')}
+              </label>
+              <input
+                id="hub-try-question"
+                name="q"
+                required
+                maxLength={TRY_AI_MAX_CHARS}
+                autoComplete="off"
+                placeholder={t('hub.playground.placeholder')}
+                className="flex-1 rounded-lg bg-surface-container-low px-3 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60"
+              />
+              <button
+                type="submit"
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-secondary px-4 py-2.5 font-title-sm text-title-sm text-on-secondary shadow-sm"
               >
                 <Icon name="play_arrow" size={16} />
                 {t('hub.playground.run')}
-              </Link>
-            </div>
+              </button>
+            </form>
           </section>
         </div>
       </KbFrame>

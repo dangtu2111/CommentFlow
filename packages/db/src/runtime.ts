@@ -367,6 +367,7 @@ export {
   type ShopifyStoreCredentials,
   type ShopifyStoreRow,
   type ShopifyStoreStatus,
+  type ShopifySyncDetail,
   type ShopifySyncResult,
   type ShopifySyncSummary,
   saveShopifyStore,

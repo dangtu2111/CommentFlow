@@ -322,3 +322,86 @@ describe('khi kho (Valkey) không dùng được', () => {
     await expect(limiter.reset('login', { email: 'a@example.test' })).resolves.toBeUndefined();
   });
 });
+
+describe('chống bấm đúp và spam thao tác giao diện (uiWrite, uiSensitive, uiHeavy)', () => {
+  const who = { userId: 'u1', workspaceId: 'w1' };
+
+  it.each(['uiWrite', 'uiSensitive', 'uiHeavy'] as const)(
+    '%s: lần thứ hai ngay lập tức (bấm đúp) bị chặn, hết cửa sổ ngắn thì được lại',
+    async (action) => {
+      let now = 0;
+      const { limiter } = limiterWith({ now: () => now });
+      expect((await limiter.check(action, who)).allowed).toBe(true);
+      const second = await limiter.check(action, who);
+      expect(second).toMatchObject({ allowed: false, reason: 'limited' });
+      now += 31_000; // qua cả cửa sổ 30 giây của workspace (uiHeavy)
+      expect((await limiter.check(action, who)).allowed).toBe(true);
+    },
+  );
+
+  it('tách theo người dùng/workspace: người khác không bị chặn thay', async () => {
+    const { limiter } = limiterWith();
+    expect((await limiter.check('uiWrite', who)).allowed).toBe(true);
+    expect((await limiter.check('uiWrite', who)).allowed).toBe(false);
+    expect((await limiter.check('uiWrite', { userId: 'u2', workspaceId: 'w2' })).allowed).toBe(
+      true,
+    );
+  });
+
+  it('uiWrite: trần 30 lần/phút cho mỗi người dùng (spam chậm hơn bấm đúp vẫn bị chặn)', async () => {
+    let now = 0;
+    const { limiter } = limiterWith({ now: () => now });
+    let allowed = 0;
+    for (let i = 0; i < 50; i++) {
+      now += 1_100; // mỗi 1,1 giây: vượt xô bấm đúp nhưng nhanh hơn 30/phút; 50 lần ≈ 55 giây, trong một cửa sổ phút
+      if ((await limiter.check('uiWrite', who)).allowed) allowed += 1;
+    }
+    expect(allowed).toBeLessThanOrEqual(31);
+    expect(allowed).toBeGreaterThan(20);
+  });
+
+  it('uiSensitive: tối đa 10 lần/10 phút, kèm số giây chờ', async () => {
+    let now = 0;
+    const { limiter } = limiterWith({ now: () => now });
+    let last: Awaited<ReturnType<typeof limiter.check>> = { allowed: true };
+    for (let i = 0; i < 12; i++) {
+      now += 2_500; // qua xô bấm đúp (2 giây)
+      last = await limiter.check('uiSensitive', who);
+    }
+    expect(last.allowed).toBe(false);
+    if (!last.allowed) {
+      expect(last.retryAfterSeconds).toBeGreaterThan(0);
+      expect(last.retryAfterSeconds).toBeLessThanOrEqual(600);
+    }
+  });
+
+  it('uiHeavy: mỗi workspace 1 lần/30 giây dù là người dùng khác nhau', async () => {
+    const { limiter } = limiterWith();
+    expect((await limiter.check('uiHeavy', { userId: 'u1', workspaceId: 'w1' })).allowed).toBe(
+      true,
+    );
+    expect((await limiter.check('uiHeavy', { userId: 'u2', workspaceId: 'w1' })).allowed).toBe(
+      false,
+    );
+    expect((await limiter.check('uiHeavy', { userId: 'u3', workspaceId: 'w9' })).allowed).toBe(
+      true,
+    );
+  });
+
+  it('kho Valkey lỗi → vẫn chặn bấm đúp bằng bộ nhớ tiến trình (không khóa nhầm, không mở toang)', async () => {
+    const broken: RateStore = {
+      hit: () => Promise.reject(new Error('down')),
+      reset: () => Promise.reject(new Error('down')),
+    };
+    const { limiter, warnings } = limiterWith({ store: broken });
+    expect((await limiter.check('uiWrite', who)).allowed).toBe(true);
+    expect((await limiter.check('uiWrite', who)).allowed).toBe(false);
+    expect(warnings[0]).toMatchObject({ event: 'ratelimit_store_unavailable', mode: 'memory' });
+  });
+
+  it('thiếu danh tính (không userId) → không có xô nào áp dụng, không chặn', async () => {
+    const { limiter } = limiterWith();
+    expect((await limiter.check('uiSensitive', {})).allowed).toBe(true);
+    expect((await limiter.check('uiSensitive', {})).allowed).toBe(true);
+  });
+});

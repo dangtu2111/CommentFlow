@@ -19,13 +19,19 @@ export type ShopifySyncSummary = {
   variantsUpdated: number;
 };
 
+/**
+ * Phần ghi kèm kết quả: số liệu khi `ok`, hoặc `reason` (mã lý do KHÔNG chứa bí mật, đã lọc ký tự) khi lỗi — ví dụ
+ * `exchange:shopify_invalid_credentials:invalid_client`, `decrypt_failed`.
+ */
+export type ShopifySyncDetail = Partial<ShopifySyncSummary> & { reason?: string };
+
 export type ShopifyStoreRow = {
   shopDomain: string;
   status: ShopifyStoreStatus;
   lastSyncedAt: Date | null;
   lastSyncRequestedAt: Date | null;
   lastSyncResult: ShopifySyncResult | null;
-  lastSyncSummary: Partial<ShopifySyncSummary>;
+  lastSyncSummary: ShopifySyncDetail;
   createdAt: Date;
 };
 
@@ -66,7 +72,7 @@ export async function getShopifyStore(
     last_synced_at: string | Date | null;
     last_sync_requested_at: string | Date | null;
     last_sync_result: ShopifySyncResult | null;
-    last_sync_summary: Partial<ShopifySyncSummary>;
+    last_sync_summary: ShopifySyncDetail;
     created_at: string | Date;
   }>(sql`
     SELECT shop_domain, status, last_synced_at, last_sync_requested_at, last_sync_result, last_sync_summary, created_at
@@ -119,7 +125,7 @@ export async function readShopifyStoreCredentials(
 export async function recordShopifySync(
   tx: Database,
   result: ShopifySyncResult,
-  summary: Partial<ShopifySyncSummary> = {},
+  summary: ShopifySyncDetail = {},
 ): Promise<void> {
   await tx.execute(
     sql`SELECT cf.record_shopify_sync(${result}, ${JSON.stringify(summary)}::jsonb)`,

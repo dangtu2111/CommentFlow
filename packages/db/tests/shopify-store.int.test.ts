@@ -215,8 +215,23 @@ describe('đọc token + ghi kết quả: chỉ hệ thống', () => {
     expect(code).toBe(INVALID);
   });
 
-  it('token_invalid hạ trạng thái xuống invalid; không còn đọc được token để chạy tiếp', async () => {
-    await worker.withJob(ws, (tx) => recordShopifySync(tx, 'token_invalid'));
+  it('lỗi ĐỌC SẢN PHẨM (reason catalog:*) KHÔNG hạ kết nối: vẫn connected để sửa quyền rồi đồng bộ lại', async () => {
+    await worker.withJob(ws, (tx) =>
+      recordShopifySync(tx, 'token_invalid', { reason: 'catalog:shopify_access_denied' }),
+    );
+    const store = await app.withActor(ws, owner, (tx) => getShopifyStore(tx, ws));
+    expect(store?.status).toBe('connected');
+    expect(store?.lastSyncResult).toBe('token_invalid');
+    expect(store?.lastSyncSummary).toMatchObject({ reason: 'catalog:shopify_access_denied' });
+    expect(await worker.withJob(ws, (tx) => readShopifyStoreCredentials(tx))).not.toBeNull();
+  });
+
+  it('lỗi ĐỔI TOKEN/giải mã hạ trạng thái xuống invalid; không còn đọc được thông tin để chạy tiếp', async () => {
+    await worker.withJob(ws, (tx) =>
+      recordShopifySync(tx, 'token_invalid', {
+        reason: 'exchange:shopify_invalid_credentials:invalid_client',
+      }),
+    );
     const store = await app.withActor(ws, owner, (tx) => getShopifyStore(tx, ws));
     expect(store?.status).toBe('invalid');
     expect(await worker.withJob(ws, (tx) => readShopifyStoreCredentials(tx))).toBeNull();

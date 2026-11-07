@@ -1,6 +1,6 @@
 import { PlatformError, TokenDecryptError, TokenKeyMissingError } from '@flow/connectors';
 import { describe, expect, it, vi } from 'vitest';
-import { runShopifySync, type ShopifySyncDeps } from './shopify-sync';
+import { reasonOf, runShopifySync, type ShopifySyncDeps } from './shopify-sync';
 
 const STORED = {
   shopDomain: 'demo-shop.myshopify.com',
@@ -32,6 +32,16 @@ function setup(over: Partial<ShopifySyncDeps> = {}) {
   };
   return { deps, record, apply, fetchCatalog, warn, exchange };
 }
+
+describe('reasonOf', () => {
+  it('ghép bước:mã, lọc ký tự lạ (không để lọt secret/dấu cách) và cắt tối đa 120 ký tự', () => {
+    expect(reasonOf('exchange', 'shopify_invalid_credentials:invalid_client')).toBe(
+      'exchange:shopify_invalid_credentials:invalid_client',
+    );
+    expect(reasonOf('catalog', 'có dấu & khoảng trắng')).toBe('catalog:c__d_u___kho_ng_tr_ng');
+    expect(reasonOf('catalog', 'x'.repeat(300))).toHaveLength(120);
+  });
+});
 
 describe('runShopifySync', () => {
   it('thành công → nạp sản phẩm, ghi kết quả ok kèm số liệu', async () => {
@@ -76,7 +86,7 @@ describe('runShopifySync', () => {
     });
     expect(await runShopifySync(deps)).toBe(expected);
     expect(apply).not.toHaveBeenCalled();
-    expect(record).toHaveBeenCalledWith(expected, {});
+    expect(record).toHaveBeenCalledWith(expected, { reason: `catalog:${code}` });
   });
 
   it.each([
@@ -93,7 +103,7 @@ describe('runShopifySync', () => {
       });
       expect(await runShopifySync(deps)).toBe(expected);
       expect(fetchCatalog).not.toHaveBeenCalled();
-      expect(record).toHaveBeenCalledWith(expected, {});
+      expect(record).toHaveBeenCalledWith(expected, { reason: `exchange:${code}` });
     },
   );
 
@@ -104,6 +114,7 @@ describe('runShopifySync', () => {
       },
     });
     expect(await runShopifySync(bad.deps)).toBe('token_invalid');
+    expect(bad.record).toHaveBeenCalledWith('token_invalid', { reason: 'decrypt_failed' });
     const missing = setup({
       decrypt: () => {
         throw new TokenKeyMissingError(3);
@@ -119,7 +130,7 @@ describe('runShopifySync', () => {
       },
     });
     expect(await runShopifySync(deps)).toBe('error');
-    expect(record).toHaveBeenCalledWith('error', {});
+    expect(record).toHaveBeenCalledWith('error', { reason: 'catalog:unknown' });
     const logged = JSON.stringify(warn.mock.calls);
     expect(logged).not.toContain('shpss_client_secret');
     expect(logged).not.toContain('shpat_exchanged_token');

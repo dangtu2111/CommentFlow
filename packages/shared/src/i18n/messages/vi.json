@@ -1919,7 +1919,17 @@
           "sync_queued": "Đã gửi yêu cầu đồng bộ. Kết quả hiện ở đây sau vài giây — tải lại trang để xem.",
           "sync_recent": "Vừa đồng bộ xong, hoặc chưa có kết nối đang dùng được. Thử lại sau khoảng 1 phút.",
           "disconnected": "Đã ngắt kết nối Shopify. Token đã bị xóa.",
-          "not_found": "Chưa có kết nối Shopify nào để ngắt."
+          "not_found": "Chưa có kết nối Shopify nào để ngắt.",
+          "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại."
+        },
+        "reason": {
+          "cannotDecrypt": "Không giải mã được Client secret đã lưu (khóa mã hóa ở máy chủ đã thay đổi so với lúc lưu). Hãy nhập lại Client ID và Client secret.",
+          "invalidClient": "Shopify báo Client ID hoặc Client secret KHÔNG đúng. Kiểm tra bạn đã sao chép đúng cặp của MỘT ứng dụng (Dev Dashboard › ứng dụng › Settings), không thừa khoảng trắng, và secret chưa bị xoay.",
+          "exchangeRejected": "Shopify từ chối cấp token. Thường do Client ID/secret sai, hoặc ứng dụng chưa được cài vào cửa hàng này. Kiểm tra lại cả hai.",
+          "notPermitted": "Shopify báo ứng dụng không được phép dùng cho cửa hàng này. Ứng dụng và cửa hàng phải thuộc CÙNG một tổ chức trong Dev Dashboard, và ứng dụng phải đã cài vào cửa hàng.",
+          "catalogDenied": "Đã đổi được token (Client ID và secret ĐÚNG), nhưng Shopify từ chối khi đọc sản phẩm. Thường là ứng dụng chưa được cấp quyền read_products và read_inventory, hoặc chưa phát hành phiên bản có các quyền đó / chưa cài lại sau khi đổi quyền. Vào Dev Dashboard › ứng dụng › Versions: thêm quyền, phát hành phiên bản, rồi cài lại ứng dụng vào cửa hàng.",
+          "rateLimited": "Shopify đang giới hạn tốc độ. Thử lại sau ít phút.",
+          "temporary": "Lỗi tạm thời khi nói chuyện với Shopify (mạng hoặc máy chủ Shopify). Thử lại sau ít phút."
         }
       },
       "notConnected": "Chưa kết nối",
@@ -1954,8 +1964,9 @@
       "playground": {
         "title": "Chạy thử nghiệm AI",
         "body": "Mô phỏng câu AI trả lời với kiến thức hiện tại.",
-        "example": "Ví dụ: “Shop có freeship đơn 350k không?”",
-        "run": "Mở Chạy thử"
+        "run": "Mở Chạy thử",
+        "label": "Câu hỏi của khách để thử",
+        "placeholder": "Nhập một câu khách hay hỏi, ví dụ về giá, tồn kho, giao hàng…"
       }
     }
   },
@@ -2272,7 +2283,8 @@
         "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
         "lang_saved": "Đã lưu ngôn ngữ trả lời của kênh.",
         "check_queued": "Đã gửi yêu cầu kiểm tra. Kết quả hiện ở từng kênh sau vài giây — tải lại trang để xem.",
-        "check_recent": "Vừa kiểm tra xong, vui lòng đợi khoảng 1 phút rồi thử lại."
+        "check_recent": "Vừa kiểm tra xong, vui lòng đợi khoảng 1 phút rồi thử lại.",
+        "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại."
       }
     },
     "hub": {
@@ -2996,7 +3008,8 @@
       "deleted": "Đã xóa.",
       "invalid": "Thông tin chưa hợp lệ. Kiểm tra lại các ô bắt buộc (và địa chỉ website phải bắt đầu bằng http hoặc https).",
       "not_found": "Không tìm thấy mục này.",
-      "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại."
+      "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
+      "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại."
     },
     "save": "Lưu",
     "delete": "Xóa",

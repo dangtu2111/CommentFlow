@@ -13,4 +13,6 @@
 | 7 | Nhập sai Client secret rồi đồng bộ | Kết quả "Shopify từ chối Client ID/secret…", chip "Cần nhập lại Client ID/secret"; nút đổi thành "Nhập lại Client ID/secret" |
 | 8 | Ngắt kết nối → xác nhận | Báo "Đã ngắt kết nối"; về "Chưa kết nối"; sản phẩm đã nạp vẫn còn; `/app/activity` có dòng ngắt kết nối |
 | 9 | Staff mở `/app/kb` | 404 (chỉ Owner) |
-| 10 | Kiểm `docs`/log worker khi đồng bộ | Không có Client secret, token hay tên miền trong log |
+| 10 | Bấm "Đồng bộ ngay" hai lần thật nhanh (hoặc bấm đúp) | Chỉ MỘT yêu cầu được nhận; lần còn lại báo "thao tác quá nhanh" hoặc "đợi khoảng 1 phút"; hàng đợi không có hai job |
+| 11 | Sai Client ID/secret rồi đồng bộ | Khối nói rõ nguyên nhân (sai cặp / khác tổ chức hoặc chưa cài / thiếu quyền / không giải mã được), không chỉ thông báo chung |
+| 12 | Kiểm `docs`/log worker khi đồng bộ | Không có Client secret, token hay tên miền trong log |

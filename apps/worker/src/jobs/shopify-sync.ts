@@ -12,6 +12,7 @@ import {
   type FlowDb,
   readShopifyStoreCredentials,
   recordShopifySync,
+  type ShopifySyncDetail,
   type ShopifySyncResult,
   type ShopifySyncSummary,
 } from '@flow/db';
@@ -43,7 +44,7 @@ export type ShopifySyncDeps = {
   fetchCatalog: (shopDomain: string, accessToken: string) => Promise<ShopifyCatalog>;
   buildPlan: (catalog: ShopifyCatalog) => ImportProductPlan[];
   apply: (plan: ImportProductPlan[]) => Promise<ShopifySyncSummary>;
-  record: (result: ShopifySyncResult, summary: Partial<ShopifySyncSummary>) => Promise<void>;
+  record: (result: ShopifySyncResult, summary: ShopifySyncDetail) => Promise<void>;
   warn: (event: { event: string; reason: string }) => void;
 };
 
@@ -64,36 +65,50 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
   if (!stored) return 'skipped';
 
   let result: ShopifySyncResult = 'error';
-  let summary: Partial<ShopifySyncSummary> = {};
+  let detail: ShopifySyncDetail = {};
+  let stage: 'decrypt' | 'exchange' | 'catalog' = 'decrypt';
   try {
     let clientSecret: string;
     try {
       clientSecret = deps.decrypt(stored.ciphertext, stored.keyVersion);
     } catch (error) {
       if (error instanceof TokenDecryptError) {
-        await deps.record('token_invalid', {});
+        const reason = 'decrypt_failed';
+        await deps.record('token_invalid', { reason });
         return 'token_invalid';
       }
       throw error;
     }
+    stage = 'exchange';
     const accessToken = await deps.exchange(stored.shopDomain, stored.clientId, clientSecret);
+    stage = 'catalog';
     const catalog = await deps.fetchCatalog(stored.shopDomain, accessToken);
-    summary = await deps.apply(deps.buildPlan(catalog));
+    detail = await deps.apply(deps.buildPlan(catalog));
     result = 'ok';
   } catch (error) {
-    summary = {};
+    detail = {};
     if (isPlatformError(error) && (error.code === 'TOKEN_EXPIRED' || error.code === 'PERMISSION')) {
       result = 'token_invalid';
+      detail = { reason: reasonOf(stage, error.message) };
     } else {
       result = 'error';
+      detail = { reason: reasonOf(stage, isPlatformError(error) ? error.code : 'unknown') };
       deps.warn({
         event: 'shopify_sync_failed',
         reason: isPlatformError(error) ? error.code : 'unknown',
       });
     }
   }
-  await deps.record(result, summary);
+  await deps.record(result, detail);
   return result;
+}
+
+/**
+ * Mã lý do hiển thị cho Owner: `<bước>:<mã>`. Mã chỉ gồm chữ/số/_ . : - (đã lọc, tối đa 120 ký tự) — không bao giờ chứa
+ * secret, token, tên miền hay nội dung phản hồi.
+ */
+export function reasonOf(stage: string, code: string): string {
+  return `${stage}:${code}`.replace(/[^A-Za-z0-9_.:-]/g, '_').slice(0, 120);
 }
 
 /** Nối với DB và Shopify thật; mỗi bước DB dùng `withJob` (đường hệ thống của workspace). */

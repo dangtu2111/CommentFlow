@@ -9,7 +9,7 @@ import { TryAiResultView } from './try-ai-result';
 const IDLE: TryAiState = { status: 'idle' };
 
 /** Form "Thử AI" (FR-059): gõ bình luận mẫu → kết quả cả pipeline (mock), không trừ lượt gói. */
-export function TryAiForm() {
+export function TryAiForm({ initialText = '' }: { initialText?: string }) {
   const t = useTranslations('tryAi');
   const [state, action, pending] = useActionState(runTryAiAction, IDLE);
 
@@ -26,6 +26,7 @@ export function TryAiForm() {
           rows={3}
           maxLength={TRY_AI_MAX_CHARS}
           placeholder={t('placeholder')}
+          defaultValue={initialText}
           required
         />
         <div className="row">

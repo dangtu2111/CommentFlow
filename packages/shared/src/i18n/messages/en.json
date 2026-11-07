@@ -1919,7 +1919,17 @@
           "sync_queued": "Sync requested. The result appears here in a few seconds — reload to see it.",
           "sync_recent": "A sync just finished, or there is no usable connection. Try again in about a minute.",
           "disconnected": "Shopify disconnected. The token was deleted.",
-          "not_found": "There is no Shopify connection to disconnect."
+          "not_found": "There is no Shopify connection to disconnect.",
+          "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again."
+        },
+        "reason": {
+          "cannotDecrypt": "The saved Client secret could not be decrypted (the server encryption key changed since it was saved). Re-enter the Client ID and Client secret.",
+          "invalidClient": "Shopify says the Client ID or Client secret is NOT correct. Check you copied the pair of ONE app (Dev Dashboard › app › Settings), with no extra spaces, and that the secret was not rotated.",
+          "exchangeRejected": "Shopify refused to issue a token. Usually the Client ID/secret is wrong, or the app is not installed on this store. Check both.",
+          "notPermitted": "Shopify says the app is not allowed for this store. The app and the store must belong to the SAME organization in the Dev Dashboard, and the app must be installed on the store.",
+          "catalogDenied": "A token was issued (Client ID and secret are CORRECT), but Shopify refused to read products. Usually the app lacks the read_products and read_inventory scopes, or no version with those scopes was released / the app was not reinstalled after the scope change. In Dev Dashboard › app › Versions: add the scopes, release a version, then reinstall the app on the store.",
+          "rateLimited": "Shopify is rate limiting. Try again in a few minutes.",
+          "temporary": "Temporary error talking to Shopify (network or Shopify server). Try again in a few minutes."
         }
       },
       "notConnected": "Not connected",
@@ -1954,8 +1964,9 @@
       "playground": {
         "title": "AI playground",
         "body": "Simulate the AI’s reply with the current knowledge.",
-        "example": "Example: “Does the shop offer free shipping on 350k orders?”",
-        "run": "Open playground"
+        "run": "Open playground",
+        "label": "A customer question to try",
+        "placeholder": "Type a question customers often ask, for example about price, stock or delivery…"
       }
     }
   },
@@ -2272,7 +2283,8 @@
         "unavailable": "Could not complete this right now. Please try again.",
         "lang_saved": "Channel reply language saved.",
         "check_queued": "Check requested. Results appear on each channel in a few seconds — reload to see them.",
-        "check_recent": "A check just finished, please wait about a minute and try again."
+        "check_recent": "A check just finished, please wait about a minute and try again.",
+        "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again."
       }
     },
     "hub": {
@@ -2996,7 +3008,8 @@
       "deleted": "Deleted.",
       "invalid": "The information is not valid. Check the required fields (and the website must start with http or https).",
       "not_found": "This item was not found.",
-      "unavailable": "Could not complete this right now. Please try again."
+      "unavailable": "Could not complete this right now. Please try again.",
+      "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again."
     },
     "save": "Save",
     "delete": "Delete",

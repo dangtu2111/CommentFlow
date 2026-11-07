@@ -8,6 +8,7 @@ import {
   syncShopifyAction,
 } from '../../app/app/(guarded)/kb/shopify-actions';
 import { cn } from '../../lib/cn';
+import { shopifyReasonKey } from '../../lib/shopify-reason';
 import { TwDialog, TwDialogTrigger, TwSubmit } from '../settings/tw/dialog';
 import { twBtn } from '../settings/tw/ui';
 import { Icon, type IconName } from '../ui/icon';
@@ -22,6 +23,7 @@ const NOTICES: readonly ShopifyNotice[] = [
   'sync_recent',
   'disconnected',
   'not_found',
+  'rate_limited',
 ];
 const GOOD: readonly ShopifyNotice[] = ['connected', 'sync_queued', 'disconnected'];
 
@@ -78,6 +80,7 @@ export async function ShopifyCard({
       : t('hub.notConnected');
   const summary = store?.lastSyncSummary ?? {};
   const resultKey = store?.lastSyncResult ?? null;
+  const reasonKey = resultKey === 'ok' ? null : shopifyReasonKey(summary.reason);
 
   return (
     <section className={CARD} aria-labelledby="hub-shopify">
@@ -167,6 +170,12 @@ export async function ShopifyCard({
             products: (summary.productsCreated ?? 0) + (summary.productsUpdated ?? 0),
             variants: (summary.variantsCreated ?? 0) + (summary.variantsUpdated ?? 0),
           })}
+        </p>
+      ) : null}
+
+      {reasonKey ? (
+        <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
+          {t(`hub.shopify.reason.${reasonKey}`)}
         </p>
       ) : null}
 

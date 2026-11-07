@@ -19,7 +19,9 @@ Không có. (Đã chốt: dùng client credentials, không OAuth cài app công 
 3. Worker: cờ tắt không gọi Shopify; secret hỏng/sai AAD → token_invalid; lỗi tạm không hạ trạng thái; không log secret/token — kiểm bằng: `shopify-sync.test.ts`, `shopify-sync.int.test.ts` (đầu-cuối, upsert không nhân đôi).
 4. Web: kiểm đầu vào, mã hóa với AAD đúng workspace, chỉ Owner, thời gian chờ, dịch mã lỗi — kiểm bằng: `shopify-connect-form.test.ts`, `shopify-connect.test.ts`, `require-app-user.scan.test.ts`.
 5. Giao diện kết nối/ngắt chạy thật vi + en, secret không hiện lại — kiểm bằng: E2E `kb-content.spec.ts`.
-6. Công cụ xanh — kiểm bằng: `pnpm precheck`, `pnpm lint:i18n`, CI.
+6. Chống bấm đúp/spam: ba nhóm giới hạn `uiWrite`/`uiSensitive`/`uiHeavy` (bấm đúp bị chặn, có trần theo phút/giờ), áp cho Server Action kiến thức, Shopify và kênh — kiểm bằng: `ratelimit.test.ts`, `action-guard.test.ts`, E2E `kb-content.spec.ts` (gửi form hai lần chỉ tạo một mục).
+7. Lỗi đồng bộ nói rõ nguyên nhân (Client ID/secret sai, khác tổ chức, thiếu quyền, không giải mã được) bằng mã lý do không chứa bí mật — kiểm bằng: `auth.test.ts`, `shopify-sync.test.ts`, `shopify-reason.test.ts`.
+8. Công cụ xanh — kiểm bằng: `pnpm precheck`, `pnpm lint:i18n`, CI.
 
 ## File sẽ đọc
 
