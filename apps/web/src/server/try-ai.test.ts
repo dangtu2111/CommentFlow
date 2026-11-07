@@ -98,6 +98,7 @@ describe('brand_voice thật trong ô Thử AI', () => {
         }),
         source: 'shop',
         embedding: { state: 'off', configuredModel: null, mismatches: [] },
+        vector: { off: 'service_disabled', failed: false },
       }),
     });
     const r = await action(session, 'ship về Hà Nội bao nhiêu');

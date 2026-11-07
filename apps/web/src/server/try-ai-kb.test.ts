@@ -21,6 +21,7 @@ describe('FR-059 KB-TRYAI: nguồn kiến thức của hành động Thử AI', 
         value: await fn({ ...base, searchKb }, { productNames: [], abbreviations: {}, voices: {} }),
         source: 'kb',
         embedding: { state: 'ok', configuredModel: 'bge-m3', mismatches: [] },
+        vector: { off: null, failed: false },
       }),
     });
     const r = await run({ workspaceId: 'ws1', userId: 'u1' }, 'ship về Hà Nội bao nhiêu');
@@ -41,6 +42,7 @@ describe('FR-059 KB-TRYAI: nguồn kiến thức của hành động Thử AI', 
         value: await fn(base, { productNames: [], abbreviations: {}, voices: {} }),
         source: 'kb',
         embedding: mismatch,
+        vector: { off: null, failed: false },
       }),
     });
     const r = await run({ workspaceId: 'ws1', userId: 'u1' }, 'ship về Hà Nội bao nhiêu');

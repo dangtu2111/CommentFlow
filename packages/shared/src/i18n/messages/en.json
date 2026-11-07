@@ -2037,7 +2037,12 @@
     },
     "embedding": {
       "mismatch": "The search model differs from the stored data — run kb:reembed. Vector search is off (full-text/trigram only) until they match.",
-      "off": "Vector search is off (embedding is not enabled) — full-text/trigram only."
+      "failed": "The embedding service is having problems — this run used full-text/trigram only. Ask an admin to check the ml service.",
+      "off": {
+        "service_disabled": "Vector search is off (embedding service is not enabled) — full-text/trigram only.",
+        "no_active_model": "No embedding model is active yet — run kb:switch-embedding; full-text/trigram only meanwhile.",
+        "unreadable": "Could not read the embedding state from the database — full-text/trigram only for now."
+      }
     },
     "voice": {
       "shop": "Voice: the shop’s saved brand voice for this language",

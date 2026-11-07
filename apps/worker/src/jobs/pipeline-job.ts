@@ -1,7 +1,7 @@
 import {
   createAbbreviationDict,
   type Drafter,
-  type Embedder,
+  type EmbeddingResolution,
   type Extractor,
   evaluateReplyCap,
   loadWorkspaceKnowledge,
@@ -43,7 +43,12 @@ export type PipelineJobConfig = {
   allowedWorkspaceIds: readonly string[];
   /** Hạn mức lượt/tháng (`resolveAiTurnLimit`). */
   turnLimit: number;
-  embedder?: Embedder;
+  /**
+   * Cấu hình embedding (model hoạt động từ DB + dịch vụ ml từ env). Thiếu/off/lỗi → không có nhánh vector (toàn văn + trigram); KHÔNG có embedder giả.
+   */
+  resolveEmbedding?: (tx: Database) => Promise<EmbeddingResolution>;
+  /** Sự cố dịch vụ embedding giữa lượt (đã suy giảm về toàn văn/trigram); không kèm nội dung. */
+  onEmbeddingFailure?: (workspaceId: string, error: unknown) => void;
   /** Gọi khi model embedding lệch dữ liệu của workspace (nhánh vector đã tắt cho lượt này); không kèm nội dung kiến thức. */
   onEmbeddingMismatch?: (workspaceId: string, mismatches: readonly unknown[]) => void;
   now?: () => Date;
@@ -147,16 +152,25 @@ export async function runPipelineJob(
     return { kind: 'ignored', reason: 'not_auto_eligible' };
   }
 
-  const loaded = await db.withJob(workspaceId, (tx) =>
-    loadWorkspaceKnowledge({
+  const loaded = await db.withJob(workspaceId, async (tx) => {
+    let resolution: EmbeddingResolution | undefined;
+    try {
+      resolution = await config.resolveEmbedding?.(tx);
+    } catch (error) {
+      config.onEmbeddingFailure?.(workspaceId, error); // không đoán model: toàn văn/trigram
+    }
+    const embedding = resolution?.config;
+    return loadWorkspaceKnowledge({
       tx,
       workspaceId,
       version: context.kbVersion,
       productsEnabled: true,
       base: EMPTY_KNOWLEDGE,
-      ...(config.embedder ? { embedder: config.embedder } : {}),
-    }),
-  );
+      ...(embedding?.kind === 'ml' ? { embedder: embedding.embedder } : {}),
+      ...(resolution?.revision != null ? { embeddingRevision: resolution.revision } : {}),
+      onEmbeddingFailure: (error) => config.onEmbeddingFailure?.(workspaceId, error),
+    });
+  });
   if (loaded?.embedding.state === 'mismatch') {
     config.onEmbeddingMismatch?.(workspaceId, loaded.embedding.mismatches);
   }
@@ -236,6 +250,11 @@ export function createPipelineHandler(
 ): BatchHandler {
   const runConfig: PipelineJobConfig = {
     ...config,
+    onEmbeddingFailure: (workspaceId, error) =>
+      config.logger.error(
+        { workspaceId, reason: error instanceof Error ? error.name : 'unknown' },
+        'Dịch vụ embedding gặp sự cố — lượt này chỉ tìm toàn văn/trigram',
+      ),
     onEmbeddingMismatch: (workspaceId, mismatches) =>
       config.logger.error(
         { workspaceId, mismatches },

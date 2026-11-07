@@ -167,3 +167,74 @@ describe('KB-TRYAI cờ + runner', () => {
     expect(isTryAiProductsReal({ TRY_AI_PRODUCTS_REAL: 'true' })).toBe(true);
   });
 });
+
+describe('FR-133 runner: cấu hình embedding từ DB, suy giảm khi không có/lỗi (không mock)', () => {
+  const withActor = (async (_w: string, _u: string, fn: (tx: never) => Promise<unknown>) =>
+    fn({} as never)) as never;
+  const common = {
+    enabled: true,
+    db: { withActor },
+    currentVersion: async () => ({ id: 'v1', number: 1 }),
+    abbreviations: async () => ({}),
+    brandVoices: async () => [],
+    embeddingCounts: async () => ({ chunks: [{ model: 'bge-m3', count: 2 }], products: [] }),
+  };
+  const run = (opts: Parameters<typeof createKnowledgeRunner>[0]) =>
+    createKnowledgeRunner(opts)(
+      { workspaceId: 'w', userId: 'u' },
+      createDemoKnowledge(),
+      async () => 1,
+    );
+  const fakeEmbedder = { model: 'bge-m3', dimensions: 1024, embed: async () => [] } as never;
+
+  it('model hoạt động + dịch vụ → nhánh vector bật (vector.off = null), trạng thái ok', async () => {
+    const out = await run({
+      ...common,
+      resolveEmbedding: async () => ({
+        config: {
+          kind: 'ml',
+          model: 'bge-m3',
+          embedder: fakeEmbedder,
+          describe: { kind: 'ml', model: 'bge-m3', note: '' },
+        },
+        revision: 3,
+      }),
+    });
+    expect(out.vector).toEqual({ off: null, failed: false });
+    expect(out.embedding.state).toBe('ok');
+  });
+
+  it('DB chưa kích hoạt model / dịch vụ tắt → vector.off nêu lý do, không có nhánh vector', async () => {
+    for (const reason of ['no_active_model', 'service_disabled'] as const) {
+      const out = await run({
+        ...common,
+        resolveEmbedding: async () => ({
+          config: {
+            kind: 'off',
+            reason,
+            model: null,
+            embedder: null,
+            describe: { kind: 'off', model: null, note: '' },
+          },
+          revision: 1,
+        }),
+      });
+      expect(out.vector.off).toBe(reason);
+      expect(out.embedding.state).toBe('off');
+    }
+  });
+
+  it('không đọc được trạng thái embedding ở DB → suy giảm (unreadable) + ghi nhận sự cố, lượt vẫn chạy', async () => {
+    const onEmbeddingFailure = vi.fn();
+    const out = await run({
+      ...common,
+      resolveEmbedding: async () => {
+        throw new Error('db down');
+      },
+      onEmbeddingFailure,
+    });
+    expect(out.value).toBe(1);
+    expect(out.vector.off).toBe('unreadable');
+    expect(onEmbeddingFailure).toHaveBeenCalledTimes(1);
+  });
+});

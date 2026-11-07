@@ -20,6 +20,7 @@ import {
   type TryKnowledgeSource,
   type TryRunContext,
   type TrySession,
+  type VectorStatus,
 } from './try-ai-knowledge';
 import type { TryLlmDeps } from './try-ai-llm';
 import { type PreviousTurn, parsePreviousTurns } from './try-ai-previous';
@@ -48,6 +49,8 @@ export type TryAiResult =
       knowledge: TryKnowledgeSource;
       /** Model embedding so với dữ liệu (FR-133): `mismatch` → nhánh vector đã TẮT, giao diện báo "chạy kb:reembed". */
       embedding: EmbeddingConsistency;
+      /** Vì sao không có nhánh vector (cấu hình/DB) và dịch vụ embedding có lỗi giữa lượt không — giao diện báo sự cố, không im lặng. */
+      vector: VectorStatus;
       /** Giọng văn đã dùng: `shop` = `brand_voice` thật của workspace (có cho ngôn ngữ nhận ra), `demo` = giọng mẫu. */
       voice: 'shop' | 'demo';
       /** Bước nào đang chạy bằng LLM thật (cờ `*_LLM_ENABLED` + LiteLLM); còn lại là bản mẫu. */
@@ -153,12 +156,13 @@ export function createTryAiAction(deps: TryAiDeps) {
         }
         return result;
       };
-      const { value, source, embedding } = deps.knowledgeRunner
+      const { value, source, embedding, vector } = deps.knowledgeRunner
         ? await deps.knowledgeRunner(session, built.knowledge, runPipeline)
         : {
             value: await runPipeline(built.knowledge),
             source: 'demo' as const,
             embedding: EMBEDDING_OFF,
+            vector: { off: 'service_disabled' as const, failed: false },
           };
       return {
         ok: true,
@@ -166,6 +170,7 @@ export function createTryAiAction(deps: TryAiDeps) {
         quota: { used: taken.used, limit: taken.limit },
         knowledge: source,
         embedding,
+        vector,
         voice: voiceSource,
         llm: {
           extractor: Boolean(deps.llm?.extractor),

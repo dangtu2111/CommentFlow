@@ -1,4 +1,4 @@
-import { type EmbeddingConfig, resolveEmbeddingConfig } from '@flow/ai';
+import { loadEmbeddingService, type MlEmbedderOptions } from '@flow/ai';
 import { parseEnv, parsePipelineWorkspaceIds, resolveAiTurnLimit } from '@flow/shared';
 import { z } from 'zod';
 
@@ -151,8 +151,8 @@ export type WorkerConfig = {
   workspaceDeleteEnabled: boolean;
   instagram: InstagramConnectorConfig;
   dataExport: DataExportConfig;
-  /** Cấu hình embedding DUY NHẤT (FR-133): `resolveEmbeddingConfig(env)` — dùng chung worker/web/EVAL; tắt cờ → MỘT bản mock, KHÔNG bge-m3. */
-  embedding: EmbeddingConfig;
+  /** Dịch vụ ml cho embedding (env chỉ bật/tắt + địa chỉ); `undefined` = không dùng. Model hoạt động đọc từ DB (`cf.embedding_state`), KHÔNG từ env (FR-133). */
+  embeddingService: MlEmbedderOptions | undefined;
   messenger: MessengerConnectorConfig;
   tiktok: TikTokConnectorConfig;
   /** Đồng bộ Shopify thật: cờ `SHOPIFY_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); bật thì cần `TOKEN_ENC_KEYS`. */
@@ -183,7 +183,7 @@ export function loadConfig(source: Record<string, string | undefined> = process.
       workspaceIds: parsePipelineWorkspaceIds(source.PIPELINE_WORKSPACE_IDS),
       turnLimit: resolveAiTurnLimit(source),
     },
-    embedding: resolveEmbeddingConfig(source),
+    embeddingService: loadEmbeddingService(source),
     messenger: loadMessengerConfig(source),
     tiktok: loadTikTokConfig(source),
     shopify: {
