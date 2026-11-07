@@ -5,24 +5,20 @@ describe('parseSeedArgs', () => {
   it('không tham số → tạo mới', () => {
     expect(parseSeedArgs([])).toEqual({ ok: true, options: {} });
   });
-  it('--reset, --refresh, --into <email>', () => {
+  it('--reset và --refresh', () => {
     expect(parseSeedArgs(['--reset'])).toEqual({ ok: true, options: { reset: true } });
     expect(parseSeedArgs(['--refresh'])).toEqual({ ok: true, options: { refresh: true } });
-    expect(parseSeedArgs(['--into', 'a@b.test', '--refresh'])).toEqual({
-      ok: true,
-      options: { into: 'a@b.test', refresh: true },
-    });
   });
-  it('từ chối: thiếu/sai email, --reset kèm --refresh|--into, tham số lạ', () => {
-    for (const argv of [
-      ['--into'],
-      ['--into', '--refresh'],
-      ['--into', 'khong-phai-email'],
-      ['--reset', '--refresh'],
-      ['--reset', '--into', 'a@b.test'],
-      ['--xoa-het'],
-    ]) {
+  it('từ chối --reset kèm --refresh và tham số lạ', () => {
+    for (const argv of [['--reset', '--refresh'], ['--xoa-het']]) {
       expect(parseSeedArgs(argv).ok, argv.join(' ')).toBe(false);
+    }
+  });
+  it('--into đã BỎ: seed chỉ ghi vào workspace [MẪU], báo lỗi rõ và nêu lý do', () => {
+    for (const argv of [['--into', 'a@b.test'], ['--into'], ['--refresh', '--into', 'a@b.test']]) {
+      const parsed = parseSeedArgs(argv);
+      expect(parsed.ok, argv.join(' ')).toBe(false);
+      if (!parsed.ok) expect(parsed.error).toMatch(/--into.*bỏ|chỉ ghi vào workspace/);
     }
   });
 });

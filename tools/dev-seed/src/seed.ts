@@ -26,11 +26,10 @@ export type SeedDeps = {
 /**
  * - mặc định: tạo workspace mẫu (đã có → `exists`);
  * - `reset`: xóa workspace + tài khoản mẫu rồi tạo lại (đổi mật khẩu);
- * - `refresh`: làm mới dữ liệu của workspace mẫu ĐANG CÓ, GIỮ NGUYÊN tài khoản (mật khẩu, 2FA);
- * - `into`: email Owner có sẵn — nạp cùng bộ dữ liệu vào workspace của họ (đã có dữ liệu mẫu → `exists`, thêm `refresh`
- *   để làm mới). Không bao giờ tạo workspace mới, không đổi tài khoản Owner.
+ * - `refresh`: làm mới dữ liệu của workspace mẫu ĐANG CÓ, GIỮ NGUYÊN tài khoản (mật khẩu, 2FA).
+ * Seed CHỈ ghi vào workspace [MẪU] (tạo nếu chưa có) — không có tùy chọn ghi vào workspace khác (Q-SDO1).
  */
-export type SeedOptions = { reset?: boolean; refresh?: boolean; into?: string };
+export type SeedOptions = { reset?: boolean; refresh?: boolean };
 
 export type SeedCredential = {
   role: 'owner' | 'staff' | 'staff2';
@@ -41,7 +40,7 @@ export type SeedCredential = {
 export type SeedResult =
   | { status: 'exists'; workspaceId: string }
   | {
-      status: 'created' | 'refreshed' | 'loaded';
+      status: 'created' | 'refreshed';
       workspaceId: string;
       /** Chỉ tài khoản MỚI tạo lần này (tài khoản có sẵn giữ nguyên mật khẩu nên không in). */
       credentials: SeedCredential[];
@@ -72,12 +71,75 @@ export async function resetDemo(admin: pg.Pool): Promise<void> {
   ]);
 }
 
+/** Bảng được dọn (có nhận diện mẫu chắc chắn bằng nhãn `[MẪU]`/tiền tố `demo_`/model `demo-mock`): đếm trước/sau từng bảng. */
+const CLEANED_TABLES = [
+  'cf.channels',
+  'cf.posts',
+  'cf.comments',
+  'cf.drafts',
+  'cf.leads',
+  'cf.conversations',
+  'cf.messages',
+  'cf.post_products',
+  'cf.automation_rules',
+  'cf.kb_sources',
+  'cf.kb_versions',
+  'cf.kb_chunks',
+  'cf.products',
+  'cf.product_variants',
+  'cf.product_aliases',
+  'cf.size_charts',
+  'cf.faq_items',
+  'cf.policy_items',
+  'cf.abbreviations',
+  'cf.rules',
+  'cf.ai_usage',
+  'core.action_logs',
+] as const;
+
 /**
- * Dọn đúng phần dữ liệu mẫu v2 trong MỘT workspace (giữ workspace, tài khoản, thành viên, gói, hóa đơn, bộ đếm).
- * Nhận diện bằng nhãn `[MẪU]`/tiền tố `demo_`, nên dùng được cả cho workspace thật của Owner khác (`--into`).
- * Dùng pool quản trị (cf_owner), giống `resetDemo`; không đổi RLS/GRANT.
+ * Bảng seed CÓ THỂ đã ghi nhưng KHÔNG phân biệt chắc chắn được mẫu với dữ liệu thật (không có nhãn): thông tin shop/giọng văn (seed chỉ
+ * thêm khi Owner chưa có), cài đặt tự động hóa, gói/bộ đếm lượt/hóa đơn. (Ô tự động hóa theo kênh mẫu bị xóa cùng kênh mẫu nên nằm ở nhóm đã dọn.) KHÔNG bị đụng — chỉ báo cáo số dòng để người
+ * quyết định.
  */
-export async function wipeSeededData(admin: pg.Pool, workspaceId: string): Promise<void> {
+const UNTOUCHED_TABLES = [
+  'cf.shop_profiles',
+  'cf.brand_voice',
+  'cf.automation_settings',
+  'core.subscriptions',
+  'core.usage_counters',
+  'core.invoices',
+] as const;
+
+export type WipeCount = { table: string; before: number; after: number };
+export type WipeReport = { cleaned: WipeCount[]; untouched: WipeCount[] };
+
+async function countRows(client: pg.PoolClient, tables: readonly string[], workspaceId: string) {
+  const counts = new Map<string, number>();
+  for (const table of tables) {
+    // Tên bảng lấy từ danh sách cố định ở trên (không từ đầu vào ngoài).
+    const r = await client.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM ${table} WHERE workspace_id = $1`,
+      [workspaceId],
+    );
+    counts.set(table, r.rows[0]?.n ?? 0);
+  }
+  return counts;
+}
+
+/**
+ * Dọn đúng phần dữ liệu mẫu v2 trong MỘT workspace (giữ workspace, tài khoản, thành viên, gói, hóa đơn, bộ đếm, thông tin shop, giọng
+ * văn). Nhận diện bằng nhãn `[MẪU]`/tiền tố `demo_`/model `demo-mock`. Dùng pool quản trị (cf_owner), giống `resetDemo`; không đổi
+ * RLS/GRANT.
+ *
+ * TẤT CẢ câu xóa chạy trong MỘT giao dịch; `verify` (tùy chọn) chạy cuối giao dịch — ném lỗi → hoàn tác TOÀN BỘ. Trả báo cáo số dòng
+ * trước/sau của từng bảng đã dọn, và số dòng của các bảng KHÔNG đụng tới (không phân biệt chắc chắn được mẫu/thật).
+ */
+export async function wipeSeededData(
+  admin: pg.Pool,
+  workspaceId: string,
+  options: { verify?: (client: pg.PoolClient) => Promise<void> } = {},
+): Promise<WipeReport> {
   const demoChannels = `SELECT id FROM cf.channels WHERE workspace_id = $1 AND external_id LIKE 'demo\\_%'`;
   const statements: Array<[string, unknown[]]> = [
     // leads_channel_fk không cascade → xóa lead của kênh mẫu trước.
@@ -132,7 +194,36 @@ export async function wipeSeededData(admin: pg.Pool, workspaceId: string): Promi
       [workspaceId, LIKE_TAG],
     ],
   ];
-  for (const [text, values] of statements) await admin.query(text, values);
+  const client = await admin.connect();
+  try {
+    await client.query('BEGIN');
+    const cleanedBefore = await countRows(client, CLEANED_TABLES, workspaceId);
+    const untouchedBefore = await countRows(client, UNTOUCHED_TABLES, workspaceId);
+    for (const [text, values] of statements) await client.query(text, values);
+    const cleanedAfter = await countRows(client, CLEANED_TABLES, workspaceId);
+    const untouchedAfter = await countRows(client, UNTOUCHED_TABLES, workspaceId);
+    if (options.verify) await options.verify(client);
+    await client.query('COMMIT');
+    const report = (
+      tables: readonly string[],
+      before: Map<string, number>,
+      after: Map<string, number>,
+    ) =>
+      tables.map((table) => ({
+        table: table.replace(/^(cf|core)\./, ''),
+        before: before.get(table) ?? 0,
+        after: after.get(table) ?? 0,
+      }));
+    return {
+      cleaned: report(CLEANED_TABLES, cleanedBefore, cleanedAfter),
+      untouched: report(UNTOUCHED_TABLES, untouchedBefore, untouchedAfter),
+    };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 type UserRow = { id: string };
@@ -197,53 +288,27 @@ async function markDemoOwnerTwoFactor(admin: pg.Pool): Promise<void> {
   ]);
 }
 
-async function demoChannelCount(admin: pg.Pool, workspaceId: string): Promise<number> {
-  const r = await admin.query<{ n: number }>(
-    `SELECT count(*)::int AS n FROM cf.channels WHERE workspace_id = $1 AND external_id LIKE 'demo\\_%'`,
-    [workspaceId],
-  );
-  return r.rows[0]?.n ?? 0;
-}
-
 type Target = {
   workspaceId: string;
   ownerId: string;
   credentials: SeedCredential[];
-  status: 'created' | 'refreshed' | 'loaded';
-  intoExisting: boolean;
+  status: 'created' | 'refreshed';
 };
 
-/** `--into`: Owner có sẵn + workspace đầu tiên (cũ nhất) mà họ làm Owner. */
-async function resolveInto(
-  deps: SeedDeps,
-  email: string,
-  refresh: boolean,
-): Promise<Target | { exists: string }> {
-  const found = await deps.admin.query<{ user_id: string; workspace_id: string }>(
-    `SELECT m.user_id, m.workspace_id
-       FROM core.users u
-       JOIN core.members m ON m.user_id = u.id AND m.role = 'owner' AND m.status = 'active'
-       JOIN core.workspaces w ON w.id = m.workspace_id
-      WHERE lower(u.email) = lower($1)
-      ORDER BY w.created_at, w.id
-      LIMIT 1`,
-    [email],
-  );
-  const row = found.rows[0];
-  if (!row) {
-    throw new AppError('NOT_FOUND', 'Không tìm thấy Owner đang hoạt động với email này (--into).');
+/**
+ * Cổng an toàn: đích ghi của seed PHẢI là workspace mẫu (đúng tên `DEMO_WORKSPACE_NAME`). Kiểm lại ngay trước khi ghi nên dù có lỗi
+ * ở bước chọn đích cũng không thể ghi dữ liệu mẫu vào workspace thật (Q-SDO1).
+ */
+export async function assertDemoWorkspace(admin: pg.Pool, workspaceId: string): Promise<void> {
+  const r = await admin.query<{ name: string }>('SELECT name FROM core.workspaces WHERE id = $1', [
+    workspaceId,
+  ]);
+  if (r.rows[0]?.name !== DEMO_WORKSPACE_NAME) {
+    throw new AppError(
+      'FORBIDDEN',
+      `dev:seed-demo chỉ được ghi vào workspace ${DEMO_WORKSPACE_NAME}.`,
+    );
   }
-  if ((await demoChannelCount(deps.admin, row.workspace_id)) > 0) {
-    if (!refresh) return { exists: row.workspace_id };
-    await wipeSeededData(deps.admin, row.workspace_id);
-  }
-  return {
-    workspaceId: row.workspace_id,
-    ownerId: row.user_id,
-    credentials: [],
-    status: 'loaded',
-    intoExisting: true,
-  };
 }
 
 async function resolveDemoWorkspace(
@@ -270,7 +335,6 @@ async function resolveDemoWorkspace(
       ownerId: owner,
       credentials: [],
       status: 'refreshed',
-      intoExisting: false,
     };
   }
   // Tài khoản mẫu cũ (workspace đã bị xóa tay) được tạo lại để mật khẩu in ra luôn đúng.
@@ -285,24 +349,24 @@ async function resolveDemoWorkspace(
     name: DEMO_WORKSPACE_NAME,
   });
   await markDemoOwnerTwoFactor(deps.admin);
-  return { workspaceId, ownerId: owner.id, credentials, status: 'created', intoExisting: false };
+  return { workspaceId, ownerId: owner.id, credentials, status: 'created' };
 }
 
 export async function seedDemo(deps: SeedDeps, options: SeedOptions = {}): Promise<SeedResult> {
-  if (options.reset && (options.refresh || options.into)) {
-    throw new AppError('VALIDATION_FAILED', '--reset không dùng cùng --refresh hoặc --into.');
+  if (options.reset && options.refresh) {
+    throw new AppError('VALIDATION_FAILED', '--reset không dùng cùng --refresh.');
   }
   await verifyConnectedDatabases(deps);
 
-  const target = options.into
-    ? await resolveInto(deps, options.into, options.refresh === true)
-    : await resolveDemoWorkspace(deps, options);
+  const target = await resolveDemoWorkspace(deps, options);
   if ('exists' in target) {
     // DB đã seed trước khi có `/dev/login`: đánh dấu 2FA cho Owner mẫu mà không phải `--reset`.
     await markDemoOwnerTwoFactor(deps.admin);
     return { status: 'exists', workspaceId: target.exists };
   }
 
+  // Chốt chặn cuối: dù chọn đích thế nào, chỉ ghi vào workspace [MẪU].
+  await assertDemoWorkspace(deps.admin, target.workspaceId);
   const staff = await ensureStaff(deps, target.workspaceId, 'staff', target.credentials);
   const staff2 = await ensureStaff(deps, target.workspaceId, 'staff2', target.credentials);
   const counts = await seedContent(
@@ -311,7 +375,6 @@ export async function seedDemo(deps: SeedDeps, options: SeedOptions = {}): Promi
       workspaceId: target.workspaceId,
       ownerId: target.ownerId,
       staffIds: { staff, staff2 },
-      intoExisting: target.intoExisting,
     },
     { env: deps.env ?? process.env, now: deps.now },
   );

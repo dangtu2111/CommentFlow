@@ -23,7 +23,7 @@ import {
   KB_FAQS,
   KB_POLICIES,
 } from './demo-data-v2';
-import { seedDemo } from './seed';
+import { assertDemoWorkspace, seedDemo, wipeSeededData } from './seed';
 
 /**
  * Chạy seed THẬT trên DB test (cf_test / cf_test_<làn>) bằng đúng ba role như CLI (cf_owner, cf_app, cf_worker),
@@ -247,8 +247,7 @@ describe('seedDemo v2 trên DB test', () => {
     expect(await stageCounts(workspaceId)).toEqual({ new: 9, contacted: 8, won: 4, lost: 4 });
   });
 
-  it('--into <owner có sẵn> nạp cùng bộ dữ liệu vào workspace của họ, không đổi tài khoản Owner', async () => {
-    // Một Owner khác với workspace riêng có sẵn dữ liệu của họ (một kênh thật, một sản phẩm thật).
+  it('seed CHỈ ghi vào workspace [MẪU]: workspace khác (Owner riêng, kênh/sản phẩm/gói thật) không đổi MỘT dòng ở mọi bảng, qua mặc định/--refresh/--reset; tùy chọn `into` cũ bị bỏ qua', async () => {
     await admin.query('DELETE FROM core.workspaces WHERE name = $1', [
       'Shop thật của owner thu hai',
     ]);
@@ -275,56 +274,191 @@ describe('seedDemo v2 trên DB test', () => {
         name: 'Trang thật',
       });
     });
-
-    const result = await seedDemo(deps(), { into: OWNER_THU2 });
-    expect(result.status).toBe('loaded');
-    if (result.status !== 'loaded') return;
-    expect(result.workspaceId).toBe(wsId);
-    // Staff mẫu có sẵn (từ workspace mẫu) được giữ nguyên → không in mật khẩu mới.
-    expect(result.credentials).toEqual([]);
-
-    const c = await tableCounts(wsId);
-    expect(c.channels).toBe(DEMO_CHANNELS.length + 1); // + kênh thật
-    expect(c.posts).toBe(counts.posts);
-    expect(c.comments).toBe(counts.comments);
-    expect(c.products).toBe(DEMO_PRODUCTS.length);
-    expect(c.leads).toBe(DEMO_LEADS.length);
-    expect(c.conversations).toBe(DEMO_CONVERSATIONS.length);
-    expect(c.messages).toBe(counts.messages);
-    expect(c.faqs).toBe(KB_FAQS.length);
-    expect(c.kb_versions).toBe(2);
-    expect(c.spam_rules).toBe(DEMO_SPAM_RULES.length);
-    expect(c.automation_rules).toBe(DEMO_AUTOMATION.matrix.length);
-    expect(c.action_logs).toBeGreaterThanOrEqual(DEMO_ACTION_LOGS.length);
-    expect(c.members).toBe(3); // owner + 2 staff mẫu
-
-    const pw = await admin.query<{ password: string }>(
-      'SELECT password FROM core.accounts WHERE user_id = $1',
-      [ownerId],
+    await admin.query(
+      `INSERT INTO cf.products (workspace_id, source, name, search_text) VALUES ($1, 'shopify', 'Sản phẩm Shopify thật', 'san pham shopify that')`,
+      [wsId],
     );
-    expect(pw.rows[0]?.password).toBe('hash-giu-nguyen');
+    const snapshot = async () => ({
+      tables: await tableCounts(wsId),
+      subscriptions: Number(
+        (
+          await admin.query('SELECT count(*) n FROM core.subscriptions WHERE workspace_id = $1', [
+            wsId,
+          ])
+        ).rows[0].n,
+      ),
+      usage: Number(
+        (
+          await admin.query('SELECT count(*) n FROM core.usage_counters WHERE workspace_id = $1', [
+            wsId,
+          ])
+        ).rows[0].n,
+      ),
+      invoices: Number(
+        (await admin.query('SELECT count(*) n FROM core.invoices WHERE workspace_id = $1', [wsId]))
+          .rows[0].n,
+      ),
+    });
+    const before = await snapshot();
 
-    // Chạy lại --into: đã có → không ghi; thêm --refresh: làm mới, số lượng không đổi, kênh thật còn nguyên.
-    expect((await seedDemo(deps(), { into: OWNER_THU2 })).status).toBe('exists');
-    const refreshed = await seedDemo(deps(), { into: OWNER_THU2, refresh: true });
-    expect(refreshed.status).toBe('loaded');
-    const again = await tableCounts(wsId);
-    const { action_logs: logsAgain = 0, ...restAgain } = again;
-    const { action_logs: logsFirst = 0, ...restFirst } = c;
-    expect(restAgain).toEqual(restFirst);
-    expect(logsAgain).toBeGreaterThanOrEqual(logsFirst);
+    const demo = await admin.query<{ id: string }>(
+      'SELECT id FROM core.workspaces WHERE name = $1',
+      [DEMO_WORKSPACE_NAME],
+    );
+    const demoId = demo.rows[0]?.id as string;
+    const results = [
+      await seedDemo(deps(), {}),
+      await seedDemo(deps(), { refresh: true }),
+      // Tùy chọn `into` đã bỏ: dù ai truyền vào (mã cũ/ép kiểu) cũng KHÔNG được đổi đích ghi.
+      await seedDemo(deps(), { into: OWNER_THU2, refresh: true } as never),
+      await seedDemo(deps(), { reset: true }),
+    ];
+    for (const result of results) {
+      expect(result.workspaceId).not.toBe(wsId);
+    }
+    expect((results[0] as { workspaceId: string }).workspaceId).toBe(demoId);
+    expect(await snapshot()).toEqual(before);
     const real = await admin.query(
       "SELECT 1 FROM cf.channels WHERE workspace_id = $1 AND external_id = 'real_page_1'",
       [wsId],
     );
     expect(real.rowCount).toBe(1);
+    const pw = await admin.query<{ password: string }>(
+      'SELECT password FROM core.accounts WHERE user_id = $1',
+      [ownerId],
+    );
+    expect(pw.rows[0]?.password).toBe('hash-giu-nguyen');
+    // Sau --reset workspace mẫu được tạo lại; cập nhật id cho các test sau.
+    workspaceId = (results[3] as { workspaceId: string }).workspaceId;
   });
 
-  it('--into với email lạ: báo lỗi rõ, không tạo gì', async () => {
-    await expect(seedDemo(deps(), { into: 'khong.co@example.test' })).rejects.toThrow(/Owner/);
+  it('đích của seed LUÔN là workspace [MẪU]: kiểm trước khi ghi, từ chối workspace khác', async () => {
+    const other = await admin.query<{ id: string }>(
+      "SELECT id FROM core.workspaces WHERE name = 'Shop thật của owner thu hai'",
+    );
+    await expect(assertDemoWorkspace(admin, other.rows[0]?.id as string)).rejects.toThrow(
+      /\[MẪU\]/,
+    );
+    await expect(assertDemoWorkspace(admin, workspaceId)).resolves.toBeUndefined();
   });
 
-  it('--reset không đi kèm --refresh/--into', async () => {
+  it('--reset không đi kèm --refresh', async () => {
     await expect(seedDemo(deps(), { reset: true, refresh: true })).rejects.toThrow(/--reset/);
+  });
+});
+
+describe('wipeSeededData — dọn dữ liệu mẫu trong MỘT giao dịch, báo cáo đếm trước/sau, giữ dữ liệu thật', () => {
+  let ws = '';
+
+  beforeAll(async () => {
+    // Nhóm kết nối của describe trước đã đóng: dựng lại.
+    admin = new pg.Pool({ connectionString: need('TEST_DATABASE_ADMIN_URL'), max: 2 });
+    appDb = createDb({ connectionString: need('TEST_DATABASE_URL'), max: 2 });
+    workerDb = createDb({ connectionString: need('TEST_DATABASE_WORKER_URL'), max: 2 });
+    const result = await seedDemo(deps(), { reset: true });
+    if (result.status !== 'created') throw new Error('không tạo được workspace mẫu');
+    ws = result.workspaceId;
+    // Dữ liệu THẬT do chủ shop nhập/đồng bộ: phải còn nguyên sau khi dọn.
+    await admin.query(
+      `INSERT INTO cf.products (workspace_id, source, name, search_text) VALUES
+         ($1, 'manual', 'Sản phẩm nhập tay', 'san pham nhap tay'),
+         ($1, 'shopify', 'Sản phẩm Shopify', 'san pham shopify')`,
+      [ws],
+    );
+    await admin.query(
+      `INSERT INTO cf.policy_items (workspace_id, kind, lang, title, content)
+       VALUES ($1, 'return', 'vi', 'Chính sách thật của shop', 'Đổi trả trong 7 ngày.')`,
+      [ws],
+    );
+    await admin.query(
+      `INSERT INTO cf.faq_items (workspace_id, question, answer, lang)
+       VALUES ($1, 'Shop ở đâu?', 'Hà Nội', 'vi')`,
+      [ws],
+    );
+  });
+
+  afterAll(async () => {
+    await Promise.all([admin.end(), appDb.close(), workerDb.close()]);
+  });
+
+  const real = async () => ({
+    manual: Number(
+      (
+        await admin.query(
+          "SELECT count(*) n FROM cf.products WHERE workspace_id = $1 AND source = 'manual' AND name NOT LIKE '[MẪU]%'",
+          [ws],
+        )
+      ).rows[0].n,
+    ),
+    shopify: Number(
+      (
+        await admin.query(
+          "SELECT count(*) n FROM cf.products WHERE workspace_id = $1 AND source = 'shopify'",
+          [ws],
+        )
+      ).rows[0].n,
+    ),
+    policy: Number(
+      (
+        await admin.query(
+          "SELECT count(*) n FROM cf.policy_items WHERE workspace_id = $1 AND title NOT LIKE '[MẪU]%'",
+          [ws],
+        )
+      ).rows[0].n,
+    ),
+    faq: Number(
+      (
+        await admin.query(
+          "SELECT count(*) n FROM cf.faq_items WHERE workspace_id = $1 AND question NOT LIKE '[MẪU]%'",
+          [ws],
+        )
+      ).rows[0].n,
+    ),
+  });
+
+  it('điểm kiểm lỗi → HOÀN TÁC toàn bộ (không xóa nửa chừng)', async () => {
+    const before = await tableCounts(ws);
+    await expect(
+      wipeSeededData(admin, ws, {
+        verify: async () => {
+          throw new Error('điểm kiểm thất bại');
+        },
+      }),
+    ).rejects.toThrow('điểm kiểm thất bại');
+    expect(await tableCounts(ws)).toEqual(before);
+  });
+
+  it('dọn xong: mọi bảng có mẫu về 0, dữ liệu thật còn nguyên; báo cáo có đếm trước/sau từng bảng', async () => {
+    const realBefore = await real();
+    expect(realBefore).toEqual({ manual: 1, shopify: 1, policy: 1, faq: 1 });
+    const report = await wipeSeededData(admin, ws);
+    const row = (table: string) => report.cleaned.find((r) => r.table === table);
+    expect(row('products')).toMatchObject({ before: 12 + 2 });
+    expect(row('products')?.after).toBe(2);
+    expect(row('comments')?.after).toBe(0);
+    expect(row('drafts')?.after).toBe(0);
+    expect(row('kb_chunks')?.after).toBe(0);
+    expect(row('faq_items')?.after).toBe(1);
+    expect(row('policy_items')?.after).toBe(1);
+    expect(row('channels')?.after).toBe(0);
+    expect(row('automation_rules')?.after).toBe(0);
+    expect(await real()).toEqual(realBefore);
+    // Bảng KHÔNG chắc chắn lọc được (thông tin shop, giọng văn, gói, bộ đếm, hóa đơn…) không bị đụng — chỉ báo cáo.
+    const names = report.untouched.map((r) => r.table);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'shop_profiles',
+        'brand_voice',
+        'automation_settings',
+        'subscriptions',
+        'invoices',
+      ]),
+    );
+    for (const r of report.untouched) expect(r.before).toBe(r.after);
+  });
+
+  it('chạy lại khi đã sạch → không xóa gì, không lỗi', async () => {
+    const report = await wipeSeededData(admin, ws);
+    for (const r of report.cleaned) expect(r.before).toBe(r.after);
   });
 });
