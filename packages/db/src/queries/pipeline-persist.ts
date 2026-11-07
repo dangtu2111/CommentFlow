@@ -72,14 +72,20 @@ export async function failPipelineTurn(
      WHERE workspace_id = ${workspaceId}::uuid AND comment_id = ${commentId}::uuid`);
 }
 
-/** Gia hạn thuê của lượt đang xử lý thêm `seconds` giây (Q-POR6: tổng thời gian chờ LLM một lượt < thuê). */
+/**
+ * Gia hạn thuê của lượt đang xử lý thêm `seconds` giây (Q-POR6). CHỈ gia hạn khi `attempts` = lượt của CHÍNH job này (token thuê):
+ * job đã mất thuê (hết hạn, job khác giành lại và tăng `attempts`) không kéo dài thuê của job khác. Trả `false` = đã mất thuê.
+ */
 export async function extendPipelineTurnLease(
   tx: Database,
   workspaceId: string,
   commentId: string,
+  attempt: number,
   seconds: number,
-): Promise<void> {
-  await tx.execute(sql`
+): Promise<boolean> {
+  const r = await tx.execute(sql`
     UPDATE cf.pipeline_turns SET locked_until = now() + make_interval(secs => ${seconds}), updated_at = now()
-     WHERE workspace_id = ${workspaceId}::uuid AND comment_id = ${commentId}::uuid AND state = 'processing'`);
+     WHERE workspace_id = ${workspaceId}::uuid AND comment_id = ${commentId}::uuid AND state = 'processing' AND attempts = ${attempt}
+    RETURNING comment_id`);
+  return r.rows.length > 0;
 }
