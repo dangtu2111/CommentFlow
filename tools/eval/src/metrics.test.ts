@@ -240,3 +240,16 @@ describe('EVAL-RUNNER tổng hợp và ngưỡng', () => {
     expect(metrics.byGroup.mixed.samples).toBe(0);
   });
 });
+
+describe('altLabels — nhãn thay thế được chấp nhận (Q-EV2-2/5/6)', () => {
+  it('nhãn khớp nhãn chính hoặc một nhãn thay thế thì đúng; ngoài hai loại đó thì sai', () => {
+    const ok = (label: string) =>
+      checkSample(
+        sample({ label: 'advice', altLabels: ['complaint'] }),
+        outcome({ label: label as never }),
+      ).label;
+    expect(ok('advice')).toBe(true);
+    expect(ok('complaint')).toBe(true);
+    expect(ok('price')).toBe(false);
+  });
+});
