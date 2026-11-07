@@ -128,6 +128,7 @@ function runScenarios(locale: Locale) {
       await expect(page.locator('.kb-slot a[href="/app/kb/faq"]')).toContainText('1');
 
       await page.goto('/app/kb/faq');
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp sau thao tác sửa ngay trước (uiWrite 1 giây)
       await card(page, question)
         .getByRole('button', { name: t('kbContent.delete'), exact: true })
         .click();
