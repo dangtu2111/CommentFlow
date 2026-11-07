@@ -11,3 +11,5 @@
 **Việc còn lại / cần ở PIPE-ORCHESTRATOR:** `sendRecheck` R5 + `price_snapshot` đọc giá ngoại tệ rồi mới bỏ chặn `foreign_price`; giao diện danh sách sản phẩm hiện giá ngoại tệ; Haravan/Sapo/KiotViet (VND-only) không đổi.
 
 **Cần bạn làm:** bấm "Đồng bộ ngay" lại trên trang Shopify để nạp giá USD; hỏi giá một sản phẩm ở ô Thử AI (kỳ vọng "… USD", nút tự gửi bị chặn vì `foreign_price`).
+
+**Cập nhật (Q-PMT1):** khi thử ô Thử AI phát hiện khớp tên sản phẩm kém với tên Shopify dài; đã sửa `searchProducts` dùng `word_similarity` (xem `q-pmt1.md`, test tích hợp trong `kb-search.int.test.ts`).

@@ -344,6 +344,32 @@ describe('FR-127 searchProducts / findProductMatch', () => {
     expect(match).toMatchObject({ status: 'matched', id: target });
   });
 
+  it('tên Shopify dài, khách gõ tên ngắn/diễn đạt khác → vẫn nhận đúng sản phẩm (word_similarity), không nhận sản phẩm lạ', async () => {
+    const bird = await seedProduct(
+      wsA,
+      'Electric Bird Food Shell Blowing Machine, Efficient Quiet Operation Bird Food Separator, Detachable Easy Cleaning',
+    );
+    const cart = await seedProduct(
+      wsA,
+      'Lightweight Foldable Shopping Cart, 75Lbs Capacity, Removable Bag, Premium Wheels, Sage',
+    );
+    await seedProduct(
+      wsA,
+      'Cartoon Children Electric Toothbrush with USB Power, Push Button Control',
+    );
+    const find = (queryText: string) =>
+      db.withWorkspace(wsA, (tx) => findProductMatch(tx, { workspaceId: wsA, queryText }));
+    expect(await find('Bird Food Shell Blower')).toMatchObject({ status: 'matched', id: bird });
+    expect(await find('bird food shell blowing machine')).toMatchObject({
+      status: 'matched',
+      id: bird,
+    });
+    expect(await find('Foldable Shopping Cart')).toMatchObject({ status: 'matched', id: cart });
+    expect(await find('shopping cart')).toMatchObject({ status: 'matched', id: cart });
+    // Không nhận bừa: câu không liên quan tới sản phẩm nào.
+    expect((await find('wireless gaming keyboard')).status).toBe('none');
+  });
+
   it('truy vấn lạ → không chọn (để AI hỏi lại)', async () => {
     const match = await db.withWorkspace(wsA, (tx) =>
       findProductMatch(tx, { workspaceId: wsA, queryText: 'zzzz qqqq' }),

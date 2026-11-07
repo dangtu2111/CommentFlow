@@ -183,15 +183,22 @@ export async function searchProducts(
   await tx.execute(
     sql`SELECT set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true)`,
   );
+  await tx.execute(
+    sql`SELECT set_config('pg_trgm.word_similarity_threshold', ${String(WORD_SIMILARITY_THRESHOLD)}, true)`,
+  );
+  // Điểm = lớn hơn của (a) độ giống CẢ CHUỖI (chịu gõ sai) và (b) `word_similarity` — tên khách gõ nằm trong `search_text` bao
+  // nhiêu. (b) cần vì tên sản phẩm từ nguồn ngoài (Shopify) rất dài: khách gõ "bird food shell blower" thì cả chuỗi chỉ ~0,16
+  // nhưng gần như nằm trọn trong tên (~0,86). Ngưỡng chọn/mơ hồ ở `pickProductMatch` vẫn áp dụng trên điểm này.
   const trigram =
     normalized === ''
       ? []
       : (
           await tx.execute<{ id: string; name: string; s: number }>(sql`
-            SELECT p.id, p.name, similarity(p.search_text, ${normalized}) AS s
+            SELECT p.id, p.name,
+                   GREATEST(similarity(p.search_text, ${normalized}), word_similarity(${normalized}, p.search_text)) AS s
               FROM cf.products p
              WHERE p.workspace_id = ${input.workspaceId}::uuid AND p.status = 'active'
-               AND p.search_text % ${normalized}
+               AND (p.search_text % ${normalized} OR ${normalized} <% p.search_text)
              ORDER BY s DESC, p.id
              LIMIT ${limit}`)
         ).rows;
