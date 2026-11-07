@@ -3,8 +3,8 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { roleAccessRows } from '../../lib/app-nav';
 import { cn } from '../../lib/cn';
 import { userInitials } from '../../lib/user-initials';
-import { SettingsFrame, type SettingsFrameScope, TwPageHeader } from '../settings/settings-frame';
-import { TwCard, TwChip } from '../settings/tw/ui';
+import { SettingsFrame, type SettingsFrameScope } from '../settings/settings-frame';
+import { TwCard, TwChip, TwSoonButton } from '../settings/tw/ui';
 import { Icon } from '../ui/icon';
 import { InvitationActions } from './invitation-actions';
 import { InviteForm } from './invite-form';
@@ -71,14 +71,18 @@ export async function MembersView({
       {...frame}
       active="members"
       variant="tabs"
-      header={
-        <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
-          <TwPageHeader
-            size="md"
-            title={t('headerTitle')}
-            subtitle={t('subtitle', { workspace: workspaceName })}
-          />
-        </div>
+      workspaceName={workspaceName}
+      headerEnd={
+        <>
+          <TwSoonButton tone="soft" soon={t('soon')}>
+            <Icon name="menu_book" size={16} />
+            {t('docs')}
+          </TwSoonButton>
+          <TwSoonButton tone="primary" soon={t('soon')}>
+            <Icon name="check_circle" size={16} />
+            {t('saveChanges')}
+          </TwSoonButton>
+        </>
       }
     >
       <TwCard labelledBy={LIST_TITLE_ID} className="p-space-lg space-y-space-md">

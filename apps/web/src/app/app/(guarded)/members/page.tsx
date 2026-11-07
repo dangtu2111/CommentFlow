@@ -27,7 +27,7 @@ export default async function MembersPage() {
   return (
     <main className="app-page app-page-settings">
       <MembersView
-        frame={{ viewerRole: workspace.role, counts }}
+        frame={{ viewerRole: workspace.role, counts, workspaceName: workspace.name }}
         currentUserId={user.id}
         workspaceName={workspace.name}
         members={members}

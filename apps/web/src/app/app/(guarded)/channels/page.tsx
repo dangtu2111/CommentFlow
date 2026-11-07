@@ -1,9 +1,9 @@
-import { listChannels } from '@flow/db/runtime';
+import { listChannels, loadChannelActivity } from '@flow/db/runtime';
 import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
+import { ChannelsHeaderActions, ChannelsHub } from '../../../../components/settings/channels-hub';
 import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { Banner } from '../../../../components/ui/banner';
-import { PageHeader } from '../../../../components/ui/page-header';
 import {
   canReconnect,
   countParam,
@@ -57,8 +57,11 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
   }
   const enabled = config !== null;
 
-  const channels = await getDb().withActor(workspace.id, user.id, (tx) =>
-    listChannels(tx, workspace.id),
+  const [channels, activity] = await getDb().withActor(
+    workspace.id,
+    user.id,
+    async (tx) =>
+      [await listChannels(tx, workspace.id), await loadChannelActivity(tx, workspace.id)] as const,
   );
 
   // Bước chọn Page: chỉ khi cookie niêm phong còn hạn VÀ đúng người + workspace.
@@ -99,6 +102,18 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
       ? 'expiredSession'
       : fbNoticeOf(query.fb);
 
+  const actionNotice = (
+    [
+      'disconnected',
+      'lang_saved',
+      'check_queued',
+      'check_recent',
+      'not_found',
+      'forbidden',
+      'unavailable',
+    ] as const
+  ).find((code) => code === query.ch);
+
   const counts = await loadSettingsCounts({
     role: workspace.role,
     workspaceId: workspace.id,
@@ -110,10 +125,10 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
       <SettingsFrame
         viewerRole={workspace.role}
         active="channels"
+        variant="tabs"
         counts={counts}
-        header={
-          <PageHeader title={t('title')} subtitle={t('subtitle', { workspace: workspace.name })} />
-        }
+        workspaceName={workspace.name}
+        headerEnd={<ChannelsHeaderActions connectHref={enabled ? FB_START_PATH : null} />}
       >
         {notice ? (
           <Banner variant={NOTICE_VARIANT[notice]}>
@@ -161,76 +176,23 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
           </section>
         ) : null}
 
-        {channels
-          .filter((channel) => channel.status !== 'connected')
-          .map((channel) => (
-            <section
-              key={channel.id}
-              className="card stack recovery-card"
-              aria-labelledby={`recovery-${channel.id}`}
-            >
-              <div className="row row-between">
-                <h2 id={`recovery-${channel.id}`} className="section-title">
-                  {t('recovery.title')}: {channel.name}
-                </h2>
-                <span className="badge badge-danger">{t(`status.${channel.status}`)}</span>
-              </div>
-              <p className="recovery-cause">{t(`recovery.cause.${channel.status}`)}</p>
-              <h3 className="section-subtitle">{t('recovery.stepsTitle')}</h3>
-              <ol className="recovery-steps">
-                <li>{t('recovery.step1')}</li>
-                <li>{t('recovery.step2')}</li>
-              </ol>
-              {reconnectable.has(channel.id) ? (
-                <a href={FB_START_PATH} className="btn btn-primary">
-                  {t('reconnect')}
-                </a>
-              ) : (
-                <p className="muted">{t('recovery.ownerOnly')}</p>
-              )}
-            </section>
-          ))}
-
-        <section className="card stack" aria-labelledby="channels-title">
-          <h2 id="channels-title" className="section-title">
-            {t('list.title')}
-          </h2>
-          {channels.length === 0 ? <p className="muted">{t('list.empty')}</p> : null}
-          <ul className="member-list">
-            {channels.map((channel) => (
-              <li key={channel.id} className="member-item">
-                <div className="member-info">
-                  <p className="member-name">{channel.name}</p>
-                  <p>
-                    <span className="badge badge-off">{t(`platform.${channel.platform}`)}</span>{' '}
-                    <span
-                      className={
-                        channel.status === 'connected' ? 'badge badge-on' : 'badge badge-off'
-                      }
-                    >
-                      {t(`status.${channel.status}`)}
-                    </span>{' '}
-                    {channel.status === 'connected' && !channel.webhookSubscribed ? (
-                      <span className="badge badge-off">{t('list.noWebhook')}</span>
-                    ) : null}
-                  </p>
-                </div>
-                {reconnectable.has(channel.id) ? (
-                  <a href={FB_START_PATH} className="btn btn-secondary">
-                    {t('reconnect')}
-                  </a>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-          {enabled ? (
-            <a href={FB_START_PATH} className="btn btn-primary">
-              {t('connect')}
-            </a>
-          ) : (
-            <p className="muted">{t('disabled')}</p>
-          )}
-        </section>
+        {actionNotice ? (
+          <Banner
+            variant={
+              actionNotice === 'disconnected' || actionNotice === 'lang_saved'
+                ? 'success'
+                : 'danger'
+            }
+          >
+            {t(`notice.ch.${actionNotice}`)}
+          </Banner>
+        ) : null}
+        <ChannelsHub
+          channels={channels}
+          activity={activity}
+          reconnectable={reconnectable}
+          connectHref={enabled ? FB_START_PATH : null}
+        />
       </SettingsFrame>
     </main>
   );

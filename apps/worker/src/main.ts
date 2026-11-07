@@ -5,6 +5,7 @@ import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
 import { createLocalExportStore } from './export-store';
 import { startHealthServer } from './health';
+import { createChannelCheckHandler } from './jobs/channel-check';
 import { createDataExportHandler } from './jobs/data-export';
 import { createHideHandler } from './jobs/hide';
 import { createIngestHandler } from './jobs/ingest';
@@ -18,6 +19,7 @@ import { startWorkspaceDeletion } from './jobs/workspace-deletion';
 import { createLogger } from './logger';
 import { createBoss } from './queue/boss';
 import {
+  CHANNEL_CHECK_QUEUE,
   DATA_EXPORT_QUEUE,
   HIDE_QUEUE,
   INGEST_QUEUE,
@@ -63,6 +65,20 @@ async function main(): Promise<void> {
     SEND_QUEUE,
     { batchSize: 1, localConcurrency: 3 },
     createSendHandler({ db, registry, logger }),
+  );
+  // Nút "Kiểm tra toàn bộ kết nối": gọi nền tảng bằng token Page, ghi kết quả từng kênh. Connector tắt → kết quả `unavailable`.
+  await boss.work(
+    CHANNEL_CHECK_QUEUE,
+    { batchSize: 1, localConcurrency: 1 },
+    createChannelCheckHandler({
+      db,
+      connectorFor: () => {
+        const connector = registry.has('facebook') ? registry.get('facebook') : undefined;
+        const check = connector?.checkConnection?.bind(connector);
+        return check ? { checkConnection: check } : undefined;
+      },
+      logger,
+    }),
   );
   // FR-044: hide — ẩn/bỏ ẩn bình luận; kiểm lại trước khi gọi nền tảng, ẩn lặp lại idempotent. Dùng chung sổ với `send`.
   await boss.work(

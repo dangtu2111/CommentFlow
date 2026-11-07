@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "background": "#f5faff", "on-error-container": "#93000a", "on-tertiary-fixed": "#2e1500", "surface-dim": "#cedce7", "surface-container-lowest": "#ffffff", "tertiary-container": "#945b23", "primary-container": "#0b7285", "error-container": "#ffdad6", "on-secondary-container": "#fffbff", "inverse-surface": "#25323b", "tertiary": "#77440b", "secondary": "#633cd5", "surface-container-low": "#eaf5ff", "surface": "#f5faff", "on-secondary-fixed": "#1f0060", "on-primary": "#ffffff", "surface-tint": "#00687a", "on-tertiary-container": "#ffe3cf", "inverse-on-surface": "#e5f3fe", "surface-container-high": "#dceaf5", "error": "#ba1a1a", "surface-container": "#e2f0fb", "on-primary-container": "#bdf0ff", "on-error": "#ffffff", "on-tertiary": "#ffffff", "on-tertiary-fixed-variant": "#6c3a02", "secondary-container": "#7c59ef", "primary-fixed": "#abedff", "surface-container-highest": "#d7e4f0", "on-surface-variant": "#3f484b", "surface-variant": "#d7e4f0", "primary-fixed-dim": "#82d2e7", "on-background": "#101d25", "on-secondary-fixed-variant": "#4d1ebf", "secondary-fixed-dim": "#ccbdff", "tertiary-fixed-dim": "#ffb779", "outline-variant": "#bec8cc", "tertiary-fixed": "#ffdcc1", "on-primary-fixed-variant": "#004e5c", "on-secondary": "#ffffff", "secondary-fixed": "#e7deff", "on-primary-fixed": "#001f26", "outline": "#6f797c", "surface-bright": "#f5faff", "inverse-primary": "#82d2e7", "primary": "#005868", "on-surface": "#101d25" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin": "1.5rem", "space-xs": "0.25rem", "space-md": "0.75rem", "gutter-mobile": "0.75rem", "space-sm": "0.5rem", "gutter": "1rem", "space-xl": "1.5rem", "space-lg": "1rem", "margin-mobile": "1rem" }, "fontFamily": { "headline-sm": ["Be Vietnam Pro"], "title-sm": ["Be Vietnam Pro"], "body-lg": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "headline-md": ["Be Vietnam Pro"], "headline-lg-mobile": ["Be Vietnam Pro"], "code-sm": ["Be Vietnam Pro"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "title-sm": ["13px", { "lineHeight": "18px", "fontWeight": "600" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-md": ["15px", { "lineHeight": "20px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "body-md": ["13px", { "lineHeight": "19px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "code-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }] } } } }</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-16"><div class="flex-1 overflow-y-auto px-space-sm py-space-md"><div class="px-space-sm mb-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Điều hướng vận hành</div><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary font-title-sm shadow-sm"><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="binh-luan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">chat</span><span class="font-title-sm text-title-sm">Bình luận</span></div><span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm">24</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tin-nhan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">send</span><span class="font-title-sm text-title-sm">Tin nhắn</span></div><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-error animate-pulse"></span><span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">8</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="khach-tiem-nang" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">person_search</span><span class="font-title-sm text-title-sm">Khách tiềm năng</span></div><span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">+5</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bai-viet" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">feed</span><span class="font-title-sm text-title-sm">Bài viết</span></div><span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">3</span></a><div class="my-space-md border-t border-surface-container"></div><div class="px-space-sm mb-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Hệ thống &amp; Trí tuệ</div><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="co-so-kien-thuc" href="#"><span class="material-symbols-outlined text-lg">menu_book</span><span class="font-title-sm text-title-sm">Cơ sở kiến thức</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tu-dong-hoa" href="#"><span class="material-symbols-outlined text-lg">smart_toy</span><span class="font-title-sm text-title-sm">Tự động hóa</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bao-cao" href="#"><span class="material-symbols-outlined text-lg">bar_chart</span><span class="font-title-sm text-title-sm">Báo cáo</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="quy-tac-spam" href="#"><span class="material-symbols-outlined text-lg">gshield</span><span class="font-title-sm text-title-sm">Quy tắc spam</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="nhat-ky-hoat-dong" href="#"><span class="material-symbols-outlined text-lg">history</span><span class="font-title-sm text-title-sm">Nhật ký hoạt động</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded bg-primary-container text-on-primary font-title-sm shadow-sm transition-colors" data-path="cai-dat" href="#"><span class="material-symbols-outlined text-lg">settings</span><span class="font-title-sm text-title-sm">Cài đặt</span></a></nav></div><div class="p-space-sm space-y-space-sm bg-surface-container-lowest"><div class="bg-surface-container-low rounded-lg p-space-sm space-y-space-xs"><div class="flex items-center justify-between text-on-surface"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm text-secondary">bolt</span><span class="font-title-sm text-title-sm">Hạn mức AI</span></div><span class="font-label-sm text-label-sm text-primary">71%</span></div><div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden"><div class="bg-primary-container h-full rounded-full" style="width: 71%"></div></div><div class="flex items-center justify-between pt-0.5"><span class="text-on-surface-variant font-label-sm text-label-sm">2.140 / 3.000 lượt</span><button class="text-primary hover:text-on-primary-fixed-variant font-label-sm text-label-sm" type="button">Nâng gói</button></div></div><div class="flex items-center justify-between p-1.5 rounded-lg bg-surface-container-low"><div class="flex items-center gap-2 overflow-hidden"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwcZm3TMSiHkNQ4B250GrpqU8pEMkD38dPVp_ia3bg6FubRiQrgxOsTzAJOFdK7zIybRwltPDjurEazKTciRbEjnOrhTrB0p6XM_Ins-mAV8Ask9nhwjwvafun5f33_IKTDZlsozTIVyasgH5_XxVS5ogOcaTtonJ_lyLTQGHzTotLv2BdwwmoNPf52faRZLJRcTm15y4SWuehdxkWdukk1j3vucIC2qqKsRxc9iCZ"/><div class="min-w-0"><div class="font-title-sm text-title-sm text-on-surface truncate">Nguyễn Mai Linh</div><div class="font-label-sm text-label-sm text-on-surface-variant truncate">CSKH • Trực tuyến</div></div></div><button class="p-1 text-on-surface-variant hover:text-on-surface" type="button"><span class="material-symbols-outlined text-base">expand_more</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-0 right-0 h-16 bg-surface-container-lowest z-50 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-space-md flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-2 pr-space-md"><img alt="CommentFlow AI Logo Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VC7X4t51CinIpB3O45rpY-WErdfe1lXwcDO9-tJeUTAyi404rV2qeGWEexZXXSptgB-nhH8GEtH7IoDdbkEEjfY0_mueCjR1BUcFJk7Sk_XlYNN3_naqsZflesw6BioCzeVyuKVJePv6tEZwY_2koLbrIynVMNm_J5bZjD8RAi2ws3Sm9SdQ7zun4kHQ5ALEoiR0BeTZjqAz47KbvIJ0NzXAjd9o_nngVVAtfR38Wf5w"/><div class="flex items-center gap-1.5"><span class="font-headline-sm text-headline-sm text-on-surface">Comment</span><span class="font-headline-sm text-headline-sm text-primary-container">Flow</span><span class="px-1.5 py-0.5 rounded bg-secondary text-on-secondary font-label-sm text-label-sm uppercase tracking-wider">AI</span></div></div><div class="h-6 w-px bg-surface-container-high"></div><button class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors text-left" type="button"><div class="flex flex-col"><div class="flex items-center gap-1"><span class="font-title-sm text-title-sm text-on-surface">Thời Trang Mẫu An Nhiên</span><span class="material-symbols-outlined text-sm text-on-surface-variant">unfold_more</span></div><span class="font-label-sm text-label-sm text-primary font-medium">18 chờ duyệt</span></div></button><div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg"><button class="px-2 py-1 rounded bg-surface-container-lowest shadow-sm text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-primary-container"></span><span>FB: An Nhiên Store</span></button><button class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>IG: @annhien.official</span></button><button class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-outline"></span><span>TikTok: An Nhiên</span></button></div></div><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low"><div class="flex items-center gap-1.5"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span></span><span class="font-label-md text-label-md text-on-surface">AI tự động: <span class="font-semibold text-primary">Bật (2 kênh)</span></span></div><button class="flex items-center gap-1 px-2 py-1 rounded bg-error text-on-error hover:bg-on-error-container font-label-sm text-label-sm transition-colors" type="button"><span class="material-symbols-outlined text-sm">gpp_maybe</span><span>Dừng khẩn cấp</span></button></div><div class="h-6 w-px bg-surface-container-high"></div><div class="flex items-center gap-1"><button class="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Trợ giúp (Phím tắt ?)" type="button"><span class="font-title-sm text-title-sm font-semibold">?</span></button><button class="relative flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-lg">notifications</span><span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span></button></div><div class="flex items-center gap-2 pl-1"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwcZm3TMSiHkNQ4B250GrpqU8pEMkD38dPVp_ia3bg6FubRiQrgxOsTzAJOFdK7zIybRwltPDjurEazKTciRbEjnOrhTrB0p6XM_Ins-mAV8Ask9nhwjwvafun5f33_IKTDZlsozTIVyasgH5_XxVS5ogOcaTtonJ_lyLTQGHzTotLv2BdwwmoNPf52faRZLJRcTm15y4SWuehdxkWdukk1j3vucIC2qqKsRxc9iCZ"/><div class="hidden xl:block text-left"><div class="font-title-sm text-title-sm text-on-surface leading-none">Nguyễn Mai Linh</div><div class="font-label-sm text-label-sm text-on-surface-variant mt-1 leading-none">Nhân viên CSKH</div></div></div></div></div></header><main class="w-full pt-16 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive script for Modals & Micro-interactions -->
+<script>
+    function toggleModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.toggle('hidden');
+      }
+    }
+
+    function checkConnections() {
+      const btn = document.getElementById('btn-check-all');
+      const icon = document.getElementById('icon-refresh');
+      if (icon) icon.classList.add('animate-spin');
+      btn.setAttribute('disabled', 'true');
+      setTimeout(() => {
+        if (icon) icon.classList.remove('animate-spin');
+        btn.removeAttribute('disabled');
+        const toast = document.getElementById('toast-notification');
+        if (toast) {
+          toast.classList.remove('translate-y-24', 'opacity-0');
+          setTimeout(() => {
+            toast.classList.add('translate-y-24', 'opacity-0');
+          }, 4000);
+        }
+      }, 1200);
+    }
+  </script>
+<!-- Top Page Header Bar & Navigation Pathway -->
+<div class="w-full px-margin py-space-lg flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container-lowest shadow-sm">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+<span>Cài đặt hệ thống</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-primary font-semibold">Kênh đã kết nối</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-on-surface-variant font-code-sm text-code-sm bg-surface-container-high px-2 py-0.5 rounded">PRD-Sec-7.6</span>
+</div>
+<div class="flex items-center gap-3 mt-0.5">
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight">Quản lý Kênh Đã Kết Nối</h1>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-low text-primary font-label-sm text-label-sm">Omnichannel Hub</span>
+</div>
+</div>
+<!-- Action Toolbar with Disabled Quota Enforcement & Check All -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface transition-colors font-title-sm text-title-sm" id="btn-check-all" onclick="checkConnections()" type="button">
+<span class="material-symbols-outlined text-base text-primary" id="icon-refresh">sync</span>
+<span>Kiểm tra toàn bộ kết nối</span>
+</button>
+<!-- Tooltip Container for Disabled Add Button -->
+<div class="relative group">
+<button class="cursor-not-allowed flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container-high text-outline font-title-sm text-title-sm opacity-80" disabled="" type="button">
+<span class="material-symbols-outlined text-base">add_link</span>
+<span>Thêm kênh mới</span>
+</button>
+<div class="pointer-events-none absolute right-0 top-full mt-2 w-72 p-2.5 bg-inverse-surface text-inverse-on-surface rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-30 font-body-sm text-body-sm">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed text-base shrink-0">info</span>
+<span>Đã đạt giới hạn <strong>3/3 kênh</strong> của gói Growth. Nâng cấp gói để kết nối thêm Facebook, Zalo OA hoặc TikTok Shop.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Space -->
+<div class="p-margin space-y-margin max-w-7xl mx-auto w-full">
+<!-- KPI Metric Strip / Channel Quota & System Health -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1: Hạn mức kênh (Growth Tier) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-20 h-20 bg-primary/5 rounded-full pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+<span>Hạn mức kênh (Gói Growth)</span>
+<span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">100% Đầy</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-headline-lg text-headline-lg text-on-surface">3/3</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">kênh trực tuyến</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-3 overflow-hidden">
+<div class="bg-primary-container h-full rounded-full w-full"></div>
+</div>
+</div>
+<div class="pt-3 mt-1 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cần thêm page bán lẻ?</span>
+<button class="text-primary hover:text-on-primary-fixed-variant font-title-sm text-title-sm flex items-center gap-0.5" type="button">
+<span>Nâng gói ngay</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Sức khỏe kết nối OAuth -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+<span>Tình trạng kết nối OAuth</span>
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-ping"></span>
+</div>
+<div class="flex items-center gap-3 mt-2">
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-primary">2</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">ổn định</span>
+</div>
+<span class="text-surface-container-highest font-light">/</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-error">1</span>
+<span class="font-label-sm text-label-sm text-error font-medium">lỗi token</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            1 Kênh gián đoạn Meta API do thay đổi quản trị viên.
+          </p>
+</div>
+<div class="pt-2">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-error bg-error-container/60 text-on-error-container px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-xs">warning</span> Yêu cầu cấp lại quyền
+          </span>
+</div>
+</div>
+<!-- Card 3: Thống kê tương tác hôm nay -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+<span>Tương tác tiếp nhận hôm nay</span>
+<span class="material-symbols-outlined text-base text-primary">query_stats</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-headline-lg text-headline-lg text-on-surface">3.842</span>
+<span class="text-primary font-label-sm text-label-sm bg-surface-container-low px-1.5 py-0.5 rounded">+18.4%</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-3 pt-1">
+<div class="bg-surface-container-low rounded p-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Bình luận</span>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">2.910</span>
+</div>
+<div class="bg-surface-container-low rounded p-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Hộp thư (DM)</span>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">932</span>
+</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant pt-2">Độ trễ trung bình: <strong>1.4s</strong></span>
+</div>
+<!-- Card 4: Tự động hóa & Spark AI -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute right-0 top-0 w-24 h-24 bg-secondary/5 rounded-bl-full pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+<span class="flex items-center gap-1 text-secondary font-medium">
+<span class="material-symbols-outlined text-sm">arrow_back_ios_new</span> AI Automation Flow
+            </span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">v4.2 LLM</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-headline-lg text-headline-lg text-secondary">94.8%</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">tự động phản hồi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 leading-tight">
+            18 bình luận nghi vấn khiếu nại đang điều hướng tới CSKH người.
+          </p>
+</div>
+<div class="pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Bảo vệ chống spam</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Đang kích hoạt</span>
+</div>
+</div>
+</div>
+<!-- Alert Banner: Disconnected Channel Incident -->
+<div class="bg-error-container text-on-error-container p-space-lg rounded-xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-lg bg-error text-on-error flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+<span class="material-symbols-outlined text-2xl">report_problem</span>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md font-bold">Cảnh báo: Fanpage "An Nhiên Store - Xả Kho" đã bị ngắt kết nối Meta Token!</span>
+<span class="px-2 py-0.2 rounded bg-error text-on-error font-label-sm text-label-sm">Gián đoạn 4h</span>
+</div>
+<p class="font-body-md text-body-md opacity-90 max-w-3xl">
+            Token truy cập Meta Graph API đã hết hiệu lực do có thao tác cập nhật bảo mật trên Facebook cá nhân quản trị viên. CommentFlow AI không thể lắng nghe Webhook và tự động ẩn số điện thoại khách hàng trên trang này.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+<button class="px-3 py-2 rounded-lg bg-surface-container-lowest/80 text-on-error-container hover:bg-surface-container-lowest font-title-sm text-title-sm transition-colors" onclick="toggleModal('modal-permissions')" type="button">
+          Xem chi tiết lỗi
+        </button>
+<button class="px-4 py-2 rounded-lg bg-error text-on-error hover:bg-on-error-container font-title-sm text-title-sm shadow-sm flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-base">bolt</span>
+<span>Cấp lại quyền OAuth (15s)</span>
+</button>
+</div>
+</div>
+<!-- Connected Channels Grouped Sections -->
+<div class="space-y-space-xl">
+<!-- SECTION 1: FACEBOOK FANPAGES (2 CHANNELS) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Platform Header -->
+<div class="px-space-lg py-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<!-- Official Facebook SVG Brand Color -->
+<div class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center shadow-sm">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-title-md text-title-md text-on-surface">Meta Facebook Fanpages</h2>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">2 Trang kết nối</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Giao thức: Webhook v19.0 Graph API (Lắng nghe sự kiện feed &amp; leadgen)</p>
+</div>
+</div>
+<button class="text-primary hover:text-on-primary-fixed-variant font-label-md text-label-md flex items-center gap-1" onclick="toggleModal('modal-permissions')" type="button">
+<span class="material-symbols-outlined text-sm">health_and_safety</span>
+<span>Báo cáo quyền Graph API</span>
+</button>
+</div>
+<!-- Channel List Grid -->
+<div class="p-space-lg space-y-space-md">
+<!-- Channel Item 1: Thời Trang Mẫu An Nhiên (Active) -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest hover:bg-surface-bright transition-colors shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-space-md">
+<!-- Left Info -->
+<div class="flex items-start gap-3.5 min-w-0">
+<div class="relative shrink-0">
+<img class="w-14 h-14 rounded-xl object-cover shadow-sm" data-alt="Official Facebook business fanpage avatar of a modern aesthetic Vietnamese fashion boutique named An Nhien, featuring elegant serif typography and beige minimalist boutique interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYfEzY-vDtH5xTI2lwoTD2RMWaNHRjhWl3iXfbamU0DZr1eXWSU1V_NbkihIoxMnr6KKYnOsWyuLFK_25zcgIHbZoIZBYGdO6kkSsKqL-nO4LP4DnJo001aaQ4GqNE9LzHCs2hpolUkBGNW7X7MR_s2OSYU3UZYr6WVm9xj4gED39rauDbTwQTKELBRv1r1YBhw4CrcWf_a1yTCiUl-ypD6szQ3OJIZocoovXVnl35"/>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]" title="Đang đồng bộ trực tiếp">
+<span class="material-symbols-outlined text-[12px]">check</span>
+</span>
+</div>
+<div class="space-y-1 min-w-0">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Thời Trang Mẫu An Nhiên</span>
+<span class="px-2 py-0.5 rounded-full bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-[#237A36]"></span> Đang hoạt động
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm">ID: 109288371928371</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface-variant font-body-sm text-body-sm flex-wrap">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-primary">sensors</span>
+<span>Webhook nhận <strong>2 phút trước</strong></span>
+</span>
+<span class="text-surface-container-highest">•</span>
+<span>Bình luận hôm nay: <strong class="text-on-surface">1.420</strong></span>
+<span class="text-surface-container-highest">•</span>
+<span>Tin nhắn Inbox: <strong class="text-on-surface">512</strong></span>
+</div>
+<!-- Granted Permissions Badges -->
+<div class="flex items-center gap-1.5 pt-1 flex-wrap">
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-primary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">done</span> Bình luận tự động
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-primary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">done</span> Quản lý tin nhắn (DM)
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-primary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">done</span> Ẩn SĐT chống cướp khách
+                  </span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">smart_toy</span> Spark AI Bot v2.4
+                  </span>
+</div>
+</div>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-2 shrink-0 w-full xl:w-auto justify-end pt-2 xl:pt-0">
+<button class="px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-title-sm text-title-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-base">refresh</span>
+<span>Đồng bộ lại</span>
+</button>
+<button class="px-3 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm flex items-center gap-1 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">tune</span>
+<span>Cài đặt nâng cao</span>
+</button>
+<button class="px-2.5 py-2 rounded-lg text-outline hover:text-error hover:bg-error-container/30 transition-colors" onclick="toggleModal('modal-disconnect')" title="Ngắt kết nối kênh này" type="button">
+<span class="material-symbols-outlined text-base">link_off</span>
+</button>
+</div>
+</div>
+<!-- Channel Item 2: An Nhiên Store - Xả Kho (Token Expired Warning) -->
+<div class="p-space-lg rounded-xl bg-error-container/20 hover:bg-error-container/30 transition-colors shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-space-md">
+<!-- Left Info -->
+<div class="flex items-start gap-3.5 min-w-0">
+<div class="relative shrink-0">
+<img class="w-14 h-14 rounded-xl object-cover shadow-sm grayscale opacity-75" data-alt="E-commerce clearance sale warehouse store avatar on social media with bright red badge accents, apparel warehouse storage shelves and discount typography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJiktDW-MR8PXkFXMBNmZHeV-HCnKLwhxEmpTJ3cnHoAu-7TowSW8FVYADblZfl3oZRna2YD_smAnGw_gZ46HEotp5r29DlEhppvHldbGvjyvcfflNpWa3tSQsvWYs5iu0mkBSnM5hjq9k5LKANttlDBkYAomLGzKtWfM7RdO7c1uIGNlGSeDpky-b0Gsp02apRUiC2i0i6SE8cEEPOx7Qq4S0KbF03XNGyXOC9CrG"/>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-error text-on-error flex items-center justify-center text-[10px]" title="Mất quyền truy cập">
+<span class="material-symbols-outlined text-[12px]">priority_high</span>
+</span>
+</div>
+<div class="space-y-1 min-w-0">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">An Nhiên Store - Xả Kho</span>
+<span class="px-2 py-0.5 rounded-full bg-[#FDE8E8] text-[#C92A2A] font-label-sm text-label-sm flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Mất kết nối OAuth
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm">ID: 884719230194812</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface-variant font-body-sm text-body-sm flex-wrap">
+<span class="flex items-center gap-1 text-error font-medium">
+<span class="material-symbols-outlined text-sm">wifi_off</span>
+<span>Webhook gián đoạn: <strong>4 giờ trước</strong></span>
+</span>
+<span class="text-surface-container-highest">•</span>
+<span>Bình luận chờ phản hồi tồn đọng: <strong class="text-error">89</strong></span>
+<span class="text-surface-container-highest">•</span>
+<span>Lý do: <em>Facebook Admin Changed Password</em></span>
+</div>
+<!-- Warning Notice Box -->
+<div class="bg-surface-container-lowest p-2 rounded-lg flex items-center gap-2 text-error font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-base shrink-0">info</span>
+<span>Trang này đang tạm dừng tự động hóa AI. Bấm "Cấp lại quyền ngay" để tái kích hoạt luồng trả lời.</span>
+</div>
+</div>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-2 shrink-0 w-full xl:w-auto justify-end pt-2 xl:pt-0">
+<button class="px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:text-on-surface font-title-sm text-title-sm transition-colors shadow-sm" onclick="toggleModal('modal-permissions')" type="button">
+                Chi tiết sự cố
+              </button>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm flex items-center gap-1.5 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">vpn_key</span>
+<span>Kết nối lại ngay (OAuth 15s)</span>
+</button>
+<button class="px-2.5 py-2 rounded-lg text-outline hover:text-error hover:bg-error-container/30 transition-colors" onclick="toggleModal('modal-disconnect')" title="Ngắt kết nối kênh này" type="button">
+<span class="material-symbols-outlined text-base">link_off</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2: INSTAGRAM PROFESSIONAL (1 CHANNEL) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Platform Header -->
+<div class="px-space-lg py-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<!-- Official Instagram Gradient Style SVG -->
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center shadow-sm">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-title-md text-title-md text-on-surface">Instagram Professional Business</h2>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">1 Tài khoản</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Liên kết qua Meta Business Suite (Direct Message API &amp; Story Reply Webhook)</p>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary bg-secondary-fixed/50 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-xs">schedule</span> Cửa sổ tin nhắn 24h: Hoạt động
+          </span>
+</div>
+<!-- Channel Row -->
+<div class="p-space-lg">
+<div class="p-space-lg rounded-xl bg-surface-container-lowest hover:bg-surface-bright transition-colors shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-space-md">
+<!-- Left Info -->
+<div class="flex items-start gap-3.5 min-w-0">
+<div class="relative shrink-0">
+<img class="w-14 h-14 rounded-xl object-cover shadow-sm" data-alt="Instagram professional profile avatar showing a high-fashion lookbook flat lay, soft pastel tone garments, styled with accessories and clean studio photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBMjVw-XmZyGAhXaYQDPceBW3cqv4IkAWz4VsFSrduSnLmTKC0AgsFSzKsDBemghO8Wsz5JUG_LKVbpsTA5ZlLp3fxdAXK9yLgnn4WBz0jHEj6j0TB7FcU6DwDrplOYwmI-8RccEmze2MjQYjP_T5cbOy9oOm6AhqgnD6ORv3eCp4uGtYVfikOOzAhYy-TbcGMF-AGuCFiCSsyhmc4Cd3Isc8kfLx_JPtwoxqS9Tfe"/>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px]">
+<span class="material-symbols-outlined text-[12px]">check</span>
+</span>
+</div>
+<div class="space-y-1 min-w-0">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">@annhien.official</span>
+<span class="px-2 py-0.5 rounded-full bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-[#237A36]"></span> Trực tuyến
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm">IGID: 178414029381923</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface-variant font-body-sm text-body-sm flex-wrap">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-primary">mark_chat_read</span>
+<span>Đồng bộ tin nhắn DM tức thì</span>
+</span>
+<span class="text-surface-container-highest">•</span>
+<span>Bình luận bài viết &amp; Reels hôm nay: <strong class="text-on-surface">490</strong></span>
+<span class="text-surface-container-highest">•</span>
+<span>Tin nhắn Direct: <strong class="text-on-surface">420</strong></span>
+</div>
+<!-- Granted Badges -->
+<div class="flex items-center gap-1.5 pt-1 flex-wrap">
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-primary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">done</span> instagram_manage_comments
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-primary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">done</span> instagram_manage_messages
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-primary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">done</span> Trả lời Story Mention
+                  </span>
+</div>
+</div>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-2 shrink-0 w-full xl:w-auto justify-end pt-2 xl:pt-0">
+<button class="px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-title-sm text-title-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-base">refresh</span>
+<span>Kiểm tra DM</span>
+</button>
+<button class="px-3 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm flex items-center gap-1 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">tune</span>
+<span>Cấu hình Story Bot</span>
+</button>
+<button class="px-2.5 py-2 rounded-lg text-outline hover:text-error hover:bg-error-container/30 transition-colors" onclick="toggleModal('modal-disconnect')" title="Ngắt kết nối kênh này" type="button">
+<span class="material-symbols-outlined text-base">link_off</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: TIKTOK BUSINESS (TESTING / BETA ACCESS) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Platform Header -->
+<div class="px-space-lg py-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<!-- Official TikTok SVG Silhouette -->
+<div class="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center shadow-sm">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"></path>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-title-md text-title-md text-on-surface">TikTok for Business / TikTok Shop</h2>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">Beta v1.1 Thử nghiệm</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Giao thức: TikTok Open API (Lắng nghe bình luận Video &amp; Livestream Shop)</p>
+</div>
+</div>
+<span class="font-label-md text-label-md text-primary bg-primary-fixed/40 px-2 py-0.5 rounded">
+            Thử nghiệm nội bộ
+          </span>
+</div>
+<!-- Testing Channel Row -->
+<div class="p-space-lg">
+<div class="p-space-lg rounded-xl bg-surface-container-low shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-space-md">
+<div class="flex items-start gap-3.5 min-w-0">
+<div class="relative shrink-0">
+<img class="w-14 h-14 rounded-xl object-cover shadow-sm" data-alt="TikTok creator channel avatar featuring short video creator fashion styling studio backdrop with neon rim light and trendy outfit styling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcWB8pApLIqtoVnXdVkvhw8yKKFlGcmku__2cmdmvtnBYypNnjFnLds-TfCnOiDFYf96Fj3u5WW_IlRR93LCL-T6mCZybjtSfMxga-ACJ7TEIc2P5siqN_Njq_XBRoGWpca3Pz0tzIWHf0m6L6pAKRd1AdU3ZxtBZ7SLgwl9dc_GUBzynX-qs8pAKq0bqumEudOCk0T6EmzzecssuhqnFj7UEOXbbhTl4H4DZpe4kP"/>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-[10px]" title="Beta Sandbox">
+<span class="material-symbols-outlined text-[12px]">science</span>
+</span>
+</div>
+<div class="space-y-1 min-w-0">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">TikTok: An Nhiên Official</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Đang thử nghiệm Sandbox
+                  </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-code-sm text-code-sm">@annhien_fashion_tt</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Nhận diện và phân loại ý định mua hàng trên video ngắn. Trả lời tự động hiện giới hạn 100 phản hồi/ngày theo chính sách TikTok Developer.
+                </p>
+<!-- Switch and toggles -->
+<div class="flex items-center gap-4 pt-1 flex-wrap">
+<label class="flex items-center gap-2 cursor-pointer select-none">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container relative"></div>
+<span class="font-title-sm text-title-sm text-on-surface">Nhận bình luận Video ngắn</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer select-none opacity-60">
+<input class="sr-only peer" disabled="" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container relative"></div>
+<span class="font-title-sm text-title-sm text-on-surface-variant">Bình luận Livestream (Q2/2025)</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-2 shrink-0 w-full xl:w-auto justify-end pt-2 xl:pt-0">
+<button class="px-3.5 py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm transition-colors shadow-sm" type="button">
+                Cấu hình Webhook Secret
+              </button>
+<button class="px-2.5 py-2 rounded-lg text-outline hover:text-error hover:bg-error-container/30 transition-colors" onclick="toggleModal('modal-disconnect')" title="Ngắt kết nối thử nghiệm" type="button">
+<span class="material-symbols-outlined text-base">link_off</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Security & Data Persistence Assurance Card -->
+<div class="p-space-lg rounded-xl bg-surface-container-low shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-2xl shrink-0 mt-0.5">verified_user</span>
+<div class="space-y-0.5">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">Chính sách bảo toàn dữ liệu &amp; Ngắt kết nối an toàn</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Khi bạn ngắt kết nối bất kỳ trang hay tài khoản mạng xã hội nào, <strong>toàn bộ dữ liệu bình luận, lịch sử tin nhắn, thông tin khách tiềm năng đã thu thập vẫn được bảo lưu an toàn 100%</strong> trong kho dữ liệu CRM của bạn.
+          </p>
+</div>
+</div>
+<a class="font-label-md text-label-md text-primary hover:underline whitespace-nowrap" href="#">Tìm hiểu chính sách bảo mật</a>
+</div>
+</div>
+<!-- TOAST NOTIFICATION: CONNECTION REFRESH SUCCESS (Hidden by default, triggered by JS) -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none" id="toast-notification">
+<div class="bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed text-xl">check_circle</span>
+<div class="font-body-sm text-body-sm">
+<span class="font-semibold block text-inverse-on-surface">Đã kiểm tra 3 kênh kết nối</span>
+<span>2 kênh Meta ổn định. 1 kênh cần cấp lại Token OAuth.</span>
+</div>
+</div>
+</div>
+<!-- MODAL: PERMISSIONS HEALTH CHECK (Graph API Inspector) -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm" id="modal-permissions">
+<div class="bg-surface-container-lowest rounded-xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[921px]">
+<!-- Modal Header -->
+<div class="px-space-lg py-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">security</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Báo cáo Quyền Hạn Meta Graph API</h3>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-1 rounded-lg" onclick="toggleModal('modal-permissions')" type="button">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-space-lg overflow-y-auto space-y-space-md flex-1">
+<div class="p-space-md rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5">info</span>
+<span>Bảng trạng thái quyền hạn được ủy thác cho CommentFlow AI Business App qua Facebook Login for Business v19.0.</span>
+</div>
+<div class="space-y-space-xs">
+<!-- Permission Row 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-bright transition-colors shadow-sm">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-[#EBF7ED] text-[#237A36] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">check</span>
+</span>
+<div>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">pages_manage_engagement</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Đọc và trả lời bình luận công khai trên bài viết &amp; video</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm font-semibold">Hợp lệ</span>
+</div>
+<!-- Permission Row 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-bright transition-colors shadow-sm">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-[#EBF7ED] text-[#237A36] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">check</span>
+</span>
+<div>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">pages_messaging</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Gửi và nhận tin nhắn trực tiếp qua Facebook Messenger</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm font-semibold">Hợp lệ</span>
+</div>
+<!-- Permission Row 3 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-bright transition-colors shadow-sm">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-[#EBF7ED] text-[#237A36] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">check</span>
+</span>
+<div>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">instagram_manage_comments</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ẩn/Xóa và phản hồi bình luận trên Instagram Posts &amp; Reels</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm font-semibold">Hợp lệ</span>
+</div>
+<!-- Permission Row 4 (Warning on Fanpage 2) -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-error-container/20 shadow-sm">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-error text-on-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">close</span>
+</span>
+<div>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">pages_read_engagement (An Nhiên Xả Kho)</span>
+<p class="font-body-sm text-body-sm text-error">Token truy cập trang bị thu hồi (User revoked / Password changed)</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Hết hạn</span>
+</div>
+<!-- Permission Row 5 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-bright transition-colors shadow-sm">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-[#EBF7ED] text-[#237A36] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">check</span>
+</span>
+<div>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">leads_retrieval</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tự động trích xuất form đăng ký khách hàng tiềm năng Facebook Lead Ads</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-[#EBF7ED] text-[#237A36] font-label-sm text-label-sm font-semibold">Hợp lệ</span>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="px-space-lg py-space-md bg-surface-container-low flex items-center justify-end gap-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-title-sm text-title-sm transition-colors" onclick="toggleModal('modal-permissions')" type="button">
+          Đóng
+        </button>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm shadow-sm transition-colors" type="button">
+          Cấp lại quyền trang bị lỗi
+        </button>
+</div>
+</div>
+</div>
+<!-- MODAL: CONFIRM CHANNEL DISCONNECTION -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm" id="modal-disconnect">
+<div class="bg-surface-container-lowest rounded-xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col">
+<!-- Header -->
+<div class="p-space-lg flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl">link_off</span>
+</div>
+<div class="space-y-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Xác nhận ngắt kết nối kênh?</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Hệ thống sẽ dừng đồng bộ tin nhắn, bình luận và ngừng chạy kịch bản trả lời tự động cho kênh này ngay lập tức.
+          </p>
+</div>
+</div>
+<!-- Safe data banner -->
+<div class="mx-space-lg p-space-sm bg-surface-container-low rounded-lg flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-base">verified</span>
+<span>Dữ liệu bình luận &amp; tin nhắn cũ vẫn được bảo lưu an toàn trong CRM.</span>
+</div>
+<!-- Actions -->
+<div class="p-space-lg flex items-center justify-end gap-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-title-sm text-title-sm transition-colors" onclick="toggleModal('modal-disconnect')" type="button">
+          Hủy bỏ
+        </button>
+<button class="px-4 py-2 rounded-lg bg-error text-on-error hover:bg-on-error-container font-title-sm text-title-sm shadow-sm transition-colors" onclick="toggleModal('modal-disconnect')" type="button">
+          Đồng ý ngắt kết nối
+        </button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

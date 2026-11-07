@@ -8,10 +8,9 @@ import { TwoFactorCard } from '../../../../components/security/two-factor-card';
 import { AccountCard } from '../../../../components/settings/account-card';
 import { LanguageCard } from '../../../../components/settings/language-card';
 import { ReplyLanguageCard } from '../../../../components/settings/reply-language-card';
-import { SettingsFrame, TwPageHeader } from '../../../../components/settings/settings-frame';
+import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { TwChip } from '../../../../components/settings/tw/ui';
 import { UsageMeterCard } from '../../../../components/settings/usage-meter-card';
-import { Icon } from '../../../../components/ui/icon';
 import { parseThemeChoice } from '../../../../lib/theme';
 import { getAuthRuntime } from '../../../../server/auth';
 import { getBrand } from '../../../../server/brand';
@@ -63,28 +62,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <SettingsFrame
         viewerRole={workspace.role}
         active="security"
+        variant="tabs"
         counts={counts}
-        header={
-          <TwPageHeader
-            title={t('title')}
-            subtitle={t('subtitle')}
-            end={
-              <TwChip tone={overview.twoFactorEnabled ? 'ok' : 'warn'} dot className="px-3 py-1.5">
-                {t(overview.twoFactorEnabled ? 'securityStatus.on' : 'securityStatus.off')}
-              </TwChip>
-            }
-          />
-        }
-        sideNote={
-          <div className="bg-surface-container-low rounded-xl p-space-md shadow-sm space-y-2">
-            <div className="flex items-center gap-2 text-primary">
-              <Icon name="verified" size={16} />
-              <span className="font-title-sm text-title-sm">{t('securityNote.title')}</span>
-            </div>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
-              {t('securityNote.body')}
-            </p>
-          </div>
+        workspaceName={workspace.name}
+        headerEnd={
+          <TwChip tone={overview.twoFactorEnabled ? 'ok' : 'warn'} dot className="px-3 py-1.5">
+            {t(overview.twoFactorEnabled ? 'securityStatus.on' : 'securityStatus.off')}
+          </TwChip>
         }
       >
         <TwoFactorCard

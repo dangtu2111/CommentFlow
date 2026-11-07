@@ -53,7 +53,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   return (
     <main className="app-page app-page-settings">
       <BillingView
-        frame={{ viewerRole: workspace.role, counts }}
+        frame={{ viewerRole: workspace.role, counts, workspaceName: workspace.name }}
         currentPlan={null}
         usage={usage}
         invoices={buildInvoiceRows(invoices)}

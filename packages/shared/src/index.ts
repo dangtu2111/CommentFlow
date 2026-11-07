@@ -349,6 +349,9 @@ export {
   productEmbeddingText,
 } from './products';
 export {
+  CHANNEL_CHECK_QUEUE,
+  type ChannelCheckJob,
+  channelCheckJobSchema,
   HIDE_QUEUE,
   type HideJob,
   hideJobSchema,

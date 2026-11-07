@@ -65,6 +65,9 @@ export type NormalizedEvent =
  * (1) `channel` là `ChannelRef` không bí mật, token đi qua `TokenProvider`; (2) `setHidden`/`privateReply`/`sendMessage`
  * là tùy chọn — có hay không PHẢI khớp `capabilities` (kiểm bằng `checkConnectorContract`).
  */
+/** Kết quả "kiểm tra kết nối" khi token còn sống: webhook đã đăng ký hay chưa (`null` = nền tảng không có khái niệm này). */
+export type ConnectionHealth = { webhookSubscribed: boolean | null };
+
 export interface PlatformConnector {
   readonly platform: Platform;
   /** Khai báo cửa sổ thời gian và hành động được phép (FR-016). */
@@ -91,6 +94,11 @@ export interface PlatformConnector {
     options: { humanAgent: boolean },
   ): Promise<{ externalId: string }>;
   privateReply?(channel: ChannelRef, commentId: string, text: string): Promise<void>;
+  /**
+   * Kiểm token Page còn hiệu lực (gọi nền tảng thật bằng token đã lưu) và webhook đã đăng ký chưa. Token hỏng → ném
+   * `PlatformError` (`TOKEN_EXPIRED`). Tùy chọn: connector không có thì thiếu.
+   */
+  checkConnection?(channel: ChannelRef): Promise<ConnectionHealth>;
   /** Chuẩn hóa MỌI lỗi (kể cả giá trị không phải Error) về một trong 5 mã. */
   mapError(error: unknown): PlatformError;
 }

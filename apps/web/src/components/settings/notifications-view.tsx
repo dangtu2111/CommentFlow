@@ -1,6 +1,5 @@
 import { Bell } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { PageHeader } from '../ui/page-header';
 import { SectionHead } from '../ui/section-head';
 import { SettingsFrame, type SettingsFrameScope } from './settings-frame';
 
@@ -10,13 +9,7 @@ const ITEMS = ['usage', 'channel', 'handoff', 'pause'] as const;
 export async function NotificationsView({ frame }: { frame: SettingsFrameScope }) {
   const t = await getTranslations('settings');
   return (
-    <SettingsFrame
-      {...frame}
-      active="notifications"
-      header={
-        <PageHeader title={t('notifications.title')} subtitle={t('notifications.subtitle')} />
-      }
-    >
+    <SettingsFrame {...frame} active="notifications" variant="tabs">
       <section className="card stack" aria-labelledby="notif-list">
         <SectionHead
           id="notif-list"

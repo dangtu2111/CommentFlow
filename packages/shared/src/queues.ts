@@ -23,6 +23,11 @@ export type SendJob = z.infer<typeof sendJobSchema>;
 /** Hàng đợi ẩn/bỏ ẩn bình luận (FR-044, ADR 009; thử lại 3 lần, backoff mũ). */
 export const HIDE_QUEUE = 'hide';
 
+/** Hàng đợi "Kiểm tra toàn bộ kết nối" của một workspace (Owner bấm ở Cài đặt → Kênh). */
+export const CHANNEL_CHECK_QUEUE = 'channel-check';
+export const channelCheckJobSchema = z.object({ workspaceId: z.uuid() });
+export type ChannelCheckJob = z.infer<typeof channelCheckJobSchema>;
+
 /** Dữ liệu job `hide`: chỉ id (hành động ẩn/bỏ ẩn nằm ở `cf.comment_hides`, không đi qua hàng đợi). */
 export const hideJobSchema = z.object({
   workspaceId: z.uuid(),

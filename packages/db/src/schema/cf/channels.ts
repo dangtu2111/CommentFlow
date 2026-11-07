@@ -31,6 +31,9 @@ export const channels = cf.table(
     replyLanguage: text('reply_language').notNull().default('auto'),
     capabilities: jsonb('capabilities').notNull().default(sql`'{}'::jsonb`),
     lastPolledAt: timestamptz('last_polled_at'),
+    /** Lần "Kiểm tra toàn bộ kết nối" gần nhất (worker ghi) và kết quả — xem migration 0063. */
+    lastCheckedAt: timestamptz('last_checked_at'),
+    lastCheckResult: text('last_check_result'),
     sendSuspendedUntil: timestamptz('send_suspended_until'),
     sendSuspendedReason: text('send_suspended_reason'),
     rateLimitOverride: jsonb('rate_limit_override'),

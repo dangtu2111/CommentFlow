@@ -314,6 +314,32 @@
         "disabled": "Phone verification is not enabled in this environment.",
         "generic": "Something went wrong, please try again."
       }
+    },
+    "pages": {
+      "security": {
+        "title": "Account & Security",
+        "subtitle": "Manage two-step verification, your signed-in sessions and your interface language."
+      },
+      "channels": {
+        "title": "Connected channels",
+        "subtitle": "The Facebook, Instagram and TikTok channels of workspace “{workspace}”. Only Owners can connect them."
+      },
+      "members": {
+        "title": "Members & Permissions",
+        "subtitle": "Manage the people who work in workspace “{workspace}”. Only Owners can see this page."
+      },
+      "billing": {
+        "title": "Plan & Billing",
+        "subtitle": "See the plan, this month’s AI turns and the invoice history of workspace “{workspace}”."
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "Choose which events should notify you in workspace “{workspace}”. Choosing delivery channels is still being finished."
+      },
+      "privacy": {
+        "title": "Data & Privacy",
+        "subtitle": "Export data, see retention periods and send a deletion request for workspace “{workspace}”."
+      }
     }
   },
   "auth": {
@@ -546,7 +572,11 @@
         "viewCodes": "View codes",
         "maskedLabel": "Hidden backup codes",
         "maskedNote": "Backup codes are shown only once when created and cannot be viewed again. To get new ones, regenerate the set.",
-        "soon": "Coming soon"
+        "soon": "Coming soon",
+        "backupRemainingPill": "{remaining}/{total} codes unused",
+        "regenButton": "Regenerate {total} new codes",
+        "viewBody": "Enter your password to view your unused backup codes. View them in private and never share them.",
+        "viewEmpty": "No usable backup codes left. Regenerate a new set."
       },
       "sessions": {
         "title": "Signed-in devices",
@@ -753,7 +783,10 @@
       "denied": "Not allowed",
       "note": "Main-page access only, read from the system permission table; what each role may do inside a page (exports, costs, billing, privacy…) varies by role. Owner-only pages return 404 for Staff.",
       "page": "Page / feature"
-    }
+    },
+    "docs": "View documentation",
+    "saveChanges": "Save changes",
+    "soon": "Coming soon"
   },
   "leave": {
     "title": "Leave workspace",
@@ -2135,7 +2168,108 @@
       "limit": "This exceeds the channel limit of your current plan. Select fewer Pages or upgrade.",
       "none": "Select at least one Page.",
       "unavailable": "Facebook connection is being reconfigured. Please tell your system administrator.",
-      "expiredSession": "The Page selection session expired. Press Connect Facebook to start over."
+      "expiredSession": "The Page selection session expired. Press Connect Facebook to start over.",
+      "ch": {
+        "disconnected": "Channel disconnected. Its token was deleted; you can reconnect any time.",
+        "not_found": "Channel not found.",
+        "forbidden": "Only the workspace Owner can disconnect a channel.",
+        "unavailable": "Could not complete this right now. Please try again.",
+        "lang_saved": "Channel reply language saved.",
+        "check_queued": "Check requested. Results appear on each channel in a few seconds — reload to see them.",
+        "check_recent": "A check just finished, please wait about a minute and try again."
+      }
+    },
+    "hub": {
+      "title": "Connected channels",
+      "soon": "Coming soon",
+      "disabled": "Channel connection is turned off in this environment",
+      "checkAll": "Check all connections",
+      "addChannel": "Add channel",
+      "stats": {
+        "quota": {
+          "title": "Connected channels",
+          "unit": "channels online",
+          "upsellQuestion": "Need more Pages?",
+          "upsell": "Upgrade"
+        },
+        "oauth": {
+          "title": "OAuth connection status",
+          "stable": "stable",
+          "errors": "errors",
+          "allOk": "All channels are stable.",
+          "needReauth": "{count, plural, one {# channel needs} other {# channels need}} re-authorization."
+        },
+        "today": {
+          "title": "Interactions received today",
+          "comments": "Comments",
+          "dm": "Inbox (DM)",
+          "total": "{count, plural, one {# interaction} other {# interactions}}",
+          "sub": "Comments and customer messages received in the last 24 hours."
+        },
+        "ai": {
+          "title": "AI auto-replies",
+          "body": "{auto} of {total} comments in the last 7 days were answered by AI automatically.",
+          "value": "{percent}%",
+          "empty": "No comments in the last 7 days."
+        }
+      },
+      "alert": {
+        "title": "Warning: {count} channel(s) disconnected (first: \"{name}\")",
+        "body": "The access token is no longer valid, so CommentFlow AI cannot receive comments or auto-reply on this channel. Re-authorize to restore it.",
+        "details": "View error details",
+        "reauth": "Re-authorize OAuth"
+      },
+      "groups": {
+        "count": "{count, plural, one {# channel} other {# channels}}",
+        "beta": "Beta",
+        "empty": "No {platform} channels yet.",
+        "facebook": {
+          "title": "Meta Facebook Pages",
+          "sub": "Graph API: listens to Page comments and messages"
+        },
+        "instagram": {
+          "title": "Instagram Professional Business",
+          "sub": "Linked through Meta Business Suite (direct messages and comments)"
+        },
+        "tiktok": {
+          "title": "TikTok for Business / TikTok Shop",
+          "sub": "TikTok Open API (video comments) — in testing"
+        }
+      },
+      "row": {
+        "webhookOk": "Webhook is active",
+        "sync": "Sync again",
+        "advanced": "Advanced settings",
+        "disconnect": "Disconnect",
+        "comments24h": "Comments in the last 24h: {count}",
+        "lastComment": "Latest comment: {time}",
+        "noComment": "No comments yet",
+        "advancedTitle": "Advanced settings — {name}",
+        "replyLanguage": "AI reply language",
+        "replyLanguageHint": "\"Match customer\" = the AI replies in the customer's language.",
+        "save": "Save",
+        "disconnectTitle": "Disconnect \"{name}\"?",
+        "disconnectBody": "The channel token will be deleted and CommentFlow AI stops receiving new comments and messages from this channel. Existing data is kept. You can reconnect later.",
+        "disconnectConfirm": "Disconnect",
+        "alreadyDisconnected": "This channel is already disconnected.",
+        "checkOk": "Connection healthy",
+        "checkWebhookMissing": "Token is fine, but the webhook is not registered",
+        "checkTokenInvalid": "Token is no longer valid — re-authorization needed",
+        "checkError": "The last check hit a temporary error",
+        "checkUnavailable": "Cannot check (platform connection is turned off on the server)",
+        "checkedAt": "Checked at {time}",
+        "neverChecked": "Never checked"
+      },
+      "policy": {
+        "title": "Data & disconnection policy",
+        "body": "See how CommentFlow AI stores, exports and deletes comment, message and lead data when you disconnect a channel.",
+        "link": "Data & Privacy"
+      },
+      "option": {
+        "auto": "Match customer",
+        "vi": "Vietnamese",
+        "en": "English"
+      }
     }
   },
   "posts": {
@@ -2552,6 +2686,7 @@
       "security_two_factor_enabled": "Two-factor authentication enabled",
       "security_two_factor_disabled": "Two-factor authentication disabled",
       "security_backup_codes_regenerated": "Backup codes regenerated",
+      "security_backup_codes_viewed": "Backup codes viewed",
       "security_session_revoked": "Signed out one device",
       "security_other_sessions_revoked": "Signed out other devices",
       "security_profile_updated": "Profile updated",

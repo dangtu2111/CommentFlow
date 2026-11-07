@@ -19,7 +19,9 @@ export default async function NotificationsPage() {
   });
   return (
     <main className="app-page app-page-settings">
-      <NotificationsView frame={{ viewerRole: workspace.role, counts }} />
+      <NotificationsView
+        frame={{ viewerRole: workspace.role, counts, workspaceName: workspace.name }}
+      />
     </main>
   );
 }

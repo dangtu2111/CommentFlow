@@ -2,12 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { type ReactNode, useActionState, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import {
   beginTwoFactorAction,
   confirmTwoFactorAction,
   disableTwoFactorAction,
   regenerateBackupCodesAction,
+  viewBackupCodesAction,
 } from '../../app/app/security/actions';
 import { cn } from '../../lib/cn';
 import { SECURITY_IDLE, type SecurityState } from '../../lib/security-form';
@@ -21,6 +22,8 @@ import { Icon } from '../ui/icon';
 const SETUP_ID = 'two-factor-setup-dialog';
 const REGEN_ID = 'two-factor-regen-dialog';
 const DISABLE_ID = 'two-factor-disable-dialog';
+const VIEW_ID = 'two-factor-view-codes-dialog';
+const DOWNLOAD_ID = 'two-factor-download-codes-dialog';
 const MASKED_SLOTS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10'] as const;
 
 const TITLE_ID = 'two-factor-title';
@@ -298,6 +301,47 @@ function RegenFlow() {
   );
 }
 
+/**
+ * Xem lại mã dự phòng CHƯA dùng (cần mật khẩu). `autoDownload`: đúng mật khẩu thì tải luôn file .txt (nút "Tải file .txt").
+ * Mã chỉ nằm trong state của hộp thoại này, không lưu ở đâu khác.
+ */
+function ViewFlow({ autoDownload }: { autoDownload: boolean }) {
+  const t = useTranslations('auth.security.twoFactor');
+  const [view, viewAction] = useActionState(viewBackupCodesAction, SECURITY_IDLE);
+  const viewError = useError(view);
+  const codes = view.status === 'codes' ? view.backupCodes : null;
+  const downloaded = useRef(false);
+  useEffect(() => {
+    if (autoDownload && codes && codes.length > 0 && !downloaded.current) {
+      downloaded.current = true;
+      downloadCodes(codes);
+    }
+  }, [autoDownload, codes]);
+  return (
+    <div className="space-y-space-md">
+      {codes ? (
+        codes.length > 0 ? (
+          <BackupCodes codes={codes} />
+        ) : (
+          <TwBanner tone="warning">{t('viewEmpty')}</TwBanner>
+        )
+      ) : null}
+      <form action={viewAction} noValidate className="space-y-space-md">
+        <p className="font-body-md text-body-md text-on-surface-variant">{t('viewBody')}</p>
+        {viewError ? <TwBanner tone="danger">{viewError}</TwBanner> : null}
+        <TwPasswordField
+          name="password"
+          label={t('passwordLabel')}
+          autoComplete="current-password"
+        />
+        <div className="flex justify-end">
+          <TwSubmit tone="primary">{autoDownload ? t('downloadTxt') : t('viewCodes')}</TwSubmit>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 /** Tắt 2FA (cần mật khẩu). Chỉ dựng khi tài khoản không bắt buộc 2FA (Owner/Admin không được tắt). */
 function DisableFlow() {
   const t = useTranslations('auth.security.twoFactor');
@@ -494,15 +538,20 @@ export function TwoFactorCard({
         </div>
         {enabled && !enableFlow ? (
           <div className="bg-surface-container rounded-xl p-space-lg space-y-space-md">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md">
               <div className="flex items-start gap-space-sm">
                 <span className="text-tertiary shrink-0 mt-0.5">
                   <Icon name="key_visualizer" size={24} />
                 </span>
                 <div>
-                  <h3 className="font-title-md text-title-md text-on-surface">
-                    {t('backupBlockTitle')}
-                  </h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-title-md text-title-md text-on-surface">
+                      {t('backupBlockTitle')}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-surface-container-lowest font-label-sm text-label-sm text-primary font-bold">
+                      {t('backupRemainingPill', { remaining: backupRemaining, total: backupTotal })}
+                    </span>
+                  </div>
                   <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 max-w-2xl">
                     {t('backupBlockBody')}
                   </p>
@@ -510,11 +559,25 @@ export function TwoFactorCard({
               </div>
               <div className="flex items-center gap-2 shrink-0 flex-wrap">
                 <TwDialogTrigger
+                  dialogId={VIEW_ID}
+                  className={twBtn({ tone: 'primary', size: 'sm' })}
+                >
+                  <Icon name="visibility" size={16} />
+                  {t('viewCodes')}
+                </TwDialogTrigger>
+                <TwDialogTrigger
+                  dialogId={DOWNLOAD_ID}
+                  className={twBtn({ tone: 'plain', size: 'sm' })}
+                >
+                  <Icon name="download" size={16} />
+                  {t('downloadTxt')}
+                </TwDialogTrigger>
+                <TwDialogTrigger
                   dialogId={REGEN_ID}
                   className={twBtn({ tone: 'plain', size: 'sm' })}
                 >
                   <Icon name="refresh" size={16} />
-                  {t('regenTitle')}
+                  {t('regenButton', { total: backupTotal })}
                 </TwDialogTrigger>
               </div>
             </div>
@@ -551,6 +614,22 @@ export function TwoFactorCard({
           </TwDialog>
         ) : (
           <>
+            <TwDialog
+              dialogId={VIEW_ID}
+              title={t('viewCodes')}
+              icon={<Icon name="visibility" size={20} />}
+              size="lg"
+            >
+              <ViewFlow autoDownload={false} />
+            </TwDialog>
+            <TwDialog
+              dialogId={DOWNLOAD_ID}
+              title={t('downloadTxt')}
+              icon={<Icon name="download" size={20} />}
+              size="lg"
+            >
+              <ViewFlow autoDownload />
+            </TwDialog>
             <TwDialog
               dialogId={REGEN_ID}
               title={t('regenTitle')}
