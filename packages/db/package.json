@@ -17,6 +17,7 @@
     "test:db": "vitest run --config vitest.int.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/migrate.ts",
+    "db:repair-dev": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/repair-dev.ts",
     "db:migrate:staging": "tsx src/cli/migrate-staging.ts",
     "db:test:reset": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/test-reset.ts",
     "db:check-rls": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/check-rls.ts"
