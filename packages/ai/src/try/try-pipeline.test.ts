@@ -339,3 +339,54 @@ describe('Q-LLM2 rewriteQuery trong pipeline + variantCount', () => {
     expect(without.drafts[0]?.variantCount).toBeUndefined();
   });
 });
+
+describe('brand_voice thật — pipeline chọn giọng theo ngôn ngữ nhận ra', () => {
+  const viVoice = { ...voice, do: ['Gọi khách là bạn'], greeting: 'Dạ chào bạn' };
+  const enVoice = { ...voice, customerAddress: 'you' as const, do: ['Be concise'] };
+
+  function run(text: string, voices: TryInput['voices']) {
+    const seen: Array<unknown> = [];
+    const drafter: Drafter = {
+      draft: async (input) => {
+        seen.push(input.voice);
+        return needsHumanResult('x');
+      },
+    };
+    return runTryPipeline(
+      { ...base, text, ...(voices ? { voices } : {}) },
+      deps({
+        extractor: createFixtureExtractor([{ match: /./, result: shipExtract }]),
+        drafter,
+      }),
+    ).then(() => seen[0]);
+  }
+
+  it('tiếng Việt → giọng vi; tiếng Anh → giọng en', async () => {
+    expect(await run('ship về Hà Nội bao nhiêu', { vi: viVoice, en: enVoice })).toBe(viVoice);
+    expect(await run('how much is shipping to Hanoi', { vi: viVoice, en: enVoice })).toBe(enVoice);
+  });
+
+  it('bộ chặn xưng hô dùng ĐÚNG giọng đã chọn (không phải giọng mặc định)', async () => {
+    const reply: DraftResult = {
+      ...shipReply,
+      reply: 'Dạ em gửi phí ship 20.000đ ạ',
+      claims: [{ text: 'Phí ship 20.000đ', source_ids: ['demo-kb-ship'], kind: 'fact' }],
+    };
+    const emVoice = { ...voice, shopPronoun: 'em' as const };
+    const run2 = (voices: TryInput['voices']) =>
+      runTryPipeline(
+        { ...base, ...(voices ? { voices } : {}) },
+        deps({ drafter: createFixtureDrafter([{ match: /ship/, result: reply }]) }),
+      );
+    const withEm = await run2({ vi: emVoice });
+    const withDefault = await run2(undefined);
+    if (withEm.status !== 'done' || withDefault.status !== 'done') throw new Error('expected done');
+    expect(withEm.guard.replyViolations.map((v) => v.code)).not.toContain('pronoun_mismatch');
+    expect(withDefault.guard.replyViolations.map((v) => v.code)).toContain('pronoun_mismatch');
+  });
+
+  it('thiếu giọng cho ngôn ngữ đó → dùng giọng mặc định `voice`; không truyền voices → như cũ', async () => {
+    expect(await run('how much is shipping to Hanoi', { vi: viVoice })).toBe(voice);
+    expect(await run('ship về Hà Nội bao nhiêu', undefined)).toBe(voice);
+  });
+});

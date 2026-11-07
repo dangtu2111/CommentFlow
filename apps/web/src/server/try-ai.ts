@@ -42,6 +42,8 @@ export type TryAiResult =
       quota: { used: number; limit: number };
       /** Nguồn kiến thức đã dùng: mẫu hay KB thật (cờ `TRY_AI_KB_REAL`). */
       knowledge: TryKnowledgeSource;
+      /** Giọng văn đã dùng: `shop` = `brand_voice` thật của workspace (có cho ngôn ngữ nhận ra), `demo` = giọng mẫu. */
+      voice: 'shop' | 'demo';
       /** Bước nào đang chạy bằng LLM thật (cờ `*_LLM_ENABLED` + LiteLLM); còn lại là bản mẫu. */
       llm: { extractor: boolean; drafter: boolean; rewriter: boolean };
     }
@@ -67,7 +69,7 @@ const defaultDeps = (llm: TryLlmDeps = {}): TryDeps => ({
   ...(llm.rewriter ? { rewriter: llm.rewriter } : {}),
 });
 
-/** Giọng văn mẫu của ô thử (chưa đọc `brand_voice` thật của workspace — KB-SHOP-POLICY-FAQ có bảng, chưa nối). */
+/** Giọng văn MẪU của ô thử — dùng khi workspace chưa có `brand_voice` hợp lệ cho ngôn ngữ nhận ra (có thì dùng giọng thật qua `voices`). */
 const DEMO_VOICE = {
   do: [],
   dont: [],
@@ -98,10 +100,14 @@ export function createTryAiAction(deps: TryAiDeps) {
         // Ô thử cho biết kết quả "nếu Owner bật tự gửi"; cổng thật chưa có (AUTO-SEND-GATE).
         autoSendEnabled: true,
       };
-      const runPipeline = (knowledge: TryDeps['knowledge'], context?: TryRunContext) =>
-        runTryPipeline(
+      let voiceSource: 'shop' | 'demo' = 'demo';
+      const runPipeline = async (knowledge: TryDeps['knowledge'], context?: TryRunContext) => {
+        const result = await runTryPipeline(
           {
             ...input,
+            ...(context && Object.keys(context.voices).length > 0
+              ? { voices: context.voices }
+              : {}),
             // Từ điển thật (hệ thống + workspace) khi có DB; không thì bản mẫu — để "bn"/"sz" được mở trước khi extract.
             dict: createAbbreviationDict(
               context && Object.keys(context.abbreviations).length > 0
@@ -119,6 +125,12 @@ export function createTryAiAction(deps: TryAiDeps) {
                 : built.extractor,
           },
         );
+        // `shop` chỉ khi giọng thật CÓ cho đúng ngôn ngữ mà pipeline nhận ra (nếu không, bộ soạn dùng giọng mẫu).
+        if (result.status === 'done' && result.lang !== 'other' && context?.voices[result.lang]) {
+          voiceSource = 'shop';
+        }
+        return result;
+      };
       const { value, source } = deps.knowledgeRunner
         ? await deps.knowledgeRunner(session, built.knowledge, runPipeline)
         : { value: await runPipeline(built.knowledge), source: 'demo' as const };
@@ -127,6 +139,7 @@ export function createTryAiAction(deps: TryAiDeps) {
         result: value,
         quota: { used: taken.used, limit: taken.limit },
         knowledge: source,
+        voice: voiceSource,
         llm: {
           extractor: Boolean(deps.llm?.extractor),
           drafter: Boolean(deps.llm?.drafter),
