@@ -1,0 +1,26 @@
+{
+  "name": "@flow/eval",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "EVAL-RUNNER (docs/14 §4): chạy bộ mẫu qua pipeline AI với từng cấu hình model, tính chỉ số §4.2 và chi phí/1.000 lượt tách theo bước. Bộ `synthetic` chỉ để chạy thử runner.",
+  "scripts": {
+    "gen:synthetic": "tsx src/cli/gen-synthetic.ts",
+    "gen:promptfoo": "tsx src/cli/gen-promptfoo.ts",
+    "evaluate": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/run.ts",
+    "promptfoo": "pnpm dlx promptfoo@0.125.1 eval -c promptfoo/promptfooconfig.yaml --no-cache",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@flow/ai": "workspace:*",
+    "@flow/db": "workspace:*",
+    "@flow/shared": "workspace:*",
+    "tsx": "4.23.15",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "vitest": "5.0.5"
+  }
+}

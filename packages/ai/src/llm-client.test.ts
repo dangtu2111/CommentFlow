@@ -82,7 +82,7 @@ const codeOf = async (promise: Promise<unknown>) => {
 };
 
 describe('createLlmClient.call — yêu cầu gửi đi', () => {
-  it('POST /v1/chat/completions với khóa Bearer, model, tin nhắn và metadata theo dõi', async () => {
+  it('POST /v1/chat/completions với khóa Bearer, model, tin nhắn và metadata theo dõi (khóa cf_workspace_id: LiteLLM từ chối workspace_id)', async () => {
     const { db } = fakeDb();
     const { fetchImpl, calls } = fakeFetch(() => jsonResponse(okBody()));
     await client(db, fetchImpl).call(input({ maxTokens: 300, temperature: 0.2 }));
@@ -98,7 +98,7 @@ describe('createLlmClient.call — yêu cầu gửi đi', () => {
       max_tokens: 300,
       temperature: 0.2,
       user: WS,
-      metadata: { workspace_id: WS, step: 'classify', prompt_version: 'classify@1' },
+      metadata: { cf_workspace_id: WS, step: 'classify', prompt_version: 'classify@1' },
     });
     expect(body.messages).toHaveLength(2);
   });
@@ -159,6 +159,7 @@ describe('FR-034 createLlmClient.call — kết quả và ghi ai_usage', () => {
       inputTokens: 12,
       outputTokens: 7,
       cachedTokens: 4,
+      reasoningTokens: 0,
       costUsd: 0.000123,
       cacheHit: false,
       usageId: 'usage-1',
@@ -373,5 +374,31 @@ describe('createLlmClient.call — structured output (response_format json_schem
     );
     expect(code).toBe('VALIDATION_FAILED');
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('createLlmClient.call — token suy luận (Q-LLM2, ai_usage.reasoning_tokens)', () => {
+  it('đọc completion_tokens_details.reasoning_tokens, trả về và ghi vào ai_usage', async () => {
+    const { db, inserted } = fakeDb();
+    const body = okBody({
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 50,
+        completion_tokens_details: { reasoning_tokens: 32 },
+      },
+    });
+    const { fetchImpl } = fakeFetch(() => jsonResponse(body));
+    const result = await client(db, fetchImpl).call(input());
+    expect(result.reasoningTokens).toBe(32);
+    expect(result.outputTokens).toBe(50);
+    expect(inserted[0]?.values).toMatchObject({ reasoningTokens: 32, outputTokens: 50 });
+  });
+
+  it('nhà cung cấp không trả chi tiết → 0 (không ném lỗi)', async () => {
+    const { db, inserted } = fakeDb();
+    const { fetchImpl } = fakeFetch(() => jsonResponse(okBody()));
+    const result = await client(db, fetchImpl).call(input());
+    expect(result.reasoningTokens).toBe(0);
+    expect(inserted[0]?.values).toMatchObject({ reasoningTokens: 0 });
   });
 });

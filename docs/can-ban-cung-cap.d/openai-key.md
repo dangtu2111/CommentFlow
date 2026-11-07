@@ -1,6 +1,6 @@
 ## OPENAI-KEY. Nhập `OPENAI_API_KEY` vào máy ảo và bật LLM thật cho ô Thử AI / EVAL-RUNNER — `PIPE-CLASSIFY-EXTRACT`, `PIPE-DRAFT`, `EVAL-RUNNER`
 
-Chỉ cần khóa OpenAI lúc này; Anthropic/Gemini thêm sau bằng đúng cách này, **không sửa code** (các bí danh `cand-*` trong `infra/litellm/config.yaml` đã có sẵn). Cấu hình đánh giá ban đầu (Q-LLM2): `cf-classify` (extract, rewrite) = `gpt-5-nano`; `cf-draft` = `gpt-5.6-luna`. **Lưu ý rủi ro (Q-LLM1):** `gpt-5-nano` tắt hẳn ngày 11/12/2026; chỉ dùng để so sánh, không làm model chính thức.
+Chỉ cần khóa OpenAI lúc này; Anthropic/Gemini thêm sau bằng đúng cách này, **không sửa code** (các bí danh `cand-*` trong `infra/litellm/config.yaml` đã có sẵn). Cấu hình đánh giá ban đầu (Q-LLM2): `cf-classify` (extract, rewrite) và `cf-draft` đều = `gpt-5.6-luna` (reasoning `none`). **Lưu ý rủi ro (Q-LLM1):** `gpt-5-nano` tắt hẳn ngày 11/12/2026; chỉ còn là `cand-gpt-nano` để so sánh, không làm model chính thức.
 
 Khóa nằm trên **máy ảo** (`.env.cf-dev`), nhập bằng script ẨN: khóa không hiện trên màn hình, không vào lịch sử shell, không dán vào chat. Lệnh `pnpm …` chạy ở máy code; lệnh `ssh cf …` chạy trên máy ảo.
 

@@ -36,6 +36,7 @@ function fakeLlm(text: string | Error, logprobs?: LlmCallResult['logprobs']) {
         inputTokens: 1,
         outputTokens: 1,
         cachedTokens: 0,
+        reasoningTokens: 0,
         costUsd: 0,
         cacheHit: false,
         usageId: 'u1',

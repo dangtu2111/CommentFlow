@@ -13,9 +13,9 @@ import {
 export const DRAFT_STEP = 'draft';
 /**
  * Đổi khi sửa prompt (ghi vào `ai_usage.prompt_version`). `@2`: hướng dẫn theo hành động (FR-147);
- * `@3`: thêm `variants[]` đa dạng diễn đạt (FR-161).
+ * `@3`: thêm `variants[]` đa dạng diễn đạt (FR-161); `@4`: số biến thể cấu hình được (`variantCount`).
  */
-export const DRAFT_PROMPT_VERSION = 'draft@3';
+export const DRAFT_PROMPT_VERSION = 'draft@4';
 /** Nhiệt độ soạn thấp (FR-161: khởi điểm 0,3, chỉnh theo bộ đánh giá). */
 export const DRAFT_TEMPERATURE = 0.3;
 /** Ngưỡng liên quan mặc định; chưa hiệu chuẩn (chờ EVAL), người gọi có thể ghi đè. */

@@ -14,6 +14,7 @@ import {
 } from '@flow/shared';
 import { primaryLabel } from '../classify/extract-result';
 import type { Extractor } from '../classify/extractor';
+
 import { resolveLabelProbability } from '../classify/label-signal';
 import { assessDraft } from '../confidence/assess-draft';
 import type { ConfidenceResult } from '../confidence/confidence';
@@ -29,6 +30,7 @@ import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
 import { checkGuardMoney, type GuardViolation } from '../guard-money';
 import { checkReplyGuard, type ReplyGuardViolation } from '../guard-reply';
 import { type AbbreviationDict, normalizeAndDetectLang } from '../normalize/normalize-lang';
+import type { Rewriter } from '../rewrite/rewriter';
 import { executeRoute } from '../route/execute-route';
 import { type RouteKind, type RouteReason, routeQuery } from '../route/route';
 import { classifyAsk } from '../route/route-topics';
@@ -76,9 +78,17 @@ export type TryInput = {
    * extract/tìm kiếm. Thiếu → không mở viết tắt (nơi gọi chịu trách nhiệm nạp).
    */
   dict?: AbbreviationDict;
+  /** Số cách diễn đạt KHÁC của câu soạn (0–4); thiếu = mặc định của prompt. Xem `DraftInput.variantCount`. */
+  variantCount?: number;
 };
 
-export type TryDeps = { extractor: Extractor; drafter: Drafter; knowledge: TryKnowledge };
+export type TryDeps = {
+  extractor: Extractor;
+  drafter: Drafter;
+  knowledge: TryKnowledge;
+  /** Bước `rewriteQuery` (docs/09 §4, FR-137): viết lại câu hỏi ngắn/mơ hồ thành câu tìm kiếm; thiếu = tìm bằng câu đã chuẩn hóa. */
+  rewriter?: Rewriter;
+};
 
 export type TryResult =
   | { status: 'skipped'; billed: false; reason: RuleFilterReason }
@@ -86,6 +96,10 @@ export type TryResult =
       status: 'done';
       billed: false;
       maskedText: string;
+      /** Câu dùng để tìm kiếm (sau chuẩn hóa và, nếu bật, sau `rewriteQuery`). */
+      searchQuery?: string;
+      /** Nguồn câu tìm kiếm khi có bước rewrite (`rule` = không tốn LLM, `llm`); `null` = không chạy rewrite. */
+      rewriteSource?: 'rule' | 'llm' | null;
       lang: DraftLang | 'other';
       label: CommentLabel;
       labels: ReadonlyArray<{ label: CommentLabel }>;
@@ -141,12 +155,21 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
   const extract = await deps.extractor.extract({ workspaceId: input.workspaceId, text: forModel });
   const label = primaryLabel(extract);
   const products = await deps.knowledge.matchProducts(extract.product_mentions);
+  // `rewriteQuery` chạy SAU extract (cần biết đã nhận được sản phẩm chưa): chỉ tốn LLM khi câu ngắn/mơ hồ và chưa có sản phẩm.
+  const rewritten = deps.rewriter
+    ? await deps.rewriter.rewrite({
+        workspaceId: input.workspaceId,
+        comment: forModel,
+        productKnown: products.names.length > 0,
+      })
+    : null;
+  const searchQuery = rewritten ? rewritten.searchQuery : forModel;
   const routed = routeQuery({ extract, resolvedProductIds: products.ids });
 
   const outcome = await executeRoute(routed.route, {
     sql: () => deps.knowledge.lookupProductFacts(products.ids),
     hybrid: () =>
-      deps.knowledge.searchKb(forModel, {
+      deps.knowledge.searchKb(searchQuery, {
         lang: lang === 'other' ? 'vi' : lang,
         productIds: products.ids,
       }),
@@ -173,6 +196,7 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
     question: masked,
     lang: lang === 'other' ? 'vi' : lang,
     kbVersion: input.kbVersion,
+    ...(input.variantCount === undefined ? {} : { variantCount: input.variantCount }),
     voice: input.voice,
     sources: found.map((c) => ({ id: c.id, kind: c.kind, text: c.text, relevance: c.score })),
     decision,
@@ -210,6 +234,8 @@ export async function runTryPipeline(input: TryInput, deps: TryDeps): Promise<Tr
     status: 'done',
     billed: false,
     maskedText: masked,
+    searchQuery,
+    rewriteSource: rewritten ? rewritten.source : null,
     lang,
     label,
     labels: extract.labels,

@@ -28,6 +28,7 @@ function fakeLlm(text: string | Error) {
         inputTokens: 1,
         outputTokens: 1,
         cachedTokens: 0,
+        reasoningTokens: 0,
         costUsd: 0,
         cacheHit: false,
         usageId: 'u1',
@@ -70,7 +71,7 @@ describe('FR-029/FR-138 drafter LLM', () => {
     expect(r.sources).toEqual(['sp-1']);
   });
 
-  it('FR-161 variants: câu gốc đầu, chỉ giữ biến thể đúng số/nguồn, vẫn MỘT lần gọi, draft@3', async () => {
+  it('FR-161 variants: câu gốc đầu, chỉ giữ biến thể đúng số/nguồn, vẫn MỘT lần gọi, draft@4', async () => {
     const { llm, calls } = fakeLlm(
       JSON.stringify({
         ...good,
@@ -83,7 +84,7 @@ describe('FR-029/FR-138 drafter LLM', () => {
     );
     const r = await createLlmDrafter({ llm, model: 'soan' }).draft(input());
     expect(calls).toHaveLength(1);
-    expect(DRAFT_PROMPT_VERSION).toBe('draft@3');
+    expect(DRAFT_PROMPT_VERSION).toBe('draft@4');
     expect(r.variants).toEqual([
       good.reply,
       'Áo này đang giá 199.000đ nha bạn.',
@@ -241,6 +242,6 @@ describe('FR-147 FR-141 drafter theo hành động đã chọn', () => {
   });
 
   it('prompt_version đổi khi thêm khối hành động', () => {
-    expect(DRAFT_PROMPT_VERSION).toBe('draft@3');
+    expect(DRAFT_PROMPT_VERSION).toBe('draft@4');
   });
 });

@@ -1991,6 +1991,7 @@
     "llm": {
       "off": "Intent detection and drafting: simulated (real AI is off)",
       "extractor": "intent detection",
+      "rewriter": "query rewriting",
       "drafter": "reply drafting",
       "on": "Real AI is running for: {steps}; other steps are simulated"
     },

@@ -43,7 +43,7 @@ export type TryAiResult =
       /** Nguồn kiến thức đã dùng: mẫu hay KB thật (cờ `TRY_AI_KB_REAL`). */
       knowledge: TryKnowledgeSource;
       /** Bước nào đang chạy bằng LLM thật (cờ `*_LLM_ENABLED` + LiteLLM); còn lại là bản mẫu. */
-      llm: { extractor: boolean; drafter: boolean };
+      llm: { extractor: boolean; drafter: boolean; rewriter: boolean };
     }
   | { ok: false; reason: TryAiFailure };
 
@@ -64,6 +64,7 @@ const defaultDeps = (llm: TryLlmDeps = {}): TryDeps => ({
   extractor: llm.extractor ?? createDemoExtractor(),
   drafter: llm.drafter ?? createDemoDrafter(),
   knowledge: createDemoKnowledge(),
+  ...(llm.rewriter ? { rewriter: llm.rewriter } : {}),
 });
 
 /** Giọng văn mẫu của ô thử (chưa đọc `brand_voice` thật của workspace — KB-SHOP-POLICY-FAQ có bảng, chưa nối). */
@@ -126,7 +127,11 @@ export function createTryAiAction(deps: TryAiDeps) {
         result: value,
         quota: { used: taken.used, limit: taken.limit },
         knowledge: source,
-        llm: { extractor: Boolean(deps.llm?.extractor), drafter: Boolean(deps.llm?.drafter) },
+        llm: {
+          extractor: Boolean(deps.llm?.extractor),
+          drafter: Boolean(deps.llm?.drafter),
+          rewriter: Boolean(deps.llm?.rewriter),
+        },
       };
     } catch (error) {
       if (isUnreadableAiOutput(error)) {

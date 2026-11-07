@@ -33,7 +33,11 @@ const labelSchema = z
 /** Gộp nhãn trùng, giữ THỨ TỰ mô hình trả (nhãn đầu = nhãn chính, FR-145). */
 function normalizeLabels(labels: { label: CommentLabel }[]): { label: CommentLabel }[] {
   const seen = new Set<CommentLabel>();
-  return labels.filter(({ label }) => (seen.has(label) ? false : (seen.add(label), true)));
+  return labels.filter(({ label }) => {
+    if (seen.has(label)) return false;
+    seen.add(label);
+    return true;
+  });
 }
 
 export const extractResultSchema = z.object({

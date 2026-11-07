@@ -1,0 +1,139 @@
+import type { DraftVoice } from '@flow/ai';
+import {
+  type AbbreviationDict,
+  type Drafter,
+  type Extractor,
+  isUnreadableAiOutput,
+  type Rewriter,
+  runTryPipeline,
+  type TryKnowledge,
+} from '@flow/ai';
+import { isAppError } from '@flow/shared';
+import type { EvalSample } from './dataset';
+import type { UsageRecord } from './recording-llm';
+
+/**
+ * Chạy MỘT mẫu qua pipeline thật của ô Thử AI (`runTryPipeline`: che PII → chuẩn hóa → extract → rewrite → route → tìm nguồn
+ * → decideAction → draft → guard → độ tin cậy), bắt lại kết quả `extract` và các lần gọi LLM. Không bao giờ ném lỗi ra ngoài:
+ * lỗi của AI thành `ok: false` kèm MÃ (không có nội dung khách hay đầu ra thô).
+ */
+export type PipelineParts = {
+  extractor: Extractor;
+  drafter: Drafter;
+  rewriter?: Rewriter;
+};
+
+export type RunContext = {
+  knowledge: TryKnowledge;
+  voice: DraftVoice;
+  dict?: AbbreviationDict;
+  variantCount?: number;
+  workspaceId?: string;
+  /** Dựng các bước cho MỘT mẫu; mọi lần gọi LLM phải được ghi vào `sink` (qua `recordUsage`). */
+  build: (sink: UsageRecord[]) => PipelineParts;
+};
+
+export type ExtractSnapshot = {
+  product_mentions: string[];
+  size: string | null;
+  color: string | null;
+  qty: number | null;
+};
+
+export type SampleOutcome =
+  | {
+      ok: true;
+      id: string;
+      label: string;
+      action: string;
+      lang: string;
+      reply: string;
+      variants: string[];
+      confidence: number;
+      /** Số vi phạm số tiền/%/ngày/SĐT/link lạ (guard-money): ≥ 1 = câu có số không có trong nguồn. */
+      moneyViolations: number;
+      /** Mã vi phạm của guard §4 (nguồn từng ý, ngôn ngữ, độ dài, xưng hô). */
+      replyViolations: string[];
+      extract: ExtractSnapshot | null;
+      /** Câu tìm kiếm đã dùng + nguồn (rule/llm/không chạy rewrite). */
+      searchQuery: string;
+      rewriteSource: 'rule' | 'llm' | null;
+      usage: UsageRecord[];
+    }
+  | {
+      ok: false;
+      id: string;
+      /** `skipped` = bị lọc quy tắc; `invalid_output` = AI trả JSON hỏng; `limit` = chạm trần chi phí/lần gọi; `error` = khác. */
+      errorKind: 'skipped' | 'invalid_output' | 'limit' | 'error';
+      /** Mã + thông báo CHUNG của lỗi (ví dụ `LLM_UNAVAILABLE: Dịch vụ AI trả về lỗi HTTP 400.`); không có nội dung khách. */
+      detail?: string;
+      usage: UsageRecord[];
+    };
+
+const WORKSPACE = '00000000-0000-4000-8000-000000000e01';
+
+export async function runSample(sample: EvalSample, context: RunContext): Promise<SampleOutcome> {
+  const usage: UsageRecord[] = [];
+  let snapshot: ExtractSnapshot | null = null;
+  try {
+    const parts = context.build(usage);
+    const extractor: Extractor = {
+      async extract(input) {
+        const result = await parts.extractor.extract(input);
+        snapshot = {
+          product_mentions: result.product_mentions,
+          size: result.size,
+          color: result.color,
+          qty: result.qty,
+        };
+        return result;
+      },
+    };
+    const result = await runTryPipeline(
+      {
+        workspaceId: context.workspaceId ?? WORKSPACE,
+        text: sample.text,
+        kbVersion: 'eval',
+        voice: context.voice,
+        autoSendEnabled: true,
+        ...(context.dict ? { dict: context.dict } : {}),
+        ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
+      },
+      {
+        extractor,
+        drafter: parts.drafter,
+        knowledge: context.knowledge,
+        ...(parts.rewriter ? { rewriter: parts.rewriter } : {}),
+      },
+    );
+    if (result.status === 'skipped')
+      return { ok: false, id: sample.id, errorKind: 'skipped', usage };
+    return {
+      ok: true,
+      id: sample.id,
+      label: result.label,
+      action: result.decision.action,
+      lang: result.draft.lang,
+      reply: result.reply,
+      variants: result.variants,
+      confidence: result.confidence.confidence,
+      moneyViolations: result.guard.violations.length,
+      replyViolations: result.guard.replyViolations.map((violation) => violation.code),
+      extract: snapshot,
+      searchQuery: result.searchQuery ?? '',
+      rewriteSource: result.rewriteSource ?? null,
+      usage,
+    };
+  } catch (error) {
+    // `LlmClient` bọc lỗi mạng thành AppError, chỉ giữ TÊN lỗi gốc trong `cause.message`: nhận ra trần chi phí qua đó.
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : '';
+    const name = error instanceof Error ? error.name : '';
+    const errorKind = isUnreadableAiOutput(error)
+      ? 'invalid_output'
+      : name === 'SpendLimitError' || cause === 'SpendLimitError'
+        ? 'limit'
+        : 'error';
+    const detail = isAppError(error) ? `${error.code}: ${error.message}` : name;
+    return { ok: false, id: sample.id, errorKind, detail, usage };
+  }
+}

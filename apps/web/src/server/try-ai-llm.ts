@@ -2,11 +2,14 @@ import {
   createLlmClient,
   createLlmDrafter,
   createLlmExtractor,
+  createLlmRewriter,
   type Drafter,
   type Extractor,
   type LlmClientOptions,
   loadClassifyConfig,
   loadDraftConfig,
+  loadRewriteConfig,
+  type Rewriter,
 } from '@flow/ai';
 
 /**
@@ -16,7 +19,7 @@ import {
  * (nguyên tắc #7), chỉ nhận văn bản đã che PII (#6); hạn mức tiền do khóa ảo của LiteLLM (`max_budget`) chặn.
  * AI chỉ soạn câu — hành động, độ tin cậy, guard tiền, cổng tự gửi vẫn do code quyết (#3, #4, #9).
  */
-export type TryLlmDeps = { extractor?: Extractor; drafter?: Drafter };
+export type TryLlmDeps = { extractor?: Extractor; drafter?: Drafter; rewriter?: Rewriter };
 
 type Env = Record<string, string | undefined>;
 
@@ -33,7 +36,8 @@ export function createTryLlmDeps(options: TryLlmOptions): TryLlmDeps {
   if (!baseUrl || !apiKey) return {};
   const classify = loadClassifyConfig(options.env);
   const draft = loadDraftConfig(options.env);
-  if (!classify.enabled && !draft.enabled) return {};
+  const rewrite = loadRewriteConfig(options.env);
+  if (!classify.enabled && !draft.enabled && !rewrite.enabled) return {};
   const llm = createLlmClient({
     db: options.db as LlmClientOptions['db'],
     baseUrl,
@@ -45,5 +49,6 @@ export function createTryLlmDeps(options: TryLlmOptions): TryLlmDeps {
   return {
     extractor: classify.enabled ? createLlmExtractor({ llm, model: classify.model }) : undefined,
     drafter: draft.enabled ? createLlmDrafter({ llm, model: draft.model }) : undefined,
+    rewriter: rewrite.enabled ? createLlmRewriter({ llm, model: rewrite.model }) : undefined,
   };
 }

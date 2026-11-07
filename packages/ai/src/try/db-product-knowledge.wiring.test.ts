@@ -78,6 +78,6 @@ describe('TRY-AI-REAL createDbShopKnowledgeSearch', () => {
       },
     ]);
     const hits = await search('Phí ship bao nhiêu?', { lang: 'vi', productIds: [] });
-    expect(hits.map((hit) => hit.id.split('#')[0])).toEqual(['policy:a']);
+    expect(hits.map((hit) => hit.id.split('.')[0])).toEqual(['policy:a']);
   });
 });
