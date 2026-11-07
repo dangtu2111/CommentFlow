@@ -186,6 +186,17 @@ async function ensureStaff(
   return id;
 }
 
+/**
+ * Owner mẫu được đánh dấu "đã bật 2FA" (cột `totp_enabled`, đúng cơ chế sản phẩm) để cổng 2FA của Owner cho qua
+ * phiên do `/dev/login` tạo mà KHÔNG nới cổng. Hệ quả: đăng nhập bằng mật khẩu của Owner mẫu sẽ đòi mã 2FA mà
+ * không có secret — dùng `/dev/login` (xem docs/plans/feat-dev-auto-login.md). Chỉ đụng email mẫu `.test`.
+ */
+async function markDemoOwnerTwoFactor(admin: pg.Pool): Promise<void> {
+  await admin.query('UPDATE core.users SET totp_enabled = true WHERE email = $1', [
+    DEMO_EMAILS.owner,
+  ]);
+}
+
 async function demoChannelCount(admin: pg.Pool, workspaceId: string): Promise<number> {
   const r = await admin.query<{ n: number }>(
     `SELECT count(*)::int AS n FROM cf.channels WHERE workspace_id = $1 AND external_id LIKE 'demo\\_%'`,
@@ -273,6 +284,7 @@ async function resolveDemoWorkspace(
     userId: owner.id,
     name: DEMO_WORKSPACE_NAME,
   });
+  await markDemoOwnerTwoFactor(deps.admin);
   return { workspaceId, ownerId: owner.id, credentials, status: 'created', intoExisting: false };
 }
 
@@ -285,7 +297,11 @@ export async function seedDemo(deps: SeedDeps, options: SeedOptions = {}): Promi
   const target = options.into
     ? await resolveInto(deps, options.into, options.refresh === true)
     : await resolveDemoWorkspace(deps, options);
-  if ('exists' in target) return { status: 'exists', workspaceId: target.exists };
+  if ('exists' in target) {
+    // DB đã seed trước khi có `/dev/login`: đánh dấu 2FA cho Owner mẫu mà không phải `--reset`.
+    await markDemoOwnerTwoFactor(deps.admin);
+    return { status: 'exists', workspaceId: target.exists };
+  }
 
   const staff = await ensureStaff(deps, target.workspaceId, 'staff', target.credentials);
   const staff2 = await ensureStaff(deps, target.workspaceId, 'staff2', target.credentials);
