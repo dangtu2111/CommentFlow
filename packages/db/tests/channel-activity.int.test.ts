@@ -36,8 +36,8 @@ async function comment(
   opts: { status?: string; ageHours?: number; deleted?: boolean } = {},
 ): Promise<void> {
   await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status, created_at, deleted_at)
-     VALUES ($1, $2, $3, $4, 'u1', 'nội dung', $5, now() - ($6 || ' hours')::interval, $7)`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, status, created_at, deleted_at)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', 'nội dung', $5, now() - ($6 || ' hours')::interval, $7)`,
     [
       workspaceId,
       channelId,

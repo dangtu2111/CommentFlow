@@ -66,7 +66,11 @@ const change = (pageId: string, overrides: Record<string, unknown> = {}) => ({
 });
 
 /** Ghi sự kiện qua đường thật của route webhook, trả (eventId) của workspace ws. */
-async function record(pageId: string, changeObject: unknown): Promise<string> {
+async function record(
+  pageId: string,
+  changeObject: unknown,
+  source?: 'polling' | 'backfill' | 'khac',
+): Promise<string> {
   const [event] = parseMetaWebhook({
     object: 'page',
     entry: [{ id: pageId, time: 1, changes: [changeObject] }],
@@ -77,7 +81,7 @@ async function record(pageId: string, changeObject: unknown): Promise<string> {
       platform: 'facebook',
       pageExternalId: pageId,
       eventHash: eventHashOf('facebook', event),
-      payload: serializeEvent(event),
+      payload: source ? { ...serializeEvent(event), source } : serializeEvent(event),
     }),
   );
   const row = rows.find((r) => r.workspaceId === ws);
@@ -129,6 +133,26 @@ describe('FR-021 job ingest — bình luận mới', () => {
     const row = await eventRow(eventId);
     expect(row.status).toBe('done');
     expect(row.processed_at).not.toBeNull();
+  });
+
+  it('Q-POR1 lưu nguồn bình luận vào comments.ingest_source: webhook (không có source), polling, backfill; giá trị lạ → webhook', async () => {
+    const sourceOf = async (channelId: string) =>
+      (
+        await admin.query('SELECT ingest_source FROM cf.comments WHERE channel_id = $1', [
+          channelId,
+        ])
+      ).rows[0].ingest_source as string;
+    for (const [source, expected] of [
+      [undefined, 'webhook'],
+      ['polling', 'polling'],
+      ['backfill', 'backfill'],
+      ['khac', 'webhook'],
+    ] as const) {
+      const { pageId, channelId } = await seedPage();
+      const eventId = await record(pageId, change(pageId), source);
+      await handler()(job(ws, eventId));
+      expect(await sourceOf(channelId)).toBe(expected);
+    }
   });
 
   it('FR-143 lưu loại + link tệp đính kèm; bình luận chữ thuần → []; chữ vẫn lưu', async () => {

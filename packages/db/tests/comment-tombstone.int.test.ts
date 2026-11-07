@@ -25,8 +25,8 @@ const code = (error: unknown) => {
 const asSystem = <T>(fn: (tx: Database) => Promise<T>) => db.withJob(ws, fn);
 const insertComment = (ext: string, extra = '') =>
   admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, text_normalized, attachments, created_time, status)
-     VALUES ($1, $2, $3, $4, 'fb-user', 'Khách', 'Giá bao nhiêu?', 'gia', '[{"type":"photo"}]'::jsonb, now(), 'new') ${extra} RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, text_normalized, attachments, created_time, status)
+     VALUES ('webhook', $1, $2, $3, $4, 'fb-user', 'Khách', 'Giá bao nhiêu?', 'gia', '[{"type":"photo"}]'::jsonb, now(), 'new') ${extra} RETURNING id`,
     [ws, channel, post, ext],
   );
 const rowOf = async (ext: string) =>
@@ -129,7 +129,7 @@ describe('FR-048 xóa đến TRƯỚC tạo: dấu xóa', () => {
     const ext2 = `cm-${randomUUID()}`;
     await asSystem((tx) => markCommentDeleted(tx, channel, ext2, new Date()));
     await admin.query(
-      "INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status) VALUES ($1,$2,$3,$4,'u','giữ nguyên','new')",
+      "INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, status) VALUES ('webhook', $1,$2,$3,$4,'u','giữ nguyên','new')",
       [ws, ch2, p2, ext2],
     );
     expect(

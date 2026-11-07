@@ -1,0 +1,1 @@
+| Ngữ cảnh thật cho job pipeline (bình luận, bài, sản phẩm gắn bài, chuỗi: đã hỏi lại/hỏi lặp/người đang giữ, cấu hình gộp, kb_version đã xuất bản; chỉ đọc; Q-POR4) | `loadPipelineContext` | `packages/db/src/queries/pipeline-context.ts` |

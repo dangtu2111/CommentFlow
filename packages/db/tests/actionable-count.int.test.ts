@@ -20,8 +20,8 @@ let postA: string;
 
 async function comment(status: string): Promise<string> {
   const r = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status)
-     VALUES ($1, $2, $3, $4, 'u1', 'nội dung', $5) RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, status)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', 'nội dung', $5) RETURNING id`,
     [wsA, channelA, postA, `cm-${randomUUID()}`, status],
   );
   return r.rows[0].id as string;

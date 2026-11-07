@@ -82,8 +82,8 @@ async function fixture(
   );
   const commentExternalId = `cm-${randomUUID()}`;
   const comment = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, created_time, status, is_hidden)
-     VALUES ($1, $2, $3, $4, 'u1', 'Khách', 'Giá bao nhiêu?', now(), $5, $6) RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, created_time, status, is_hidden)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', 'Khách', 'Giá bao nhiêu?', now(), $5, $6) RETURNING id`,
     [
       ws,
       channelId,

@@ -64,6 +64,8 @@ export const comments = cf.table(
     mergedIntoId: uuid('merged_into_id'),
     isImpersonationSuspected: boolean('is_impersonation_suspected').notNull().default(false),
     status: text('status').notNull().default('new'),
+    /** Nguồn bình luận: `webhook` | `polling` | `backfill` (migration 0072, Q-POR1). KHÔNG có mặc định: nơi chèn phải ghi nguồn; dòng có sẵn trước 0072 = `backfill`. Backfill KHÔNG tự chạy pipeline. */
+    ingestSource: text('ingest_source').notNull(),
     isHidden: boolean('is_hidden').notNull().default(false),
     isOwn: boolean('is_own').notNull().default(false),
     lockedBy: uuid('locked_by').references(() => users.id, { onDelete: 'set null' }),
@@ -116,6 +118,10 @@ export const comments = cf.table(
     check(
       'comments_attachments_shape_check',
       sql`case when jsonb_typeof(${t.attachments}) = 'array' then jsonb_array_length(${t.attachments}) <= 10 else false end`,
+    ),
+    check(
+      'comments_ingest_source_check',
+      sql`${t.ingestSource} in ('webhook', 'polling', 'backfill')`,
     ),
     check(
       'comments_label_source_check',

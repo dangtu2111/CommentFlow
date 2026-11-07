@@ -35,8 +35,8 @@ async function seed(
   const workspace = o.workspace ?? ws;
   const [ch, p] = workspace === ws ? [channel, post] : [channelOther, postOther];
   const r = await admin.query(
-    `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status, is_own, deleted_at, created_time)
-     VALUES ($1, $2, $3, $4, 'u1', $5, 'new', $6, CASE WHEN $7::boolean THEN now() END, now() - make_interval(days => $8::int)) RETURNING id`,
+    `INSERT INTO cf.comments (ingest_source, workspace_id, channel_id, post_id, external_id, author_external_id, text, status, is_own, deleted_at, created_time)
+     VALUES ('webhook', $1, $2, $3, $4, 'u1', $5, 'new', $6, CASE WHEN $7::boolean THEN now() END, now() - make_interval(days => $8::int)) RETURNING id`,
     [
       workspace,
       ch,
