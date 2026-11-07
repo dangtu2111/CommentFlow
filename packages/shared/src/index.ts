@@ -499,6 +499,13 @@ export {
   type SpamSample,
 } from './spam-rules';
 export {
+  allowMockInThisProcess,
+  assertMockAllowed,
+  isTestProcess,
+  mockAllowedReason,
+  resetMockAllowanceForTests,
+} from './test-process';
+export {
   type ConsumeInput,
   canConsume,
   parseConsumeInput,

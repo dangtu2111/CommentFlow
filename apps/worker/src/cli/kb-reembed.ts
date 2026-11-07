@@ -6,17 +6,19 @@
 import { countChunksByEmbeddingModel, countChunksToReembed, createDb } from '@flow/db';
 import { isAppError, KB_REEMBED_QUEUE } from '@flow/shared';
 import { loadConfig } from '../config';
-import { pickReembedEmbedder } from '../jobs/kb-reembed-embedder';
 import { createBoss } from '../queue/boss';
 import { parseReembedArgs } from './kb-reembed-args';
 
 try {
   const command = parseReembedArgs(process.argv.slice(2));
   const config = loadConfig();
-  const target = pickReembedEmbedder(config).model;
-  console.log(
-    `Mô hình đích: ${target} (${config.mlEmbedder ? 'dịch vụ ml' : 'MOCK — chưa bật ML_EMBED_ENABLED'})`,
-  );
+  if (config.embedding.kind !== 'ml') {
+    throw new Error(
+      `Không có embedding thật: ${config.embedding.describe.note}. Sửa .env.local (ML_EMBED_ENABLED=true + ML_URL) rồi chạy lại; KHÔNG đổi cờ chỉ cho riêng lệnh này.`,
+    );
+  }
+  const target = config.embedding.model;
+  console.log(`Mô hình đích: ${target} (${config.embedding.describe.note})`);
 
   if (command.action === 'count') {
     const db = createDb({ connectionString: config.databaseUrl, max: 2 });

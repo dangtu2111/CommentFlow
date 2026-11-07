@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { AppError, type ChunkDraft, indexText } from '@flow/shared';
+import { AppError, assertMockAllowed, type ChunkDraft, indexText } from '@flow/shared';
 import { annotateInjection } from './injection/injection-scan';
 
 /** Số chiều vector của `kb_chunks.embedding` (`halfvec(1024)`, FR-139). */
@@ -61,6 +61,8 @@ function seedOf(text: string): number {
 
 /** Bản mock: vector giả ngẫu nhiên nhưng xác định theo văn bản, chuẩn hóa độ dài 1. Chỉ cho test/dev. */
 export function createMockEmbedder(model: string = MOCK_MODEL): Embedder {
+  // Bản giả CHỈ cho test tự động; tiến trình khác nạp → lỗi ngay (chốt chặn "không mock khi chạy").
+  assertMockAllowed('createMockEmbedder');
   return {
     model,
     embed: async (texts) =>

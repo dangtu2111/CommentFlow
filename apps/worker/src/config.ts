@@ -1,4 +1,4 @@
-import { loadMlEmbedderOptions, type MlEmbedderOptions } from '@flow/ai';
+import { type EmbeddingConfig, resolveEmbeddingConfig } from '@flow/ai';
 import { parseEnv, parsePipelineWorkspaceIds, resolveAiTurnLimit } from '@flow/shared';
 import { z } from 'zod';
 
@@ -153,8 +153,8 @@ export type WorkerConfig = {
   dataExport: DataExportConfig;
   /** FR-133: cờ `KB_REEMBED_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); tắt → không đăng ký hàng đợi `kb-reembed`. */
   kbReembedEnabled: boolean;
-  /** Embedding thật (bge-m3 qua `ml`) cho `kb-reembed`: chỉ khi `ML_EMBED_ENABLED=true` + `ML_URL`; thiếu → bản mock. */
-  mlEmbedder: MlEmbedderOptions | undefined;
+  /** Cấu hình embedding DUY NHẤT (FR-133): `resolveEmbeddingConfig(env)` — dùng chung worker/web/EVAL; tắt cờ → MỘT bản mock, KHÔNG bge-m3. */
+  embedding: EmbeddingConfig;
   messenger: MessengerConnectorConfig;
   tiktok: TikTokConnectorConfig;
   /** Đồng bộ Shopify thật: cờ `SHOPIFY_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); bật thì cần `TOKEN_ENC_KEYS`. */
@@ -186,7 +186,7 @@ export function loadConfig(source: Record<string, string | undefined> = process.
       workspaceIds: parsePipelineWorkspaceIds(source.PIPELINE_WORKSPACE_IDS),
       turnLimit: resolveAiTurnLimit(source),
     },
-    mlEmbedder: loadMlEmbedderOptions(source),
+    embedding: resolveEmbeddingConfig(source),
     messenger: loadMessengerConfig(source),
     tiktok: loadTikTokConfig(source),
     shopify: {

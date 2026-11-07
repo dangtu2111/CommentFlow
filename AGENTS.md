@@ -98,9 +98,15 @@ Chủ dự án đọc TypeScript ở mức cơ bản. Mọi kế hoạch, báo c
 - Chỉ `git add` đúng file của việc đang làm; không bao giờ `git add -A`/`git add .` hay gom file ngoài việc.
 - Báo cáo ≤ 10 dòng, mỗi ngày một lần hoặc khi dừng; tách riêng mục "Việc chỉ bạn làm được".
 
-## Tài nguyên ngoài: xây mock, không chờ (chủ dự án chốt 05/11/2026)
+## Tài nguyên ngoài: xây code thật sau interface, KHÔNG mock khi chạy (chủ dự án chốt 05/11, sửa 08/11/2026)
 
-Không chờ khóa/tài nguyên của chủ dự án. Việc cần Meta OAuth/webhook thật, khóa LLM, SMTP, tên miền/Cloudflare, Shopify/Google/Haravan/Sapo/KiotViet/Pancake/TikTok, thanh toán… → viết đủ code thật sau interface + fixture/mock theo tài liệu chính thức; cấu hình đọc từ biến môi trường (chỉ TÊN biến vào `env.example`); feature flag mặc định **TẮT** cho đường dùng tài nguyên thật; test bằng fixture/mock; trạng thái **Xong-mock** trong `MASTER.md`; mỗi tài nguyên một mục trong `docs/CAN_BAN_CUNG_CAP.md`. Không bịa khóa, không gọi dịch vụ thật, không dùng dữ liệu khách thật. Dừng chỉ khi mọi việc còn lại đều "Chờ tài nguyên" hoặc Xong, hoặc lỗi sửa 2 lần không được. FR-166 (GĐ6) làm cuối. Không force-push; cập nhật nhánh bằng merge.
+Không chờ khóa/tài nguyên của chủ dự án để CODE. Việc cần Meta OAuth/webhook thật, khóa LLM, SMTP, tên miền/Cloudflare, Shopify/Google/Haravan/Sapo/KiotViet/Pancake/TikTok, thanh toán… → viết đủ code thật sau interface theo tài liệu chính thức; cấu hình đọc từ biến môi trường (chỉ TÊN biến vào `env.example`); feature flag mặc định **TẮT** cho đường dùng tài nguyên thật; mỗi tài nguyên một mục trong `docs/CAN_BAN_CUNG_CAP.md`. Không bịa khóa, không gọi dịch vụ thật khi chưa có khóa, không dùng dữ liệu khách thật.
+
+**KHÔNG MOCK KHI CHẠY (web, worker, mọi môi trường chạy được, kể cả dev):** thiếu cờ/cấu hình/dịch vụ thật → báo lỗi RÕ khi khởi động HOẶC tắt hẳn tính năng đó kèm thông báo trên giao diện; KHÔNG âm thầm chạy bản giả (embedder, LLM, SMS, lưu trữ, thông báo…). Bản giả (mock/fixture/demo) chỉ tồn tại cho TEST TỰ ĐỘNG: test tự cắm qua tham số/DI, KHÔNG chọn được bằng biến môi trường; chốt chặn `assertMockAllowed` (`@flow/shared`) làm tiến trình không phải test mà nạp bản giả báo lỗi ngay. EVAL chỉ đo model thật (LiteLLM + bge-m3); bản fixture chạy ở CI phải ghi "mock — không phải số đo chất lượng" và không dùng để so sánh. Dữ liệu ĐẦU VÀO giả lập (webhook `[FIXTURE]` khi chưa có khóa Meta, `pnpm dev:push-webhook`) được giữ, đi qua đường thật và luôn gắn nhãn. Trạng thái "Xong-mock" trong gap matrix nghĩa là: code thật xong, CHƯA có tài nguyên thật để chạy (không phải đang chạy bản giả).
+
+**Cấu hình ảnh hưởng dữ liệu (model embedding, cờ bật tính năng…) chỉ có MỘT nguồn:** `.env.local` + một hàm đọc duy nhất dùng chung (`resolveEmbeddingConfig`). Không bao giờ đổi model embedding hay cờ ảnh hưởng dữ liệu chỉ cho MỘT lệnh trong khi ứng dụng chạy cấu hình khác. Cần đổi → báo chủ dự án sửa `.env.local` (và khởi động lại ứng dụng) TRƯỚC, rồi mới chạy lệnh. Chi tiết: `docs/workflows/embedding-config.md`.
+
+Dừng chỉ khi mọi việc còn lại đều "Chờ tài nguyên" hoặc Xong, hoặc lỗi sửa 2 lần không được. FR-166 (GĐ6) làm cuối. Không force-push; cập nhật nhánh bằng merge.
 
 ## Cấm
 
