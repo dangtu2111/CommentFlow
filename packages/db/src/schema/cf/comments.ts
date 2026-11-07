@@ -103,6 +103,12 @@ export const comments = cf.table(
     }).onDelete('set null'),
     index('comments_workspace_status_created_idx').on(t.workspaceId, t.status, t.createdTime),
     index('comments_post_id_idx').on(t.postId),
+    // PIPE-ORCHESTRATOR (0075): job quét chỉ nhìn bình luận CÒN CHỜ, không backfill — chỉ mục nhỏ, không phình theo lịch sử.
+    index('comments_pipeline_pending_idx')
+      .on(sql`coalesce(${t.createdTime}, ${t.createdAt})`, t.id)
+      .where(
+        sql`${t.status} in ('new', 'processing') and ${t.ingestSource} <> 'backfill' and ${t.deletedAt} is null and ${t.mergedIntoId} is null and ${t.isOwn} = false`,
+      ),
     index('comments_merged_into_idx')
       .on(t.workspaceId, t.mergedIntoId)
       .where(sql`${t.mergedIntoId} is not null`),
