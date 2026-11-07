@@ -7,6 +7,9 @@ import type { Database } from '../client';
  * (nguyên tắc #4), không từ vector. Chỉ sản phẩm `active` của workspace; gọi trong `withActor`/`withWorkspace`.
  */
 export type TryProductVariant = {
+  id?: string;
+  /** Mốc dữ liệu nguồn (ảnh chụp giá, FR-111). */
+  updatedFromSourceAt?: Date | null;
   attrs: Record<string, string>;
   attrsNorm: Record<string, string>;
   priceVnd: number | null;
@@ -23,6 +26,7 @@ export type TryProduct = {
   currencyCode?: string;
   priceMinor?: number | null;
   stock: number | null;
+  updatedFromSourceAt?: Date | null;
   variants: TryProductVariant[];
   /** Thẻ sản phẩm (FR-058); dữ liệu hỏng/khóa lạ → bỏ (không đoán). */
   card?: ProductCard;
@@ -60,11 +64,14 @@ export async function loadTryProducts(
     card: unknown;
     currency_code: string;
     price_minor: string | null;
+    updated_from_source_at: Date | null;
   }>(sql`
-    SELECT id, name, price_vnd, stock, card, currency_code, price_minor FROM cf.products
+    SELECT id, name, price_vnd, stock, card, currency_code, price_minor, updated_from_source_at FROM cf.products
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND id IN (${uuidList(productIds)})
      ORDER BY name, id`);
   const variants = await tx.execute<{
+    id: string;
+    updated_from_source_at: Date | null;
     product_id: string;
     attrs: Record<string, string>;
     attrs_norm: Record<string, string>;
@@ -73,13 +80,15 @@ export async function loadTryProducts(
     currency_code: string;
     price_minor: string | null;
   }>(sql`
-    SELECT product_id, attrs, attrs_norm, price_vnd, stock, currency_code, price_minor FROM cf.product_variants
+    SELECT id, updated_from_source_at, product_id, attrs, attrs_norm, price_vnd, stock, currency_code, price_minor FROM cf.product_variants
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND product_id IN (${uuidList(productIds)})
      ORDER BY product_id, id`);
   const byProduct = new Map<string, TryProductVariant[]>();
   for (const row of variants.rows) {
     const list = byProduct.get(row.product_id) ?? [];
     list.push({
+      id: row.id,
+      updatedFromSourceAt: row.updated_from_source_at,
       attrs: row.attrs,
       attrsNorm: row.attrs_norm,
       priceVnd: row.price_vnd === null ? null : Number(row.price_vnd),
@@ -98,6 +107,7 @@ export async function loadTryProducts(
       currencyCode: row.currency_code,
       priceMinor: row.price_minor === null ? null : Number(row.price_minor),
       stock: row.stock,
+      updatedFromSourceAt: row.updated_from_source_at,
       variants: byProduct.get(row.id) ?? [],
       ...(parsed.ok && Object.keys(parsed.card).length > 0 ? { card: parsed.card } : {}),
     };

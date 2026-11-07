@@ -1,0 +1,1 @@
+| Dựng bản ghi drafts/retrieval_logs/kb_gaps/cập nhật bình luận từ kết quả pipeline (hàm thuần) | `toDraftInput`, `toRetrievalInput`, `toGapInputs`, `commentUpdateOf`, `handoffDraftInput` | `packages/ai/src/pipeline/persist-records.ts` |

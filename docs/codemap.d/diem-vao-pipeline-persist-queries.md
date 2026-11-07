@@ -1,0 +1,1 @@
+| Truy vấn ghi kết quả pipeline (CAS bình luận, khóa theo bình luận, gia hạn thuê, đóng khóa failed) | `finishCommentProcessing`, `commentHasDraft`, `extendPipelineTurnLease`, `failPipelineTurn` | `packages/db/src/queries/pipeline-persist.ts` |

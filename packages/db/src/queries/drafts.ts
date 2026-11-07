@@ -26,6 +26,12 @@ export type NewDraft = {
   traceId?: string | null;
   /** Ảnh chụp giá/tồn lúc soạn (`buildPriceSnapshot`); `[]` khi câu không có số tiền. */
   priceSnapshot: PriceSnapshot;
+  /** Kết quả bước `extract` (đã che PII). */
+  extracted?: unknown;
+  /** Thành phần độ tin cậy (FR-032); null khi không đọc được. */
+  confidenceComponents?: unknown;
+  /** Tham chiếu ngữ cảnh (luồng hội thoại…). */
+  contextRefs?: unknown[];
 };
 
 export async function insertDraft(
@@ -37,13 +43,17 @@ export async function insertDraft(
   const topics = draft.unansweredTopics ?? [];
   const r = await tx.execute<{ id: string }>(sql`
     INSERT INTO cf.drafts (workspace_id, target_type, target_id, text, lang, sources, confidence, needs_human,
-      reason, model, prompt_version, kb_version, action, variants, claims, unanswered_topics, trace_id, price_snapshot)
+      reason, model, prompt_version, kb_version, action, variants, claims, unanswered_topics, trace_id, price_snapshot,
+      extracted, confidence_components, context_refs)
     VALUES (${workspaceId}::uuid, ${draft.targetType}, ${draft.targetId}::uuid, ${draft.text}, ${draft.lang},
       ${JSON.stringify(draft.sources ?? [])}::jsonb, ${draft.confidence ?? null}, ${draft.needsHuman ?? false},
       ${draft.reason ?? null}, ${draft.model ?? null}, ${draft.promptVersion ?? null}, ${draft.kbVersion ?? null},
       ${draft.action ?? 'answer'}, ${JSON.stringify(draft.variants ?? [])}::jsonb,
       ${JSON.stringify(draft.claims ?? [])}::jsonb, ARRAY(SELECT jsonb_array_elements_text(${JSON.stringify(topics)}::jsonb)),
-      ${draft.traceId ?? null}, ${JSON.stringify(snapshot)}::jsonb)
+      ${draft.traceId ?? null}, ${JSON.stringify(snapshot)}::jsonb,
+      ${draft.extracted === undefined ? null : JSON.stringify(draft.extracted)}::jsonb,
+      ${draft.confidenceComponents == null ? null : JSON.stringify(draft.confidenceComponents)}::jsonb,
+      ${JSON.stringify(draft.contextRefs ?? [])}::jsonb)
     RETURNING id`);
   const row = r.rows[0];
   if (!row) throw new Error('insert drafts không trả dòng nào');

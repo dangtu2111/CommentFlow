@@ -52,5 +52,12 @@ Kế hoạch đã duyệt (kèm 4 sửa đổi) ở `docs/plans/feat-pipe-orches
 6. **Sửa nội dung migration sau khi áp:** 0073 được sửa (thêm `locked_until`) sau khi áp lên `cf_dev`; đã dùng `db:repair-dev` — đã khớp.
 
 ### Lưu ý cho lát D/E
-- Handler (lát E) phải xử lý `blocked` theo lý do: `busy` → bỏ qua (KHÔNG đánh `needs_human`); `gate_error` → ném để pg-boss thử lại; `quota_exhausted`/`emergency_stop`/`attempts_exhausted` → ghi bản nháp "Cần nhân viên" kèm lý do (lát D).
+- Handler (lát E) phải xử lý `blocked` theo lý do: `busy` → bỏ qua (KHÔNG đánh `needs_human`); `gate_error` → ném để pg-boss thử lại; `quota_exhausted`/`attempts_exhausted` → ghi bản nháp "Cần nhân viên" kèm lý do (lát D); **`emergency_stop` → KHÔNG ghi gì, bình luận giữ `new`, job quét bỏ qua workspace đang dừng (Q-POR7)**.
 - Lỗi có kiểm soát trong handler → gọi `releasePipelineTurn` để lần thử lại giành được ngay; xong → `completePipelineTurn`.
+
+## Lát D — ghi kết quả (nhánh `feat/pipe-orchestrator-d`)
+
+**Làm gì:** `persistPipelineResult` (một giao dịch: CAS `processing → trạng thái cuối`, `drafts`, `retrieval_logs`, `kb_gaps`, khóa lượt `done`), `persistHandoff` ("Cần nhân viên", khóa theo bình luận, idempotent), `runCommentPipeline` (cổng → pipeline → ghi; gia hạn thuê 120 giây trước mỗi lời gọi LLM; dừng khẩn cấp/busy/đã xử lý → không ghi; lỗi tạm → nhả thuê và ném). `NewDraft` ghi thêm `extracted`, `confidence_components`, `context_refs`; nguồn sản phẩm mang `priceSources` để dựng `price_snapshot`.
+**Số đo (DB thật):** `pipeline-persist.int.test.ts` 5 + `pipeline-run.int.test.ts` 10 xanh; gói `ai` 1861 test xanh. Chạy trùng/đồng thời → đúng 1 bản nháp; PII không lọt cột nào.
+**Việc lát E:** dựng `LlmClient` thật + adapter `ai_usage` qua `withJob`, job `pipeline`, quét, `shouldAutoRunPipeline`. Ghi chú: nhật ký tìm kiếm chưa có điểm từng nhánh (vector/toàn văn/trigram) — cần mở rộng `TryKnowledge`.
+**Tự kiểm (verify.md §A):** không đụng auth/RLS/migration/đường gửi; ghi chỉ qua `withJob` đúng workspace; văn bản qua `maskPii`. Nhãn: tự kiểm, chưa có kiểm chứng độc lập.

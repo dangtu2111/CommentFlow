@@ -1,0 +1,1 @@
+| Chạy trọn một bình luận: cổng lượt → pipeline → ghi; gia hạn thuê trước mỗi lời gọi LLM; map kết cục written/handoff/skipped/deferred (dừng khẩn cấp giữ new, Q-POR7) | `runCommentPipeline` | `apps/worker/src/jobs/pipeline-run.ts` |
