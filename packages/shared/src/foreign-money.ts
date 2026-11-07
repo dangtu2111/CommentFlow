@@ -9,12 +9,9 @@ const DECIMAL = /^(\d{1,12})(?:\.(\d+))?$/;
 /** Số chữ số thập phân của đơn vị nhỏ nhất theo ISO 4217 (USD 2, JPY 0, KWD 3); mã sai dạng → `null`. */
 export function currencyExponent(code: string): number | null {
   if (!CODE.test(code)) return null;
-  try {
-    return new Intl.NumberFormat('en', { style: 'currency', currency: code }).resolvedOptions()
-      .maximumFractionDigits as number;
-  } catch {
-    return null;
-  }
+  // Mã đã đúng dạng 3 chữ cái hoa nên `Intl` không ném; mã lạ (không có trong ISO) mặc định 2 chữ số.
+  return new Intl.NumberFormat('en', { style: 'currency', currency: code }).resolvedOptions()
+    .maximumFractionDigits as number;
 }
 
 /**
