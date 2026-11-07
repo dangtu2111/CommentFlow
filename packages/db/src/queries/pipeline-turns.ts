@@ -93,10 +93,13 @@ export async function releasePipelineTurn(
   workspaceId: string,
   commentId: string,
   lastError?: string,
+  /** Lượt (`attempts`) của job gọi: có thì chỉ nhả thuê của CHÍNH nó (job mất thuê không nhả thuê của job khác). */
+  attempt?: number,
 ): Promise<void> {
   await tx.execute(sql`
     UPDATE cf.pipeline_turns SET locked_until = NULL, last_error = ${lastError ? lastError.slice(0, 200) : null}, updated_at = now()
-     WHERE workspace_id = ${workspaceId}::uuid AND comment_id = ${commentId}::uuid AND state = 'processing'`);
+     WHERE workspace_id = ${workspaceId}::uuid AND comment_id = ${commentId}::uuid AND state = 'processing'
+       AND (${attempt ?? null}::int IS NULL OR attempts = ${attempt ?? null}::int)`);
 }
 
 /** Xong lượt: khóa `done`. */

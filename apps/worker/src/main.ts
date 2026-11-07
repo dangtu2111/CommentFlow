@@ -1,5 +1,6 @@
+import { createLlmDepsFromEnv } from '@flow/ai';
 import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
-import { createDb } from '@flow/db';
+import { createDb, DEFAULT_MERGE_WINDOW_SECONDS, getMergeWindowSeconds } from '@flow/db';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
@@ -8,11 +9,13 @@ import { startHealthServer } from './health';
 import { createChannelCheckHandler } from './jobs/channel-check';
 import { createDataExportHandler } from './jobs/data-export';
 import { createHideHandler } from './jobs/hide';
-import { createIngestHandler } from './jobs/ingest';
+import { createIngestHandler, type IngestPipelineHook } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
 import { createKbReembedHandler } from './jobs/kb-reembed';
 import { pickReembedEmbedder } from './jobs/kb-reembed-embedder';
 import { createPingHandler } from './jobs/ping';
+import { createPipelineHandler } from './jobs/pipeline-job';
+import { startPipelineSweep } from './jobs/pipeline-sweep';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
 import { createShopifySyncHandler } from './jobs/shopify-sync';
@@ -27,6 +30,7 @@ import {
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
   KB_REEMBED_QUEUE,
+  PIPELINE_QUEUE,
   SEND_QUEUE,
   SHOPIFY_SYNC_QUEUE,
   SYSTEM_PING_QUEUE,
@@ -49,11 +53,68 @@ async function main(): Promise<void> {
   // batchSize 1: một job lỗi không làm các job đã chạy xong trong cùng lô bị thử lại (tránh tác dụng phụ lặp, ví dụ gửi trùng).
   await boss.work(SYSTEM_PING_QUEUE, { batchSize: 1 }, createPingHandler(db, logger));
   // docs/09 §9: ingest — 10 job đồng thời (mỗi lần một job để lỗi không làm các job khác trong lô bị thử lại).
+  // PIPE-ORCHESTRATOR: cờ PIPELINE_ENABLED mặc định TẮT; bật thì cần LLM đã cấu hình (extractor + drafter), thiếu → KHÔNG chạy
+  // (không bao giờ chạy bình luận thật bằng bản mẫu).
+  const llm = config.pipeline.enabled
+    ? createLlmDepsFromEnv({
+        env: process.env,
+        db: { withWorkspace: (id, fn) => db.withJob(id, fn) },
+      })
+    : undefined;
+  const pipelineOn = Boolean(llm?.extractor && llm?.drafter);
+  if (config.pipeline.enabled && !pipelineOn) {
+    logger.error(
+      {},
+      'PIPELINE_ENABLED=true nhưng thiếu cấu hình LLM (LITELLM_*, CLASSIFY/DRAFT_LLM_ENABLED): pipeline KHÔNG chạy',
+    );
+  }
+  const pipelineHook: IngestPipelineHook | undefined = pipelineOn
+    ? {
+        enqueue: async (job, startAfterSeconds) => {
+          await boss.send(PIPELINE_QUEUE, job, { startAfter: startAfterSeconds });
+        },
+        flagEnabled: true,
+        allowedWorkspaceIds: config.pipeline.workspaceIds,
+        mergeWindowSeconds: (workspaceId) =>
+          db.withJob(workspaceId, (tx) =>
+            getMergeWindowSeconds(tx, workspaceId, DEFAULT_MERGE_WINDOW_SECONDS),
+          ),
+      }
+    : undefined;
   await boss.work(
     INGEST_QUEUE,
     { batchSize: 1, localConcurrency: 10 },
-    createIngestHandler({ db, logger }),
+    createIngestHandler({ db, logger, ...(pipelineHook ? { pipeline: pipelineHook } : {}) }),
   );
+  let stopPipelineSweep: (() => void) | undefined;
+  if (pipelineOn && llm?.extractor && llm.drafter) {
+    // docs/09 §9: pipeline — 5 job đồng thời, thử lại 3 lần; an toàn khi chạy trùng nhờ khóa lượt (`pipeline_turns`).
+    await boss.work(
+      PIPELINE_QUEUE,
+      { batchSize: 1, localConcurrency: 5 },
+      createPipelineHandler({
+        db,
+        logger,
+        llm: {
+          extractor: llm.extractor,
+          drafter: llm.drafter,
+          ...(llm.rewriter ? { rewriter: llm.rewriter } : {}),
+        },
+        flagEnabled: true,
+        allowedWorkspaceIds: config.pipeline.workspaceIds,
+        turnLimit: config.pipeline.turnLimit,
+      }),
+    );
+    stopPipelineSweep = startPipelineSweep({
+      db,
+      logger,
+      enqueue: async (job) => {
+        await boss.send(PIPELINE_QUEUE, job);
+      },
+      flagEnabled: true,
+      allowedWorkspaceIds: config.pipeline.workspaceIds,
+    });
+  }
   // Sổ connector: RỖNG khi `FB_CONNECTOR_ENABLED` tắt (mặc định) → yêu cầu ghi `connector_unavailable`, không gọi Meta.
   const registry = buildConnectorRegistry({
     db,
@@ -158,6 +219,7 @@ async function main(): Promise<void> {
     stopRetention();
     stopWorkspaceDeletion();
     stopSweep();
+    stopPipelineSweep?.();
     await boss.stop({ graceful: true });
     await db.close();
     await health.close();

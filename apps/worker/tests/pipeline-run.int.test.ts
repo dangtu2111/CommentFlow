@@ -82,6 +82,7 @@ type Over = {
   maxAttempts?: number;
   extractThrows?: Error;
   beforeDraft?: () => Promise<void>;
+  afterExtract?: () => Promise<void>;
   consumeThrows?: boolean;
 };
 
@@ -121,7 +122,9 @@ function config(commentId: string, over: Over = {}): RunCommentConfig {
       extractor: {
         extract: async (i) => {
           if (over.extractThrows) throw over.extractThrows;
-          return extractor.extract(i);
+          const r = await extractor.extract(i);
+          await over.afterExtract?.();
+          return r;
         },
       },
       drafter: {
@@ -291,5 +294,41 @@ describe('runCommentPipeline — mọi kết cục', () => {
       }),
     );
     expect(remaining).toBeGreaterThan(60);
+  });
+  it('MẤT THUÊ (job khác giành lại, attempts tăng): job cũ dừng, không kéo dài/không nhả thuê của job mới, không ghi bản nháp (token thuê)', async () => {
+    const id = await addComment();
+    let lockedBefore = '';
+    await expect(
+      runCommentPipeline(
+        config(id, {
+          beforeDraft: async () => {
+            // Chưa tới đây: giả lập mất thuê ngay trước bước soạn bằng cách để job khác giành lại.
+          },
+          afterExtract: async () => {
+            await admin.query(
+              "UPDATE cf.pipeline_turns SET attempts = attempts + 1, locked_until = now() + interval '90 seconds' WHERE comment_id = $1",
+              [id],
+            );
+            lockedBefore = String(
+              (
+                await admin.query(
+                  'SELECT locked_until FROM cf.pipeline_turns WHERE comment_id = $1',
+                  [id],
+                )
+              ).rows[0].locked_until,
+            );
+          },
+        }),
+      ),
+    ).rejects.toThrow('Mất thuê');
+    const row = (
+      await admin.query(
+        'SELECT attempts, locked_until FROM cf.pipeline_turns WHERE comment_id = $1',
+        [id],
+      )
+    ).rows[0];
+    expect(String(row.locked_until)).toBe(lockedBefore);
+    expect(Number(row.attempts)).toBe(2);
+    expect(await drafts(id)).toHaveLength(0);
   });
 });

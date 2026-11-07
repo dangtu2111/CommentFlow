@@ -273,6 +273,13 @@ export {
   type PipelineContext,
 } from './queries/pipeline-context';
 export {
+  getMergeWindowSeconds,
+  listPendingPipelineComments,
+  type MergedGroup,
+  mergeCommentGroup,
+  type PendingPipelineComment,
+} from './queries/pipeline-merge';
+export {
   type CommentFinish,
   commentHasDraft,
   extendPipelineTurnLease,

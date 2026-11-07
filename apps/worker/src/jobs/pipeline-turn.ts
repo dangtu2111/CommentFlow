@@ -53,10 +53,15 @@ export type DbTurnPortsConfig = {
   consume?: TurnConsume;
 };
 
-export function createDbTurnPorts(config: DbTurnPortsConfig): TurnPorts {
+/** Cổng lượt kèm token thuê: `attempt()` = số lần thử của CHÍNH job này sau khi giành quyền (null = chưa giành). */
+export type DbTurnPorts = TurnPorts & { attempt: () => number | null };
+
+export function createDbTurnPorts(config: DbTurnPortsConfig): DbTurnPorts {
   const { db, workspaceId, commentId } = config;
+  let attempt: number | null = null;
   const consume = config.consume ?? consumeAiTurn;
   return {
+    attempt: () => attempt,
     emergencyStopped: () =>
       db.withJob(workspaceId, (tx) => isWorkspaceEmergencyStopped(tx, workspaceId)),
     begin: () =>
@@ -66,6 +71,7 @@ export function createDbTurnPorts(config: DbTurnPortsConfig): TurnPorts {
           ...(config.leaseSeconds === undefined ? {} : { leaseSeconds: config.leaseSeconds }),
         });
         if (turn.outcome !== 'claimed') return { outcome: turn.outcome };
+        attempt = turn.attempts;
         if (turn.alreadyCharged) return { outcome: 'proceed', charged: false };
         const spent = await consume(tx, {
           workspaceId,

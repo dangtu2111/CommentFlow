@@ -19,6 +19,7 @@ export { DEMO_ABBREVIATIONS } from './demo-abbreviations';
 export { createDemoDrafter, createDemoExtractor, mentionsOfProducts } from './demo-ai';
 export { createDemoKnowledge } from './demo-knowledge';
 export { createKbTryKnowledge, type KbTryKnowledgeDeps } from './kb-try-knowledge';
+export { createLlmDepsFromEnv, type LlmDeps, type LlmDepsOptions } from './llm-deps';
 export {
   type ParseTestCasesResult,
   parseTestCases,
@@ -47,3 +48,13 @@ export {
   type TryQuota,
   type TryQuotaResult,
 } from './try-quota';
+export {
+  defaultKnowledgeReaders,
+  loadWorkspaceKnowledge,
+  SAMPLE_LABEL,
+  type TryKnowledgeSource,
+  type TryRunContext,
+  type WorkspaceKnowledge,
+  type WorkspaceKnowledgeParams,
+  type WorkspaceKnowledgeReaders,
+} from './workspace-knowledge';

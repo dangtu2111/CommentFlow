@@ -1,0 +1,1 @@
+| Job pipeline một bình luận: nạp ngữ cảnh thật, nguồn kiến thức dùng chung, gộp bình luận, cổng lượt → pipeline → ghi | `runPipelineJob`, `createPipelineHandler` | `apps/worker/src/jobs/pipeline-job.ts` |

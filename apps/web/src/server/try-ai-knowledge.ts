@@ -1,24 +1,16 @@
 import {
   type BrandVoiceRow,
-  createDbKbSearcher,
-  createDbProductKnowledge,
-  createDbShopKnowledgeSearch,
-  createFixtureEmbedder,
-  createKbTryKnowledge,
-  type DraftVoicesByLang,
-  draftVoicesFromRows,
+  defaultKnowledgeReaders,
   type Embedder,
+  loadWorkspaceKnowledge,
   type TryKnowledge,
+  type TryKnowledgeSource,
+  type TryRunContext,
 } from '@flow/ai';
 import {
-  countActiveProducts,
   type Database,
   getCurrentVersion,
   type KbVersionRef,
-  listBrandVoices,
-  listTryProductNames,
-  loadAbbreviationEntries,
-  loadTryShopTexts,
   type TryShopText,
 } from '@flow/db/runtime';
 
@@ -31,17 +23,8 @@ import {
  *   như phí ship không được lẫn vào dữ liệu thật). Tắt bằng `TRY_AI_PRODUCTS_REAL=false`.
  * - `demo`: còn lại → kiến thức mẫu, không đụng DB.
  */
-export type TryKnowledgeSource = 'demo' | 'shop' | 'kb';
+export type { TryKnowledgeSource, TryRunContext };
 export type TrySession = { workspaceId: string; userId?: string };
-
-/** Thông tin thêm cho bộ nhận diện: tên sản phẩm thật để nhận ra khách đang nhắc sản phẩm nào. */
-export type TryRunContext = {
-  productNames: readonly string[];
-  /** Từ điển viết tắt (hệ thống + workspace) để mở "bn", "sz"… trước khi extract/tìm kiếm; rỗng → dùng bản mẫu. */
-  abbreviations: Readonly<Record<string, string>>;
-  /** Giọng văn THẬT của workspace theo ngôn ngữ (`brand_voice`); rỗng/thiếu ngôn ngữ → giọng mặc định của ô thử. */
-  voices: DraftVoicesByLang;
-};
 
 export type KnowledgeRunner = <T>(
   session: TrySession,
@@ -55,9 +38,6 @@ export const isTryAiKbReal = (env: Record<string, string | undefined>): boolean 
 /** Mặc định BẬT (chỉ đọc dữ liệu của chính workspace, không tốn tiền, không gọi ngoài); tắt bằng đúng chữ `false`. */
 export const isTryAiProductsReal = (env: Record<string, string | undefined>): boolean =>
   env.TRY_AI_PRODUCTS_REAL !== 'false';
-
-/** Nhãn dữ liệu mẫu của DEV (`pnpm dev:seed-demo`): không bao giờ tính là sản phẩm thật. */
-const SAMPLE_LABEL = '[MẪU]';
 
 type ActorDb = {
   withActor<T>(workspaceId: string, userId: string, fn: (tx: Database) => Promise<T>): Promise<T>;
@@ -79,18 +59,12 @@ export function createKnowledgeRunner(options: {
   embedder?: Embedder;
 }): KnowledgeRunner {
   const currentVersion = options.currentVersion ?? getCurrentVersion;
-  const countProducts =
-    options.countProducts ?? ((tx, ws) => countActiveProducts(tx, ws, SAMPLE_LABEL));
-  const productNames =
-    options.productNames ?? ((tx, ws) => listTryProductNames(tx, ws, SAMPLE_LABEL));
-  const shopTexts = options.shopTexts ?? ((tx, ws) => loadTryShopTexts(tx, ws, SAMPLE_LABEL));
-  const abbreviations =
-    options.abbreviations ??
-    (async (tx: Database, ws: string) => ({
-      ...(await loadAbbreviationEntries(tx, ws, 'en')),
-      ...(await loadAbbreviationEntries(tx, ws, 'vi')),
-    }));
-  const brandVoices = options.brandVoices ?? listBrandVoices;
+  const countProducts = options.countProducts ?? defaultKnowledgeReaders.countProducts;
+  const productNames = options.productNames ?? defaultKnowledgeReaders.productNames;
+  const shopTexts = options.shopTexts ?? defaultKnowledgeReaders.shopTexts;
+  const abbreviations = options.abbreviations ?? defaultKnowledgeReaders.abbreviations;
+  const brandVoices = options.brandVoices ?? defaultKnowledgeReaders.brandVoices;
+  const readers = { countProducts, productNames, shopTexts, abbreviations, brandVoices };
   return async (session, base, run) => {
     const demo = async () => ({
       value: await run(base, { productNames: [], abbreviations: {}, voices: {} }),
@@ -99,47 +73,18 @@ export function createKnowledgeRunner(options: {
     if ((!options.enabled && !options.productsEnabled) || !session.userId) return demo();
     const userId = session.userId;
     return options.db.withActor(session.workspaceId, userId, async (tx) => {
-      const hasProducts = options.productsEnabled
-        ? (await countProducts(tx, session.workspaceId)) > 0
-        : false;
-      const version = options.enabled ? await currentVersion(tx, session.workspaceId) : null;
-      const texts = options.productsEnabled ? await shopTexts(tx, session.workspaceId) : [];
-      const hasShopData = hasProducts || texts.length > 0;
-      if (!version && !hasShopData) return demo();
-      const products = hasProducts ? createDbProductKnowledge(tx, session.workspaceId) : base;
-      const names = hasProducts ? await productNames(tx, session.workspaceId) : [];
-      const abbreviationEntries = await abbreviations(tx, session.workspaceId);
-      const voices = draftVoicesFromRows(await brandVoices(tx, session.workspaceId));
-      if (!version) {
-        const knowledge: TryKnowledge = {
-          ...products,
-          searchKb: createDbShopKnowledgeSearch(texts),
-        };
-        return {
-          value: await run(knowledge, {
-            productNames: names,
-            abbreviations: abbreviationEntries,
-            voices,
-          }),
-          source: 'shop' as const,
-        };
-      }
-      const knowledge = createKbTryKnowledge({
-        searcher: createDbKbSearcher(tx, {
-          workspaceId: session.workspaceId,
-          versionId: version.id,
-        }),
-        embedder: options.embedder ?? createFixtureEmbedder(),
-        base: products,
+      // Phần TÌM kiến thức/sản phẩm dùng CHUNG với worker (`loadWorkspaceKnowledge`, `@flow/ai`); web chỉ chọn tham số.
+      const loaded = await loadWorkspaceKnowledge({
+        tx,
+        workspaceId: session.workspaceId,
+        version: options.enabled ? await currentVersion(tx, session.workspaceId) : null,
+        productsEnabled: options.productsEnabled === true,
+        base,
+        ...(options.embedder ? { embedder: options.embedder } : {}),
+        readers,
       });
-      return {
-        value: await run(knowledge, {
-          productNames: names,
-          abbreviations: abbreviationEntries,
-          voices,
-        }),
-        source: 'kb' as const,
-      };
+      if (!loaded) return demo();
+      return { value: await run(loaded.knowledge, loaded.context), source: loaded.source };
     });
   };
 }

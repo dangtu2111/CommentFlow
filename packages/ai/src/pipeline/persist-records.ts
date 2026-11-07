@@ -28,6 +28,8 @@ export const HANDOFF_PLACEHOLDER_TEXT = 'Cần nhân viên xem câu này.';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isUuid = (id: string): boolean => UUID.test(id);
+/** Ứng viên đoạn kiến thức có id dạng `kb:<uuid>` (`createKbTryKnowledge`); nhật ký chỉ lưu phần uuid. */
+const chunkIdOf = (id: string): string => id.replace(/^kb:/, '');
 /** `drafts`/`retrieval_logs` chỉ nhận vi/en; ngôn ngữ khác → `vi` (bản nháp khi đó luôn cần người). */
 const storedLang = (lang: DonePipelineResult['lang']): 'vi' | 'en' => (lang === 'en' ? 'en' : 'vi');
 
@@ -82,7 +84,9 @@ export function toRetrievalInput(
   latencyMs: number,
 ): RetrievalLogInput {
   // Chỉ ứng viên có id dạng uuid (đoạn kiến thức) vào nhật ký; điểm từng nhánh chưa có nên để rỗng.
-  const chunks = result.candidates.filter((c) => isUuid(c.id) && c.kind === 'kb');
+  const chunks = result.candidates
+    .filter((c) => c.kind === 'kb' && isUuid(chunkIdOf(c.id)))
+    .map((c) => ({ ...c, id: chunkIdOf(c.id) }));
   const products = result.candidates.filter((c) => c.kind === 'product' && isUuid(c.id));
   return {
     query: result.maskedText,

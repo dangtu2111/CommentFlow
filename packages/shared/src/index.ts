@@ -256,6 +256,11 @@ export {
   unsafeMarkMasked,
 } from './pii';
 export {
+  type AutoRunInput,
+  parsePipelineWorkspaceIds,
+  shouldAutoRunPipeline,
+} from './pipeline-auto-run';
+export {
   type ActivatePlanInput,
   type GrantAddonInput,
   PLAN_KINDS,
@@ -367,6 +372,9 @@ export {
   INGEST_QUEUE,
   type IngestJob,
   ingestJobSchema,
+  PIPELINE_QUEUE,
+  type PipelineJob,
+  pipelineJobSchema,
   SEND_QUEUE,
   type SendJob,
   SHOPIFY_SYNC_QUEUE,

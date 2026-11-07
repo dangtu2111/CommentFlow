@@ -29,6 +29,14 @@ export type RunCommentOutcome =
 /** Thuê mặc định của khóa lượt (giây) — mỗi lời gọi LLM gia hạn lại để tổng thời gian một lượt không vượt thuê (Q-POR6). */
 export const TURN_LEASE_SECONDS = 120;
 
+/** Job đã mất thuê (hết hạn, job khác giành lại): dừng ngay để không gọi LLM trùng/ghi chồng; pg-boss thử lại sau. */
+export class LeaseLostError extends Error {
+  constructor() {
+    super('Mất thuê lượt pipeline');
+    this.name = 'LeaseLostError';
+  }
+}
+
 export type RunCommentConfig = {
   db: FlowDb;
   workspaceId: string;
@@ -43,11 +51,18 @@ export type RunCommentConfig = {
 export async function runCommentPipeline(config: RunCommentConfig): Promise<RunCommentOutcome> {
   const { db, workspaceId, commentId } = config;
   const now = config.now ?? Date.now;
-  const gate = createTurnGate(createDbTurnPorts({ db, workspaceId, commentId, ...config.turn }));
-  const extend = () =>
-    db.withJob(workspaceId, (tx) =>
-      extendPipelineTurnLease(tx, workspaceId, commentId, TURN_LEASE_SECONDS),
-    );
+  const ports = createDbTurnPorts({ db, workspaceId, commentId, ...config.turn });
+  const gate = createTurnGate(ports);
+  // Gia hạn CHỈ khi còn là chủ thuê (token = số lần thử của chính job); mất thuê → dừng, không ghi, không đụng thuê của job khác.
+  const extend = async () => {
+    const attempt = ports.attempt();
+    const owned =
+      attempt !== null &&
+      (await db.withJob(workspaceId, (tx) =>
+        extendPipelineTurnLease(tx, workspaceId, commentId, attempt, TURN_LEASE_SECONDS),
+      ));
+    if (!owned) throw new LeaseLostError();
+  };
   // Gia hạn thuê TRƯỚC mỗi lời gọi LLM (extract / rewrite / draft).
   const { extractor, drafter, rewriter } = config.deps;
   const deps: PipelineDeps = {
@@ -88,9 +103,12 @@ export async function runCommentPipeline(config: RunCommentConfig): Promise<RunC
       });
       return { kind: 'handoff', reason: 'ai_invalid_output' };
     }
-    await db.withJob(workspaceId, (tx) =>
-      releasePipelineTurn(tx, workspaceId, commentId, 'transient_error'),
-    );
+    if (!(error instanceof LeaseLostError)) {
+      const attempt = ports.attempt() ?? undefined;
+      await db.withJob(workspaceId, (tx) =>
+        releasePipelineTurn(tx, workspaceId, commentId, 'transient_error', attempt),
+      );
+    }
     throw error;
   }
 

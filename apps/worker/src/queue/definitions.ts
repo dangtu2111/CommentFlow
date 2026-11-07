@@ -8,6 +8,7 @@ import {
   DATA_EXPORT_QUEUE,
   KB_PUBLISH_QUEUE,
   KB_REEMBED_QUEUE,
+  PIPELINE_QUEUE,
   SHOPIFY_SYNC_QUEUE,
 } from '@flow/shared';
 
@@ -18,6 +19,7 @@ export {
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
   KB_REEMBED_QUEUE,
+  PIPELINE_QUEUE,
   SEND_QUEUE,
   SHOPIFY_SYNC_QUEUE,
 } from '@flow/shared';
@@ -41,6 +43,9 @@ export const HIDE_RETRY_LIMIT = 3;
 export const ABUSE_QUEUE = 'abuse';
 export const ABUSE_RETRY_LIMIT = 2;
 
+/** docs/09 §9: `pipeline` thử lại 3 lần (khớp `PIPELINE_MAX_ATTEMPTS` của cổng lượt). */
+export const PIPELINE_RETRY_LIMIT = 3;
+
 export const QUEUES: QueueDefinition[] = [
   { name: SYSTEM_PING_QUEUE, retryLimit: 0 },
   // docs/09 §9: ingest — thử lại 5 lần, backoff mũ; idempotent theo sự kiện.
@@ -61,4 +66,6 @@ export const QUEUES: QueueDefinition[] = [
   { name: SHOPIFY_SYNC_QUEUE, retryLimit: 1, retryBackoff: true },
   // FR-133: kb-reembed — tạo lại embedding khi đổi mô hình; idempotent (xong rồi → 0 đoạn) nên thử lại an toàn.
   { name: KB_REEMBED_QUEUE, retryLimit: 2, retryBackoff: true },
+  // PIPE-ORCHESTRATOR: pipeline — xử lý AI một bình luận; an toàn khi chạy trùng nhờ khóa lượt `pipeline_turns` (lát C).
+  { name: PIPELINE_QUEUE, retryLimit: PIPELINE_RETRY_LIMIT, retryBackoff: true },
 ];

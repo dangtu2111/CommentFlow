@@ -41,3 +41,14 @@ export const hideJobSchema = z.object({
   hideId: z.uuid(),
 });
 export type HideJob = z.infer<typeof hideJobSchema>;
+
+/** Hàng đợi xử lý AI một bình luận (docs/09 §9: `pipeline`, thử lại 3 lần). */
+export const PIPELINE_QUEUE = 'pipeline';
+
+/** Dữ liệu job `pipeline`: chỉ id + cách kích hoạt (không nội dung bình luận/PII); worker đọc bình luận từ DB. */
+export const pipelineJobSchema = z.object({
+  workspaceId: z.uuid(),
+  commentId: z.uuid(),
+  trigger: z.enum(['auto', 'manual']),
+});
+export type PipelineJob = z.infer<typeof pipelineJobSchema>;
