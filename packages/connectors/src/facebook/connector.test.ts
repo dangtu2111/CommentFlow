@@ -586,6 +586,18 @@ describe('webhook subscription — /{page-id}/subscribed_apps', () => {
     expect((await failureOf(perm.connector.subscribePage(channel))).code).toBe('PERMISSION');
   });
 
+  it('checkConnection: token sống → báo webhook đã đăng ký hay chưa; token hỏng → TOKEN_EXPIRED', async () => {
+    const ok = harness([json(SUBSCRIBED_APPS)]);
+    expect(await ok.connector.checkConnection?.(channel)).toEqual({ webhookSubscribed: true });
+    const none = harness([json({ data: [] })]);
+    expect(await none.connector.checkConnection?.(channel)).toEqual({ webhookSubscribed: false });
+    const expired = harness([json(graphError(190), 401)]);
+    expect(
+      (await failureOf(Promise.resolve().then(() => expired.connector.checkConnection?.(channel))))
+        .code,
+    ).toBe('TOKEN_EXPIRED');
+  });
+
   it('thân lạ khi GET → UNKNOWN', async () => {
     const { connector } = harness([json({ data: 5 })]);
     expect((await failureOf(connector.getPageSubscription(channel))).code).toBe('UNKNOWN');

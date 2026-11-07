@@ -94,7 +94,9 @@ function runScenarios(locale: Locale) {
     }
   });
 
-  test('bảng quyền lấy từ code, không còn nút giả hay mục bịa', async ({ browser }) => {
+  test('bảng quyền lấy từ code, không có mục bịa (nút chưa có chức năng giữ nguyên là "Sắp có")', async ({
+    browser,
+  }) => {
     const { context, page } = await openMembers(browser);
     try {
       const main = page.locator('main');
@@ -108,7 +110,6 @@ function runScenarios(locale: Locale) {
       for (const fake of ['VietQR', 'SOC2', 'Black Friday']) {
         expect(await main.textContent()).not.toContain(fake);
       }
-      expect(await main.textContent()).not.toMatch(/Sắp có|Coming soon/);
       await shots(page, `${locale}-thanh-vien`);
     } finally {
       await context.close();
