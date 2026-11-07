@@ -4,6 +4,7 @@ import {
   acquireCommentLock,
   cancelCommentHide,
   cancelCommentReply,
+  getCommentDetail,
   HideRejectedError,
   ReplyRejectedError,
   relabelComments,
@@ -12,7 +13,7 @@ import {
   requestCommentReply,
   skipComments,
 } from '@flow/db/runtime';
-import { HIDE_QUEUE, SEND_QUEUE } from '@flow/shared';
+import { HIDE_QUEUE, PIPELINE_QUEUE, SEND_QUEUE } from '@flow/shared';
 import { z } from 'zod';
 import type { LockActionResult } from '../../../../lib/comment-lock-result';
 import { type BulkResult, createBulkActions } from '../../../../server/bulk-action';
@@ -21,6 +22,10 @@ import { createHideAction, type HideActionResult } from '../../../../server/hide
 import { enqueueJob } from '../../../../server/queue';
 import { createReplyAction, type ReplyActionResult } from '../../../../server/reply-action';
 import { requireAppUser } from '../../../../server/require-app-user';
+import {
+  createSuggestionRequest,
+  type SuggestionResult,
+} from '../../../../server/suggestion-request';
 
 const idSchema = z.uuid();
 
@@ -144,4 +149,26 @@ export async function hideCommentsAction(
 ): Promise<BulkResult> {
   const { user, workspace } = await requireAppUser({});
   return bulk.hideMany({ workspaceId: workspace.id, userId: user.id }, commentIds, confirmed);
+}
+
+/** Logic "Soạn gợi ý" (kiểm điều kiện, đẩy job `pipeline` thủ công kèm người bấm) — xem `server/suggestion-request.ts`. */
+const askForSuggestion = createSuggestionRequest({
+  find: async (session, commentId) => {
+    const detail = await getDb().withActor(session.workspaceId, session.userId, (tx) =>
+      getCommentDetail(tx, session.workspaceId, commentId, session.userId),
+    );
+    return detail ? { status: detail.status, deletedAt: detail.deletedAt } : null;
+  },
+  enqueue: (job, options) => enqueueJob(PIPELINE_QUEUE, job, options),
+  pipelineEnabled: () => process.env.PIPELINE_ENABLED?.trim() === 'true',
+  warn: (event) => console.warn(JSON.stringify(event)),
+});
+
+/**
+ * Nút "Soạn gợi ý" (PIPE-ORCHESTRATOR lát F, Q-POR8): nhân viên (Owner hoặc Staff) yêu cầu AI soạn gợi ý cho bình luận chưa có bản nháp hoặc
+ * đang "Cần nhân viên". Workspace/người dùng lấy từ phiên (`requireAppUser`), KHÔNG từ client. Không gửi gì cho khách; AI chỉ soạn, người bấm gửi.
+ */
+export async function requestSuggestionAction(commentId: string): Promise<SuggestionResult> {
+  const { user, workspace } = await requireAppUser({});
+  return askForSuggestion({ workspaceId: workspace.id, userId: user.id }, commentId);
 }

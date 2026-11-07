@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
+import { DEFAULT_MAX_AI_REPLIES_PER_CUSTOMER_POST } from './pipeline-context';
 
 /**
  * Cấu hình cổng tự gửi (FR-070/071, migration 0047, Q-ACS1). Đầu vào ghi PHẢI đã qua `parseAutomationConfig`
@@ -109,4 +110,43 @@ export async function saveAutomationSettings(
     INSERT INTO cf.automation_rules (workspace_id, channel_id, target, label, mode)
     SELECT ${workspaceId}::uuid, (e->>'channelId')::uuid, e->>'target', e->>'label', e->>'mode'
     FROM jsonb_array_elements(${JSON.stringify(input.rules)}::jsonb) AS e`);
+}
+
+/** Trần câu AI cho mỗi khách dưới mỗi bài trong 24 giờ (FR-167, migration 0076/0077): mặc định, khoảng cho phép. */
+export const MIN_MAX_AI_REPLIES_PER_CUSTOMER_POST = 1;
+export const MAX_MAX_AI_REPLIES_PER_CUSTOMER_POST = 5;
+
+/** Giá trị trần hiện hành của workspace (chưa lưu → mặc định 3). Đọc: mọi thành viên (RLS). */
+export async function getMaxAiRepliesPerCustomerPost(
+  tx: Database,
+  workspaceId: string,
+): Promise<number> {
+  const r = await tx.execute<{ v: number }>(sql`
+    SELECT max_ai_replies_per_customer_post AS v FROM cf.automation_settings WHERE workspace_id = ${workspaceId}::uuid`);
+  return r.rows[0]?.v ?? DEFAULT_MAX_AI_REPLIES_PER_CUSTOMER_POST;
+}
+
+/**
+ * Lưu trần 1–5 (Owner; RLS chặn Staff → 42501). Chỉ đụng MỘT cột + `updated_by`/`updated_at`; chưa có dòng cài đặt thì tạo dòng với
+ * mặc định các cột khác. `userId` = Owner đang ghi (RLS buộc `updated_by` = chính họ). Giá trị ngoài 1–5 bị từ chối TRƯỚC khi chạm DB.
+ */
+export async function saveMaxAiRepliesPerCustomerPost(
+  tx: Database,
+  workspaceId: string,
+  userId: string,
+  value: number,
+): Promise<void> {
+  if (
+    !Number.isInteger(value) ||
+    value < MIN_MAX_AI_REPLIES_PER_CUSTOMER_POST ||
+    value > MAX_MAX_AI_REPLIES_PER_CUSTOMER_POST
+  ) {
+    throw new RangeError('max_ai_replies_per_customer_post phải là số nguyên 1–5');
+  }
+  await tx.execute(sql`
+    INSERT INTO cf.automation_settings (workspace_id, max_ai_replies_per_customer_post, updated_by)
+    VALUES (${workspaceId}::uuid, ${value}, ${userId}::uuid)
+    ON CONFLICT (workspace_id) DO UPDATE SET
+      max_ai_replies_per_customer_post = EXCLUDED.max_ai_replies_per_customer_post,
+      updated_by = EXCLUDED.updated_by, updated_at = now()`);
 }

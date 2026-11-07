@@ -104,7 +104,11 @@ export {
   type AutomationSettingsInput,
   type AutomationSettingsRow,
   getAutomationSettings,
+  getMaxAiRepliesPerCustomerPost,
+  MAX_MAX_AI_REPLIES_PER_CUSTOMER_POST,
+  MIN_MAX_AI_REPLIES_PER_CUSTOMER_POST,
   saveAutomationSettings,
+  saveMaxAiRepliesPerCustomerPost,
 } from './queries/automation-settings';
 export {
   type ChannelAlert,
@@ -297,6 +301,8 @@ export {
   finishCommentProcessing,
   handoffCommentIfPending,
   lockCommentForPersist,
+  type ManualRerunResult,
+  requestManualPipelineRun,
 } from './queries/pipeline-persist';
 export {
   type BeginPipelineTurnResult,

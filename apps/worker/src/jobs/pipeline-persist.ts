@@ -66,13 +66,14 @@ export async function persistHandoff(
   workspaceId: string,
   reason: string,
   ctx: PersistContext,
-  options: { markFailed?: boolean } = {},
+  options: { markFailed?: boolean; since?: Date } = {},
 ): Promise<PersistOutcome> {
   return db.withJob(workspaceId, async (tx): Promise<PersistOutcome> => {
     await lockCommentForPersist(tx, ctx.commentId);
     await handoffCommentIfPending(tx, workspaceId, ctx.commentId);
     if (options.markFailed) await failPipelineTurn(tx, workspaceId, ctx.commentId, reason);
-    if (await commentHasDraft(tx, workspaceId, ctx.commentId)) return { written: false };
+    if (await commentHasDraft(tx, workspaceId, ctx.commentId, options.since))
+      return { written: false };
     const draftId = await insertDraft(tx, workspaceId, handoffDraftInput(reason, ctx));
     return { written: true, draftId };
   });

@@ -1,0 +1,1 @@
+| Nút Soạn gợi ý: kiểm điều kiện + đẩy job pipeline thủ công kèm người bấm, khóa chống bấm đúp (Q-POR8/Q-POR15) | `createSuggestionRequest`, `canRequestSuggestion` | `apps/web/src/server/suggestion-request.ts` |

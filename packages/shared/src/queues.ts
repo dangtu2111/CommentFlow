@@ -50,5 +50,7 @@ export const pipelineJobSchema = z.object({
   workspaceId: z.uuid(),
   commentId: z.uuid(),
   trigger: z.enum(['auto', 'manual']),
+  /** Người bấm "Soạn gợi ý" (chỉ `trigger: manual`); worker kiểm là thành viên đang hoạt động và ghi `action_logs`. */
+  requestedBy: z.uuid().optional(),
 });
 export type PipelineJob = z.infer<typeof pipelineJobSchema>;

@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { AutomationView } from '../../../../components/automation/automation-view';
+import { ReplyCapCard } from '../../../../components/automation/reply-cap-card';
 import { Notice } from '../../../../components/ui/tw-form';
 import { TwPage } from '../../../../components/ui/tw-parts';
 import { automationFormDefaults } from '../../../../lib/automation-form';
@@ -7,7 +8,13 @@ import { AUTOMATION_SAMPLE_METRICS } from '../../../../lib/automation-sample';
 import { showSampleData } from '../../../../lib/sample-data';
 import { automationSettings } from '../../../../server/automation-settings';
 import { getBrand } from '../../../../server/brand';
+import {
+  createReplyCapService,
+  REPLY_CAP_MAX,
+  REPLY_CAP_MIN,
+} from '../../../../server/reply-cap-settings';
 import { requireAppUser } from '../../../../server/require-app-user';
+import { saveReplyCapAction } from './actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('automation');
@@ -56,9 +63,15 @@ export default async function AutomationPage({ searchParams }: { searchParams: S
     );
   }
 
+  // Trần câu AI/khách/bài (FR-167): lỗi đọc → hiện mặc định 3 (không chặn cả trang cài đặt).
+  const replyCap = await createReplyCapService()
+    .load({ workspaceId: workspace.id, userId: user.id })
+    .catch(() => 3);
   const sample = showSampleData();
   return (
     <TwPage>
+      {params.capSaved === '1' ? <Notice tone="success">{t('replyCap.saved')}</Notice> : null}
+      {params.capError === '1' ? <Notice tone="danger">{t('replyCap.error')}</Notice> : null}
       <AutomationView
         channels={view.channels}
         defaults={automationFormDefaults(view.config)}
@@ -71,6 +84,12 @@ export default async function AutomationPage({ searchParams }: { searchParams: S
             {error ? <Notice tone="danger">{t(`error.${error}`)}</Notice> : null}
           </>
         }
+      />
+      <ReplyCapCard
+        value={replyCap}
+        min={REPLY_CAP_MIN}
+        max={REPLY_CAP_MAX}
+        action={saveReplyCapAction}
       />
     </TwPage>
   );
