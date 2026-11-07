@@ -5,6 +5,7 @@ Chưa có giao diện; kiểm bằng lệnh trên DB thử (`cf_test`). / No UI;
 | # | Bước | Kết quả mong đợi |
 |---|---|---|
 | 1 | `pnpm --filter @flow/db run test:db tests/embedding-switch.int.test.ts`. | 10 test xanh: runtime không ghi được vector khác model đang hoạt động; web không gọi được hàm đổi model; đổi model đủ 100% mới chuyển, một giao dịch; ngắt giữa chừng → model cũ và vector cũ nguyên vẹn, truy vấn cũ vẫn chạy. |
+| 1b | `pnpm --filter @flow/worker run test:db tests/embedding-switch.int.test.ts`. | 4 test xanh: đổi toàn bộ dữ liệu mọi workspace sang model đích; ngắt giữa chừng giữ model cũ + vector cũ rồi chạy lại hoàn tất; đã hoạt động → không làm gì; embedder sai model bị từ chối trước khi đụng dữ liệu. |
 | 2 | `pnpm --filter @flow/db run test:db tests/kb-hybrid-accuracy.int.test.ts`. | 2 test xanh (lai đúng cả truy vấn "ý nghĩa" và "mã chính xác"). |
 | 3 | `pnpm --filter @flow/db run test:db tests/embedding-models.int.test.ts`. | 3 test xanh (đếm vector theo model, cô lập workspace). |
 
