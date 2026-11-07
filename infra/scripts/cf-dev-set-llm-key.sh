@@ -51,6 +51,7 @@ if [[ "$changed" -eq 0 ]]; then
 fi
 
 echo "Khởi động lại LiteLLM để nạp khóa và cấu hình mới..."
-"${COMPOSE[@]}" up -d litellm
+# --no-deps: không tạo lại postgres/valkey chỉ vì cấu hình của chúng lệch (docs/workflows/may-ao-dong-bo.md).
+"${COMPOSE[@]}" up -d --no-deps litellm
 "${COMPOSE[@]}" ps litellm
 echo "Xong. Bước tiếp: tạo khóa ảo có max_budget trong giao diện LiteLLM (http://<ip-máy-ảo>:4000/ui) và điền LITELLM_API_KEY vào .env ở máy code."

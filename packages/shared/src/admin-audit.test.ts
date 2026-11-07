@@ -140,7 +140,11 @@ describe('FR-100 parseAdminAuditInput', () => {
           expect(new TextEncoder().encode(JSON.stringify(r.detail)).length).toBeLessThanOrEqual(
             ADMIN_AUDIT_DETAIL_MAX_BYTES,
           );
-          expect(JSON.stringify(r.detail)).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
+          // Cùng định nghĩa "email" với `maskPii` (pii.ts): đuôi miền phải là ≥ 2 CHỮ CÁI. Regex cũ chấp nhận đuôi toàn số
+          // nên fast-check tìm ra "+@0.0" (không phải email) làm test chập chờn theo hạt ngẫu nhiên.
+          expect(JSON.stringify(r.detail)).not.toMatch(
+            /(?<![A-Z0-9._%+-])[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i,
+          );
         },
       ),
     );
