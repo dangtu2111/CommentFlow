@@ -137,4 +137,18 @@ describe('createLlmDepsFromEnv — bật/tắt bằng cờ DB, env chỉ còn UR
     );
     spy.mockRestore();
   });
+
+  it('diagnose nêu ĐÚNG nguyên nhân: thiếu dịch vụ → thiếu model → cờ tắt → null khi đủ', async () => {
+    const mk = (
+      env: Record<string, string>,
+      isStepEnabled: (step: LlmStep) => Promise<boolean> = allOn,
+    ) => createLlmDepsFromEnv({ env, db, isStepEnabled });
+    expect(await mk({ ...models }).diagnose?.(WS)).toBe('missing_service');
+    expect(await mk({ ...base, CLASSIFY_LLM_MODEL: 'cf-classify' }).diagnose?.(WS)).toBe(
+      'missing_model',
+    );
+    expect(await mk({ ...base, ...models }, allOff).diagnose?.(WS)).toBe('flag_off');
+    expect(await mk({ ...base, ...models }, only('classify')).diagnose?.(WS)).toBe('flag_off');
+    expect(await mk({ ...base, ...models }, allOn).diagnose?.(WS)).toBeNull();
+  });
 });

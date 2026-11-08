@@ -9,16 +9,16 @@ const now = () => new Date('2026-11-06T10:00:00Z');
 import { demoBuildDeps, demoKnowledgeRunner } from './test-demo-wiring';
 
 describe('FR-059 KB-TRYAI: nguồn kiến thức của hành động Thử AI', () => {
-  it('KHÔNG có LLM thật → llm_not_configured, không tốn lượt, không chạy bản mẫu', async () => {
+  it('KHÔNG có LLM thật → llm_missing_service, không tốn lượt, không chạy bản mẫu', async () => {
     const quota = createTryQuota({ limit: 1 });
     const run = createTryAiAction({ quota, now, knowledgeRunner: demoKnowledgeRunner });
     expect(await run(session, 'ship về Hà Nội bao nhiêu')).toEqual({
       ok: false,
-      reason: 'llm_not_configured',
+      reason: 'llm_missing_service',
     });
     expect(await run(session, 'ship về Hà Nội bao nhiêu')).toEqual({
       ok: false,
-      reason: 'llm_not_configured',
+      reason: 'llm_missing_service',
     }); // lượt thử chưa bị trừ
   });
 

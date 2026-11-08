@@ -23,11 +23,15 @@ export type LlmDeps = {
   drafter?: Drafter;
   rewriter?: Rewriter;
   /**
-   * Workspace này có thể chạy AI không: extractor + drafter đã cấu hình (URL, khóa, model) VÀ cờ `cf.ai.classify` + `cf.ai.draft` đang bật cho workspace.
-   * Nơi dùng (Thử AI, worker) gọi trước khi tốn lượt; false → "chưa cấu hình AI".
+   * Vì sao workspace này CHƯA chạy được AI (`null` = chạy được). Thứ tự: thiếu dịch vụ (URL/khóa LiteLLM) → thiếu tên model → cờ DB
+   * `cf.ai.classify` / `cf.ai.draft` đang tắt cho workspace. Nơi dùng (Thử AI, kiểm thử, worker) gọi trước khi tốn lượt và nêu ĐÚNG nguyên nhân.
    */
+  diagnose?: (workspaceId: string) => Promise<LlmNotReady | null>;
+  /** `diagnose(...) === null` — tiện cho nơi chỉ cần có/không. */
   ready?: (workspaceId: string) => Promise<boolean>;
 };
+
+export type LlmNotReady = 'missing_service' | 'missing_model' | 'flag_off';
 
 type Env = Record<string, string | undefined>;
 
@@ -63,17 +67,30 @@ export function createLlmDepsFromEnv(options: LlmDepsOptions): LlmDeps {
     );
   };
 
-  if (!baseUrl || !apiKey) {
-    return {
-      ready: async (workspaceId) => {
-        for (const step of ['classify', 'draft'] as const) {
-          if (await options.isStepEnabled(step, workspaceId))
-            warnOnce(step, 'thiếu LITELLM_BASE_URL/LITELLM_API_KEY');
-        }
-        return false;
-      },
+  const REQUIRED = ['classify', 'draft'] as const;
+  const modelVar = { classify: 'CLASSIFY_LLM_MODEL', draft: 'DRAFT_LLM_MODEL' } as const;
+  const diagnose = async (workspaceId: string): Promise<LlmNotReady | null> => {
+    const enabled = {
+      classify: await options.isStepEnabled('classify', workspaceId),
+      draft: await options.isStepEnabled('draft', workspaceId),
     };
-  }
+    if (!baseUrl || !apiKey) {
+      for (const step of REQUIRED) {
+        if (enabled[step]) warnOnce(step, 'thiếu LITELLM_BASE_URL/LITELLM_API_KEY');
+      }
+      return 'missing_service';
+    }
+    for (const step of REQUIRED) {
+      if (!models[step]) {
+        if (enabled[step]) warnOnce(step, `thiếu ${modelVar[step]}`);
+        return 'missing_model';
+      }
+    }
+    return enabled.classify && enabled.draft ? null : 'flag_off';
+  };
+  const ready = async (workspaceId: string) => (await diagnose(workspaceId)) === null;
+
+  if (!baseUrl || !apiKey) return { diagnose, ready };
 
   const llm = createLlmClient({
     db: options.db as LlmClientOptions['db'],
@@ -125,17 +142,7 @@ export function createLlmDepsFromEnv(options: LlmDepsOptions): LlmDeps {
           } satisfies Rewriter,
         }
       : {}),
-    ready: async (workspaceId) => {
-      let ok = true;
-      for (const step of ['classify', 'draft'] as const) {
-        const on = await options.isStepEnabled(step, workspaceId);
-        if (!on) ok = false;
-        else if (!models[step]) {
-          warnOnce(step, `thiếu ${step === 'classify' ? 'CLASSIFY_LLM_MODEL' : 'DRAFT_LLM_MODEL'}`);
-          ok = false;
-        }
-      }
-      return ok;
-    },
+    diagnose,
+    ready,
   };
 }

@@ -16,6 +16,7 @@ import { computeMetrics } from '../metrics';
 import { costReport, renderReport } from '../report';
 import { type Backend, createRunner, runAll } from '../runner';
 import { shopFixtureSchema } from '../shop';
+import { createPgTrigramScorer, type TrigramScorer } from '../shop-trigram';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -33,6 +34,8 @@ const { values } = parseArgs({
     out: { type: 'string', default: resolve(ROOT, 'out') },
     'no-reduce': { type: 'boolean', default: false },
     'persist-usage': { type: 'boolean', default: false },
+    // Khớp sản phẩm: `trigram` (mặc định khi có DB dev/test) = ĐÚNG như production qua pg_trgm; `substring` = cũ (offline, quá chặt với tên dài).
+    matcher: { type: 'string', default: 'trigram' },
   },
 });
 
@@ -104,6 +107,30 @@ if (values['persist-usage']) {
   console.log(`Ghi ai_usage thật vào cf_dev, workspace ${workspaceId}`);
 }
 
+// Bộ khớp sản phẩm như production: cần kết nối DB (chỉ gọi hàm pg_trgm, không đọc/ghi bảng) → chỉ cf_dev / cf_test.
+let scorer: TrigramScorer | undefined;
+let scorerPool: { end: () => Promise<void> } | undefined;
+if (values.matcher === 'trigram' && backend === 'litellm') {
+  const adminUrl = process.env.DATABASE_ADMIN_URL ?? process.env.TEST_DATABASE_ADMIN_URL ?? '';
+  let name = '';
+  try {
+    name = new URL(adminUrl).pathname.replace(/^\//, '');
+  } catch {}
+  if (!/^(cf_dev|cf_test(_[a-z0-9]{1,8})?)$/.test(name)) {
+    console.error(
+      'Bộ khớp "trigram" cần DATABASE_ADMIN_URL trỏ cf_dev/cf_test (hoặc dùng --matcher substring).',
+    );
+    process.exit(2);
+  }
+  const pg = (await import('pg')).default;
+  const pool = new pg.Pool({ connectionString: adminUrl, max: 2 });
+  scorer = createPgTrigramScorer(pool);
+  scorerPool = pool;
+  console.log('Khớp sản phẩm: pg_trgm như production.');
+} else if (backend === 'litellm') {
+  console.log('Khớp sản phẩm: "tên chứa lời nhắc" (cũ, KHÔNG phản ánh production).');
+}
+
 async function runOnce(variantCount: number) {
   const runner = createRunner({
     backend,
@@ -115,6 +142,7 @@ async function runOnce(variantCount: number) {
     },
     variantCount,
     shop,
+    ...(scorer ? { scorer } : {}),
     ...(persistUsage ? { persistUsage } : {}),
   });
   const outcomes = await runAll(samples, runner, Number(values.concurrency), (done, total) => {
@@ -141,6 +169,9 @@ async function runOnce(variantCount: number) {
       'Embedder (cấu hình ứng dụng)': `${embeddingInfo.model ?? 'tắt'} — ${embeddingInfo.note}`,
       'Embedder dùng trong lượt này':
         'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',
+      'Khớp sản phẩm': scorer
+        ? 'pg_trgm như production (similarity/word_similarity, ngưỡng 0,3/0,4; bí danh 0,6; chọn/mơ hồ 0,45/0,05)'
+        : '"tên chứa lời nhắc" (cũ, KHÔNG phản ánh production)',
     },
     samples,
     metrics,
@@ -173,3 +204,4 @@ if (first.cost.overBudget && variantCount > 2 && !values['no-reduce']) {
 }
 
 if (persistUsage) await persistUsage.close();
+if (scorerPool) await scorerPool.end();

@@ -14,6 +14,7 @@ import type { EvalSample } from './dataset';
 import { noopUsageDb, recordUsage } from './recording-llm';
 import { type PipelineParts, runSample, type SampleOutcome } from './run-sample';
 import { buildShopKnowledge, type ShopFixture, shopVoice } from './shop';
+import type { TrigramScorer } from './shop-trigram';
 
 /**
  * Dựng bộ chạy theo backend:
@@ -30,6 +31,8 @@ export type RunnerOptions = {
   /** Số cách diễn đạt KHÁC của câu soạn (0–4); 4 = 5 phiên bản, 2 = 3 phiên bản. */
   variantCount?: number;
   shop: ShopFixture;
+  /** Bộ chấm điểm pg_trgm: có → khớp sản phẩm ĐÚNG như production (khuyến nghị khi đo thật); thiếu → khớp "tên chứa lời nhắc" cũ. */
+  scorer?: TrigramScorer;
   /** Ghi `ai_usage` thật (chỉ backend `litellm`): `db` của dev + workspace dành cho đánh giá. Không có → không ghi DB. */
   persistUsage?: { db: unknown; workspaceId: string };
 };
@@ -46,7 +49,9 @@ function requireEnv(env: RunnerOptions['env'], name: string): string {
 
 export function createRunner(options: RunnerOptions): Runner {
   const knowledge =
-    options.backend === 'mock' ? createDemoKnowledge() : buildShopKnowledge(options.shop);
+    options.backend === 'mock'
+      ? createDemoKnowledge()
+      : buildShopKnowledge(options.shop, options.scorer ? { scorer: options.scorer } : {});
   const dict = createAbbreviationDict(DEMO_ABBREVIATIONS);
   const voice = shopVoice(options.shop);
 

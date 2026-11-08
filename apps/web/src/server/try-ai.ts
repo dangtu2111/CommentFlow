@@ -34,7 +34,9 @@ export type TryAiFailure =
   | 'limit_reached'
   | 'unavailable'
   /** Chưa cấu hình LLM thật (cờ DB `cf.ai.classify`/`cf.ai.draft` + LiteLLM + tên model): KHÔNG chạy bản mẫu (chủ dự án chốt 08/11). */
-  | 'llm_not_configured'
+  | 'llm_missing_service'
+  | 'llm_missing_model'
+  | 'llm_flag_off'
   /** Workspace chưa có kiến thức/sản phẩm thật để thử. */
   | 'no_knowledge'
   /** AI trả đầu ra không đọc được/sai schema → chuyển người (FR-032), khác lỗi mạng/khóa. */
@@ -64,7 +66,7 @@ export type TryAiDeps = {
   buildDeps?: () => TryDeps;
   /** Nguồn kiến thức THẬT của workspace (bản DB chạy trong giao dịch `withActor`). Thiếu → `no_knowledge`; KHÔNG có kiến thức mẫu. */
   knowledgeRunner?: KnowledgeRunner;
-  /** LLM thật cho extract + soạn câu (bắt buộc cả hai, trừ khi test cắm `buildDeps`). Thiếu → `llm_not_configured`; KHÔNG có bản mẫu. */
+  /** LLM thật cho extract + soạn câu (bắt buộc cả hai, trừ khi test cắm `buildDeps`). Thiếu → `llm_*`; KHÔNG có bản mẫu. */
   llm?: TryLlmDeps;
   warn?: (event: { event: string; reason?: string }) => void;
 };
@@ -120,12 +122,11 @@ export function createTryAiAction(deps: TryAiDeps) {
     if (parsed.data.length > TRY_AI_MAX_CHARS) return { ok: false, reason: 'too_long' };
 
     // Thiếu LLM thật hoặc nguồn kiến thức thật → báo rõ TRƯỚC khi tốn lượt (không chạy bản mẫu).
+    // Nêu ĐÚNG nguyên nhân AI chưa chạy được: thiếu dịch vụ LiteLLM / thiếu tên model / cờ DB cf.ai.* tắt cho workspace — kiểm trước khi tốn lượt.
+    const notReady = deps.llm?.diagnose ? await deps.llm.diagnose(session.workspaceId) : null;
+    if (notReady) return { ok: false, reason: `llm_${notReady}` };
     const built = build();
-    if (!built) return { ok: false, reason: 'llm_not_configured' };
-    // Cờ AI theo workspace (cf.ai.classify + cf.ai.draft) phải đang BẬT và cấu hình đủ — kiểm trước khi tốn lượt.
-    if (deps.llm?.ready && !(await deps.llm.ready(session.workspaceId))) {
-      return { ok: false, reason: 'llm_not_configured' };
-    }
+    if (!built) return { ok: false, reason: 'llm_missing_service' };
     if (!deps.knowledgeRunner) return { ok: false, reason: 'no_knowledge' };
 
     const taken = deps.quota.take(session.workspaceId, now());

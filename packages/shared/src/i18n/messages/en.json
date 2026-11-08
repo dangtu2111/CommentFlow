@@ -1810,7 +1810,9 @@
       "invalid_line": "Line {line} is malformed: use \"question | action\" with a valid action, at most 5 keywords of up to 100 characters each.",
       "limit_reached": "You have used today's runs. Come back tomorrow.",
       "unavailable": "Cannot run right now. Please try again later.",
-      "llm_not_configured": "Real AI (LiteLLM) is not configured, so there is nothing to try yet. Ask an admin to enable CLASSIFY_LLM_ENABLED / DRAFT_LLM_ENABLED and retry.",
+      "llm_missing_service": "AI cannot run: the server has no AI service address/key (LiteLLM). Ask an admin to check the AI service configuration.",
+      "llm_missing_model": "AI cannot run: no model name is set for the classify or draft step. Ask an admin to set the model names and restart.",
+      "llm_flag_off": "AI is OFF for this workspace: the cf.ai.classify and cf.ai.draft flags must be enabled for it (an admin sets them with flags:set or the Admin page).",
       "no_knowledge": "This workspace has no real knowledge or products to try yet. Add products/policies (or publish knowledge) and retry."
     },
     "summary": "Passed {passed}/{total} · failed {failed} · errors {errored}",
@@ -2056,7 +2058,9 @@
       "limit_reached": "You have used all of today's tries. Come back tomorrow.",
       "unavailable": "Can't run the test right now. Try again later.",
       "ai_invalid_output": "Handoff: the AI did not return a valid result. This question would go to a human.",
-      "llm_not_configured": "Real AI (LiteLLM) is not configured, so there is nothing to try yet. Ask an admin to enable CLASSIFY_LLM_ENABLED / DRAFT_LLM_ENABLED and retry.",
+      "llm_missing_service": "AI cannot run: the server has no AI service address/key (LiteLLM). Ask an admin to check the AI service configuration.",
+      "llm_missing_model": "AI cannot run: no model name is set for the classify or draft step. Ask an admin to set the model names and restart.",
+      "llm_flag_off": "AI is OFF for this workspace: the cf.ai.classify and cf.ai.draft flags must be enabled for it (an admin sets them with flags:set or the Admin page).",
       "no_knowledge": "This workspace has no real knowledge or products to try yet. Add products/policies (or publish knowledge) and retry."
     },
     "skipped": "The comment has only emoji/tags/punctuation, so AI skips it (no classification, no reply, no quota used).",

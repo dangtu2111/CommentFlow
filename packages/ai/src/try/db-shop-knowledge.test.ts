@@ -180,3 +180,30 @@ describe('mã nguồn hợp lệ với bước soạn (draft-prompt SOURCE_ID)',
     ).not.toThrow();
   });
 });
+
+describe('hỏi THỜI GIAN nhận hàng → chính sách giao hàng, không phải điều khoản dịch vụ (Q-EV2-3)', () => {
+  const items = [
+    {
+      id: 'tos',
+      kind: 'policy',
+      policyKind: 'other',
+      lang: 'all',
+      title: 'Terms of service',
+      text: '3. Orders When you place an order, you are making an offer to purchase. Your order is not accepted until the store confirms acceptance. We must receive and process your payment before your order is accepted.',
+    },
+    {
+      id: 'ship',
+      kind: 'policy',
+      policyKind: 'shipping',
+      lang: 'all',
+      title: 'Shipping',
+      text: 'Orders are processed within 1-2 business days. Standard delivery takes 5-9 business days after dispatch. Delivery times may vary during peak periods.',
+    },
+  ] as never;
+
+  it('câu "how long until I get my order?" chọn đoạn Shipping và xếp trên Terms of service', () => {
+    const hits = searchShopTexts(items, 'how long until I get my order?', { lang: 'en' });
+    expect(hits[0]?.title).toBe('Shipping');
+    expect(hits[0]?.topics).toContain('shipping');
+  });
+});
