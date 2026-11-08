@@ -9,7 +9,7 @@ import {
   getMergeWindowSeconds,
 } from '@flow/db';
 import { createFlags } from '@flow/saas-core';
-import { AI_STEP_FLAGS, FLAG_DEFAULTS } from '@flow/shared';
+import { AI_STEP_FLAGS, FLAG_DEFAULTS, PIPELINE_FLAG } from '@flow/shared';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
@@ -79,21 +79,23 @@ async function main(): Promise<void> {
       logger.warn({ type: event.type, attempt: event.attempt }, 'kết nối nghe flags_changed'),
   });
   await flags.start();
-  const llm = config.pipeline.enabled
-    ? createLlmDepsFromEnv({
-        env: process.env,
-        db: { withWorkspace: (id, fn) => db.withJob(id, fn) },
-        isStepEnabled: (step, workspaceId) => flags.isEnabled(AI_STEP_FLAGS[step], { workspaceId }),
-        // Cờ bật mà thiếu URL/khóa/tên model: nêu rõ lỗi cấu hình (không có model mặc định).
-        onMisconfigured: (message) => logger.error({}, message),
-      })
-    : undefined;
+  const llm = createLlmDepsFromEnv({
+    env: process.env,
+    db: { withWorkspace: (id, fn) => db.withJob(id, fn) },
+    isStepEnabled: (step, workspaceId) => flags.isEnabled(AI_STEP_FLAGS[step], { workspaceId }),
+    // Cờ bật mà thiếu URL/khóa/tên model: nêu rõ lỗi cấu hình (không có model mặc định).
+    onMisconfigured: (message) => logger.error({}, message),
+  });
+  // Cờ DB `cf.pipeline.v2` theo workspace (thay PIPELINE_ENABLED/PIPELINE_WORKSPACE_IDS); đọc ở MỖI lần quyết định, NOTIFY có hiệu lực ngay.
+  const pipelineEnabledFor = (workspaceId: string) =>
+    flags.isEnabled(PIPELINE_FLAG, { workspaceId });
   const embeddingResolver = createEmbeddingResolver({ service: config.embeddingService });
-  const pipelineOn = Boolean(llm?.extractor && llm?.drafter);
-  if (config.pipeline.enabled && !pipelineOn) {
-    logger.error(
+  // Pipeline chỉ được đăng ký khi LLM ĐÃ cấu hình đủ (URL/khóa/tên model hai bước); thiếu → KHÔNG chạy (không bao giờ chạy bình luận thật bằng bản mẫu).
+  const pipelineOn = Boolean(llm.extractor && llm.drafter);
+  if (!pipelineOn) {
+    logger.warn(
       {},
-      'PIPELINE_ENABLED=true nhưng thiếu cấu hình LLM (LITELLM_BASE_URL/LITELLM_API_KEY, CLASSIFY_LLM_MODEL/DRAFT_LLM_MODEL): pipeline KHÔNG chạy',
+      'pipeline KHÔNG chạy: thiếu cấu hình LLM (LITELLM_BASE_URL/LITELLM_API_KEY, CLASSIFY_LLM_MODEL/DRAFT_LLM_MODEL); bật cờ cf.pipeline.v2 cũng chưa có tác dụng',
     );
   }
   const pipelineHook: IngestPipelineHook | undefined = pipelineOn
@@ -108,8 +110,7 @@ async function main(): Promise<void> {
               ? FIRST_COMMENT_PRIORITY
               : 0,
           ),
-        flagEnabled: true,
-        allowedWorkspaceIds: config.pipeline.workspaceIds,
+        isEnabled: pipelineEnabledFor,
         mergeWindowSeconds: (workspaceId) =>
           db.withJob(workspaceId, (tx) =>
             getMergeWindowSeconds(tx, workspaceId, DEFAULT_MERGE_WINDOW_SECONDS),
@@ -122,7 +123,7 @@ async function main(): Promise<void> {
     createIngestHandler({ db, logger, ...(pipelineHook ? { pipeline: pipelineHook } : {}) }),
   );
   let stopPipelineSweep: (() => void) | undefined;
-  if (pipelineOn && llm?.extractor && llm.drafter) {
+  if (pipelineOn && llm.extractor && llm.drafter) {
     // docs/09 §9: pipeline — 5 job đồng thời, thử lại 3 lần; an toàn khi chạy trùng nhờ khóa lượt (`pipeline_turns`).
     await boss.work(
       PIPELINE_QUEUE,
@@ -135,8 +136,7 @@ async function main(): Promise<void> {
           drafter: llm.drafter,
           ...(llm.rewriter ? { rewriter: llm.rewriter } : {}),
         },
-        flagEnabled: true,
-        allowedWorkspaceIds: config.pipeline.workspaceIds,
+        pipelineEnabled: pipelineEnabledFor,
         turnLimit: config.pipeline.turnLimit,
         // Cờ DB cf.ai.* theo workspace + cấu hình đủ; tắt → lượt bị bỏ qua (`ai_disabled`).
         llmReady: (workspaceId) => (llm?.ready ? llm.ready(workspaceId) : Promise.resolve(false)),
@@ -150,8 +150,7 @@ async function main(): Promise<void> {
       enqueue: async (job) => {
         await boss.send(PIPELINE_QUEUE, job);
       },
-      flagEnabled: true,
-      allowedWorkspaceIds: config.pipeline.workspaceIds,
+      isEnabled: pipelineEnabledFor,
     });
   }
   // Sổ connector: RỖNG khi `FB_CONNECTOR_ENABLED` tắt (mặc định) → yêu cầu ghi `connector_unavailable`, không gọi Meta.
@@ -222,7 +221,8 @@ async function main(): Promise<void> {
   await checkEmbeddingAtStartup({
     configuredModel: startupEmbedding.model,
     offNote: startupEmbedding.describe.note,
-    workspaceIds: config.pipeline.workspaceIds,
+    // Danh sách workspace không còn nằm trong env: kiểm lệch model chạy ở MỖI lượt pipeline (log lỗi khi lệch).
+    workspaceIds: [],
     count: (workspaceId) => db.withJob(workspaceId, (tx) => countEmbeddingModels(tx, workspaceId)),
     logger,
   });

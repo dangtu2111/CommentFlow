@@ -69,8 +69,7 @@ function sweep(over: { allowed?: string[]; flag?: boolean } = {}) {
       enqueue: async (job) => {
         if (job.workspaceId === ws) jobs.push(job);
       },
-      flagEnabled: over.flag ?? true,
-      allowedWorkspaceIds: over.allowed ?? [ws],
+      isEnabled: async (id) => (over.flag ?? true) && (over.allowed ?? [ws]).includes(id),
       logger: noLog,
     });
   return { jobs, run };

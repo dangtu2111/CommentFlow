@@ -240,8 +240,8 @@ async function markFailed(db: FlowDb, job: IngestJob, error: unknown): Promise<v
 /** Xếp job `pipeline` cho bình luận mới (sau khi `ingest` commit). Cấu hình tắt → không xếp. */
 export type IngestPipelineHook = {
   enqueue: (job: PipelineJob, startAfterSeconds: number, priority: number) => Promise<void>;
-  flagEnabled: boolean;
-  allowedWorkspaceIds: readonly string[];
+  /** Cờ DB `cf.pipeline.v2` có bật cho workspace này không (đọc theo workspace, `saas-core/flags`). */
+  isEnabled: (workspaceId: string) => Promise<boolean>;
   /** Cửa sổ gộp của workspace (giây). */
   mergeWindowSeconds: (workspaceId: string) => Promise<number>;
   /**
@@ -297,15 +297,20 @@ async function enqueueNew(
   created: readonly IngestedComment[],
   logger: Pick<Logger, 'error'>,
 ): Promise<void> {
+  if (created.length === 0) return;
+  let enabled = false;
+  try {
+    enabled = await hook.isEnabled(workspaceId);
+  } catch (error) {
+    logger.error({ error: safeErrorCode(error) }, 'ingest: không đọc được cờ pipeline');
+  }
   for (const comment of created) {
     if (
       !shouldAutoRunPipeline({
-        workspaceId,
         ingestSource: comment.ingestSource,
         isOwn: false,
         deleted: false,
-        flagEnabled: hook.flagEnabled,
-        allowedWorkspaceIds: hook.allowedWorkspaceIds,
+        enabled,
       })
     ) {
       continue;

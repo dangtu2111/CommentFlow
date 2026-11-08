@@ -122,8 +122,7 @@ const config = (over: Partial<PipelineJobConfig> = {}): PipelineJobConfig => ({
       },
     ]),
   },
-  flagEnabled: true,
-  allowedWorkspaceIds: [ws],
+  pipelineEnabled: async () => true,
   turnLimit: 100,
   ...over,
 });
@@ -166,12 +165,17 @@ describe('handler pipeline — một bình luận thật', () => {
       reason: 'not_auto_eligible',
     });
     const normal = await addComment('webhook');
-    expect((await runPipelineJob(config({ flagEnabled: false }), job(normal))).kind).toBe(
-      'ignored',
-    );
-    expect((await runPipelineJob(config({ allowedWorkspaceIds: [] }), job(normal))).kind).toBe(
-      'ignored',
-    );
+    expect(
+      (await runPipelineJob(config({ pipelineEnabled: async () => false }), job(normal))).kind,
+    ).toBe('ignored');
+    expect(
+      (
+        await runPipelineJob(
+          config({ pipelineEnabled: async (id) => id === 'workspace-khac' }),
+          job(normal),
+        )
+      ).kind,
+    ).toBe('ignored');
     expect(await used()).toBe(0);
     expect(await draftsOf(backfill)).toHaveLength(0);
   });

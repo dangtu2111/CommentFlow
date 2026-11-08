@@ -20,7 +20,7 @@ function deps(over: Partial<SuggestionDeps> = {}): SuggestionDeps & { jobs: unkn
     enqueue: async (job, options) => {
       jobs.push([job, options]);
     },
-    pipelineEnabled: () => true,
+    pipelineEnabled: async () => true,
     warn: () => {},
     ...over,
   };
@@ -91,7 +91,7 @@ describe('nút "Soạn gợi ý" — yêu cầu', () => {
 
   it('pipeline chưa bật → pipeline_off, không đọc DB, không đẩy job', async () => {
     const find = vi.fn();
-    const d = deps({ pipelineEnabled: () => false, find });
+    const d = deps({ pipelineEnabled: async () => false, find });
     expect(await createSuggestionRequest(d)(session, ID)).toEqual({
       ok: false,
       reason: 'pipeline_off',

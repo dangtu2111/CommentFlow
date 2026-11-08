@@ -13,11 +13,12 @@ import {
   requestCommentReply,
   skipComments,
 } from '@flow/db/runtime';
-import { HIDE_QUEUE, PIPELINE_QUEUE, SEND_QUEUE } from '@flow/shared';
+import { HIDE_QUEUE, PIPELINE_FLAG, PIPELINE_QUEUE, SEND_QUEUE } from '@flow/shared';
 import { z } from 'zod';
 import type { LockActionResult } from '../../../../lib/comment-lock-result';
 import { type BulkResult, createBulkActions } from '../../../../server/bulk-action';
 import { getDb } from '../../../../server/db';
+import { getFlags } from '../../../../server/flags';
 import { createHideAction, type HideActionResult } from '../../../../server/hide-action';
 import { enqueueJob } from '../../../../server/queue';
 import { createReplyAction, type ReplyActionResult } from '../../../../server/reply-action';
@@ -160,7 +161,8 @@ const askForSuggestion = createSuggestionRequest({
     return detail ? { status: detail.status, deletedAt: detail.deletedAt } : null;
   },
   enqueue: (job, options) => enqueueJob(PIPELINE_QUEUE, job, options),
-  pipelineEnabled: () => process.env.PIPELINE_ENABLED?.trim() === 'true',
+  // Cờ DB `cf.pipeline.v2` theo workspace (thay PIPELINE_ENABLED); web nhớ cờ ≤ 30 giây.
+  pipelineEnabled: (workspaceId) => getFlags().isEnabled(PIPELINE_FLAG, { workspaceId }),
   warn: (event) => console.warn(JSON.stringify(event)),
 });
 

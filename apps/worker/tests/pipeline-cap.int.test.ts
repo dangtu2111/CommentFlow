@@ -114,8 +114,7 @@ const config = (): PipelineJobConfig => ({
       },
     },
   },
-  flagEnabled: true,
-  allowedWorkspaceIds: [ws],
+  pipelineEnabled: async () => true,
   turnLimit: 100,
 });
 

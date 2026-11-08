@@ -24,8 +24,8 @@ export type SuggestionDeps = {
     job: { workspaceId: string; commentId: string; trigger: 'manual'; requestedBy: string },
     options: { singletonKey: string; singletonSeconds: number },
   ) => Promise<void>;
-  /** Worker pipeline có bật không (`PIPELINE_ENABLED`): tắt thì job không ai xử lý → từ chối rõ thay vì treo "đang soạn". */
-  pipelineEnabled: () => boolean;
+  /** Cờ DB `cf.pipeline.v2` có bật cho workspace không: tắt thì job không ai xử lý → từ chối rõ thay vì treo "đang soạn". */
+  pipelineEnabled: (workspaceId: string) => Promise<boolean>;
   warn: (event: { event: string; reason?: string }) => void;
 };
 
@@ -46,7 +46,8 @@ export function createSuggestionRequest(deps: SuggestionDeps) {
   ): Promise<SuggestionResult> {
     const parsed = idSchema.safeParse(rawCommentId);
     if (!parsed.success) return { ok: false, reason: 'not_found' };
-    if (!deps.pipelineEnabled()) return { ok: false, reason: 'pipeline_off' };
+    if (!(await deps.pipelineEnabled(session.workspaceId)))
+      return { ok: false, reason: 'pipeline_off' };
     let comment: Awaited<ReturnType<SuggestionDeps['find']>>;
     try {
       comment = await deps.find(session, parsed.data);

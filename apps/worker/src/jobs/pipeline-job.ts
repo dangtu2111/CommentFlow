@@ -41,8 +41,8 @@ export type PipelineJobConfig = {
   /** Workspace có được chạy AI không (cờ DB `cf.ai.*` + cấu hình đủ). Tắt → lượt bị bỏ qua (`ai_disabled`), bình luận giữ nguyên. */
   llmReady?: (workspaceId: string) => Promise<boolean>;
   /** `PIPELINE_ENABLED` và `PIPELINE_WORKSPACE_IDS` (Q-POR1) — chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm. */
-  flagEnabled: boolean;
-  allowedWorkspaceIds: readonly string[];
+  /** Cờ DB `cf.pipeline.v2` cho workspace (chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm). */
+  pipelineEnabled: (workspaceId: string) => Promise<boolean>;
   /** Hạn mức lượt/tháng (`resolveAiTurnLimit`). */
   turnLimit: number;
   /**
@@ -146,12 +146,10 @@ export async function runPipelineJob(
   if (
     job.trigger === 'auto' &&
     !shouldAutoRunPipeline({
-      workspaceId,
       ingestSource: comment.ingestSource as IngestSource,
       isOwn: comment.isOwn,
       deleted: comment.deleted,
-      flagEnabled: config.flagEnabled,
-      allowedWorkspaceIds: config.allowedWorkspaceIds,
+      enabled: await config.pipelineEnabled(workspaceId),
     })
   ) {
     return { kind: 'ignored', reason: 'not_auto_eligible' };

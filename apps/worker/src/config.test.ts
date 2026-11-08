@@ -23,7 +23,7 @@ describe('loadConfig', () => {
       messenger: { enabled: false },
       tiktok: { enabled: false },
       shopify: { enabled: false, apiVersion: undefined },
-      pipeline: { enabled: false, workspaceIds: [], turnLimit: 500 },
+      pipeline: { turnLimit: 500 },
     });
   });
 
@@ -266,22 +266,15 @@ describe('loadConfig', () => {
 
 describe('PIPE-ORCHESTRATOR — cấu hình pipeline', () => {
   const base = { DATABASE_WORKER_URL };
-  it('mặc định TẮT, danh sách rỗng, hạn mức mặc định', () => {
+  it('env chỉ còn hạn mức lượt; PIPELINE_ENABLED/PIPELINE_WORKSPACE_IDS KHÔNG còn tác dụng (bật theo workspace bằng cờ DB cf.pipeline.v2)', () => {
     const c = loadConfig(base);
-    expect(c.pipeline.enabled).toBe(false);
-    expect(c.pipeline.workspaceIds).toEqual([]);
     expect(c.pipeline.turnLimit).toBeGreaterThan(0);
-  });
-  it('chỉ đúng chữ true mới bật; danh sách chỉ giữ UUID hợp lệ', () => {
-    const id = '11111111-1111-4111-8111-111111111111';
-    const on = loadConfig({
+    const withOld = loadConfig({
       ...base,
       PIPELINE_ENABLED: 'true',
-      PIPELINE_WORKSPACE_IDS: `${id}, bad`,
+      PIPELINE_WORKSPACE_IDS: '11111111-1111-4111-8111-111111111111',
     });
-    expect(on.pipeline.enabled).toBe(true);
-    expect(on.pipeline.workspaceIds).toEqual([id]);
-    expect(loadConfig({ ...base, PIPELINE_ENABLED: 'yes' }).pipeline.enabled).toBe(false);
+    expect(withOld.pipeline).toEqual({ turnLimit: c.pipeline.turnLimit });
   });
 });
 

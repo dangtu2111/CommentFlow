@@ -1,8 +1,11 @@
 import type pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FlowDb } from '../src/client';
-import { listPendingPipelineComments } from '../src/queries/pipeline-merge';
-import { createAdminPool, createWorkerDb, newId, seedWorkspace } from './helpers';
+import {
+  listPendingPipelineComments,
+  listWorkspacesWithPendingPipelineComments,
+} from '../src/queries/pipeline-merge';
+import { createAdminPool, createWebDb, createWorkerDb, newId, seedWorkspace } from './helpers';
 
 /**
  * PIPE-ORCHESTRATOR (migration 0075): job quét không được quét toàn bảng khi có hàng chục nghìn bình luận backfill. Seed ~50k
@@ -112,5 +115,42 @@ describe('job quét với 50k bình luận backfill (0075)', () => {
     const started = Date.now();
     await worker.withSystem((tx) => listPendingPipelineComments(tx, opts()));
     expect(Date.now() - started).toBeLessThan(2000);
+  });
+});
+
+describe('workspace có bình luận chờ quét (0081) — đầu vào để lọc bằng cờ cf.pipeline.v2', () => {
+  it('trả workspace có bình luận `new` quá hạn không backfill; KHÔNG trả workspace chỉ có backfill/chưa quá hạn', async () => {
+    const quiet = await seedWorkspace(admin);
+    const ids = await worker.withSystem((tx) =>
+      listWorkspacesWithPendingPipelineComments(tx, { newAfterSeconds: 90, limit: 500 }),
+    );
+    expect(ids).toContain(ws);
+    expect(ids).not.toContain(quiet);
+  });
+
+  it('workspace dừng khẩn cấp không được trả; chỉ cf_worker ở ngữ cảnh trần gọi được', async () => {
+    await admin.query('UPDATE core.workspaces SET emergency_stopped_at = now() WHERE id = $1', [
+      ws,
+    ]);
+    try {
+      const ids = await worker.withSystem((tx) =>
+        listWorkspacesWithPendingPipelineComments(tx, { newAfterSeconds: 90, limit: 500 }),
+      );
+      expect(ids).not.toContain(ws);
+      const web = createWebDb();
+      try {
+        await expect(
+          web.withSystem((tx) =>
+            listWorkspacesWithPendingPipelineComments(tx, { newAfterSeconds: 90, limit: 10 }),
+          ),
+        ).rejects.toThrow();
+      } finally {
+        await web.close();
+      }
+    } finally {
+      await admin.query('UPDATE core.workspaces SET emergency_stopped_at = NULL WHERE id = $1', [
+        ws,
+      ]);
+    }
   });
 });

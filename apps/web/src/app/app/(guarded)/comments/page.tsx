@@ -1,3 +1,4 @@
+import { PIPELINE_FLAG } from '@flow/shared';
 import { getTranslations } from 'next-intl/server';
 import { CommentDetailPanel } from '../../../../components/comments/comment-detail';
 import { BackLink, EmptyNote } from '../../../../components/comments/empty-note';
@@ -13,6 +14,7 @@ import {
 } from '../../../../components/ui/workbench';
 import { parseInboxSearchParams } from '../../../../lib/inbox-filters';
 import { buildInboxBackHref, inboxMobilePane } from '../../../../lib/inbox-pane';
+import { getFlags } from '../../../../server/flags';
 import { loadInbox } from '../../../../server/inbox';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -56,6 +58,8 @@ export default async function CommentsPage({
 
   const { page, counts, channels, timeZone, detail } = data;
   const now = new Date();
+  // Cờ DB `cf.pipeline.v2` theo workspace: có nút "Soạn gợi ý" hay chỉ ghi chú AI chưa bật.
+  const pipelineOn = await getFlags().isEnabled(PIPELINE_FLAG, { workspaceId: workspace.id });
   const filtered = Boolean(view.platform || view.channelId || view.adsOnly || view.search);
   return (
     <Workbench strip={<InboxStrip />} pane={inboxMobilePane(view)}>
@@ -86,7 +90,13 @@ export default async function CommentsPage({
         ) : null}
         {detail ? (
           // key = id: đổi bình luận → gắn lại panel (mở khóa cái cũ, lấy khóa cái mới).
-          <CommentDetailPanel key={detail.id} comment={detail} timeZone={timeZone} now={now} />
+          <CommentDetailPanel
+            key={detail.id}
+            comment={detail}
+            timeZone={timeZone}
+            now={now}
+            pipelineOn={pipelineOn}
+          />
         ) : view.selected ? (
           <EmptyNote
             role="alert"

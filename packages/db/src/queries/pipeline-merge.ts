@@ -98,3 +98,17 @@ export async function listPendingPipelineComments(
     hasTurn: row.has_turn,
   }));
 }
+
+/**
+ * Workspace đang có bình luận `new` quá hạn cần quét (hàm DEFINER `cf.list_workspaces_with_pending_pipeline_comments`, 0081): CHỈ id workspace. Job quét lọc
+ * từng workspace bằng cờ `cf.pipeline.v2` rồi mới gọi `listPendingPipelineComments`. Gọi ở NGỮ CẢNH TRẦN (`withSystem`) của kết nối worker.
+ */
+export async function listWorkspacesWithPendingPipelineComments(
+  tx: Database,
+  options: { newAfterSeconds: number; limit: number },
+): Promise<string[]> {
+  const r = await tx.execute<{ workspace_id: string }>(sql`
+    SELECT workspace_id FROM cf.list_workspaces_with_pending_pipeline_comments(
+      ${options.newAfterSeconds}::int, ${options.limit}::int)`);
+  return r.rows.map((row) => row.workspace_id);
+}
