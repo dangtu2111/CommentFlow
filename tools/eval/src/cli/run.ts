@@ -190,7 +190,8 @@ if (knowledgeMode === 'production') {
 // ---- Trần chi phí: sổ chi tiêu cộng dồn cho cả chuỗi việc (out/ không commit) + chi tiêu khóa ảo LiteLLM ----
 const perMeasurementCap = Number(values['max-usd']);
 const totalCap = Number(values['total-cap-usd']);
-const ledgerFile = resolve(values.out as string, '..', 'eval-spend-ledger.jsonl');
+// Sổ chi tiêu CỐ ĐỊNH (không phụ thuộc --out) để trần tổng thật sự cộng dồn qua mọi lần đo.
+const ledgerFile = resolve(ROOT, 'out', 'eval-spend-ledger.jsonl');
 const ledgerSpent = existsSync(ledgerFile) ? sumLedger(readFileSync(ledgerFile, 'utf8')) : 0;
 const startedAt = new Date();
 const keyNow = () =>
