@@ -46,6 +46,8 @@ export type KbSearchHit = {
   content: string;
   contextHeader: string | null;
   productId: string | null;
+  /** `kb_chunks.metadata`: chủ đề `topic`, cờ mâu thuẫn `conflict_group`/`conflict_values` (ghi lúc xuất bản). */
+  metadata: Record<string, unknown>;
   /** Điểm RRF (chỉ để so thứ tự, không phải độ liên quan 0–1). */
   score: number;
 };
@@ -130,6 +132,7 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
     content: string;
     context_header: string | null;
     product_id: string | null;
+    metadata: Record<string, unknown> | null;
     score: string;
   }>(sql`
     WITH v AS (${vectorBranch}), t AS (${textBranch}), g AS (${trigramBranch}),
@@ -138,7 +141,7 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
         FROM (SELECT * FROM v UNION ALL SELECT * FROM t UNION ALL SELECT * FROM g) x
        GROUP BY id
     )
-    SELECT c.id, c.chunk_key, c.content, c.context_header, c.product_id, f.score
+    SELECT c.id, c.chunk_key, c.content, c.context_header, c.product_id, c.metadata, f.score
       FROM fused f
       JOIN cf.kb_chunks c ON c.id = f.id AND c.workspace_id = ${input.workspaceId}::uuid
      ORDER BY f.score DESC, c.id
@@ -149,6 +152,7 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
     content: row.content,
     contextHeader: row.context_header,
     productId: row.product_id,
+    metadata: row.metadata ?? {},
     score: Number(row.score),
   }));
 }

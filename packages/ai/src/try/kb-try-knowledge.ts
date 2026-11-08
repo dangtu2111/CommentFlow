@@ -1,4 +1,4 @@
-import { unsafeMarkMasked } from '@flow/shared';
+import { isKbTopic, type KbTopic, unsafeMarkMasked } from '@flow/shared';
 import type { KbGapTopic } from '../decide/decide-action';
 import type { Embedder } from '../embedding/embedder';
 import { scanInjection } from '../injection/injection-scan';
@@ -23,6 +23,13 @@ export type KbTryKnowledgeDeps = {
 function chunkTopics(hit: KbHit): KbGapTopic[] {
   const topic = topicOf(`${hit.contextHeader ?? ''} ${hit.content}`);
   return topic === 'other' ? [] : [topic];
+}
+
+/** Chủ đề của nhóm mâu thuẫn nếu đoạn mang cờ `conflict_group` (ghi lúc xuất bản). */
+function conflictTopicOf(hit: KbHit): KbTopic | undefined {
+  const meta = hit.metadata;
+  if (!meta || typeof meta.conflict_group !== 'string') return undefined;
+  return isKbTopic(meta.topic) ? meta.topic : undefined;
 }
 
 export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
@@ -60,6 +67,7 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
           text: unsafeMarkMasked(hit.content),
           score: rrfRelevance(hit.score),
           topics: chunkTopics(hit),
+          ...(conflictTopicOf(hit) ? { conflictTopic: conflictTopicOf(hit) } : {}),
         });
       }
       return candidates.sort((a, b) => b.score - a.score);

@@ -16,6 +16,8 @@ export type KbHit = {
   content: string;
   contextHeader: string | null;
   productId: string | null;
+  /** `kb_chunks.metadata` (chủ đề `topic`, cờ mâu thuẫn `conflict_group`/`conflict_values`); thiếu = không có. */
+  metadata?: Record<string, unknown> | null;
   /** Điểm RRF (k=60) của `searchKbChunks`. */
   score: number;
 };

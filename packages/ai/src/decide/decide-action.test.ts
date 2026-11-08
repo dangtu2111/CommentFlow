@@ -365,6 +365,7 @@ describe('FR-147 decideAction — bậc 4: chuyển người khi có rủi ro (l
     ],
     ['mạo danh (FR-155)', { risks: { ...NO_RISK, impersonation: true } }, 'impersonation'],
     ['xung đột giá (FR-150)', { risks: { ...NO_RISK, priceConflict: true } }, 'price_conflict'],
+    ['chính sách mâu thuẫn', { risks: { ...NO_RISK, policyConflict: true } }, 'policy_conflict'],
     [
       'cam kết pháp lý không nguồn (FR-160)',
       { risks: { ...NO_RISK, legalUnsourced: true } },

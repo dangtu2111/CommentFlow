@@ -70,6 +70,7 @@ const AI_REASONS = [
   'attempts_exhausted',
   'ai_invalid_output',
   'customer_post_reply_cap',
+  'policy_conflict',
 ];
 
 const STATUSES = [

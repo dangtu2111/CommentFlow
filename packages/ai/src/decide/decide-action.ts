@@ -37,6 +37,8 @@ export const DECISION_REASONS = [
   'complaint',
   'impersonation',
   'price_conflict',
+  /** Đoạn kiến thức dùng để trả lời thuộc nhóm chính sách MÂU THUẪN của đúng chủ đề khách hỏi (KB-SYNC-DRAFT): chuyển người. */
+  'policy_conflict',
   'legal_unsourced',
   'repeat_limit',
   'clarify_limit',
@@ -133,6 +135,8 @@ export const decideActionInputSchema = z.object({
     stockStale: z.boolean(),
     /** Nghi chèn lệnh vào bình luận (`scanInjection`): chuyển người, không soạn theo lệnh của khách. */
     injectionSuspected: z.boolean(),
+    /** Nguồn dùng để trả lời mâu thuẫn nhau về đúng chủ đề khách hỏi (cờ `kb_chunks.metadata.conflict_*`). Thiếu = không mâu thuẫn. */
+    policyConflict: z.boolean().default(false),
   }),
 });
 
@@ -191,6 +195,7 @@ function riskReason(input: ParsedInput): DecisionReason | null {
   if (input.risks.injectionSuspected) return 'injection_suspected';
   if (input.risks.impersonation) return 'impersonation';
   if (input.risks.priceConflict) return 'price_conflict';
+  if (input.risks.policyConflict) return 'policy_conflict';
   if (input.risks.legalUnsourced) return 'legal_unsourced';
   if (input.thread.repeatCount >= REPEAT_HANDOFF_THRESHOLD) return 'repeat_limit';
   return null;

@@ -6,6 +6,7 @@
  */
 import {
   type CommentLabel,
+  type KbTopic,
   type MaskedText,
   maskPii,
   type PriceSource,
@@ -31,6 +32,7 @@ import type { DraftLang, DraftResult } from '../draft/draft-result';
 import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
 import { checkGuardMoney, type GuardViolation } from '../guard-money';
 import { checkReplyGuard, type ReplyGuardViolation } from '../guard-reply';
+import { classifyTopic } from '../kb-sync/topic';
 import { type AbbreviationDict, normalizeAndDetectLang } from '../normalize/normalize-lang';
 import type { PromptHistory } from '../prompt-history';
 import type { CustomerContext } from '../rewrite/customer-context';
@@ -63,6 +65,8 @@ export type TryCandidate = {
   priceUnknown?: boolean;
   /** Nguồn này nêu giá theo tiền tệ GỐC khác VND (Q-SFP1): câu dùng nó không được tự gửi (kiểm giá lúc gửi chưa hỗ trợ). */
   foreignPrice?: boolean;
+  /** Đoạn kiến thức này thuộc nhóm chính sách MÂU THUẪN (cờ `kb_chunks.metadata.conflict_group`): chủ đề của nhóm (vd `shipping_time`). */
+  conflictTopic?: KbTopic;
   /** Dữ liệu giá/tồn CÓ CẤU TRÚC của nguồn sản phẩm (cho `drafts.price_snapshot`, FR-111); chỉ nguồn kind `product`. */
   priceSources?: PriceSource[];
 };
@@ -265,6 +269,19 @@ export function topicOf(ask: string): KbGapTopic {
   return 'other';
 }
 
+/**
+ * Chủ đề MỊN (mã `KbTopic`) của một ý hỏi để so với nhóm mâu thuẫn: từ khóa mịn trước (phí ship/giao hàng/hoàn tiền…); không khớp thì suy từ chủ đề thô
+ * (`topicOf`): hỏi giao hàng chung → thời gian giao; hỏi chính sách chung → đổi trả/hoàn tiền/bảo hành.
+ */
+function conflictTopicsOfAsk(ask: string): KbTopic[] {
+  const fine = classifyTopic(ask, 'other');
+  if (fine !== 'other') return [fine];
+  const coarse = topicOf(ask);
+  if (coarse === 'shipping') return ['shipping_time'];
+  if (coarse === 'policy') return ['return', 'refund', 'warranty'];
+  return [];
+}
+
 /** Chủ đề từng ý hỏi, kèm cờ "đây là hỏi giá" (để biết nguồn chưa có giá có trả lời được ý đó không). */
 function askTopicsOf(
   asks: readonly string[],
@@ -391,6 +408,13 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     repeatCount: input.thread?.repeatCount ?? 0,
     humanHolding: input.thread?.humanHolding ?? false,
   };
+  // Chính sách mâu thuẫn: chỉ khi đoạn DÙNG ĐƯỢC (qua ngưỡng) thuộc nhóm mâu thuẫn của đúng chủ đề khách hỏi; ý khác trả lời bình thường.
+  const askedConflictTopics = new Set(
+    (extract.asks.length > 0 ? extract.asks : [masked]).flatMap(conflictTopicsOfAsk),
+  );
+  const policyConflict = usable.some(
+    (c) => c.conflictTopic !== undefined && askedConflictTopics.has(c.conflictTopic),
+  );
   const decision = closing
     ? replyCapClosingDecision()
     : decideAction({
@@ -409,7 +433,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
         // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
         comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
-        risks: turnRisks.risks,
+        risks: { ...turnRisks.risks, policyConflict },
       });
 
   // Giọng văn: của workspace theo ngôn ngữ nhận ra (brand_voice thật); thiếu → giọng mặc định. Bộ soạn và bộ chặn dùng CÙNG giọng.

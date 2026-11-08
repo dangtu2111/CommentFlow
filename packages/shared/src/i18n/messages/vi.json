@@ -1008,6 +1008,7 @@
         "quota_exhausted": "Đã hết lượt AI trong kỳ nên AI không soạn gợi ý cho bình luận này. Bạn trả lời tay hoặc bấm Soạn gợi ý sau khi có thêm lượt.",
         "attempts_exhausted": "AI đã thử nhiều lần mà chưa soạn được. Bạn trả lời tay hoặc bấm Soạn gợi ý để thử lại.",
         "ai_invalid_output": "AI trả về kết quả không đọc được. Bạn trả lời tay hoặc bấm Soạn gợi ý để thử lại.",
+        "policy_conflict": "Các chính sách của shop đang mâu thuẫn nhau về đúng điều khách hỏi (chính sách mâu thuẫn). Bạn kiểm tra và trả lời thủ công, rồi sửa chính sách cho khớp.",
         "customer_post_reply_cap": "Khách này đã đủ số câu AI được trả lời dưới bài này trong 24 giờ. Bạn xem và trả lời tay.",
         "other": "AI cần người xem câu này (ví dụ khiếu nại, thông tin chưa có trong kiến thức). Bạn trả lời tay hoặc bấm Soạn gợi ý để thử lại."
       },
