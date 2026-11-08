@@ -1,4 +1,11 @@
-import { type Embedder, loadEmbeddingService, type TryKnowledge } from '@flow/ai';
+import {
+  createMlReranker,
+  type Embedder,
+  loadEmbeddingService,
+  loadMlRerankerOptions,
+  type Reranker,
+  type TryKnowledge,
+} from '@flow/ai';
 import type { FlowDb } from '@flow/db';
 import type { ShopFixture } from '../shop';
 import { createProductionKnowledge } from './knowledge';
@@ -13,8 +20,11 @@ export type ProductionHandle = {
   info: ProductionKnowledgeInfo;
   db: FlowDb;
   embedder: Embedder;
+  /** Rerank thật qua ml (nếu `ML_RERANK_ENABLED=true`); không có → `undefined` (quyết định liên quan bằng cosine). */
+  reranker: Reranker | undefined;
   knowledge: TryKnowledge;
   vectorFailures: () => number;
+  rerankFailures: () => number;
   close: () => Promise<void>;
 };
 
@@ -40,18 +50,23 @@ export async function openProduction(
     await adminPool.end();
   }
   const embedder = prepared.embedding.embedder as Embedder;
+  const rerankOptions = loadMlRerankerOptions(env);
+  const reranker = rerankOptions ? createMlReranker(rerankOptions) : undefined;
   const built = await createProductionKnowledge({
     db: prepared.db,
     workspaceId: prepared.info.workspaceId,
     version: prepared.info.kbVersion,
     embedder,
+    ...(reranker ? { reranker } : {}),
   });
   return {
     info: prepared.info,
     db: prepared.db,
     embedder,
+    reranker,
     knowledge: built.knowledge,
     vectorFailures: built.vectorFailures,
+    rerankFailures: built.rerankFailures,
     close: () => prepared.db.close(),
   };
 }

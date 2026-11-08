@@ -24,3 +24,10 @@ export {
   ML_EMBEDDING_MODEL,
   type MlEmbedderOptions,
 } from './ml-embedder';
+export {
+  createMlReranker,
+  loadMlRerankerOptions,
+  ML_RERANK_MODEL,
+  type MlRerankerOptions,
+  type Reranker,
+} from './ml-reranker';

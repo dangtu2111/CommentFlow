@@ -95,12 +95,16 @@ export function renderRetrievalReport(input: {
   config: Record<string, string>;
   metrics: Record<string, RetrievalGroupMetrics>;
   failures: readonly QuestionDiagnostic[];
-  /** Hiệu chỉnh ngưỡng "đủ liên quan" theo điểm tuyệt đối (cosine/rerank) trên bộ đoạn đúng đã gán. */
-  calibration?: Calibration & {
-    scoreKind: string;
-    positiveSamples: Record<string, number>;
-    negativeSamples: Record<string, number>;
-  };
+  /** Bảng chỉ số bổ sung (vd. SAU rerank) cạnh bảng chính (trước rerank/RRF). */
+  extraMetrics?: ReadonlyArray<{ label: string; metrics: Record<string, RetrievalGroupMetrics> }>;
+  /** Hiệu chỉnh ngưỡng "đủ liên quan" theo điểm tuyệt đối (cosine, rerank) trên bộ đoạn đúng đã gán — mỗi loại điểm một mục. */
+  calibrations?: ReadonlyArray<
+    Calibration & {
+      scoreKind: string;
+      positiveSamples: Record<string, number>;
+      negativeSamples: Record<string, number>;
+    }
+  >;
 }): string {
   const k = RETRIEVAL_THRESHOLDS.k;
   const lines = [`# ${input.title}`, ''];
@@ -112,6 +116,20 @@ export function renderRetrievalReport(input: {
       `| ${group} | ${m.samples} | ${pct(m.recallAtK)} | ${m.mrr === null ? 'n/a' : m.mrr.toFixed(3)} |`,
     );
   }
+  for (const extra of input.extraMetrics ?? []) {
+    lines.push(
+      '',
+      `## ${extra.label}`,
+      '',
+      `| Nhóm | Số câu | recall@${k} | MRR |`,
+      '|---|---|---|---|',
+    );
+    for (const [group, m] of Object.entries(extra.metrics)) {
+      lines.push(
+        `| ${group} | ${m.samples} | ${pct(m.recallAtK)} | ${m.mrr === null ? 'n/a' : m.mrr.toFixed(3)} |`,
+      );
+    }
+  }
   lines.push('', '### Phán quyết (mục tiêu recall@5 ≥ 0,9 và MRR ≥ 0,7)', '');
   for (const [group, m] of Object.entries(input.metrics)) {
     for (const v of judgeRetrieval(m)) {
@@ -120,8 +138,7 @@ export function renderRetrievalReport(input: {
       );
     }
   }
-  if (input.calibration) {
-    const c = input.calibration;
+  for (const c of input.calibrations ?? []) {
     lines.push('', `## Hiệu chỉnh ngưỡng liên quan (điểm tuyệt đối: ${c.scoreKind})`, '');
     lines.push(
       `- Mẫu dương (đoạn đúng của câu có đáp án): ${c.positives}; mẫu âm (câu không có nguồn, lấy điểm cao nhất của kết quả): ${c.negatives}`,

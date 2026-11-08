@@ -1,4 +1,9 @@
-import { loadEmbeddingService, type MlEmbedderOptions } from '@flow/ai';
+import {
+  loadEmbeddingService,
+  loadMlRerankerOptions,
+  type MlEmbedderOptions,
+  type MlRerankerOptions,
+} from '@flow/ai';
 import { parseEnv, resolveAiTurnLimit } from '@flow/shared';
 import { z } from 'zod';
 
@@ -153,6 +158,8 @@ export type WorkerConfig = {
   dataExport: DataExportConfig;
   /** Dịch vụ ml cho embedding (env chỉ bật/tắt + địa chỉ); `undefined` = không dùng. Model hoạt động đọc từ DB (`cf.embedding_state`), KHÔNG từ env (FR-133). */
   embeddingService: MlEmbedderOptions | undefined;
+  /** Dịch vụ ml cho rerank (bge-reranker-v2-m3; `ML_RERANK_ENABLED=true` + `ML_URL`); `undefined` = không dùng (quyết định liên quan bằng cosine). */
+  rerankService: MlRerankerOptions | undefined;
   messenger: MessengerConnectorConfig;
   tiktok: TikTokConnectorConfig;
   /** Đồng bộ Shopify thật: cờ `SHOPIFY_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); bật thì cần `TOKEN_ENC_KEYS`. */
@@ -182,6 +189,7 @@ export function loadConfig(source: Record<string, string | undefined> = process.
       turnLimit: resolveAiTurnLimit(source),
     },
     embeddingService: loadEmbeddingService(source),
+    rerankService: loadMlRerankerOptions(source),
     messenger: loadMessengerConfig(source),
     tiktok: loadTikTokConfig(source),
     shopify: {

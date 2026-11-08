@@ -47,6 +47,17 @@ export const KB_MIN_COSINE = 0.3;
 export function kbRelevanceFromCosine(cosine: number): number {
   return Math.min(1, Math.max(0, cosine - KB_MIN_COSINE + KB_RELEVANCE_FLOOR));
 }
+/**
+ * Ngưỡng điểm RERANK (bge-reranker-v2-m3, 0..1) để đoạn được coi là "đủ liên quan". Hiệu chỉnh theo dữ liệu bằng `pnpm --filter @flow/eval run retrieval`
+ * (mẫu dương = điểm đoạn đúng, mẫu âm = điểm cao nhất ở câu không có nguồn; F1 lớn nhất, hòa → thấp nhất). Số đo: docs/testing/eval-nhom-r-2026-11-08.md.
+ */
+export const KB_MIN_RERANK = 0.3;
+
+/** Điểm rerank → điểm liên quan trên cùng thang với ngưỡng chung (rerank = `KB_MIN_RERANK` ⇒ đúng bằng `DEFAULT_MIN_RELEVANCE`); đơn điệu, kẹp 0..1. */
+export function kbRelevanceFromRerank(score: number): number {
+  return Math.min(1, Math.max(0, score - KB_MIN_RERANK + KB_RELEVANCE_FLOOR));
+}
+
 /** Bằng `DEFAULT_MIN_RELEVANCE` của bộ soạn (khai ở đây để `retrieve` không import ngược `draft`; có test khóa hai giá trị bằng nhau). */
 const KB_RELEVANCE_FLOOR = 0.35;
 
