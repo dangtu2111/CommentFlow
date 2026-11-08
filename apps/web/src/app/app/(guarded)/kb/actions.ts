@@ -20,8 +20,7 @@ import {
 } from '../../../../lib/kb-content-form';
 import { actionAllowed } from '../../../../server/action-guard';
 import { getDb } from '../../../../server/db';
-import { createKbSyncRequester } from '../../../../server/kb-sync-request';
-import { enqueueJob } from '../../../../server/queue';
+import { requestKbSync } from '../../../../server/kb-sync-request';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 /**
@@ -40,12 +39,6 @@ export type KbNotice =
 
 type Session = { workspaceId: string; userId: string };
 type Tx = Parameters<Parameters<ReturnType<typeof getDb>['withActor']>[2]>[0];
-
-/** Đồng bộ nguồn → bản nháp sau mỗi lần lưu (gộp ~10 giây/workspace); không ảnh hưởng kết quả lưu. */
-const requestKbSync = createKbSyncRequester({
-  enqueue: enqueueJob,
-  warn: (event) => console.warn(JSON.stringify(event)),
-});
 
 const SHOP = '/app/kb/shop';
 const POLICIES = '/app/kb/policies';

@@ -77,12 +77,11 @@ async function loadPlans(
   plans: SourcePlan[];
   productsTruncated: boolean;
 }> {
-  const [policies, faqs, shops, products] = await Promise.all([
-    listPolicyItems(tx, workspaceId),
-    listFaqItems(tx, workspaceId),
-    listShopProfiles(tx, workspaceId),
-    listProductsForSync(tx, workspaceId),
-  ]);
+  // Tuần tự: cùng một giao dịch/kết nối, không chạy song song (pg 9 sẽ bỏ cho phép).
+  const policies = await listPolicyItems(tx, workspaceId);
+  const faqs = await listFaqItems(tx, workspaceId);
+  const shops = await listShopProfiles(tx, workspaceId);
+  const products = await listProductsForSync(tx, workspaceId);
   const policyDocs = buildPolicyDocuments(
     policies.map((p) => ({
       id: p.id,

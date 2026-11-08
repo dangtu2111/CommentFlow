@@ -1,4 +1,5 @@
 import { KB_SYNC_QUEUE, kbSyncEnqueueOptions } from '@flow/shared';
+import { enqueueJob } from './queue';
 
 type Enqueue = (queue: string, data: object, options?: object) => Promise<void>;
 
@@ -19,3 +20,9 @@ export function createKbSyncRequester(deps: {
     }
   };
 }
+
+/** Bản dùng chung của web (Server Action nguồn kiến thức, nhập Excel…): gộp ~10 giây/workspace, không ném lỗi. */
+export const requestKbSync = createKbSyncRequester({
+  enqueue: enqueueJob,
+  warn: (event) => console.warn(JSON.stringify(event)),
+});

@@ -1,9 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { parseKbPublishForm } from '../../../../lib/kb-publish-form';
 import { kbPublish } from '../../../../server/kb-publish';
+import { requestKbSync } from '../../../../server/kb-sync-request';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 /** Trạng thái form xuất bản/khôi phục (đọc bằng `useActionState`). */
@@ -40,4 +41,15 @@ export async function kbPublishAction(
   if (result === 'confirm_required') return { status: 'error', code: 'confirm_required' };
   revalidatePath('/app/kb-publish');
   return { status: result };
+}
+
+/**
+ * Nút "Đồng bộ kiến thức": xếp job `kb-sync` ngay (đưa thông tin shop, chính sách, FAQ, sản phẩm vào BẢN NHÁP). Chỉ Owner (Staff nhận 404);
+ * workspace từ `requireAppUser`. Không xuất bản gì — Owner xem thay đổi rồi bấm Xuất bản.
+ */
+export async function syncKnowledgeAction(): Promise<never> {
+  const { workspace } = await requireAppUser({ role: 'owner' });
+  await requestKbSync(workspace.id);
+  revalidatePath('/app/kb-publish');
+  redirect('/app/kb-publish?synced=1');
 }

@@ -1,3 +1,4 @@
+import { type ProductCard, parseProductCard } from '@flow/shared';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
 import { variantOptionsOf } from './kb-content';
@@ -68,6 +69,7 @@ export async function listProductsForSync(
     name: string;
     sku: string | null;
     options: ReturnType<typeof variantOptionsOf>;
+    card?: ProductCard;
   }>;
   truncated: boolean;
 }> {
@@ -76,16 +78,21 @@ export async function listProductsForSync(
     name: string;
     sku: string | null;
     variants: unknown;
+    card: unknown;
   }>(sql`
-    SELECT id, name, sku, variants FROM cf.products
+    SELECT id, name, sku, variants, card FROM cf.products
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'active'
      ORDER BY created_at, id LIMIT ${limit + 1}`);
-  const rows = r.rows.slice(0, limit).map((row) => ({
-    id: row.id,
-    name: row.name,
-    sku: row.sku,
-    options: variantOptionsOf(row.variants),
-  }));
+  const rows = r.rows.slice(0, limit).map((row) => {
+    const parsed = parseProductCard(row.card);
+    return {
+      id: row.id,
+      name: row.name,
+      sku: row.sku,
+      options: variantOptionsOf(row.variants),
+      ...(parsed.ok && Object.keys(parsed.card).length > 0 ? { card: parsed.card } : {}),
+    };
+  });
   return { rows, truncated: r.rows.length > limit };
 }
 
@@ -164,4 +171,29 @@ export async function setDraftConflictMarks(
        WHERE workspace_id = ${workspaceId}::uuid AND version_id IS NULL AND is_draft
          AND chunk_key IN (SELECT jsonb_array_elements_text(${JSON.stringify(mark.chunkKeys)}::jsonb))`);
   }
+}
+
+export type DraftChunkSummary = { source: string; chunks: number; withVector: number };
+
+/**
+ * Tóm tắt đoạn nháp theo loại nguồn đồng bộ (`sync:policy|product|faq|shop`, nguồn khác ghi `other`): số đoạn và số đoạn CÓ vector đúng model
+ * đang hoạt động (`embedding_model` = `activeModel`). Chỉ đọc; dùng cho báo cáo lệnh dev `kb:sync`.
+ */
+export async function summarizeDraftChunks(
+  tx: Database,
+  workspaceId: string,
+  activeModel: string,
+): Promise<DraftChunkSummary[]> {
+  const r = await tx.execute<{ source: string; chunks: number; with_vector: number }>(sql`
+    SELECT coalesce(replace(s.external_key, 'sync:', ''), 'other') AS source,
+           count(*)::int AS chunks,
+           count(*) FILTER (WHERE c.embedding IS NOT NULL AND c.embedding_model = ${activeModel})::int AS with_vector
+      FROM cf.kb_chunks c JOIN cf.kb_sources s ON s.id = c.source_id
+     WHERE c.workspace_id = ${workspaceId}::uuid AND c.version_id IS NULL AND c.is_draft
+     GROUP BY 1 ORDER BY 1`);
+  return r.rows.map((row) => ({
+    source: row.source,
+    chunks: row.chunks,
+    withVector: row.with_vector,
+  }));
 }

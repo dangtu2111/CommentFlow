@@ -2,6 +2,7 @@
 
 import { applyProductImport } from '@flow/db/runtime';
 import { getDb } from '../../../../../server/db';
+import { requestKbSync } from '../../../../../server/kb-sync-request';
 import { type ImportActionResult, runProductImport } from '../../../../../server/product-import';
 import { requireAppUser } from '../../../../../server/require-app-user';
 
@@ -21,10 +22,14 @@ export async function runProductImportAction(formData: FormData): Promise<Import
       mapping: typeof mapping === 'string' ? mapping : null,
     },
     {
-      commit: (plan) =>
-        getDb().withActor(workspace.id, user.id, (tx) =>
+      commit: async (plan) => {
+        const result = await getDb().withActor(workspace.id, user.id, (tx) =>
           applyProductImport(tx, workspace.id, plan),
-        ),
+        );
+        // Sản phẩm vừa đổi → đồng bộ lại vào bản nháp kiến thức (gộp ~10 giây, không ném lỗi).
+        await requestKbSync(workspace.id);
+        return result;
+      },
     },
   );
 }

@@ -76,7 +76,7 @@ const variantLabel = (attrs: Record<string, string>): string =>
     .join(', ');
 
 /** Các trường thẻ đưa vào câu nguồn, theo thứ tự cố định, kèm nhãn tiếng Việt (loại/tag không cần cho trả lời). */
-const CARD_DETAIL_LABELS: ReadonlyArray<readonly [keyof ProductCard, string]> = [
+export const CARD_DETAIL_LABELS: ReadonlyArray<readonly [keyof ProductCard, string]> = [
   ['material', 'chất liệu'],
   ['care', 'cách giặt'],
   ['sizeChart', 'bảng size'],

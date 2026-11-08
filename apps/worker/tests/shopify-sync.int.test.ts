@@ -254,4 +254,22 @@ describe('đồng bộ Shopify đầu-cuối (client credentials)', () => {
       ] as never),
     ).rejects.toThrow();
   });
+
+  it('đồng bộ thành công → xếp job kb-sync cho workspace (đưa sản phẩm + chính sách vào bản nháp kiến thức); chưa kết nối → không xếp', async () => {
+    const queued: string[] = [];
+    const withQueue = (fetchImpl: typeof fetch) =>
+      createShopifySyncHandler({
+        db: worker,
+        cipher,
+        enabled: true,
+        logger,
+        fetchImpl,
+        requestKbSync: async (workspaceId) => void queued.push(workspaceId),
+      });
+    await withQueue(fakeShopify({}))(job(ws)); // chưa có cửa hàng kết nối → bỏ qua
+    expect(queued).toEqual([]);
+    await connect();
+    await withQueue(fakeShopify({}))(job(ws));
+    expect(queued).toEqual([ws]);
+  });
 });

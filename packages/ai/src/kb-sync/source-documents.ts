@@ -1,4 +1,5 @@
-import type { ChunkDocument } from '@flow/shared';
+import { type ChunkDocument, cleanCardText, type ProductCard } from '@flow/shared';
+import { CARD_DETAIL_LABELS } from '../try/db-product-knowledge';
 
 /** Nguồn nhập tay → tài liệu cần cắt đoạn (FAQ, thông tin shop, sản phẩm). Hàm thuần, không I/O. */
 
@@ -20,6 +21,8 @@ export type ProductInput = {
   name: string;
   sku: string | null;
   options: ReadonlyArray<{ name: string; values: readonly string[] }>;
+  /** Thẻ sản phẩm (FR-058: chất liệu, cách giặt, bảng size, bảo hành, xuất xứ, mô tả, tag từ Shopify/nhập tay). */
+  card?: ProductCard;
 };
 
 const chunkLang = (lang: 'vi' | 'en' | 'all'): 'vi' | 'en' => (lang === 'en' ? 'en' : 'vi');
@@ -60,6 +63,18 @@ export function buildShopDocuments(
   });
 }
 
+/** Dòng chi tiết từ thẻ: mỗi giá trị làm sạch lại (loại câu có số tiền — nguyên tắc #4: giá chỉ từ `product_variants`). */
+function cardLines(card: ProductCard | undefined): string[] {
+  if (!card) return [];
+  const labelled = CARD_DETAIL_LABELS.flatMap(([field, label]) => {
+    const value = card[field];
+    const text = typeof value === 'string' ? cleanCardText(value) : '';
+    return text === '' ? [] : [`${label.charAt(0).toUpperCase()}${label.slice(1)}: ${text}`];
+  });
+  const tags = (card.tags ?? []).map((tag) => cleanCardText(tag)).filter((tag) => tag !== '');
+  return tags.length > 0 ? [...labelled, `Tag: ${tags.join(', ')}`] : labelled;
+}
+
 export function buildProductDocuments(
   products: readonly ProductInput[],
   sourceTitle: string,
@@ -72,6 +87,7 @@ export function buildProductDocuments(
       `Sản phẩm: ${product.name}`,
       product.sku ? `Mã: ${product.sku}` : null,
       options.length > 0 ? `Tùy chọn: ${options.join('; ')}` : null,
+      ...cardLines(product.card),
     ].filter((line): line is string => line !== null);
     return {
       key: `product:${product.id}`,

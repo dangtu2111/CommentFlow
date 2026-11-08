@@ -1675,6 +1675,12 @@
     }
   },
   "kbPublish": {
+    "sync": {
+      "title": "Sync knowledge",
+      "body": "Put the shop info, policies, FAQ and products (name, options, description — no price/stock) into the draft. This runs automatically after every save; press the button to redo it now. It publishes nothing.",
+      "queued": "Sync queued. Reload in a few minutes to see the draft changes, then press Publish.",
+      "button": "Sync knowledge"
+    },
     "conflicts": {
       "title": "Your policies contradict each other",
       "body": "The sentences below say different things about the same information. You can still publish, but when a customer asks about this topic the AI will hand over to staff instead of answering. Fix them so they match, then publish.",

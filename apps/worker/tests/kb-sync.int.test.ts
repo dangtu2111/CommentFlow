@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createMockEmbedder, type EmbeddingConfig } from '@flow/ai';
-import { createDb, type FlowDb } from '@flow/db';
+import { createDb, type FlowDb, summarizeDraftChunks } from '@flow/db';
 import { AppError } from '@flow/shared';
 import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -99,9 +99,43 @@ describe('đồng bộ vào bản nháp', () => {
       ['Chính sách cửa hàng › Chính sách giao hàng › Phí', 'shipping_fee'],
     ]);
     expect(rows.every((r) => r.embedding_model === MODEL)).toBe(true);
+    const summary = await db.withJob(ws, (tx) => summarizeDraftChunks(tx, ws, MODEL));
+    expect(summary.map((r) => [r.source, r.chunks === r.withVector])).toEqual([
+      ['policy', true],
+      ['product', true],
+    ]);
     const product = rows.find((r) => r.external_key === 'sync:product');
     expect(product?.metadata.topic).toBe('product_info');
     expect(product?.content).not.toMatch(/199|giá|tồn/i);
+  });
+
+  it('thẻ sản phẩm (card) vào đoạn nháp gắn product_id + header "Sản phẩm › tên"; câu có số tiền trong mô tả bị loại; vẫn không giá/tồn', async () => {
+    const pid = (
+      await admin.query(
+        `INSERT INTO cf.products (workspace_id, name, price_vnd, stock, card)
+         VALUES ($1, 'Áo thun Basic', 199000, 7, $2::jsonb) RETURNING id`,
+        [
+          ws,
+          JSON.stringify({
+            material: 'Cotton 100%',
+            sizeChart: 'M: 56-62kg; L: 63-70kg',
+            description: 'Áo thoáng mát. Giá chỉ 199k hôm nay.',
+          }),
+        ],
+      )
+    ).rows[0].id as string;
+    await run();
+    const rows = (await draftChunks()).filter((r) => r.external_key === 'sync:product');
+    const text = rows.map((r) => r.content).join(' ');
+    expect(text).toMatch(/Chất liệu: Cotton 100%/);
+    expect(text).toMatch(/Bảng size: M: 56-62kg/);
+    expect(text).not.toMatch(/199|giá|tồn/i);
+    expect(rows[0]?.context_header).toBe('Sản phẩm › Áo thun Basic');
+    const linked = await admin.query(
+      'SELECT count(*)::int AS n FROM cf.kb_chunks WHERE workspace_id = $1 AND product_id = $2 AND is_draft',
+      [ws, pid],
+    );
+    expect(linked.rows[0].n).toBeGreaterThan(0);
   });
 
   it('chạy lại không đổi gì → không ghi đoạn nào; sửa một mục → chỉ ghi đoạn đó; xóa chính sách → xóa đoạn', async () => {
