@@ -12,7 +12,7 @@ Trạng thái nằm trong repo (AGENTS.md § Phối hợp nhiều agent): agent 
 | 2 | **(1b)** khớp sản phẩm lai (vector tên sản phẩm + pg_trgm + bí danh) | Chưa làm |
 | 3 | **(4)** + **STOCK-DISCLOSURE-OPTION** | Chưa làm (gap đã ghi) |
 | 4 | **(6)** extract trả mã chủ đề cố định (`KbTopic`), hỏi lại đúng ngôn ngữ khách | Chưa làm |
-| 5 | **(3) (7) (8)** | Chưa làm |
+| 5 | **(3) (7) (8)** — nhóm (7) gồm gap GUARD-REDIRECT-TEMPLATE (câu chuyển hướng của guard nghĩa lấy từ `brand_voice.handoff_templates` + xưng hô + trong/ngoài giờ) | Chưa làm |
 | 6 | Đo tốc độ / recall / cache | Chưa làm |
 | 7 | Gắn sản phẩm vào bài | Chưa làm |
 
