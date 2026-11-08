@@ -59,7 +59,7 @@ function runScenarios(locale: Locale) {
       await page.goto('/app/try-ai');
       await page.getByLabel(t('tryAi.label'), { exact: true }).fill('ship về Hà Nội mất bao lâu ạ');
       await page.getByRole('button', { name: t('tryAi.submit'), exact: true }).click();
-      await expect(page.getByText(t('tryAi.errors.llm_not_configured'))).toBeVisible();
+      await expect(page.getByText(t('tryAi.errors.llm_missing_service'))).toBeVisible();
       await expect(page.getByText(t('tryAi.result.reply'))).toHaveCount(0);
     } finally {
       await context.close();

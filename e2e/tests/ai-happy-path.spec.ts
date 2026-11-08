@@ -85,7 +85,9 @@ function runScenarios(locale: Locale) {
       await expect(page.getByText('Dạ shop gửi bạn thông tin')).toBeVisible();
       // Nguồn tìm được là chính FAQ vừa nhập.
       await expect(page.getByText(question).first()).toBeVisible();
-      await expect(page.getByText(t('tryAi.errors.llm_not_configured'))).toHaveCount(0);
+      for (const key of ['llm_missing_service', 'llm_missing_model', 'llm_flag_off']) {
+        await expect(page.getByText(t(`tryAi.errors.${key}`))).toHaveCount(0);
+      }
     } finally {
       await context.close();
     }

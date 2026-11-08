@@ -89,13 +89,13 @@ describe('FR-054 US-034 bộ câu kiểm thử: đầu vào, hạn mức, kết 
 });
 
 describe('bộ câu kiểm thử không chạy bản mẫu', () => {
-  it('thiếu LLM thật → llm_not_configured, không tốn hạn mức', async () => {
+  it('thiếu LLM thật → llm_missing_service, không tốn hạn mức', async () => {
     const quota = createTryQuota({ limit: 1 });
     const run = createKbTestSetAction({ quota, now, knowledgeRunner: demoKnowledgeRunner });
     for (let i = 0; i < 2; i++) {
       expect(await run(session, 'ship | answer')).toEqual({
         ok: false,
-        reason: 'llm_not_configured',
+        reason: 'llm_missing_service',
       });
     }
   });

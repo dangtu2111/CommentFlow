@@ -19,7 +19,12 @@ export { DEMO_ABBREVIATIONS } from './demo-abbreviations';
 export { createDemoDrafter, createDemoExtractor, mentionsOfProducts } from './demo-ai';
 export { createDemoKnowledge } from './demo-knowledge';
 export { createKbTryKnowledge, type KbTryKnowledgeDeps } from './kb-try-knowledge';
-export { createLlmDepsFromEnv, type LlmDeps, type LlmDepsOptions } from './llm-deps';
+export {
+  createLlmDepsFromEnv,
+  type LlmDeps,
+  type LlmDepsOptions,
+  type LlmNotReady,
+} from './llm-deps';
 export {
   type ParseTestCasesResult,
   parseTestCases,
