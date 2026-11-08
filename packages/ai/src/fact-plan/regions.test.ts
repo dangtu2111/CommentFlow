@@ -1,6 +1,56 @@
 import { describe, expect, it } from 'vitest';
 import { canonicalProvince, findProvinces, PROVINCES, sameProvince } from './regions';
 
+describe('bí danh và thành phố thuộc tỉnh (đã duyệt 08/11/2026)', () => {
+  it.each([
+    ['SG', 'ho_chi_minh'],
+    ['Thủ Đức', 'ho_chi_minh'],
+    ['HP', 'hai_phong'],
+    ['Biên Hòa', 'dong_nai'],
+    ['Hạ Long', 'quang_ninh'],
+    ['Quy Nhơn', 'gia_lai'],
+    ['Buôn Ma Thuột', 'dak_lak'],
+    ['Hội An', 'da_nang'],
+    ['Tam Kỳ', 'da_nang'],
+    ['Tuy Hòa', 'dak_lak'],
+    ['Phan Thiết', 'lam_dong'],
+    ['Rạch Giá', 'an_giang'],
+    ['Mỹ Tho', 'dong_thap'],
+    ['Long Xuyên', 'an_giang'],
+    ['Bảo Lộc', 'lam_dong'],
+  ])('%s → %s', (name, id) => {
+    expect(canonicalProvince(name)).toBe(id);
+  });
+
+  it('viết tắt 2 chữ (HN/HP/SG) chỉ nhận khi đứng sau từ chỉ nơi hoặc khi cả câu ≤ 3 từ: "máy in HP" không phải Hải Phòng', () => {
+    expect(findProvinces('máy in HP loại tốt')).toEqual([]);
+    expect(findProvinces('laptop HP 15 còn hàng không')).toEqual([]);
+    expect(findProvinces('ship ra HP bao nhiêu')).toEqual(['hai_phong']);
+    expect(findProvinces('giao về SG nhé bạn')).toEqual(['ho_chi_minh']);
+    expect(findProvinces('HP')).toEqual(['hai_phong']);
+    expect(findProvinces('ở HN ạ')).toEqual(['ha_noi']);
+    expect(findProvinces('mình ở hn nhé')).toEqual(['ha_noi']);
+    expect(findProvinces('hn')).toEqual(['ha_noi']);
+  });
+
+  it('KHÔNG có "ĐN" (Đà Nẵng/Đồng Nai mơ hồ)', () => {
+    expect(canonicalProvince('ĐN')).toBeNull();
+    expect(canonicalProvince('dn')).toBeNull();
+  });
+
+  it('"Vinh" là Nghệ An, nhưng Vĩnh Long / Vĩnh Phúc / Vĩnh Yên KHÔNG ra Nghệ An', () => {
+    expect(canonicalProvince('Vinh')).toBe('nghe_an');
+    expect(canonicalProvince('ship ra TP Vinh nhé')).toBe('nghe_an');
+    expect(canonicalProvince('Vĩnh Long')).toBe('vinh_long');
+    expect(findProvinces('Vĩnh Long')).toEqual(['vinh_long']);
+    expect(findProvinces('vinh long')).toEqual(['vinh_long']);
+    expect(findProvinces('Vĩnh Phúc')).toEqual(['phu_tho']);
+    expect(findProvinces('vinh phuc')).toEqual(['phu_tho']);
+    expect(findProvinces('Vĩnh Yên')).toEqual(['phu_tho']);
+    expect(findProvinces('từ Vinh vào Vĩnh Long')).toEqual(['nghe_an', 'vinh_long']);
+  });
+});
+
 describe('từ điển tỉnh/thành (sau sáp nhập 2025, kèm tên cũ)', () => {
   it('có đúng 34 đơn vị cấp tỉnh sau sáp nhập', () => {
     expect(PROVINCES).toHaveLength(34);
