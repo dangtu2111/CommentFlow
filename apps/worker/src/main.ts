@@ -25,6 +25,7 @@ import {
   type IngestPipelineHook,
 } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
+import { createKbSyncHandler } from './jobs/kb-sync';
 import { createPingHandler } from './jobs/ping';
 import { createPipelineHandler } from './jobs/pipeline-job';
 import { startPipelineSweep } from './jobs/pipeline-sweep';
@@ -41,6 +42,7 @@ import {
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
+  KB_SYNC_QUEUE,
   PIPELINE_QUEUE,
   SEND_QUEUE,
   SHOPIFY_SYNC_QUEUE,
@@ -207,6 +209,17 @@ async function main(): Promise<void> {
     KB_PUBLISH_QUEUE,
     { batchSize: 1, localConcurrency: 1 },
     createKbPublishHandler({ db, logger }),
+  );
+  // KB-SYNC-DRAFT: kb-sync — nguồn nhập tay → bản nháp (embedding thật theo model hoạt động ở DB; thiếu → lỗi rõ). Một job một lúc.
+  await boss.work(
+    KB_SYNC_QUEUE,
+    { batchSize: 1, localConcurrency: 1 },
+    createKbSyncHandler({
+      db,
+      logger,
+      resolveEmbedding: async (tx) =>
+        (await embeddingResolver.resolve(() => getEmbeddingState(tx))).config,
+    }),
   );
   // Kiểm lệch model embedding với dữ liệu đã lưu (FR-133): chỉ log; khi lệch, nhánh vector tự tắt ở từng lượt (không trộn vector khác model).
   const embeddingState = await db.withSystem((tx) => getEmbeddingState(tx));

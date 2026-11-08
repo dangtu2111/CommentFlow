@@ -267,6 +267,14 @@ export {
   setProductNameEmbedding,
 } from './queries/kb-search';
 export {
+  findOrCreateSyncSource,
+  findSyncSource,
+  KB_SYNC_PRODUCT_LIMIT,
+  listProductsForSync,
+  type SyncSourceKind,
+  setDraftChunkTopics,
+} from './queries/kb-sync';
+export {
   countLeadsByStage,
   deleteLead,
   getLeadCipher,
