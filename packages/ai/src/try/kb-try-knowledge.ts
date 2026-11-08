@@ -4,6 +4,7 @@ import type { Embedder } from '../embedding/embedder';
 import type { Reranker } from '../embedding/ml-reranker';
 import { scanInjection } from '../injection/injection-scan';
 import type { KbSearcher } from '../retrieve/kb-searcher';
+import { shouldRerank } from '../retrieve/rerank-policy';
 import {
   type KbHit,
   kbRelevanceFromCosine,
@@ -93,7 +94,7 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
           ...(conflictTopicOf(hit) ? { conflictTopic: conflictTopicOf(hit) } : {}),
         });
       }
-      if (deps.reranker && candidates.length > 0) {
+      if (deps.reranker && candidates.length > 0 && shouldRerank(query, context.lang)) {
         // Chỉ rerank RERANK_TOP đoạn đầu (kết quả tìm đã xếp theo RRF + ưu tiên nhẹ ngôn ngữ).
         const top = candidates.slice(0, RERANK_TOP);
         try {

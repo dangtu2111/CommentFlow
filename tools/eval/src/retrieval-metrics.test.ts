@@ -95,7 +95,7 @@ describe('calibrateThreshold — chọn ngưỡng cosine theo dữ liệu (F1)',
     expect(r.f1).toBeGreaterThan(0.8);
     expect(r.positives).toBe(4);
     expect(r.negatives).toBe(3);
-    expect(r.curve.length).toBeGreaterThan(10);
+    expect(r.curve.length).toBeGreaterThanOrEqual(5);
   });
 
   it('F1 hòa → lấy ngưỡng THẤP nhất (ưu tiên recall: không bỏ sót đoạn đúng)', () => {
@@ -106,5 +106,12 @@ describe('calibrateThreshold — chọn ngưỡng cosine theo dữ liệu (F1)',
 
   it('không có mẫu dương → lỗi rõ (không thể hiệu chỉnh)', () => {
     expect(() => calibrateThreshold([], [0.3])).toThrow(/dương/);
+  });
+
+  it('thang điểm rất nhỏ (rerank 0,0001–0,2) vẫn hiệu chỉnh được — không dùng lưới cố định 0,01', () => {
+    const r = calibrateThreshold([0.19, 0.08, 0.03], [0.004, 0.0006]);
+    expect(r.f1).toBe(1);
+    expect(r.threshold).toBeGreaterThan(0.004);
+    expect(r.threshold).toBeLessThanOrEqual(0.03);
   });
 });

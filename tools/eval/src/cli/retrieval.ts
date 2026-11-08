@@ -14,6 +14,7 @@ import {
   KB_MIN_RERANK,
   normalizeAndDetectLang,
   rrfRelevance,
+  shouldRerank,
 } from '@flow/ai';
 import { searchKbChunksDetailed } from '@flow/db';
 import { parseDataset } from '../dataset';
@@ -125,9 +126,11 @@ async function fetchFor(original: string): Promise<Fetched> {
     }
     hits = [...byId.values()].sort((a, b) => b.score - a.score);
   }
-  const rerank = handle.reranker
-    ? await handle.reranker.rerank(original, hits.slice(0, TOP_RERANK).map(textOf))
-    : null;
+  // Cùng chính sách như production: bỏ rerank với tiếng Việt không dấu (đo: làm xấu đi).
+  const rerank =
+    handle.reranker && shouldRerank(text, lang)
+      ? await handle.reranker.rerank(original, hits.slice(0, TOP_RERANK).map(textOf))
+      : null;
   return {
     hits,
     origins: hits.map((hit) => originOf(hit.chunkKey, origins)),

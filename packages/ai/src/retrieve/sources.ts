@@ -48,10 +48,12 @@ export function kbRelevanceFromCosine(cosine: number): number {
   return Math.min(1, Math.max(0, cosine - KB_MIN_COSINE + KB_RELEVANCE_FLOOR));
 }
 /**
- * Ngưỡng điểm RERANK (bge-reranker-v2-m3, 0..1) để đoạn được coi là "đủ liên quan". Hiệu chỉnh theo dữ liệu bằng `pnpm --filter @flow/eval run retrieval`
- * (mẫu dương = điểm đoạn đúng, mẫu âm = điểm cao nhất ở câu không có nguồn; F1 lớn nhất, hòa → thấp nhất). Số đo: docs/testing/eval-nhom-r-2026-11-08.md.
+ * Ngưỡng điểm RERANK (bge-reranker-v2-m3, sigmoid 0..1) để đoạn được coi là "đủ liên quan" — CHỈ áp cho câu được rerank (tiếng Anh, tiếng Việt có dấu; xem `shouldRerank`).
+ * Hiệu chỉnh theo dữ liệu (Nhóm R, 08/11/2026, gộp sswiftly + demo-shop: 21 mẫu dương = đoạn đúng, 11 mẫu âm = câu không có nguồn): điểm của reranker rất THẤP và trải rộng
+ * (đoạn đúng 0,0005–0,99; đoạn sai ở câu COD ≤ 0,0020), nên ngưỡng nằm ở cỡ 0,002: ở **0,0021** recall 90,5% (19/21), nhận nhầm 36,4% (4/11) và các câu COD (đoạn ship, điểm ≤ 0,0020)
+ * bị loại; F1 tối đa (0,875) ở 0,0005 nhưng nhận nhầm 54,5% và KHÔNG loại được câu COD. Số đo đầy đủ: docs/testing/eval-nhom-r-2026-11-08.md.
  */
-export const KB_MIN_RERANK = 0.3;
+export const KB_MIN_RERANK = 0.0021;
 
 /** Điểm rerank → điểm liên quan trên cùng thang với ngưỡng chung (rerank = `KB_MIN_RERANK` ⇒ đúng bằng `DEFAULT_MIN_RELEVANCE`); đơn điệu, kẹp 0..1. */
 export function kbRelevanceFromRerank(score: number): number {

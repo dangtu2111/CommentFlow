@@ -164,7 +164,7 @@ describe('rerank (bge-reranker-v2-m3): quyết định "đủ liên quan" bằng
         }),
       ],
       rr,
-    ).searchKb('ship COD không', { lang: 'vi', productIds: [] });
+    ).searchKb('ship COD không', { lang: 'en', productIds: [] });
     expect(out.map((c) => c.id)).toEqual(['kb:cod', 'kb:ship']);
     expect(out[0]?.score).toBeCloseTo(kbRelevanceFromRerank(0.9), 10);
     expect(out[1]?.score).toBeCloseTo(kbRelevanceFromRerank(0.1), 10);
@@ -177,7 +177,7 @@ describe('rerank (bge-reranker-v2-m3): quyết định "đủ liên quan" bằng
   it('chỉ rerank tối đa 10 đoạn đầu (theo RRF)', async () => {
     const rr = reranker(Array.from({ length: 10 }, () => 0.5));
     const hits = Array.from({ length: 14 }, (_, i) => hit({ id: `h${i}`, content: `đoạn ${i}` }));
-    const out = await make(hits, rr).searchKb('q', { lang: 'vi', productIds: [] });
+    const out = await make(hits, rr).searchKb('q', { lang: 'en', productIds: [] });
     expect(rr.calls[0]).toHaveLength(10);
     expect(out).toHaveLength(10);
   });
@@ -186,7 +186,7 @@ describe('rerank (bge-reranker-v2-m3): quyết định "đủ liên quan" bằng
     const failures: unknown[] = [];
     const out = await make([hit({ id: 'a', cosine: 0.7 })], reranker(new Error('ml down')), (e) =>
       failures.push(e),
-    ).searchKb('q', { lang: 'vi', productIds: [] });
+    ).searchKb('q', { lang: 'en', productIds: [] });
     expect(failures).toHaveLength(1);
     expect(out[0]?.score).toBeGreaterThan(0.35);
   });
@@ -197,5 +197,24 @@ describe('rerank (bge-reranker-v2-m3): quyết định "đủ liên quan" bằng
       productIds: [],
     });
     expect(out).toHaveLength(1);
+  });
+
+  it('câu tiếng Việt KHÔNG dấu bỏ rerank (giữ cosine); tiếng Anh/có dấu thì rerank', async () => {
+    const rr = reranker([0.9]);
+    const plain = await make([hit({ id: 'a', cosine: 0.7 })], rr).searchKb('dat hom nay may ngay', {
+      lang: 'vi',
+      productIds: [],
+    });
+    expect(rr.calls).toHaveLength(0);
+    expect(plain).toHaveLength(1);
+    await make([hit({ id: 'a', cosine: 0.7 })], rr).searchKb('how long', {
+      lang: 'en',
+      productIds: [],
+    });
+    await make([hit({ id: 'a', cosine: 0.7 })], rr).searchKb('Đặt hôm nay mấy ngày', {
+      lang: 'vi',
+      productIds: [],
+    });
+    expect(rr.calls).toHaveLength(2);
   });
 });

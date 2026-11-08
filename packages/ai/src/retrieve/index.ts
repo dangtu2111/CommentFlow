@@ -4,6 +4,7 @@ export {
   type KbSearcher,
   type KbSearchQuery,
 } from './kb-searcher';
+export { shouldRerank } from './rerank-policy';
 export {
   type RetrieveDeps,
   type RetrieveInput,
