@@ -122,7 +122,11 @@ describe('workspace có bình luận chờ quét (0081) — đầu vào để l�
   it('trả workspace có bình luận `new` quá hạn không backfill; KHÔNG trả workspace chỉ có backfill/chưa quá hạn', async () => {
     const quiet = await seedWorkspace(admin);
     const ids = await worker.withSystem((tx) =>
-      listWorkspacesWithPendingPipelineComments(tx, { newAfterSeconds: 90, limit: 500 }),
+      listWorkspacesWithPendingPipelineComments(tx, {
+        newAfterSeconds: 90,
+        processingAfterSeconds: 900,
+        limit: 500,
+      }),
     );
     expect(ids).toContain(ws);
     expect(ids).not.toContain(quiet);
@@ -134,14 +138,22 @@ describe('workspace có bình luận chờ quét (0081) — đầu vào để l�
     ]);
     try {
       const ids = await worker.withSystem((tx) =>
-        listWorkspacesWithPendingPipelineComments(tx, { newAfterSeconds: 90, limit: 500 }),
+        listWorkspacesWithPendingPipelineComments(tx, {
+          newAfterSeconds: 90,
+          processingAfterSeconds: 900,
+          limit: 500,
+        }),
       );
       expect(ids).not.toContain(ws);
       const web = createWebDb();
       try {
         await expect(
           web.withSystem((tx) =>
-            listWorkspacesWithPendingPipelineComments(tx, { newAfterSeconds: 90, limit: 10 }),
+            listWorkspacesWithPendingPipelineComments(tx, {
+              newAfterSeconds: 90,
+              processingAfterSeconds: 900,
+              limit: 10,
+            }),
           ),
         ).rejects.toThrow();
       } finally {
@@ -152,5 +164,85 @@ describe('workspace có bình luận chờ quét (0081) — đầu vào để l�
         ws,
       ]);
     }
+  });
+});
+
+describe('hàm liệt kê workspace bao CẢ HAI nhánh của hàm quét gốc (0082)', () => {
+  const list = (limit = 500) =>
+    worker.withSystem((tx) =>
+      listWorkspacesWithPendingPipelineComments(tx, {
+        newAfterSeconds: 90,
+        processingAfterSeconds: 900,
+        limit,
+      }),
+    );
+  const seedOnly = async (status: string, state: 'processing' | null) => {
+    const w = await seedWorkspace(admin);
+    const ch = (
+      await admin.query(
+        "INSERT INTO cf.channels (workspace_id, platform, external_id, name) VALUES ($1, 'facebook', $2, 'P') RETURNING id",
+        [w, `p-${newId()}`],
+      )
+    ).rows[0].id;
+    const post = (
+      await admin.query(
+        'INSERT INTO cf.posts (workspace_id, channel_id, external_id) VALUES ($1, $2, $3) RETURNING id',
+        [w, ch, `post-${newId()}`],
+      )
+    ).rows[0].id;
+    const c = (
+      await admin.query(
+        `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, text, status, ingest_source, created_time)
+         VALUES ($1, $2, $3, $4, 'u', 'x', $5, 'webhook', now() - interval '2 hours') RETURNING id`,
+        [w, ch, post, `c-${newId()}`, status],
+      )
+    ).rows[0].id as string;
+    if (state) {
+      await admin.query(
+        `INSERT INTO cf.pipeline_turns (workspace_id, comment_id, state, attempts, locked_until, updated_at)
+         VALUES ($1, $2, $3, 1, now() - interval '1 hour', now() - interval '1 hour')`,
+        [w, c, state],
+      );
+    }
+    return { w, c };
+  };
+
+  it('workspace CHỈ có 1 bình luận `processing` kẹt (job chết) vẫn được liệt kê và hàm quét gốc trả đúng bình luận đó', async () => {
+    const { w, c } = await seedOnly('processing', 'processing');
+    expect(await list()).toContain(w);
+    const rows = await worker.withSystem((tx) =>
+      listPendingPipelineComments(tx, {
+        newAfterSeconds: 90,
+        processingAfterSeconds: 900,
+        workspaceIds: [w],
+        limit: 10,
+      }),
+    );
+    // Nhánh B của hàm gốc không giới hạn theo danh sách workspace nên còn trả lượt của workspace khác trong DB test dùng chung.
+    expect(rows.filter((r) => r.workspaceId === w).map((r) => r.commentId)).toEqual([c]);
+  });
+
+  it('workspace chỉ có bình luận `new` ĐÃ có lượt (nhân viên bấm "Soạn gợi ý") cũng được liệt kê', async () => {
+    const { w } = await seedOnly('new', 'processing');
+    expect(await list()).toContain(w);
+  });
+
+  it('không kẹt (`processing` còn thuê) thì không liệt kê', async () => {
+    const { w, c } = await seedOnly('processing', 'processing');
+    await admin.query(
+      "UPDATE cf.pipeline_turns SET locked_until = now() + interval '1 hour', updated_at = now() WHERE comment_id = $1",
+      [c],
+    );
+    expect(await list()).not.toContain(w);
+  });
+
+  it('workspace chờ CŨ NHẤT đứng đầu trước khi LIMIT (không bị bỏ đói)', async () => {
+    const oldest = await seedOnly('new', null);
+    await admin.query(
+      "UPDATE cf.comments SET created_time = now() - interval '30 days' WHERE id = $1",
+      [oldest.c],
+    );
+    const ids = await list(1);
+    expect(ids).toEqual([oldest.w]);
   });
 });

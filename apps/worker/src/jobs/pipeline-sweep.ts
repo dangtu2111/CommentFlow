@@ -52,6 +52,7 @@ export async function runPipelineSweep(config: PipelineSweepConfig): Promise<Pip
       db.withSystem((tx) =>
         listWorkspacesWithPendingPipelineComments(tx, {
           newAfterSeconds: DEFAULT_MERGE_WINDOW_SECONDS + 60,
+          processingAfterSeconds: PIPELINE_PROCESSING_STUCK_SECONDS,
           limit: PIPELINE_SWEEP_LIMIT,
         }),
       ))
@@ -70,6 +71,11 @@ export async function runPipelineSweep(config: PipelineSweepConfig): Promise<Pip
   }
   const rows = await list(config.db, [...enabled]);
   for (const row of rows) {
+    // Cờ `cf.pipeline.v2` TẮT cho workspace → không xếp lại gì (kể cả bình luận kẹt `processing`/đã có lượt): bật cờ lại thì lần quét sau xử lý tiếp.
+    if (!enabled.has(row.workspaceId)) {
+      result.skipped += 1;
+      continue;
+    }
     const auto = shouldAutoRunPipeline({
       ingestSource: row.ingestSource as IngestSource,
       isOwn: false,
