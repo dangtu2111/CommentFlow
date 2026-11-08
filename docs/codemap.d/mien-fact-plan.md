@@ -1,0 +1,1 @@
+| Fact plan (DRAFT-FACT-SLOTS) | `packages/ai/src/fact-plan/{plan,regions,slots,fill,types}.ts` | Lập sự kiện từ dữ liệu có cấu trúc (khu vực ship theo từ điển tỉnh/thành 2025, giá/khoảng giá, tồn, COD/đổi trả/bảo hành/thanh toán) hoặc `unknown`; guard từ chối cứng chữ số/khẳng định ngoài chỗ giữ chỗ `{fact:id}`; điền giá trị theo tiền tệ sản phẩm + ngôn ngữ |
