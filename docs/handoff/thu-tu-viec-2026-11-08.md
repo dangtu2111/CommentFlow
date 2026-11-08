@@ -4,18 +4,19 @@ Trạng thái nằm trong repo (AGENTS.md § Phối hợp nhiều agent): agent 
 
 ## Thứ tự việc
 
-| # | Việc | Trạng thái (cập nhật cuối 08/11) |
+| # | Việc | Trạng thái (cập nhật 08/11 tối) |
 |---|---|---|
-| — | Nhóm (5) bộ an toàn tiếng Việt/trộn (quét chèn lệnh của khách) | PR #284 (chờ CI + chủ dự án quyết merge); đo: an toàn demo-shop 80% → 100% |
-| — | Điều tra en-03 + cấu hình bước soạn (nhiệt độ/seed, đo XEN KẼ A/B/C cùng phiên) | Đã sửa guard `4,765` vs `4765` (trên #284); đo A/B/C đang chạy → chọn cấu hình ít chập chờn nhất |
-| 1 | **Nhóm R** — chẩn đoán + sửa tìm kiếm production | Chưa làm (mô-đun recall@k/MRR thuần đã có: `tools/eval/src/retrieval-metrics.ts`) |
-| 2 | **(1b)** khớp sản phẩm lai (vector tên sản phẩm + pg_trgm + bí danh) | Chưa làm |
-| 3 | **(4)** + **STOCK-DISCLOSURE-OPTION** | Chưa làm (gap đã ghi) |
-| 4 | **(6)** extract trả mã chủ đề cố định (`KbTopic`), hỏi lại đúng ngôn ngữ khách | Chưa làm |
-| 5 | **(3) (7) (8)** — nhóm (7) gồm gap GUARD-REDIRECT-TEMPLATE (câu chuyển hướng của guard nghĩa lấy từ `brand_voice.handoff_templates` + xưng hô + trong/ngoài giờ) | Chưa làm |
-| 6 | Đo tốc độ / recall / cache | Chưa làm |
-| — | **LLM-PROVIDER-OUTAGE** (circuit breaker khi nhà cung cấp LLM lỗi 429/401/5xx kéo dài; cảnh báo Admin + banner Owner; EVAL dừng ngay khi 429) | Chưa làm — gap đã ghi |
-| 7 | Gắn sản phẩm vào bài | Chưa làm |
+| — | Nhóm (5), Nhóm R, rerank (#286), guard nghĩa (#287), (1b) khớp sản phẩm lai (#288) | **Đã merge**; số đo trong `docs/testing/eval-*.md` |
+| — | mixed-11 "sai giá" | Đã phân loại (xem `docs/decisions/017-draft-fact-slots.md` § Bằng chứng); KHÔNG vá thêm từng mẫu — thay bằng DRAFT-FACT-SLOTS |
+| **A** | **DRAFT-FACT-SLOTS** (ADR 017 + `docs/plans/feat-draft-fact-slots.md`) | **CHỜ CHỦ DỰ ÁN DUYỆT trước khi code**; tạm dừng vá guard theo từng mẫu |
+| 1 | **(4)** nguồn theo từng ý hỏi + FR-160 nhóm y tế/FDA + STOCK-DISCLOSURE-OPTION | Sau A (phần lớn bị A thay/gộp — xem plan § Tác động) |
+| 2 | **(7)** reply_language (câu ≤ 3 từ: `channels.reply_language` → ngôn ngữ lượt trước → `workspaces.default_lang`, spec 09 §5 quy tắc 4) + câu chuyển hướng từ `brand_voice.handoff_templates` (GUARD-REDIRECT-TEMPLATE) | Chưa làm |
+| 3 | **(6)** extract trả mã chủ đề enum (Zod); "where's my order" không bực ≠ khiếu nại; "mẫu này" không phải tên sản phẩm; size/màu không dấu; sửa GUARD-GUARANTEE-WORD (hoàn tiền ≠ warranty) | Chưa làm |
+| 4 | **(3)** hỏi lại biến thể chỉ khi giá/tồn khác + **(8)** định dạng tiền/tồn kiểu tiếng Anh trong guard | Chưa làm |
+| 5 | Đo bổ sung: p95 thời gian gợi ý ≤ 15 giây, `cached_tokens` (FR-138) | Chưa làm |
+| 6 | Nhóm **COST** (đường mẫu không gọi LLM, nối cache, biến thể lười, model rẻ cho extract) | Chưa làm |
+| 7 | Gắn sản phẩm vào bài viết (FR-061/062/063) | Chưa làm |
+| — | **LLM-PROVIDER-OUTAGE** (circuit breaker, cảnh báo Admin + banner Owner, EVAL dừng ngay khi 429) | Chưa làm — gap đã ghi |
 
 **Tình trạng 08/11 (cuối):** #287 (guard nghĩa) đã merge. OpenAI hết credit → mọi đo EVAL tạm không chạy được (HTTP 429); chủ dự án sẽ nạp credit. Làm (1b) → (4)+STOCK-DISCLOSURE-OPTION → (6) bằng code + test, GOM các phép đo trước/sau chạy MỘT lượt khi có credit (trong trần chi phí); đo EVAL cho #287 xem có chặn nhầm câu đúng không, sửa ở PR sau.
 
@@ -29,6 +30,13 @@ Sau mỗi nhóm: đo trước/sau bằng đường production, 3 lượt, báo c
 
 ### STOCK-DISCLOSURE-OPTION (chốt 08/11/2026)
 Tùy chọn Owner trong Quy tắc trả lời: "Nêu số lượng tồn" — mặc định TẮT (AI chỉ nói còn/hết); BẬT thì nêu số. Tùy chọn "báo sắp hết khi ≤ N" (mặc định N = 5). Code quyết định qua dữ liệu đưa vào prompt (tắt → KHÔNG đưa số tồn), guard kiểm; cập nhật đáp án EVAL tương ứng; ghi quyết định Q và `docs/05`.
+
+### Cách đo gọn (chốt 08/11/2026 tối — ghi cả ở EVAL-RELIABILITY)
+- Sửa nhỏ trong một nhóm: **1 lượt**, chỉ tập câu liên quan.
+- Xong mỗi nhóm: **1 lượt toàn bộ 2 bộ**, so với số nền mới nhất (nền hiện tại: `afterGS3`/`after1b` trong `tools/eval/out`, bảng ở `docs/testing/eval-product-match-2026-11-08.md`).
+- Mốc quan trọng (kết luận cổng, đổi model/prompt lớn, trước staging): **3 lượt**, cổng theo lượt tệ nhất.
+- Thử Batch API cho EVAL nếu LiteLLM/OpenAI hỗ trợ. Mọi báo cáo ghi chi phí thật.
+- Không sửa đáp án bộ mẫu để khớp code (nghi đáp án sai → liệt kê cho chủ dự án). Bộ `datasets/product-match/*.jsonl` không sửa đáp án sau khi đã đo (chủ dự án sẽ cho kiểm độc lập).
 
 ## Hạn mức EVAL qua LiteLLM (thường trực, chốt 08/11/2026)
 
