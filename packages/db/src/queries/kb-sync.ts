@@ -198,8 +198,6 @@ export async function summarizeDraftChunks(
   }));
 }
 
-const productVectorLiteral = (embedding: readonly number[]): string => `[${embedding.join(',')}]`;
-
 /** Sản phẩm CHƯA có vector tên ở model `model` (NULL hoặc khác model), tối đa `limit` — để nhúng bù khi đồng bộ (khớp sản phẩm lai). */
 export async function listProductNamesToEmbed(
   tx: Database,
@@ -213,25 +211,4 @@ export async function listProductNamesToEmbed(
        AND (name_embedding IS NULL OR name_embedding_model IS DISTINCT FROM ${model})
      ORDER BY id LIMIT ${limit}`);
   return result.rows.map((row) => ({ id: row.id, name: row.name }));
-}
-
-/** Ghi vector tên + model; chỉ ghi khi tên còn như lúc đọc. KHÔNG tăng `rev`. Trả số hàng đã ghi. */
-export async function writeProductNameVectors(
-  tx: Database,
-  workspaceId: string,
-  model: string,
-  rows: Array<{ id: string; name: string; embedding: number[] }>,
-): Promise<number> {
-  let written = 0;
-  for (const row of rows) {
-    if (row.embedding.length !== 1024 || row.embedding.some((v) => !Number.isFinite(v))) {
-      throw new Error('Vector tên sản phẩm sai kích thước hoặc có giá trị không hợp lệ.');
-    }
-    const result = await tx.execute(sql`
-      UPDATE cf.products
-         SET name_embedding = ${productVectorLiteral(row.embedding)}::halfvec(1024), name_embedding_model = ${model}
-       WHERE workspace_id = ${workspaceId}::uuid AND id = ${row.id}::uuid AND name = ${row.name}`);
-    written += result.rowCount ?? 0;
-  }
-  return written;
 }

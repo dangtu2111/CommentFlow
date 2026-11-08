@@ -10,8 +10,9 @@ import {
   searchKbChunksDetailed,
   searchProducts,
   setProductNameEmbedding,
+  writeProductNameVectors,
 } from '../src/queries/kb-search';
-import { listProductNamesToEmbed, writeProductNameVectors } from '../src/queries/kb-sync';
+import { listProductNamesToEmbed } from '../src/queries/kb-sync';
 import {
   createAdminPool,
   createAppDb,

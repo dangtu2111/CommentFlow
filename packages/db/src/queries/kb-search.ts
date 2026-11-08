@@ -342,3 +342,24 @@ export async function setProductNameEmbedding(
     RETURNING id`);
   return result.rows.length > 0;
 }
+
+/** Ghi vector tên + model; chỉ ghi khi tên còn như lúc đọc. KHÔNG tăng `rev`. Trả số hàng đã ghi. */
+export async function writeProductNameVectors(
+  tx: Database,
+  workspaceId: string,
+  model: string,
+  rows: Array<{ id: string; name: string; embedding: number[] }>,
+): Promise<number> {
+  let written = 0;
+  for (const row of rows) {
+    if (row.embedding.length !== 1024 || row.embedding.some((v) => !Number.isFinite(v))) {
+      throw new Error('Vector tên sản phẩm sai kích thước hoặc có giá trị không hợp lệ.');
+    }
+    const result = await tx.execute(sql`
+      UPDATE cf.products
+         SET name_embedding = ${vectorLiteral(row.embedding)}::halfvec(1024), name_embedding_model = ${model}
+       WHERE workspace_id = ${workspaceId}::uuid AND id = ${row.id}::uuid AND name = ${row.name}`);
+    written += result.rowCount ?? 0;
+  }
+  return written;
+}

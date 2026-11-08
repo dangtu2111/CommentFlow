@@ -268,6 +268,7 @@ export {
   searchKbChunksDetailed,
   searchProducts,
   setProductNameEmbedding,
+  writeProductNameVectors,
 } from './queries/kb-search';
 export {
   type ConflictMark,
@@ -283,7 +284,6 @@ export {
   setDraftChunkTopics,
   setDraftConflictMarks,
   summarizeDraftChunks,
-  writeProductNameVectors,
 } from './queries/kb-sync';
 export {
   countLeadsByStage,
