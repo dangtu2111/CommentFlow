@@ -2,6 +2,7 @@ import {
   DEFAULT_MERGE_WINDOW_SECONDS,
   type FlowDb,
   listPendingPipelineComments,
+  listWorkspacesWithPendingPipelineComments,
   type PendingPipelineComment,
 } from '@flow/db';
 import { type IngestSource, type PipelineJob, shouldAutoRunPipeline } from '@flow/shared';
@@ -22,9 +23,11 @@ export type EnqueuePipeline = (job: PipelineJob) => Promise<void>;
 export type PipelineSweepConfig = {
   db: FlowDb;
   enqueue: EnqueuePipeline;
-  flagEnabled: boolean;
-  allowedWorkspaceIds: readonly string[];
+  /** Cờ DB `cf.pipeline.v2` cho từng workspace (đọc qua `saas-core/flags`). */
+  isEnabled: (workspaceId: string) => Promise<boolean>;
   logger: Pick<Logger, 'info' | 'error'>;
+  /** Workspace đang có bình luận `new` quá hạn (DEFINER, chỉ id) — để lọc bằng cờ trước khi quét; mặc định đọc DB. */
+  candidateWorkspaces?: (db: FlowDb) => Promise<string[]>;
   list?: (db: FlowDb, workspaceIds: readonly string[]) => Promise<PendingPipelineComment[]>;
 };
 
@@ -43,15 +46,41 @@ export async function runPipelineSweep(config: PipelineSweepConfig): Promise<Pip
           limit: PIPELINE_SWEEP_LIMIT,
         }),
       ));
-  const rows = await list(config.db, config.allowedWorkspaceIds);
+  const candidates = await (
+    config.candidateWorkspaces ??
+    ((db) =>
+      db.withSystem((tx) =>
+        listWorkspacesWithPendingPipelineComments(tx, {
+          newAfterSeconds: DEFAULT_MERGE_WINDOW_SECONDS + 60,
+          processingAfterSeconds: PIPELINE_PROCESSING_STUCK_SECONDS,
+          limit: PIPELINE_SWEEP_LIMIT,
+        }),
+      ))
+  )(config.db);
+  // Cờ `cf.pipeline.v2` theo workspace: chỉ quét workspace đang BẬT (lỗi đọc cờ → bỏ qua workspace đó, log, lần quét sau thử lại).
+  const enabled = new Set<string>();
+  for (const workspaceId of candidates) {
+    try {
+      if (await config.isEnabled(workspaceId)) enabled.add(workspaceId);
+    } catch (error) {
+      config.logger.error(
+        { error: error instanceof Error ? error.name : 'unknown' },
+        'pipeline-sweep: không đọc được cờ pipeline của một workspace',
+      );
+    }
+  }
+  const rows = await list(config.db, [...enabled]);
   for (const row of rows) {
+    // Cờ `cf.pipeline.v2` TẮT cho workspace → không xếp lại gì (kể cả bình luận kẹt `processing`/đã có lượt): bật cờ lại thì lần quét sau xử lý tiếp.
+    if (!enabled.has(row.workspaceId)) {
+      result.skipped += 1;
+      continue;
+    }
     const auto = shouldAutoRunPipeline({
-      workspaceId: row.workspaceId,
       ingestSource: row.ingestSource as IngestSource,
       isOwn: false,
       deleted: false,
-      flagEnabled: config.flagEnabled,
-      allowedWorkspaceIds: config.allowedWorkspaceIds,
+      enabled: enabled.has(row.workspaceId),
     });
     // Không được tự chạy và chưa từng có lượt → không xếp (backfill không bao giờ vào đây).
     if (!auto && !row.hasTurn) {

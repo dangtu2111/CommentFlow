@@ -97,10 +97,13 @@ export async function CommentDetailPanel({
   timeZone,
   now,
   preview = false,
+  pipelineOn = false,
 }: {
   comment: CommentDetailView;
   timeZone: string;
   now: Date;
+  /** Cờ DB `cf.pipeline.v2` đang bật cho workspace (trang tính; mặc định tắt) — quyết định nút "Soạn gợi ý" hay ghi chú AI chưa bật. */
+  pipelineOn?: boolean;
   /** Trang xem mẫu `/dev/ui/comments`: không lấy khóa mềm (không có phiên). */
   preview?: boolean;
 }) {
@@ -153,7 +156,6 @@ export async function CommentDetailPanel({
   // Trạng thái AI cho nhân viên (PIPE-ORCHESTRATOR lát F): "đang soạn", lý do cần nhân viên, nút "Soạn gợi ý" (chưa có nháp / cần nhân viên).
   const aiReason = comment.status === 'needs_human' ? (comment.aiDraft?.reason ?? null) : null;
   const askable = canRequestSuggestion({ status: comment.status, deletedAt: comment.deletedAt });
-  const pipelineOn = process.env.PIPELINE_ENABLED?.trim() === 'true';
   const aiNote = (
     <div
       className="space-y-2 rounded-xl bg-surface-container-lowest p-3 shadow-sm"

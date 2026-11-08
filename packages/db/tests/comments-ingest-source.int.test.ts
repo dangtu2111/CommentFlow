@@ -6,7 +6,7 @@ import { createAdminPool, pgCodeOf, seedWorkspace } from './helpers';
 
 /**
  * `comments.ingest_source` (migration 0072, Q-POR1): bình luận CÓ SẴN trước migration = `backfill` (không tự chạy AI khi bật
- * PIPELINE_ENABLED); cột KHÔNG có mặc định nên dòng MỚI bắt buộc ghi nguồn; CHECK chỉ nhận 3 giá trị.
+ * cờ cf.pipeline.v2); cột KHÔNG có mặc định nên dòng MỚI bắt buộc ghi nguồn; CHECK chỉ nhận 3 giá trị.
  */
 let admin: pg.Pool;
 let ws: string;

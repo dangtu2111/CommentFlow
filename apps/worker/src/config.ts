@@ -1,5 +1,5 @@
 import { loadEmbeddingService, type MlEmbedderOptions } from '@flow/ai';
-import { parseEnv, parsePipelineWorkspaceIds, resolveAiTurnLimit } from '@flow/shared';
+import { parseEnv, resolveAiTurnLimit } from '@flow/shared';
 import { z } from 'zod';
 
 /** Tên role đăng nhập của worker — khớp migration 0030 (`session_user = 'cf_worker'`). */
@@ -158,10 +158,10 @@ export type WorkerConfig = {
   /** Đồng bộ Shopify thật: cờ `SHOPIFY_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); bật thì cần `TOKEN_ENC_KEYS`. */
   shopify: { enabled: boolean; apiVersion: string | undefined };
   /**
-   * PIPE-ORCHESTRATOR (Q-POR1): cờ `PIPELINE_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); `PIPELINE_WORKSPACE_IDS` = danh sách workspace
-   * được tự chạy (rỗng = không workspace nào). Tắt → không đăng ký hàng đợi/job quét, ingest không xếp job.
+   * PIPE-ORCHESTRATOR: chỉ còn hạn mức lượt AI (`turnLimit`). BẬT pipeline theo workspace là cờ DB `cf.pipeline.v2` (docs/09 §10, `pnpm flags:set`);
+   * env KHÔNG còn `PIPELINE_ENABLED`/`PIPELINE_WORKSPACE_IDS`.
    */
-  pipeline: { enabled: boolean; workspaceIds: string[]; turnLimit: number };
+  pipeline: { turnLimit: number };
 };
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): WorkerConfig {
@@ -179,8 +179,6 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     instagram: loadInstagramConfig(source),
     dataExport: loadDataExportConfig(source),
     pipeline: {
-      enabled: source.PIPELINE_ENABLED?.trim() === 'true',
-      workspaceIds: parsePipelineWorkspaceIds(source.PIPELINE_WORKSPACE_IDS),
       turnLimit: resolveAiTurnLimit(source),
     },
     embeddingService: loadEmbeddingService(source),

@@ -18,8 +18,7 @@ describe('runPipelineJob — cổng cờ AI theo workspace', () => {
       {
         db,
         llm: { extractor: {} as never, drafter: {} as never },
-        flagEnabled: true,
-        allowedWorkspaceIds: [job.workspaceId],
+        pipelineEnabled: async () => true,
         turnLimit: 100,
         llmReady,
       },

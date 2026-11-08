@@ -568,8 +568,8 @@ describe('PIPE-ORCHESTRATOR lát E — ingest xếp job pipeline (một nơi quy
           sent.push({ commentId: j.commentId, trigger: j.trigger, startAfter, priority });
         },
         priority: async () => 10,
-        flagEnabled: over.flag ?? true,
-        allowedWorkspaceIds: over.allowed ?? [ws],
+        // Cờ cf.pipeline.v2 theo workspace (giả lập: bật nếu `flag` và workspace nằm trong `allowed`).
+        isEnabled: async (id) => (over.flag ?? true) && (over.allowed ?? [ws]).includes(id),
         mergeWindowSeconds: async () => 30,
       },
     });
@@ -631,8 +631,7 @@ describe('PIPE-ORCHESTRATOR lát E — ingest xếp job pipeline (một nơi quy
         enqueue: async () => {
           throw new Error('boss down');
         },
-        flagEnabled: true,
-        allowedWorkspaceIds: [ws],
+        isEnabled: async () => true,
         mergeWindowSeconds: async () => 30,
       },
     });

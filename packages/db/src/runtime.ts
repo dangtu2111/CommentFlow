@@ -299,6 +299,7 @@ export {
 export {
   getMergeWindowSeconds,
   listPendingPipelineComments,
+  listWorkspacesWithPendingPipelineComments,
   type MergedGroup,
   mergeCommentGroup,
   type PendingPipelineComment,

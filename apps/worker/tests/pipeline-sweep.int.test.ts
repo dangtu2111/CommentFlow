@@ -69,8 +69,7 @@ function sweep(over: { allowed?: string[]; flag?: boolean } = {}) {
       enqueue: async (job) => {
         if (job.workspaceId === ws) jobs.push(job);
       },
-      flagEnabled: over.flag ?? true,
-      allowedWorkspaceIds: over.allowed ?? [ws],
+      isEnabled: async (id) => (over.flag ?? true) && (over.allowed ?? [ws]).includes(id),
       logger: noLog,
     });
   return { jobs, run };
@@ -152,6 +151,20 @@ describe('job quét pipeline', () => {
     const s = sweep();
     await s.run();
     expect(s.jobs.map((j) => j.commentId)).toEqual([dead]);
+  });
+
+  it('workspace CHỈ còn một bình luận `processing` kẹt: cờ bật → xếp lại (không mất bình luận); cờ tắt → không xếp, bật lại thì xếp', async () => {
+    const dead = await addComment('webhook', 'processing');
+    await admin.query(
+      "INSERT INTO cf.pipeline_turns (workspace_id, comment_id, state, attempts, locked_until, updated_at) VALUES ($1, $2, 'processing', 1, now() - interval '1 hour', now() - interval '1 hour')",
+      [ws, dead],
+    );
+    const off = sweep({ flag: false });
+    await off.run();
+    expect(off.jobs).toHaveLength(0);
+    const on = sweep();
+    await on.run();
+    expect(on.jobs.map((j) => j.commentId)).toEqual([dead]);
   });
 
   it('bình luận của Page / đã xóa / đã gộp không bao giờ được xếp', async () => {

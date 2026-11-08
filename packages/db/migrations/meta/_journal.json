@@ -568,6 +568,20 @@
       "when": 1794954400000,
       "tag": "0080_embedding_trigger_changed_only",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1795040800000,
+      "tag": "0081_list_workspaces_pending_pipeline",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1795127200000,
+      "tag": "0082_pipeline_pending_shared",
+      "breakpoints": true
     }
   ]
 }

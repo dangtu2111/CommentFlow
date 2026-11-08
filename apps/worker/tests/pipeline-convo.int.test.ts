@@ -147,8 +147,7 @@ function config(): PipelineJobConfig {
       },
       drafter,
     },
-    flagEnabled: true,
-    allowedWorkspaceIds: [ws],
+    pipelineEnabled: async () => true,
     turnLimit: 100,
   };
 }

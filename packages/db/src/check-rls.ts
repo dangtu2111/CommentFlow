@@ -1068,7 +1068,7 @@ async function checkWorkerDirectPrivileges(
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
-      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox', 'list_pending_pipeline_comments', 'begin_embedding_switch', 'list_embedding_switch_pending', 'switch_active_embedding')
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox', 'list_pending_pipeline_comments', 'begin_embedding_switch', 'list_embedding_switch_pending', 'switch_active_embedding', 'list_workspaces_with_pending_pipeline_comments')
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('create_invoice', 'confirm_invoice_payment', 'void_invoice')
@@ -1160,6 +1160,7 @@ const SWEEP_FUNCTIONS = [
   'begin_embedding_switch',
   'list_embedding_switch_pending',
   'switch_active_embedding',
+  'list_workspaces_with_pending_pipeline_comments',
 ] as const;
 
 async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
