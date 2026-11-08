@@ -1,3 +1,4 @@
+import { assertMockAllowed } from '@flow/shared';
 import type { AutoSentRecord } from './auto-sent-record';
 import { decideMarkWrong, type MarkWrongActor, type MarkWrongErrorCode } from './mark-wrong';
 
@@ -26,10 +27,11 @@ export interface AutoSentHistoryStore {
   ): Promise<MarkWrongOutcome>;
 }
 
-/** Bản trong bộ nhớ: fixture cho test và store rỗng của trang cho tới khi có bảng thật. */
+/** Bản trong bộ nhớ: CHỈ fixture cho test (chốt chặn `assertMockAllowed`); trang dùng `createEmptyHistoryStore` cho tới khi có bảng thật. */
 export function createInMemoryHistoryStore(
   initial: readonly AutoSentRecord[] = [],
 ): AutoSentHistoryStore {
+  assertMockAllowed('createInMemoryHistoryStore');
   const records = new Map<string, AutoSentRecord>(initial.map((r) => [r.id, r]));
   const ofWorkspace = (workspaceId: string) =>
     [...records.values()].filter((r) => r.workspaceId === workspaceId);

@@ -1,6 +1,6 @@
 import {
   type AutoSentHistoryStore,
-  createInMemoryHistoryStore,
+  createEmptyHistoryStore,
   evaluateMarkedWrongSignal,
   type HistoryQuery,
   type MarkWrongRole,
@@ -8,8 +8,8 @@ import {
 
 /**
  * Lịch sử AI đã gửi + Đánh dấu sai (FR-075). `workspaceId`/`userId`/`role` lấy từ `requireAppUser`, không từ
- * client. Q-ASH1: chưa có bảng `drafts`/`automation_events` nên store hiện là bản bộ nhớ RỖNG (không dữ liệu
- * giả); bản DB cắm vào ở `AI-SENT-HISTORY-DB` bằng cách đổi `store` trong `aiSentHistory()`.
+ * client. Q-ASH1: chưa có cổng tự gửi (GĐ4) và cột đánh dấu sai nên store là bản LUÔN TRỐNG (`createEmptyHistoryStore`,
+ * không lưu, không dữ liệu giả); bản DB cắm vào ở `AI-SENT-HISTORY-DB` bằng cách đổi `store` trong `aiSentHistory()`.
  */
 type Ctx = { workspaceId: string; userId: string; role: MarkWrongRole };
 type Deps = { store: AutoSentHistoryStore; now: () => Date };
@@ -43,7 +43,7 @@ export function createAiSentHistoryService({ store, now }: Deps) {
 let service: ReturnType<typeof createAiSentHistoryService> | undefined;
 export const aiSentHistory = () => {
   service ??= createAiSentHistoryService({
-    store: createInMemoryHistoryStore(),
+    store: createEmptyHistoryStore(),
     now: () => new Date(),
   });
   return service;
