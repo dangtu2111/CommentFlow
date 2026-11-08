@@ -6,6 +6,7 @@ export {
   MARK_WRONG_ROLES,
   type MarkWrongRole,
 } from './auto-sent-record';
+export { createEmptyHistoryStore } from './empty-store';
 export {
   decideMarkWrong,
   MAX_WRONG_REASON_LENGTH,
