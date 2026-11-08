@@ -6,6 +6,7 @@ import {
   evaluateReplyCap,
   loadWorkspaceKnowledge,
   parseConversationState,
+  type Reranker,
   type Rewriter,
   selectCustomerContext,
   type TryKnowledge,
@@ -52,6 +53,10 @@ export type PipelineJobConfig = {
   /** Sự cố dịch vụ embedding giữa lượt (đã suy giảm về toàn văn/trigram); không kèm nội dung. */
   onEmbeddingFailure?: (workspaceId: string, error: unknown) => void;
   /** Gọi khi model embedding lệch dữ liệu của workspace (nhánh vector đã tắt cho lượt này); không kèm nội dung kiến thức. */
+  /** Rerank THẬT qua ml (bge-reranker-v2-m3); thiếu → cosine. Không có bản giả khi chạy. */
+  reranker?: Reranker;
+  /** Sự cố dịch vụ rerank giữa lượt (đã suy giảm về cosine); không kèm nội dung. */
+  onRerankFailure?: (workspaceId: string, error: unknown) => void;
   onEmbeddingMismatch?: (workspaceId: string, mismatches: readonly unknown[]) => void;
   now?: () => Date;
 };
@@ -172,6 +177,8 @@ export async function runPipelineJob(
       ...(embedding?.kind === 'ml' ? { embedder: embedding.embedder } : {}),
       ...(resolution?.revision != null ? { embeddingRevision: resolution.revision } : {}),
       onEmbeddingFailure: (error) => config.onEmbeddingFailure?.(workspaceId, error),
+      ...(config.reranker ? { reranker: config.reranker } : {}),
+      onRerankFailure: (error) => config.onRerankFailure?.(workspaceId, error),
     });
   });
   if (loaded?.embedding.state === 'mismatch') {

@@ -122,22 +122,22 @@ export function calibrateThreshold(
 ): Calibration {
   if (positives.length === 0)
     throw new Error('Hiệu chỉnh ngưỡng cần ít nhất một mẫu dương (đoạn đúng).');
-  const curve: CalibrationPoint[] = [];
-  for (let i = 0; i <= 100; i += 1) {
-    const threshold = i / 100;
+  // Ứng viên ngưỡng = chính các điểm quan sát được (+ 0): đúng với mọi thang điểm (cosine 0,3–0,7 hay rerank 0,00001–0,9), không phụ thuộc lưới cố định.
+  const candidates = [...new Set([0, ...positives, ...negatives])].sort((a, b) => a - b);
+  const curve: CalibrationPoint[] = candidates.map((threshold) => {
     const tp = positives.filter((v) => v >= threshold).length;
     const fp = negatives.filter((v) => v >= threshold).length;
     const recall = tp / positives.length;
     const precision = tp + fp === 0 ? 0 : tp / (tp + fp);
     const f1 = precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall);
-    curve.push({
+    return {
       threshold,
       recall,
       precision,
       f1,
       falseAcceptRate: negatives.length === 0 ? 0 : fp / negatives.length,
-    });
-  }
+    };
+  });
   const best = curve.reduce((a, b) => (b.f1 > a.f1 + 1e-12 ? b : a));
   return { ...best, positives: positives.length, negatives: negatives.length, curve };
 }

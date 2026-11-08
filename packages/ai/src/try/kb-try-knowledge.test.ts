@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createFixtureEmbedder } from '../embedding/fixture-embedder';
+import type { Reranker } from '../embedding/ml-reranker';
 import type { KbSearcher } from '../retrieve/kb-searcher';
 import { type KbHit, MAX_RRF_SCORE } from '../retrieve/sources';
 import { createDemoKnowledge } from './demo-knowledge';
@@ -124,5 +125,96 @@ describe('FR-059 KB-TRYAI: Thử AI nối searchKbChunks', () => {
     expect(m.ids).toEqual(['demo-p1']);
     expect((await knowledge.lookupProductFacts(m.ids))[0]?.kind).toBe('product');
     expect(searcher).not.toHaveBeenCalled();
+  });
+});
+
+describe('rerank (bge-reranker-v2-m3): quyết định "đủ liên quan" bằng điểm rerank tuyệt đối', () => {
+  const reranker = (scores: number[] | Error): Reranker & { calls: string[][] } => {
+    const calls: string[][] = [];
+    return {
+      model: 'bge-reranker-v2-m3',
+      calls,
+      async rerank(_query, documents) {
+        calls.push([...documents]);
+        if (scores instanceof Error) throw scores;
+        return scores;
+      },
+    };
+  };
+  const make = (hits: KbHit[], rr?: Reranker, onRerankFailure?: (e: unknown) => void) =>
+    createKbTryKnowledge({
+      searcher: vi.fn<KbSearcher>(async () => hits),
+      embedder: createFixtureEmbedder(),
+      base: createDemoKnowledge(),
+      ...(rr ? { reranker: rr } : {}),
+      ...(onRerankFailure ? { onRerankFailure } : {}),
+    });
+
+  it('điểm = rerank (không phải cosine/RRF); xếp lại theo điểm rerank; gửi "header + nội dung" cho reranker', async () => {
+    const { kbRelevanceFromRerank } = await import('../retrieve/sources');
+    const rr = reranker([0.1, 0.9]);
+    const out = await make(
+      [
+        hit({ id: 'ship', content: 'Phí ship 20.000đ', contextHeader: 'Vận chuyển', cosine: 0.7 }),
+        hit({
+          id: 'cod',
+          content: 'Thanh toán COD khi nhận hàng',
+          contextHeader: 'Thanh toán',
+          cosine: 0.5,
+        }),
+      ],
+      rr,
+    ).searchKb('ship COD không', { lang: 'en', productIds: [] });
+    expect(out.map((c) => c.id)).toEqual(['kb:cod', 'kb:ship']);
+    expect(out[0]?.score).toBeCloseTo(kbRelevanceFromRerank(0.9), 10);
+    expect(out[1]?.score).toBeCloseTo(kbRelevanceFromRerank(0.1), 10);
+    expect(rr.calls[0]).toEqual([
+      'Vận chuyển\nPhí ship 20.000đ',
+      'Thanh toán\nThanh toán COD khi nhận hàng',
+    ]);
+  });
+
+  it('chỉ rerank tối đa 10 đoạn đầu (theo RRF)', async () => {
+    const rr = reranker(Array.from({ length: 10 }, () => 0.5));
+    const hits = Array.from({ length: 14 }, (_, i) => hit({ id: `h${i}`, content: `đoạn ${i}` }));
+    const out = await make(hits, rr).searchKb('q', { lang: 'en', productIds: [] });
+    expect(rr.calls[0]).toHaveLength(10);
+    expect(out).toHaveLength(10);
+  });
+
+  it('reranker lỗi → suy giảm về cosine (có báo onRerankFailure), KHÔNG làm hỏng lượt', async () => {
+    const failures: unknown[] = [];
+    const out = await make([hit({ id: 'a', cosine: 0.7 })], reranker(new Error('ml down')), (e) =>
+      failures.push(e),
+    ).searchKb('q', { lang: 'en', productIds: [] });
+    expect(failures).toHaveLength(1);
+    expect(out[0]?.score).toBeGreaterThan(0.35);
+  });
+
+  it('không có reranker → như cũ (cosine)', async () => {
+    const out = await make([hit({ id: 'a', cosine: 0.7 })]).searchKb('q', {
+      lang: 'vi',
+      productIds: [],
+    });
+    expect(out).toHaveLength(1);
+  });
+
+  it('câu tiếng Việt KHÔNG dấu bỏ rerank (giữ cosine); tiếng Anh/có dấu thì rerank', async () => {
+    const rr = reranker([0.9]);
+    const plain = await make([hit({ id: 'a', cosine: 0.7 })], rr).searchKb('dat hom nay may ngay', {
+      lang: 'vi',
+      productIds: [],
+    });
+    expect(rr.calls).toHaveLength(0);
+    expect(plain).toHaveLength(1);
+    await make([hit({ id: 'a', cosine: 0.7 })], rr).searchKb('how long', {
+      lang: 'en',
+      productIds: [],
+    });
+    await make([hit({ id: 'a', cosine: 0.7 })], rr).searchKb('Đặt hôm nay mấy ngày', {
+      lang: 'vi',
+      productIds: [],
+    });
+    expect(rr.calls).toHaveLength(2);
   });
 });

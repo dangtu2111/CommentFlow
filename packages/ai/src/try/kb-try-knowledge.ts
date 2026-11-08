@@ -1,9 +1,16 @@
 import { isKbTopic, type KbTopic, unsafeMarkMasked } from '@flow/shared';
 import type { KbGapTopic } from '../decide/decide-action';
 import type { Embedder } from '../embedding/embedder';
+import type { Reranker } from '../embedding/ml-reranker';
 import { scanInjection } from '../injection/injection-scan';
 import type { KbSearcher } from '../retrieve/kb-searcher';
-import { type KbHit, kbRelevanceFromCosine, rrfRelevance } from '../retrieve/sources';
+import { shouldRerank } from '../retrieve/rerank-policy';
+import {
+  type KbHit,
+  kbRelevanceFromCosine,
+  kbRelevanceFromRerank,
+  rrfRelevance,
+} from '../retrieve/sources';
 import { type TryCandidate, type TryKnowledge, topicOf } from './try-pipeline';
 
 /**
@@ -17,6 +24,10 @@ export type KbTryKnowledgeDeps = {
   embedder?: Embedder;
   /** Gọi khi embedder lỗi (ml chết/trả sai model): lượt vẫn chạy bằng toàn văn + trigram (suy giảm, không mock); nơi gọi ghi nhận sự cố. */
   onVectorFailure?: (error: unknown) => void;
+  /** Rerank THẬT qua ml (bge-reranker-v2-m3): có → "đủ liên quan" quyết định bằng điểm rerank; thiếu hoặc lỗi → cosine. Không có bản giả khi chạy. */
+  reranker?: Reranker;
+  /** Gọi khi reranker lỗi giữa lượt (đã suy giảm về cosine); không kèm nội dung. */
+  onRerankFailure?: (error: unknown) => void;
   base: Pick<TryKnowledge, 'matchProducts' | 'lookupProductFacts'>;
 };
 
@@ -31,6 +42,9 @@ function conflictTopicOf(hit: KbHit): KbTopic | undefined {
   if (!meta || typeof meta.conflict_group !== 'string') return undefined;
   return isKbTopic(meta.topic) ? meta.topic : undefined;
 }
+
+/** Số đoạn đầu (theo RRF) đem rerank: đủ rộng để không bỏ sót đoạn đúng, đủ hẹp để độ trễ/CPU của ml chấp nhận được. */
+const RERANK_TOP = 10;
 
 export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
   return {
@@ -56,6 +70,7 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
         productIds: context.productIds,
       });
       const candidates: TryCandidate[] = [];
+      const rerankTexts: string[] = []; // song song với `candidates`: "header + nội dung" đem chấm rerank
       // Chưa nhận ra sản phẩm nào: đoạn của MỘT sản phẩm bất kỳ không phải nguồn cho câu hỏi chung ("how much?", "còn hàng không?") — nếu không, mọi câu
       // thiếu sản phẩm đều bị coi là "có nguồn" và trả lời thay vì hỏi lại. Chỉ giữ đoạn dùng chung (chính sách, FAQ, thông tin shop).
       const usableHits =
@@ -64,6 +79,7 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
         const text = hit.contextHeader ? `${hit.contextHeader}\n${hit.content}` : hit.content;
         // Cùng lớp phòng thủ như `kbHitsToSources` (FR-164): đoạn nghi cài lệnh không được hiện/đưa vào soạn.
         if (scanInjection(text, { allowedDomains: [] }).suspected) continue;
+        rerankTexts.push(text);
         candidates.push({
           id: `kb:${hit.id}`,
           kind: 'kb',
@@ -77,6 +93,18 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
           topics: chunkTopics(hit),
           ...(conflictTopicOf(hit) ? { conflictTopic: conflictTopicOf(hit) } : {}),
         });
+      }
+      if (deps.reranker && candidates.length > 0 && shouldRerank(query, context.lang)) {
+        // Chỉ rerank RERANK_TOP đoạn đầu (kết quả tìm đã xếp theo RRF + ưu tiên nhẹ ngôn ngữ).
+        const top = candidates.slice(0, RERANK_TOP);
+        try {
+          const scores = await deps.reranker.rerank(query, rerankTexts.slice(0, RERANK_TOP));
+          return top
+            .map((c, i) => ({ ...c, score: kbRelevanceFromRerank(scores[i] as number) }))
+            .sort((a, b) => b.score - a.score);
+        } catch (error) {
+          deps.onRerankFailure?.(error);
+        }
       }
       return candidates.sort((a, b) => b.score - a.score);
     },

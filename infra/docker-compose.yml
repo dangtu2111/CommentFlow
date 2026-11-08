@@ -189,12 +189,14 @@ services:
       context: ../services/ml
     image: cf/ml:local
     restart: unless-stopped
-    # bge-m3 (embedding) cần ~2,5–3 GB RAM khi nạp; không bật ML_EMBED_ENABLED thì dịch vụ chỉ dùng vài chục MB.
-    mem_limit: 3g
+    # bge-m3 (embedding) ~2,5–3 GB RAM khi nạp + bge-reranker-v2-m3 (rerank) ~2 GB: nâng trần lên 5 GB cho CẢ HAI cùng nạp.
+    # Không bật ML_EMBED_ENABLED / ML_RERANK_ENABLED thì dịch vụ chỉ dùng vài chục MB.
+    mem_limit: 5g
     environment:
-      # Mặc định TẮT: không nạp model nặng ngoài ý muốn. Bật bằng ML_EMBED_ENABLED=true trong .env.cf-dev.
+      # Mặc định TẮT: không nạp model nặng ngoài ý muốn. Bật bằng ML_EMBED_ENABLED=true / ML_RERANK_ENABLED=true trong .env.cf-dev.
       ML_EMBED_ENABLED: ${ML_EMBED_ENABLED:-false}
-      # Tùy chọn: đặt thì /embed bắt buộc `Authorization: Bearer <token>` (app dùng cùng giá trị ở ML_API_TOKEN).
+      ML_RERANK_ENABLED: ${ML_RERANK_ENABLED:-false}
+      # Tùy chọn: đặt thì /embed và /rerank bắt buộc `Authorization: Bearer <token>` (app dùng cùng giá trị ở ML_API_TOKEN).
       ML_API_TOKEN: ${ML_API_TOKEN:-}
     volumes:
       - ml-models:/models

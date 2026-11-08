@@ -4,6 +4,7 @@ export {
   type KbSearcher,
   type KbSearchQuery,
 } from './kb-searcher';
+export { shouldRerank } from './rerank-policy';
 export {
   type RetrieveDeps,
   type RetrieveInput,
@@ -15,8 +16,12 @@ export {
   DEFAULT_MAX_SOURCE_TOKENS,
   DEFAULT_MIN_RELEVANCE_RETRIEVE,
   estimateTokens,
+  KB_MIN_COSINE,
+  KB_MIN_RERANK,
   type KbHit,
   kbHitsToSources,
+  kbRelevanceFromCosine,
+  kbRelevanceFromRerank,
   MAX_RRF_SCORE,
   rrfRelevance,
   variantsToSources,

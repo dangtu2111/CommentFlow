@@ -1,4 +1,9 @@
-import { createEmbeddingResolver, createLlmDepsFromEnv, resolveEmbeddingConfig } from '@flow/ai';
+import {
+  createEmbeddingResolver,
+  createLlmDepsFromEnv,
+  createMlReranker,
+  resolveEmbeddingConfig,
+} from '@flow/ai';
 import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
 import {
   countEmbeddingModels,
@@ -92,6 +97,8 @@ async function main(): Promise<void> {
   const pipelineEnabledFor = (workspaceId: string) =>
     flags.isEnabled(PIPELINE_FLAG, { workspaceId });
   const embeddingResolver = createEmbeddingResolver({ service: config.embeddingService });
+  // Rerank THẬT qua ml (bật bằng ML_RERANK_ENABLED=true + ML_URL); tắt → quyết định liên quan bằng cosine.
+  const reranker = config.rerankService ? createMlReranker(config.rerankService) : undefined;
   // Pipeline chỉ được đăng ký khi LLM ĐÃ cấu hình đủ (URL/khóa/tên model hai bước); thiếu → KHÔNG chạy (không bao giờ chạy bình luận thật bằng bản mẫu).
   const pipelineOn = Boolean(llm.extractor && llm.drafter);
   if (!pipelineOn) {
@@ -144,6 +151,12 @@ async function main(): Promise<void> {
         llmReady: (workspaceId) => (llm?.ready ? llm.ready(workspaceId) : Promise.resolve(false)),
         // Model hoạt động đọc từ DB mỗi vài giây (`cf.embedding_state`); env chỉ bật/tắt dịch vụ ml. Không có embedder giả (FR-133).
         resolveEmbedding: (tx) => embeddingResolver.resolve(() => getEmbeddingState(tx)),
+        ...(reranker ? { reranker } : {}),
+        onRerankFailure: (workspaceId, error) =>
+          logger.warn(
+            { workspaceId, reason: error instanceof Error ? error.name : 'unknown' },
+            'rerank lỗi: suy giảm về cosine',
+          ),
       }),
     );
     stopPipelineSweep = startPipelineSweep({

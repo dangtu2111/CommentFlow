@@ -196,3 +196,14 @@ describe('kbRelevanceFromCosine — điểm liên quan TUYỆT ĐỐI cho đoạ
     expect(kbRelevanceFromCosine(5)).toBe(1);
   });
 });
+
+describe('kbRelevanceFromRerank — điểm rerank tuyệt đối trên cùng thang ngưỡng chung', () => {
+  it('đúng ngưỡng rerank = đúng ngưỡng liên quan chung; đơn điệu; kẹp 0..1', async () => {
+    const { kbRelevanceFromRerank, KB_MIN_RERANK } = await import('./sources');
+    const { DEFAULT_MIN_RELEVANCE } = await import('../draft/drafter');
+    expect(kbRelevanceFromRerank(KB_MIN_RERANK)).toBeCloseTo(DEFAULT_MIN_RELEVANCE, 10);
+    expect(kbRelevanceFromRerank(1)).toBeGreaterThan(kbRelevanceFromRerank(KB_MIN_RERANK));
+    expect(kbRelevanceFromRerank(-1)).toBe(0);
+    expect(kbRelevanceFromRerank(9)).toBe(1);
+  });
+});

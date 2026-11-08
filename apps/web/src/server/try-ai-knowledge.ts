@@ -5,6 +5,7 @@ import {
   type EmbeddingOffReason,
   type EmbeddingResolution,
   loadWorkspaceKnowledge,
+  type Reranker,
   type TryKnowledge,
   type TryKnowledgeSource,
   type TryRunContext,
@@ -82,6 +83,10 @@ export function createKnowledgeRunner(options: {
   resolveEmbedding?: (tx: Database) => Promise<EmbeddingResolution>;
   /** Ghi nhận sự cố dịch vụ embedding giữa lượt (không kèm nội dung). */
   onEmbeddingFailure?: (error: unknown) => void;
+  /** Rerank THẬT qua ml (bge-reranker-v2-m3); thiếu → cosine. Không có bản giả khi chạy. */
+  reranker?: Reranker;
+  /** Sự cố dịch vụ rerank giữa lượt (đã suy giảm về cosine); không kèm nội dung. */
+  onRerankFailure?: (error: unknown) => void;
 }): KnowledgeRunner {
   const currentVersion = options.currentVersion ?? getCurrentVersion;
   const countProducts = options.countProducts ?? defaultKnowledgeReaders.countProducts;
@@ -128,6 +133,8 @@ export function createKnowledgeRunner(options: {
         ...(embedder ? { embedder } : {}),
         ...(resolution?.revision != null ? { embeddingRevision: resolution.revision } : {}),
         ...(options.onEmbeddingFailure ? { onEmbeddingFailure: options.onEmbeddingFailure } : {}),
+        ...(options.reranker ? { reranker: options.reranker } : {}),
+        ...(options.onRerankFailure ? { onRerankFailure: options.onRerankFailure } : {}),
         readers,
       });
       if (!loaded) return none();

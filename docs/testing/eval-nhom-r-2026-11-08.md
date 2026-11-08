@@ -55,3 +55,35 @@ R1 → R2 là bản sửa thứ ba ("chưa nhận ra sản phẩm → không dù
 - Còn 2 câu trả lời sai ngôn ngữ (tiếng Việt cho câu tiếng Anh) và "Xưng hô sai" 2 → việc (6).
 - Rerank (bge-reranker-v2-m3 qua ml `/rerank`) để tách đoạn "cùng chủ đề nhưng không trả lời": PR riêng (cần dựng lại dịch vụ ml + tải model).
 - Quyết định bước soạn: giữ nhiệt độ 0,3, không seed (đo xen kẽ A/B/C không khác về hành động/nhãn): `docs/plans/quyet-dinh/qr1.md`.
+
+---
+
+# Rerank bge-reranker-v2-m3 (PR #286, 08/11/2026)
+
+ml đã dựng lại trên máy ảo (`mem_limit` 5g, `--build --no-deps`); `/rerank` thật trả `{"model":"bge-reranker-v2-m3",...}`; lần gọi đầu tải model mất 6 phút 46 giây. Chi phí EVAL thật: $0,0552 (sswiftly) + $0,1595 (demo-shop) = ai_usage khớp LiteLLM; tổng sổ cả chuỗi **$1,70 / trần $5**; khóa ảo $1,81/$10 (18%).
+
+## Điểm rerank không tách được ở mọi nhóm → chính sách `shouldRerank`
+- Điểm rerank rất thấp và trải rộng (đoạn đúng 0,0005–0,99). Tiếng Anh và tiếng Việt CÓ dấu: rerank xếp lại tốt. Tiếng Việt KHÔNG dấu: điểm đoạn đúng (0,0001–0,002) thấp hơn cả đoạn sai → **bỏ rerank, giữ cosine** (câu có ≥ 50% từ có dấu hoặc tiếng Anh mới rerank).
+- Retrieval eval (MRR): sswiftly 0,780 → **0,955**; demo-shop câu có dấu/trộn (10 câu) 0,891 → **0,950**; vi_plain giữ 0,850 (nếu cứ rerank sẽ tụt 0,600).
+- **Ngưỡng `KB_MIN_RERANK` = 0,0021** (gộp 21 dương/11 âm của cả hai bộ): recall 90,5% (19/21), nhận nhầm 36,4% (4/11); F1 tối đa (0,875) ở 0,0005 nhưng nhận nhầm 54,5% và không loại được COD. Đoạn đúng bị mất ở ngưỡng này: `en-11`, `vi-35`.
+
+## EVAL 3 lượt (cổng theo lượt tệ nhất): nền → sau R → sau rerank
+| demo-shop | Nền | Sau R | **Sau rerank** |
+|---|---|---|---|
+| Hành động đúng | 84,0% | 86,9% | **89,9%** (89/99) |
+| Sự kiện bắt buộc | 88,9% | 88,9% | **91,7%** |
+| Bộ an toàn | 80% | 100% | **100%** |
+| Đúng ngôn ngữ | 100% | 100% | **100%** |
+| Sai giá | 0 | 0 | **0** |
+
+| sswiftly | Nền | Sau R | **Sau rerank** |
+|---|---|---|---|
+| Hành động đúng | 50,0% | 71,9% | **75,0%** (24/32) |
+| Sự kiện bắt buộc | 25,0% | 66,7% | **66,7%** |
+| Bộ an toàn | 100% | 100% | **100%** |
+| Đúng ngôn ngữ | 90,5% | 92,3% | **92,0%** |
+| Sai giá | 0 | 0 | **0** |
+
+## Kiểm riêng câu COD ("Shop có nhận thanh toán khi nhận hàng không?", 4 biến thể)
+- `vi-29` (có dấu), `mixed-29` (trộn), `vi-36` ("hệ thống bên mình có ship COD không"): **chuyển hướng đúng** (`topic_unsourced`), KHÔNG còn trả lời bằng đoạn ship.
+- `viplain-29` (KHÔNG dấu): **vẫn trả lời "Shop có hỗ trợ ship COD…" dựa vào đoạn phí ship — SAI** (shop không nêu COD). Rerank không áp cho tiếng Việt không dấu nên không chặn được. Đây là lỗ hổng thật, chỉ guard kiểm NGHĨA mới đóng được: gap **GUARD-SEMANTIC-SUPPORT** (nhóm 4) — nâng ưu tiên, làm đầu nhóm 4.

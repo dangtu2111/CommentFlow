@@ -2,6 +2,7 @@ import {
   createDemoKnowledge,
   type Embedder,
   loadWorkspaceKnowledge,
+  type Reranker,
   type TryKnowledge,
 } from '@flow/ai';
 import type { FlowDb, KbVersionRef } from '@flow/db';
@@ -28,9 +29,16 @@ export async function createProductionKnowledge(input: {
   workspaceId: string;
   version: KbVersionRef;
   embedder: Embedder;
+  /** Rerank thật qua ml (nếu bật `ML_RERANK_ENABLED`); thiếu → cosine. */
+  reranker?: Reranker;
   embeddingRevision?: number;
-}): Promise<{ knowledge: TryKnowledge; vectorFailures: () => number }> {
+}): Promise<{
+  knowledge: TryKnowledge;
+  vectorFailures: () => number;
+  rerankFailures: () => number;
+}> {
   let failures = 0;
+  let rerankFailures = 0;
   const loaded = await input.db.withJob(input.workspaceId, (tx) =>
     loadWorkspaceKnowledge({
       tx,
@@ -39,6 +47,10 @@ export async function createProductionKnowledge(input: {
       productsEnabled: true,
       base: NO_BASE_KNOWLEDGE,
       embedder: input.embedder,
+      ...(input.reranker ? { reranker: input.reranker } : {}),
+      onRerankFailure: () => {
+        rerankFailures += 1;
+      },
       ...(input.embeddingRevision === undefined
         ? {}
         : { embeddingRevision: input.embeddingRevision }),
@@ -60,5 +72,5 @@ export async function createProductionKnowledge(input: {
     lookupProductFacts: (ids) => withTx((k) => k.lookupProductFacts(ids)),
     searchKb: (query, context) => withTx((k) => k.searchKb(query, context)),
   };
-  return { knowledge, vectorFailures: () => failures };
+  return { knowledge, vectorFailures: () => failures, rerankFailures: () => rerankFailures };
 }

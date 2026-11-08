@@ -290,3 +290,20 @@ describe('FR-133 cấu hình embedding của worker: env chỉ bật/tắt dịc
     expect(on.embeddingService).toEqual({ baseUrl: 'http://ml:8000' });
   });
 });
+
+describe('rerank (bge-reranker-v2-m3): dịch vụ ml riêng cờ ML_RERANK_ENABLED', () => {
+  const base = { DATABASE_WORKER_URL };
+  it('mặc định tắt; chỉ đúng chữ true + ML_URL mới bật; độc lập với cờ embedding', () => {
+    expect(loadConfig(base).rerankService).toBeUndefined();
+    expect(loadConfig({ ...base, ML_RERANK_ENABLED: 'true' }).rerankService).toBeUndefined();
+    expect(
+      loadConfig({ ...base, ML_RERANK_ENABLED: '1', ML_URL: 'http://ml' }).rerankService,
+    ).toBeUndefined();
+    expect(
+      loadConfig({ ...base, ML_RERANK_ENABLED: 'true', ML_URL: 'http://ml:8000' }).rerankService,
+    ).toEqual({ baseUrl: 'http://ml:8000' });
+    expect(
+      loadConfig({ ...base, ML_EMBED_ENABLED: 'true', ML_URL: 'http://ml:8000' }).rerankService,
+    ).toBeUndefined();
+  });
+});

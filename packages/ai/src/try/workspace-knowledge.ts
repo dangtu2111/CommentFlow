@@ -16,6 +16,7 @@ import {
   evaluateEmbeddingConsistency,
   vectorBranchUsable,
 } from '../embedding/embedding-consistency';
+import type { Reranker } from '../embedding/ml-reranker';
 import { createDbKbSearcher } from '../retrieve/kb-searcher';
 import { type BrandVoiceRow, type DraftVoicesByLang, draftVoicesFromRows } from './brand-voice';
 import { createDbProductKnowledge } from './db-product-knowledge';
@@ -93,6 +94,10 @@ export type WorkspaceKnowledgeParams = {
   embedder?: Embedder;
   /** `cf.embedding_state.revision` hiện hành: khóa bộ nhớ trạng thái lệch model (đổi model → revision đổi → đếm lại). */
   embeddingRevision?: number;
+  /** Rerank THẬT (ml `/rerank`): có → quyết định "đủ liên quan" bằng điểm rerank; thiếu → cosine. Không có bản giả khi chạy. */
+  reranker?: Reranker;
+  /** Gọi khi reranker lỗi giữa lượt (đã suy giảm về cosine); không kèm nội dung. */
+  onRerankFailure?: (error: unknown) => void;
   /** Gọi khi embedder lỗi giữa lượt (đã suy giảm về toàn văn/trigram); không kèm nội dung. */
   onEmbeddingFailure?: (error: unknown) => void;
   readers?: Partial<WorkspaceKnowledgeReaders>;
@@ -157,6 +162,8 @@ export async function loadWorkspaceKnowledge(
         vectorHealth.failed = true;
         params.onEmbeddingFailure?.(error);
       },
+      ...(params.reranker ? { reranker: params.reranker } : {}),
+      ...(params.onRerankFailure ? { onRerankFailure: params.onRerankFailure } : {}),
       base: products,
     });
   };
