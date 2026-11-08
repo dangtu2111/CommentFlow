@@ -48,12 +48,13 @@ try {
     await db.close();
   }
 } catch (error) {
-  console.error(
-    isAppError(error)
-      ? `[${error.code}] ${error.message}`
-      : error instanceof Error
-        ? error.message
-        : 'Thất bại.',
-  );
+  // Drizzle bọc lỗi DB thành "Failed query" kèm tham số (vector rất dài): in NGUYÊN NHÂN thật (cause) và cắt phần tham số.
+  const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : null;
+  const message = isAppError(error)
+    ? `[${error.code}] ${error.message}`
+    : error instanceof Error
+      ? (error.message.split('\nparams:')[0] ?? error.message)
+      : 'Thất bại.';
+  console.error(cause ? `${message}\nNguyên nhân: ${cause}` : message);
   process.exit(1);
 }

@@ -313,3 +313,39 @@ describe('đổi model: tạo vector mới song song, đủ 100% mới đổi, m
     expect(left).toBe(0);
   });
 });
+
+describe('dòng CŨ có vector chính của model cũ/giả (chưa có model hoạt động)', () => {
+  it('ghi vector ĐỆM được (chuyển model lần đầu); vector chính không đổi; ghi vector chính sai model vẫn bị chặn', async () => {
+    await setActiveEmbeddingModel(admin, null);
+    const id = await seedChunk('legacy', unit(1), 'mock-embed-v1');
+    const prod = await seedProduct('Gối legacy', unit(1), 'mock-embed-v1');
+    await worker.withSystem((tx) => beginEmbeddingSwitch(tx, 'm2'));
+    await worker.withJob(ws, async (tx) => {
+      const [chunk] = await listChunksForSwitch(tx, ws, 'm2', 10);
+      const [product] = await listProductsForSwitch(tx, ws, 'm2', 10);
+      if (!chunk || !product) throw new Error('thiếu dòng');
+      await writeChunksNext(tx, ws, 'm2', [
+        { id: chunk.id, contentHash: chunk.contentHash, embedding: unit(7) },
+      ]);
+      await writeProductsNext(tx, ws, 'm2', [
+        { id: product.id, name: product.name, embedding: unit(7) },
+      ]);
+    });
+    const row = (
+      await admin.query(
+        'SELECT embedding_model AS m, embedding_next_model AS n FROM cf.kb_chunks WHERE id = $1',
+        [id],
+      )
+    ).rows[0];
+    expect(row).toEqual({ m: 'mock-embed-v1', n: 'm2' });
+    // Ghi vector CHÍNH với model khác model hoạt động (NULL) vẫn bị chặn.
+    await expect(
+      worker.withJob(ws, (tx) =>
+        tx.execute(
+          sql`UPDATE cf.kb_chunks SET embedding = ${lit(unit(3))}::halfvec, embedding_model = 'm9' WHERE id = ${id}::uuid`,
+        ),
+      ),
+    ).rejects.toThrow();
+    expect(prod).toBeDefined();
+  });
+});

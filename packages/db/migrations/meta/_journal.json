@@ -561,6 +561,13 @@
       "when": 1794868000000,
       "tag": "0079_embedding_active_model",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1794954400000,
+      "tag": "0080_embedding_trigger_changed_only",
+      "breakpoints": true
     }
   ]
 }
