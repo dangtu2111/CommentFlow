@@ -233,7 +233,7 @@ if (backend === 'litellm') {
   }
 }
 
-async function runOnce(variantCount: number) {
+async function runOnce(variantCount: number, runIndex = 1) {
   const runner = createRunner({
     backend,
     env: process.env,
@@ -289,7 +289,10 @@ async function runOnce(variantCount: number) {
     cost,
     outcomes,
   });
-  const base = resolve(values.out as string, `eval-${backend}-v${variantCount}-${stamp}`);
+  const base = resolve(
+    values.out as string,
+    `eval-${backend}-v${variantCount}-${stamp}${runIndex > 1 ? `-r${runIndex}` : ''}`,
+  );
   writeFileSync(`${base}.md`, report);
   writeFileSync(
     `${base}.jsonl`,
@@ -333,7 +336,7 @@ for (let i = 2; i <= repeats; i += 1) {
     break;
   }
   console.log(`\nLượt ${i}/${repeats}…`);
-  const next = await runOnce(variantCount);
+  const next = await runOnce(variantCount, i);
   runs.push(next);
   measurementSpent += runUsd(next.cost);
 }
