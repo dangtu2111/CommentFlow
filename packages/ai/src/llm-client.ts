@@ -35,6 +35,8 @@ export type LlmCallInput = {
   messages: LlmMessage[];
   maxTokens?: number;
   temperature?: number;
+  /** Hạt giống lấy mẫu (nếu nhà cung cấp hỗ trợ) để giảm dao động giữa các lượt đo EVAL; LiteLLM bỏ nếu model không hỗ trợ. */
+  seed?: number;
   /** Xin logprob của token đầu ra (nếu nhà cung cấp hỗ trợ) để tính `p_label` (docs/09 §6.0). */
   logprobs?: boolean;
   /** Structured output gốc (`response_format: json_schema`, strict) — LiteLLM bỏ nếu model không hỗ trợ (drop_params). */
@@ -87,6 +89,7 @@ const inputSchema = z.object({
     .min(1),
   maxTokens: z.number().int().positive().max(32_768).optional(),
   temperature: z.number().min(0).max(2).optional(),
+  seed: z.number().int().optional(),
   logprobs: z.boolean().optional(),
   responseFormat: z
     .object({
@@ -168,6 +171,7 @@ export function createLlmClient(options: LlmClientOptions) {
             messages: input.messages.map(toWireMessage),
             ...(input.maxTokens !== undefined ? { max_tokens: input.maxTokens } : {}),
             ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
+            ...(input.seed !== undefined ? { seed: input.seed } : {}),
             ...(input.logprobs ? { logprobs: true } : {}),
             ...(input.responseFormat
               ? {
