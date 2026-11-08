@@ -7,12 +7,17 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import type { TryKnowledge } from '@flow/ai';
 import { loadEmbeddingService, resolveEmbeddingConfig } from '@flow/ai';
 import { allowMockInThisProcess } from '@flow/shared';
 import pg from 'pg';
 import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
-import { computeMetrics } from '../metrics';
+import { checkSample, computeMetrics } from '../metrics';
+import { findFlakySamples, renderMultiRun } from '../multi-run';
+import { createProductionKnowledge } from '../production/knowledge';
+import { type ProductionKnowledgeInfo, prepareProductionKnowledge } from '../production/prepare';
+import { assertDevDatabase } from '../production/seed';
 import { costReport, renderReport } from '../report';
 import { type Backend, createRunner, runAll } from '../runner';
 import { shopFixtureSchema } from '../shop';
@@ -36,6 +41,12 @@ const { values } = parseArgs({
     'persist-usage': { type: 'boolean', default: false },
     // Khớp sản phẩm: `trigram` (mặc định khi có DB dev/test) = ĐÚNG như production qua pg_trgm; `substring` = cũ (offline, quá chặt với tên dài).
     matcher: { type: 'string', default: 'trigram' },
+    // Nguồn kiến thức: `production` (mặc định với litellm) = nạp shop file vào workspace [EVAL] → đồng bộ → xuất bản → loadWorkspaceKnowledge (vector bge-m3 thật);
+    // `fixture` = tìm bằng từ khóa trong shop file (cũ, KHÔNG phản ánh production).
+    knowledge: { type: 'string' },
+    // Số lượt chạy mỗi bên (mặc định 3 với litellm, 1 với mock) và hạt giống bước extract (nhiệt độ luôn 0).
+    repeats: { type: 'string' },
+    seed: { type: 'string', default: '42' },
   },
 });
 
@@ -131,6 +142,60 @@ if (values.matcher === 'trigram' && backend === 'litellm') {
   console.log('Khớp sản phẩm: "tên chứa lời nhắc" (cũ, KHÔNG phản ánh production).');
 }
 
+const repeats = Math.max(1, Number(values.repeats ?? (backend === 'litellm' ? 3 : 1)));
+const seed = Number(values.seed);
+const knowledgeMode = (values.knowledge ??
+  (backend === 'litellm' ? 'production' : 'fixture')) as string;
+if (!['production', 'fixture'].includes(knowledgeMode)) {
+  console.error('--knowledge phải là production | fixture');
+  process.exit(2);
+}
+if (knowledgeMode === 'production' && backend !== 'litellm') {
+  console.error('--knowledge production chỉ dùng với --backend litellm');
+  process.exit(2);
+}
+
+// Đường production: nạp [EVAL] → đồng bộ → xuất bản → loadWorkspaceKnowledge. Chỉ cf_dev/cf_test.
+let productionInfo: ProductionKnowledgeInfo | undefined;
+let productionKnowledge: TryKnowledge | undefined;
+let closeProduction: (() => Promise<void>) | undefined;
+let vectorFailures = () => 0;
+if (knowledgeMode === 'production') {
+  const adminUrl = process.env.DATABASE_ADMIN_URL ?? process.env.TEST_DATABASE_ADMIN_URL ?? '';
+  const workerUrl = process.env.DATABASE_WORKER_URL ?? process.env.TEST_DATABASE_WORKER_URL ?? '';
+  try {
+    assertDevDatabase(adminUrl);
+    if (!workerUrl) throw new Error('Thiếu DATABASE_WORKER_URL (role cf_worker).');
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : 'Cấu hình DB không hợp lệ.');
+    process.exit(2);
+  }
+  const pg = (await import('pg')).default;
+  const adminPool = new pg.Pool({ connectionString: adminUrl, max: 2 });
+  const prepared = await prepareProductionKnowledge({
+    adminPool,
+    workerUrl,
+    embeddingService: loadEmbeddingService(process.env),
+    shop,
+  });
+  await adminPool.end();
+  productionInfo = prepared.info;
+  const built = await createProductionKnowledge({
+    db: prepared.db,
+    workspaceId: prepared.info.workspaceId,
+    version: prepared.info.kbVersion,
+    embedder: prepared.embedding.embedder as NonNullable<typeof prepared.embedding.embedder>,
+  });
+  productionKnowledge = built.knowledge;
+  vectorFailures = built.vectorFailures;
+  closeProduction = () => prepared.db.close();
+  console.log(
+    `Kiến thức production: [EVAL] kb_version ${prepared.info.kbVersion.number}, embedder ${prepared.info.embeddingModel}; ` +
+      `sản phẩm ${prepared.info.seed.products}, chính sách ${prepared.info.seed.policies}, FAQ ${prepared.info.seed.faqs}; ` +
+      `đồng bộ ghi ${prepared.info.sync.chunksWritten} đoạn (giữ ${prepared.info.sync.chunksUnchanged}).`,
+  );
+}
+
 async function runOnce(variantCount: number) {
   const runner = createRunner({
     backend,
@@ -142,6 +207,8 @@ async function runOnce(variantCount: number) {
     },
     variantCount,
     shop,
+    seed,
+    ...(productionKnowledge ? { knowledge: productionKnowledge } : {}),
     ...(scorer ? { scorer } : {}),
     ...(persistUsage ? { persistUsage } : {}),
   });
@@ -167,11 +234,18 @@ async function runOnce(variantCount: number) {
       'Từ điển viết tắt': 'bản mẫu (DEMO_ABBREVIATIONS), không phải từ điển hệ thống của DB',
       // Ghi rõ embedder trong MỌI báo cáo (FR-133). Lấy từ ĐÚNG hàm cấu hình mà web/worker dùng (`resolveEmbeddingConfig`), không tự chọn.
       'Embedder (cấu hình ứng dụng)': `${embeddingInfo.model ?? 'tắt'} — ${embeddingInfo.note}`,
-      'Embedder dùng trong lượt này':
-        'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',
-      'Khớp sản phẩm': scorer
-        ? 'pg_trgm như production (similarity/word_similarity, ngưỡng 0,3/0,4; bí danh 0,6; chọn/mơ hồ 0,45/0,05)'
-        : '"tên chứa lời nhắc" (cũ, KHÔNG phản ánh production)',
+      'Nguồn kiến thức': productionInfo
+        ? `PRODUCTION — workspace [EVAL] đã đồng bộ + xuất bản; kb_version ${productionInfo.kbVersion.number}; tìm lai vector ${productionInfo.embeddingModel} + toàn văn + trigram (loadWorkspaceKnowledge)`
+        : 'fixture — từ khóa trong shop file (KHÔNG phản ánh production)',
+      'Cấu hình lấy mẫu': `extract: nhiệt độ 0, seed ${seed}; soạn: nhiệt độ mặc định của bước soạn`,
+      'Embedder dùng trong lượt này': productionInfo
+        ? `${productionInfo.embeddingModel} (bge-m3 thật qua dịch vụ ml; đoạn kiến thức và truy vấn cùng model)`
+        : 'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',
+      'Khớp sản phẩm': productionInfo
+        ? 'production (findProductMatch trên DB [EVAL]; vector tên sản phẩm chưa nạp trong EVAL)'
+        : scorer
+          ? 'pg_trgm như production (similarity/word_similarity, ngưỡng 0,3/0,4; bí danh 0,6; chọn/mơ hồ 0,45/0,05)'
+          : '"tên chứa lời nhắc" (cũ, KHÔNG phản ánh production)',
     },
     samples,
     metrics,
@@ -184,7 +258,7 @@ async function runOnce(variantCount: number) {
     `${base}.jsonl`,
     `${[...outcomes.values()].map((outcome) => JSON.stringify(outcome)).join('\n')}\n`,
   );
-  return { report, cost, base };
+  return { report, cost, base, metrics, outcomes };
 }
 
 const variantCount = Math.min(4, Math.max(0, Number(values.variants)));
@@ -193,7 +267,7 @@ console.log(first.report);
 console.log(`\nĐã ghi: ${first.base}.md và .jsonl`);
 
 // Vượt trần $2/1.000 lượt → thử giảm số biến thể 5 → 3 trước (Q-LLM2) và ghi kết quả so sánh.
-if (first.cost.overBudget && variantCount > 2 && !values['no-reduce']) {
+if (first.cost.overBudget && variantCount > 2 && !values['no-reduce'] && repeats === 1) {
   console.log('\n⚠ Vượt $2/1.000 lượt — thử giảm biến thể 5 → 3 phiên bản…');
   const reduced = await runOnce(2);
   console.log(
@@ -203,5 +277,57 @@ if (first.cost.overBudget && variantCount > 2 && !values['no-reduce']) {
   console.log(`Đã ghi: ${reduced.base}.md và .jsonl`);
 }
 
+// Nhiều lượt (EVAL-RELIABILITY): trung bình + min/max theo nhóm, cổng theo LƯỢT TỆ NHẤT, mẫu chập chờn.
+if (repeats > 1) {
+  const runs = [first];
+  for (let i = 2; i <= repeats; i += 1) {
+    console.log(`\nLượt ${i}/${repeats}…`);
+    runs.push(await runOnce(variantCount));
+  }
+  const groups: Record<string, (typeof first.metrics.all)[]> = {
+    all: runs.map((r) => r.metrics.all),
+  };
+  for (const group of Object.keys(
+    first.metrics.byGroup,
+  ) as (keyof typeof first.metrics.byGroup)[]) {
+    if (first.metrics.byGroup[group].samples > 0) {
+      groups[group] = runs.map((r) => r.metrics.byGroup[group]);
+    }
+  }
+  const perRunChecks = runs.map(
+    (r) =>
+      new Map(
+        samples.flatMap((sample) => {
+          const outcome = r.outcomes.get(sample.id);
+          return outcome ? ([[sample.id, checkSample(sample, outcome)]] as const) : [];
+        }),
+      ),
+  );
+  const header = [
+    `# EVAL nhiều lượt — ${backend}, ${repeats} lượt`,
+    '',
+    `- Bộ mẫu: ${values.dataset} (${samples.length} mẫu); cửa hàng: ${shop.id}`,
+    `- Model extract/rewrite/draft: ${values['classify-model']} / ${values['rewrite-model']} / ${values['draft-model']}`,
+    `- Lấy mẫu: extract nhiệt độ 0, seed ${seed}`,
+    productionInfo
+      ? `- Nguồn kiến thức: PRODUCTION — [EVAL] kb_version ${productionInfo.kbVersion.number}, embedder ${productionInfo.embeddingModel}, sản phẩm ${productionInfo.seed.products}, chính sách ${productionInfo.seed.policies}, FAQ ${productionInfo.seed.faqs}; lỗi vector trong lượt chạy: ${vectorFailures()}`
+      : '- Nguồn kiến thức: fixture (từ khóa; KHÔNG phản ánh production)',
+    `- Embedder cấu hình ứng dụng: ${embeddingInfo.model ?? 'tắt'} — ${embeddingInfo.note}`,
+    backend === 'mock' ? '- NHÃN: MOCK (fixture) — KHÔNG phải số đo chất lượng' : '',
+    '',
+  ].join('\n');
+  const multi = `${header}\n${renderMultiRun({
+    title: `So sánh ${repeats} lượt`,
+    repeats,
+    groups,
+    flaky: findFlakySamples(samples, perRunChecks),
+  })}`;
+  const multiBase = resolve(values.out as string, `eval-multi-${backend}-${stamp}`);
+  writeFileSync(`${multiBase}.md`, multi);
+  console.log(`\n${multi}`);
+  console.log(`Đã ghi: ${multiBase}.md`);
+}
+
 if (persistUsage) await persistUsage.close();
 if (scorerPool) await scorerPool.end();
+if (closeProduction) await closeProduction();
