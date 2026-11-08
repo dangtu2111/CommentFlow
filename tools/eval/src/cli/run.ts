@@ -168,7 +168,7 @@ async function runOnce(variantCount: number) {
       // Ghi rõ embedder trong MỌI báo cáo (FR-133). Lấy từ ĐÚNG hàm cấu hình mà web/worker dùng (`resolveEmbeddingConfig`), không tự chọn.
       'Embedder (cấu hình ứng dụng)': `${embeddingInfo.model ?? 'tắt'} — ${embeddingInfo.note}`,
       'Embedder dùng trong lượt này':
-        'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',,
+        'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',
       'Khớp sản phẩm': scorer
         ? 'pg_trgm như production (similarity/word_similarity, ngưỡng 0,3/0,4; bí danh 0,6; chọn/mơ hồ 0,45/0,05)'
         : '"tên chứa lời nhắc" (cũ, KHÔNG phản ánh production)',
