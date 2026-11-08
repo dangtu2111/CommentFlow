@@ -1794,14 +1794,14 @@
     "pageTitle": "Câu kiểm thử kiến thức",
     "title": "Câu kiểm thử trước khi xuất bản",
     "subtitle": "Viết vài câu hỏi mẫu của khách kèm kết quả mong đợi, chạy thử để chắc AI xử lý đúng trước khi xuất bản kiến thức. Không trừ lượt AI của gói.",
-    "mockNote": "Đang chạy bản mô phỏng (không gọi AI thật). Bộ câu chưa được lưu và chưa chặn nút Xuất bản; bạn cần chạy lại mỗi lần.",
+    "mockNote": "Chạy bằng AI thật và kiến thức thật của shop. Bộ câu chưa được lưu và chưa chặn nút Xuất bản; bạn cần chạy lại mỗi lần.",
     "label": "Danh sách câu kiểm thử",
     "hint": "Mỗi dòng một câu: câu hỏi | hành động mong đợi | từ khóa phải có trong câu trả lời (không bắt buộc, cách nhau bằng dấu ;). Hành động: answer (trả lời), clarify (hỏi lại), redirect (chuyển hướng), handoff (chuyển nhân viên), skip (bỏ qua). Tối đa {max} dòng.",
     "sample": "ship về Hà Nội bao nhiêu | redirect | 20.000đ\náo thun basic size M màu đen giá bao nhiêu? | answer\n😀😀 | skip",
     "submit": "Chạy bộ câu kiểm thử",
     "quota": "Đã chạy {used}/{limit} lần hôm nay",
     "knowledge": {
-      "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
+      "demo": "Nguồn: chưa có kiến thức thật của shop",
       "kb": "Nguồn: kiến thức đã xuất bản của shop"
     },
     "errors": {
@@ -2017,7 +2017,7 @@
     "pageTitle": "Thử AI",
     "title": "Thử AI",
     "subtitle": "Gõ một bình luận mẫu để xem AI sẽ phân loại, trả lời và có được tự gửi hay không. Không trừ lượt AI của gói.",
-    "mockNote": "Đang chạy bản mô phỏng (không gọi AI thật, kiến thức mẫu). Kết quả chỉ để xem trước luồng xử lý.",
+    "mockNote": "Chạy bằng AI thật và kiến thức thật của shop (cần cấu hình AI). Không trừ lượt AI của gói và không gửi gì cho khách.",
     "label": "Bình luận mẫu của khách",
     "placeholder": "Ví dụ: áo thun basic size M màu đen giá bao nhiêu?",
     "previousLabel": "Lượt trước trong hội thoại (tùy chọn)",
@@ -2026,15 +2026,15 @@
     "submit": "Thử",
     "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
     "llm": {
-      "off": "Nhận diện ý định và soạn câu: bản mô phỏng (chưa bật AI thật)",
+      "off": "Chưa cấu hình AI thật",
       "extractor": "nhận diện ý định",
       "rewriter": "viết lại câu hỏi",
       "drafter": "soạn câu trả lời",
-      "on": "AI thật đang chạy ở bước: {steps}; các bước còn lại là bản mô phỏng"
+      "on": "AI thật đang chạy ở bước: {steps}"
     },
     "knowledge": {
-      "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
-      "shop": "Nguồn: sản phẩm thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm); chính sách vẫn là đoạn mẫu",
+      "demo": "Nguồn: chưa có kiến thức thật của shop",
+      "shop": "Nguồn: sản phẩm, chính sách và FAQ thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm)",
       "kb": "Nguồn: kiến thức đã xuất bản của shop — điểm 0–1 là độ liên quan do hệ thống tính"
     },
     "embedding": {
