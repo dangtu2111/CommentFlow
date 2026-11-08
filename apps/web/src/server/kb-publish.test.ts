@@ -129,6 +129,43 @@ describe('FR-054 UF-8 createKbPublishService.restore', () => {
 });
 
 describe('FR-054 createKbPublishService.overview', () => {
+  it('trả nhóm chính sách mâu thuẫn (2 câu + nguồn) từ đoạn nháp; không có ops đọc nội dung → danh sách rỗng', async () => {
+    const { service, ops } = setup({ drafts: [chunk('policy:a:0#0')] });
+    const withTexts = {
+      ...ops,
+      listDraftChunkTexts: vi.fn(async () => [
+        {
+          chunkKey: 'policy:a:0#0',
+          content: 'Giao trong 2 ngày.',
+          contextHeader: 'CS › A',
+          sourceTitle: 'CS',
+          topic: 'shipping_time',
+        },
+        {
+          chunkKey: 'policy:b:0#0',
+          content: 'Giao trong 5 ngày.',
+          contextHeader: 'CS › B',
+          sourceTitle: 'CS',
+          topic: 'shipping_time',
+        },
+      ]),
+    };
+    const svc = createKbPublishService({
+      db: {
+        withActor: async (_w: string, _u: string, fn: (t: unknown) => unknown) => fn({}),
+      } as never,
+      ops: withTexts as never,
+      enqueue: vi.fn(),
+    });
+    const o = await svc.overview(ctx);
+    expect(o.conflicts).toHaveLength(1);
+    expect(o.conflicts[0]?.members.map((m) => [m.sentence, m.sourceTitle])).toEqual([
+      ['Giao trong 2 ngày.', 'CS › A'],
+      ['Giao trong 5 ngày.', 'CS › B'],
+    ]);
+    expect((await service.overview(ctx)).conflicts).toEqual([]);
+  });
+
   it('trả danh sách phiên bản, số đang chạy và bản xem trước thay đổi trong một giao dịch', async () => {
     const { service, withActor } = setup({ drafts: [chunk('a', 'n')], current: [chunk('a')] });
     const o = await service.overview(ctx);

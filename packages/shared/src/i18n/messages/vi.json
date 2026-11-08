@@ -1674,6 +1674,22 @@
     }
   },
   "kbPublish": {
+    "conflicts": {
+      "title": "Chính sách đang mâu thuẫn nhau",
+      "body": "Các câu dưới đây nói khác nhau về cùng một thông tin. Bạn vẫn xuất bản được, nhưng khi khách hỏi đúng chủ đề này AI sẽ chuyển nhân viên thay vì trả lời. Hãy sửa cho khớp rồi xuất bản.",
+      "topics": {
+        "shipping_time": "Thời gian giao hàng",
+        "shipping_fee": "Phí vận chuyển",
+        "return": "Đổi trả",
+        "refund": "Hoàn tiền",
+        "warranty": "Bảo hành"
+      },
+      "valuesLabel": "Giá trị khác nhau: {values}"
+    },
+    "unpublishedBanner": {
+      "title": "Chưa xuất bản kiến thức",
+      "body": "AI chỉ trả lời theo phiên bản đã xuất bản. Bản nháp đã sẵn sàng — bấm Xuất bản bên dưới để AI bắt đầu dùng kiến thức của bạn."
+    },
     "pageTitle": "Phiên bản kiến thức",
     "title": "Phiên bản kiến thức",
     "subtitle": "AI chỉ trả lời theo phiên bản đã xuất bản. Sửa ở bản nháp, xem thay đổi rồi xuất bản; cần quay lại thì khôi phục một phiên bản cũ (hệ thống tạo phiên bản mới, không xóa bản nào).",

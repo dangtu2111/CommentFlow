@@ -1674,6 +1674,22 @@
     }
   },
   "kbPublish": {
+    "conflicts": {
+      "title": "Your policies contradict each other",
+      "body": "The sentences below say different things about the same information. You can still publish, but when a customer asks about this topic the AI will hand over to staff instead of answering. Fix them so they match, then publish.",
+      "topics": {
+        "shipping_time": "Delivery time",
+        "shipping_fee": "Shipping fee",
+        "return": "Returns",
+        "refund": "Refunds",
+        "warranty": "Warranty"
+      },
+      "valuesLabel": "Conflicting values: {values}"
+    },
+    "unpublishedBanner": {
+      "title": "Knowledge not published yet",
+      "body": "The AI only answers from the published version. Your draft is ready — press Publish below so the AI can start using your knowledge."
+    },
     "pageTitle": "Knowledge versions",
     "title": "Knowledge versions",
     "subtitle": "The AI only answers from the published version. Edit the draft, review the changes, then publish; to go back, restore an older version (a new version is created, nothing is deleted).",

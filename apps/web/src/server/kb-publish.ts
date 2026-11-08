@@ -1,3 +1,4 @@
+import { type ConflictGroup, conflictChunkOf, detectConflicts } from '@flow/ai';
 import {
   type Database,
   type FlowDb,
@@ -5,6 +6,7 @@ import {
   getVersionByNumber,
   type KbVersionRow,
   listChunkSummaries,
+  listDraftChunkTexts,
   listKbVersions,
 } from '@flow/db/runtime';
 import {
@@ -27,6 +29,8 @@ type Ops = {
   getCurrentVersion: typeof getCurrentVersion;
   getVersionByNumber: typeof getVersionByNumber;
   listChunkSummaries: typeof listChunkSummaries;
+  /** Nội dung đoạn nháp để phát hiện mâu thuẫn (cùng hàm với worker khi xuất bản). */
+  listDraftChunkTexts?: typeof listDraftChunkTexts;
 };
 type Deps = {
   db: Pick<FlowDb, 'withActor'>;
@@ -39,6 +43,8 @@ export type KbPublishOverview = {
   currentNumber: number | null;
   /** So nháp với phiên bản đang chạy (UF-8 "xem thay đổi"). */
   preview: KbVersionPlan;
+  /** Nhóm chính sách mâu thuẫn trong bản nháp (số + đơn vị cùng chủ đề), kèm 2 câu + nguồn. */
+  conflicts: ConflictGroup[];
 };
 
 export type KbPublishResult = 'queued' | 'no_changes' | 'confirm_required' | 'not_found';
@@ -75,6 +81,11 @@ export function createKbPublishService({ db, ops, enqueue }: Deps) {
           versions,
           currentNumber: current?.number ?? null,
           preview: planKbVersion(drafts, chunks),
+          conflicts: ops.listDraftChunkTexts
+            ? detectConflicts(
+                (await ops.listDraftChunkTexts(tx, ctx.workspaceId)).map(conflictChunkOf),
+              )
+            : [],
         };
       }),
 
@@ -124,6 +135,12 @@ export function createKbPublishService({ db, ops, enqueue }: Deps) {
 export const kbPublish = () =>
   createKbPublishService({
     db: getDb(),
-    ops: { listKbVersions, getCurrentVersion, getVersionByNumber, listChunkSummaries },
+    ops: {
+      listKbVersions,
+      getCurrentVersion,
+      getVersionByNumber,
+      listChunkSummaries,
+      listDraftChunkTexts,
+    },
     enqueue: enqueueJob,
   });
