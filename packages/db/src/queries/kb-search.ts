@@ -305,8 +305,9 @@ export async function findProductMatch(
   );
   if (byAlias.status !== 'none') return byAlias;
   const hits = await searchProducts(tx, input);
-  // (1b) LAI: điểm mỗi sản phẩm = lớn hơn của trigram và cosine vector tên (khách gõ lệch chữ vẫn khớp); thiếu vector → như cũ (chỉ trigram).
-  return pickProductMatch(hybridProductScores(hits));
+  // (1b) LAI: điểm mỗi sản phẩm = lớn hơn của trigram và cosine vector tên (khách gõ lệch chữ vẫn khớp) + ưu tiên token đặc trưng (xxxl, a4, 2 in 1, mã);
+  // thiếu vector → như cũ (chỉ trigram). Đo 08/11: lai-max hơn lai-RRF (docs/testing/eval-product-match-2026-11-08.md).
+  return pickProductMatch(hybridProductScores(hits, { mention: input.queryText }));
 }
 
 /**

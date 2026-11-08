@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  adjustByDistinctiveTokens,
+  distinctiveTokens,
   hybridProductScores,
   isProductCacheStale,
   normalizeSearchText,
@@ -154,5 +156,55 @@ describe('(1b) điểm sản phẩm LAI: trigram + vector tên (cosine)', () => 
       hybridProductScores([{ id: 'p1', similarity: 0.12, cosine: 0.4 }]),
     );
     expect(miss.status).toBe('none');
+  });
+});
+
+describe('(1b) token đặc trưng (size/mã/"2 in 1") ưu tiên khi xếp hạng sản phẩm', () => {
+  it('nhận kích cỡ, chữ-số, "n in n" (mọi cách viết), bỏ từ thường', () => {
+    expect(distinctiveTokens('xxxl litter box')).toEqual(['xxxl']);
+    expect(distinctiveTokens('A4 Portable Printer')).toEqual(['a4']);
+    expect(distinctiveTokens('2 in 1 shower')).toEqual(['2in1']);
+    expect(distinctiveTokens('2 in1 Handheld Shower')).toEqual(['2in1']);
+    expect(distinctiveTokens('14-in-1 foldable bench')).toEqual(['14in1']);
+    expect(distinctiveTokens('áo thun size M màu đen')).toEqual(['m']);
+    expect(distinctiveTokens('dog nail scratch board')).toEqual([]);
+    expect(distinctiveTokens('SKU ab123 giá')).toEqual(['ab123']);
+  });
+
+  it('đủ token trong tên → cộng điểm (trần 1); thiếu → nhân hệ số giảm; không có token → giữ nguyên', () => {
+    expect(
+      adjustByDistinctiveTokens(0.5, 'xxxl litter box', 'XXXL Stainless Steel Litter Box'),
+    ).toBeGreaterThan(0.5);
+    expect(
+      adjustByDistinctiveTokens(0.95, 'xxxl litter box', 'XXXL Litter Box'),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      adjustByDistinctiveTokens(0.5, 'xxxl litter box', 'Extra large automatic litter box'),
+    ).toBeLessThan(0.5);
+    expect(adjustByDistinctiveTokens(0.5, 'litter box', 'Stainless Steel Cat Litter Box')).toBe(
+      0.5,
+    );
+    expect(adjustByDistinctiveTokens(0, 'xxxl box', 'XXXL Box')).toBe(0);
+  });
+
+  it('hybridProductScores nhận minCosine tùy chỉnh và tên + lời nhắc để áp token', () => {
+    const hits = [
+      { id: 'a', name: 'XXXL Stainless Steel Litter Box', similarity: 0.5, cosine: 0.7 },
+      { id: 'b', name: 'Extra large automatic litter box', similarity: 0.5, cosine: 0.7 },
+    ];
+    const plain = hybridProductScores(hits);
+    expect(plain[0]?.score).toBe(plain[1]?.score);
+    const tokened = hybridProductScores(hits, { mention: 'xxxl litter box' });
+    expect((tokened[0]?.score ?? 0) - (tokened[1]?.score ?? 0)).toBeGreaterThan(0.1);
+    expect(
+      hybridProductScores([{ id: 'c', name: 'x', similarity: 0, cosine: 0.7 }], {
+        minCosine: 0.8,
+      })[0]?.score,
+    ).toBe(0);
+    expect(
+      hybridProductScores([{ id: 'c', name: 'x', similarity: 0, cosine: 0.7 }], {
+        minCosine: 0.6,
+      })[0]?.score,
+    ).toBeGreaterThan(0.45);
   });
 });

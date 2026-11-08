@@ -472,6 +472,18 @@ describe('FR-127 searchProducts / findProductMatch', () => {
     expect(noVector.status).toBe('none');
   });
 
+  it('(1b) token đặc trưng: hai sản phẩm gần tên nhau, lời nhắc có "xxxl" → chọn đúng sản phẩm có xxxl (không phải mơ hồ)', async () => {
+    const big = await seedProduct(wsB, 'XXXL Stainless Steel Litter Box Premium');
+    await seedProduct(wsB, 'Stainless Steel Cat Litter Box Premium');
+    const match = await db.withWorkspace(wsB, (tx) =>
+      findProductMatch(tx, {
+        workspaceId: wsB,
+        queryText: 'xxxl stainless steel litter box premium',
+      }),
+    );
+    expect(match).toMatchObject({ status: 'matched', id: big });
+  });
+
   it('(1b) nhúng bù tên sản phẩm: liệt kê chỉ sản phẩm active thiếu/khác model; ghi chỉ khi tên còn nguyên; không đụng sản phẩm khác workspace', async () => {
     const missing = await seedProduct(wsA, 'Cần nhúng bù một');
     const stale = await seedProduct(wsA, 'Cần nhúng bù hai', {
