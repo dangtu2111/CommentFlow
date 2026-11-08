@@ -2,6 +2,14 @@
 // Không hook, không ống lọc output giữa lệnh kiểm và lệnh push (lỗi đã lặp 3 lần: precheck đỏ mà vẫn push).
 const FORBIDDEN = /^(--force(-with-lease|-if-includes)?|-f|--mirror|--delete|-d|\+.*)$/;
 
+/**
+ * Nhánh có upstream "đúng" khi upstream là `origin/<tên nhánh>`. Nhánh tạo từ `origin/main` mà đặt tên khác có upstream = `origin/main`: `git push` trơn sẽ lỗi (hoặc đẩy nhầm
+ * nhánh) → coi như CHƯA có upstream và đặt lại bằng `-u origin HEAD`.
+ */
+export function upstreamMatches(branch, upstream) {
+  return branch !== '' && upstream === `origin/${branch}`;
+}
+
 /** Dựng tham số `git push`; cấm force/xóa nhánh/mirror (AGENTS.md: không force-push). */
 export function buildPushArgs(argv, { hasUpstream }) {
   const bad = argv.find((arg) => FORBIDDEN.test(arg));

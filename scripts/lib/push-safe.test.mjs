@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildPushArgs, runPushSafe } from './push-safe.mjs';
+import { buildPushArgs, runPushSafe, upstreamMatches } from './push-safe.mjs';
 
 describe('buildPushArgs', () => {
   it('chưa có upstream → đặt upstream tới origin/HEAD; đã có → push trơn', () => {
@@ -66,5 +66,14 @@ describe('runPushSafe', () => {
   it('push lỗi → báo và thoát ≠ 0', () => {
     const result = runPushSafe({ ...base, precheck: () => 0, push: () => 1 });
     expect(result.exitCode).not.toBe(0);
+  });
+});
+
+describe('upstreamMatches', () => {
+  it('chỉ đúng khi upstream là origin/<nhánh hiện tại>', () => {
+    expect(upstreamMatches('feat/x', 'origin/feat/x')).toBe(true);
+    expect(upstreamMatches('feat/x', 'origin/main')).toBe(false); // nhánh tạo từ origin/main
+    expect(upstreamMatches('feat/x', '')).toBe(false);
+    expect(upstreamMatches('', 'origin/')).toBe(false);
   });
 });
