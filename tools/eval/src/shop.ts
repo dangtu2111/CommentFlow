@@ -5,8 +5,16 @@ import {
   searchShopTexts,
   type TryKnowledge,
 } from '@flow/ai';
-import { normalizeAttrs, unsafeMarkMasked } from '@flow/shared';
+import {
+  ALIAS_MATCH_THRESHOLD,
+  normalizeAttrs,
+  normalizeSearchText,
+  pickProductMatch,
+  productSearchText,
+  unsafeMarkMasked,
+} from '@flow/shared';
 import { z } from 'zod';
+import type { TrigramScorer } from './shop-trigram';
 
 /**
  * Cửa hàng mẫu (fixture) cho EVAL-RUNNER: sản phẩm/biến thể/giá/tồn, chính sách/FAQ, giọng văn. Dựng `TryKnowledge` bằng
@@ -96,13 +104,61 @@ const toTryProduct = (product: ShopFixture['products'][number]) => ({
   })),
 });
 
-export function buildShopKnowledge(shop: ShopFixture): TryKnowledge {
+export type ShopKnowledgeOptions = {
+  /**
+   * Bộ chấm điểm pg_trgm: có → khớp sản phẩm ĐÚNG như production (`findProductMatch`, xem `shop-trigram.ts`). Thiếu → khớp "tên chứa lời
+   * nhắc" cũ (offline/mock; quá chặt với tên dài của Shopify nên KHÔNG dùng để đo thật).
+   */
+  scorer?: TrigramScorer;
+};
+
+/** Khớp một lời nhắc như `findProductMatch`: bí danh (≥ 0,6) trước, rồi trigram toàn chuỗi/từ-trong-chuỗi; chọn/mơ hồ bằng `pickProductMatch`. */
+async function matchByTrigram(
+  shop: ShopFixture,
+  mention: string,
+  scorer: TrigramScorer,
+): Promise<string[]> {
+  if (normalizeSearchText(mention) === '') return [];
+  const rows = shop.products.map((product) => ({
+    id: product.id,
+    searchText: productSearchText({
+      name: product.name,
+      sku: null,
+      variants: product.variants.map((variant) => ({ attrs: variant.attrs })),
+      aliases: product.aliases,
+    }),
+    aliasNorms: product.aliases.map((alias) => normalizeSearchText(alias)),
+  }));
+  const scored = await scorer(mention, rows);
+  const byAlias = pickProductMatch(
+    scored.flatMap((r) => (r.alias === null ? [] : [{ id: r.id, score: r.alias }])),
+    { threshold: ALIAS_MATCH_THRESHOLD },
+  );
+  const picked =
+    byAlias.status !== 'none'
+      ? byAlias
+      : pickProductMatch(
+          scored.flatMap((r) => (r.trigram === null ? [] : [{ id: r.id, score: r.trigram }])),
+        );
+  if (picked.status === 'matched') return [picked.id];
+  if (picked.status === 'ambiguous') return picked.ids;
+  return [];
+}
+
+export function buildShopKnowledge(
+  shop: ShopFixture,
+  options: ShopKnowledgeOptions = {},
+): TryKnowledge {
   const byId = new Map(shop.products.map((product) => [product.id, product]));
   return {
     async matchProducts(mentions) {
       const ids = new Set<string>();
       for (const mention of mentions) {
-        for (const product of shop.products) if (matches(product, mention)) ids.add(product.id);
+        if (options.scorer) {
+          for (const id of await matchByTrigram(shop, mention, options.scorer)) ids.add(id);
+        } else {
+          for (const product of shop.products) if (matches(product, mention)) ids.add(product.id);
+        }
       }
       const found = [...ids].flatMap((id) => {
         const product = byId.get(id);

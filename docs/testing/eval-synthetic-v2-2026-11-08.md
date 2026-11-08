@@ -66,3 +66,22 @@ Ký hiệu: **(a)** lỗi code/prompt/harness; **(b)** spec mơ hồ → chờ c
 2. Sửa (a) theo từng nhóm nhỏ, mỗi nhóm có test: chủ đề thời gian giao/xử lý; trục biến thể chỉ khi khác giá/tồn; nguồn theo ý hỏi (COD); mẫu chèn lệnh; prompt extract (không dấu, từ chỉ định, "đơn tới đâu" ≠ khiếu nại); truyền `channels.reply_language` vào nhận diện ngôn ngữ.
 3. Thêm bí danh "basic tee" vào `demo-shop.json` hoặc đổi 3 đáp án mixed.
 4. Anh chốt Q-EV2-1…7.
+
+## 5. Nhóm (1) — bộ khớp sản phẩm của EVAL như production (08/11, nhánh `fix/eval-product-matcher-prod`)
+
+Trước = khớp "tên chứa lời nhắc" (`--matcher substring`); sau = pg_trgm như production (`--matcher trigram`); cùng đáp án đã sửa theo Q-EV2. Mô hình `temperature 0` vẫn cho dao động ±1–2 mẫu giữa hai lần chạy (ví dụ nhãn `complaint` của vi-12, vi-27, mixed-21 đổi không liên quan bộ khớp) — chênh ≤ 2 mẫu coi là nhiễu.
+
+| Bộ | Nhóm | Chỉ số | Trước | Sau |
+|---|---|---|---|---|
+| sswiftly | Tiếng Anh | Chọn đúng hành động | 71,9% (23/32) | 75,0% (24/32) |
+| demo-shop | Trộn Việt–Anh | Chọn đúng hành động | 73,3% (22/30) | 86,7% (26/30) |
+| demo-shop | Trộn Việt–Anh | Có sự kiện bắt buộc | 75,0% (9/12) | 91,7% (11/12) |
+| demo-shop | Việt có dấu | Chọn đúng hành động | 84,4% (27/32) | 81,3% (26/32) (nhiễu: vi-12, vi-27 đổi nhãn khiếu nại) |
+| — | Chi phí / 1.000 lượt | sswiftly | $0,488 | $0,520 |
+| — | Chi phí / 1.000 lượt | demo-shop | $0,531 | $0,517 |
+
+**Đổi hành vi do bộ khớp (mẫu thật sự bị ảnh hưởng):** mixed-03/10/15/16 (câu có "Basic tee") nay ĐÚNG mà KHÔNG cần thêm bí danh (pg_trgm tự khớp "basic tee" ↔ "Áo thun basic"); en-21 đúng (hỏi lại). Lộ ra điểm yếu THẬT của production, giữ nguyên số đo: en-04 ("neck massager with waist support") thành **mơ hồ nhiều ứng viên** (hỏi lại thay vì trả giá) → việc của nhóm (1b); en-05, en-15 thành hỏi lại màu dù các biến thể cùng giá → nhóm (3).
+
+**Phát hiện mới ngoài danh sách:** chỉ số "Sai giá" lên 1 ở sswiftly (en-03) là **dương tính giả của guard tiền**: câu trả lời đúng ("$398.00 USD … 4,765 available") bị đánh dấu vì số tồn kho "4,765" (dấu phẩy ngăn nghìn kiểu Anh) bị coi là một khoản tiền không có trong nguồn ("4765"). Giá luôn đúng; lỗi ở cách guard đọc số có dấu phẩy ngăn nghìn/đếm tồn kho trong câu tiếng Anh → thêm nhóm **(8) guard tiền: định dạng số tiếng Anh/tồn kho** (gap `GUARD-MONEY-EN-NUMBERS`). Ở demo-shop "Sai giá" lên 1 ở mixed-25 là mẫu chèn lệnh (câu trả lời nhắc lại chữ "mèo" trong `forbidden`), thuộc nhóm (5), không phải giá.
+
+**Embedder đã dùng (chủ dự án yêu cầu ghi rõ, 08/11):** mọi lượt EVAL ở trên (baseline lẫn sau nhóm 1) KHÔNG dùng embedder nào — không mock, không bge-m3. Cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (`searchShopTexts`) và khớp sản phẩm bằng pg_trgm; chưa có nhánh vector ở EVAL. Việc chủ dự án bật `ML_EMBED_ENABLED`/`KB_REEMBED_ENABLED` sau đó (trước đó tắt → ô Thử AI dùng embedder mock với `kb_chunks` bge-m3) vì vậy KHÔNG làm sai lệch các số này nên không cần chạy lại; từ nhóm (1) mọi báo cáo EVAL in dòng "Embedder" và "Khớp sản phẩm" ở phần cấu hình. Khi nhóm (1b) thêm nhánh vector cho khớp sản phẩm thì báo cáo sẽ ghi model embedding và EVAL chạy với bge-m3 thật.
