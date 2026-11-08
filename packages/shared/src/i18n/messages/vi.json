@@ -1809,7 +1809,9 @@
       "too_many": "Quá nhiều câu (tối đa {max} dòng mỗi lần chạy).",
       "invalid_line": "Dòng {line} chưa đúng dạng: cần \"câu hỏi | hành động\" với hành động hợp lệ, từ khóa tối đa 5 và mỗi từ khóa tối đa 100 ký tự.",
       "limit_reached": "Hôm nay bạn đã chạy hết số lần cho phép. Hãy quay lại vào ngày mai.",
-      "unavailable": "Không chạy được lúc này. Hãy thử lại sau."
+      "unavailable": "Không chạy được lúc này. Hãy thử lại sau.",
+      "llm_not_configured": "Chưa cấu hình AI thật (LiteLLM) nên chưa thử được. Nhờ quản trị bật cờ CLASSIFY_LLM_ENABLED / DRAFT_LLM_ENABLED rồi thử lại.",
+      "no_knowledge": "Workspace chưa có kiến thức hoặc sản phẩm thật để thử. Hãy nhập sản phẩm/chính sách (hoặc xuất bản kiến thức) rồi thử lại."
     },
     "summary": "Đạt {passed}/{total} · không đạt {failed} · lỗi {errored}",
     "gate": {
@@ -2053,7 +2055,9 @@
       "too_long": "Bình luận quá dài (tối đa {max} ký tự).",
       "limit_reached": "Hôm nay bạn đã dùng hết lượt thử. Hãy quay lại vào ngày mai.",
       "unavailable": "Không thử được lúc này. Hãy thử lại sau.",
-      "ai_invalid_output": "Chuyển người: AI không trả kết quả hợp lệ. Câu này sẽ được chuyển cho nhân viên xử lý."
+      "ai_invalid_output": "Chuyển người: AI không trả kết quả hợp lệ. Câu này sẽ được chuyển cho nhân viên xử lý.",
+      "llm_not_configured": "Chưa cấu hình AI thật (LiteLLM) nên chưa thử được. Nhờ quản trị bật cờ CLASSIFY_LLM_ENABLED / DRAFT_LLM_ENABLED rồi thử lại.",
+      "no_knowledge": "Workspace chưa có kiến thức hoặc sản phẩm thật để thử. Hãy nhập sản phẩm/chính sách (hoặc xuất bản kiến thức) rồi thử lại."
     },
     "skipped": "Bình luận chỉ có biểu tượng/tag/dấu câu nên AI bỏ qua (không phân loại, không trả lời, không trừ lượt).",
     "result": {

@@ -24,7 +24,7 @@ import {
  * - `shop`: workspace đã có sản phẩm hoặc chính sách/FAQ thật → giá/tồn/biến thể đọc từ `products`/`product_variants`
  *   (lát A), chính sách/FAQ đọc từ `policy_items`/`faq_items` (lát B). Ở mức này KHÔNG dùng đoạn mẫu nào nữa (số liệu mẫu
  *   như phí ship không được lẫn vào dữ liệu thật). Tắt bằng `TRY_AI_PRODUCTS_REAL=false`.
- * - `demo`: còn lại → kiến thức mẫu, không đụng DB.
+ * - còn lại (chưa có dữ liệu thật nào, hoặc cờ đọc dữ liệu thật đang tắt) → `NoKnowledgeError`: ô Thử AI báo "chưa có kiến thức để thử", KHÔNG dùng kiến thức mẫu.
  */
 export type { TryKnowledgeSource, TryRunContext };
 export type TrySession = { workspaceId: string; userId?: string };
@@ -38,17 +38,18 @@ export type KnowledgeRunner = <T>(
   run: (knowledge: TryKnowledge, context: TryRunContext) => Promise<T>,
 ) => Promise<{
   value: T;
-  source: TryKnowledgeSource;
+  source: Exclude<TryKnowledgeSource, 'demo'>;
   embedding: EmbeddingConsistency;
   vector: VectorStatus;
 }>;
 
-/** Nguồn mẫu (không đụng DB): không có kiểm model embedding. */
-export const EMBEDDING_OFF: EmbeddingConsistency = {
-  state: 'off',
-  configuredModel: null,
-  mismatches: [],
-};
+/** Workspace chưa có kiến thức/sản phẩm thật nào để thử (hoặc tính năng đọc dữ liệu thật đang tắt). */
+export class NoKnowledgeError extends Error {
+  constructor() {
+    super('no_knowledge');
+    this.name = 'NoKnowledgeError';
+  }
+}
 
 export const isTryAiKbReal = (env: Record<string, string | undefined>): boolean =>
   env.TRY_AI_KB_REAL === 'true';
@@ -98,13 +99,11 @@ export function createKnowledgeRunner(options: {
     embeddingCounts,
   };
   return async (session, base, run) => {
-    const demo = async () => ({
-      value: await run(base, { productNames: [], abbreviations: {}, voices: {} }),
-      source: 'demo' as const,
-      embedding: EMBEDDING_OFF,
-      vector: { off: 'service_disabled' as const, failed: false },
-    });
-    if ((!options.enabled && !options.productsEnabled) || !session.userId) return demo();
+    // Không có dữ liệu thật để thử → báo rõ, KHÔNG dùng kiến thức mẫu (FR-059, chủ dự án chốt 08/11: không mock khi chạy).
+    const none = (): never => {
+      throw new NoKnowledgeError();
+    };
+    if ((!options.enabled && !options.productsEnabled) || !session.userId) return none();
     const userId = session.userId;
     return options.db.withActor(session.workspaceId, userId, async (tx) => {
       // Phần TÌM kiến thức/sản phẩm dùng CHUNG với worker (`loadWorkspaceKnowledge`, `@flow/ai`); web chỉ chọn tham số.
@@ -131,7 +130,7 @@ export function createKnowledgeRunner(options: {
         ...(options.onEmbeddingFailure ? { onEmbeddingFailure: options.onEmbeddingFailure } : {}),
         readers,
       });
-      if (!loaded) return demo();
+      if (!loaded) return none();
       return {
         value: await run(loaded.knowledge, loaded.context),
         source: loaded.source,

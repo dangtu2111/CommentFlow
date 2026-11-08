@@ -23,7 +23,6 @@ export {
 } from './langfuse-trace';
 export {
   DEFAULT_ROUTING,
-  MOCK_MODEL,
   type ResolvedRoute,
   type RoutingConfig,
   resolveStepRoute,

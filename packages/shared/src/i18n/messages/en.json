@@ -1809,7 +1809,9 @@
       "too_many": "Too many questions (up to {max} lines per run).",
       "invalid_line": "Line {line} is malformed: use \"question | action\" with a valid action, at most 5 keywords of up to 100 characters each.",
       "limit_reached": "You have used today's runs. Come back tomorrow.",
-      "unavailable": "Cannot run right now. Please try again later."
+      "unavailable": "Cannot run right now. Please try again later.",
+      "llm_not_configured": "Real AI (LiteLLM) is not configured, so there is nothing to try yet. Ask an admin to enable CLASSIFY_LLM_ENABLED / DRAFT_LLM_ENABLED and retry.",
+      "no_knowledge": "This workspace has no real knowledge or products to try yet. Add products/policies (or publish knowledge) and retry."
     },
     "summary": "Passed {passed}/{total} · failed {failed} · errors {errored}",
     "gate": {
@@ -2053,7 +2055,9 @@
       "too_long": "Comment is too long (max {max} characters).",
       "limit_reached": "You have used all of today's tries. Come back tomorrow.",
       "unavailable": "Can't run the test right now. Try again later.",
-      "ai_invalid_output": "Handoff: the AI did not return a valid result. This question would go to a human."
+      "ai_invalid_output": "Handoff: the AI did not return a valid result. This question would go to a human.",
+      "llm_not_configured": "Real AI (LiteLLM) is not configured, so there is nothing to try yet. Ask an admin to enable CLASSIFY_LLM_ENABLED / DRAFT_LLM_ENABLED and retry.",
+      "no_knowledge": "This workspace has no real knowledge or products to try yet. Add products/policies (or publish knowledge) and retry."
     },
     "skipped": "The comment has only emoji/tags/punctuation, so AI skips it (no classification, no reply, no quota used).",
     "result": {
