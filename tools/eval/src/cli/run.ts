@@ -22,9 +22,9 @@ import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
 import { checkSample, computeMetrics } from '../metrics';
 import { findFlakySamples, renderMultiRun } from '../multi-run';
-import { createProductionKnowledge } from '../production/knowledge';
-import { type ProductionKnowledgeInfo, prepareProductionKnowledge } from '../production/prepare';
+import type { ProductionKnowledgeInfo } from '../production/prepare';
 import { assertDevDatabase } from '../production/seed';
+import { describeProduction, openProduction } from '../production/setup';
 import { costReport, renderReport } from '../report';
 import { type Backend, createRunner, runAll } from '../runner';
 import { shopFixtureSchema } from '../shop';
@@ -174,39 +174,17 @@ let productionKnowledge: TryKnowledge | undefined;
 let closeProduction: (() => Promise<void>) | undefined;
 let vectorFailures = () => 0;
 if (knowledgeMode === 'production') {
-  const adminUrl = process.env.DATABASE_ADMIN_URL ?? process.env.TEST_DATABASE_ADMIN_URL ?? '';
-  const workerUrl = process.env.DATABASE_WORKER_URL ?? process.env.TEST_DATABASE_WORKER_URL ?? '';
   try {
-    assertDevDatabase(adminUrl);
-    if (!workerUrl) throw new Error('Thiếu DATABASE_WORKER_URL (role cf_worker).');
+    const handle = await openProduction(shop, process.env);
+    productionInfo = handle.info;
+    productionKnowledge = handle.knowledge;
+    vectorFailures = handle.vectorFailures;
+    closeProduction = handle.close;
+    console.log(describeProduction(handle.info));
   } catch (error) {
     console.error(error instanceof Error ? error.message : 'Cấu hình DB không hợp lệ.');
     process.exit(2);
   }
-  const pg = (await import('pg')).default;
-  const adminPool = new pg.Pool({ connectionString: adminUrl, max: 2 });
-  const prepared = await prepareProductionKnowledge({
-    adminPool,
-    workerUrl,
-    embeddingService: loadEmbeddingService(process.env),
-    shop,
-  });
-  await adminPool.end();
-  productionInfo = prepared.info;
-  const built = await createProductionKnowledge({
-    db: prepared.db,
-    workspaceId: prepared.info.workspaceId,
-    version: prepared.info.kbVersion,
-    embedder: prepared.embedding.embedder as NonNullable<typeof prepared.embedding.embedder>,
-  });
-  productionKnowledge = built.knowledge;
-  vectorFailures = built.vectorFailures;
-  closeProduction = () => prepared.db.close();
-  console.log(
-    `Kiến thức production: [EVAL] kb_version ${prepared.info.kbVersion.number}, embedder ${prepared.info.embeddingModel}; ` +
-      `sản phẩm ${prepared.info.seed.products}, chính sách ${prepared.info.seed.policies}, FAQ ${prepared.info.seed.faqs}; ` +
-      `đồng bộ ghi ${prepared.info.sync.chunksWritten} đoạn (giữ ${prepared.info.sync.chunksUnchanged}).`,
-  );
 }
 
 // ---- Trần chi phí: sổ chi tiêu cộng dồn cho cả chuỗi việc (out/ không commit) + chi tiêu khóa ảo LiteLLM ----

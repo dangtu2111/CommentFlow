@@ -7,6 +7,7 @@
   "scripts": {
     "gen:synthetic": "tsx src/cli/gen-synthetic.ts",
     "gen:promptfoo": "tsx src/cli/gen-promptfoo.ts",
+    "retrieval": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/retrieval.ts",
     "evaluate": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/run.ts",
     "promptfoo": "pnpm dlx promptfoo@0.125.1 eval -c promptfoo/promptfooconfig.yaml --no-cache",
     "typecheck": "tsc -p tsconfig.json",
