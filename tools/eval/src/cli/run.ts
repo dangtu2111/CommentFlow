@@ -3,7 +3,7 @@
 //   pnpm --filter @flow/eval evaluate --backend mock            (không mạng, chi phí 0 — thử luồng)
 // Không in nội dung bình luận hay khóa; tệp kết quả (`out/`, không commit) chỉ có mã mẫu, số liệu và câu trả lời của AI.
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -11,6 +11,13 @@ import type { TryKnowledge } from '@flow/ai';
 import { loadEmbeddingService, resolveEmbeddingConfig } from '@flow/ai';
 import { allowMockInThisProcess } from '@flow/shared';
 import pg from 'pg';
+import {
+  DEFAULT_MEASUREMENT_CAP_USD,
+  DEFAULT_TOTAL_CAP_USD,
+  decideBudget,
+  readKeySpend,
+  sumLedger,
+} from '../budget';
 import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
 import { checkSample, computeMetrics } from '../metrics';
@@ -47,6 +54,9 @@ const { values } = parseArgs({
     // Số lượt chạy mỗi bên (mặc định 3 với litellm, 1 với mock) và hạt giống bước extract (nhiệt độ luôn 0).
     repeats: { type: 'string' },
     seed: { type: 'string', default: '42' },
+    // Trần chi phí (chủ dự án chốt 08/11/2026): mỗi lần đo ≤ 1 USD, tổng sổ chi tiêu ≤ 5 USD, khóa ảo > 80% trần → dừng.
+    'max-usd': { type: 'string', default: String(DEFAULT_MEASUREMENT_CAP_USD) },
+    'total-cap-usd': { type: 'string', default: String(DEFAULT_TOTAL_CAP_USD) },
   },
 });
 
@@ -196,6 +206,33 @@ if (knowledgeMode === 'production') {
   );
 }
 
+// ---- Trần chi phí: sổ chi tiêu cộng dồn cho cả chuỗi việc (out/ không commit) + chi tiêu khóa ảo LiteLLM ----
+const perMeasurementCap = Number(values['max-usd']);
+const totalCap = Number(values['total-cap-usd']);
+const ledgerFile = resolve(values.out as string, '..', 'eval-spend-ledger.jsonl');
+const ledgerSpent = existsSync(ledgerFile) ? sumLedger(readFileSync(ledgerFile, 'utf8')) : 0;
+const startedAt = new Date();
+const keyNow = () =>
+  backend === 'litellm' && process.env.LITELLM_BASE_URL && process.env.LITELLM_API_KEY
+    ? readKeySpend(fetch, process.env.LITELLM_BASE_URL, process.env.LITELLM_API_KEY)
+    : Promise.resolve(null);
+const runUsd = (cost: { steps: { costUsd: number }[] }) =>
+  cost.steps.reduce((total, step) => total + step.costUsd, 0);
+if (backend === 'litellm') {
+  const gate = decideBudget({
+    perMeasurementCap,
+    totalCap,
+    measurementSpent: 0,
+    ledgerSpent,
+    nextRunEstimate: 0,
+    key: await keyNow(),
+  });
+  if (gate.stop) {
+    console.error(`DỪNG trước khi chạy (hỏi chủ dự án): ${gate.message}`);
+    process.exit(3);
+  }
+}
+
 async function runOnce(variantCount: number) {
   const runner = createRunner({
     backend,
@@ -277,13 +314,68 @@ if (first.cost.overBudget && variantCount > 2 && !values['no-reduce'] && repeats
   console.log(`Đã ghi: ${reduced.base}.md và .jsonl`);
 }
 
-// Nhiều lượt (EVAL-RELIABILITY): trung bình + min/max theo nhóm, cổng theo LƯỢT TỆ NHẤT, mẫu chập chờn.
-if (repeats > 1) {
-  const runs = [first];
-  for (let i = 2; i <= repeats; i += 1) {
-    console.log(`\nLượt ${i}/${repeats}…`);
-    runs.push(await runOnce(variantCount));
+// Nhiều lượt (EVAL-RELIABILITY): trung bình + min/max theo nhóm, cổng theo LƯỢT TỆ NHẤT, mẫu chập chờn. Mỗi lượt kế tiếp phải qua trần chi phí.
+const runs = [first];
+let measurementSpent = runUsd(first.cost);
+let stoppedBy: string | null = null;
+for (let i = 2; i <= repeats; i += 1) {
+  const decision = decideBudget({
+    perMeasurementCap,
+    totalCap,
+    measurementSpent,
+    ledgerSpent,
+    nextRunEstimate: runUsd(runs[runs.length - 1]?.cost ?? first.cost),
+    key: await keyNow(),
+  });
+  if (decision.stop) {
+    stoppedBy = decision.message;
+    console.error(`\nDỪNG sau ${runs.length}/${repeats} lượt (hỏi chủ dự án): ${decision.message}`);
+    break;
   }
+  console.log(`\nLượt ${i}/${repeats}…`);
+  const next = await runOnce(variantCount);
+  runs.push(next);
+  measurementSpent += runUsd(next.cost);
+}
+
+// Chi phí THẬT: LiteLLM (header từng lần gọi) và, khi --persist-usage, tổng `ai_usage` ghi trong lần đo này.
+let aiUsageLine = 'không ghi ai_usage (thiếu --persist-usage)';
+if (persistUsage) {
+  const adminUrl = process.env.DATABASE_ADMIN_URL ?? '';
+  if (adminUrl) {
+    assertDevDatabase(adminUrl);
+    const pgMod = (await import('pg')).default;
+    const pool = new pgMod.Pool({ connectionString: adminUrl, max: 1 });
+    try {
+      const r = await pool.query(
+        'SELECT coalesce(sum(cost_usd), 0)::float8 AS usd, count(*)::int AS calls FROM cf.ai_usage WHERE workspace_id = $1 AND created_at >= $2',
+        [persistUsage.workspaceId, startedAt],
+      );
+      aiUsageLine = `ai_usage (workspace [EVAL]): $${Number(r.rows[0].usd).toFixed(4)} cho ${r.rows[0].calls} lần gọi`;
+    } finally {
+      await pool.end();
+    }
+  }
+}
+const keyAfter = await keyNow();
+const spendLine = [
+  `Chi phí lần đo (LiteLLM, ${runs.length} lượt): $${measurementSpent.toFixed(4)} / trần $${perMeasurementCap}`,
+  aiUsageLine,
+  `Tổng theo sổ trước lần đo: $${ledgerSpent.toFixed(4)}; sau: $${(ledgerSpent + measurementSpent).toFixed(4)} / trần $${totalCap}`,
+  keyAfter
+    ? `Khóa ảo LiteLLM: đã tiêu $${keyAfter.spend.toFixed(2)}${keyAfter.maxBudget === null ? ' (không có trần)' : ` / $${keyAfter.maxBudget} (${((keyAfter.spend / keyAfter.maxBudget) * 100).toFixed(0)}%)`}`
+    : 'Khóa ảo LiteLLM: không đọc được chi tiêu',
+].join('\n- ');
+if (backend === 'litellm') {
+  mkdirSync(dirname(ledgerFile), { recursive: true });
+  appendFileSync(
+    ledgerFile,
+    `${JSON.stringify({ at: new Date().toISOString(), dataset: values.dataset, shop: shop.id, runs: runs.length, usd: measurementSpent })}\n`,
+  );
+}
+console.log(`\n- ${spendLine}`);
+
+if (repeats > 1) {
   const groups: Record<string, (typeof first.metrics.all)[]> = {
     all: runs.map((r) => r.metrics.all),
   };
@@ -304,7 +396,7 @@ if (repeats > 1) {
       ),
   );
   const header = [
-    `# EVAL nhiều lượt — ${backend}, ${repeats} lượt`,
+    `# EVAL nhiều lượt — ${backend}, ${runs.length}/${repeats} lượt${stoppedBy ? ' (DỪNG SỚM)' : ''}`,
     '',
     `- Bộ mẫu: ${values.dataset} (${samples.length} mẫu); cửa hàng: ${shop.id}`,
     `- Model extract/rewrite/draft: ${values['classify-model']} / ${values['rewrite-model']} / ${values['draft-model']}`,
@@ -314,11 +406,13 @@ if (repeats > 1) {
       : '- Nguồn kiến thức: fixture (từ khóa; KHÔNG phản ánh production)',
     `- Embedder cấu hình ứng dụng: ${embeddingInfo.model ?? 'tắt'} — ${embeddingInfo.note}`,
     backend === 'mock' ? '- NHÃN: MOCK (fixture) — KHÔNG phải số đo chất lượng' : '',
+    ...(stoppedBy ? [`- ⚠ DỪNG SỚM do trần chi phí: ${stoppedBy}`] : []),
+    `- ${spendLine}`,
     '',
   ].join('\n');
   const multi = `${header}\n${renderMultiRun({
-    title: `So sánh ${repeats} lượt`,
-    repeats,
+    title: `So sánh ${runs.length} lượt`,
+    repeats: runs.length,
     groups,
     flaky: findFlakySamples(samples, perRunChecks),
   })}`;
@@ -331,3 +425,4 @@ if (repeats > 1) {
 if (persistUsage) await persistUsage.close();
 if (scorerPool) await scorerPool.end();
 if (closeProduction) await closeProduction();
+if (stoppedBy) process.exit(3);
