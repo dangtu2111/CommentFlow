@@ -2,7 +2,7 @@
 # Muốn thử: gộp vào config.yaml TRÊN MÁY ẢO sau khi có khóa nhà cung cấp (docs/CAN_BAN_CUNG_CAP.md);
 # KHÔNG commit giá trị thật — chỉ tên biến môi trường (os.environ/…).
 # Tên nhóm `cf-*` khớp `DEFAULT_ROUTING` (packages/ai/src/observability/routing.ts); cờ app
-# `LITELLM_MULTI_PROVIDER_ENABLED` tắt → app chỉ gọi `mock-llm`.
+# `LITELLM_MULTI_PROVIDER_ENABLED` tắt → không có tuyến (app giữ model cấu hình sẵn, không có model giả).
 # Tên model nhà cung cấp dưới đây là GỢI Ý, đối chiếu tài liệu LiteLLM/nhà cung cấp trước khi bật.
 model_list:
   # Bước phân loại/viết lại: model rẻ, nhanh.

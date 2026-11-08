@@ -160,7 +160,7 @@ services:
       REDIS_PORT: "6379"
       REDIS_PASSWORD: ${VALKEY_PASSWORD:?}
       CACHE_NAMESPACE: ${CACHE_NAMESPACE:?}
-      # Khóa nhà cung cấp LLM (tùy chọn, chỉ điền nhà cung cấp muốn đo; để trống thì chỉ dùng được mock-llm).
+      # Khóa nhà cung cấp LLM (tùy chọn, chỉ điền nhà cung cấp muốn đo; để trống thì chưa gọi được model nào — không còn model giả).
       # Chỉ có trên máy ảo, không bao giờ commit.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

@@ -31,17 +31,26 @@ describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố
   });
 
   it('chỉ bước nào bật cờ mới có bản LLM; cờ khác "true" (ví dụ "1") không bật', () => {
-    const onlyDraft = createTryLlmDeps({ env: { ...base, DRAFT_LLM_ENABLED: 'true' }, db });
+    const onlyDraft = createTryLlmDeps({
+      env: { ...base, DRAFT_LLM_ENABLED: 'true', DRAFT_LLM_MODEL: 'cf-draft' },
+      db,
+    });
     expect(onlyDraft.drafter).toBeDefined();
     expect(onlyDraft.extractor).toBeUndefined();
-    const onlyClassify = createTryLlmDeps({ env: { ...base, CLASSIFY_LLM_ENABLED: 'true' }, db });
+    const onlyClassify = createTryLlmDeps({
+      env: { ...base, CLASSIFY_LLM_ENABLED: 'true', CLASSIFY_LLM_MODEL: 'cf-classify' },
+      db,
+    });
     expect(onlyClassify.extractor).toBeDefined();
     expect(onlyClassify.drafter).toBeUndefined();
     expect(createTryLlmDeps({ env: { ...base, DRAFT_LLM_ENABLED: '1' }, db })).toEqual({});
   });
 
   it('REWRITE_LLM_ENABLED=true → có bộ viết lại (rewriter) dù chưa bật extract/draft', () => {
-    const llm = createTryLlmDeps({ env: { ...base, REWRITE_LLM_ENABLED: 'true' }, db });
+    const llm = createTryLlmDeps({
+      env: { ...base, REWRITE_LLM_ENABLED: 'true', REWRITE_LLM_MODEL: 'cf-classify' },
+      db,
+    });
     expect(llm.rewriter).toBeDefined();
     expect(llm.extractor).toBeUndefined();
     expect(llm.drafter).toBeUndefined();

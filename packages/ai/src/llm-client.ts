@@ -29,7 +29,7 @@ export type LlmCallInput = {
   workspaceId: string;
   /** Bước của pipeline, ví dụ `classify`, `draft` (ghi vào ai_usage.step). */
   step: string;
-  /** Tên model theo cấu hình LiteLLM (ví dụ `mock-llm`). */
+  /** Tên model theo cấu hình LiteLLM (ví dụ `cf-draft`). */
   model: string;
   promptVersion: string;
   messages: LlmMessage[];
