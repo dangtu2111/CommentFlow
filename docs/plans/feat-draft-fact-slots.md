@@ -8,18 +8,22 @@ Mã gap matrix: `DRAFT-FACT-SLOTS` · Spec: FR-140, FR-141, FR-160, FR-161, FR-1
 
 ## Điểm chưa rõ
 
-1. `[CẦN LÀM RÕ: thẻ Ship khai khu vực thế nào?]` Khuyến nghị: mỗi dòng khu vực có `tên hiển thị` + danh sách `từ khớp` (vd "nội thành" = [hà nội, tp hcm, hcm, sài gòn…]) + phí + thời gian; luôn có dòng "toàn quốc" (nếu shop khai). Khách nêu địa điểm không khớp dòng nào → `unknown` (không đoán).
-2. `[CẦN LÀM RÕ: shop chưa có thẻ có cấu trúc thì xử lý ra sao trong giai đoạn chuyển tiếp?]` Khuyến nghị: sự kiện chính sách = `unknown` → mời ib theo mẫu; thêm nút "AI đề xuất điền thẻ từ văn bản chính sách/Shopify", mỗi giá trị đề xuất phải xuất hiện nguyên văn trong văn bản nguồn (code kiểm), Owner duyệt mới có hiệu lực. Không bao giờ tự áp giá trị đề xuất chưa duyệt.
-3. `[CẦN LÀM RÕ: độ chặt của guard "số viết bằng chữ"?]` Khuyến nghị: chặn chữ số mọi nơi ngoài chỗ giữ chỗ + số-bằng-chữ chỉ khi đứng cạnh đơn vị tiền/thời gian/phần trăm (danh sách đóng vi/en, hiệu chỉnh bằng EVAL); không chặn "một chút", "hai bạn".
-4. `[CẦN LÀM RÕ: cờ bật theo workspace hay toàn hệ thống?]` Khuyến nghị: cờ theo workspace (mặc định TẮT) để bật dần shop mẫu; EVAL bật cho `[EVAL]`.
-5. `[CẦN LÀM RÕ: màn hình thẻ chính sách có cấu trúc]` Thiết kế 7.3 (`design/stitch/knowledge-base.png`) chỉ có mục "Chính sách" dạng danh sách văn bản, chưa có thẻ có cấu trúc → khuyến nghị ghi `docs/plans/ui-thieu-thiet-ke.md` ("Thẻ chính sách có cấu trúc: Ship/Đổi trả/Bảo hành/Thanh toán + banner đề xuất AI chờ duyệt") để người điều phối tạo bằng Stitch; phần code lõi KHÔNG chờ màn này (nhập tạm qua API/seed cho shop mẫu).
-6. `[CẦN LÀM RÕ: kiểu hiển thị tồn kho]` Khuyến nghị: sự kiện `stock` có chế độ do code chọn theo tùy chọn Owner (còn/hết mặc định; "nêu số lượng"; "báo sắp hết khi ≤ N", N mặc định 5) — gộp STOCK-DISCLOSURE-OPTION vào đây.
+Không có (chủ dự án trả lời và duyệt 08/11/2026). Các quyết định:
+
+1. **Khu vực:** theo khuyến nghị (dòng khu vực = tên hiển thị + từ khớp + phí + thời gian; dòng "Toàn quốc"), thêm: (a) dòng "nội thành" **bắt buộc ghi thành phố** (không có thành phố thì không hợp lệ); (b) từ điển tỉnh/thành gồm **tên cũ và tên mới sau sáp nhập 2025**; "Toàn quốc" là mặc định cho địa điểm trong VN không khớp dòng khác; (c) khách **không nêu địa điểm** mà phí/thời gian phụ thuộc khu vực → **clarify hỏi tỉnh/thành** (FR-147), không redirect.
+2. **Chuyển tiếp:** theo khuyến nghị; thêm: **mỗi lần đồng bộ Shopify tự tạo đề xuất nháp**; thanh **Độ sẵn sàng (FR-146)** nhắc Owner duyệt đề xuất.
+3. **Guard chữ số:** theo khuyến nghị; thêm: **tên sản phẩm, thuộc tính biến thể (size 29, 32mm, A4, 14-in-1…) và số khách tự nêu cũng đi qua chỗ giữ chỗ** (`{fact:product_name}`, `{fact:variant}`, `{fact:customer_measure}`); test với tên sản phẩm có chữ số của sswiftly.
+4. **Cờ theo workspace**, mặc định TẮT; bật cho `[EVAL]` và Shop Thử 2 khi đo.
+5. **Màn thẻ:** chủ dự án tạo bằng Stitch (đã ghi `docs/plans/ui-thieu-thiet-ke.md`); **code lõi không chờ**.
+6. **Tồn kho:** gộp STOCK-DISCLOSURE-OPTION; **tồn kho cũ (FR-151) → sự kiện tồn = `unknown`**.
+7. **Bổ sung vào ADR 017:** định dạng tiền theo **tiền tệ của sản phẩm** (VND/USD); ngôn ngữ chỉ quyết định dấu phân cách; **khoảng giá** khi các biến thể khác giá là sự kiện riêng `{fact:price_range}` do code tính (FR-158).
+8. **Thứ tự PR:** (1) lõi fact plan + guard + điền, sau cờ TẮT, không migration → (2) bảng `policy_facts` + RLS + trigger (**dừng gửi chủ dự án kiểm chéo**) → (3) đề xuất điền từ văn bản/Shopify → (4) UI thẻ → (5) bật cờ cho `[EVAL]`/Shop Thử 2, đo, báo.
 
 ## Tiêu chí nghiệm thu
 
-1. **Fact plan (thuần, 0 lần gọi LLM):** với câu hỏi giá/tồn/ship/COD/đổi trả, đầu ra liệt kê từng sự kiện với giá trị hoặc `unknown`; "Hà Nội" chỉ ra giá trị khi có dòng khu vực khớp, nếu không → `unknown` — kiểm bằng: `packages/ai/src/fact-plan/*.test.ts` (vi/en, có dấu/không dấu).
-2. **Chỗ giữ chỗ:** câu có chữ số, số-bằng-chữ cạnh đơn vị, hoặc khẳng định có/không ngoài `{fact:…}` → bị TỪ CHỐI CỨNG (không gọi LLM sửa; chuyển biến thể khác cùng tập chỗ giữ chỗ, hết thì câu mời theo mẫu); mọi biến thể phải dùng cùng tập chỗ giữ chỗ — kiểm bằng: `fact-plan/guard.test.ts` + test pipeline đếm số lần gọi LLM (≤ 2/lượt, FR-162).
-3. **Điền giá trị:** tiền/tồn/thời gian đúng định dạng theo ngôn ngữ (vi `99.000đ`, en `$58.90`), `claims`/`sources` do code sinh từ chỗ giữ chỗ — kiểm bằng: `fact-plan/fill.test.ts`.
+1. **Fact plan (thuần, 0 lần gọi LLM):** với câu hỏi giá/tồn/ship/COD/đổi trả, đầu ra liệt kê từng sự kiện với giá trị hoặc `unknown`; địa điểm khớp dòng khu vực (kể cả tên cũ/mới sau sáp nhập 2025) → giá trị; địa điểm VN không khớp → dòng "Toàn quốc"; khách không nêu địa điểm mà giá trị phụ thuộc khu vực → **clarify hỏi tỉnh/thành** (không redirect); dòng "nội thành" thiếu thành phố → không hợp lệ; tồn cũ (FR-151) → `unknown`; khoảng giá = `{fact:price_range}` — kiểm bằng: `packages/ai/src/fact-plan/*.test.ts` (vi/en, có dấu/không dấu).
+2. **Chỗ giữ chỗ:** tên sản phẩm/thuộc tính biến thể/số khách nêu cũng qua `{fact:product_name}`/`{fact:variant}`/`{fact:customer_measure}` (test với tên sswiftly có chữ số: "14-in-1", "A4", "32mm", "2 in1"); câu có chữ số, số-bằng-chữ cạnh đơn vị, hoặc khẳng định có/không ngoài `{fact:…}` → bị TỪ CHỐI CỨNG (không gọi LLM sửa; chuyển biến thể khác cùng tập chỗ giữ chỗ, hết thì câu mời theo mẫu); mọi biến thể phải dùng cùng tập chỗ giữ chỗ — kiểm bằng: `fact-plan/guard.test.ts` + test pipeline đếm số lần gọi LLM (≤ 2/lượt, FR-162).
+3. **Điền giá trị:** tiền theo **tiền tệ của sản phẩm** (VND/USD; ngôn ngữ chỉ quyết định dấu phân cách: vi `99.000đ`/`$58,90`, en `99,000₫`/`$58.90`), tồn/thời gian theo ngôn ngữ, `claims`/`sources` do code sinh từ chỗ giữ chỗ — kiểm bằng: `fact-plan/fill.test.ts`.
 4. **Không xác định → câu mời:** sự kiện `unknown` → câu theo `brand_voice.handoff_templates` (xưng hô, trong/ngoài giờ) + `unanswered_topics`; phần xác định vẫn được trả lời — kiểm bằng: test pipeline `mixed-11` (giá sản phẩm + mời ib phí ship khi không rõ khu vực) cả vi/en.
 5. **Chính sách có cấu trúc:** bảng + RLS (đọc theo workspace; ghi/duyệt chỉ Owner), giá trị `draft` chưa duyệt KHÔNG vào fact plan — kiểm bằng: `pnpm test:db` (`policy-facts.int.test.ts`, `pnpm db:check-rls`).
 6. **Đề xuất điền từ văn bản/Shopify:** mỗi giá trị đề xuất xuất hiện nguyên văn trong nguồn (code kiểm), trạng thái `draft` chờ Owner duyệt — kiểm bằng: `policy-facts-suggest.test.ts`.
@@ -70,7 +74,7 @@ Thêm một tầng mới (`fact-plan`) và một bảng mới: có ≥ 2 nơi d�
 
 ## Checklist plan
 
-- [ ] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
+- [x] Không còn thẻ chưa-rõ chưa trả lời (hoặc mục "Điểm chưa rõ" ghi "Không có")
 - [x] Mỗi tiêu chí nghiệm thu kiểm được và có cách kiểm
 - [x] Logic quy tắc đã có test viết trước
 - [x] Đã đánh dấu diff nhạy cảm (cần kiểm chéo)
@@ -80,4 +84,4 @@ Thêm một tầng mới (`fact-plan`) và một bảng mới: có ≥ 2 nơi d�
 
 ## Trạng thái duyệt
 
-**Chờ duyệt.** Chưa sửa code. Cần chủ dự án trả lời 6 điểm chưa rõ (hoặc chấp nhận các khuyến nghị) và duyệt ADR 017.
+Đã duyệt (chủ dự án 08/11/2026, kèm các trả lời ở mục "Điểm chưa rõ"). PR (2) có migration + RLS + trigger: DỪNG, gửi chủ dự án kiểm chéo, không tự merge.

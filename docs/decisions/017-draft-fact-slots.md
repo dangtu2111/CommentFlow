@@ -1,6 +1,6 @@
 # ADR 017 — DRAFT-FACT-SLOTS: code lập "fact plan", LLM chỉ viết câu với chỗ giữ chỗ
 
-Trạng thái: **ĐỀ XUẤT — chờ chủ dự án duyệt trước khi code** (08/11/2026). Kế hoạch triển khai: `docs/plans/feat-draft-fact-slots.md`.
+Trạng thái: **ĐÃ DUYỆT** (chủ dự án, 08/11/2026) kèm các bổ sung ở § Bổ sung đã chốt. Kế hoạch triển khai: `docs/plans/feat-draft-fact-slots.md`.
 
 ## Bối cảnh (2–3 câu dễ hiểu)
 
@@ -22,6 +22,16 @@ Hiện nay AI tự viết cả phần "sự kiện" trong câu trả lời (số
 3. **`unknown` → code chèn câu mời** theo `brand_voice.handoff_templates` (FR-141; xưng hô cấu hình, trong/ngoài giờ qua `resolveInvitation`) và ghi `unanswered_topics`. LLM không được tự viết câu "chưa có thông tin" cho sự kiện này; AI vẫn trả lời phần xác định (vd giá sản phẩm).
 4. **Chính sách có cấu trúc** là nguồn chuẩn của các sự kiện chính sách; **văn bản thô vẫn giữ** làm nguồn diễn giải (câu không có số/khẳng định). Thẻ nhập tay (Owner) trong trang Cơ sở kiến thức (mục "Chính sách", `design/stitch/knowledge-base.png` §7.3 chưa có màn hình thẻ có cấu trúc → ghi `docs/plans/ui-thieu-thiet-ke.md`, tạo bằng Stitch); nhập từ Shopify: AI **đề xuất** điền thẻ, mỗi giá trị đề xuất phải xuất hiện nguyên văn trong văn bản nguồn (code kiểm), **Owner duyệt** mới có hiệu lực.
 5. **Claims và `sources` do code suy ra từ chỗ giữ chỗ** (mỗi `{fact:id}` đã biết nguồn của nó), không để model tự khai `source_ids`/`sources` cho sự kiện → loại bỏ cả lớp lỗi (a).
+
+## Bổ sung đã chốt (chủ dự án 08/11/2026)
+
+1. **Khu vực ship:** dòng "nội thành" bắt buộc ghi thành phố; từ điển tỉnh/thành có tên cũ và tên mới sau sáp nhập 2025; "Toàn quốc" là mặc định cho địa điểm trong VN không khớp dòng khác; khách không nêu địa điểm mà phí/thời gian phụ thuộc khu vực → **clarify hỏi tỉnh/thành** (FR-147), không redirect.
+2. **Tên sản phẩm, thuộc tính biến thể, số khách nêu** cũng là chỗ giữ chỗ (`{fact:product_name}`, `{fact:variant}`, `{fact:customer_measure}`), vì chứa chữ số (size 29, 32mm, A4, 14-in-1…).
+3. **Định dạng tiền theo tiền tệ của sản phẩm** (VND/USD); ngôn ngữ chỉ quyết định dấu phân cách (nghìn/thập phân).
+4. **Khoảng giá** khi các biến thể khác giá là sự kiện riêng `{fact:price_range}` do code tính (FR-158).
+5. **Tồn kho cũ** (FR-151) → sự kiện tồn = `unknown`; chế độ hiển thị tồn theo tùy chọn Owner (gộp STOCK-DISCLOSURE-OPTION).
+6. **Chuyển tiếp:** mỗi lần đồng bộ Shopify tự tạo đề xuất nháp; thanh Độ sẵn sàng (FR-146) nhắc Owner duyệt.
+7. **Cờ theo workspace**, mặc định TẮT; bật cho `[EVAL]` và Shop Thử 2 khi đo.
 
 ## Phần nào thay, phần nào giữ
 
