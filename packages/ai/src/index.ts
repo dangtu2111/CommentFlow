@@ -39,3 +39,4 @@ export * from './send-lock';
 export * from './try';
 export * from './variation';
 export * from './virtual-key';
+export * from './kb-sync';
