@@ -466,7 +466,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // DRAFT-FACT-SLOTS: fact plan do CODE lập (0 lần gọi LLM) khi workspace bật cờ.
   const slotMode = input.factSlots !== undefined && !closing;
   const factTopics: FactTopic[] = slotMode
-    ? factTopicsOf(`${masked} ${extract.asks.join(' ')}`)
+    ? factTopicsOf([masked, ...extract.asks].join(', '))
     : [];
   const planProducts: PlanProduct[] =
     slotMode && deps.knowledge.lookupPlanProducts
