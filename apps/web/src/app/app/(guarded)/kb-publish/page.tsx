@@ -32,13 +32,56 @@ export default async function KbPublishPage() {
       </main>
     );
   }
-  const { preview, versions, currentNumber } = overview;
+  const { preview, versions, currentNumber, conflicts } = overview;
+  // Chủ đề nào có nhãn dịch thì dùng, không thì hiện mã chung.
+  const topicLabel = (topic: string) =>
+    t.has(`conflicts.topics.${topic}`) ? t(`conflicts.topics.${topic}`) : topic;
   return (
     <main className="app-page app-page-wide">
       <KbFrame active="kbPublish">
         <header className="kb-head">
           <PageHeader title={t('title')} subtitle={t('subtitle')} />
         </header>
+        {currentNumber === null && preview.ok ? (
+          <div className="tw">
+            <div
+              role="status"
+              className="mb-4 rounded-xl bg-tertiary-fixed px-4 py-3 text-on-tertiary-fixed-variant"
+            >
+              <p className="font-label-md text-label-md">{t('unpublishedBanner.title')}</p>
+              <p className="font-body-sm text-body-sm">{t('unpublishedBanner.body')}</p>
+            </div>
+          </div>
+        ) : null}
+        {conflicts.length > 0 ? (
+          <div className="tw">
+            <section
+              role="alert"
+              aria-labelledby="kb-conflicts-title"
+              className="mb-4 space-y-3 rounded-xl bg-error-container px-4 py-3 text-on-error-container"
+            >
+              <h2 id="kb-conflicts-title" className="font-label-md text-label-md">
+                {t('conflicts.title')}
+              </h2>
+              <p className="font-body-sm text-body-sm">{t('conflicts.body')}</p>
+              {conflicts.map((group) => (
+                <div key={group.group} className="space-y-1">
+                  <p className="font-label-md text-label-md">
+                    {topicLabel(group.topic)} —{' '}
+                    {t('conflicts.valuesLabel', { values: group.values.join(' / ') })}
+                  </p>
+                  <ul className="list-disc space-y-1 pl-5 font-body-sm text-body-sm">
+                    {group.members.map((m) => (
+                      <li key={`${m.chunkKey}:${m.value}`}>
+                        “{m.sentence}” <span className="opacity-80">({m.sourceTitle})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          </div>
+        ) : null}
         <KbPublishForm
           currentNumber={currentNumber}
           preview={

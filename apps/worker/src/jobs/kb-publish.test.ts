@@ -38,6 +38,32 @@ function ops(
 const publish: KbPublishJob = { kind: 'publish', workspaceId: WS, requestedBy: USER, note: 'ghi' };
 
 describe('FR-054 runKbPublish — xuất bản', () => {
+  it('gắn cờ mâu thuẫn lên bản nháp TRƯỚC khi tạo phiên bản; báo số nhóm; khôi phục thì không tính lại', async () => {
+    const order: string[] = [];
+    const markConflicts = vi.fn(async () => {
+      order.push('mark');
+      return 2;
+    });
+    const { o } = ops({
+      markConflicts,
+      drafts: [chunk('a', 'new')],
+      versions: { v2: [chunk('a', 'old')], v1: [chunk('a', 'v1')] },
+      createVersion: vi.fn(async () => {
+        order.push('create');
+        return { versionId: 'new', copied: 1 };
+      }),
+    });
+    expect(await runKbPublish(tx, publish, o)).toMatchObject({ outcome: 'created', conflicts: 2 });
+    expect(order).toEqual(['mark', 'create']);
+    markConflicts.mockClear();
+    await runKbPublish(
+      tx,
+      { kind: 'restore', workspaceId: WS, requestedBy: USER, versionNumber: 1 },
+      o,
+    );
+    expect(markConflicts).not.toHaveBeenCalled();
+  });
+
   it('không phải Owner đang hoạt động → forbidden, không khóa/không tạo', async () => {
     const { o } = ops({ isActiveOwner: vi.fn(async () => false) });
     expect(await runKbPublish(tx, publish, o)).toEqual({ outcome: 'forbidden' });
@@ -51,7 +77,13 @@ describe('FR-054 runKbPublish — xuất bản', () => {
       versions: { v2: [chunk('a', 'old'), chunk('b')] },
     });
     const out = await runKbPublish(tx, publish, o);
-    expect(out).toEqual({ outcome: 'created', number: 3, copied: 1, blockedInjection: 0 });
+    expect(out).toEqual({
+      outcome: 'created',
+      number: 3,
+      copied: 1,
+      blockedInjection: 0,
+      conflicts: 0,
+    });
     expect(o.createVersion).toHaveBeenCalledWith(tx, WS, {
       number: 3,
       publishedBy: USER,

@@ -191,6 +191,14 @@ export {
   planKbVersion,
 } from './kb-publish';
 export { KB_REEMBED_BATCH_MAX } from './kb-reembed';
+export {
+  KB_SYNC_DEBOUNCE_SECONDS,
+  KB_SYNC_QUEUE,
+  type KbSyncJob,
+  kbSyncEnqueueOptions,
+  kbSyncJobSchema,
+} from './kb-sync';
+export { isKbTopic, KB_TOPIC_CODES, type KbTopic } from './kb-topics';
 export { type KiotVietConfig, readKiotVietConfig } from './kiotviet-config';
 export {
   LEAD_MAX_PER_CAPTURE,

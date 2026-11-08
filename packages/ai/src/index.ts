@@ -22,6 +22,7 @@ export * from './history';
 export * from './inbox';
 export * from './injection';
 export * from './kb-reembed';
+export * from './kb-sync';
 export * from './normalize';
 export * from './observability';
 export * from './pii';

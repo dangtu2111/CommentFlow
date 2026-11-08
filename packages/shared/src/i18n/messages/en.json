@@ -1008,6 +1008,7 @@
         "quota_exhausted": "The AI turns for this period are used up, so AI did not draft a suggestion. Reply manually or press Draft suggestion once more turns are available.",
         "attempts_exhausted": "AI tried several times and could not draft one. Reply manually or press Draft suggestion to retry.",
         "ai_invalid_output": "AI returned an unreadable result. Reply manually or press Draft suggestion to retry.",
+        "policy_conflict": "The shop policies contradict each other on exactly what the customer asked (policy conflict). Review and reply manually, then fix the policies so they match.",
         "customer_post_reply_cap": "This customer already received the maximum number of AI replies under this post in 24 hours. Review and reply manually.",
         "other": "AI needs a person to look at this (for example a complaint, or information not in the knowledge base). Reply manually or press Draft suggestion to retry."
       },
@@ -1674,6 +1675,22 @@
     }
   },
   "kbPublish": {
+    "conflicts": {
+      "title": "Your policies contradict each other",
+      "body": "The sentences below say different things about the same information. You can still publish, but when a customer asks about this topic the AI will hand over to staff instead of answering. Fix them so they match, then publish.",
+      "topics": {
+        "shipping_time": "Delivery time",
+        "shipping_fee": "Shipping fee",
+        "return": "Returns",
+        "refund": "Refunds",
+        "warranty": "Warranty"
+      },
+      "valuesLabel": "Conflicting values: {values}"
+    },
+    "unpublishedBanner": {
+      "title": "Knowledge not published yet",
+      "body": "The AI only answers from the published version. Your draft is ready — press Publish below so the AI can start using your knowledge."
+    },
     "pageTitle": "Knowledge versions",
     "title": "Knowledge versions",
     "subtitle": "The AI only answers from the published version. Edit the draft, review the changes, then publish; to go back, restore an older version (a new version is created, nothing is deleted).",

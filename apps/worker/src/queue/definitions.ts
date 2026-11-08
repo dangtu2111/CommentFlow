@@ -7,6 +7,7 @@ import {
   CHANNEL_CHECK_QUEUE,
   DATA_EXPORT_QUEUE,
   KB_PUBLISH_QUEUE,
+  KB_SYNC_QUEUE,
   PIPELINE_QUEUE,
   SHOPIFY_SYNC_QUEUE,
 } from '@flow/shared';
@@ -17,6 +18,7 @@ export {
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
+  KB_SYNC_QUEUE,
   PIPELINE_QUEUE,
   SEND_QUEUE,
   SHOPIFY_SYNC_QUEUE,
@@ -54,6 +56,8 @@ export const QUEUES: QueueDefinition[] = [
   { name: 'hide', retryLimit: HIDE_RETRY_LIMIT, retryBackoff: true },
   // FR-054: kb-publish — xuất bản/khôi phục phiên bản kiến thức; một giao dịch, chạy lại → no_changes nên thử lại an toàn.
   { name: KB_PUBLISH_QUEUE, retryLimit: 2, retryBackoff: true },
+  // KB-SYNC-DRAFT: kb-sync — đồng bộ nguồn nhập tay vào bản nháp; một giao dịch, chạy lại không đổi gì nên thử lại an toàn.
+  { name: KB_SYNC_QUEUE, retryLimit: 2, retryBackoff: true },
   // FR-115: abuse — chấm tín hiệu lạm dụng theo workspace (docs/09 §11.2).
   { name: ABUSE_QUEUE, retryLimit: ABUSE_RETRY_LIMIT, retryBackoff: true },
   // FR-094: data-export — xuất dữ liệu workspace; lỗi nghiệp vụ không ném (→ failed), chỉ lỗi bất ngờ mới thử lại; chạy lại → skipped.
