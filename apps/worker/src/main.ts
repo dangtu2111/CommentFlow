@@ -72,6 +72,8 @@ async function main(): Promise<void> {
     : undefined;
   const embeddingResolver = createEmbeddingResolver({ service: config.embeddingService });
   const pipelineOn = Boolean(llm?.extractor && llm?.drafter);
+  // Cờ LLM bật mà thiếu tên model (không có model mặc định): nêu rõ từng lỗi cấu hình ngay khi khởi động.
+  for (const message of llm?.configErrors ?? []) logger.error({}, message);
   if (config.pipeline.enabled && !pipelineOn) {
     logger.error(
       {},

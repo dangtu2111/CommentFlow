@@ -19,10 +19,15 @@ const embeddingResolver = createEmbeddingResolver({ service: loadEmbeddingServic
 export function createRealTryLlm(
   env: Record<string, string | undefined> = process.env,
 ): TryLlmDeps {
-  return createTryLlmDeps({
+  const llm = createTryLlmDeps({
     env,
     db: { withWorkspace: (workspaceId, fn) => getDb().withWorkspace(workspaceId, fn) },
   });
+  // Cờ LLM bật mà thiếu tên model: bước đó tắt (Thử AI báo "chưa cấu hình AI"); ghi log rõ nguyên nhân để quản trị sửa .env.
+  for (const message of llm.configErrors ?? []) {
+    console.error(JSON.stringify({ event: 'llm_config_invalid', message }));
+  }
+  return llm;
 }
 
 export function createRealKnowledgeRunner(

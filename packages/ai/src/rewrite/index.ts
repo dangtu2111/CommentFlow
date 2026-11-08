@@ -11,7 +11,6 @@ export {
 } from './customer-context';
 export { createFixtureRewriter, type RewriteFixture } from './fixture-rewriter';
 export {
-  DEFAULT_REWRITE_MODEL,
   loadRewriteConfig,
   type RewriteConfig,
 } from './rewrite-config';

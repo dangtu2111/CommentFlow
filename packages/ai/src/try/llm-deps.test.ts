@@ -12,7 +12,12 @@ describe('createLlmDepsFromEnv — dùng chung Thử AI (web) và pipeline (work
 
   it('bật cờ nhưng thiếu URL/khóa → rỗng, không gọi mạng', () => {
     const fetchImpl = vi.fn();
-    const env = { CLASSIFY_LLM_ENABLED: 'true', DRAFT_LLM_ENABLED: 'true' };
+    const env = {
+      CLASSIFY_LLM_ENABLED: 'true',
+      DRAFT_LLM_ENABLED: 'true',
+      CLASSIFY_LLM_MODEL: 'cf-classify',
+      DRAFT_LLM_MODEL: 'cf-draft',
+    };
     expect(createLlmDepsFromEnv({ env, db, fetchImpl })).toEqual({});
     expect(
       createLlmDepsFromEnv({ env: { ...env, LITELLM_BASE_URL: base.LITELLM_BASE_URL }, db }),
@@ -21,17 +26,23 @@ describe('createLlmDepsFromEnv — dùng chung Thử AI (web) và pipeline (work
   });
 
   it('chỉ bước nào bật cờ mới có bản LLM; "1" không bật; rewriter độc lập', () => {
-    const onlyDraft = createLlmDepsFromEnv({ env: { ...base, DRAFT_LLM_ENABLED: 'true' }, db });
+    const onlyDraft = createLlmDepsFromEnv({
+      env: { ...base, DRAFT_LLM_ENABLED: 'true', DRAFT_LLM_MODEL: 'cf-draft' },
+      db,
+    });
     expect(onlyDraft.drafter).toBeDefined();
     expect(onlyDraft.extractor).toBeUndefined();
     const onlyClassify = createLlmDepsFromEnv({
-      env: { ...base, CLASSIFY_LLM_ENABLED: 'true' },
+      env: { ...base, CLASSIFY_LLM_ENABLED: 'true', CLASSIFY_LLM_MODEL: 'cf-classify' },
       db,
     });
     expect(onlyClassify.extractor).toBeDefined();
     expect(onlyClassify.drafter).toBeUndefined();
     expect(createLlmDepsFromEnv({ env: { ...base, DRAFT_LLM_ENABLED: '1' }, db })).toEqual({});
-    const rewrite = createLlmDepsFromEnv({ env: { ...base, REWRITE_LLM_ENABLED: 'true' }, db });
+    const rewrite = createLlmDepsFromEnv({
+      env: { ...base, REWRITE_LLM_ENABLED: 'true', REWRITE_LLM_MODEL: 'cf-classify' },
+      db,
+    });
     expect(rewrite.rewriter).toBeDefined();
     expect(rewrite.extractor).toBeUndefined();
   });
@@ -57,5 +68,32 @@ describe('createLlmDepsFromEnv — dùng chung Thử AI (web) và pipeline (work
       'http://litellm.local:4000/v1/chat/completions',
     );
     spy.mockRestore();
+  });
+
+  it('cờ bật mà THIẾU tên model → bước đó tắt + configErrors nêu biến; bước khác vẫn chạy; không gọi mạng', () => {
+    const fetchImpl = vi.fn();
+    const onlyMissing = createLlmDepsFromEnv({
+      env: { ...base, DRAFT_LLM_ENABLED: 'true' },
+      db,
+      fetchImpl,
+    });
+    expect(onlyMissing.drafter).toBeUndefined();
+    expect(onlyMissing.configErrors).toHaveLength(1);
+    expect(onlyMissing.configErrors?.[0]).toContain('DRAFT_LLM_MODEL');
+
+    const mixed = createLlmDepsFromEnv({
+      env: {
+        ...base,
+        CLASSIFY_LLM_ENABLED: 'true',
+        CLASSIFY_LLM_MODEL: 'cf-classify',
+        DRAFT_LLM_ENABLED: 'true',
+      },
+      db,
+      fetchImpl,
+    });
+    expect(mixed.extractor).toBeDefined();
+    expect(mixed.drafter).toBeUndefined();
+    expect(mixed.configErrors?.[0]).toContain('DRAFT_LLM_MODEL');
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

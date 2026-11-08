@@ -1,6 +1,5 @@
 // API công khai của module draft. Thêm export mới ở ĐÂY (không sửa src/index.ts).
 export {
-  DEFAULT_DRAFT_MODEL,
   type DraftConfig,
   loadDraftConfig,
 } from './draft-config';
