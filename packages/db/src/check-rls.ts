@@ -688,6 +688,13 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.product_aliases', 'a', 'is_system_context'],
   ['cf.product_aliases', 'a', 'current_user_id'],
   ['cf.product_aliases', 'r', 'is_workspace_member'],
+  // DRAFT-FACT-SLOTS (0083): Owner hoặc hệ thống ghi (hệ thống chỉ đề xuất NHÁP); đọc: thành viên hoặc không người dùng
+  ['cf.policy_facts', 'a', 'is_workspace_owner'],
+  ['cf.policy_facts', 'a', 'is_system_context'],
+  ['cf.policy_facts', 'a', 'current_user_id'],
+  ['cf.policy_facts', 'w', 'is_workspace_owner'],
+  ['cf.policy_facts', 'w', 'is_system_context'],
+  ['cf.policy_facts', 'r', 'is_workspace_member'],
   ['cf.products', 'a', 'is_workspace_member'],
   ['cf.products', 'a', 'is_system_context'],
   ['cf.products', 'w', 'is_workspace_member'],
@@ -851,6 +858,11 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.products', 'a', 'IS NULL'],
   ['cf.products', 'w', 'IS NULL'],
   ['cf.product_aliases', 'a', 'IS NULL'],
+  // chính sách có cấu trúc: Staff không ghi; withWorkspace trần (không người dùng) không được ghi
+  ['cf.policy_facts', 'a', 'is_workspace_member'],
+  ['cf.policy_facts', 'w', 'is_workspace_member'],
+  ['cf.policy_facts', 'a', 'IS NULL'],
+  ['cf.policy_facts', 'w', 'IS NULL'],
   // bảng size: Staff không ghi; withWorkspace trần (không người dùng) không được ghi
   ['cf.size_charts', 'a', 'is_workspace_member'],
   ['cf.size_charts', 'w', 'is_workspace_member'],

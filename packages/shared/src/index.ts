@@ -279,6 +279,18 @@ export {
   type SubscriptionStatus,
 } from './plan';
 export {
+  PAYMENT_METHODS,
+  POLICY_FACT_KINDS,
+  POLICY_FACT_ORIGINS,
+  POLICY_FACT_STATUSES,
+  type PolicyFactKind,
+  type PolicyFactOrigin,
+  type PolicyFactStatus,
+  parsePolicyFactData,
+  policySlotOf,
+  type ShipRegionData,
+} from './policy-facts';
+export {
   type AutoMode,
   effectiveAutoMode,
   POST_NOTE_MAX,
