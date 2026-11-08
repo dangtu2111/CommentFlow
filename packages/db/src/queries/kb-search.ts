@@ -52,6 +52,15 @@ export type KbSearchHit = {
   score: number;
 };
 
+/** Hạng + điểm thô của MỖI nhánh (chẩn đoán truy hồi, Nhóm R); `null` = đoạn không nằm trong top của nhánh đó. */
+export type KbBranchDetail = {
+  vector: { rank: number; distance: number } | null;
+  text: { rank: number; tsRank: number } | null;
+  trigram: { rank: number; wordSimilarity: number } | null;
+};
+
+export type KbSearchHitDetailed = KbSearchHit & { branches: KbBranchDetail };
+
 const vectorLiteral = (vector: readonly number[]) => `[${vector.join(',')}]`;
 const uuidList = (ids: readonly string[]) =>
   sql.join(
@@ -68,6 +77,15 @@ const orTsQuery = (normalized: string) => normalized.split(' ').filter(Boolean).
  * đoạn nghi cài lệnh (FR-164). Chưa gồm rerank, ngưỡng liên quan, trần token (PIPE-RETRIEVE).
  */
 export async function searchKbChunks(tx: Database, input: KbSearchInput): Promise<KbSearchHit[]> {
+  const detailed = await searchKbChunksDetailed(tx, input);
+  return detailed.map(({ branches: _branches, ...hit }) => hit);
+}
+
+/** Như `searchKbChunks` nhưng kèm hạng và điểm thô từng nhánh (vector, toàn văn, trigram) để chẩn đoán đoạn trượt. */
+export async function searchKbChunksDetailed(
+  tx: Database,
+  input: KbSearchInput,
+): Promise<KbSearchHitDetailed[]> {
   const normalized = normalizeSearchText(input.queryText);
   const tsQuery = orTsQuery(normalized);
   if (normalized === '' && !input.queryVector) return [];
@@ -101,26 +119,29 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
     : sql``;
   const vectorBranch = input.queryVector
     ? sql`
-      SELECT c.id, row_number() OVER (ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024), c.id) AS r
+      SELECT c.id, row_number() OVER (ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024), c.id) AS r,
+             (c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024))::float8 AS s
         FROM cf.kb_chunks c
        WHERE ${filters} AND c.embedding IS NOT NULL ${modelFilter}
        ORDER BY c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024)
        LIMIT ${BRANCH_LIMIT}`
-    : sql`SELECT NULL::uuid AS id, NULL::bigint AS r WHERE false`;
+    : sql`SELECT NULL::uuid AS id, NULL::bigint AS r, NULL::float8 AS s WHERE false`;
   const textBranch =
     tsQuery === ''
-      ? sql`SELECT NULL::uuid AS id, NULL::bigint AS r WHERE false`
+      ? sql`SELECT NULL::uuid AS id, NULL::bigint AS r, NULL::float8 AS s WHERE false`
       : sql`
-      SELECT c.id, row_number() OVER (ORDER BY ts_rank(c.tsv, q.query) DESC, c.id) AS r
+      SELECT c.id, row_number() OVER (ORDER BY ts_rank(c.tsv, q.query) DESC, c.id) AS r,
+             ts_rank(c.tsv, q.query)::float8 AS s
         FROM cf.kb_chunks c, to_tsquery(${config}, ${tsQuery}) AS q(query)
        WHERE ${filters} AND c.tsv @@ q.query
        ORDER BY ts_rank(c.tsv, q.query) DESC, c.id
        LIMIT ${BRANCH_LIMIT}`;
   const trigramBranch =
     normalized === ''
-      ? sql`SELECT NULL::uuid AS id, NULL::bigint AS r WHERE false`
+      ? sql`SELECT NULL::uuid AS id, NULL::bigint AS r, NULL::float8 AS s WHERE false`
       : sql`
-      SELECT c.id, row_number() OVER (ORDER BY word_similarity(${normalized}, c.search_norm) DESC, c.id) AS r
+      SELECT c.id, row_number() OVER (ORDER BY word_similarity(${normalized}, c.search_norm) DESC, c.id) AS r,
+             word_similarity(${normalized}, c.search_norm)::float8 AS s
         FROM cf.kb_chunks c
        WHERE ${filters} AND ${normalized} <% c.search_norm
        ORDER BY word_similarity(${normalized}, c.search_norm) DESC, c.id
@@ -134,14 +155,25 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
     product_id: string | null;
     metadata: Record<string, unknown> | null;
     score: string;
+    vr: string | null;
+    vs: number | null;
+    tr: string | null;
+    ts: number | null;
+    gr: string | null;
+    gs: number | null;
   }>(sql`
     WITH v AS (${vectorBranch}), t AS (${textBranch}), g AS (${trigramBranch}),
     fused AS (
-      SELECT id, sum(1.0 / (60 + r)) AS score
-        FROM (SELECT * FROM v UNION ALL SELECT * FROM t UNION ALL SELECT * FROM g) x
+      SELECT id, sum(1.0 / (60 + r)) AS score,
+             max(r) FILTER (WHERE b = 'v') AS vr, max(s) FILTER (WHERE b = 'v') AS vs,
+             max(r) FILTER (WHERE b = 't') AS tr, max(s) FILTER (WHERE b = 't') AS ts,
+             max(r) FILTER (WHERE b = 'g') AS gr, max(s) FILTER (WHERE b = 'g') AS gs
+        FROM (SELECT id, r, s, 'v' AS b FROM v UNION ALL SELECT id, r, s, 't' FROM t
+              UNION ALL SELECT id, r, s, 'g' FROM g) x
        GROUP BY id
     )
-    SELECT c.id, c.chunk_key, c.content, c.context_header, c.product_id, c.metadata, f.score
+    SELECT c.id, c.chunk_key, c.content, c.context_header, c.product_id, c.metadata, f.score,
+           f.vr, f.vs, f.tr, f.ts, f.gr, f.gs
       FROM fused f
       JOIN cf.kb_chunks c ON c.id = f.id AND c.workspace_id = ${input.workspaceId}::uuid
      ORDER BY f.score DESC, c.id
@@ -154,6 +186,11 @@ export async function searchKbChunks(tx: Database, input: KbSearchInput): Promis
     productId: row.product_id,
     metadata: row.metadata ?? {},
     score: Number(row.score),
+    branches: {
+      vector: row.vr === null ? null : { rank: Number(row.vr), distance: Number(row.vs) },
+      text: row.tr === null ? null : { rank: Number(row.tr), tsRank: Number(row.ts) },
+      trigram: row.gr === null ? null : { rank: Number(row.gr), wordSimilarity: Number(row.gs) },
+    },
   }));
 }
 

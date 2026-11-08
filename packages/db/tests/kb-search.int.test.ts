@@ -7,6 +7,7 @@ import {
   findProductMatch,
   getProductRevs,
   searchKbChunks,
+  searchKbChunksDetailed,
   searchProducts,
   setProductNameEmbedding,
 } from '../src/queries/kb-search';
@@ -210,6 +211,33 @@ describe('FR-057 searchKbChunks (RRF vector + toàn văn + trigram)', () => {
     const hits = await search(wsA, verA, 'ao len gat tay');
     expect(hits[0]?.id).toBe(hit);
     expect(hits.map((h) => h.content)).not.toContain('Quần short kaki giao hàng nhanh');
+  });
+
+  it('chẩn đoán: searchKbChunksDetailed trả hạng + điểm thô từng nhánh, cùng thứ tự/điểm RRF với searchKbChunks', async () => {
+    const hit = await seedChunk(wsA, srcA, verA, 'q-diag', 'diagphiship quokkaxyz noi thanh cua hang', {
+      embedding: unit(33),
+    });
+    const input = {
+      workspaceId: wsA,
+      versionId: verA,
+      lang: 'vi' as const,
+      queryText: 'diagphiship quokkaxyz',
+      queryVector: unit(33),
+    };
+    const detailed = await db.withWorkspace(wsA, (tx) => searchKbChunksDetailed(tx, input));
+    const plain = await db.withWorkspace(wsA, (tx) => searchKbChunks(tx, input));
+    expect(detailed.map((h) => [h.id, h.score])).toEqual(plain.map((h) => [h.id, h.score]));
+    const top = detailed.find((h) => h.id === hit);
+    expect(top?.branches.vector).toMatchObject({ rank: 1 });
+    expect(top?.branches.vector?.distance).toBeCloseTo(0, 3);
+    expect(top?.branches.text?.rank).toBe(1);
+    expect(top?.branches.text?.tsRank).toBeGreaterThan(0);
+    expect(top?.branches.trigram?.wordSimilarity).toBeGreaterThan(0.4);
+    // Không có vector truy vấn → nhánh vector rỗng.
+    const noVec = await db.withWorkspace(wsA, (tx) =>
+      searchKbChunksDetailed(tx, { ...input, queryVector: undefined }),
+    );
+    expect(noVec.find((h) => h.id === hit)?.branches.vector).toBeNull();
   });
 
   it('lỗi gõ vẫn ra nhờ pg_trgm', async () => {
