@@ -14,7 +14,10 @@ Trạng thái nằm trong repo (AGENTS.md § Phối hợp nhiều agent): agent 
 | 4 | **(6)** extract trả mã chủ đề cố định (`KbTopic`), hỏi lại đúng ngôn ngữ khách | Chưa làm |
 | 5 | **(3) (7) (8)** — nhóm (7) gồm gap GUARD-REDIRECT-TEMPLATE (câu chuyển hướng của guard nghĩa lấy từ `brand_voice.handoff_templates` + xưng hô + trong/ngoài giờ) | Chưa làm |
 | 6 | Đo tốc độ / recall / cache | Chưa làm |
+| — | **LLM-PROVIDER-OUTAGE** (circuit breaker khi nhà cung cấp LLM lỗi 429/401/5xx kéo dài; cảnh báo Admin + banner Owner; EVAL dừng ngay khi 429) | Chưa làm — gap đã ghi |
 | 7 | Gắn sản phẩm vào bài | Chưa làm |
+
+**Tình trạng 08/11 (cuối):** #287 (guard nghĩa) đã merge. OpenAI hết credit → mọi đo EVAL tạm không chạy được (HTTP 429); chủ dự án sẽ nạp credit. Làm (1b) → (4)+STOCK-DISCLOSURE-OPTION → (6) bằng code + test, GOM các phép đo trước/sau chạy MỘT lượt khi có credit (trong trần chi phí); đo EVAL cho #287 xem có chặn nhầm câu đúng không, sửa ở PR sau.
 
 Sau mỗi nhóm: đo trước/sau bằng đường production, 3 lượt, báo cổng theo lượt tệ nhất + mẫu chập chờn (xem `docs/testing/eval-production-path.md`).
 
