@@ -36,7 +36,7 @@ export type TurnRisks = {
 
 export function evaluateTurnRisks(input: TurnRiskInput): TurnRisks {
   const legal = evaluateLegalRules({ customerText: input.text, sources: [...input.sources] });
-  const injection = scanInjection(input.text);
+  const injection = scanInjection(input.text, { source: 'customer' });
   const impersonation = input.impersonation
     ? evaluateImpersonation({
         text: input.text,

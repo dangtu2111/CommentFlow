@@ -20,17 +20,29 @@ export const INJECTION_REASONS = [
 export type InjectionReason = (typeof INJECTION_REASONS)[number];
 
 export type InjectionScanOptions = {
+  /**
+   * Nguồn văn bản: `customer` = câu của KHÁCH (thêm luật "Hệ thống:" tiếng Việt và "giảm X% cho tất cả" mà khách không có quyền ra lệnh);
+   * mặc định = đoạn kiến thức của shop (không áp các luật này vì shop được phép có khuyến mãi hợp lệ).
+   */
+  source?: 'customer' | 'knowledge';
   /** Miền thuộc shop (vd `myshop.vn`); link tới miền này hoặc miền con của nó không bị coi là lạ. */
   allowedDomains?: readonly string[];
 };
 
 export type InjectionScanResult = { suspected: boolean; reasons: InjectionReason[] };
 
+/** Động từ "bỏ qua" và đối tượng bị bỏ qua, CẢ tiếng Anh lẫn tiếng Việt (khách hay trộn: "Ignore quy định của shop", "bỏ qua instructions"). */
+const IGNORE_VERBS = 'ignore|disregard|forget|override|bypass|bo qua|quen|phot lo|huy bo';
+const IGNORE_OBJECTS =
+  'instructions?|rules?|prompts?|guidelines?|directions?|everything|huong dan|quy tac|chi dan|lenh|chi thi|quy dinh|yeu cau|noi dung';
+
 /** Mẫu trên văn bản đã bỏ dấu + chữ thường + gộp khoảng trắng (`foldText`). */
 const PHRASE_RULES: ReadonlyArray<readonly [InjectionReason, RegExp]> = [
   [
     'ignore_instructions',
-    /\b(?:ignore|disregard|forget|override|bypass)\b[^.\n]{0,30}\b(?:instructions?|rules?|prompts?|guidelines?|directions?|everything)\b|\b(?:ignore|disregard|forget)\b[^.\n]{0,15}\b(?:above|previous|prior|earlier)\b|\b(?:bo qua|quen|phot lo|huy bo)\b[^.\n]{0,30}\b(?:huong dan|quy tac|chi dan|lenh|chi thi|quy dinh|yeu cau|noi dung|truoc do|o tren)\b/,
+    new RegExp(
+      `\\b(?:${IGNORE_VERBS})\\b[^.\\n]{0,30}\\b(?:${IGNORE_OBJECTS})\\b|\\b(?:ignore|disregard|forget)\\b[^.\\n]{0,15}\\b(?:above|previous|prior|earlier)\\b|\\b(?:bo qua|quen|phot lo|huy bo)\\b[^.\\n]{0,30}\\b(?:truoc do|o tren)\\b`,
+    ),
   ],
   [
     'role_play',
@@ -61,6 +73,23 @@ const MARKER_TOKEN = /<\|[a-z_]+\|>|\[\/?inst\]|<<\/?sys>>/;
 
 const URL_PATTERN =
   /(?:https?:\/\/|www\.)[^\s<>"')]+|\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.(?:com|vn|net|org|io|me|ly|xyz|info|biz|co|shop|store|site|online|top|link|app)\b(?:\/[^\s<>"')]*)?/g;
+
+/** Dòng mở đầu giả danh hệ thống bằng tiếng Việt (đã bỏ dấu): "hệ thống:", "quản trị viên:", "admin:". */
+const VI_MARKER_LINE = /^\s*(?:he thong|quan tri(?: vien)?|admin|nha phat trien)\s*:/;
+/** Giảm giá X% cho TẤT CẢ/MỌI sản phẩm/đơn: khách không có quyền ra lệnh điều này (chỉ xét câu KHÔNG phải câu hỏi). */
+const DISCOUNT_ALL =
+  /\b(?:giam(?: gia)?|discount|off|khuyen mai)\b[^.!\n?]{0,25}\d{1,3}\s?%[^.!\n?]{0,25}\b(?:moi|tat ca|toan bo|all|every|cho tat ca)\b|\b(?:moi|tat ca|toan bo|all|every)\b[^.!\n?]{0,25}\b(?:giam(?: gia)?|discount|off)\b[^.!\n?]{0,20}\d{1,3}\s?%/;
+const QUESTION_WORDS = /\?|\bkhong\b|\bko\b|\bhong\b/;
+
+function customerRules(folded: string): Set<InjectionReason> {
+  const hit = new Set<InjectionReason>();
+  if (folded.split(/\r?\n/).some((line) => VI_MARKER_LINE.test(line))) hit.add('system_marker');
+  const sentences = folded.split(/(?<=[.!\n])\s*/);
+  if (sentences.some((sentence) => DISCOUNT_ALL.test(sentence) && !QUESTION_WORDS.test(sentence))) {
+    hit.add('discount_directive');
+  }
+  return hit;
+}
 
 function hostOf(rawUrl: string): string {
   const withoutScheme = rawUrl.replace(/^https?:\/\//, '');
@@ -99,7 +128,10 @@ export function scanInjection(
   const norm = normalize(text);
   // `-`/`_` coi như khoảng trắng để "bo-qua", "ignore_all" không né được mẫu cụm từ.
   const folded = foldText(norm.replace(/[-_]/g, ' '));
-  const hit = new Set<InjectionReason>();
+  const hit =
+    options.source === 'customer'
+      ? customerRules(foldText(norm.replace(/[-_]/g, ' ')))
+      : new Set<InjectionReason>();
   for (const [reason, pattern] of PHRASE_RULES) {
     if (pattern.test(folded)) hit.add(reason);
   }
