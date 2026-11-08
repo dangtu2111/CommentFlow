@@ -14,7 +14,7 @@ import { createTryLlmDeps, type TryLlmDeps } from './try-ai-llm';
 /**
  * Lắp ráp NGUỒN THẬT cho ô Thử AI và bộ câu kiểm thử (dùng chung, không bản mẫu — chủ dự án chốt 08/11):
  * LLM thật qua LiteLLM (cờ DB `cf.ai.*` theo workspace), kiến thức/sản phẩm thật của workspace, embedding theo model hoạt động ở DB (FR-133).
- * Thiếu LLM → `llm_not_configured`; chưa có dữ liệu thật → `no_knowledge`. Mọi kết nối DB tạo lười (next build không có DATABASE_URL).
+ * Thiếu LLM → `llm_missing_service|llm_missing_model|llm_flag_off`; chưa có dữ liệu thật → `no_knowledge`. Mọi kết nối DB tạo lười (next build không có DATABASE_URL).
  */
 const embeddingResolver = createEmbeddingResolver({ service: loadEmbeddingService(process.env) });
 

@@ -15,7 +15,7 @@ const base = { LITELLM_BASE_URL: 'http://litellm.local:4000', LITELLM_API_KEY: '
 import { demoKnowledgeRunner, demoWiring } from './test-demo-wiring';
 
 describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố định)', () => {
-  it('Thử AI báo "chưa cấu hình AI" khi cờ cf.ai.* của workspace TẮT (kiểm trước khi tốn lượt)', async () => {
+  it('Thử AI báo ĐÚNG nguyên nhân khi AI chưa sẵn sàng cho workspace, kiểm trước khi tốn lượt', async () => {
     const quota = createTryQuota({ limit: 1 });
     const run = createTryAiAction({
       quota,
@@ -23,7 +23,7 @@ describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố
       llm: {
         extractor: createDemoExtractor(),
         drafter: createDemoDrafter(),
-        ready: async () => false,
+        diagnose: async () => 'flag_off',
       },
     });
     for (let i = 0; i < 2; i++) {
@@ -31,7 +31,7 @@ describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố
         await run({ workspaceId: '11111111-1111-4111-8111-111111111111' }, 'ship bao nhiêu'),
       ).toEqual({
         ok: false,
-        reason: 'llm_not_configured',
+        reason: 'llm_flag_off',
       });
     }
   });

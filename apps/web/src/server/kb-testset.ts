@@ -17,7 +17,7 @@ import type { TryLlmDeps } from './try-ai-llm';
 
 /**
  * Chạy bộ câu kiểm thử (FR-054, US-034) qua pipeline Thử AI bằng LLM THẬT và kiến thức THẬT của workspace (dùng chung
- * `KnowledgeRunner`; thiếu LLM → `llm_not_configured`, chưa có kiến thức → `no_knowledge`; KHÔNG chạy bản mẫu — chủ dự án chốt 08/11). Không trừ lượt gói (BR-03), không ghi dữ liệu. Hạn mức riêng: số LẦN CHẠY
+ * `KnowledgeRunner`; thiếu LLM → `llm_missing_service|llm_missing_model|llm_flag_off`, chưa có kiến thức → `no_knowledge`; KHÔNG chạy bản mẫu — chủ dự án chốt 08/11). Không trừ lượt gói (BR-03), không ghi dữ liệu. Hạn mức riêng: số LẦN CHẠY
  * mỗi ngày mỗi workspace (mỗi lần tối đa 20 ca). Đầu vào sai không tốn hạn mức. Log chỉ có tên lỗi.
  */
 export type KbTestSetFailure =
@@ -25,7 +25,9 @@ export type KbTestSetFailure =
   | 'too_many'
   | 'invalid_line'
   | 'limit_reached'
-  | 'llm_not_configured'
+  | 'llm_missing_service'
+  | 'llm_missing_model'
+  | 'llm_flag_off'
   | 'no_knowledge'
   | 'unavailable';
 
@@ -80,12 +82,11 @@ export function createKbTestSetAction(deps: KbTestSetDeps) {
     const parsed = parseTestSetText(rawText);
     if (!parsed.ok) return parsed;
 
+    // Nêu ĐÚNG nguyên nhân AI chưa chạy được: thiếu dịch vụ LiteLLM / thiếu tên model / cờ DB cf.ai.* tắt cho workspace — kiểm trước khi tốn lượt.
+    const notReady = deps.llm?.diagnose ? await deps.llm.diagnose(session.workspaceId) : null;
+    if (notReady) return { ok: false, reason: `llm_${notReady}` };
     const built = build();
-    if (!built) return { ok: false, reason: 'llm_not_configured' };
-    // Cờ AI theo workspace (cf.ai.classify + cf.ai.draft) phải đang BẬT và cấu hình đủ — kiểm trước khi tốn lượt.
-    if (deps.llm?.ready && !(await deps.llm.ready(session.workspaceId))) {
-      return { ok: false, reason: 'llm_not_configured' };
-    }
+    if (!built) return { ok: false, reason: 'llm_missing_service' };
     if (!deps.knowledgeRunner) return { ok: false, reason: 'no_knowledge' };
 
     const taken = deps.quota.take(session.workspaceId, now());
