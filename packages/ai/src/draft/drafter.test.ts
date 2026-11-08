@@ -71,6 +71,18 @@ describe('FR-029/FR-138 drafter LLM', () => {
     expect(r.sources).toEqual(['sp-1']);
   });
 
+  it('nhiệt độ mặc định 0,3 không seed; EVAL có thể đặt nhiệt độ thấp hơn + seed cố định', async () => {
+    const a = fakeLlm(JSON.stringify(good));
+    await createLlmDrafter({ llm: a.llm, model: 'soan' }).draft(input());
+    expect(a.calls[0]?.temperature).toBe(0.3);
+    expect(a.calls[0] && 'seed' in a.calls[0]).toBe(false);
+    const b = fakeLlm(JSON.stringify(good));
+    await createLlmDrafter({ llm: b.llm, model: 'soan', temperature: 0.1, seed: 42 }).draft(
+      input(),
+    );
+    expect(b.calls[0]).toMatchObject({ temperature: 0.1, seed: 42 });
+  });
+
   it('FR-161 variants: câu gốc đầu, chỉ giữ biến thể đúng số/nguồn, vẫn MỘT lần gọi, draft@4', async () => {
     const { llm, calls } = fakeLlm(
       JSON.stringify({

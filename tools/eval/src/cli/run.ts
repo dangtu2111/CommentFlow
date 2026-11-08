@@ -54,6 +54,9 @@ const { values } = parseArgs({
     // Số lượt chạy mỗi bên (mặc định 3 với litellm, 1 với mock) và hạt giống bước extract (nhiệt độ luôn 0).
     repeats: { type: 'string' },
     seed: { type: 'string', default: '42' },
+    // Thử nghiệm bước soạn (đo xen kẽ): nhiệt độ khác mặc định 0,3 và/hoặc seed cố định cho bước soạn.
+    'draft-temperature': { type: 'string' },
+    'draft-seed': { type: 'string' },
     // Trần chi phí (chủ dự án chốt 08/11/2026): mỗi lần đo ≤ 1 USD, tổng sổ chi tiêu ≤ 5 USD, khóa ảo > 80% trần → dừng.
     'max-usd': { type: 'string', default: String(DEFAULT_MEASUREMENT_CAP_USD) },
     'total-cap-usd': { type: 'string', default: String(DEFAULT_TOTAL_CAP_USD) },
@@ -245,6 +248,12 @@ async function runOnce(variantCount: number, runIndex = 1) {
     variantCount,
     shop,
     seed,
+    draft: {
+      ...(values['draft-temperature'] === undefined
+        ? {}
+        : { temperature: Number(values['draft-temperature']) }),
+      ...(values['draft-seed'] === undefined ? {} : { seed: Number(values['draft-seed']) }),
+    },
     ...(productionKnowledge ? { knowledge: productionKnowledge } : {}),
     ...(scorer ? { scorer } : {}),
     ...(persistUsage ? { persistUsage } : {}),
@@ -274,7 +283,7 @@ async function runOnce(variantCount: number, runIndex = 1) {
       'Nguồn kiến thức': productionInfo
         ? `PRODUCTION — workspace [EVAL] đã đồng bộ + xuất bản; kb_version ${productionInfo.kbVersion.number}; tìm lai vector ${productionInfo.embeddingModel} + toàn văn + trigram (loadWorkspaceKnowledge)`
         : 'fixture — từ khóa trong shop file (KHÔNG phản ánh production)',
-      'Cấu hình lấy mẫu': `extract: nhiệt độ 0, seed ${seed}; soạn: nhiệt độ mặc định của bước soạn`,
+      'Cấu hình lấy mẫu': `extract: nhiệt độ 0, seed ${seed}; soạn: nhiệt độ ${values['draft-temperature'] ?? '0,3 (mặc định)'}, seed ${values['draft-seed'] ?? 'không'}`,
       'Embedder dùng trong lượt này': productionInfo
         ? `${productionInfo.embeddingModel} (bge-m3 thật qua dịch vụ ml; đoạn kiến thức và truy vấn cùng model)`
         : 'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',
