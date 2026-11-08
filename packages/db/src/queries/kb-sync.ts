@@ -107,3 +107,61 @@ export async function setDraftChunkTopics(
          AND metadata ->> 'topic' IS DISTINCT FROM ${topic}`);
   }
 }
+
+export type DraftChunkText = {
+  chunkKey: string;
+  content: string;
+  contextHeader: string | null;
+  sourceTitle: string;
+  topic: string | null;
+};
+
+/** Đoạn nháp đủ điều kiện xuất bản (không nghi cài lệnh) kèm nội dung/chủ đề — đầu vào phát hiện mâu thuẫn (chỉ đọc). */
+export async function listDraftChunkTexts(
+  tx: Database,
+  workspaceId: string,
+): Promise<DraftChunkText[]> {
+  const r = await tx.execute<{
+    chunk_key: string;
+    content: string;
+    context_header: string | null;
+    title: string;
+    topic: string | null;
+  }>(sql`
+    SELECT c.chunk_key, c.content, c.context_header, s.title, c.metadata ->> 'topic' AS topic
+      FROM cf.kb_chunks c JOIN cf.kb_sources s ON s.id = c.source_id
+     WHERE c.workspace_id = ${workspaceId}::uuid AND c.version_id IS NULL AND c.is_draft
+       AND NOT c.injection_suspected
+     ORDER BY c.chunk_key`);
+  return r.rows.map((row) => ({
+    chunkKey: row.chunk_key,
+    content: row.content,
+    contextHeader: row.context_header,
+    sourceTitle: row.title,
+    topic: row.topic,
+  }));
+}
+
+export type ConflictMark = { group: string; values: string[]; chunkKeys: string[] };
+
+/**
+ * Ghi cờ mâu thuẫn CÓ CẤU TRÚC vào `kb_chunks.metadata` của bản nháp (`conflict_group`, `conflict_values`): trước hết xóa cờ cũ ở mọi đoạn
+ * nháp (cờ lỗi thời), rồi gắn cờ mới cho các đoạn thuộc nhóm. Không đổi `content_hash` nên không tạo thay đổi giả khi xuất bản.
+ */
+export async function setDraftConflictMarks(
+  tx: Database,
+  workspaceId: string,
+  marks: readonly ConflictMark[],
+): Promise<void> {
+  await tx.execute(sql`
+    UPDATE cf.kb_chunks SET metadata = metadata - 'conflict_group' - 'conflict_values'
+     WHERE workspace_id = ${workspaceId}::uuid AND version_id IS NULL AND is_draft
+       AND (metadata ? 'conflict_group' OR metadata ? 'conflict_values')`);
+  for (const mark of marks) {
+    await tx.execute(sql`
+      UPDATE cf.kb_chunks
+         SET metadata = metadata || jsonb_build_object('conflict_group', ${mark.group}::text, 'conflict_values', ${JSON.stringify(mark.values)}::jsonb)
+       WHERE workspace_id = ${workspaceId}::uuid AND version_id IS NULL AND is_draft
+         AND chunk_key IN (SELECT jsonb_array_elements_text(${JSON.stringify(mark.chunkKeys)}::jsonb))`);
+  }
+}

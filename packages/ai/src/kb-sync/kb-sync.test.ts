@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectConflicts } from './conflicts';
+import { conflictChunkOf, detectConflicts } from './conflicts';
 import { buildPolicyDocuments, splitSections } from './policy-documents';
 import { buildFaqDocuments, buildProductDocuments, buildShopDocuments } from './source-documents';
 import { classifyTopic } from './topic';
@@ -112,5 +112,75 @@ describe('detectConflicts — số + đơn vị cùng chủ đề', () => {
         chunk('a#0', 'A', 'Nội thành 2 ngày, tỉnh 5 ngày.', 'shipping_time' as never),
       ]),
     ).toEqual([]);
+  });
+  it('hai chính sách CÙNG tên nguồn hiển thị nhưng khác originKey vẫn bị so (mâu thuẫn giữa hai chính sách)', () => {
+    const groups = detectConflicts([
+      {
+        chunkKey: 'policy:a:0#0',
+        sourceTitle: 'Chính sách cửa hàng › A',
+        originKey: 'policy:a',
+        text: 'Giao 2 ngày.',
+        topic: 'shipping_time',
+      },
+      {
+        chunkKey: 'policy:b:0#0',
+        sourceTitle: 'Chính sách cửa hàng › B',
+        originKey: 'policy:b',
+        text: 'Giao 5 ngày.',
+        topic: 'shipping_time',
+      },
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.group).toBe('shipping_time:ngày');
+  });
+  it('cùng originKey (một chính sách tự nhắc hai số) không bị coi là mâu thuẫn', () => {
+    expect(
+      detectConflicts([
+        {
+          chunkKey: 'policy:a:0#0',
+          sourceTitle: 'X',
+          originKey: 'policy:a',
+          text: 'Nội thành 2 ngày.',
+          topic: 'shipping_time',
+        },
+        {
+          chunkKey: 'policy:a:1#0',
+          sourceTitle: 'Y',
+          originKey: 'policy:a',
+          text: 'Tỉnh 5 ngày.',
+          topic: 'shipping_time',
+        },
+      ]),
+    ).toEqual([]);
+  });
+  it('conflictChunkOf: nguồn thật là tài liệu gốc, tên hiển thị là context_header, topic lạ → other', () => {
+    expect(
+      conflictChunkOf({
+        chunkKey: 'policy:p1:2#0',
+        content: 'x',
+        contextHeader: 'CS › Giao',
+        sourceTitle: 'S',
+        topic: 'shipping_time',
+      }),
+    ).toEqual({
+      chunkKey: 'policy:p1:2#0',
+      sourceTitle: 'CS › Giao',
+      originKey: 'policy:p1',
+      text: 'x',
+      topic: 'shipping_time',
+    });
+    expect(
+      conflictChunkOf({
+        chunkKey: 'faq:f1#0',
+        content: 'x',
+        contextHeader: null,
+        sourceTitle: 'FAQ',
+        topic: null,
+      }),
+    ).toMatchObject({
+      sourceTitle: 'FAQ',
+      originKey: 'faq:f1#0',
+      topic: 'other',
+    });
   });
 });

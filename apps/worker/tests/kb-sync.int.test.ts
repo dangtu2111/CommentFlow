@@ -4,6 +4,7 @@ import { createDb, type FlowDb } from '@flow/db';
 import { AppError } from '@flow/shared';
 import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { markDraftConflicts } from '../src/jobs/kb-publish';
 import { runKbSync } from '../src/jobs/kb-sync';
 
 /**
@@ -140,5 +141,31 @@ describe('đồng bộ vào bản nháp', () => {
     await expect(run(offConfig)).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
     await expect(run(offConfig)).rejects.toBeInstanceOf(AppError);
     expect(await draftChunks()).toEqual([]);
+  });
+});
+
+describe('cờ mâu thuẫn có cấu trúc trong kb_chunks.metadata', () => {
+  const mark = () => db.withJob(ws, (tx) => markDraftConflicts(tx, ws));
+
+  it('hai chính sách nói thời gian giao khác nhau → gắn conflict_group/conflict_values lên đúng hai đoạn; sửa cho khớp → cờ biến mất', async () => {
+    const a = await addPolicy('shipping', 'Giao hàng A', 'Giao trong 2 ngày.');
+    const b = await addPolicy('shipping', 'Giao hàng B', 'Thời gian giao 5 ngày.');
+    await addPolicy('warranty', 'Bảo hành', 'Bảo hành 12 tháng.');
+    await run();
+    expect(await mark()).toBe(1);
+    const flagged = (await draftChunks()).filter((r) => r.metadata.conflict_group);
+    expect(flagged.map((r) => r.chunk_key).sort()).toEqual(
+      [`policy:${a}:0#0`, `policy:${b}:0#0`].sort(),
+    );
+    expect(flagged.every((r) => r.metadata.conflict_group === 'shipping_time:ngày')).toBe(true);
+    expect(flagged[0]?.metadata.conflict_values).toEqual(['2 ngày', '5 ngày']);
+    expect(flagged.every((r) => r.metadata.topic === 'shipping_time')).toBe(true);
+
+    await admin.query("UPDATE cf.policy_items SET content = 'Giao trong 2 ngày.' WHERE id = $1", [
+      b,
+    ]);
+    await run();
+    expect(await mark()).toBe(0);
+    expect((await draftChunks()).some((r) => r.metadata.conflict_group)).toBe(false);
   });
 });

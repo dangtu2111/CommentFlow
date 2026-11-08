@@ -1,6 +1,14 @@
-import type { KbTopic } from '@flow/shared';
+import { isKbTopic, type KbTopic } from '@flow/shared';
 
-export type ConflictChunk = { chunkKey: string; sourceTitle: string; text: string; topic: KbTopic };
+export type ConflictChunk = {
+  chunkKey: string;
+  /** Tên hiển thị của nơi nói câu đó (vd "Chính sách cửa hàng › Giao hàng › Thời gian") — hiện ở cảnh báo. */
+  sourceTitle: string;
+  /** Khóa NGUỒN thật để biết hai đoạn có thuộc cùng một nguồn không (mặc định = `sourceTitle`). Vd `policy:<id>`. */
+  originKey?: string;
+  text: string;
+  topic: KbTopic;
+};
 
 export type ConflictMember = {
   chunkKey: string;
@@ -95,7 +103,7 @@ function quantitiesOf(chunk: ConflictChunk): Quantity[] {
  * (vd "giao 2 ngày" vs "giao 5 ngày"). Một nguồn tự nhắc nhiều số (nội thành/tỉnh) không bị coi là mâu thuẫn.
  */
 export function detectConflicts(chunks: readonly ConflictChunk[]): ConflictGroup[] {
-  type Entry = ConflictMember & { sort: number };
+  type Entry = ConflictMember & { sort: number; origin: string };
   const byGroup = new Map<string, { topic: KbTopic; entries: Entry[] }>();
   for (const chunk of chunks) {
     for (const q of quantitiesOf(chunk)) {
@@ -107,6 +115,7 @@ export function detectConflicts(chunks: readonly ConflictChunk[]): ConflictGroup
         sentence: q.sentence,
         value: q.value,
         sort: q.sort,
+        origin: chunk.originKey ?? chunk.sourceTitle,
       });
       byGroup.set(group, bucket);
     }
@@ -114,15 +123,32 @@ export function detectConflicts(chunks: readonly ConflictChunk[]): ConflictGroup
   const result: ConflictGroup[] = [];
   for (const [group, { topic, entries }] of byGroup) {
     const values = new Set(entries.map((e) => e.value));
-    const sources = new Set(entries.map((e) => e.sourceTitle));
+    const sources = new Set(entries.map((e) => e.origin));
     if (values.size < 2 || sources.size < 2) continue;
     const sorted = [...entries].sort((a, b) => a.sort - b.sort);
     result.push({
       group,
       topic,
       values: [...new Set(sorted.map((e) => e.value))],
-      members: entries.map(({ sort: _sort, ...member }) => member),
+      members: entries.map(({ sort: _sort, origin: _origin, ...member }) => member),
     });
   }
   return result;
+}
+
+/** Hàng đoạn nháp (từ DB) → đầu vào phát hiện mâu thuẫn: nguồn thật = tài liệu gốc (`policy:<id>`), tên hiển thị = `context_header`. */
+export function conflictChunkOf(row: {
+  chunkKey: string;
+  content: string;
+  contextHeader: string | null;
+  sourceTitle: string;
+  topic: unknown;
+}): ConflictChunk {
+  return {
+    chunkKey: row.chunkKey,
+    sourceTitle: row.contextHeader ?? row.sourceTitle,
+    originKey: row.chunkKey.replace(/:\d+#\d+$/, ''),
+    text: row.content,
+    topic: isKbTopic(row.topic) ? row.topic : 'other',
+  };
 }

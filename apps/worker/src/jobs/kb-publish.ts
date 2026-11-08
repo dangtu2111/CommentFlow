@@ -1,3 +1,4 @@
+import { conflictChunkOf, detectConflicts } from '@flow/ai';
 import {
   type ChunkScope,
   type CreateKbVersionInput,
@@ -9,7 +10,9 @@ import {
   isActiveOwner,
   type KbVersionRef,
   listChunkSummaries,
+  listDraftChunkTexts,
   lockKbPublish,
+  setDraftConflictMarks,
 } from '@flow/db';
 import {
   type KbPublishJob,
@@ -30,9 +33,17 @@ export type KbPublishOutcome =
   | { outcome: 'forbidden' }
   | { outcome: 'version_not_found' }
   | { outcome: 'no_changes' }
-  | { outcome: 'created'; number: number; copied: number; blockedInjection: number };
+  | {
+      outcome: 'created';
+      number: number;
+      copied: number;
+      blockedInjection: number;
+      conflicts: number;
+    };
 
 export type KbPublishOps = {
+  /** Gắn cờ mâu thuẫn có cấu trúc lên bản nháp TRƯỚC khi sao sang phiên bản (phiên bản chép nguyên `metadata`); trả số nhóm mâu thuẫn. */
+  markConflicts?: (tx: Database, workspaceId: string) => Promise<number>;
   isActiveOwner: (tx: Database, workspaceId: string, userId: string) => Promise<boolean>;
   lock: (tx: Database, workspaceId: string) => Promise<void>;
   getCurrentVersion: (tx: Database, workspaceId: string) => Promise<KbVersionRef | null>;
@@ -53,7 +64,24 @@ export type KbPublishOps = {
   ) => Promise<{ versionId: string; copied: number }>;
 };
 
+/** Phát hiện mâu thuẫn chính sách bằng quy tắc (số + đơn vị cùng chủ đề) và ghi `metadata.conflict_*` lên đoạn nháp. */
+export async function markDraftConflicts(tx: Database, workspaceId: string): Promise<number> {
+  const rows = await listDraftChunkTexts(tx, workspaceId);
+  const groups = detectConflicts(rows.map(conflictChunkOf));
+  await setDraftConflictMarks(
+    tx,
+    workspaceId,
+    groups.map((g) => ({
+      group: g.group,
+      values: g.values,
+      chunkKeys: g.members.map((m) => m.chunkKey),
+    })),
+  );
+  return groups.length;
+}
+
 export const defaultKbPublishOps: KbPublishOps = {
+  markConflicts: markDraftConflicts,
   isActiveOwner,
   lock: lockKbPublish,
   getCurrentVersion,
@@ -87,6 +115,9 @@ export async function runKbPublish(
   const plan = planKbVersion(next, currentChunks);
   if (!plan.ok) return { outcome: 'no_changes' };
 
+  // Chỉ bản nháp mới tính mâu thuẫn; khôi phục sao đúng phiên bản cũ (giữ nguyên cờ đã có).
+  const conflicts =
+    scope.kind === 'draft' ? ((await ops.markConflicts?.(tx, workspaceId)) ?? 0) : 0;
   const number = nextVersionNumber(current?.number ?? null);
   const { copied } = await ops.createVersion(tx, workspaceId, {
     number,
@@ -96,7 +127,13 @@ export async function runKbPublish(
     scope,
     keys: plan.publishKeys,
   });
-  return { outcome: 'created', number, copied, blockedInjection: plan.blockedInjection };
+  return {
+    outcome: 'created',
+    number,
+    copied,
+    blockedInjection: plan.blockedInjection,
+    conflicts,
+  };
 }
 
 export function createKbPublishHandler(deps: {

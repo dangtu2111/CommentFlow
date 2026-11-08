@@ -3,6 +3,7 @@ export {
   type ConflictChunk,
   type ConflictGroup,
   type ConflictMember,
+  conflictChunkOf,
   detectConflicts,
 } from './conflicts';
 export {
