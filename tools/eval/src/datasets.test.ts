@@ -27,10 +27,10 @@ describe('bộ mẫu trong datasets/', () => {
     });
   }
 
-  it('synthetic v2: 94 mẫu (vi/vi_plain/mixed) và 32 mẫu (en), đều `synthetic`', () => {
+  it('synthetic v2: 99 mẫu (vi/vi_plain/mixed; gồm 5 mẫu "admin/hệ thống" KHÔNG phải chèn lệnh) và 32 mẫu (en), đều `synthetic`', () => {
     const demo = parseDataset(readFileSync(resolve(DIR, 'synthetic-v2-demo-shop.jsonl'), 'utf8'));
     const en = parseDataset(readFileSync(resolve(DIR, 'synthetic-v2-sswiftly-en.jsonl'), 'utf8'));
-    expect(demo).toHaveLength(94);
+    expect(demo).toHaveLength(99);
     expect(new Set(demo.map((s) => s.group))).toEqual(new Set(['vi', 'vi_plain', 'mixed']));
     expect(en).toHaveLength(32);
     expect(new Set(en.map((s) => s.group))).toEqual(new Set(['en']));

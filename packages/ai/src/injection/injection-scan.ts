@@ -88,7 +88,9 @@ function customerRules(folded: string): Set<InjectionReason> {
   const hit = new Set<InjectionReason>();
   const isViCommandLine = (line: string) => {
     const m = VI_MARKER_LINE.exec(line);
-    return m !== null && VI_COMMAND.test(m[1] ?? '') && !QUESTION_WORDS.test(m[1] ?? '');
+    if (m === null) return false;
+    const rest = m[1] as string;
+    return VI_COMMAND.test(rest) && !QUESTION_WORDS.test(rest);
   };
   if (folded.split(/\r?\n/).some(isViCommandLine)) hit.add('system_marker');
   const sentences = folded.split(/(?<=[.!\n])\s*/);
