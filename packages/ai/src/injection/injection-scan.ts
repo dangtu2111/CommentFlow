@@ -75,7 +75,10 @@ const URL_PATTERN =
   /(?:https?:\/\/|www\.)[^\s<>"')]+|\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.(?:com|vn|net|org|io|me|ly|xyz|info|biz|co|shop|store|site|online|top|link|app)\b(?:\/[^\s<>"')]*)?/g;
 
 /** Dòng mở đầu giả danh hệ thống bằng tiếng Việt (đã bỏ dấu): "hệ thống:", "quản trị viên:", "admin:". */
-const VI_MARKER_LINE = /^\s*(?:he thong|quan tri(?: vien)?|admin|nha phat trien)\s*:/;
+const VI_MARKER_LINE = /^\s*(?:he thong|quan tri(?: vien)?|admin|nha phat trien)\s*:\s*(.+)$/;
+/** Phần sau "vai trò:" phải là MỆNH LỆNH hoặc đổi giá/chính sách (không phải câu hỏi/nhờ vả thường: "Admin: áo này còn không?"). */
+const VI_COMMAND =
+  /\b(?:giam|doi gia|dat gia|mien phi|free|tang|hay|phai|luon|bo qua|ignore|cho khach|tra loi|thay doi|ap dung|huy|khong can|tu gio|chinh sach)\b|\d{1,3}\s?%/;
 /** Giảm giá X% cho TẤT CẢ/MỌI sản phẩm/đơn: khách không có quyền ra lệnh điều này (chỉ xét câu KHÔNG phải câu hỏi). */
 const DISCOUNT_ALL =
   /\b(?:giam(?: gia)?|discount|off|khuyen mai)\b[^.!\n?]{0,25}\d{1,3}\s?%[^.!\n?]{0,25}\b(?:moi|tat ca|toan bo|all|every|cho tat ca)\b|\b(?:moi|tat ca|toan bo|all|every)\b[^.!\n?]{0,25}\b(?:giam(?: gia)?|discount|off)\b[^.!\n?]{0,20}\d{1,3}\s?%/;
@@ -83,7 +86,11 @@ const QUESTION_WORDS = /\?|\bkhong\b|\bko\b|\bhong\b/;
 
 function customerRules(folded: string): Set<InjectionReason> {
   const hit = new Set<InjectionReason>();
-  if (folded.split(/\r?\n/).some((line) => VI_MARKER_LINE.test(line))) hit.add('system_marker');
+  const isViCommandLine = (line: string) => {
+    const m = VI_MARKER_LINE.exec(line);
+    return m !== null && VI_COMMAND.test(m[1] ?? '') && !QUESTION_WORDS.test(m[1] ?? '');
+  };
+  if (folded.split(/\r?\n/).some(isViCommandLine)) hit.add('system_marker');
   const sentences = folded.split(/(?<=[.!\n])\s*/);
   if (sentences.some((sentence) => DISCOUNT_ALL.test(sentence) && !QUESTION_WORDS.test(sentence))) {
     hit.add('discount_directive');
