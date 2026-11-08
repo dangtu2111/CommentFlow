@@ -40,6 +40,9 @@ function runScenarios(locale: Locale) {
       await register(page, t, owner);
       await verifyEmail(page, t, mailpit, owner);
       await signIn(page, t, owner);
+      await expect(
+        page.getByRole('heading', { name: t('workspace.create.title'), level: 1 }),
+      ).toBeVisible();
       await createWorkspace(page, t, `E2E NoAI ${tag} ${locale}`);
       await expect(page).toHaveURL(/\/app\/security$/);
       await enableTwoFactor(page, t, owner);
