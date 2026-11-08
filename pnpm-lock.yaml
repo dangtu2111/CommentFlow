@@ -114,6 +114,9 @@ importers:
       '@flow/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@flow/saas-core':
+        specifier: workspace:*
+        version: link:../../packages/saas-core
       '@flow/shared':
         specifier: workspace:*
         version: link:../../packages/shared

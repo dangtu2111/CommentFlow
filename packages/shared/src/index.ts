@@ -84,6 +84,7 @@ export {
 } from './draft-feedback';
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
+export { AI_STEP_FLAGS, type AiStep, FLAG_DEFAULTS } from './flag-keys';
 export { currencyExponent, formatMinorAmount, parseDecimalMinor } from './foreign-money';
 export { type HaravanConfig, readHaravanConfig } from './haravan-config';
 export { htmlToPlainText } from './html-text';

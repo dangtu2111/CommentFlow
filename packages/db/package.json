@@ -20,6 +20,7 @@
     "db:repair-dev": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/repair-dev.ts",
     "db:migrate:staging": "tsx src/cli/migrate-staging.ts",
     "db:test:reset": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/test-reset.ts",
+    "flags:set": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/flags-set.ts",
     "db:check-rls": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/cli/check-rls.ts"
   },
   "dependencies": {

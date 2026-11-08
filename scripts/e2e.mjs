@@ -131,14 +131,19 @@ console.log('[e2e] Khởi động dịch vụ LLM giả và /embed giả (ngoài
 env.LITELLM_BASE_URL = await startFake('fake-litellm.mjs');
 env.ML_URL = await startFake('fake-ml.mjs');
 env.LITELLM_API_KEY = 'e2e-virtual-key';
-env.CLASSIFY_LLM_ENABLED = 'true';
-env.DRAFT_LLM_ENABLED = 'true';
 env.CLASSIFY_LLM_MODEL = 'e2e-fake-model';
 env.DRAFT_LLM_MODEL = 'e2e-fake-model';
 env.ML_EMBED_ENABLED = 'true';
 
 console.log('[e2e] Áp migration lên DB test…');
 if (run('pnpm --filter @flow/db run db:migrate', env) !== 0) fail('Migration DB test thất bại.');
+
+// Bật các bước AI bằng feature flag DB (ĐÚNG đường vận hành: `flags:set`, chỉ cf_test) — env KHÔNG còn cờ bật AI. Bản web "chưa cấu hình AI" vẫn không có
+// LITELLM_* nên Thử AI ở đó báo chưa cấu hình dù cờ bật.
+for (const key of ['cf.ai.classify', 'cf.ai.draft']) {
+  if (run(`pnpm --filter @flow/db run flags:set -- ${key} on`, env) !== 0)
+    fail(`flags:set ${key} thất bại.`);
+}
 
 // Kích hoạt model embedding bằng ĐÚNG lệnh vận hành thật (`kb:switch-embedding`) trỏ vào dịch vụ /embed giả.
 if (!env.DATABASE_WORKER_URL) {
@@ -179,8 +184,6 @@ const noAiEnv = {
   PORT: String(noAiPort),
   BETTER_AUTH_URL: noAiBase,
   E2E_BASE_URL: noAiBase,
-  CLASSIFY_LLM_ENABLED: 'false',
-  DRAFT_LLM_ENABLED: 'false',
 };
 for (const name of ['LITELLM_BASE_URL', 'LITELLM_API_KEY']) delete noAiEnv[name];
 console.log(`[e2e] Khởi động web "chưa cấu hình AI" ở cổng ${noAiPort}…`);

@@ -8,6 +8,8 @@ import {
   getEmbeddingState,
   getMergeWindowSeconds,
 } from '@flow/db';
+import { createFlags } from '@flow/saas-core';
+import { AI_STEP_FLAGS, FLAG_DEFAULTS } from '@flow/shared';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
@@ -64,20 +66,34 @@ async function main(): Promise<void> {
   // docs/09 §9: ingest — 10 job đồng thời (mỗi lần một job để lỗi không làm các job khác trong lô bị thử lại).
   // PIPE-ORCHESTRATOR: cờ PIPELINE_ENABLED mặc định TẮT; bật thì cần LLM đã cấu hình (extractor + drafter), thiếu → KHÔNG chạy
   // (không bao giờ chạy bình luận thật bằng bản mẫu).
+  // Feature flag DB (docs/09 §10): bật/tắt từng bước AI theo workspace (`cf.ai.*`); NOTIFY `flags_changed` có hiệu lực ngay, mất LISTEN thì cache 30 giây.
+  const flags = createFlags({
+    db,
+    defaults: { ...FLAG_DEFAULTS },
+    onReadError: (error) =>
+      logger.error(
+        { reason: error instanceof Error ? error.name : 'unknown' },
+        'không đọc được feature flag — dùng mặc định trong mã',
+      ),
+    onListenEvent: (event) =>
+      logger.warn({ type: event.type, attempt: event.attempt }, 'kết nối nghe flags_changed'),
+  });
+  await flags.start();
   const llm = config.pipeline.enabled
     ? createLlmDepsFromEnv({
         env: process.env,
         db: { withWorkspace: (id, fn) => db.withJob(id, fn) },
+        isStepEnabled: (step, workspaceId) => flags.isEnabled(AI_STEP_FLAGS[step], { workspaceId }),
+        // Cờ bật mà thiếu URL/khóa/tên model: nêu rõ lỗi cấu hình (không có model mặc định).
+        onMisconfigured: (message) => logger.error({}, message),
       })
     : undefined;
   const embeddingResolver = createEmbeddingResolver({ service: config.embeddingService });
   const pipelineOn = Boolean(llm?.extractor && llm?.drafter);
-  // Cờ LLM bật mà thiếu tên model (không có model mặc định): nêu rõ từng lỗi cấu hình ngay khi khởi động.
-  for (const message of llm?.configErrors ?? []) logger.error({}, message);
   if (config.pipeline.enabled && !pipelineOn) {
     logger.error(
       {},
-      'PIPELINE_ENABLED=true nhưng thiếu cấu hình LLM (LITELLM_*, CLASSIFY/DRAFT_LLM_ENABLED): pipeline KHÔNG chạy',
+      'PIPELINE_ENABLED=true nhưng thiếu cấu hình LLM (LITELLM_BASE_URL/LITELLM_API_KEY, CLASSIFY_LLM_MODEL/DRAFT_LLM_MODEL): pipeline KHÔNG chạy',
     );
   }
   const pipelineHook: IngestPipelineHook | undefined = pipelineOn
@@ -122,6 +138,8 @@ async function main(): Promise<void> {
         flagEnabled: true,
         allowedWorkspaceIds: config.pipeline.workspaceIds,
         turnLimit: config.pipeline.turnLimit,
+        // Cờ DB cf.ai.* theo workspace + cấu hình đủ; tắt → lượt bị bỏ qua (`ai_disabled`).
+        llmReady: (workspaceId) => (llm?.ready ? llm.ready(workspaceId) : Promise.resolve(false)),
         // Model hoạt động đọc từ DB mỗi vài giây (`cf.embedding_state`); env chỉ bật/tắt dịch vụ ml. Không có embedder giả (FR-133).
         resolveEmbedding: (tx) => embeddingResolver.resolve(() => getEmbeddingState(tx)),
       }),
@@ -249,6 +267,7 @@ async function main(): Promise<void> {
     stopWorkspaceDeletion();
     stopSweep();
     stopPipelineSweep?.();
+    await flags.stop();
     await boss.stop({ graceful: true });
     await db.close();
     await health.close();

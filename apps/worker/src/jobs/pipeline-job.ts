@@ -38,6 +38,8 @@ import type { BatchHandler } from './run-job';
 export type PipelineJobConfig = {
   db: FlowDb;
   llm: { extractor: Extractor; drafter: Drafter; rewriter?: Rewriter };
+  /** Workspace có được chạy AI không (cờ DB `cf.ai.*` + cấu hình đủ). Tắt → lượt bị bỏ qua (`ai_disabled`), bình luận giữ nguyên. */
+  llmReady?: (workspaceId: string) => Promise<boolean>;
   /** `PIPELINE_ENABLED` và `PIPELINE_WORKSPACE_IDS` (Q-POR1) — chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm. */
   flagEnabled: boolean;
   allowedWorkspaceIds: readonly string[];
@@ -91,6 +93,9 @@ export async function runPipelineJob(
 ): Promise<PipelineJobOutcome> {
   const { db } = config;
   const { workspaceId } = job;
+  if (config.llmReady && !(await config.llmReady(workspaceId))) {
+    return { kind: 'ignored', reason: 'ai_disabled' };
+  }
   let commentId = job.commentId;
   const now = (config.now ?? (() => new Date()))();
 

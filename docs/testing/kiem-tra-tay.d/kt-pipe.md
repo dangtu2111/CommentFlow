@@ -1,6 +1,6 @@
 ## KT-PIPE — Pipeline AI chạy thật trên bình luận (PIPE-ORCHESTRATOR, chỉ DEV)
 
-Điều kiện: DEV (`cf_dev`), `pnpm cf:dev status` ổn, worker đang chạy. Trong `.env.local` của máy code đã đặt `PIPELINE_ENABLED=true`, `PIPELINE_WORKSPACE_IDS=e8f9e1e3-a805-491a-81d5-0612fec8d6a2` (Shop Thử 2) và bật LLM thật (`LITELLM_*`, `CLASSIFY_LLM_ENABLED`, `DRAFT_LLM_ENABLED`); khởi động lại worker (`pnpm --filter @flow/worker dev`). Workspace Shop Thử 2 phải có sản phẩm hoặc kiến thức đã xuất bản (nếu không AI sẽ báo chưa có nguồn). Lệnh chỉ chạy được khi `APP_ENV=dev` và cả ba chuỗi kết nối trỏ `cf_dev`; dữ liệu tạo ra mang nhãn `[FIXTURE]`, không phải khách thật.
+Điều kiện: DEV (`cf_dev`), `pnpm cf:dev status` ổn, worker đang chạy. Trong `.env.local` của máy code đã đặt `PIPELINE_ENABLED=true`, `PIPELINE_WORKSPACE_IDS=e8f9e1e3-a805-491a-81d5-0612fec8d6a2` (Shop Thử 2) và bật LLM thật (`LITELLM_*`, cờ DB `cf.ai.classify`, cờ DB `cf.ai.draft`); khởi động lại worker (`pnpm --filter @flow/worker dev`). Workspace Shop Thử 2 phải có sản phẩm hoặc kiến thức đã xuất bản (nếu không AI sẽ báo chưa có nguồn). Lệnh chỉ chạy được khi `APP_ENV=dev` và cả ba chuỗi kết nối trỏ `cf_dev`; dữ liệu tạo ra mang nhãn `[FIXTURE]`, không phải khách thật.
 
 | # | Bước | Kết quả mong đợi |
 |---|---|---|

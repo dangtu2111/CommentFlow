@@ -1,11 +1,8 @@
-import { type LlmStepConfig, loadLlmStepConfig } from '../llm-step-config';
+import { loadLlmModel } from '../llm-step-config';
 
-/**
- * Cấu hình bước phân loại LLM (FR-027). Cờ `CLASSIFY_LLM_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); model BẮT BUỘC khi bật
- * (`CLASSIFY_LLM_MODEL`, không có mặc định — xem `llm-step-config.ts`).
- */
-export type ClassifyConfig = LlmStepConfig;
+/** Model bước phân loại LLM (FR-027): `CLASSIFY_LLM_MODEL`, bắt buộc, không mặc định. Bật/tắt: cờ DB `cf.ai.classify`. */
+export type ClassifyConfig = { model: string | null };
 
 export function loadClassifyConfig(env: Record<string, string | undefined>): ClassifyConfig {
-  return loadLlmStepConfig(env, { flag: 'CLASSIFY_LLM_ENABLED', model: 'CLASSIFY_LLM_MODEL' });
+  return { model: loadLlmModel(env, 'CLASSIFY_LLM_MODEL') };
 }

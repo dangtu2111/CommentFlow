@@ -1,11 +1,8 @@
-import { type LlmStepConfig, loadLlmStepConfig } from '../llm-step-config';
+import { loadLlmModel } from '../llm-step-config';
 
-/**
- * Cấu hình bước soạn trả lời bằng LLM (FR-029). Cờ `DRAFT_LLM_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); model BẮT BUỘC khi bật
- * (`DRAFT_LLM_MODEL`, không có mặc định — xem `llm-step-config.ts`).
- */
-export type DraftConfig = LlmStepConfig;
+/** Model bước soạn trả lời LLM (FR-029): `DRAFT_LLM_MODEL`, bắt buộc, không mặc định. Bật/tắt: cờ DB `cf.ai.draft`. */
+export type DraftConfig = { model: string | null };
 
 export function loadDraftConfig(env: Record<string, string | undefined>): DraftConfig {
-  return loadLlmStepConfig(env, { flag: 'DRAFT_LLM_ENABLED', model: 'DRAFT_LLM_MODEL' });
+  return { model: loadLlmModel(env, 'DRAFT_LLM_MODEL') };
 }

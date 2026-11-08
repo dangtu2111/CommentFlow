@@ -11,7 +11,7 @@ export type TryAiState = { status: 'idle' } | ({ status: 'done' } & TryAiResult)
 // Bộ đếm lượt thử/ngày trong bộ nhớ tiến trình (Q-ATB1).
 const tryAi = createTryAiAction({
   quota: createTryQuota(),
-  // LLM THẬT (LiteLLM, cờ `CLASSIFY_LLM_ENABLED`/`DRAFT_LLM_ENABLED`) + kiến thức THẬT của workspace; thiếu → báo rõ, không bản mẫu.
+  // LLM THẬT (LiteLLM, cờ DB `cf.ai.classify`/`cf.ai.draft` theo workspace) + kiến thức THẬT của workspace; thiếu → báo rõ, không bản mẫu.
   llm: createRealTryLlm(process.env),
   knowledgeRunner: createRealKnowledgeRunner(process.env),
 });
