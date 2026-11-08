@@ -39,6 +39,8 @@ export const DECISION_REASONS = [
   'price_conflict',
   /** Đoạn kiến thức dùng để trả lời thuộc nhóm chính sách MÂU THUẪN của đúng chủ đề khách hỏi (KB-SYNC-DRAFT): chuyển người. */
   'policy_conflict',
+  /** Bản nháp khẳng định chính sách (COD, ship quốc tế, trả góp…) mà nguồn đã dùng KHÔNG nêu, kể cả sau khi soạn lại (GUARD-SEMANTIC-SUPPORT): chuyển người. */
+  'claim_unsupported',
   'legal_unsourced',
   'repeat_limit',
   'clarify_limit',
@@ -171,6 +173,11 @@ export type ActionDecision = {
 export function readDecideActionInput(raw: unknown): ParsedInput | null {
   const parsed = decideActionInputSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
+}
+
+/** Quyết định chuyển người với lý do cho trước (dùng ở pipeline khi guard nghĩa loại bản soạn). */
+export function handoffDecision(reason: DecisionReason, askedBefore = false): ActionDecision {
+  return handoff(reason, askedBefore);
 }
 
 function handoff(reason: DecisionReason, askedBefore = false): ActionDecision {

@@ -23,6 +23,7 @@ import type { ConfidenceResult } from '../confidence/confidence';
 import {
   type ActionDecision,
   decideAction,
+  handoffDecision,
   type KbGapTopic,
   type VariantAxis,
 } from '../decide/decide-action';
@@ -32,6 +33,7 @@ import type { DraftLang, DraftResult } from '../draft/draft-result';
 import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
 import { checkGuardMoney, type GuardViolation } from '../guard-money';
 import { checkReplyGuard, type ReplyGuardViolation } from '../guard-reply';
+import { checkConceptSupport, unsupportedConceptReply } from '../guard-support';
 import { classifyTopic } from '../kb-sync/topic';
 import { type AbbreviationDict, normalizeAndDetectLang } from '../normalize/normalize-lang';
 import type { PromptHistory } from '../prompt-history';
@@ -415,30 +417,33 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const policyConflict = usable.some(
     (c) => c.conflictTopic !== undefined && askedConflictTopics.has(c.conflictTopic),
   );
-  const decision = closing
-    ? replyCapClosingDecision()
-    : decideAction({
-        lang,
-        extract,
-        products: {
-          candidates: products.names.map(shortProductName),
-          missingAxes: products.missingAxes,
-          mentionedCount: extract.product_mentions.length,
-        },
-        topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
-          topic,
-          // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
-          sourced: usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown)),
-        })),
-        thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
-        // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
-        comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
-        risks: { ...turnRisks.risks, policyConflict },
-      });
+  // `decideFor(strict)`: strict = coi mọi ý KHÔNG phải hỏi giá là CHƯA có nguồn (dùng khi guard nghĩa loại bản soạn đầu).
+  const decideFor = (strict: boolean): ActionDecision =>
+    decideAction({
+      lang,
+      extract,
+      products: {
+        candidates: products.names.map(shortProductName),
+        missingAxes: products.missingAxes,
+        mentionedCount: extract.product_mentions.length,
+      },
+      topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
+        topic,
+        // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
+        sourced:
+          !(strict && !isPrice) &&
+          usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown)),
+      })),
+      thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
+      // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
+      comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
+      risks: { ...turnRisks.risks, policyConflict },
+    });
+  let decision = closing ? replyCapClosingDecision() : decideFor(false);
 
   // Giọng văn: của workspace theo ngôn ngữ nhận ra (brand_voice thật); thiếu → giọng mặc định. Bộ soạn và bộ chặn dùng CÙNG giọng.
   const voice = (lang === 'other' ? undefined : input.voices?.[lang]) ?? input.voice;
-  const draft = await deps.drafter.draft({
+  const draftInput = (d: ActionDecision) => ({
     workspaceId: input.workspaceId,
     question: masked,
     lang: lang === 'other' ? 'vi' : lang,
@@ -446,9 +451,54 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     ...(input.variantCount === undefined ? {} : { variantCount: input.variantCount }),
     voice,
     sources: found.map((c) => ({ id: c.id, kind: c.kind, text: c.text, relevance: c.score })),
-    decision,
+    decision: d,
     ...(history ? { history } : {}),
   });
+  let draft = await deps.drafter.draft(draftInput(decision));
+  const usedBy = (d: DraftResult) => found.filter((c) => new Set(d.sources).has(c.id));
+  // GUARD-SEMANTIC-SUPPORT: câu khẳng định COD/ship quốc tế/trả góp/… mà nguồn đã dùng KHÔNG nêu (hoặc nguồn nói ngược lại) → KHÔNG gọi LLM soạn lại
+  // (giữ ≤ 2 lần gọi LLM/lượt, FR-162): (1) chọn biến thể khác đã có (FR-161) không chứa ý bị loại; (2) không có → câu chuyển hướng THEO MẪU; (3) không còn ý nào để
+  // chuyển hướng → chuyển người (`claim_unsupported`). Không bao giờ để câu bịa đi tiếp (nghiêm trọng như sai giá).
+  if (!closing && decision.action !== 'handoff') {
+    const sourceTexts = usedBy(draft).map((c) => c.text);
+    const supported = (text: string) =>
+      checkConceptSupport({ reply: text, sources: sourceTexts }).ok;
+    const check = checkConceptSupport({ reply: draft.reply, sources: sourceTexts });
+    if (!check.ok) {
+      const variants = draft.variants ?? [];
+      const clean = variants.find(supported);
+      if (clean !== undefined) {
+        draft = {
+          ...draft,
+          reply: clean,
+          variants: variants.filter((v) => v !== clean && supported(v)),
+          claims: draft.claims.filter((claim) => supported(claim.text)),
+        };
+      } else {
+        const strict = decideFor(true);
+        if (strict.action === 'answer' || strict.action === 'handoff') {
+          decision = handoffDecision('claim_unsupported', decision.askedBefore);
+          draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
+        } else {
+          decision = strict;
+          const replyLang = lang === 'en' ? 'en' : 'vi';
+          draft = {
+            reply: unsupportedConceptReply(
+              check.violations.map((v) => v.concept),
+              replyLang,
+            ),
+            lang: replyLang,
+            sources: [],
+            claims: [],
+            unanswered_topics: strict.unansweredTopics,
+            needs_human: false,
+            reason: '',
+            variants: [],
+          };
+        }
+      }
+    }
+  }
 
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));

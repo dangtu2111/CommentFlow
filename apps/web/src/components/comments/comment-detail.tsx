@@ -71,6 +71,7 @@ const AI_REASONS = [
   'ai_invalid_output',
   'customer_post_reply_cap',
   'policy_conflict',
+  'claim_unsupported',
 ];
 
 const STATUSES = [
