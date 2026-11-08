@@ -113,3 +113,13 @@ export async function expectRejectCode(promise: Promise<unknown>): Promise<strin
   }
   return undefined;
 }
+
+/**
+ * Đặt model embedding đang hoạt động (`cf.embedding_state`, 0079) bằng quyền chủ sở hữu — test dựng dữ liệu. Trigger chỉ chặn kết nối runtime
+ * (cf_app/cf_worker): test ghi vector bằng đường runtime phải khai báo model trước. `null` = chưa kích hoạt. Test chạy tuần tự (fileParallelism=false).
+ */
+export async function setActiveEmbeddingModel(admin: pg.Pool, model: string | null): Promise<void> {
+  await admin.query('UPDATE cf.embedding_state SET active_model = $1, pending_model = NULL', [
+    model,
+  ]);
+}

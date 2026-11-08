@@ -201,6 +201,15 @@ Hủy trong khoảng trễ (nút Hủy) và Dừng khẩn cấp vẫn hủy job 
 
 Hiệu chuẩn ngưỡng (như `03_Product_Requirements.md` M08): cần ≥ 50 mẫu; khoảng trên ngưỡng có > 10% bị sửa (khoảng đó ≥ 10 mẫu) → đề xuất tăng; khoảng dưới ngưỡng có 15 mẫu, 0% sửa → đề xuất giảm; sàn 0,80, mặc định 0,85. Đề xuất chỉ hiển thị, Owner quyết định.
 
+### 6.2 Model embedding đang hoạt động (FR-133, bổ sung 08/11/2026)
+
+Lệch model giữa câu hỏi và dữ liệu làm nhánh vector vô nghĩa mà không ai biết — nên thiết kế để **không thể xảy ra**, không chỉ phát hiện:
+1. **Một nguồn:** `cf.embedding_state.active_model` (DB). `resolveEmbeddingConfig` đọc tên model từ DB; env chỉ còn `ML_URL`/`ML_API_TOKEN`/`ML_EMBED_ENABLED` (bật/tắt dịch vụ). Dịch vụ ml trả `model` khác active → từ chối dùng và báo lỗi.
+2. **Một đường ghi:** mọi vector ghi kèm tên model đang hoạt động; trigger DB từ chối ghi sai model từ cf_app/cf_worker.
+3. **Đổi model = `kb:switch-embedding <model>`:** tạo vector mới vào cột đệm cho TOÀN BỘ dữ liệu (kb_chunks, tên sản phẩm; mọi workspace) trong khi truy vấn vẫn dùng model cũ; đủ 100% mới gọi `switch_active_embedding` (một giao dịch, bảng khóa ghi): đổi `active_model` rồi chuyển cột đệm → cột chính. Lỗi giữa chừng → rollback, model cũ giữ nguyên. Không có thời điểm truy vấn và dữ liệu khác model.
+4. **Dịch vụ ml không chạy:** chỉ toàn văn/trigram + cảnh báo sự cố; không mock.
+5. **Lớp cuối:** mỗi câu tìm kb_chunks/products lọc từng dòng `embedding_model = active`; kiểm lệch khi khởi động/banner Thử AI (trạng thái lệch = lỗi S1, log error), cache theo (workspace, kb_version, revision).
+
 ## 7. Luồng dữ liệu chính
 
 ### 7.1 Webhook → trả lời

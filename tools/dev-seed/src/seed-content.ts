@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { buildChunkRows, createMockEmbedder } from '@flow/ai';
+import { buildChunkRows, loadEmbeddingService, resolveEmbeddingConfig } from '@flow/ai';
 import {
   activatePlan,
   assignConversation,
@@ -17,6 +17,7 @@ import {
   createSizeChartRow,
   createSpamRule,
   getCurrentVersion,
+  getEmbeddingState,
   getSubscription,
   getUsageCounter,
   insertDraft,
@@ -610,9 +611,15 @@ async function seedKnowledgeBase(ctx: ContentCtx, now: Date): Promise<SeedCounts
     ),
   );
 
-  const embedder = createMockEmbedder();
   let chunkCount = 0;
   await deps.workerDb.withJob(workspaceId, async (tx) => {
+    // Embedding THẬT theo model hoạt động ở DB + dịch vụ ml từ env; thiếu một trong hai → đoạn không có vector (chỉ toàn văn/trigram). Không có mock (FR-133).
+    const embedding = resolveEmbeddingConfig(
+      loadEmbeddingService(process.env),
+      (await getEmbeddingState(tx)).activeModel,
+    );
+    console.info(`Embedding khi tạo dữ liệu mẫu: ${embedding.describe.note}`);
+    const embedder = embedding.kind === 'ml' ? embedding.embedder : undefined;
     for (const [key, drafts] of draftsBySource) {
       const { rows } = await buildChunkRows({ drafts, existing: [], embedder });
       await upsertDraftChunks(tx, workspaceId, must(sourceIds.get(key), 'nguồn kiến thức'), rows);

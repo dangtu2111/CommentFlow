@@ -96,3 +96,53 @@ describe('loadWorkspaceKnowledge — chặn lệch model embedding', () => {
     expect(embed).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('loadWorkspaceKnowledge — dịch vụ embedding lỗi giữa chừng và bộ nhớ trạng thái', () => {
+  it('embed lỗi (ml chết/trả sai model) → vẫn tìm bằng toàn văn/trigram, ghi nhận sự cố, KHÔNG làm hỏng lượt', async () => {
+    const onEmbeddingFailure = vi.fn();
+    const failing: Embedder = {
+      model: 'bge-m3',
+      dimensions: 1024,
+      embed: vi.fn(async () => {
+        throw new Error('ml down');
+      }),
+    } as unknown as Embedder;
+    const out = await loadWorkspaceKnowledge({
+      tx: {} as Database,
+      workspaceId: WS,
+      version,
+      productsEnabled: true,
+      base,
+      embedder: failing,
+      onEmbeddingFailure,
+      readers: readers([{ model: 'bge-m3', count: 4 }]),
+    });
+    expect(out?.vectorHealth.failed).toBe(false);
+    await out?.knowledge.searchKb('giá?', { lang: 'vi', productIds: [] } as never);
+    expect(searched[0]?.queryVector).toBeUndefined();
+    expect(onEmbeddingFailure).toHaveBeenCalledTimes(1);
+    expect(out?.vectorHealth.failed).toBe(true);
+  });
+
+  it('cùng (workspace, kb_version, revision, model) → chỉ đếm model MỘT lần, không đếm mỗi lượt', async () => {
+    const embeddingCounts = vi.fn(async () => ({
+      chunks: [{ model: 'bge-m3', count: 1 }],
+      products: [],
+    }));
+    const params = {
+      tx: {} as Database,
+      workspaceId: '99999999-9999-4999-8999-999999999999',
+      version,
+      productsEnabled: true,
+      base,
+      embedder,
+      embeddingRevision: 7,
+      readers: { ...readers([]), embeddingCounts },
+    };
+    await loadWorkspaceKnowledge(params);
+    await loadWorkspaceKnowledge(params);
+    expect(embeddingCounts).toHaveBeenCalledTimes(1);
+    await loadWorkspaceKnowledge({ ...params, embeddingRevision: 8 }); // đổi model → đếm lại
+    expect(embeddingCounts).toHaveBeenCalledTimes(2);
+  });
+});

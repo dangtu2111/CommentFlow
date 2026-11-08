@@ -7,7 +7,7 @@ Chủ dự án chốt: **ứng dụng KHÔNG dùng mock khi chạy** (web, worke
 |---|---|---|
 | Embedder ô Thử AI (`try-ai/actions.ts`) | rơi về embedder fixture khi thiếu `ML_EMBED_ENABLED` | `resolveEmbeddingConfig`: `off` → không nhánh vector (toàn văn + trigram) |
 | Embedder job `pipeline` (`worker/main.ts`) | không truyền → rơi về fixture | truyền embedder thật; `off` → không nhánh vector |
-| Embedder `kb-reembed` (worker + CLI) | `createMockEmbedder` khi thiếu cờ | `KB_REEMBED_ENABLED=true` mà thiếu embedding thật → worker báo lỗi, không khởi động; CLI báo lỗi |
+| Embedder `kb-reembed` (worker + CLI) | `createMockEmbedder` khi thiếu cờ | Gỡ job `kb-reembed` + cờ `KB_REEMBED_ENABLED`; đổi model bằng `kb:switch-embedding <model>` (embedder thật, model đích do tham số, DB là nguồn model hoạt động — Q-EMB-1) |
 | `createFixtureEmbedder` / `createMockEmbedder` | chọn được lúc chạy | gắn `assertMockAllowed` (có test) |
 | EVAL `--backend mock` | không nhãn | tự khai báo, báo cáo ghi "MOCK — không phải số đo chất lượng"; mọi báo cáo ghi embedder |
 

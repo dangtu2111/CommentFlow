@@ -64,8 +64,13 @@ export function TryAiForm({ initialText = '' }: { initialText?: string }) {
               {t('embedding.mismatch')}
             </p>
           ) : null}
-          {state.embedding.state === 'off' && state.knowledge !== 'demo' ? (
-            <p className="muted">{t('embedding.off')}</p>
+          {state.vector.failed ? (
+            <p role="alert" className="alert">
+              {t('embedding.failed')}
+            </p>
+          ) : null}
+          {state.vector.off && state.knowledge !== 'demo' ? (
+            <p className="muted">{t(`embedding.off.${state.vector.off}`)}</p>
           ) : null}
           <p className="muted">{t(`voice.${state.voice}`)}</p>
           <p className="muted">{llmStatusText(t, state.llm)}</p>

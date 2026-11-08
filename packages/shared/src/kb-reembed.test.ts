@@ -1,15 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { KB_REEMBED_BATCH_MAX, KB_REEMBED_QUEUE, kbReembedJobSchema } from './kb-reembed';
+import { KB_REEMBED_BATCH_MAX } from './kb-reembed';
 
-describe('FR-133 kbReembedJobSchema', () => {
-  const workspaceId = '00000000-0000-4000-8000-000000000001';
-  it('chỉ nhận workspaceId (không mang nội dung kiến thức)', () => {
-    expect(kbReembedJobSchema.parse({ workspaceId })).toEqual({ workspaceId });
-    expect(kbReembedJobSchema.safeParse({ workspaceId: 'x' }).success).toBe(false);
-    expect(kbReembedJobSchema.safeParse({}).success).toBe(false);
-  });
-  it('hằng số', () => {
-    expect(KB_REEMBED_QUEUE).toBe('kb-reembed');
+describe('KB_REEMBED_BATCH_MAX', () => {
+  it('trần lô gọi embedder/ghi DB khi tạo vector mới là số dương hữu hạn', () => {
+    expect(Number.isInteger(KB_REEMBED_BATCH_MAX)).toBe(true);
     expect(KB_REEMBED_BATCH_MAX).toBeGreaterThan(0);
+    expect(KB_REEMBED_BATCH_MAX).toBeLessThanOrEqual(256);
   });
 });

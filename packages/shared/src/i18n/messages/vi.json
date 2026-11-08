@@ -2037,7 +2037,12 @@
     },
     "embedding": {
       "mismatch": "Model tìm kiếm khác dữ liệu — chạy kb:reembed. Nhánh vector đang tắt (chỉ tìm toàn văn/trigram) cho tới khi khớp.",
-      "off": "Tìm kiếm vector đang tắt (chưa bật embedding) — chỉ tìm toàn văn/trigram."
+      "failed": "Dịch vụ embedding đang gặp sự cố — lượt này chỉ tìm toàn văn/trigram. Báo quản trị kiểm tra dịch vụ ml.",
+      "off": {
+        "service_disabled": "Tìm kiếm vector đang tắt (chưa bật dịch vụ embedding) — chỉ tìm toàn văn/trigram.",
+        "no_active_model": "Chưa kích hoạt model embedding — chạy kb:switch-embedding; trong lúc đó chỉ tìm toàn văn/trigram.",
+        "unreadable": "Không đọc được trạng thái embedding ở DB — tạm thời chỉ tìm toàn văn/trigram."
+      }
     },
     "voice": {
       "shop": "Giọng văn: của shop (đọc từ mục Giọng văn đã lưu cho ngôn ngữ này)",

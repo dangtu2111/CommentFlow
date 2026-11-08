@@ -7,7 +7,6 @@ import {
   CHANNEL_CHECK_QUEUE,
   DATA_EXPORT_QUEUE,
   KB_PUBLISH_QUEUE,
-  KB_REEMBED_QUEUE,
   PIPELINE_QUEUE,
   SHOPIFY_SYNC_QUEUE,
 } from '@flow/shared';
@@ -18,7 +17,6 @@ export {
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
-  KB_REEMBED_QUEUE,
   PIPELINE_QUEUE,
   SEND_QUEUE,
   SHOPIFY_SYNC_QUEUE,
@@ -64,8 +62,6 @@ export const QUEUES: QueueDefinition[] = [
   { name: CHANNEL_CHECK_QUEUE, retryLimit: 1, retryBackoff: true },
   // Nút "Đồng bộ ngay" Shopify: upsert theo external_id nên chạy lại an toàn; lỗi từng lần thành KẾT QUẢ, không ném.
   { name: SHOPIFY_SYNC_QUEUE, retryLimit: 1, retryBackoff: true },
-  // FR-133: kb-reembed — tạo lại embedding khi đổi mô hình; idempotent (xong rồi → 0 đoạn) nên thử lại an toàn.
-  { name: KB_REEMBED_QUEUE, retryLimit: 2, retryBackoff: true },
   // PIPE-ORCHESTRATOR: pipeline — xử lý AI một bình luận; an toàn khi chạy trùng nhờ khóa lượt `pipeline_turns` (lát C).
   { name: PIPELINE_QUEUE, retryLimit: PIPELINE_RETRY_LIMIT, retryBackoff: true },
 ];

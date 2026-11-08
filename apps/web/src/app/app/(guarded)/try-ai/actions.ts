@@ -1,6 +1,7 @@
 'use server';
 
-import { createTryQuota, resolveEmbeddingConfig } from '@flow/ai';
+import { createEmbeddingResolver, createTryQuota, loadEmbeddingService } from '@flow/ai';
+import { getEmbeddingState } from '@flow/db/runtime';
 import { getDb } from '../../../../server/db';
 import { requireAppUser } from '../../../../server/require-app-user';
 import { createTryAiAction, type TryAiResult } from '../../../../server/try-ai';
@@ -13,6 +14,9 @@ import { createTryLlmDeps } from '../../../../server/try-ai-llm';
 
 /** Trạng thái form (đọc bằng `useActionState`). */
 export type TryAiState = { status: 'idle' } | ({ status: 'done' } & TryAiResult);
+
+// Dịch vụ ml từ env (chỉ bật/tắt); model hoạt động đọc từ DB mỗi vài giây (nhớ ngắn hạn).
+const embeddingResolver = createEmbeddingResolver({ service: loadEmbeddingService(process.env) });
 
 // Bộ đếm lượt thử/ngày trong bộ nhớ tiến trình (Q-ATB1).
 const tryAi = createTryAiAction({
@@ -27,8 +31,15 @@ const tryAi = createTryAiAction({
   knowledgeRunner: createKnowledgeRunner({
     enabled: isTryAiKbReal(process.env),
     productsEnabled: isTryAiProductsReal(process.env),
-    // Cấu hình embedding DUY NHẤT (`resolveEmbeddingConfig`, dùng chung worker/EVAL): không tự chọn embedder ở đây.
-    embedder: resolveEmbeddingConfig(process.env).embedder ?? undefined,
+    // Model hoạt động đọc từ DB (`cf.embedding_state`); env chỉ bật/tắt dịch vụ ml. Không có embedder giả (FR-133).
+    resolveEmbedding: (tx) => embeddingResolver.resolve(() => getEmbeddingState(tx)),
+    onEmbeddingFailure: (error) =>
+      console.warn(
+        JSON.stringify({
+          event: 'try_ai_embedding_failed',
+          reason: error instanceof Error ? error.name : 'unknown',
+        }),
+      ),
     db: { withActor: (workspaceId, userId, fn) => getDb().withActor(workspaceId, userId, fn) },
   }),
 });
