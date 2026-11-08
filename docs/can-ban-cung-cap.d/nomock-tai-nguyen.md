@@ -6,7 +6,7 @@
 |---|---|---|---|
 | Embedding bge-m3 (đã có ở dev) | Giữ `ML_EMBED_ENABLED=true`, `ML_URL` (và `ML_API_TOKEN` nếu có) ở `.env.local`/staging/production | Nhánh vector tìm kiếm | `NO-MOCK-RUNTIME-FOUNDATION`, `EMBED-MODEL-MISMATCH-GUARD` |
 | LLM qua LiteLLM (đã có ở dev) | `LITELLM_BASE_URL`, `LITELLM_API_KEY`, `CLASSIFY_LLM_ENABLED`, `DRAFT_LLM_ENABLED` (+ rewrite) | Ô Thử AI, bộ câu kiểm thử, job `pipeline` | `NOMOCK-01-TRYAI-LLM`, `NOMOCK-02-KB-TESTSET` |
-| Nhà cung cấp SMS (OTP) | Chọn nhà cung cấp (eSMS/SpeedSMS/Twilio…), brandname, khóa API | Xác minh số điện thoại | `NOMOCK-04-SMS` |
-| Kho ảnh đại diện | Cloudflare R2/S3: bucket, khóa, tên miền công khai | Tải ảnh đại diện | `NOMOCK-05-AVATAR` |
+| Nhà cung cấp SMS (OTP) — **CHƯA lên lịch** (chốt 08/11: tắt hẳn xác minh SĐT, đăng ký/đăng nhập không phụ thuộc SĐT) | Khi muốn bật lại: nhà cung cấp (eSMS/SpeedSMS/Twilio…), brandname đã đăng ký, khóa API | Xác minh số điện thoại (đang TẮT, ẩn khỏi giao diện) | `SMS-PROVIDER`, `NOMOCK-04-SMS` |
+| Kho ảnh đại diện — dùng **SeaweedFS đã có** (S3-compatible), không cần R2/S3 riêng | Env S3 chung: endpoint, bucket, khóa truy cập (staging/production cũng SeaweedFS) | Tải ảnh đại diện | `NOMOCK-05-AVATAR` |
 | Master key LiteLLM (khi bật khóa ảo theo workspace) | `LITELLM_MASTER_KEY` | Ngân sách riêng theo workspace | `NOMOCK-08-GUARD-ALL-MOCKS` |
-| Quyết định giữ/bỏ dữ liệu mẫu `[MẪU]` ở giao diện dev | Chỉ cần trả lời | — | `NOMOCK-07-SAMPLE-DATA-UI` |
+| ~~Quyết định giữ/bỏ dữ liệu mẫu `[MẪU]` ở giao diện dev~~ — đã chốt 08/11: BỎ khỏi trang thật, dùng workspace `[MẪU] Demo Shop` (seed-demo) | — | — | `NOMOCK-07-SAMPLE-DATA-UI` |
