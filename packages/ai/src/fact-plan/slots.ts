@@ -1,5 +1,5 @@
-import { checkConceptSupport } from '../guard-support';
-import type { FactPlan } from './types';
+import { type ConceptId, checkConceptSupport } from '../guard-support';
+import type { FactKind, FactPlan } from './types';
 
 /**
  * Chỗ giữ chỗ `{fact:id}` và guard TỪ CHỐI CỨNG (ADR 017): ngoài chỗ giữ chỗ, câu do LLM viết KHÔNG được có chữ số, số viết bằng chữ cạnh đơn vị tiền/thời gian/phần trăm, ký hiệu tiền
@@ -127,6 +127,32 @@ const NUMBER_WORD_UNIT = new RegExp(
 );
 const CURRENCY_SYMBOL = /[$€£¥₫]|(?<![\p{L}\p{N}])đ(?![\p{L}\p{N}])/u;
 
+/** Khái niệm chính sách nào được PHÉP nêu tên trong câu nếu câu có chỗ giữ chỗ thuộc loại tương ứng ("Về đổi trả, {fact:returns}"); khẳng định do chỗ giữ chỗ mang. */
+const CONCEPT_SLOT_KINDS: Record<ConceptId, readonly FactKind[]> = {
+  cod: ['cod', 'payment'],
+  installment: ['payment'],
+  invoice: ['payment'],
+  international_shipping: [],
+  return: ['returns'],
+  refund: ['returns'],
+  warranty: ['warranty'],
+};
+const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
+
+/** Có khẳng định/nêu khái niệm chính sách ngoài chỗ giữ chỗ cùng loại không (xét từng câu). */
+function hasUnslottedConcept(text: string, kindOf: ReadonlyMap<string, FactKind>): boolean {
+  for (const sentence of text.split(SENTENCE_BREAK)) {
+    const slotKinds = slotIds(sentence).flatMap((id) => kindOf.get(id) ?? []);
+    const result = checkConceptSupport({ reply: sentence.replace(SLOT, ' ◇ '), sources: [] });
+    const flagged = result.violations.some(
+      (violation) =>
+        !CONCEPT_SLOT_KINDS[violation.concept].some((kind) => slotKinds.includes(kind)),
+    );
+    if (flagged) return true;
+  }
+  return false;
+}
+
 export function checkSlotText(text: string, plan: FactPlan): SlotCheck {
   const codes = new Set<SlotViolationCode>();
   const byId = new Map(plan.facts.map((fact) => [fact.id, fact]));
@@ -139,7 +165,8 @@ export function checkSlotText(text: string, plan: FactPlan): SlotCheck {
   if (/\d/.test(outside)) codes.add('digit');
   if (NUMBER_WORD_UNIT.test(outside)) codes.add('number_word');
   if (CURRENCY_SYMBOL.test(outside)) codes.add('currency_symbol');
-  if (!checkConceptSupport({ reply: outside, sources: [] }).ok) codes.add('concept');
+  const kindOf = new Map(plan.facts.map((fact) => [fact.id, fact.kind] as const));
+  if (hasUnslottedConcept(text, kindOf)) codes.add('concept');
   const violations = [...codes].map((code) => ({ code }));
   return { ok: violations.length === 0, violations };
 }

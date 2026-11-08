@@ -71,6 +71,7 @@ describe('fillSlots', () => {
       '14-in-1 Foldable Bench A4 giá $398.00; ship 20,000đ, giao 2–4 days bạn nhé.',
     );
     expect(out.missing).toEqual([]);
+    expect(out.rendered).toEqual(['14-in-1 Foldable Bench A4', '$398.00', '20,000đ', '2–4 days']);
   });
 
   it('thời gian một giá trị / khoảng, vi và en; khoảng giá', () => {

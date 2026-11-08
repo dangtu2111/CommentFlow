@@ -96,6 +96,15 @@ describe('checkSlotText — từ chối cứng mọi sự kiện ngoài chỗ gi
     expect(codes('Về thanh toán, shop {fact:cod} bạn nhé')).toEqual([]);
   });
 
+  it('nêu TÊN khái niệm cạnh chỗ giữ chỗ cùng loại thì được ("Về đổi trả, {fact:returns}"); khác loại hoặc không có chỗ giữ chỗ thì vẫn bị chặn', () => {
+    const withPolicy = plan([knownFact('returns', 'returns'), knownFact('warranty', 'warranty')]);
+    expect(codes('Về đổi trả: {fact:returns}.', withPolicy)).toEqual([]);
+    expect(codes('Về bảo hành, {fact:warranty} bạn nhé', withPolicy)).toEqual([]);
+    expect(codes('Về đổi trả, shop có COD và {fact:ship_fee}', withPolicy)).toContain('concept');
+    expect(codes('Shop nhận đổi trả, phí ship {fact:ship_fee}', withPolicy)).toContain('concept');
+    expect(codes('Hoàn tiền cho bạn nhé, {fact:returns}', withPolicy)).toEqual([]);
+  });
+
   it('mã sự kiện không có trong fact plan → unknown_slot; dùng sự kiện `unknown` → unknown_fact_used', () => {
     expect(codes('Phí {fact:bịa_ra}')).toEqual([]); // sai dạng mã: không phải chỗ giữ chỗ, chỉ là chữ thường
     expect(codes('Phí {fact:made_up} bạn nhé')).toContain('unknown_slot');

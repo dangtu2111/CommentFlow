@@ -54,7 +54,8 @@ export function createLlmDrafter(options: {
       }
       const threshold = input.minRelevance ?? DEFAULT_MIN_RELEVANCE;
       const sources = input.sources.filter((source) => source.relevance >= threshold);
-      if (sources.length === 0 && requiresSources(input.decision)) {
+      // Chế độ chỗ giữ chỗ: sự kiện đến từ fact plan, không từ đoạn văn → nguồn rỗng không chặn.
+      if (sources.length === 0 && requiresSources(input.decision) && !input.factSlots) {
         return needsHumanResult(REASON_NO_RELEVANT_SOURCE, input.lang);
       }
 
@@ -62,7 +63,7 @@ export function createLlmDrafter(options: {
         workspaceId: input.workspaceId,
         step: DRAFT_STEP,
         model: options.model,
-        promptVersion: DRAFT_PROMPT_VERSION,
+        promptVersion: input.factSlots ? `${DRAFT_PROMPT_VERSION}+slots@1` : DRAFT_PROMPT_VERSION,
         messages: buildDraftMessages({ ...input, sources }),
         temperature: options.temperature ?? DRAFT_TEMPERATURE,
         ...(options.seed === undefined ? {} : { seed: options.seed }),

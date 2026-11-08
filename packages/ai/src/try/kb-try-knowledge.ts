@@ -28,7 +28,7 @@ export type KbTryKnowledgeDeps = {
   reranker?: Reranker;
   /** Gọi khi reranker lỗi giữa lượt (đã suy giảm về cosine); không kèm nội dung. */
   onRerankFailure?: (error: unknown) => void;
-  base: Pick<TryKnowledge, 'matchProducts' | 'lookupProductFacts'>;
+  base: Pick<TryKnowledge, 'matchProducts' | 'lookupProductFacts' | 'lookupPlanProducts'>;
 };
 
 function chunkTopics(hit: KbHit): KbGapTopic[] {
@@ -47,9 +47,12 @@ function conflictTopicOf(hit: KbHit): KbTopic | undefined {
 const RERANK_TOP = 10;
 
 export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
+  const planProducts = deps.base.lookupPlanProducts?.bind(deps.base);
   return {
     matchProducts: (mentions) => deps.base.matchProducts(mentions),
     lookupProductFacts: (ids) => deps.base.lookupProductFacts(ids),
+    // Dữ liệu sản phẩm có cấu trúc cho fact plan (ADR 017): chuyển tiếp nguyên trạng nếu nguồn cơ sở có.
+    ...(planProducts ? { lookupPlanProducts: planProducts } : {}),
     async searchKb(query, context) {
       // Có embedder → thêm nhánh vector (cùng model với dữ liệu: DB chỉ so vector cùng `embedding_model`); không → toàn văn + trigram.
       let queryVector: readonly number[] | undefined;

@@ -13,6 +13,7 @@ import {
 } from '@flow/shared';
 import type { VariantAxis } from '../decide/decide-action';
 import type { Embedder } from '../embedding/embedder';
+import type { PlanProduct } from '../fact-plan';
 import type { TryCandidate, TryKnowledge } from './try-pipeline';
 
 /**
@@ -165,8 +166,37 @@ export function priceSourcesOf(product: TryProduct): PriceSource[] {
 
 export type DbProductKnowledge = Pick<
   TryKnowledge,
-  'matchProducts' | 'lookupProductFacts' | 'resolveProducts'
+  'matchProducts' | 'lookupProductFacts' | 'resolveProducts' | 'lookupPlanProducts'
 >;
+
+/**
+ * Dữ liệu sản phẩm CÓ CẤU TRÚC cho fact plan (ADR 017): giá theo tiền tệ nguồn (VND = đồng; ngoại tệ = đơn vị nhỏ nhất), tồn, biến thể. Không văn bản tự do.
+ * `stockStale` do nơi gọi đặt (luật tồn cũ FR-151 cần mốc thời gian + đồng hồ).
+ */
+export function toPlanProduct(product: TryProduct, stockStale = false): PlanProduct {
+  const currency = product.currencyCode ?? 'VND';
+  const amountOf = (
+    priceVnd: number | null,
+    priceMinor: number | null | undefined,
+    code: string,
+  ) => (code === 'VND' ? priceVnd : (priceMinor ?? null));
+  return {
+    id: product.id,
+    name: product.name,
+    currency,
+    priceMinor: amountOf(product.priceVnd, product.priceMinor, currency),
+    stock: product.stock,
+    stockStale,
+    variants: product.variants.map((variant) => ({
+      label: Object.entries(variant.attrs)
+        .map(([key, value]) => `${key} ${value}`)
+        .join(', '),
+      attrsNorm: variant.attrsNorm,
+      priceMinor: amountOf(variant.priceVnd, variant.priceMinor, variant.currencyCode ?? currency),
+      stock: variant.stock,
+    })),
+  };
+}
 
 export type DbProductKnowledgeOptions = {
   /** Embedder thật (đã qua kiểm lệch model). Thiếu → khớp chỉ bằng bí danh + trigram. */
@@ -220,6 +250,10 @@ export function createDbProductKnowledge(
         names: products.map((p) => p.name),
         missingAxes: products.length === 1 ? missingAxesOf(products[0] as TryProduct) : [],
       };
+    },
+    async lookupPlanProducts(ids, options) {
+      const products = await loadTryProducts(tx, workspaceId, ids);
+      return products.map((product) => toPlanProduct(product, options?.stockStale === true));
     },
     async lookupProductFacts(ids) {
       const products = await loadTryProducts(tx, workspaceId, ids);

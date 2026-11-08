@@ -106,6 +106,8 @@ export type FillResult = {
   claims: Claim[];
   /** Nguồn kiến thức đã dùng (không gồm số khách tự nêu). */
   sourceIds: string[];
+  /** Các giá trị đã điền (để kiểm số tiền với CHÍNH giá trị code vừa điền). */
+  rendered: string[];
 };
 
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
@@ -113,10 +115,12 @@ const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 export function fillSlots(template: string, plan: FactPlan, options: { lang: Lang }): FillResult {
   const byId = new Map(plan.facts.map((fact) => [fact.id, fact]));
   const missing: string[] = [];
+  const rendered: string[] = [];
   const render = (id: string): string | null => {
     const fact = byId.get(id);
     const out = fact?.status === 'known' ? renderValue(fact, options.lang) : null;
     if (out === null && !missing.includes(id)) missing.push(id);
+    if (out !== null && !rendered.includes(out)) rendered.push(out);
     return out;
   };
   const fillText = (text: string) => text.replace(SLOT, (whole, id: string) => render(id) ?? whole);
@@ -134,5 +138,5 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
     claims.push({ text, source_ids: [...sources], kind });
     for (const id of sources) if (!sourceIds.includes(id)) sourceIds.push(id);
   }
-  return { text: fillText(template), missing, claims, sourceIds };
+  return { text: fillText(template), missing, claims, sourceIds, rendered };
 }
