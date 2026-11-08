@@ -30,20 +30,25 @@ Container khỏe: `pnpm cf:dev ps` (dòng `litellm` ghi `healthy`).
 ### Bước 4. Khóa ảo của app phải cho phép hai bí danh mới
 Mở `http://<ip-máy-ảo>:4000/ui` → Keys. Khóa ảo đang dùng làm `LITELLM_API_KEY` ở máy code phải cho phép các model `cf-classify`, `cf-draft` (nếu được tạo khi chỉ có `mock-llm` thì chưa cho phép). Đặt **Max Budget** theo tháng làm trần chi phí.
 
-### Bước 5. Biến môi trường ở máy code (`.env.local`)
-Bật từng bước (tên biến có trong `env.example`; chỉ đúng chữ `true` mới bật):
+### Bước 5. Tên model ở máy code (`.env.local`) và bật bước AI bằng feature flag
+Env chỉ còn **địa chỉ dịch vụ, khóa và TÊN MODEL** (không còn cờ `*_LLM_ENABLED`):
 ```
-CLASSIFY_LLM_ENABLED=true
 CLASSIFY_LLM_MODEL=cf-classify
-REWRITE_LLM_ENABLED=true
 REWRITE_LLM_MODEL=cf-classify
-DRAFT_LLM_ENABLED=true
 DRAFT_LLM_MODEL=cf-draft
 ```
-`LITELLM_BASE_URL` và `LITELLM_API_KEY` đã có sẵn. Bật các cờ này **tốn tiền** (trần là `max_budget` ở Bước 4). Khởi động lại web/worker để nạp biến.
+`LITELLM_BASE_URL` và `LITELLM_API_KEY` đã có sẵn. Khởi động lại web/worker để nạp tên model.
+
+**Bật từng bước bằng feature flag DB** (mặc định TẮT; `docs/09` §10). Ở dev, bật cho MỘT workspace (thay `<uuid>` bằng id workspace dev, ví dụ Shop Thử 2) hoặc cho tất cả:
+```
+pnpm flags:set -- cf.ai.classify on --workspace <uuid>
+pnpm flags:set -- cf.ai.draft on --workspace <uuid>
+pnpm flags:set -- cf.ai.rewrite on --workspace <uuid>
+```
+(bỏ `--workspace <uuid>` để bật toàn hệ thống). Cờ có hiệu lực trong vài giây, không cần khởi động lại. Bật các cờ này **tốn tiền** (trần là `max_budget` ở Bước 4). Lệnh chỉ chạy trên `cf_dev`/`cf_test`/`cf_ci`; staging/production dùng trang Admin (gap `ADMIN-FLAGS-PAGE`).
 
 ### Quay lui
-Đặt các cờ `*_LLM_ENABLED` về rỗng hoặc xóa dòng ở `.env.local` (không gọi LLM nữa). Gỡ khóa: sửa dòng `OPENAI_API_KEY=` trong `.env.cf-dev` trên máy ảo về rỗng rồi `pnpm cf:dev up -d --no-deps litellm`.
+Tắt cờ: `pnpm flags:set -- cf.ai.draft off [--workspace <uuid>]` (và `cf.ai.classify`, `cf.ai.rewrite`) — không gọi LLM nữa. Gỡ khóa: sửa dòng `OPENAI_API_KEY=` trong `.env.cf-dev` trên máy ảo về rỗng rồi `pnpm cf:dev up -d --no-deps litellm`.
 
 ### Lưu ý
 Mẫu chạy EVAL-RUNNER (`synthetic`) chỉ để thử runner, không dùng để chọn model hay báo đạt Cổng 2 — Cổng 2 cần bộ ~300 bình luận thật (xem mục định dạng bộ mẫu thật).

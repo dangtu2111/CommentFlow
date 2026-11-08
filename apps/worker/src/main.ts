@@ -1,14 +1,19 @@
-import { createLlmDepsFromEnv } from '@flow/ai';
+import { createEmbeddingResolver, createLlmDepsFromEnv, resolveEmbeddingConfig } from '@flow/ai';
 import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
 import {
+  countEmbeddingModels,
   countRepliesForCommentThread,
   createDb,
   DEFAULT_MERGE_WINDOW_SECONDS,
+  getEmbeddingState,
   getMergeWindowSeconds,
 } from '@flow/db';
+import { createFlags } from '@flow/saas-core';
+import { AI_STEP_FLAGS, FLAG_DEFAULTS } from '@flow/shared';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
+import { checkEmbeddingAtStartup } from './embedding-startup-check';
 import { createLocalExportStore } from './export-store';
 import { startHealthServer } from './health';
 import { createChannelCheckHandler } from './jobs/channel-check';
@@ -20,8 +25,6 @@ import {
   type IngestPipelineHook,
 } from './jobs/ingest';
 import { createKbPublishHandler } from './jobs/kb-publish';
-import { createKbReembedHandler } from './jobs/kb-reembed';
-import { pickReembedEmbedder } from './jobs/kb-reembed-embedder';
 import { createPingHandler } from './jobs/ping';
 import { createPipelineHandler } from './jobs/pipeline-job';
 import { startPipelineSweep } from './jobs/pipeline-sweep';
@@ -38,7 +41,6 @@ import {
   HIDE_QUEUE,
   INGEST_QUEUE,
   KB_PUBLISH_QUEUE,
-  KB_REEMBED_QUEUE,
   PIPELINE_QUEUE,
   SEND_QUEUE,
   SHOPIFY_SYNC_QUEUE,
@@ -64,17 +66,34 @@ async function main(): Promise<void> {
   // docs/09 §9: ingest — 10 job đồng thời (mỗi lần một job để lỗi không làm các job khác trong lô bị thử lại).
   // PIPE-ORCHESTRATOR: cờ PIPELINE_ENABLED mặc định TẮT; bật thì cần LLM đã cấu hình (extractor + drafter), thiếu → KHÔNG chạy
   // (không bao giờ chạy bình luận thật bằng bản mẫu).
+  // Feature flag DB (docs/09 §10): bật/tắt từng bước AI theo workspace (`cf.ai.*`); NOTIFY `flags_changed` có hiệu lực ngay, mất LISTEN thì cache 30 giây.
+  const flags = createFlags({
+    db,
+    defaults: { ...FLAG_DEFAULTS },
+    onReadError: (error) =>
+      logger.error(
+        { reason: error instanceof Error ? error.name : 'unknown' },
+        'không đọc được feature flag — dùng mặc định trong mã',
+      ),
+    onListenEvent: (event) =>
+      logger.warn({ type: event.type, attempt: event.attempt }, 'kết nối nghe flags_changed'),
+  });
+  await flags.start();
   const llm = config.pipeline.enabled
     ? createLlmDepsFromEnv({
         env: process.env,
         db: { withWorkspace: (id, fn) => db.withJob(id, fn) },
+        isStepEnabled: (step, workspaceId) => flags.isEnabled(AI_STEP_FLAGS[step], { workspaceId }),
+        // Cờ bật mà thiếu URL/khóa/tên model: nêu rõ lỗi cấu hình (không có model mặc định).
+        onMisconfigured: (message) => logger.error({}, message),
       })
     : undefined;
+  const embeddingResolver = createEmbeddingResolver({ service: config.embeddingService });
   const pipelineOn = Boolean(llm?.extractor && llm?.drafter);
   if (config.pipeline.enabled && !pipelineOn) {
     logger.error(
       {},
-      'PIPELINE_ENABLED=true nhưng thiếu cấu hình LLM (LITELLM_*, CLASSIFY/DRAFT_LLM_ENABLED): pipeline KHÔNG chạy',
+      'PIPELINE_ENABLED=true nhưng thiếu cấu hình LLM (LITELLM_BASE_URL/LITELLM_API_KEY, CLASSIFY_LLM_MODEL/DRAFT_LLM_MODEL): pipeline KHÔNG chạy',
     );
   }
   const pipelineHook: IngestPipelineHook | undefined = pipelineOn
@@ -119,6 +138,10 @@ async function main(): Promise<void> {
         flagEnabled: true,
         allowedWorkspaceIds: config.pipeline.workspaceIds,
         turnLimit: config.pipeline.turnLimit,
+        // Cờ DB cf.ai.* theo workspace + cấu hình đủ; tắt → lượt bị bỏ qua (`ai_disabled`).
+        llmReady: (workspaceId) => (llm?.ready ? llm.ready(workspaceId) : Promise.resolve(false)),
+        // Model hoạt động đọc từ DB mỗi vài giây (`cf.embedding_state`); env chỉ bật/tắt dịch vụ ml. Không có embedder giả (FR-133).
+        resolveEmbedding: (tx) => embeddingResolver.resolve(() => getEmbeddingState(tx)),
       }),
     );
     stopPipelineSweep = startPipelineSweep({
@@ -186,15 +209,23 @@ async function main(): Promise<void> {
     { batchSize: 1, localConcurrency: 1 },
     createKbPublishHandler({ db, logger }),
   );
-  // FR-133: kb-reembed — tạo lại embedding khi đổi mô hình. Cờ KB_REEMBED_ENABLED mặc định TẮT (chỉ có embedder mock,
-  // embedding thật = KB-EMBED-LITELLM): tắt thì không đăng ký hàng đợi.
-  if (config.kbReembedEnabled) {
-    await boss.work(
-      KB_REEMBED_QUEUE,
-      { batchSize: 1, localConcurrency: 1 },
-      createKbReembedHandler({ db, logger, embedder: pickReembedEmbedder(config) }),
-    );
-  }
+  // Kiểm lệch model embedding với dữ liệu đã lưu (FR-133): chỉ log; khi lệch, nhánh vector tự tắt ở từng lượt (không trộn vector khác model).
+  const embeddingState = await db.withSystem((tx) => getEmbeddingState(tx));
+  const startupEmbedding = resolveEmbeddingConfig(
+    config.embeddingService,
+    embeddingState.activeModel,
+  );
+  logger.info(
+    { embedding: startupEmbedding.describe, revision: embeddingState.revision },
+    'cấu hình embedding',
+  );
+  await checkEmbeddingAtStartup({
+    configuredModel: startupEmbedding.model,
+    offNote: startupEmbedding.describe.note,
+    workspaceIds: config.pipeline.workspaceIds,
+    count: (workspaceId) => db.withJob(workspaceId, (tx) => countEmbeddingModels(tx, workspaceId)),
+    logger,
+  });
   // FR-094: xuất dữ liệu workspace — cờ DATA_EXPORT_ENABLED mặc định TẮT: tắt thì không đăng ký hàng đợi, không dọn tệp.
   const exportStore = config.dataExport.enabled
     ? createLocalExportStore(config.dataExport.dir)
@@ -236,6 +267,7 @@ async function main(): Promise<void> {
     stopWorkspaceDeletion();
     stopSweep();
     stopPipelineSweep?.();
+    await flags.stop();
     await boss.stop({ graceful: true });
     await db.close();
     await health.close();

@@ -1,15 +1,8 @@
-/**
- * Cấu hình bước viết lại câu hỏi bằng LLM rẻ (FR-137). Cờ MẶC ĐỊNH TẮT: chỉ đúng chữ `true` mới bật
- * (đường dùng khóa LLM trả phí). Model mặc định `mock-llm` = model duy nhất của khóa dev.
- */
-export type RewriteConfig = { enabled: boolean; model: string };
+import { loadLlmModel } from '../llm-step-config';
 
-export const DEFAULT_REWRITE_MODEL = 'mock-llm';
+/** Model bước viết lại câu hỏi LLM rẻ (FR-137): `REWRITE_LLM_MODEL`, bắt buộc, không mặc định. Bật/tắt: cờ DB `cf.ai.rewrite`. */
+export type RewriteConfig = { model: string | null };
 
 export function loadRewriteConfig(env: Record<string, string | undefined>): RewriteConfig {
-  const model = env.REWRITE_LLM_MODEL?.trim();
-  return {
-    enabled: env.REWRITE_LLM_ENABLED === 'true',
-    model: model ? model : DEFAULT_REWRITE_MODEL,
-  };
+  return { model: loadLlmModel(env, 'REWRITE_LLM_MODEL') };
 }

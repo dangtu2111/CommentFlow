@@ -1,11 +1,7 @@
 # LiteLLM proxy — cấu hình khung. Chưa có khóa nhà cung cấp LLM thật.
-# `mock-llm` trả lời cố định, không gọi nhà cung cấp, không tốn tiền (dùng cho test/CI).
+# KHÔNG có model giả (`mock-llm`) ở cấu hình dev/staging (chủ dự án chốt 08/11: không mock khi chạy). CI/E2E dùng dịch vụ LLM giả ngoài ứng dụng
+# (e2e/fake-services), không qua LiteLLM này.
 model_list:
-  - model_name: mock-llm
-    litellm_params:
-      model: openai/mock-llm
-      api_key: mock-not-a-real-key
-      mock_response: "Đây là phản hồi giả để kiểm thử."
   # ỨNG VIÊN LLM theo spec 12 §8 (chốt 02/11): KHÔNG chốt cứng một model — chọn theo kết quả bộ đánh giá (14 §4, EVAL-RUNNER).
   # Mỗi ứng viên là một bí danh `cand-*`; app chọn bằng CLASSIFY_LLM_MODEL / DRAFT_LLM_MODEL (đổi model KHÔNG sửa code,
   # chỉ đổi biến môi trường). Ứng viên nào thiếu khóa nhà cung cấp thì không gọi được (lỗi 401 ở bước gọi) — chỉ điền khóa

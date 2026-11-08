@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cập nhật khóa ảo LiteLLM dev: cho phép cf-classify, cf-draft, mock-llm; max_budget 10 USD / 30 ngày.
+// Cập nhật khóa ảo LiteLLM dev: cho phép cf-classify, cf-draft; max_budget 10 USD / 30 ngày.
 //   pnpm cf:dev:update-vkey [--models a,b,c] [--max-budget 10] [--duration 30d]
 // Đọc LITELLM_API_KEY từ môi trường (.env.local), tính MÃ BĂM SHA-256 rồi chạy script Python trong container litellm qua `ssh cf`.
 // Khóa thật và master key KHÔNG bao giờ được in hay truyền qua dòng lệnh.

@@ -6,13 +6,14 @@ import {
   type Extractor,
 } from '@flow/ai';
 import { describe, expect, it } from 'vitest';
+import { demoKnowledgeRunner, demoWiring } from './test-demo-wiring';
 import { createTryAiAction, TRY_AI_MAX_CHARS } from './try-ai';
 
 const session = { workspaceId: 'ws1' };
 const now = () => new Date('2026-11-06T10:00:00Z');
 
 function action(limit = 5) {
-  return createTryAiAction({ quota: createTryQuota({ limit }), now });
+  return createTryAiAction({ quota: createTryQuota({ limit }), now, ...demoWiring });
 }
 
 describe('FR-059 US-034 BR-03 Thử AI (mock): đầu vào, giới hạn/ngày, không trừ lượt', () => {
@@ -52,6 +53,7 @@ describe('FR-059 US-034 BR-03 Thử AI (mock): đầu vào, giới hạn/ngày, 
     const run = createTryAiAction({
       quota: createTryQuota({ limit: 3 }),
       now,
+      knowledgeRunner: demoKnowledgeRunner,
       buildDeps: () => ({
         extractor: {
           extract: async () => {
@@ -83,6 +85,7 @@ describe('brand_voice thật trong ô Thử AI', () => {
       quota: createTryQuota({ limit: 5 }),
       now,
       llm: {
+        extractor: createDemoExtractor(),
         drafter: {
           draft: async (input) => {
             seen.push(input.voice);
@@ -97,6 +100,8 @@ describe('brand_voice thật trong ô Thử AI', () => {
           voices: voices as never,
         }),
         source: 'shop',
+        embedding: { state: 'off', configuredModel: null, mismatches: [] },
+        vector: { off: 'service_disabled', failed: false },
       }),
     });
     const r = await action(session, 'ship về Hà Nội bao nhiêu');
@@ -141,6 +146,7 @@ describe('Q-POR12 Thử AI — ô "lượt trước" (tùy chọn)', () => {
     const run = createTryAiAction({
       quota: createTryQuota({ limit: 5 }),
       now,
+      knowledgeRunner: demoKnowledgeRunner,
       buildDeps: () => ({
         extractor,
         drafter: createDemoDrafter(),

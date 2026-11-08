@@ -1,4 +1,4 @@
-import { unsafeMarkMasked } from '@flow/shared';
+import { assertMockAllowed, unsafeMarkMasked } from '@flow/shared';
 import type { KbGapTopic, VariantAxis } from '../decide/decide-action';
 import type { TryCandidate, TryKnowledge } from './try-pipeline';
 
@@ -75,6 +75,8 @@ function productCandidate(product: DemoProduct): TryCandidate {
 }
 
 export function createDemoKnowledge(): TryKnowledge {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createDemoKnowledge');
   return {
     async matchProducts(mentions) {
       const wanted = mentions.map(fold);

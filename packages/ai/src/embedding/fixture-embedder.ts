@@ -1,4 +1,4 @@
-import { normalizeSearchText } from '@flow/shared';
+import { assertMockAllowed, normalizeSearchText } from '@flow/shared';
 import { EMBEDDING_DIMENSIONS, type Embedder } from './embedder';
 
 export const FIXTURE_EMBEDDING_MODEL = 'fixture-trigram-1024';
@@ -31,6 +31,8 @@ function embedOne(text: string): number[] {
  * cho độ chính xác ngữ nghĩa của mô hình thật.
  */
 export function createFixtureEmbedder(): Embedder {
+  // Bản giả CHỈ cho test tự động (cắm qua tham số); tiến trình khác nạp → lỗi ngay (chốt chặn "không mock khi chạy").
+  assertMockAllowed('createFixtureEmbedder');
   return {
     model: FIXTURE_EMBEDDING_MODEL,
     async embed(texts) {

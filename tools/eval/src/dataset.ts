@@ -53,6 +53,8 @@ export const evalSampleSchema = z.object({
   expected: z.object({
     lang: z.enum(['vi', 'en']),
     label: z.enum(COMMENT_LABELS),
+    /** Nhãn khác cũng được chấp nhận (chủ dự án chốt: câu nhãn mơ hồ giữa hai cách gán, Q-EV2-2/5/6). Mặc định: chỉ `label`. */
+    altLabels: z.array(z.enum(COMMENT_LABELS)).optional(),
     action: z.enum(ACTIONS),
     /** Chỉ kiểm các trường có mặt ở đây. */
     extract: extractExpectation.default({}),

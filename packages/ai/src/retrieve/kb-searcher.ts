@@ -4,8 +4,8 @@ import type { KbHit } from './sources';
 export type KbSearchQuery = {
   queryText: string;
   lang: 'vi' | 'en';
-  /** Vector truy vấn 1024 chiều do `Embedder` tạo. */
-  queryVector: readonly number[];
+  /** Vector truy vấn 1024 chiều do `Embedder` tạo; THIẾU (embedder tắt/lệch model) → chỉ toàn văn + trigram, không có nhánh vector. */
+  queryVector?: readonly number[];
   /** `Embedder.model` đã tạo `queryVector`: nhánh vector chỉ so với đoạn cùng mô hình (FR-133). */
   embeddingModel?: string;
   /** Sản phẩm của bài; rỗng = không lọc theo sản phẩm. */

@@ -12,7 +12,12 @@ const AUTH_ROLE = 'cf_auth';
 const WORKER_ROLE = 'cf_worker';
 
 /** Bảng hệ thống KHÔNG có RLS (cờ tính năng; chỉ SELECT cho cf_app). */
-const SYSTEM_TABLES = ['core.feature_flags', 'cf.system_abbreviations', 'core.plans'];
+const SYSTEM_TABLES = [
+  'core.feature_flags',
+  'cf.system_abbreviations',
+  'core.plans',
+  'cf.embedding_state',
+];
 /** Bảng hệ thống do Admin quản (0060): RLS bật, KHÔNG policy, cf_app không có quyền nào; truy cập chỉ qua hàm DEFINER. */
 const ADMIN_ONLY_TABLES = ['core.coupons', 'core.admin_audit_log'];
 /** Hàm DEFINER quản trị gói/mã (0060): PUBLIC/cf_auth không được EXECUTE; cf_app có (cf_worker kế thừa nhưng thân hàm từ chối). */
@@ -1063,7 +1068,7 @@ async function checkWorkerDirectPrivileges(
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
-      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox', 'list_pending_pipeline_comments')
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox', 'list_pending_pipeline_comments', 'begin_embedding_switch', 'list_embedding_switch_pending', 'switch_active_embedding')
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('create_invoice', 'confirm_invoice_payment', 'void_invoice')
@@ -1149,7 +1154,13 @@ async function checkWebhookFunction(db: Queryable, violations: RlsViolation[]): 
  * Phần thân chỉ kiểm bằng chuỗi con của prosrc; logic được kiểm bằng test tích hợp stuck-outbox.int.test.ts.
  */
 /** Hàm quét cross-workspace chỉ-đọc dành cho worker: list_stuck_outbox (0031) và list_pending_pipeline_comments (0074, PIPE-ORCHESTRATOR). */
-const SWEEP_FUNCTIONS = ['list_stuck_outbox', 'list_pending_pipeline_comments'] as const;
+const SWEEP_FUNCTIONS = [
+  'list_stuck_outbox',
+  'list_pending_pipeline_comments',
+  'begin_embedding_switch',
+  'list_embedding_switch_pending',
+  'switch_active_embedding',
+] as const;
 
 async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {
   for (const fn of SWEEP_FUNCTIONS) await checkSweepFunction(db, violations, fn);

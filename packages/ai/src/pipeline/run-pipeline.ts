@@ -247,8 +247,21 @@ export function topicOf(ask: string): KbGapTopic {
   const text = ask.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/gi, 'd').toLowerCase();
   if (/ship|giao|van chuyen|delivery|shipping/.test(text)) return 'shipping';
   if (/giam|khuyen mai|voucher|discount|coupon/.test(text)) return 'discount';
-  if (/doi|tra hang|hoan|bao hanh|return|refund|warranty/.test(text)) return 'policy';
-  if (/don hang|order/.test(text)) return 'order_status';
+  const policy = /doi|tra hang|hoan|bao hanh|return|refund|warranty/.test(text);
+  // Q-EV2-3: hỏi THỜI GIAN giao/xử lý ("bao lâu nhận được hàng", "how long until I get my order") là chính sách giao hàng, KHÔNG phải tra cứu
+  // trạng thái đơn. Chỉ khi có cả từ chỉ thời gian VÀ đối tượng giao nhận, và không dính chủ đề đổi trả/bảo hành/hoàn tiền.
+  if (
+    !policy &&
+    /how long|how many days|how soon|when (will|would|do|can)|bao lau|may ngay|khi nao|bao gio|mat bao|thoi gian/.test(
+      text,
+    ) &&
+    /order|deliver|arriv|receiv|nhan|hang|don\b/.test(text)
+  ) {
+    return 'shipping';
+  }
+  if (policy) return 'policy';
+  // Tra cứu trạng thái đơn: "đơn đến đâu rồi", "where is my order", "track".
+  if (/don hang|order|den dau|track/.test(text)) return 'order_status';
   return 'other';
 }
 

@@ -5,3 +5,8 @@ export {
   type ReembedResult,
   reembedWorkspaceChunks,
 } from './reembed';
+export {
+  type ReembedProductItem,
+  type ReembedProductOps,
+  reembedWorkspaceProducts,
+} from './reembed-products';

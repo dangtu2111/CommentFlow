@@ -9,7 +9,13 @@ import {
   listKbVersions,
   lockKbPublish,
 } from '../src/queries/kb-publish';
-import { createAdminPool, createAppDb, seedUser, seedWorkspace } from './helpers';
+import {
+  createAdminPool,
+  createAppDb,
+  seedUser,
+  seedWorkspace,
+  setActiveEmbeddingModel,
+} from './helpers';
 
 /**
  * KB-PUBLISH-VERSION (FR-054, UF-8): nháp → phiên bản bất biến, khôi phục = phiên bản mới. Ghi chỉ qua `withJob`.
@@ -50,6 +56,7 @@ async function newSource(workspaceId: string, type = 'faq'): Promise<string> {
 
 beforeAll(async () => {
   admin = createAdminPool();
+  await setActiveEmbeddingModel(admin, 'mock-embed-v1');
   db = createAppDb(3);
   ws = await seedWorkspace(admin);
   other = await seedWorkspace(admin);

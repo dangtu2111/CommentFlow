@@ -7,6 +7,9 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { loadEmbeddingService, resolveEmbeddingConfig } from '@flow/ai';
+import { allowMockInThisProcess } from '@flow/shared';
+import pg from 'pg';
 import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
 import { computeMetrics } from '../metrics';
@@ -36,7 +39,32 @@ const { values } = parseArgs({
   },
 });
 
+// Model embedding hoạt động nằm ở DB (`cf.embedding_state`); env chỉ bật/tắt dịch vụ ml (FR-133). Báo cáo ghi cả hai; không đọc được DB → ghi rõ.
+async function readActiveEmbeddingModel(): Promise<string | null | undefined> {
+  const url = process.env.DATABASE_URL;
+  if (!url) return undefined;
+  const pool = new pg.Pool({ connectionString: url, max: 1 });
+  try {
+    const result = await pool.query('SELECT active_model FROM cf.embedding_state');
+    return (result.rows[0]?.active_model as string | null | undefined) ?? null;
+  } catch {
+    return undefined;
+  } finally {
+    await pool.end();
+  }
+}
+const activeEmbeddingModel = await readActiveEmbeddingModel();
+const embeddingInfo =
+  activeEmbeddingModel === undefined
+    ? {
+        model: null,
+        note: 'không đọc được model hoạt động từ DB (thiếu DATABASE_URL hoặc lỗi kết nối)',
+      }
+    : resolveEmbeddingConfig(loadEmbeddingService(process.env), activeEmbeddingModel).describe;
 const backend = values.backend as Backend;
+// EVAL chỉ đo model THẬT (LiteLLM + bge-m3). `--backend mock` (bản fixture chạy ở CI) phải tự khai báo và báo cáo ghi rõ "không phải số đo".
+if (backend === 'mock')
+  allowMockInThisProcess('EVAL --backend mock (fixture): không phải số đo chất lượng');
 if (!['litellm', 'mock'].includes(backend)) {
   console.error('--backend phải là litellm | mock');
   process.exit(2);
@@ -125,6 +153,11 @@ async function runOnce(variantCount: number) {
   const report = renderReport({
     title: `EVAL-RUNNER — ${backend}, ${variantCount + 1} phiên bản câu soạn`,
     config: {
+      ...(backend === 'mock'
+        ? {
+            NHÃN: 'MOCK (fixture) — KHÔNG phải số đo chất lượng; không dùng để so sánh hay chọn model',
+          }
+        : {}),
       'Bộ mẫu': `${values.dataset} (${samples.length} mẫu)`,
       'Cửa hàng': shop.id,
       Backend: backend,
@@ -132,10 +165,10 @@ async function runOnce(variantCount: number) {
       'Số biến thể': `${variantCount} khác + câu gốc = ${variantCount + 1} phiên bản`,
       'Trần chi tiêu': 'max_budget của khóa ảo LiteLLM (không có trần riêng trong runner)',
       'Từ điển viết tắt': 'bản mẫu (DEMO_ABBREVIATIONS), không phải từ điển hệ thống của DB',
-      // Ghi rõ embedder đã dùng trong MỌI báo cáo (FR-133: không trộn vector khác model). Cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa
-      // (`searchShopTexts`) và khớp sản phẩm bằng pg_trgm, nên KHÔNG có nhánh vector nào ở EVAL hiện tại.
-      Embedder:
-        'không dùng — chính sách/FAQ tìm bằng từ khóa (searchShopTexts), sản phẩm khớp bằng pg_trgm; chưa có nhánh vector (bge-m3/mock đều không tham gia)',
+      // Ghi rõ embedder trong MỌI báo cáo (FR-133). Lấy từ ĐÚNG hàm cấu hình mà web/worker dùng (`resolveEmbeddingConfig`), không tự chọn.
+      'Embedder (cấu hình ứng dụng)': `${embeddingInfo.model ?? 'tắt'} — ${embeddingInfo.note}`,
+      'Embedder dùng trong lượt này':
+        'không — cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (searchShopTexts) và khớp sản phẩm bằng từ khóa/trigram; chưa có nhánh vector ở EVAL',,
       'Khớp sản phẩm': scorer
         ? 'pg_trgm như production (similarity/word_similarity, ngưỡng 0,3/0,4; bí danh 0,6; chọn/mơ hồ 0,45/0,05)'
         : '"tên chứa lời nhắc" (cũ, KHÔNG phản ánh production)',

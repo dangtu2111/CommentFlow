@@ -84,6 +84,7 @@ export {
 } from './draft-feedback';
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
+export { AI_STEP_FLAGS, type AiStep, FLAG_DEFAULTS } from './flag-keys';
 export { currencyExponent, formatMinorAmount, parseDecimalMinor } from './foreign-money';
 export { type HaravanConfig, readHaravanConfig } from './haravan-config';
 export { htmlToPlainText } from './html-text';
@@ -189,12 +190,7 @@ export {
   parsePublishNote,
   planKbVersion,
 } from './kb-publish';
-export {
-  KB_REEMBED_BATCH_MAX,
-  KB_REEMBED_QUEUE,
-  type KbReembedJob,
-  kbReembedJobSchema,
-} from './kb-reembed';
+export { KB_REEMBED_BATCH_MAX } from './kb-reembed';
 export { type KiotVietConfig, readKiotVietConfig } from './kiotviet-config';
 export {
   LEAD_MAX_PER_CAPTURE,
@@ -498,6 +494,13 @@ export {
   type SpamRuleType,
   type SpamSample,
 } from './spam-rules';
+export {
+  allowMockInThisProcess,
+  assertMockAllowed,
+  isTestProcess,
+  mockAllowedReason,
+  resetMockAllowanceForTests,
+} from './test-process';
 export {
   type ConsumeInput,
   canConsume,

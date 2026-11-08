@@ -2,7 +2,7 @@
 // Chỉ nhận MÃ BĂM của khóa (không bao giờ truyền khóa thật qua dòng lệnh/ssh) và danh sách model đã kiểm regex.
 import { createHash } from 'node:crypto';
 
-export const DEFAULT_MODELS = ['cf-classify', 'cf-draft', 'mock-llm'];
+export const DEFAULT_MODELS = ['cf-classify', 'cf-draft'];
 export const DEFAULT_MAX_BUDGET = 10;
 export const DEFAULT_DURATION = '30d';
 const CONTAINER = 'cf-dev-litellm-1';

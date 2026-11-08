@@ -129,12 +129,8 @@ describe('FR-137 fixture rewriter', () => {
 });
 
 describe('FR-137 loadRewriteConfig', () => {
-  it('mặc định TẮT, model mock-llm; chỉ đúng chữ true mới bật', () => {
-    expect(loadRewriteConfig({})).toEqual({ enabled: false, model: 'mock-llm' });
-    expect(loadRewriteConfig({ REWRITE_LLM_ENABLED: 'TRUE' }).enabled).toBe(false);
-    expect(loadRewriteConfig({ REWRITE_LLM_ENABLED: 'true', REWRITE_LLM_MODEL: ' rẻ ' })).toEqual({
-      enabled: true,
-      model: 'rẻ',
-    });
+  it('chỉ còn tên model, bắt buộc, không mặc định (chi tiết ở llm-step-config.test.ts)', () => {
+    expect(loadRewriteConfig({})).toEqual({ model: null });
+    expect(loadRewriteConfig({ REWRITE_LLM_MODEL: ' rẻ ' })).toEqual({ model: 'rẻ' });
   });
 });

@@ -14,3 +14,9 @@ Lệnh tắt: `/feature <mã>` = `docs/workflows/feature.md` · `/finish` = `doc
 - **Lập gap matrix:** phiên chính đọc đúng mục spec + `docs/codemap.md`, từng nhóm một.
 - **Việc cơ học trải nhiều file:** phiên chính làm bằng script hoặc sửa tuần tự, kiểm bằng typecheck/test. Không còn "làn Haiku".
 - Không đổi `/model` qua lại giữa chừng một phiên (mất cache).
+
+## Cấu hình và bản giả (chủ dự án chốt 08/11/2026 — đọc kỹ)
+
+- **Không bao giờ đổi model embedding hay cờ ảnh hưởng dữ liệu chỉ cho MỘT lệnh** trong khi ứng dụng chạy cấu hình khác (tiền lệ: bge-m3 bật bằng cờ riêng cho lệnh `kb:reembed` còn ứng dụng chạy mock → nhánh vector vô nghĩa). Cần đổi → DỪNG và báo chủ dự án sửa `.env.local` rồi khởi động lại, SAU ĐÓ mới chạy lệnh. Không tự ghi/đọc `.env*`.
+- **Ứng dụng KHÔNG chạy bản giả:** thiếu dịch vụ thật → lỗi rõ khi khởi động hoặc tắt tính năng kèm thông báo; không tự rơi về mock. Mock chỉ cho test tự động, cắm qua tham số, có chốt chặn `assertMockAllowed`. Khi thêm tính năng mới KHÔNG thêm đường mock chọn bằng biến môi trường.
+- Model embedding đang hoạt động nằm ở DB (`cf.embedding_state`), đọc qua MỘT hàm (`resolveEmbeddingConfig`) cho web/worker/EVAL; env chỉ bật/tắt dịch vụ ml; đổi model chỉ bằng `kb:switch-embedding <model>`; mọi báo cáo EVAL ghi embedder đã dùng. Chi tiết `docs/workflows/embedding-config.md`.

@@ -6,7 +6,9 @@ const DATABASE_WORKER_URL = 'postgresql://cf_worker:matkhau@localhost:5433/cf_de
 
 describe('loadConfig', () => {
   it('dùng giá trị mặc định cho cổng và mức log', () => {
-    expect(loadConfig({ DATABASE_WORKER_URL })).toEqual({
+    const { embeddingService, ...rest } = loadConfig({ DATABASE_WORKER_URL });
+    expect(embeddingService).toBeUndefined(); // mặc định tắt cờ → không dịch vụ, không có embedder giả
+    expect(rest).toEqual({
       logLevel: 'info',
       port: 3001,
       databaseUrl: DATABASE_WORKER_URL,
@@ -18,7 +20,6 @@ describe('loadConfig', () => {
       workspaceDeleteEnabled: false,
       instagram: { enabled: false },
       dataExport: { enabled: false },
-      kbReembedEnabled: false,
       messenger: { enabled: false },
       tiktok: { enabled: false },
       shopify: { enabled: false, apiVersion: undefined },
@@ -281,5 +282,18 @@ describe('PIPE-ORCHESTRATOR — cấu hình pipeline', () => {
     expect(on.pipeline.enabled).toBe(true);
     expect(on.pipeline.workspaceIds).toEqual([id]);
     expect(loadConfig({ ...base, PIPELINE_ENABLED: 'yes' }).pipeline.enabled).toBe(false);
+  });
+});
+
+describe('FR-133 cấu hình embedding của worker: env chỉ bật/tắt dịch vụ ml', () => {
+  const base = { DATABASE_WORKER_URL };
+  it('tắt cờ / sai chữ / thiếu ML_URL → không có dịch vụ; bật đúng → có dịch vụ (không có model trong env)', () => {
+    expect(loadConfig(base).embeddingService).toBeUndefined();
+    expect(
+      loadConfig({ ...base, ML_EMBED_ENABLED: '1', ML_URL: 'http://ml' }).embeddingService,
+    ).toBeUndefined();
+    expect(loadConfig({ ...base, ML_EMBED_ENABLED: 'true' }).embeddingService).toBeUndefined();
+    const on = loadConfig({ ...base, ML_EMBED_ENABLED: 'true', ML_URL: 'http://ml:8000' });
+    expect(on.embeddingService).toEqual({ baseUrl: 'http://ml:8000' });
   });
 });

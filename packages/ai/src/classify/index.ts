@@ -1,7 +1,6 @@
 // API công khai của module classify. Thêm export mới ở ĐÂY (không sửa src/index.ts).
 export {
   type ClassifyConfig,
-  DEFAULT_CLASSIFY_MODEL,
   loadClassifyConfig,
 } from './classify-config';
 export {

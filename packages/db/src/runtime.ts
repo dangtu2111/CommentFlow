@@ -162,6 +162,24 @@ export {
 } from './queries/data-export';
 export { insertDraft, type NewDraft } from './queries/drafts';
 export {
+  countEmbeddingModels,
+  type EmbeddingModelCounts,
+} from './queries/embedding-models';
+export {
+  beginEmbeddingSwitch,
+  type EmbeddingState,
+  getEmbeddingState,
+  listChunksForSwitch,
+  listEmbeddingSwitchPending,
+  listProductsForSwitch,
+  type SwitchChunk,
+  type SwitchPendingWorkspace,
+  type SwitchProduct,
+  switchActiveEmbedding,
+  writeChunksNext,
+  writeProductsNext,
+} from './queries/embedding-state';
+export {
   ACTIONABLE_COMMENT_STATUSES,
   countActionableComments,
   countCommentsByTab,
@@ -235,14 +253,6 @@ export {
   listKbVersions,
   lockKbPublish,
 } from './queries/kb-publish';
-export {
-  countChunksByEmbeddingModel,
-  countChunksToReembed,
-  listChunksToReembed,
-  type ReembedChunk,
-  type ReembedWrite,
-  writeReembeddedChunks,
-} from './queries/kb-reembed';
 export {
   DEFAULT_KB_SEARCH_LIMIT,
   findProductMatch,

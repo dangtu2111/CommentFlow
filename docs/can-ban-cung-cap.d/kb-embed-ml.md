@@ -60,61 +60,49 @@ curl -s --max-time 1800 -X POST "$ML_URL/embed" -H "content-type: application/js
 - `401` → đã đặt `ML_API_TOKEN` ở máy ảo: thêm header Bearer.
 - Trong lúc tải model, theo dõi RAM và log: `pnpm cf:dev stats` và `pnpm cf:dev logs --tail=20 ml`. Nếu container `ml` bị khởi động lại liên tục (OOM) → quay lại Bước 0.
 
-### Bước 5. Bật cờ ở máy code
-Thêm hai dòng vào `.env.local` (máy code; `ML_URL` đã có sẵn trong `.env`). Lệnh dưới ghi đúng một lần, không nhân đôi dòng:
+### Bước 5. Bật dịch vụ ml ở máy code
+Thêm một dòng vào `.env.local` (máy code; `ML_URL` đã có sẵn trong `.env`). Lệnh dưới ghi đúng một lần, không nhân đôi dòng:
 ```
-for kv in ML_EMBED_ENABLED=true KB_REEMBED_ENABLED=true; do k=${kv%%=*}; if grep -q "^$k=" .env.local; then sed -i "s/^$k=.*/$kv/" .env.local; else printf '\n%s\n' "$kv" >> .env.local; fi; done
+kv=ML_EMBED_ENABLED=true; k=${kv%%=*}; if grep -q "^$k=" .env.local; then sed -i "s/^$k=.*/$kv/" .env.local; else printf '\n%s\n' "$kv" >> .env.local; fi
 ```
-- `ML_EMBED_ENABLED=true` (cùng `ML_URL`): ô Thử AI và worker dùng bge-m3.
-- `KB_REEMBED_ENABLED=true`: worker đăng ký hàng đợi `kb-reembed`.
+- `ML_EMBED_ENABLED=true` (cùng `ML_URL`): bật/tắt DỊCH VỤ ml. **Env không chọn model**: model đang hoạt động nằm ở DB (`cf.embedding_state`) và chỉ đổi bằng lệnh Bước 6 (FR-133, Q-EMB-1).
 - Nếu Bước 2 có đặt `ML_API_TOKEN`, đặt cùng giá trị ở đây.
+- Cờ `KB_REEMBED_ENABLED` và lệnh `kb:reembed` đã gỡ bỏ — xóa dòng `KB_REEMBED_ENABLED` khỏi `.env.local` nếu còn.
 
 Khởi động lại worker và web để nạp biến mới (mỗi lệnh một cửa sổ terminal riêng, để chạy nền):
 ```
 pnpm --filter @flow/worker dev
 pnpm --filter @flow/web dev
 ```
+Trước Bước 6, worker ghi log "DB chưa kích hoạt model embedding" và ô Thử AI hiện "Chưa kích hoạt model embedding"; trong lúc đó chỉ tìm toàn văn/trigram (không có vector giả).
 
-### Bước 6. Tạo lại embedding (`kb-reembed`) và kiểm số đoạn
-`<workspaceId>` là id workspace của bạn. Với workspace dev đang có dữ liệu Shopify: `e8f9e1e3-a805-491a-81d5-0612fec8d6a2`.
+### Bước 6. Kích hoạt / đổi model embedding (`kb:switch-embedding`)
+Lệnh riêng, chạy bằng kết nối worker (không dùng khóa admin), áp dụng cho TOÀN BỘ dữ liệu của mọi workspace (đoạn kiến thức nháp + đã xuất bản, tên sản phẩm).
 
-**6a. Đếm TRƯỚC** (lệnh chỉ đọc):
+**6a. Xem trạng thái TRƯỚC** (chỉ đọc):
 ```
-pnpm --filter @flow/worker kb:reembed -- count <workspaceId>
+pnpm --filter @flow/worker kb:switch-embedding -- --status
 ```
-Kết quả đúng ở thời điểm tôi đo (07/11/2026, workspace trên):
-```
-Mô hình đích: bge-m3 (dịch vụ ml)
-Số đoạn theo mô hình embedding:
-  mock-embed-v1: 65
-Còn cần tạo lại cho bge-m3: 65
-```
-Nếu dòng đầu ghi `MOCK — chưa bật ML_EMBED_ENABLED` → cờ/`ML_URL` ở máy code chưa vào (làm lại Bước 5, mở terminal mới).
+Lần đầu: `Model đang hoạt động: (chưa kích hoạt)`.
 
-**6b. Đưa job vào hàng đợi** (worker ở Bước 5 phải đang chạy):
+**6b. Chuyển sang bge-m3** (dịch vụ ml ở Bước 4 phải đang chạy):
 ```
-pnpm --filter @flow/worker kb:reembed -- enqueue <workspaceId>
+pnpm --filter @flow/worker kb:switch-embedding -- bge-m3
 ```
-Worker xử lý theo lô 64 đoạn; 65 đoạn mất vài giây đến vài phút. Theo dõi log của cửa sổ worker.
+Lệnh tạo vector mới vào cột đệm cho mọi dòng trong khi truy vấn vẫn dùng model cũ; đủ 100% mới đổi model hoạt động trong MỘT giao dịch (bảng bị khóa ghi vài giây). Lỗi hoặc Ctrl+C giữa chừng → model cũ giữ nguyên, chạy lại lệnh để tiếp tục. Nếu dịch vụ ml trả model khác model đích, lệnh từ chối ngay.
 
-**6c. Đếm SAU** (lặp lại cho tới khi `Còn cần tạo lại` = 0):
+**6c. Kiểm SAU:**
 ```
-pnpm --filter @flow/worker kb:reembed -- count <workspaceId>
+pnpm --filter @flow/worker kb:switch-embedding -- --status
 ```
-**Kết quả đúng:**
-```
-Mô hình đích: bge-m3 (dịch vụ ml)
-Số đoạn theo mô hình embedding:
-  bge-m3: 65
-Còn cần tạo lại cho bge-m3: 0
-```
-Tổng số đoạn không đổi (65 → 65): chỉ cột vector và tên mô hình thay đổi, nội dung đoạn đã xuất bản bất biến. Chạy lại 6b an toàn (xong rồi thì 0 đoạn).
+**Kết quả đúng:** `Model đang hoạt động: bge-m3` và `Đang chuyển sang: (không)`. Ô Thử AI không còn banner "Chưa kích hoạt model embedding".
 
 ### Quay lui
-- Tắt: đặt `ML_EMBED_ENABLED=false` ở `.env.local` và `.env.cf-dev`, `pnpm cf:dev up -d ml`; ô Thử AI về embedding mock.
-- Đã tạo lại sang bge-m3 mà muốn về mock: tắt cờ rồi `kb:reembed -- enqueue <workspaceId>` (worker sẽ tạo lại sang mô hình mock; khi cờ tắt `count` sẽ ghi đích là mock).
+- Tắt dịch vụ: đặt `ML_EMBED_ENABLED=false` ở `.env.local` và `.env.cf-dev`, `pnpm cf:dev up -d ml`; nhánh vector tắt (toàn văn/trigram), model hoạt động ở DB giữ nguyên.
+- Đổi model: chạy lại Bước 6b với tên model khác (dịch vụ ml phải phục vụ đúng model đó).
 - Giải phóng RAM: `pnpm cf:dev stop ml`.
 
 ### Lưu ý
-- Đổi mô hình embedding mà **chưa** chạy Bước 6 thì tìm kiếm vector không thấy đoạn nào (chỉ lọc đúng mô hình); nhánh tìm theo chữ vẫn chạy. Vì vậy làm Bước 5 và 6 liền nhau.
+- Không thể "quên" đổi dữ liệu: chưa kích hoạt model thì ứng dụng không ghi vector nào (DB từ chối), nên không có tình trạng nửa cũ nửa mới. Dữ liệu cũ do bản giả tạo (model `mock-…`/`fixture-…`) bị thay hoàn toàn ở Bước 6b.
+- Dịch vụ ml chết giữa lúc chạy: ô Thử AI/worker vẫn trả lời bằng toàn văn/trigram và báo sự cố (không mock).
 - Chưa có thử nghiệm với model thật trong CI; kết quả ở Bước 4 và 6 là bằng chứng nghiệm thu của mục này — dán lại cho tôi (bỏ khóa nếu có) để tôi ghi vào `docs/testing`.

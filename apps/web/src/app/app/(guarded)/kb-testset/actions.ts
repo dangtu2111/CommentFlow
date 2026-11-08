@@ -1,10 +1,9 @@
 'use server';
 
 import { createTryQuota } from '@flow/ai';
-import { getDb } from '../../../../server/db';
 import { createKbTestSetAction, type KbTestSetResult } from '../../../../server/kb-testset';
 import { requireAppUser } from '../../../../server/require-app-user';
-import { createKnowledgeRunner, isTryAiKbReal } from '../../../../server/try-ai-knowledge';
+import { createRealKnowledgeRunner, createRealTryLlm } from '../../../../server/try-ai-runtime';
 
 /** Trạng thái form (đọc bằng `useActionState`). */
 export type KbTestSetState = { status: 'idle' } | ({ status: 'done' } & KbTestSetResult);
@@ -12,11 +11,9 @@ export type KbTestSetState = { status: 'idle' } | ({ status: 'done' } & KbTestSe
 // Hạn mức: 10 lần chạy/ngày/workspace, đếm trong bộ nhớ tiến trình (Q-KTS1); mỗi lần tối đa 20 câu.
 const kbTestSet = createKbTestSetAction({
   quota: createTryQuota({ limit: 10 }),
-  // Cùng cờ với ô Thử AI (mặc định TẮT): tắt thì không đụng DB, dùng kiến thức mẫu.
-  knowledgeRunner: createKnowledgeRunner({
-    enabled: isTryAiKbReal(process.env),
-    db: { withActor: (workspaceId, userId, fn) => getDb().withActor(workspaceId, userId, fn) },
-  }),
+  // Cùng nguồn THẬT với ô Thử AI (LLM qua LiteLLM + kiến thức/sản phẩm thật của workspace); thiếu → báo rõ, không bản mẫu.
+  llm: createRealTryLlm(process.env),
+  knowledgeRunner: createRealKnowledgeRunner(process.env),
 });
 
 /**

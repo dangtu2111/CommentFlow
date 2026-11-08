@@ -1,3 +1,4 @@
+import { assertMockAllowed } from '@flow/shared';
 import type { ExtractResult } from '../classify/extract-result';
 import type { Extractor } from '../classify/extractor';
 import { FIXTURE_EXTRACT_DEFAULT } from '../classify/fixture-extractor';
@@ -72,6 +73,8 @@ export function mentionsOfProducts(text: string, names: readonly string[]): stri
 }
 
 export function createDemoExtractor(options: { productNames?: readonly string[] } = {}): Extractor {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createDemoExtractor');
   const productNames = options.productNames ?? PRODUCT_NAMES;
   return {
     async extract(input) {
@@ -98,6 +101,8 @@ const REDIRECT_TEXT = 'Phần còn lại bạn nhắn tin riêng cho shop để 
 
 /** Soạn từ chính nội dung nguồn đạt ngưỡng (không bịa) — đủ để kiểm cả guard và cổng tự gửi bằng mock. */
 export function createDemoDrafter(): Drafter {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createDemoDrafter');
   return {
     async draft(input) {
       const action = input.decision?.action ?? 'answer';

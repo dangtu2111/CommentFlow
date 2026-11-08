@@ -13,7 +13,10 @@ import { type TryCandidate, type TryKnowledge, topicOf } from './try-pipeline';
  */
 export type KbTryKnowledgeDeps = {
   searcher: KbSearcher;
-  embedder: Embedder;
+  /** Thiếu (cấu hình embedding tắt) → KHÔNG có nhánh vector: chỉ toàn văn + trigram. KHÔNG có embedder giả khi chạy. */
+  embedder?: Embedder;
+  /** Gọi khi embedder lỗi (ml chết/trả sai model): lượt vẫn chạy bằng toàn văn + trigram (suy giảm, không mock); nơi gọi ghi nhận sự cố. */
+  onVectorFailure?: (error: unknown) => void;
   base: Pick<TryKnowledge, 'matchProducts' | 'lookupProductFacts'>;
 };
 
@@ -27,13 +30,22 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
     matchProducts: (mentions) => deps.base.matchProducts(mentions),
     lookupProductFacts: (ids) => deps.base.lookupProductFacts(ids),
     async searchKb(query, context) {
-      const [queryVector] = await deps.embedder.embed([query]);
-      if (!queryVector) return [];
+      // Có embedder → thêm nhánh vector (cùng model với dữ liệu: DB chỉ so vector cùng `embedding_model`); không → toàn văn + trigram.
+      let queryVector: readonly number[] | undefined;
+      if (deps.embedder) {
+        try {
+          queryVector = (await deps.embedder.embed([query]))[0];
+          if (!queryVector) return [];
+        } catch (error) {
+          deps.onVectorFailure?.(error);
+        }
+      }
       const hits = await deps.searcher({
         queryText: query,
         lang: context.lang,
-        queryVector,
-        embeddingModel: deps.embedder.model,
+        ...(queryVector && deps.embedder
+          ? { queryVector, embeddingModel: deps.embedder.model }
+          : {}),
         productIds: context.productIds,
       });
       const candidates: TryCandidate[] = [];

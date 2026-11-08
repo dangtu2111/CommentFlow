@@ -1,7 +1,7 @@
 import {
   createAbbreviationDict,
   type Drafter,
-  type Embedder,
+  type EmbeddingResolution,
   type Extractor,
   evaluateReplyCap,
   loadWorkspaceKnowledge,
@@ -38,12 +38,21 @@ import type { BatchHandler } from './run-job';
 export type PipelineJobConfig = {
   db: FlowDb;
   llm: { extractor: Extractor; drafter: Drafter; rewriter?: Rewriter };
+  /** Workspace có được chạy AI không (cờ DB `cf.ai.*` + cấu hình đủ). Tắt → lượt bị bỏ qua (`ai_disabled`), bình luận giữ nguyên. */
+  llmReady?: (workspaceId: string) => Promise<boolean>;
   /** `PIPELINE_ENABLED` và `PIPELINE_WORKSPACE_IDS` (Q-POR1) — chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm. */
   flagEnabled: boolean;
   allowedWorkspaceIds: readonly string[];
   /** Hạn mức lượt/tháng (`resolveAiTurnLimit`). */
   turnLimit: number;
-  embedder?: Embedder;
+  /**
+   * Cấu hình embedding (model hoạt động từ DB + dịch vụ ml từ env). Thiếu/off/lỗi → không có nhánh vector (toàn văn + trigram); KHÔNG có embedder giả.
+   */
+  resolveEmbedding?: (tx: Database) => Promise<EmbeddingResolution>;
+  /** Sự cố dịch vụ embedding giữa lượt (đã suy giảm về toàn văn/trigram); không kèm nội dung. */
+  onEmbeddingFailure?: (workspaceId: string, error: unknown) => void;
+  /** Gọi khi model embedding lệch dữ liệu của workspace (nhánh vector đã tắt cho lượt này); không kèm nội dung kiến thức. */
+  onEmbeddingMismatch?: (workspaceId: string, mismatches: readonly unknown[]) => void;
   now?: () => Date;
 };
 
@@ -84,6 +93,9 @@ export async function runPipelineJob(
 ): Promise<PipelineJobOutcome> {
   const { db } = config;
   const { workspaceId } = job;
+  if (config.llmReady && !(await config.llmReady(workspaceId))) {
+    return { kind: 'ignored', reason: 'ai_disabled' };
+  }
   let commentId = job.commentId;
   const now = (config.now ?? (() => new Date()))();
 
@@ -145,16 +157,28 @@ export async function runPipelineJob(
     return { kind: 'ignored', reason: 'not_auto_eligible' };
   }
 
-  const loaded = await db.withJob(workspaceId, (tx) =>
-    loadWorkspaceKnowledge({
+  const loaded = await db.withJob(workspaceId, async (tx) => {
+    let resolution: EmbeddingResolution | undefined;
+    try {
+      resolution = await config.resolveEmbedding?.(tx);
+    } catch (error) {
+      config.onEmbeddingFailure?.(workspaceId, error); // không đoán model: toàn văn/trigram
+    }
+    const embedding = resolution?.config;
+    return loadWorkspaceKnowledge({
       tx,
       workspaceId,
       version: context.kbVersion,
       productsEnabled: true,
       base: EMPTY_KNOWLEDGE,
-      ...(config.embedder ? { embedder: config.embedder } : {}),
-    }),
-  );
+      ...(embedding?.kind === 'ml' ? { embedder: embedding.embedder } : {}),
+      ...(resolution?.revision != null ? { embeddingRevision: resolution.revision } : {}),
+      onEmbeddingFailure: (error) => config.onEmbeddingFailure?.(workspaceId, error),
+    });
+  });
+  if (loaded?.embedding.state === 'mismatch') {
+    config.onEmbeddingMismatch?.(workspaceId, loaded.embedding.mismatches);
+  }
   const knowledge = loaded ? perCallKnowledge(db, workspaceId, loaded.bind) : EMPTY_KNOWLEDGE;
   const voices = loaded?.context.voices ?? {};
   const abbreviations = loaded?.context.abbreviations ?? {};
@@ -229,6 +253,19 @@ export async function runPipelineJob(
 export function createPipelineHandler(
   config: PipelineJobConfig & { logger: Pick<Logger, 'info' | 'error'> },
 ): BatchHandler {
+  const runConfig: PipelineJobConfig = {
+    ...config,
+    onEmbeddingFailure: (workspaceId, error) =>
+      config.logger.error(
+        { workspaceId, reason: error instanceof Error ? error.name : 'unknown' },
+        'Dịch vụ embedding gặp sự cố — lượt này chỉ tìm toàn văn/trigram',
+      ),
+    onEmbeddingMismatch: (workspaceId, mismatches) =>
+      config.logger.error(
+        { workspaceId, mismatches },
+        'Model tìm kiếm khác dữ liệu — chạy kb:reembed (nhánh vector tắt cho lượt này)',
+      ),
+  };
   return async (jobs) => {
     for (const job of jobs) {
       const parsed = pipelineJobSchema.safeParse(job.data);
@@ -236,7 +273,7 @@ export function createPipelineHandler(
         config.logger.error({ jobId: job.id }, 'pipeline: dữ liệu job không hợp lệ');
         continue;
       }
-      const outcome = await runPipelineJob(config, parsed.data);
+      const outcome = await runPipelineJob(runConfig, parsed.data);
       config.logger.info(
         {
           workspaceId: parsed.data.workspaceId,

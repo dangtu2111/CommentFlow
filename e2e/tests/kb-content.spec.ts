@@ -81,13 +81,14 @@ function runScenarios(locale: Locale) {
       await expect(page.getByText(t('kb.hub.sources.empty'))).toBeVisible();
       await expect(page.getByText(t('kb.hub.product.empty'))).toBeVisible();
 
-      // Ô chạy thử nhận CÂU HỎI THẬT của Owner và trả lời NGAY TRONG TRANG (không chuyển sang trang Thử AI).
+      // Ô chạy thử nhận CÂU HỎI THẬT của Owner và phản hồi NGAY TRONG TRANG (không chuyển sang trang Thử AI).
       const overviewUrl = page.url();
       await page
         .getByLabel(t('kb.hub.playground.label'), { exact: true })
         .fill('Giá áo thun size M bao nhiêu?');
       await page.getByRole('button', { name: t('kb.hub.playground.run') }).click();
-      await expect(page.getByText(t('tryAi.result.reply'))).toBeVisible();
+      // Workspace mới chưa có kiến thức thật (không mock khi chạy): ô chạy thử báo trung thực "chưa có kiến thức để thử" NGAY TRONG TRANG.
+      await expect(page.getByText(t('tryAi.errors.no_knowledge'))).toBeVisible();
       expect(page.url()).toBe(overviewUrl);
     } finally {
       await context.close();

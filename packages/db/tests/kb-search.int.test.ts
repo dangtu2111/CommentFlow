@@ -17,6 +17,7 @@ import {
   seedMember,
   seedUser,
   seedWorkspace,
+  setActiveEmbeddingModel,
 } from './helpers';
 
 /** KB-SEARCH-FTS (FR-057, FR-127, FR-135): trigger tsv/search_norm, tìm lai RRF, tìm sản phẩm, cache theo rev. */
@@ -78,11 +79,11 @@ async function seedChunk(
 async function seedProduct(
   ws: string,
   name: string,
-  opts: { status?: string; price?: number; embedding?: number[] } = {},
+  opts: { status?: string; price?: number; embedding?: number[]; model?: string } = {},
 ): Promise<string> {
   const r = await admin.query(
-    `INSERT INTO cf.products (workspace_id, name, search_text, price_vnd, status, name_embedding)
-     VALUES ($1, $2, $3, $4, $5, $6::halfvec) RETURNING id`,
+    `INSERT INTO cf.products (workspace_id, name, search_text, price_vnd, status, name_embedding, name_embedding_model)
+     VALUES ($1, $2, $3, $4, $5, $6::halfvec, $7) RETURNING id`,
     [
       ws,
       name,
@@ -90,6 +91,7 @@ async function seedProduct(
       opts.price ?? 100000,
       opts.status ?? 'active',
       opts.embedding ? vec(opts.embedding) : null,
+      opts.embedding ? (opts.model ?? 'bge-m3') : null,
     ],
   );
   return r.rows[0].id as string;
@@ -113,6 +115,7 @@ const search = (
 
 beforeAll(async () => {
   admin = createAdminPool();
+  await setActiveEmbeddingModel(admin, 'bge-m3');
   db = createAppDb();
   wsA = await seedWorkspace(admin);
   wsB = await seedWorkspace(admin);
@@ -380,9 +383,34 @@ describe('FR-127 searchProducts / findProductMatch', () => {
   it('nhánh vector: sản phẩm gần vector truy vấn có mặt dù chữ không giống', async () => {
     const p = await seedProduct(wsA, 'Mẫu vec riêng', { embedding: unit(33) });
     const hits = await db.withWorkspace(wsA, (tx) =>
-      searchProducts(tx, { workspaceId: wsA, queryText: 'khongtrung', queryVector: unit(33) }),
+      searchProducts(tx, {
+        workspaceId: wsA,
+        queryText: 'khongtrung',
+        queryVector: unit(33),
+        embeddingModel: 'bge-m3',
+      }),
     );
     expect(hits.map((h) => h.id)).toContain(p);
+  });
+
+  it('KHÔNG trộn model: vector sản phẩm khác model, hoặc truy vấn không nêu model → không có nhánh vector', async () => {
+    const p = await seedProduct(wsA, 'Mẫu vec model cũ', {
+      embedding: unit(34),
+      model: 'cu-model',
+    });
+    const other = await db.withWorkspace(wsA, (tx) =>
+      searchProducts(tx, {
+        workspaceId: wsA,
+        queryText: 'khongtrung2',
+        queryVector: unit(34),
+        embeddingModel: 'bge-m3',
+      }),
+    );
+    expect(other.map((h) => h.id)).not.toContain(p);
+    const noModel = await db.withWorkspace(wsA, (tx) =>
+      searchProducts(tx, { workspaceId: wsA, queryText: 'khongtrung2', queryVector: unit(34) }),
+    );
+    expect(noModel.map((h) => h.id)).not.toContain(p);
   });
 
   it('hai sản phẩm gần như nhau → mơ hồ', async () => {
@@ -402,7 +430,7 @@ describe('FR-135 getProductRevs + isProductCacheStale', () => {
     expect(cached).toEqual({ [p]: 1 });
 
     await admin.query("UPDATE cf.products SET name = 'Mũ lưỡi trai mới' WHERE id = $1", [p]);
-    await db.withActor(wsA, owner, (tx) => setProductNameEmbedding(tx, wsA, p, unit(5)));
+    await db.withActor(wsA, owner, (tx) => setProductNameEmbedding(tx, wsA, p, unit(5), 'bge-m3'));
     const afterName = await db.withWorkspace(wsA, (tx) => getProductRevs(tx, wsA, [p]));
     expect(isProductCacheStale(cached, afterName)).toBe(false);
 
@@ -425,19 +453,27 @@ describe('FR-127 setProductNameEmbedding: quyền', () => {
   it('thành viên ghi được; withWorkspace trần không ghi được; id lạ → false', async () => {
     const p = await seedProduct(wsA, 'Dép quai ngang');
     expect(
-      await db.withActor(wsA, owner, (tx) => setProductNameEmbedding(tx, wsA, p, unit(1))),
+      await db.withActor(wsA, owner, (tx) =>
+        setProductNameEmbedding(tx, wsA, p, unit(1), 'bge-m3'),
+      ),
     ).toBe(true);
     expect(
-      await db.withActor(wsA, owner, (tx) => setProductNameEmbedding(tx, wsA, newId(), unit(1))),
+      await db.withActor(wsA, owner, (tx) =>
+        setProductNameEmbedding(tx, wsA, newId(), unit(1), 'bge-m3'),
+      ),
     ).toBe(false);
     // withWorkspace trần: RLS lọc hết dòng → không ghi được (false), giá trị cũ giữ nguyên.
-    expect(await db.withWorkspace(wsA, (tx) => setProductNameEmbedding(tx, wsA, p, unit(2)))).toBe(
-      false,
-    );
+    expect(
+      await db.withWorkspace(wsA, (tx) => setProductNameEmbedding(tx, wsA, p, unit(2), 'bge-m3')),
+    ).toBe(false);
     const row = (
       await admin.query('SELECT name_embedding::text AS e FROM cf.products WHERE id = $1', [p])
     ).rows[0];
     expect(row.e.startsWith('[0,1,0')).toBe(true); // unit(1) = [0,1,0…]
+    const model = (
+      await admin.query('SELECT name_embedding_model AS m FROM cf.products WHERE id = $1', [p])
+    ).rows[0].m;
+    expect(model).toBe('bge-m3'); // model ghi CÙNG LÚC với vector (chặn lệch model)
   });
 
   it('chuẩn hóa truy vấn khớp phép lower(unaccent()) của DB', async () => {

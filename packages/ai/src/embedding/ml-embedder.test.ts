@@ -129,3 +129,36 @@ describe('loadMlEmbedderOptions (cờ mặc định TẮT)', () => {
     ).toEqual({ baseUrl: 'http://ml' });
   });
 });
+
+describe('createMlEmbedder — xác nhận model dịch vụ trả về (FR-133)', () => {
+  it('model của embedder = model được yêu cầu (đang hoạt động ở DB); dịch vụ trả đúng model → dùng được', async () => {
+    const { fetchImpl } = setup((b) => json(okBody(b.texts.length, { model: 'bge-m3-v2' })));
+    const embedder = createMlEmbedder({
+      baseUrl: 'http://ml',
+      fetchImpl,
+      expectedModel: 'bge-m3-v2',
+    });
+    expect(embedder.model).toBe('bge-m3-v2');
+    expect(await embedder.embed(['a'])).toHaveLength(1);
+  });
+
+  it('dịch vụ trả model KHÁC model đang hoạt động → từ chối dùng, báo lỗi rõ (không trả vector sai model)', async () => {
+    const { fetchImpl } = setup((b) => json(okBody(b.texts.length, { model: 'bge-m3' })));
+    const embedder = createMlEmbedder({
+      baseUrl: 'http://ml',
+      fetchImpl,
+      expectedModel: 'model-khac',
+    });
+    const error = await embedder.embed(['a']).catch((e) => e);
+    expect(isAppError(error)).toBe(true);
+    expect(String(error.message)).toContain('model-khac');
+    expect(String(error.message)).toContain('bge-m3');
+  });
+
+  it('không nêu expectedModel → mặc định bge-m3 (và vẫn kiểm phản hồi)', async () => {
+    const { fetchImpl } = setup((b) => json(okBody(b.texts.length, { model: 'khac' })));
+    const embedder = createMlEmbedder({ baseUrl: 'http://ml', fetchImpl });
+    expect(embedder.model).toBe(ML_EMBEDDING_MODEL);
+    await expect(embedder.embed(['a'])).rejects.toThrow();
+  });
+});

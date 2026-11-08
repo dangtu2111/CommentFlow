@@ -1,0 +1,15 @@
+# Cấu hình embedding và quy tắc "không mock khi chạy"
+
+Áp dụng cho mọi agent và mọi lệnh. Chủ dự án chốt 08/11/2026 sau sự cố: bge-m3 được bật bằng cờ truyền riêng cho một lệnh còn web/worker chạy embedder mock → `kb_chunks` là bge-m3 nhưng câu hỏi dùng vector giả → nhánh vector vô nghĩa mà không ai biết. Mục tiêu: lệch model **không thể xảy ra** (không chỉ phát hiện). Thiết kế: `docs/09` §6.2, FR-133 (`docs/05`), Q-EMB-1.
+
+## Quy tắc
+1. **DB là nguồn duy nhất của model đang hoạt động:** `cf.embedding_state.active_model`. Web (ô Thử AI), worker (job `pipeline`, kiểm khi khởi động) và EVAL đọc tên model từ DB qua `resolveEmbeddingConfig(service, activeModel)` / `createEmbeddingResolver` (`@flow/ai`). Env **không chọn model**: chỉ còn `ML_EMBED_ENABLED`, `ML_URL`, `ML_API_TOKEN` (bật/tắt + địa chỉ dịch vụ ml). Dịch vụ ml trả `model` khác model hoạt động → embedder từ chối dùng và báo lỗi.
+2. **Không đổi cho một lệnh:** không đặt cờ/biến ảnh hưởng dữ liệu chỉ trong dòng lệnh của MỘT lệnh. Bật/tắt dịch vụ ml → báo chủ dự án sửa `.env.local`, khởi động lại. Đổi model → chỉ qua lệnh `kb:switch-embedding <model>` (mục dưới).
+3. **Không mock khi chạy:** thiếu dịch vụ ml hoặc DB chưa kích hoạt model → cấu hình `off`: nhánh vector TẮT (chỉ toàn văn/trigram) và giao diện báo lý do. Dịch vụ ml lỗi giữa lượt → lượt vẫn chạy bằng toàn văn/trigram + ghi nhận sự cố (log error, banner), không mock.
+4. **Bản giả chỉ cho test tự động:** test tự cắm qua tham số; không chọn được bằng biến môi trường; `assertMockAllowed` (`@flow/shared`) báo lỗi nếu tiến trình không phải test (vitest hoặc `NODE_ENV=test`) nạp bản giả. EVAL `--backend mock` tự khai báo bằng hàm và báo cáo ghi "MOCK — không phải số đo chất lượng".
+5. **Một đường ghi vector, luôn kèm model:** mọi vector ghi vào `kb_chunks.embedding`, `products.name_embedding` đi kèm model đang hoạt động; trigger DB (0079) từ chối ghi sai model từ cf_app/cf_worker. Test `packages/db/src/embedding-writers.test.ts` (chạy ở CI) liệt kê các file được phép ghi vector — thêm đường ghi mới phải thêm vào danh sách kèm lý do và test. (Bảng ví dụ trả lời `kb_answer_examples` chưa có; khi tạo phải đi qua cùng cơ chế.)
+6. **Mỗi câu tìm lọc từng dòng** `embedding_model = model hoạt động` (kb_chunks, products); lệch giữa cấu hình và dữ liệu là lỗi S1: log error + banner "Model tìm kiếm khác dữ liệu — chạy kb:switch-embedding" và tắt nhánh vector; trạng thái nhớ theo (workspace, kb_version, revision).
+7. **Mọi báo cáo EVAL ghi embedder đã dùng** (dòng "Embedder": model hoạt động từ DB + dịch vụ).
+
+## Đổi model embedding (`kb:switch-embedding <model>`)
+Lệnh riêng, chạy bằng kết nối `cf_worker` (không dùng khóa admin): tạo vector mới vào cột đệm cho TOÀN BỘ dữ liệu (mọi workspace; đoạn kiến thức nháp + đã xuất bản, tên sản phẩm) trong khi truy vấn vẫn dùng model cũ; đủ 100% (đếm khớp) mới gọi `cf.switch_active_embedding` — một giao dịch, bảng khóa GHI trong lúc chuyển: đổi `active_model`, chuyển cột đệm → cột chính. Lỗi/ngắt giữa chừng → giữ nguyên model cũ (chạy lại tiếp tục từ chỗ dở). Dịch vụ ml phải đang chạy đúng model đích. Lần đầu (chưa có model hoạt động) cũng dùng lệnh này để kích hoạt bge-m3.

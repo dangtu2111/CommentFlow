@@ -70,6 +70,10 @@ export function buildE2eEnv(source, { port, lane }) {
     DATABASE_URL: at('TEST_DATABASE_URL'),
     DATABASE_ADMIN_URL: at('TEST_DATABASE_ADMIN_URL'),
     DATABASE_AUTH_URL: at('TEST_DATABASE_AUTH_URL'),
+    // Role worker (kb:switch-embedding, worker E2E): chỉ khi có biến; DB test của làn như ba URL trên.
+    ...(source.TEST_DATABASE_WORKER_URL
+      ? { DATABASE_WORKER_URL: at('TEST_DATABASE_WORKER_URL') }
+      : {}),
     // Tiền tố riêng: rate limit của E2E không dùng chung khóa với web dev (`dev:`).
     REDIS_KEY_PREFIX: source.E2E_REDIS_KEY_PREFIX || 'e2e:',
     // Người gửi thư thử (Mailpit): không phải bí mật; mặc định khi .env chưa có.

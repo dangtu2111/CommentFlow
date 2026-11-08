@@ -24,11 +24,11 @@ describe('hashVirtualKey', () => {
 });
 
 describe('buildRemoteCommand', () => {
-  it('mặc định cf-classify, cf-draft, mock-llm; 10 USD; 30d; chỉ chứa mã băm', () => {
+  it('mặc định cf-classify, cf-draft (không model giả); 10 USD; 30d; chỉ chứa mã băm', () => {
     expect(buildRemoteCommand({ keyHash: HASH })).toBe(
-      `docker exec -i cf-dev-litellm-1 python - ${HASH} cf-classify cf-draft mock-llm --max-budget 10 --duration 30d`,
+      `docker exec -i cf-dev-litellm-1 python - ${HASH} cf-classify cf-draft --max-budget 10 --duration 30d`,
     );
-    expect(DEFAULT_MODELS).toEqual(['cf-classify', 'cf-draft', 'mock-llm']);
+    expect(DEFAULT_MODELS).toEqual(['cf-classify', 'cf-draft']);
   });
 
   it('từ chối mã băm/model/ngân sách/chu kỳ không hợp lệ (chống chèn lệnh)', () => {

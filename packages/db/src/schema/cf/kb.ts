@@ -124,6 +124,9 @@ export const kbChunks = cf.table(
     validFrom: timestamptz('valid_from'),
     validUntil: timestamptz('valid_until'),
     embeddingModel: text('embedding_model'),
+    /** Vector của model MỚI đang tạo song song (kb:switch-embedding); chuyển sang `embedding` trong một giao dịch (0079). */
+    embeddingNext: halfvec1024('embedding_next'),
+    embeddingNextModel: text('embedding_next_model'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

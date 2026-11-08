@@ -79,7 +79,9 @@ export function checkSample(sample: EvalSample, outcome: SampleOutcome): SampleC
   const priceWrong = outcome.moneyViolations > 0 || forbiddenHit;
   const actionOk = outcome.action === expected.action;
   return {
-    label: outcome.label === expected.label,
+    label:
+      outcome.label === expected.label ||
+      (expected.altLabels ?? []).includes(outcome.label as never),
     action: actionOk,
     lang: hasReply ? outcome.lang === expected.lang : null,
     facts:

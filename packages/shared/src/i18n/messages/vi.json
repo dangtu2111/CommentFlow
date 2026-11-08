@@ -1794,14 +1794,14 @@
     "pageTitle": "Câu kiểm thử kiến thức",
     "title": "Câu kiểm thử trước khi xuất bản",
     "subtitle": "Viết vài câu hỏi mẫu của khách kèm kết quả mong đợi, chạy thử để chắc AI xử lý đúng trước khi xuất bản kiến thức. Không trừ lượt AI của gói.",
-    "mockNote": "Đang chạy bản mô phỏng (không gọi AI thật). Bộ câu chưa được lưu và chưa chặn nút Xuất bản; bạn cần chạy lại mỗi lần.",
+    "mockNote": "Chạy bằng AI thật và kiến thức thật của shop. Bộ câu chưa được lưu và chưa chặn nút Xuất bản; bạn cần chạy lại mỗi lần.",
     "label": "Danh sách câu kiểm thử",
     "hint": "Mỗi dòng một câu: câu hỏi | hành động mong đợi | từ khóa phải có trong câu trả lời (không bắt buộc, cách nhau bằng dấu ;). Hành động: answer (trả lời), clarify (hỏi lại), redirect (chuyển hướng), handoff (chuyển nhân viên), skip (bỏ qua). Tối đa {max} dòng.",
     "sample": "ship về Hà Nội bao nhiêu | redirect | 20.000đ\náo thun basic size M màu đen giá bao nhiêu? | answer\n😀😀 | skip",
     "submit": "Chạy bộ câu kiểm thử",
     "quota": "Đã chạy {used}/{limit} lần hôm nay",
     "knowledge": {
-      "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
+      "demo": "Nguồn: chưa có kiến thức thật của shop",
       "kb": "Nguồn: kiến thức đã xuất bản của shop"
     },
     "errors": {
@@ -1809,7 +1809,11 @@
       "too_many": "Quá nhiều câu (tối đa {max} dòng mỗi lần chạy).",
       "invalid_line": "Dòng {line} chưa đúng dạng: cần \"câu hỏi | hành động\" với hành động hợp lệ, từ khóa tối đa 5 và mỗi từ khóa tối đa 100 ký tự.",
       "limit_reached": "Hôm nay bạn đã chạy hết số lần cho phép. Hãy quay lại vào ngày mai.",
-      "unavailable": "Không chạy được lúc này. Hãy thử lại sau."
+      "unavailable": "Không chạy được lúc này. Hãy thử lại sau.",
+      "llm_missing_service": "AI chưa chạy được: máy chủ chưa có địa chỉ/khóa dịch vụ AI (LiteLLM). Báo quản trị kiểm tra cấu hình dịch vụ AI.",
+      "llm_missing_model": "AI chưa chạy được: chưa đặt tên model cho bước phân loại hoặc soạn câu. Báo quản trị đặt tên model rồi khởi động lại.",
+      "llm_flag_off": "AI đang TẮT cho workspace này: cần bật cờ cf.ai.classify và cf.ai.draft cho workspace (quản trị bật bằng lệnh flags:set hoặc trang Admin).",
+      "no_knowledge": "Workspace chưa có kiến thức hoặc sản phẩm thật để thử. Hãy nhập sản phẩm/chính sách (hoặc xuất bản kiến thức) rồi thử lại."
     },
     "summary": "Đạt {passed}/{total} · không đạt {failed} · lỗi {errored}",
     "gate": {
@@ -2015,7 +2019,7 @@
     "pageTitle": "Thử AI",
     "title": "Thử AI",
     "subtitle": "Gõ một bình luận mẫu để xem AI sẽ phân loại, trả lời và có được tự gửi hay không. Không trừ lượt AI của gói.",
-    "mockNote": "Đang chạy bản mô phỏng (không gọi AI thật, kiến thức mẫu). Kết quả chỉ để xem trước luồng xử lý.",
+    "mockNote": "Chạy bằng AI thật và kiến thức thật của shop (cần cấu hình AI). Không trừ lượt AI của gói và không gửi gì cho khách.",
     "label": "Bình luận mẫu của khách",
     "placeholder": "Ví dụ: áo thun basic size M màu đen giá bao nhiêu?",
     "previousLabel": "Lượt trước trong hội thoại (tùy chọn)",
@@ -2024,16 +2028,25 @@
     "submit": "Thử",
     "quota": "Đã dùng {used}/{limit} lượt thử hôm nay",
     "llm": {
-      "off": "Nhận diện ý định và soạn câu: bản mô phỏng (chưa bật AI thật)",
+      "off": "Chưa cấu hình AI thật",
       "extractor": "nhận diện ý định",
       "rewriter": "viết lại câu hỏi",
       "drafter": "soạn câu trả lời",
-      "on": "AI thật đang chạy ở bước: {steps}; các bước còn lại là bản mô phỏng"
+      "on": "AI thật đang chạy ở bước: {steps}"
     },
     "knowledge": {
-      "demo": "Nguồn: kiến thức mẫu (chưa nối kiến thức thật của shop)",
-      "shop": "Nguồn: sản phẩm thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm); chính sách vẫn là đoạn mẫu",
+      "demo": "Nguồn: chưa có kiến thức thật của shop",
+      "shop": "Nguồn: sản phẩm, chính sách và FAQ thật của shop (giá/tồn/biến thể đọc từ kho sản phẩm)",
       "kb": "Nguồn: kiến thức đã xuất bản của shop — điểm 0–1 là độ liên quan do hệ thống tính"
+    },
+    "embedding": {
+      "mismatch": "Model tìm kiếm khác dữ liệu — chạy kb:reembed. Nhánh vector đang tắt (chỉ tìm toàn văn/trigram) cho tới khi khớp.",
+      "failed": "Dịch vụ embedding đang gặp sự cố — lượt này chỉ tìm toàn văn/trigram. Báo quản trị kiểm tra dịch vụ ml.",
+      "off": {
+        "service_disabled": "Tìm kiếm vector đang tắt (chưa bật dịch vụ embedding) — chỉ tìm toàn văn/trigram.",
+        "no_active_model": "Chưa kích hoạt model embedding — chạy kb:switch-embedding; trong lúc đó chỉ tìm toàn văn/trigram.",
+        "unreadable": "Không đọc được trạng thái embedding ở DB — tạm thời chỉ tìm toàn văn/trigram."
+      }
     },
     "voice": {
       "shop": "Giọng văn: của shop (đọc từ mục Giọng văn đã lưu cho ngôn ngữ này)",
@@ -2044,7 +2057,11 @@
       "too_long": "Bình luận quá dài (tối đa {max} ký tự).",
       "limit_reached": "Hôm nay bạn đã dùng hết lượt thử. Hãy quay lại vào ngày mai.",
       "unavailable": "Không thử được lúc này. Hãy thử lại sau.",
-      "ai_invalid_output": "Chuyển người: AI không trả kết quả hợp lệ. Câu này sẽ được chuyển cho nhân viên xử lý."
+      "ai_invalid_output": "Chuyển người: AI không trả kết quả hợp lệ. Câu này sẽ được chuyển cho nhân viên xử lý.",
+      "llm_missing_service": "AI chưa chạy được: máy chủ chưa có địa chỉ/khóa dịch vụ AI (LiteLLM). Báo quản trị kiểm tra cấu hình dịch vụ AI.",
+      "llm_missing_model": "AI chưa chạy được: chưa đặt tên model cho bước phân loại hoặc soạn câu. Báo quản trị đặt tên model rồi khởi động lại.",
+      "llm_flag_off": "AI đang TẮT cho workspace này: cần bật cờ cf.ai.classify và cf.ai.draft cho workspace (quản trị bật bằng lệnh flags:set hoặc trang Admin).",
+      "no_knowledge": "Workspace chưa có kiến thức hoặc sản phẩm thật để thử. Hãy nhập sản phẩm/chính sách (hoặc xuất bản kiến thức) rồi thử lại."
     },
     "skipped": "Bình luận chỉ có biểu tượng/tag/dấu câu nên AI bỏ qua (không phân loại, không trả lời, không trừ lượt).",
     "result": {

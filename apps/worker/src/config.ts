@@ -1,4 +1,4 @@
-import { loadMlEmbedderOptions, type MlEmbedderOptions } from '@flow/ai';
+import { loadEmbeddingService, type MlEmbedderOptions } from '@flow/ai';
 import { parseEnv, parsePipelineWorkspaceIds, resolveAiTurnLimit } from '@flow/shared';
 import { z } from 'zod';
 
@@ -151,10 +151,8 @@ export type WorkerConfig = {
   workspaceDeleteEnabled: boolean;
   instagram: InstagramConnectorConfig;
   dataExport: DataExportConfig;
-  /** FR-133: cờ `KB_REEMBED_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); tắt → không đăng ký hàng đợi `kb-reembed`. */
-  kbReembedEnabled: boolean;
-  /** Embedding thật (bge-m3 qua `ml`) cho `kb-reembed`: chỉ khi `ML_EMBED_ENABLED=true` + `ML_URL`; thiếu → bản mock. */
-  mlEmbedder: MlEmbedderOptions | undefined;
+  /** Dịch vụ ml cho embedding (env chỉ bật/tắt + địa chỉ); `undefined` = không dùng. Model hoạt động đọc từ DB (`cf.embedding_state`), KHÔNG từ env (FR-133). */
+  embeddingService: MlEmbedderOptions | undefined;
   messenger: MessengerConnectorConfig;
   tiktok: TikTokConnectorConfig;
   /** Đồng bộ Shopify thật: cờ `SHOPIFY_ENABLED` MẶC ĐỊNH TẮT (chỉ đúng chữ `true`); bật thì cần `TOKEN_ENC_KEYS`. */
@@ -180,13 +178,12 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     workspaceDeleteEnabled: env.WORKSPACE_DELETE_ENABLED,
     instagram: loadInstagramConfig(source),
     dataExport: loadDataExportConfig(source),
-    kbReembedEnabled: source.KB_REEMBED_ENABLED?.trim() === 'true',
     pipeline: {
       enabled: source.PIPELINE_ENABLED?.trim() === 'true',
       workspaceIds: parsePipelineWorkspaceIds(source.PIPELINE_WORKSPACE_IDS),
       turnLimit: resolveAiTurnLimit(source),
     },
-    mlEmbedder: loadMlEmbedderOptions(source),
+    embeddingService: loadEmbeddingService(source),
     messenger: loadMessengerConfig(source),
     tiktok: loadTikTokConfig(source),
     shopify: {

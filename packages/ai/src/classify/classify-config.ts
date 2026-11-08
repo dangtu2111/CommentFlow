@@ -1,15 +1,8 @@
-/**
- * Cấu hình bước phân loại LLM (FR-027). Cờ MẶC ĐỊNH TẮT: chỉ đúng chữ `true` mới bật (đường dùng
- * khóa LLM trả phí). Model mặc định `mock-llm` = model duy nhất của khóa dev.
- */
-export type ClassifyConfig = { enabled: boolean; model: string };
+import { loadLlmModel } from '../llm-step-config';
 
-export const DEFAULT_CLASSIFY_MODEL = 'mock-llm';
+/** Model bước phân loại LLM (FR-027): `CLASSIFY_LLM_MODEL`, bắt buộc, không mặc định. Bật/tắt: cờ DB `cf.ai.classify`. */
+export type ClassifyConfig = { model: string | null };
 
 export function loadClassifyConfig(env: Record<string, string | undefined>): ClassifyConfig {
-  const model = env.CLASSIFY_LLM_MODEL?.trim();
-  return {
-    enabled: env.CLASSIFY_LLM_ENABLED === 'true',
-    model: model ? model : DEFAULT_CLASSIFY_MODEL,
-  };
+  return { model: loadLlmModel(env, 'CLASSIFY_LLM_MODEL') };
 }
