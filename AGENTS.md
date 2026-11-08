@@ -22,7 +22,8 @@ Làm việc như **Senior Software Architect & Senior Full-stack Developer**: ph
 - Test một file: `pnpm --filter <gói> exec vitest run <đường-dẫn-file>`; ml: `cd services/ml && uv run pytest tests/<file>`
 - Test toàn bộ: `pnpm test` (ml: `cd services/ml && uv run pytest`)
 - Lint / typecheck: `pnpm lint && pnpm lint:i18n && pnpm typecheck && pnpm depcruise` (ml: `uv run ruff check .`)
-- **Trước mỗi lần push:** `pnpm precheck` (docs:build, lint, format check, typecheck, check:migrations, check:plans, check:gitleaks-allowlist; dừng ở lỗi đầu). Agent tự chạy tay — không hook. CI chỉ chạy ở PR và push vào `main`, nên lỗi rẻ phải bắt trước khi push.
+- **Chỉ push bằng `pnpm push:safe`** (chạy `pnpm precheck`, CHỈ `git push` khi mã thoát = 0, in rõ lỗi nếu đỏ; không nhận `--force`/xóa nhánh; tham số khác chuyển cho `git push`). **Không** gõ `git push` trực tiếp. Lọc output (`| tail`, `| grep`, `| sed`) chỉ để ĐỌC log, **không bao giờ** đứng giữa lệnh kiểm và lệnh push (ống làm mất mã thoát — lỗi push khi precheck đỏ đã lặp 3 lần).
+- Nội dung `pnpm precheck` (docs:build, lint, format check, typecheck, check:migrations, check:plans, check:gitleaks-allowlist; dừng ở lỗi đầu). Agent tự chạy tay — không hook. CI chỉ chạy ở PR và push vào `main`, nên lỗi rẻ phải bắt trước khi push.
 - Test tích hợp (DB thật `cf_test` trên máy phụ): `pnpm test:db` (cần `.env` + máy phụ bật)
 - Migration (dev/test/ci): `pnpm db:migrate` · kiểm RLS: `pnpm db:check-rls` · hàng đợi: `pnpm --filter @flow/worker queue:install`. Chỉ DB `cf_dev`/`cf_test`/`cf_ci`; staging/production chỉ qua CI có duyệt
 - Mẫu biến môi trường **đặt tên không có dấu chấm đầu, vĩnh viễn**: `env.example` (máy code) và `infra/env.cf-dev.example` (máy ảo); chỉ có tên biến + mô tả. File thật `.env` (máy code) và `.env.cf-dev` (máy ảo) không bao giờ commit. Chủ dự án tạo `.env` bằng `ssh cf "~/CommentFlow/infra/scripts/print-dev-env.sh" > .env` — **agent không chạy script này**.
