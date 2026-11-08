@@ -1,5 +1,6 @@
 import {
   ALIAS_MATCH_THRESHOLD,
+  hybridProductScores,
   normalizeSearchText,
   type ProductMatch,
   pickProductMatch,
@@ -225,6 +226,8 @@ export type ProductHit = {
   similarity: number;
   /** Điểm RRF của hai nhánh (để xếp thứ tự). */
   score: number;
+  /** Cosine giữa vector câu hỏi và `name_embedding` (null nếu không có nhánh vector hoặc sản phẩm chưa có vector cùng model). */
+  cosine: number | null;
 };
 
 /**
@@ -263,8 +266,8 @@ export async function searchProducts(
   const semantic =
     input.queryVector && input.embeddingModel
       ? (
-          await tx.execute<{ id: string; name: string }>(sql`
-          SELECT p.id, p.name
+          await tx.execute<{ id: string; name: string; cosine: number }>(sql`
+          SELECT p.id, p.name, (1 - (p.name_embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024)))::float8 AS cosine
             FROM cf.products p
            WHERE p.workspace_id = ${input.workspaceId}::uuid AND p.status = 'active'
              AND p.name_embedding IS NOT NULL
@@ -274,6 +277,7 @@ export async function searchProducts(
         ).rows
       : [];
   const similarityOf = new Map(trigram.map((row) => [row.id, Number(row.s)]));
+  const cosineOf = new Map(semantic.map((row) => [row.id, Number(row.cosine)]));
   const nameOf = new Map([...trigram, ...semantic].map((row) => [row.id, row.name]));
   return reciprocalRankFusion([trigram.map((r) => r.id), semantic.map((r) => r.id)])
     .slice(0, limit)
@@ -282,6 +286,7 @@ export async function searchProducts(
       name: nameOf.get(id) ?? '',
       similarity: similarityOf.get(id) ?? 0,
       score,
+      cosine: cosineOf.get(id) ?? null,
     }));
 }
 
@@ -300,7 +305,9 @@ export async function findProductMatch(
   );
   if (byAlias.status !== 'none') return byAlias;
   const hits = await searchProducts(tx, input);
-  return pickProductMatch(hits.map((hit) => ({ id: hit.id, score: hit.similarity })));
+  // (1b) LAI: điểm mỗi sản phẩm = lớn hơn của trigram và cosine vector tên (khách gõ lệch chữ vẫn khớp) + ưu tiên token đặc trưng (xxxl, a4, 2 in 1, mã);
+  // thiếu vector → như cũ (chỉ trigram). Đo 08/11: lai-max hơn lai-RRF (docs/testing/eval-product-match-2026-11-08.md).
+  return pickProductMatch(hybridProductScores(hits, { mention: input.queryText }));
 }
 
 /**
@@ -335,4 +342,25 @@ export async function setProductNameEmbedding(
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${productId}::uuid
     RETURNING id`);
   return result.rows.length > 0;
+}
+
+/** Ghi vector tên + model; chỉ ghi khi tên còn như lúc đọc. KHÔNG tăng `rev`. Trả số hàng đã ghi. */
+export async function writeProductNameVectors(
+  tx: Database,
+  workspaceId: string,
+  model: string,
+  rows: Array<{ id: string; name: string; embedding: number[] }>,
+): Promise<number> {
+  let written = 0;
+  for (const row of rows) {
+    if (row.embedding.length !== 1024 || row.embedding.some((v) => !Number.isFinite(v))) {
+      throw new Error('Vector tên sản phẩm sai kích thước hoặc có giá trị không hợp lệ.');
+    }
+    const result = await tx.execute(sql`
+      UPDATE cf.products
+         SET name_embedding = ${vectorLiteral(row.embedding)}::halfvec(1024), name_embedding_model = ${model}
+       WHERE workspace_id = ${workspaceId}::uuid AND id = ${row.id}::uuid AND name = ${row.name}`);
+    written += result.rowCount ?? 0;
+  }
+  return written;
 }

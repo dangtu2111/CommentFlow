@@ -1,0 +1,31 @@
+{"id": "demo-shop-01", "mention": "áo thun", "kind": "match", "gold": ["Áo thun basic"], "note": "có dấu"}
+{"id": "demo-shop-02", "mention": "ao thun basic", "kind": "match", "gold": ["Áo thun basic"], "note": "không dấu"}
+{"id": "demo-shop-03", "mention": "ao thun", "kind": "match", "gold": ["Áo thun basic"], "note": "không dấu ngắn"}
+{"id": "demo-shop-04", "mention": "váy hoa", "kind": "match", "gold": ["Váy hoa nhí"], "note": "rút gọn"}
+{"id": "demo-shop-05", "mention": "vay hoa nhi", "kind": "match", "gold": ["Váy hoa nhí"], "note": "không dấu"}
+{"id": "demo-shop-06", "mention": "đầm hoa", "kind": "match", "gold": ["Váy hoa nhí"], "note": "đồng nghĩa"}
+{"id": "demo-shop-07", "mention": "dam hoa nhi", "kind": "match", "gold": ["Váy hoa nhí"], "note": "đồng nghĩa không dấu"}
+{"id": "demo-shop-08", "mention": "túi tote", "kind": "match", "gold": ["Túi tote canvas"], "note": "rút gọn"}
+{"id": "demo-shop-09", "mention": "tui tote canvas", "kind": "match", "gold": ["Túi tote canvas"], "note": "không dấu"}
+{"id": "demo-shop-10", "mention": "túi vải canvas", "kind": "match", "gold": ["Túi tote canvas"], "note": "đồng nghĩa"}
+{"id": "demo-shop-11", "mention": "quần jean", "kind": "match", "gold": ["Quần jean ống rộng"], "note": "rút gọn"}
+{"id": "demo-shop-12", "mention": "quan jean rong", "kind": "match", "gold": ["Quần jean ống rộng"], "note": "không dấu"}
+{"id": "demo-shop-13", "mention": "quần bò ống rộng", "kind": "match", "gold": ["Quần jean ống rộng"], "note": "đồng nghĩa"}
+{"id": "demo-shop-14", "mention": "quan jeans", "kind": "match", "gold": ["Quần jean ống rộng"], "note": "gõ khác"}
+{"id": "demo-shop-15", "mention": "giày thể thao", "kind": "none", "gold": [], "note": "không bán"}
+{"id": "demo-shop-16", "mention": "điện thoại samsung", "kind": "none", "gold": [], "note": "không bán"}
+{"id": "demo-shop-17", "mention": "nồi cơm điện", "kind": "none", "gold": [], "note": "không bán"}
+{"id": "demo-shop-18", "mention": "son môi", "kind": "none", "gold": [], "note": "không bán"}
+{"id": "demo-shop-19", "mention": "áo sơ mi trắng", "kind": "none", "gold": [], "note": "không bán (gần áo thun)"}
+{"id": "demo-shop-20", "mention": "balo laptop", "kind": "none", "gold": [], "note": "không bán (gần túi)"}
+{"id": "demo-shop-21", "mention": "áo phông", "kind": "match", "gold": ["Áo thun basic"], "note": "đồng nghĩa"}
+{"id": "demo-shop-22", "mention": "ao phong", "kind": "match", "gold": ["Áo thun basic"], "note": "đồng nghĩa không dấu"}
+{"id": "demo-shop-23", "mention": "đầm", "kind": "match", "gold": ["Váy hoa nhí"], "note": "đồng nghĩa"}
+{"id": "demo-shop-24", "mention": "quần bò", "kind": "match", "gold": ["Quần jean ống rộng"], "note": "đồng nghĩa"}
+{"id": "demo-shop-25", "mention": "túi vải", "kind": "match", "gold": ["Túi tote canvas"], "note": "đồng nghĩa"}
+{"id": "demo-shop-26", "mention": "áo khoác dạ", "kind": "none", "gold": [], "note": "gần danh mục, không bán"}
+{"id": "demo-shop-27", "mention": "ví da nam", "kind": "none", "gold": [], "note": "không bán"}
+{"id": "demo-shop-28", "mention": "giày cao gót", "kind": "none", "gold": [], "note": "không bán"}
+{"id": "demo-shop-29", "mention": "mũ lưỡi trai", "kind": "none", "gold": [], "note": "không bán"}
+{"id": "demo-shop-30", "mention": "quần short", "kind": "none", "gold": [], "note": "gần quần jean, không bán"}
+{"id": "demo-shop-31", "mention": "áo sơ mi", "kind": "none", "gold": [], "note": "gần áo thun, không bán"}

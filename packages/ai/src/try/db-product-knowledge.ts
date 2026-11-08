@@ -12,6 +12,7 @@ import {
   unsafeMarkMasked,
 } from '@flow/shared';
 import type { VariantAxis } from '../decide/decide-action';
+import type { Embedder } from '../embedding/embedder';
 import type { TryCandidate, TryKnowledge } from './try-pipeline';
 
 /**
@@ -167,14 +168,40 @@ export type DbProductKnowledge = Pick<
   'matchProducts' | 'lookupProductFacts' | 'resolveProducts'
 >;
 
-export function createDbProductKnowledge(tx: Database, workspaceId: string): DbProductKnowledge {
+export type DbProductKnowledgeOptions = {
+  /** Embedder thật (đã qua kiểm lệch model). Thiếu → khớp chỉ bằng bí danh + trigram. */
+  embedder?: Embedder;
+  /** Embedder lỗi giữa lượt (đã suy giảm về trigram); không kèm nội dung. */
+  onEmbeddingFailure?: (error: unknown) => void;
+};
+
+export function createDbProductKnowledge(
+  tx: Database,
+  workspaceId: string,
+  options: DbProductKnowledgeOptions = {},
+): DbProductKnowledge {
+  /** Vector tên của lời nhắc (1b); lỗi → undefined (chỉ trigram), có ghi nhận. */
+  const vectorOf = async (text: string) => {
+    if (!options.embedder) return {};
+    try {
+      const [queryVector] = await options.embedder.embed([text]);
+      return queryVector ? { queryVector, embeddingModel: options.embedder.model } : {};
+    } catch (error) {
+      options.onEmbeddingFailure?.(error);
+      return {};
+    }
+  };
   return {
     async matchProducts(mentions) {
       const ids: string[] = [];
       for (const mention of mentions) {
         const text = mention.trim();
         if (text === '') continue;
-        const match = await findProductMatch(tx, { workspaceId, queryText: text });
+        const match = await findProductMatch(tx, {
+          workspaceId,
+          queryText: text,
+          ...(await vectorOf(text)),
+        });
         if (match.status === 'matched') ids.push(match.id);
         else if (match.status === 'ambiguous') ids.push(...match.ids);
       }

@@ -268,6 +268,7 @@ export {
   searchKbChunksDetailed,
   searchProducts,
   setProductNameEmbedding,
+  writeProductNameVectors,
 } from './queries/kb-search';
 export {
   type ConflictMark,
@@ -277,6 +278,7 @@ export {
   findSyncSource,
   KB_SYNC_PRODUCT_LIMIT,
   listDraftChunkTexts,
+  listProductNamesToEmbed,
   listProductsForSync,
   type SyncSourceKind,
   setDraftChunkTopics,

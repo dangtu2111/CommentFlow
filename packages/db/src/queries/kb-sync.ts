@@ -197,3 +197,18 @@ export async function summarizeDraftChunks(
     withVector: row.with_vector,
   }));
 }
+
+/** Sản phẩm CHƯA có vector tên ở model `model` (NULL hoặc khác model), tối đa `limit` — để nhúng bù khi đồng bộ (khớp sản phẩm lai). */
+export async function listProductNamesToEmbed(
+  tx: Database,
+  workspaceId: string,
+  model: string,
+  limit: number,
+): Promise<Array<{ id: string; name: string }>> {
+  const result = await tx.execute<{ id: string; name: string }>(sql`
+    SELECT id, name FROM cf.products
+     WHERE workspace_id = ${workspaceId}::uuid AND status = 'active'
+       AND (name_embedding IS NULL OR name_embedding_model IS DISTINCT FROM ${model})
+     ORDER BY id LIMIT ${limit}`);
+  return result.rows.map((row) => ({ id: row.id, name: row.name }));
+}

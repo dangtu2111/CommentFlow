@@ -8,6 +8,11 @@ export const RRF_K = 60;
 
 /** Ngưỡng điểm tối thiểu để chọn một sản phẩm (docs/10 §5.1; khởi điểm, hiệu chuẩn bằng bộ đánh giá). */
 export const PRODUCT_MATCH_THRESHOLD = 0.45;
+/**
+ * (1b) Vector tên sản phẩm: cosine tối thiểu để được coi là "gần tên" (khởi điểm CHƯA hiệu chuẩn — hiệu chuẩn bằng bộ gold sản phẩm khi có credit đo;
+ * bge-m3 cho cosine tên ngắn↔tên dài thường 0,5–0,8). Dưới ngưỡng → vector không cho điểm (không bao giờ chọn sản phẩm chỉ vì "hơi giống").
+ */
+export const PRODUCT_MIN_COSINE = 0.62;
 /** Hạng một phải hơn hạng hai ít nhất biên này, nếu không là mơ hồ → AI hỏi lại (FR-128). */
 export const PRODUCT_MATCH_MARGIN = 0.05;
 
@@ -79,6 +84,68 @@ export type ProductMatch =
   | { status: 'matched'; id: string; score: number }
   | { status: 'ambiguous'; ids: string[] }
   | { status: 'none'; reason: 'no_candidates' | 'below_threshold' };
+
+/** Đổi cosine (vector tên) sang thang điểm của `pickProductMatch`: `minCosine` ↔ ngưỡng chọn, 1 ↔ 1; dưới ngưỡng → 0. */
+export function productScoreFromCosine(cosine: number, minCosine = PRODUCT_MIN_COSINE): number {
+  if (cosine < minCosine) return 0;
+  const span = 1 - minCosine;
+  return PRODUCT_MATCH_THRESHOLD + ((cosine - minCosine) / span) * (1 - PRODUCT_MATCH_THRESHOLD);
+}
+
+/** Điểm cộng khi tên sản phẩm có đủ token đặc trưng của lời nhắc; hệ số nhân khi thiếu (khởi điểm, hiệu chuẩn bằng bộ gold sản phẩm). */
+export const PRODUCT_TOKEN_BONUS = 0.15;
+export const PRODUCT_TOKEN_MISS_FACTOR = 0.8;
+
+const SIZE_TOKEN = /^(xxs|xs|s|m|l|xl|xxl|xxxl|[2-9]xl)$/;
+const IN_ONE = /(\d+)\s*in\s*(\d+)/g;
+
+/**
+ * Token đặc trưng của một chuỗi (đã chuẩn hóa): kích cỡ (xxxl, m…), mã/số có chữ số (a4, ab123, 32mm), và "n in n" gộp thành `nin n` (vd `2in1`,
+ * mọi cách viết "2 in 1"/"2 in1"/"2-in-1"). Từ thường không phải token. Dùng để ưu tiên đúng biến thể khi tên gần giống nhau.
+ */
+export function distinctiveTokens(text: string): string[] {
+  const normalized = normalizeSearchText(text);
+  const combos = [...normalized.matchAll(IN_ONE)].map((m) => `${m[1]}in${m[2]}`);
+  const rest = normalized.replace(IN_ONE, ' ');
+  const tokens = rest.split(' ').filter((t) => t !== '' && (SIZE_TOKEN.test(t) || /\d/.test(t)));
+  return [...new Set([...combos, ...tokens])];
+}
+
+/** Điều chỉnh điểm theo token đặc trưng của lời nhắc so với tên sản phẩm: đủ → cộng (trần 1); thiếu bất kỳ → nhân hệ số; lời nhắc không có token → giữ. */
+export function adjustByDistinctiveTokens(
+  score: number,
+  mention: string,
+  productName: string,
+): number {
+  if (score <= 0) return score;
+  const wanted = distinctiveTokens(mention);
+  if (wanted.length === 0) return score;
+  const have = new Set(distinctiveTokens(productName));
+  return wanted.every((token) => have.has(token))
+    ? Math.min(1, score + PRODUCT_TOKEN_BONUS)
+    : score * PRODUCT_TOKEN_MISS_FACTOR;
+}
+
+/**
+ * Điểm LAI mỗi sản phẩm = lớn hơn của độ giống trigram và điểm từ cosine vector tên (thiếu vector → chỉ trigram); có `mention` thì áp thêm
+ * ưu tiên token đặc trưng. `minCosine` mặc định `PRODUCT_MIN_COSINE`.
+ */
+export function hybridProductScores(
+  hits: readonly { id: string; name?: string; similarity: number; cosine: number | null }[],
+  options: { minCosine?: number; mention?: string } = {},
+): RankedScore[] {
+  return hits.map((h) => {
+    const base = Math.max(
+      h.similarity,
+      h.cosine === null ? 0 : productScoreFromCosine(h.cosine, options.minCosine),
+    );
+    const score =
+      options.mention === undefined
+        ? base
+        : adjustByDistinctiveTokens(base, options.mention, h.name ?? '');
+    return { id: h.id, score };
+  });
+}
 
 /**
  * Chọn sản phẩm từ ứng viên đã có điểm (FR-127/128): dưới ngưỡng → không chọn; hạng hai sát hạng một → mơ hồ (trả các
