@@ -23,3 +23,13 @@
 - Cơ sở kiến thức › Chính sách (`/app/kb/policies`): danh sách + thêm/sửa/xóa theo loại — chưa có màn riêng
 - Cơ sở kiến thức › Hỏi – đáp FAQ (`/app/kb/faq`): danh sách cặp hỏi–đáp + thẻ + ngôn ngữ — chưa có màn riêng
 - Cơ sở kiến thức › Giọng văn thương hiệu (`/app/kb/voice`): xưng hô, nên/không nên, câu mời chuyển người — chưa có màn riêng
+
+# Màn thiếu thiết kế Stitch (DRAFT-FACT-SLOTS, 08/11/2026 — chủ dự án sẽ tạo bằng Stitch)
+
+- **Cơ sở kiến thức › Chính sách có cấu trúc** (thay/bổ sung mục "Chính sách" dạng văn bản ở `knowledge-base.png` §7.3; ADR `docs/decisions/017-draft-fact-slots.md`, kế hoạch `docs/plans/feat-draft-fact-slots.md`). Cần các phần:
+  - Bốn thẻ có cấu trúc: **Ship** (bảng khu vực: tên hiển thị, từ khớp địa điểm, phí, thời gian, COD có/không; dòng "Toàn quốc"), **Đổi trả** (số ngày, điều kiện, ai chịu phí), **Bảo hành** (thời hạn, phạm vi), **Thanh toán** (phương thức: COD, chuyển khoản, trả góp, hóa đơn).
+  - Mỗi giá trị hiển thị nguồn (nhập tay / đề xuất từ Shopify / đề xuất từ văn bản) và trạng thái **Nháp / Đã duyệt**; chỉ Owner được duyệt.
+  - Banner "AI đề xuất điền thẻ từ chính sách văn bản/Shopify — N giá trị chờ duyệt" kèm so sánh giá trị đề xuất với đoạn nguyên văn được trích; nút Duyệt / Sửa / Bỏ.
+  - Chỉ báo "Độ phủ sự kiện": thẻ nào còn trống (AI sẽ mời ib thay vì trả lời) và gợi ý điền.
+  - Tùy chọn Owner "Nêu số lượng tồn" / "Báo sắp hết khi ≤ N" (STOCK-DISCLOSURE-OPTION) đặt ở Quy tắc & Giới hạn, hiển thị ví dụ câu.
+  - Cần cả bản 1440px và 390px.

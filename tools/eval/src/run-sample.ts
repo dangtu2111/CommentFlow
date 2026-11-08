@@ -64,6 +64,12 @@ export type SampleOutcome =
       /** Câu tìm kiếm đã dùng + nguồn (rule/llm/không chạy rewrite). */
       searchQuery: string;
       rewriteSource: 'rule' | 'llm' | null;
+      /** Chẩn đoán lỗi số/nguồn: các nguồn bộ soạn ĐÃ DÙNG (id + văn bản), từng ý (claim) kèm `source_ids`, và vi phạm guard tiền (mã + giá trị). */
+      diagnostics?: {
+        usedSources: Array<{ id: string; text: string }>;
+        claims: Array<{ text: string; sourceIds: string[] }>;
+        moneyViolations: unknown[];
+      };
       usage: UsageRecord[];
     }
   | {
@@ -165,6 +171,13 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       extract: snapshot,
       searchQuery: result.searchQuery ?? '',
       rewriteSource: result.rewriteSource ?? null,
+      diagnostics: {
+        usedSources: result.candidates
+          .filter((c) => c.used)
+          .map((c) => ({ id: c.id, text: String(c.text) })),
+        claims: result.draft.claims.map((c) => ({ text: c.text, sourceIds: c.source_ids })),
+        moneyViolations: result.guard.violations,
+      },
       usage,
     };
   } catch (error) {
