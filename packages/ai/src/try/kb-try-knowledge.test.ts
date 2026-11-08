@@ -26,6 +26,21 @@ function build(hits: KbHit[]) {
 }
 
 describe('FR-059 KB-TRYAI: Thử AI nối searchKbChunks', () => {
+  it('cờ mâu thuẫn trong metadata → conflictTopic; thiếu cờ / chủ đề lạ → không có', async () => {
+    const { knowledge } = build([
+      hit({ id: 'a', metadata: { conflict_group: 'shipping_time:ngày', topic: 'shipping_time' } }),
+      hit({ id: 'b', metadata: { topic: 'shipping_time' } }),
+      hit({ id: 'c', metadata: { conflict_group: 'x:ngày', topic: 'khong_co' } }),
+      hit({ id: 'd', metadata: null }),
+    ]);
+    const out = await knowledge.searchKb('giao hàng', { lang: 'vi', productIds: [] });
+    const byId = new Map(out.map((c) => [c.id, c.conflictTopic]));
+    expect(byId.get('kb:a')).toBe('shipping_time');
+    expect(byId.get('kb:b')).toBeUndefined();
+    expect(byId.get('kb:c')).toBeUndefined();
+    expect(byId.get('kb:d')).toBeUndefined();
+  });
+
   it('nhúng câu hỏi, gọi searcher đúng lang + sản phẩm, điểm = rrfRelevance giảm dần', async () => {
     const { searcher, knowledge } = build([
       hit({ id: 'low', score: MAX_RRF_SCORE / 2 }),

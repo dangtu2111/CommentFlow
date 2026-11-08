@@ -183,4 +183,14 @@ describe('detectConflicts — số + đơn vị cùng chủ đề', () => {
       topic: 'other',
     });
   });
+  it('phí bằng USD được chuẩn hóa riêng đơn vị (không so với VND)', () => {
+    const groups = detectConflicts([
+      { chunkKey: 'a#0', sourceTitle: 'A', text: 'Shipping fee 5 USD.', topic: 'shipping_fee' },
+      { chunkKey: 'b#0', sourceTitle: 'B', text: 'Phí ship 8 usd.', topic: 'shipping_fee' },
+      { chunkKey: 'c#0', sourceTitle: 'C', text: 'Phí ship 30.000đ.', topic: 'shipping_fee' },
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.group).toBe('shipping_fee:usd');
+    expect(groups[0]?.values).toEqual(['5 USD', '8 USD']);
+  });
 });
