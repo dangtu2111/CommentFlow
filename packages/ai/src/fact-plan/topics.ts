@@ -46,7 +46,7 @@ export function factTopicsOf(text: string): FactTopic[] {
         if (rule.topic !== 'price' && rule.topic !== 'stock' && rule.pattern.test(clause))
           found.add(rule.topic);
       }
-      const fee = FEE.test(clause) || /gia/.test(clause);
+      const fee = FEE.test(clause) || /\bgia\b/.test(clause);
       const time = TIME.test(clause);
       // "ship COD không" chỉ hỏi COD: không kéo thêm phí/thời gian.
       if (found.has('cod') && !fee && !time) continue;

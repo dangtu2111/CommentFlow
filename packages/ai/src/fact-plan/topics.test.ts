@@ -37,3 +37,9 @@ describe('factTopicsOf — chủ đề sự kiện từ câu khách (quy tắc t
     ]);
   });
 });
+
+describe('phí ship nói bằng "giá ship"', () => {
+  it('"giá ship" trong vế có ship là phí ship, không phải giá sản phẩm', () => {
+    expect(factTopicsOf('Giá ship ra Huế')).toEqual(['ship_fee']);
+  });
+});
