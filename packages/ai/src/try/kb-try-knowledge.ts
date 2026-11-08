@@ -3,7 +3,7 @@ import type { KbGapTopic } from '../decide/decide-action';
 import type { Embedder } from '../embedding/embedder';
 import { scanInjection } from '../injection/injection-scan';
 import type { KbSearcher } from '../retrieve/kb-searcher';
-import { type KbHit, rrfRelevance } from '../retrieve/sources';
+import { type KbHit, kbRelevanceFromCosine, rrfRelevance } from '../retrieve/sources';
 import { type TryCandidate, type TryKnowledge, topicOf } from './try-pipeline';
 
 /**
@@ -65,7 +65,11 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
           kind: 'kb',
           title: hit.contextHeader ?? hit.chunkKey,
           text: unsafeMarkMasked(hit.content),
-          score: rrfRelevance(hit.score),
+          // Có vector → điểm TUYỆT ĐỐI theo cosine (RRF chỉ để xếp thứ tự); không có → như cũ (suy giảm).
+          score:
+            hit.cosine === null || hit.cosine === undefined
+              ? rrfRelevance(hit.score)
+              : kbRelevanceFromCosine(hit.cosine),
           topics: chunkTopics(hit),
           ...(conflictTopicOf(hit) ? { conflictTopic: conflictTopicOf(hit) } : {}),
         });

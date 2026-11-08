@@ -26,6 +26,19 @@ function build(hits: KbHit[]) {
 }
 
 describe('FR-059 KB-TRYAI: Thử AI nối searchKbChunks', () => {
+  it('điểm liên quan = cosine tuyệt đối khi có vector (không còn phụ thuộc RRF); không có cosine → rơi về RRF như cũ', async () => {
+    const { kbRelevanceFromCosine } = await import('../retrieve/sources');
+    const { knowledge } = build([
+      hit({ id: 'cos', score: MAX_RRF_SCORE / 3, cosine: 0.7 }),
+      hit({ id: 'nocos', score: MAX_RRF_SCORE, cosine: null }),
+    ]);
+    const out = await knowledge.searchKb('ship', { lang: 'vi', productIds: [] });
+    const byId = new Map(out.map((c) => [c.id, c.score]));
+    // RRF thấp (1/3 trần) nhưng cosine cao → vẫn điểm cao (trước đây bị ngưỡng RRF loại).
+    expect(byId.get('kb:cos')).toBeCloseTo(kbRelevanceFromCosine(0.7), 10);
+    expect(byId.get('kb:nocos')).toBeCloseTo(1);
+  });
+
   it('cờ mâu thuẫn trong metadata → conflictTopic; thiếu cờ / chủ đề lạ → không có', async () => {
     const { knowledge } = build([
       hit({ id: 'a', metadata: { conflict_group: 'shipping_time:ngày', topic: 'shipping_time' } }),

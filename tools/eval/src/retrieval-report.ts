@@ -1,6 +1,7 @@
 import type { LangGroup } from './dataset';
 import { stableId } from './production/seed';
 import {
+  type Calibration,
   judgeRetrieval,
   RETRIEVAL_THRESHOLDS,
   type RetrievalGroupMetrics,
@@ -94,6 +95,12 @@ export function renderRetrievalReport(input: {
   config: Record<string, string>;
   metrics: Record<string, RetrievalGroupMetrics>;
   failures: readonly QuestionDiagnostic[];
+  /** Hiệu chỉnh ngưỡng "đủ liên quan" theo điểm tuyệt đối (cosine/rerank) trên bộ đoạn đúng đã gán. */
+  calibration?: Calibration & {
+    scoreKind: string;
+    positiveSamples: Record<string, number>;
+    negativeSamples: Record<string, number>;
+  };
 }): string {
   const k = RETRIEVAL_THRESHOLDS.k;
   const lines = [`# ${input.title}`, ''];
@@ -112,6 +119,29 @@ export function renderRetrievalReport(input: {
         `- ${v.pass === null ? '➖' : v.pass ? '✅' : '❌'} ${group} — ${v.name}: ${v.value} (ngưỡng ${v.threshold})`,
       );
     }
+  }
+  if (input.calibration) {
+    const c = input.calibration;
+    lines.push('', `## Hiệu chỉnh ngưỡng liên quan (điểm tuyệt đối: ${c.scoreKind})`, '');
+    lines.push(
+      `- Mẫu dương (đoạn đúng của câu có đáp án): ${c.positives}; mẫu âm (câu không có nguồn, lấy điểm cao nhất của kết quả): ${c.negatives}`,
+      `- **Ngưỡng chọn (F1 lớn nhất, hòa → thấp nhất): ${c.threshold.toFixed(2)}** — recall ${pct(c.recall)}, nhận nhầm ${pct(c.falseAcceptRate)}, precision ${pct(c.precision)}, F1 ${c.f1.toFixed(3)}`,
+      '',
+      '| Ngưỡng | recall | nhận nhầm | precision | F1 |',
+      '|---|---|---|---|---|',
+    );
+    for (const p of c.curve.filter(
+      (x) => Math.round(x.threshold * 100) % 5 === 0 && x.threshold >= 0.2 && x.threshold <= 0.8,
+    )) {
+      lines.push(
+        `| ${p.threshold.toFixed(2)} | ${pct(p.recall)} | ${pct(p.falseAcceptRate)} | ${pct(p.precision)} | ${p.f1.toFixed(3)} |`,
+      );
+    }
+    lines.push('', '| Mẫu | Loại | Điểm |', '|---|---|---|');
+    for (const [id, v] of Object.entries(c.positiveSamples))
+      lines.push(`| ${id} | dương | ${v.toFixed(3)} |`);
+    for (const [id, v] of Object.entries(c.negativeSamples))
+      lines.push(`| ${id} | âm | ${v.toFixed(3)} |`);
   }
   lines.push('', '## Câu trượt (đoạn đúng không có trong top-5)', '');
   if (input.failures.length === 0) {

@@ -110,7 +110,7 @@ async function loadPlans(
     policies.map((p) => ({
       id: p.id,
       kind: p.kind as PolicyKind,
-      lang: p.lang === 'en' ? 'en' : 'vi',
+      lang: p.lang,
       title: p.title,
       content: p.content,
     })),

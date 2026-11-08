@@ -17,6 +17,8 @@ import { searchProductsByAlias } from './product-aliases';
 /** Số ứng viên mỗi nhánh trước khi trộn (docs/10 §5: limit 30). */
 const BRANCH_LIMIT = 30;
 export const DEFAULT_KB_SEARCH_LIMIT = 20;
+/** Ưu tiên NHẸ đoạn cùng ngôn ngữ câu hỏi (cỡ MỘT bậc RRF: 1/61 − 1/62 ≈ 0,00026); KHÔNG lọc bỏ đoạn khác ngôn ngữ (FR-120). */
+const SAME_LANG_BOOST = 0.0003;
 /** Ngưỡng `pg_trgm` khởi điểm (docs/10 §5.1; hiệu chuẩn bằng bộ đánh giá). */
 const SIMILARITY_THRESHOLD = 0.3;
 const WORD_SIMILARITY_THRESHOLD = 0.4;
@@ -50,6 +52,8 @@ export type KbSearchHit = {
   metadata: Record<string, unknown>;
   /** Điểm RRF (chỉ để so thứ tự, không phải độ liên quan 0–1). */
   score: number;
+  /** Cosine tuyệt đối câu hỏi ↔ đoạn (cùng model embedding); `null` khi tìm không có vector. Dùng để quyết định "đủ liên quan". */
+  cosine: number | null;
 };
 
 /** Hạng + điểm thô của MỖI nhánh (chẩn đoán truy hồi, Nhóm R); `null` = đoạn không nằm trong top của nhánh đó. */
@@ -90,7 +94,6 @@ export async function searchKbChunksDetailed(
   const tsQuery = orTsQuery(normalized);
   if (normalized === '' && !input.queryVector) return [];
   const limit = input.limit ?? DEFAULT_KB_SEARCH_LIMIT;
-  const config = input.lang === 'en' ? sql`'english'::regconfig` : sql`'simple'::regconfig`;
   const productFilter =
     input.productIds && input.productIds.length > 0
       ? sql`AND (c.product_id IS NULL OR c.product_id IN (${uuidList(input.productIds)}))`
@@ -99,7 +102,6 @@ export async function searchKbChunksDetailed(
     c.workspace_id = ${input.workspaceId}::uuid
     AND c.version_id = ${input.versionId}::uuid
     AND NOT c.is_draft
-    AND c.lang = ${input.lang}
     AND NOT c.injection_suspected
     AND (c.valid_from IS NULL OR c.valid_from <= now())
     AND (c.valid_until IS NULL OR c.valid_until > now())
@@ -130,11 +132,18 @@ export async function searchKbChunksDetailed(
     tsQuery === ''
       ? sql`SELECT NULL::uuid AS id, NULL::bigint AS r, NULL::float8 AS s WHERE false`
       : sql`
-      SELECT c.id, row_number() OVER (ORDER BY ts_rank(c.tsv, q.query) DESC, c.id) AS r,
-             ts_rank(c.tsv, q.query)::float8 AS s
-        FROM cf.kb_chunks c, to_tsquery(${config}, ${tsQuery}) AS q(query)
-       WHERE ${filters} AND c.tsv @@ q.query
-       ORDER BY ts_rank(c.tsv, q.query) DESC, c.id
+      SELECT x.id, row_number() OVER (ORDER BY x.rank DESC, x.id) AS r, x.rank::float8 AS s
+        FROM (
+          -- Cấu hình tsv THEO TỪNG ĐOẠN (FR-057): en → english (stemming), còn lại → simple đã bỏ dấu. Không lọc bỏ đoạn khác ngôn ngữ câu hỏi.
+          SELECT c.id,
+                 CASE WHEN c.lang = 'en' THEN ts_rank(c.tsv, qe.query) ELSE ts_rank(c.tsv, qs.query) END AS rank
+            FROM cf.kb_chunks c,
+                 to_tsquery('simple'::regconfig, ${tsQuery}) AS qs(query),
+                 to_tsquery('english'::regconfig, ${tsQuery}) AS qe(query)
+           WHERE ${filters}
+             AND ((c.lang = 'en' AND c.tsv @@ qe.query) OR (c.lang <> 'en' AND c.tsv @@ qs.query))
+        ) x
+       ORDER BY x.rank DESC, x.id
        LIMIT ${BRANCH_LIMIT}`;
   const trigramBranch =
     normalized === ''
@@ -147,6 +156,10 @@ export async function searchKbChunksDetailed(
        ORDER BY word_similarity(${normalized}, c.search_norm) DESC, c.id
        LIMIT ${BRANCH_LIMIT}`;
 
+  // Điểm TUYỆT ĐỐI để quyết định "đủ liên quan" (RRF chỉ để xếp thứ tự): cosine giữa câu hỏi và đoạn cùng model; NULL khi không có vector.
+  const cosine = input.queryVector
+    ? sql`CASE WHEN c.embedding IS NOT NULL ${modelFilter} THEN (1 - (c.embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024)))::float8 END`
+    : sql`NULL::float8`;
   const result = await tx.execute<{
     id: string;
     chunk_key: string;
@@ -155,6 +168,7 @@ export async function searchKbChunksDetailed(
     product_id: string | null;
     metadata: Record<string, unknown> | null;
     score: string;
+    cosine: number | null;
     vr: string | null;
     vs: number | null;
     tr: string | null;
@@ -173,10 +187,10 @@ export async function searchKbChunksDetailed(
        GROUP BY id
     )
     SELECT c.id, c.chunk_key, c.content, c.context_header, c.product_id, c.metadata, f.score,
-           f.vr, f.vs, f.tr, f.ts, f.gr, f.gs
+           ${cosine} AS cosine, f.vr, f.vs, f.tr, f.ts, f.gr, f.gs
       FROM fused f
       JOIN cf.kb_chunks c ON c.id = f.id AND c.workspace_id = ${input.workspaceId}::uuid
-     ORDER BY f.score DESC, c.id
+     ORDER BY f.score + (CASE WHEN c.lang = ${input.lang} THEN ${SAME_LANG_BOOST}::float8 ELSE 0::float8 END) DESC, c.id
      LIMIT ${limit}`);
   return result.rows.map((row) => ({
     id: row.id,
@@ -186,6 +200,7 @@ export async function searchKbChunksDetailed(
     productId: row.product_id,
     metadata: row.metadata ?? {},
     score: Number(row.score),
+    cosine: row.cosine === null ? null : Number(row.cosine),
     branches: {
       vector: row.vr === null ? null : { rank: Number(row.vr), distance: Number(row.vs) },
       text: row.tr === null ? null : { rank: Number(row.tr), tsRank: Number(row.ts) },

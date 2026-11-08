@@ -18,8 +18,10 @@ export type KbHit = {
   productId: string | null;
   /** `kb_chunks.metadata` (chủ đề `topic`, cờ mâu thuẫn `conflict_group`/`conflict_values`); thiếu = không có. */
   metadata?: Record<string, unknown> | null;
-  /** Điểm RRF (k=60) của `searchKbChunks`. */
+  /** Điểm RRF (k=60) của `searchKbChunks` — CHỈ để xếp thứ tự. */
   score: number;
+  /** Cosine tuyệt đối câu hỏi ↔ đoạn (cùng model embedding); thiếu/`null` = tìm không có vector. */
+  cosine?: number | null;
 };
 
 /** Điểm RRF tối đa: đoạn đứng hạng 1 ở cả ba nhánh (vector, toàn văn, trigram): 3/(60+1). */
@@ -30,6 +32,24 @@ export const DEFAULT_MIN_RELEVANCE_RETRIEVE = 0.25;
 export const DEFAULT_MAX_SOURCE_TOKENS = 3000;
 
 /** Điểm RRF → 0..1 để so với ngưỡng liên quan; không phải số tự chấm của model (nguyên tắc #9). */
+/**
+ * Ngưỡng cosine (bge-m3) để một đoạn kiến thức được coi là "đủ liên quan". Hiệu chỉnh THEO DỮ LIỆU (Nhóm R, 08/11/2026, bộ đoạn đúng đã gán của
+ * demo-shop + sswiftly; `docs/testing/eval-nhom-r-2026-11-08.md`): ở 0,30 recall 100% trên cả hai bộ; F1 lớn nhất (0,59) chỉ giữ 62% câu có đáp án
+ * (câu tiếng Việt KHÔNG dấu có cosine thấp 0,31–0,39) nên KHÔNG dùng. Cosine một mình không tách được đoạn "cùng chủ đề nhưng không trả lời" —
+ * việc đó do rerank (cross-encoder) và `decideAction`/bước soạn đảm nhiệm.
+ */
+export const KB_MIN_COSINE = 0.3;
+
+/**
+ * Cosine → điểm liên quan trên CÙNG thang với ngưỡng chung `DEFAULT_MIN_RELEVANCE` (0,35): dịch sao cho cosine = `KB_MIN_COSINE` đúng bằng ngưỡng chung,
+ * đơn điệu, kẹp 0..1. Nhờ vậy một ngưỡng duy nhất ở mọi nơi lọc (pipeline, bộ soạn) mà đoạn kiến thức vẫn quyết định bằng điểm tuyệt đối.
+ */
+export function kbRelevanceFromCosine(cosine: number): number {
+  return Math.min(1, Math.max(0, cosine - KB_MIN_COSINE + KB_RELEVANCE_FLOOR));
+}
+/** Bằng `DEFAULT_MIN_RELEVANCE` của bộ soạn (khai ở đây để `retrieve` không import ngược `draft`; có test khóa hai giá trị bằng nhau). */
+const KB_RELEVANCE_FLOOR = 0.35;
+
 export function rrfRelevance(score: number): number {
   if (!Number.isFinite(score) || score <= 0) return 0;
   return Math.min(1, score / MAX_RRF_SCORE);

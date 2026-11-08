@@ -214,9 +214,16 @@ describe('FR-057 searchKbChunks (RRF vector + toàn văn + trigram)', () => {
   });
 
   it('chẩn đoán: searchKbChunksDetailed trả hạng + điểm thô từng nhánh, cùng thứ tự/điểm RRF với searchKbChunks', async () => {
-    const hit = await seedChunk(wsA, srcA, verA, 'q-diag', 'diagphiship quokkaxyz noi thanh cua hang', {
-      embedding: unit(33),
-    });
+    const hit = await seedChunk(
+      wsA,
+      srcA,
+      verA,
+      'q-diag',
+      'diagphiship quokkaxyz noi thanh cua hang',
+      {
+        embedding: unit(33),
+      },
+    );
     const input = {
       workspaceId: wsA,
       versionId: verA,
@@ -294,15 +301,31 @@ describe('FR-057 searchKbChunks (RRF vector + toàn văn + trigram)', () => {
     expect(hits.map((h) => h.id)).toEqual([now]);
   });
 
-  it('ngôn ngữ: vi không lấy đoạn en và ngược lại', async () => {
-    const en = await seedChunk(wsA, srcA, verA, 'l-en', 'refundpolicy within seven days', {
+  it('ngôn ngữ (FR-120): KHÔNG lọc bỏ đoạn khác ngôn ngữ — cả đoạn en lẫn vi đều ra cho câu hỏi ở mỗi ngôn ngữ', async () => {
+    const en = await seedChunk(wsA, srcA, verA, 'l-en', 'refundpolicy sevendays', { lang: 'en' });
+    const vi = await seedChunk(wsA, srcA, verA, 'l-vi', 'refundpolicy sevendays', { lang: 'vi' });
+    for (const lang of ['en', 'vi'] as const) {
+      const ids = (await search(wsA, verA, 'refundpolicy sevendays', { lang })).map((h) => h.id);
+      expect(ids).toEqual(expect.arrayContaining([en, vi]));
+    }
+  });
+
+  it('tsv theo TỪNG ĐOẠN: câu hỏi tiếng Anh ra đoạn en nhờ stemming ("shipping" ~ "ship"), kể cả khi lang yêu cầu là vi', async () => {
+    const en = await seedChunk(wsA, srcA, verA, 'l-stem', 'we ship parcels worldwide', {
       lang: 'en',
     });
-    await seedChunk(wsA, srcA, verA, 'l-vi', 'refundpolicy trong bảy ngày', { lang: 'vi' });
-    const hitsEn = await search(wsA, verA, 'refundpolicy', { lang: 'en' });
-    expect(hitsEn.map((h) => h.id)).toEqual([en]);
-    const hitsVi = await search(wsA, verA, 'refundpolicy', { lang: 'vi' });
-    expect(hitsVi.map((h) => h.content)).toEqual(['refundpolicy trong bảy ngày']);
+    const hits = await search(wsA, verA, 'shipping parcel', { lang: 'vi' });
+    expect(hits.map((h) => h.id)).toContain(en);
+  });
+
+  it('cosine tuyệt đối: có vector truy vấn → mỗi đoạn kèm cosine (đoạn trùng vector = 1); không vector → null', async () => {
+    const near = await seedChunk(wsA, srcA, verA, 'c-near', 'cosinetoken alpha', {
+      embedding: unit(41),
+    });
+    const withVec = await search(wsA, verA, 'cosinetoken', { queryVector: unit(41) });
+    expect(withVec.find((h) => h.id === near)?.cosine).toBeCloseTo(1, 3);
+    const noVec = await search(wsA, verA, 'cosinetoken');
+    expect(noVec.find((h) => h.id === near)?.cosine).toBeNull();
   });
 
   it('sản phẩm: đoạn của sản phẩm khác bị bỏ, đoạn chung (product_id NULL) giữ', async () => {

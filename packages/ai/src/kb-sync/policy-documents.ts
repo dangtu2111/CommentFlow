@@ -1,10 +1,11 @@
 import type { ChunkDocument, KbTopic } from '@flow/shared';
+import { detectChunkLang } from './lang';
 import { classifyTopic, type PolicyKind } from './topic';
 
 export type PolicyInput = {
   id: string;
   kind: PolicyKind;
-  lang: 'vi' | 'en';
+  lang: 'vi' | 'en' | 'all';
   title: string;
   content: string;
 };
@@ -54,7 +55,7 @@ export function buildPolicyDocuments(
           kind: 'policy',
           sourceTitle,
           section: sectionName,
-          lang: policy.lang,
+          lang: detectChunkLang(`${section.heading ?? ''} ${section.body}`, policy.lang),
           text: section.body,
         },
       };

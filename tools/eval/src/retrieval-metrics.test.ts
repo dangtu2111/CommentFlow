@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   aggregateRetrieval,
+  calibrateThreshold,
   firstHitRank,
   judgeRetrieval,
   parseRetrievalGold,
@@ -76,5 +77,34 @@ describe('parseRetrievalGold — tệp gán đoạn đúng', () => {
     expect(() => parseRetrievalGold('{"id":"s1","gold":["a"]}\n{"id":"s1","gold":["b"]}')).toThrow(
       /trùng/,
     );
+  });
+});
+
+describe('calibrateThreshold — chọn ngưỡng cosine theo dữ liệu (F1)', () => {
+  it('tách được hoàn toàn → ngưỡng nằm giữa hai nhóm, F1 = 1', () => {
+    const r = calibrateThreshold([0.62, 0.7, 0.55], [0.3, 0.4, 0.35]);
+    expect(r.f1).toBe(1);
+    expect(r.threshold).toBeGreaterThan(0.4);
+    expect(r.threshold).toBeLessThanOrEqual(0.55);
+    expect(r.recall).toBe(1);
+    expect(r.falseAcceptRate).toBe(0);
+  });
+
+  it('chồng lấn → chọn ngưỡng F1 lớn nhất, báo recall và tỉ lệ nhận nhầm tại ngưỡng đó', () => {
+    const r = calibrateThreshold([0.5, 0.6, 0.7, 0.45], [0.48, 0.3, 0.2]);
+    expect(r.f1).toBeGreaterThan(0.8);
+    expect(r.positives).toBe(4);
+    expect(r.negatives).toBe(3);
+    expect(r.curve.length).toBeGreaterThan(10);
+  });
+
+  it('F1 hòa → lấy ngưỡng THẤP nhất (ưu tiên recall: không bỏ sót đoạn đúng)', () => {
+    const r = calibrateThreshold([0.6, 0.6], [0.2, 0.2]);
+    expect(r.recall).toBe(1);
+    expect(r.threshold).toBeLessThanOrEqual(0.6);
+  });
+
+  it('không có mẫu dương → lỗi rõ (không thể hiệu chỉnh)', () => {
+    expect(() => calibrateThreshold([], [0.3])).toThrow(/dương/);
   });
 });

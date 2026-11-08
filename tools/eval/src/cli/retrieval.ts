@@ -19,6 +19,7 @@ import { EVAL_WORKSPACE } from '../eval-workspace';
 import { describeProduction, openProduction } from '../production/setup';
 import {
   aggregateRetrieval,
+  calibrateThreshold,
   firstHitRank,
   parseRetrievalGold,
   RETRIEVAL_THRESHOLDS,
@@ -79,6 +80,8 @@ const search = async (text: string, lang: 'vi' | 'en', vector: readonly number[]
   );
 
 const rows: RetrievalRow[] = [];
+const positiveCos: Record<string, number> = {};
+const negativeCos: Record<string, number> = {};
 const diagnostics: QuestionDiagnostic[] = [];
 const wanted = samples.filter((sample) => gold.has(sample.id));
 const picked = values.limit ? wanted.slice(0, Number(values.limit)) : wanted;
@@ -92,6 +95,13 @@ for (const sample of picked) {
   const hitOrigins = hits.map((hit) => originOf(hit.chunkKey, origins));
   const rank = firstHitRank(hitOrigins, goldSet);
   rows.push({ id: sample.id, group: sample.group, rank });
+  // Điểm tuyệt đối (cosine) của đoạn đúng tốt nhất; không có trong kết quả = 0 (phải rớt dưới mọi ngưỡng).
+  positiveCos[sample.id] = Math.max(
+    0,
+    ...hits.flatMap((hit, i) =>
+      goldSet.has(hitOrigins[i] as string) && hit.cosine !== null ? [hit.cosine] : [],
+    ),
+  );
   if (rank !== null && rank <= k) continue;
   const other = await search(sample.text, lang === 'en' ? 'vi' : 'en', vector);
   const top: TopHit[] = hits.slice(0, k).map((hit, i) => ({
@@ -120,6 +130,22 @@ for (const sample of picked) {
   });
 }
 
+// Mẫu ÂM: câu mong đợi "chuyển hướng" vì shop KHÔNG có nguồn (không gán đoạn đúng) — điểm cao nhất của kết quả phải rớt dưới ngưỡng.
+for (const sample of samples) {
+  if (gold.has(sample.id) || sample.expected.action !== 'redirect' || sample.category !== 'normal')
+    continue;
+  const detected = normalizeAndDetectLang({ text: sample.text, dict }).lang;
+  const lang = detected === 'en' ? 'en' : 'vi';
+  const vector = (await handle.embedder.embed([sample.text]))[0] as number[];
+  const hits = await search(sample.text, lang, vector);
+  negativeCos[sample.id] = Math.max(0, ...hits.slice(0, k).map((hit) => hit.cosine ?? 0));
+}
+const calibration = {
+  ...calibrateThreshold(Object.values(positiveCos), Object.values(negativeCos)),
+  scoreKind: `cosine ${handle.info.embeddingModel}`,
+  positiveSamples: positiveCos,
+  negativeSamples: negativeCos,
+};
 const metrics = aggregateRetrieval(rows, k);
 const report = renderRetrievalReport({
   title: `Truy hồi trên đường production — ${shop.id}`,
@@ -134,6 +160,7 @@ const report = renderRetrievalReport({
   },
   metrics,
   failures: diagnostics,
+  calibration,
 });
 mkdirSync(values.out as string, { recursive: true });
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
