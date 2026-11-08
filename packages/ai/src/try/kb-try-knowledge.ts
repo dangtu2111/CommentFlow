@@ -3,7 +3,7 @@ import type { KbGapTopic } from '../decide/decide-action';
 import type { Embedder } from '../embedding/embedder';
 import { scanInjection } from '../injection/injection-scan';
 import type { KbSearcher } from '../retrieve/kb-searcher';
-import { type KbHit, rrfRelevance } from '../retrieve/sources';
+import { type KbHit, kbRelevanceFromCosine, rrfRelevance } from '../retrieve/sources';
 import { type TryCandidate, type TryKnowledge, topicOf } from './try-pipeline';
 
 /**
@@ -56,7 +56,11 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
         productIds: context.productIds,
       });
       const candidates: TryCandidate[] = [];
-      for (const hit of hits) {
+      // Chưa nhận ra sản phẩm nào: đoạn của MỘT sản phẩm bất kỳ không phải nguồn cho câu hỏi chung ("how much?", "còn hàng không?") — nếu không, mọi câu
+      // thiếu sản phẩm đều bị coi là "có nguồn" và trả lời thay vì hỏi lại. Chỉ giữ đoạn dùng chung (chính sách, FAQ, thông tin shop).
+      const usableHits =
+        context.productIds.length === 0 ? hits.filter((hit) => hit.productId === null) : hits;
+      for (const hit of usableHits) {
         const text = hit.contextHeader ? `${hit.contextHeader}\n${hit.content}` : hit.content;
         // Cùng lớp phòng thủ như `kbHitsToSources` (FR-164): đoạn nghi cài lệnh không được hiện/đưa vào soạn.
         if (scanInjection(text, { allowedDomains: [] }).suspected) continue;
@@ -65,7 +69,11 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
           kind: 'kb',
           title: hit.contextHeader ?? hit.chunkKey,
           text: unsafeMarkMasked(hit.content),
-          score: rrfRelevance(hit.score),
+          // Có vector → điểm TUYỆT ĐỐI theo cosine (RRF chỉ để xếp thứ tự); không có → như cũ (suy giảm).
+          score:
+            hit.cosine === null || hit.cosine === undefined
+              ? rrfRelevance(hit.score)
+              : kbRelevanceFromCosine(hit.cosine),
           topics: chunkTopics(hit),
           ...(conflictTopicOf(hit) ? { conflictTopic: conflictTopicOf(hit) } : {}),
         });

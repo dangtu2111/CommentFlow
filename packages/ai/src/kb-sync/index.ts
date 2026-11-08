@@ -6,6 +6,7 @@ export {
   conflictChunkOf,
   detectConflicts,
 } from './conflicts';
+export { type DeclaredLang, detectChunkLang } from './lang';
 export {
   buildPolicyDocuments,
   type PolicyDocument,

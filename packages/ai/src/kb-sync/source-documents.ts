@@ -1,5 +1,6 @@
 import { type ChunkDocument, cleanCardText, type ProductCard } from '@flow/shared';
 import { CARD_DETAIL_LABELS } from '../try/db-product-knowledge';
+import { detectChunkLang } from './lang';
 
 /** Nguồn nhập tay → tài liệu cần cắt đoạn (FAQ, thông tin shop, sản phẩm). Hàm thuần, không I/O. */
 
@@ -25,14 +26,12 @@ export type ProductInput = {
   card?: ProductCard;
 };
 
-const chunkLang = (lang: 'vi' | 'en' | 'all'): 'vi' | 'en' => (lang === 'en' ? 'en' : 'vi');
-
 export function buildFaqDocuments(faqs: readonly FaqInput[], sourceTitle: string): ChunkDocument[] {
   return faqs.map((faq) => ({
     key: `faq:${faq.id}`,
     kind: 'faq',
     sourceTitle,
-    lang: chunkLang(faq.lang),
+    lang: detectChunkLang(`${faq.question} ${faq.answer}`, faq.lang),
     text: `Hỏi: ${faq.question}\nĐáp: ${faq.answer}`,
   }));
 }
@@ -56,7 +55,7 @@ export function buildShopDocuments(
         kind: 'shop_profile' as const,
         sourceTitle,
         section: profile.name,
-        lang: chunkLang(profile.lang),
+        lang: detectChunkLang(lines.join(' '), profile.lang),
         text: lines.join('\n\n'),
       },
     ];
@@ -95,7 +94,13 @@ export function buildProductDocuments(
       sourceTitle,
       productName: product.name,
       productId: product.id,
-      lang: 'vi',
+      // Nhận ngôn ngữ từ TÊN + thẻ (không từ nhãn tiếng Việt "Sản phẩm:"/"Mã:" ta tự thêm vào văn bản).
+      lang: detectChunkLang(
+        [product.name, ...CARD_DETAIL_LABELS.map(([field]) => product.card?.[field])]
+          .filter((v): v is string => typeof v === 'string')
+          .join(' '),
+        'vi',
+      ),
       text: lines.join('\n'),
     };
   });

@@ -96,3 +96,48 @@ export function parseRetrievalGold(jsonl: string): Map<string, Set<string>> {
   });
   return gold;
 }
+
+export type CalibrationPoint = {
+  threshold: number;
+  recall: number;
+  falseAcceptRate: number;
+  precision: number;
+  f1: number;
+};
+
+export type Calibration = CalibrationPoint & {
+  positives: number;
+  negatives: number;
+  curve: CalibrationPoint[];
+};
+
+/**
+ * Hiệu chỉnh ngưỡng "đủ liên quan" THEO DỮ LIỆU: `positives` = điểm tuyệt đối (cosine/rerank) của đoạn ĐÚNG ở câu có đáp án;
+ * `negatives` = điểm cao nhất của kết quả ở câu KHÔNG có nguồn (phải bị loại). Quét ngưỡng 0,00–1,00 bước 0,01, chọn F1 lớn nhất; hòa → ngưỡng
+ * thấp nhất (ưu tiên recall: bỏ sót đoạn đúng tệ hơn đưa thêm đoạn kém — bước soạn/guard còn chặn tiếp).
+ */
+export function calibrateThreshold(
+  positives: readonly number[],
+  negatives: readonly number[],
+): Calibration {
+  if (positives.length === 0)
+    throw new Error('Hiệu chỉnh ngưỡng cần ít nhất một mẫu dương (đoạn đúng).');
+  const curve: CalibrationPoint[] = [];
+  for (let i = 0; i <= 100; i += 1) {
+    const threshold = i / 100;
+    const tp = positives.filter((v) => v >= threshold).length;
+    const fp = negatives.filter((v) => v >= threshold).length;
+    const recall = tp / positives.length;
+    const precision = tp + fp === 0 ? 0 : tp / (tp + fp);
+    const f1 = precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall);
+    curve.push({
+      threshold,
+      recall,
+      precision,
+      f1,
+      falseAcceptRate: negatives.length === 0 ? 0 : fp / negatives.length,
+    });
+  }
+  const best = curve.reduce((a, b) => (b.f1 > a.f1 + 1e-12 ? b : a));
+  return { ...best, positives: positives.length, negatives: negatives.length, curve };
+}

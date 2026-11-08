@@ -179,3 +179,20 @@ describe('FR-028 kbHitsToSources — property-based', () => {
     );
   });
 });
+
+describe('kbRelevanceFromCosine — điểm liên quan TUYỆT ĐỐI cho đoạn kiến thức (không dùng ngưỡng trên RRF)', () => {
+  it('đúng ngưỡng cosine = đúng ngưỡng liên quan chung (DEFAULT_MIN_RELEVANCE); trên ngưỡng thì qua, dưới thì rớt', async () => {
+    const { kbRelevanceFromCosine, KB_MIN_COSINE } = await import('./sources');
+    const { DEFAULT_MIN_RELEVANCE } = await import('../draft/drafter');
+    expect(kbRelevanceFromCosine(KB_MIN_COSINE)).toBeCloseTo(DEFAULT_MIN_RELEVANCE, 10);
+    expect(kbRelevanceFromCosine(KB_MIN_COSINE + 0.2)).toBeGreaterThan(DEFAULT_MIN_RELEVANCE);
+    expect(kbRelevanceFromCosine(KB_MIN_COSINE - 0.05)).toBeLessThan(DEFAULT_MIN_RELEVANCE);
+  });
+
+  it('đơn điệu theo cosine và kẹp trong 0..1', async () => {
+    const { kbRelevanceFromCosine } = await import('./sources');
+    expect(kbRelevanceFromCosine(0.9)).toBeGreaterThan(kbRelevanceFromCosine(0.5));
+    expect(kbRelevanceFromCosine(-0.5)).toBe(0);
+    expect(kbRelevanceFromCosine(5)).toBe(1);
+  });
+});

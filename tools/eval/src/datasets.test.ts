@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LANG_GROUPS, parseDataset } from './dataset';
+import { parseRetrievalGold } from './retrieval-metrics';
 import { buildShopKnowledge, shopFixtureSchema } from './shop';
 
 /**
@@ -59,4 +60,30 @@ describe('cửa hàng mẫu trong datasets/shops/', () => {
     const [fact] = await k.lookupProductFacts(m.ids);
     expect(String(fact?.text)).toContain('58.90 USD');
   });
+});
+
+describe('gán đoạn đúng cho bộ đo truy hồi (Nhóm R)', () => {
+  const cases = [
+    ['demo-shop.jsonl', 'synthetic-v2-demo-shop.jsonl', 'demo-shop.json'],
+    ['sswiftly.jsonl', 'synthetic-v2-sswiftly-en.jsonl', 'sswiftly.json'],
+  ] as const;
+  for (const [goldFile, datasetFile, shopFile] of cases) {
+    it(`${goldFile}: mọi mã mẫu có trong bộ mẫu, mọi mã mục kiến thức có trong cửa hàng`, () => {
+      const gold = parseRetrievalGold(readFileSync(resolve(DIR, 'retrieval', goldFile), 'utf8'));
+      const samples = new Set(
+        parseDataset(readFileSync(resolve(DIR, datasetFile), 'utf8')).map((s) => s.id),
+      );
+      const shop = shopFixtureSchema.parse(
+        JSON.parse(readFileSync(resolve(DIR, 'shops', shopFile), 'utf8')),
+      );
+      const items = new Set([...shop.texts.map((t) => t.id), ...shop.products.map((p) => p.id)]);
+      expect(gold.size).toBeGreaterThan(0);
+      for (const [id, wanted] of gold) {
+        expect(samples.has(id), `mẫu ${id} không có trong ${datasetFile}`).toBe(true);
+        for (const item of wanted) {
+          expect(items.has(item), `mục ${item} (mẫu ${id}) không có trong ${shopFile}`).toBe(true);
+        }
+      }
+    });
+  }
 });
