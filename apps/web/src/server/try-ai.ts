@@ -33,7 +33,7 @@ export type TryAiFailure =
   | 'too_long'
   | 'limit_reached'
   | 'unavailable'
-  /** Chưa cấu hình LLM thật (cờ `CLASSIFY_LLM_ENABLED`/`DRAFT_LLM_ENABLED` + LiteLLM): KHÔNG chạy bản mẫu (chủ dự án chốt 08/11). */
+  /** Chưa cấu hình LLM thật (cờ DB `cf.ai.classify`/`cf.ai.draft` + LiteLLM + tên model): KHÔNG chạy bản mẫu (chủ dự án chốt 08/11). */
   | 'llm_not_configured'
   /** Workspace chưa có kiến thức/sản phẩm thật để thử. */
   | 'no_knowledge'
@@ -53,7 +53,7 @@ export type TryAiResult =
       vector: VectorStatus;
       /** Giọng văn đã dùng: `shop` = `brand_voice` thật của workspace (có cho ngôn ngữ nhận ra), `demo` = giọng mẫu. */
       voice: 'shop' | 'demo';
-      /** Bước nào đang chạy bằng LLM thật (cờ `*_LLM_ENABLED` + LiteLLM); còn lại là bản mẫu. */
+      /** Bước nào đang chạy bằng LLM thật (cờ DB `cf.ai.*` + LiteLLM); còn lại là bản mẫu. */
       llm: { extractor: boolean; drafter: boolean; rewriter: boolean };
     }
   | { ok: false; reason: TryAiFailure };
@@ -122,6 +122,10 @@ export function createTryAiAction(deps: TryAiDeps) {
     // Thiếu LLM thật hoặc nguồn kiến thức thật → báo rõ TRƯỚC khi tốn lượt (không chạy bản mẫu).
     const built = build();
     if (!built) return { ok: false, reason: 'llm_not_configured' };
+    // Cờ AI theo workspace (cf.ai.classify + cf.ai.draft) phải đang BẬT và cấu hình đủ — kiểm trước khi tốn lượt.
+    if (deps.llm?.ready && !(await deps.llm.ready(session.workspaceId))) {
+      return { ok: false, reason: 'llm_not_configured' };
+    }
     if (!deps.knowledgeRunner) return { ok: false, reason: 'no_knowledge' };
 
     const taken = deps.quota.take(session.workspaceId, now());

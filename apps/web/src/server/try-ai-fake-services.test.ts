@@ -30,11 +30,11 @@ describe('Thử AI với client LLM thật trỏ vào dịch vụ giả của CI
       env: {
         LITELLM_BASE_URL: baseUrl,
         LITELLM_API_KEY: 'e2e-virtual-key',
-        CLASSIFY_LLM_ENABLED: 'true',
-        DRAFT_LLM_ENABLED: 'true',
         CLASSIFY_LLM_MODEL: 'e2e-fake-model',
         DRAFT_LLM_MODEL: 'e2e-fake-model',
       },
+      // Cờ cf.ai.* theo workspace (DB) — ở test này bật cả hai bước.
+      isStepEnabled: async () => true,
       // Ghi `ai_usage` do DB; ở test này chỉ cần trả một dòng (không phải đường mock của ứng dụng).
       db: {
         withWorkspace: (async (_w: string, fn: (tx: unknown) => unknown) =>

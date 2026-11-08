@@ -17,6 +17,7 @@
     "@flow/ai": "workspace:*",
     "@flow/connectors": "workspace:*",
     "@flow/db": "workspace:*",
+    "@flow/saas-core": "workspace:*",
     "@flow/shared": "workspace:*",
     "pg-boss": "12.38.0",
     "pino": "10.4.0",

@@ -261,10 +261,10 @@ describe('ai_usage qua withJob (nguyên tắc #7)', () => {
       env: {
         LITELLM_BASE_URL: 'http://litellm.test',
         LITELLM_API_KEY: 'sk-thu',
-        CLASSIFY_LLM_ENABLED: 'true',
-        CLASSIFY_LLM_MODEL: 'mock-llm',
+        CLASSIFY_LLM_MODEL: 'cf-classify',
       },
       db: { withWorkspace: (id, fn) => db.withJob(id, fn) },
+      isStepEnabled: async () => true,
       fetchImpl: (async () =>
         new Response(
           JSON.stringify({

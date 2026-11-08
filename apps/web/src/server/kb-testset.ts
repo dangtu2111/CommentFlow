@@ -82,6 +82,10 @@ export function createKbTestSetAction(deps: KbTestSetDeps) {
 
     const built = build();
     if (!built) return { ok: false, reason: 'llm_not_configured' };
+    // Cờ AI theo workspace (cf.ai.classify + cf.ai.draft) phải đang BẬT và cấu hình đủ — kiểm trước khi tốn lượt.
+    if (deps.llm?.ready && !(await deps.llm.ready(session.workspaceId))) {
+      return { ok: false, reason: 'llm_not_configured' };
+    }
     if (!deps.knowledgeRunner) return { ok: false, reason: 'no_knowledge' };
 
     const taken = deps.quota.take(session.workspaceId, now());
