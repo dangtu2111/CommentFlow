@@ -349,3 +349,29 @@ describe('FR-030 lỗ hổng verifier-security (Chặn merge)', () => {
     expect(Date.now() - t0).toBeLessThan(1500);
   });
 });
+
+describe('hồi quy en-03: cùng một con số khác cách viết dấu phân cách nghìn', () => {
+  const check = (reply: string, source: string) => checkGuardMoney({ reply, sources: [source] });
+
+  it('"4,765 available" khớp nguồn "còn 4765" (cùng số, khác dấu phân cách) → không bị coi là bịa số', () => {
+    expect(check('The variant is in stock with 4,765 available.', 'Biến thể: còn 4765').ok).toBe(
+      true,
+    );
+    expect(check('còn 4.765 sản phẩm', 'Biến thể: còn 4765').ok).toBe(true);
+  });
+
+  it('chiều ngược lại: câu viết "4765", nguồn ghi "4,765" → khớp', () => {
+    expect(check('còn 4765 sản phẩm', 'Stock: 4,765 units').ok).toBe(true);
+  });
+
+  it('số KHÔNG có trong nguồn vẫn bị chặn dù viết có dấu phân cách', () => {
+    const r = check('in stock with 9,999 available', 'còn 4765');
+    expect(r.ok).toBe(false);
+    expect(r.violations[0]?.kind).toBe('money');
+  });
+
+  it('có ĐƠN VỊ tiền thì nghiêm: số tồn kho 4765 KHÔNG hợp thức hóa một mức giá "4.765đ"', () => {
+    expect(check('Giá chỉ 4.765đ', 'còn 4765').ok).toBe(false);
+    expect(check('Giá chỉ 4765 đồng', 'còn 4765').ok).toBe(false);
+  });
+});

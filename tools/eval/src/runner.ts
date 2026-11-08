@@ -36,6 +36,8 @@ export type RunnerOptions = {
   knowledge?: TryKnowledge;
   /** Hạt giống cố định cho bước extract (cùng nhiệt độ 0) để các lượt đo ít dao động. */
   seed?: number;
+  /** Thử nghiệm bước soạn: nhiệt độ khác mặc định và/hoặc seed cố định (đo xen kẽ trước/sau); thiếu → như production. */
+  draft?: { temperature?: number; seed?: number };
   /** Bộ chấm điểm pg_trgm: có → khớp sản phẩm ĐÚNG như production (khuyến nghị khi đo thật); thiếu → khớp "tên chứa lời nhắc" cũ. */
   scorer?: TrigramScorer;
   /** Ghi `ai_usage` thật (chỉ backend `litellm`): `db` của dev + workspace dành cho đánh giá. Không có → không ghi DB. */
@@ -88,7 +90,14 @@ export function createRunner(options: RunnerOptions): Runner {
               ...(options.seed === undefined ? {} : { seed: options.seed }),
             }),
             rewriter: createLlmRewriter({ llm, model: options.models.rewrite }),
-            drafter: createLlmDrafter({ llm, model: options.models.draft }),
+            drafter: createLlmDrafter({
+              llm,
+              model: options.models.draft,
+              ...(options.draft?.temperature === undefined
+                ? {}
+                : { temperature: options.draft.temperature }),
+              ...(options.draft?.seed === undefined ? {} : { seed: options.draft.seed }),
+            }),
           };
         },
       }),

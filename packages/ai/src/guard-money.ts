@@ -23,6 +23,8 @@ export type GuardClaim = {
   raw: string;
   date?: DateParts;
   index: number;
+  /** Khóa thay thế được chấp nhận: cùng GIÁ TRỊ viết khác dấu phân cách nghìn ("4,765" ↔ "4765"); chỉ cho số KHÔNG kèm đơn vị tiền. */
+  alt?: string;
 };
 
 export type GuardViolation = {
@@ -287,7 +289,10 @@ export function extractClaims(text: string): GuardClaim[] {
     'money',
     (m) => {
       const value = Number(m[0].replace(/[.,]/g, ''));
-      return value >= 1000 ? moneyClaims(value) : null;
+      // Số có dấu phân cách nghìn nhưng KHÔNG kèm đơn vị tiền: cũng khớp khi nguồn ghi đúng số đó trần ("4765").
+      return value >= 1000
+        ? moneyClaims(value).map((c) => ({ ...c, alt: `num:${m[0].replace(/[.,]/g, '')}` }))
+        : null;
     },
     out,
   );
@@ -307,7 +312,20 @@ export function extractClaims(text: string): GuardClaim[] {
     (m) => (validMonth(Number(m[1])) ? dateClaim(undefined, Number(m[1])) : null),
     out,
   );
-  scan(work, BARE_NUMBER, 'number', (m) => [{ kind: 'number', key: `num:${m[0]}` }], out);
+  scan(
+    work,
+    BARE_NUMBER,
+    'number',
+    (m) => [
+      {
+        kind: 'number',
+        key: `num:${m[0]}`,
+        // Ngược lại: số trần khớp khi nguồn ghi đúng số đó có dấu phân cách ("4,765").
+        ...(Number(m[0]) >= 1000 ? { alt: vnd(Number(m[0])) } : {}),
+      },
+    ],
+    out,
+  );
 
   return out.sort((a, b) => a.index - b.index);
 }
@@ -349,7 +367,7 @@ export function checkGuardMoney(input: GuardMoneyInput): GuardMoneyResult {
     seen.add(claim.key);
     const supported = claim.date
       ? dateSupported(claim.date, sourceDates)
-      : sourceKeys.has(claim.key);
+      : sourceKeys.has(claim.key) || (claim.alt !== undefined && sourceKeys.has(claim.alt));
     if (!supported) violations.push({ kind: claim.kind, display: displayOf(claim) });
   }
   return { ok: violations.length === 0, violations, claimsChecked: seen.size };

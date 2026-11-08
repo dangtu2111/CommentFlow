@@ -33,6 +33,20 @@ describe('TRY-AI-REAL lát A — sản phẩm thật', () => {
     expect(missingAxesOf({ ...shirt, variants: [] })).toEqual([]);
   });
 
+  it('giá gốc (compare_at, đã gạch) KHÔNG bao giờ vào câu nguồn: model chỉ thấy giá bán hiện tại', () => {
+    const withCompareAt = {
+      ...shirt,
+      compareAtVnd: 597990,
+      compareAtMinor: 59799,
+      variants: shirt.variants.map((v) => ({ ...v, compareAtVnd: 597990, compareAtMinor: 59799 })),
+    } as TryProduct;
+    const text = productFactText(withCompareAt);
+    expect(text).not.toMatch(/597/);
+    expect(text).not.toMatch(/59799/);
+    expect(text).not.toMatch(/gốc|compare|gạch|original/i);
+    expect(text).toContain('150');
+  });
+
   it('productFactText: mọi số đều lấy từ dữ liệu, hết hàng ghi rõ', () => {
     const text = productFactText(shirt);
     expect(text).toContain('Áo thun basic: giá 150.000đ');

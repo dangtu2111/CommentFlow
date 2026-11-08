@@ -39,7 +39,14 @@ function requiresSources(decision: ActionBrief | undefined): boolean {
  * trả `needs_human`; ngược lại ĐÚNG MỘT lần `llm.call` (NFR-C7), không gọi lại khi đầu ra hỏng — ném
  * `LLM_UNAVAILABLE`. Lỗi của `llm.call` được ném nguyên. Sau khi đọc, code kiểm nguồn của từng ý `fact` (FR-140).
  */
-export function createLlmDrafter(options: { llm: LlmClient; model: string }): Drafter {
+export function createLlmDrafter(options: {
+  llm: LlmClient;
+  model: string;
+  /** Chỉ EVAL đặt (thử nhiệt độ thấp hơn mặc định để giảm dao động); production dùng `DRAFT_TEMPERATURE`. */
+  temperature?: number;
+  /** Hạt giống cố định (chỉ EVAL) để các lượt đo ít dao động. */
+  seed?: number;
+}): Drafter {
   return {
     async draft(input) {
       if (input.decision?.action === 'handoff') {
@@ -57,7 +64,8 @@ export function createLlmDrafter(options: { llm: LlmClient; model: string }): Dr
         model: options.model,
         promptVersion: DRAFT_PROMPT_VERSION,
         messages: buildDraftMessages({ ...input, sources }),
-        temperature: DRAFT_TEMPERATURE,
+        temperature: options.temperature ?? DRAFT_TEMPERATURE,
+        ...(options.seed === undefined ? {} : { seed: options.seed }),
         // Đủ chỗ cho model suy luận + 3–5 biến thể; chỉ trả tiền phần dùng thật.
         maxTokens: 3000,
         responseFormat: DRAFT_RESPONSE_FORMAT,
