@@ -1,7 +1,7 @@
 import type { Database } from '@flow/db';
 import type { KbPublishJob, PlanChunk } from '@flow/shared';
 import { describe, expect, it, vi } from 'vitest';
-import { type KbPublishOps, runKbPublish } from './kb-publish';
+import { type KbPublishOps, runKbPublish } from './run-kb-publish';
 
 const WS = '00000000-0000-4000-8000-000000000001';
 const USER = '00000000-0000-4000-8000-000000000002';

@@ -14,6 +14,20 @@ export {
   splitSections,
 } from './policy-documents';
 export {
+  defaultKbPublishOps,
+  type KbPublishOps,
+  type KbPublishOutcome,
+  markDraftConflicts,
+  runKbPublish,
+} from './run-kb-publish';
+export {
+  defaultKbSyncOps,
+  type KbSyncDeps,
+  type KbSyncOps,
+  type KbSyncStats,
+  runKbSync,
+} from './run-kb-sync';
+export {
   buildFaqDocuments,
   buildProductDocuments,
   buildShopDocuments,
