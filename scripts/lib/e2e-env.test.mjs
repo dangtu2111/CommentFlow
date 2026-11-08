@@ -47,6 +47,18 @@ describe('buildE2eEnv', () => {
     expect(env.SMS_MOCK_OUTBOX_FILE).toContain('cf-e2e-sms-outbox-3123');
   });
 
+  it('có TEST_DATABASE_WORKER_URL → DATABASE_WORKER_URL trỏ DB test (theo làn); không có thì không đặt', () => {
+    const w = 'postgresql://cf_worker:pw@10.0.0.1:5433/cf_test';
+    expect(buildE2eEnv(base, { port: 3123 }).DATABASE_WORKER_URL).toBeUndefined();
+    expect(
+      buildE2eEnv({ ...base, TEST_DATABASE_WORKER_URL: w }, { port: 3123 }).DATABASE_WORKER_URL,
+    ).toBe(w);
+    expect(
+      buildE2eEnv({ ...base, TEST_DATABASE_WORKER_URL: w }, { port: 3123, lane: 'b' })
+        .DATABASE_WORKER_URL,
+    ).toContain('/cf_test_b');
+  });
+
   it('CF_LANE đổi tên DB thành cf_test_<làn> cho cả ba role, giữ nguyên máy/mật khẩu', () => {
     const env = buildE2eEnv(base, { port: 3100, lane: 'b' });
     for (const name of ['DATABASE_URL', 'DATABASE_ADMIN_URL', 'DATABASE_AUTH_URL']) {

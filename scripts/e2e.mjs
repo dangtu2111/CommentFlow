@@ -103,8 +103,51 @@ if (!chromiumInstalled()) {
 }
 await assertMailpit(env.MAILPIT_URL);
 
+// DỊCH VỤ GIẢ NGOÀI ỨNG DỤNG (chỉ CI/E2E): LLM (OpenAI/LiteLLM chat completions) và /embed. Ứng dụng dùng client THẬT, chỉ trỏ
+// LITELLM_BASE_URL/ML_URL sang đây — không có đường mock nào trong mã ứng dụng. Kết quả KHÔNG phải số đo chất lượng (docs/testing/dich-vu-gia-ci.md).
+const FAKE_ML_MODEL = 'bge-m3-test';
+const fakeServices = [];
+async function startFake(script, args = []) {
+  const port = await freePort();
+  const child = spawn(
+    process.execPath,
+    [join(root, 'e2e', 'fake-services', script), String(port), ...args],
+    {
+      cwd: root,
+      env: { ...process.env, FAKE_ML_MODEL },
+      stdio: 'inherit',
+      detached: !isWindows,
+    },
+  );
+  fakeServices.push(child);
+  await waitForHealth(`http://127.0.0.1:${port}/health`, child);
+  return `http://127.0.0.1:${port}`;
+}
+const stopFakes = () => {
+  for (const child of fakeServices) killTree(child);
+};
+process.on('exit', stopFakes);
+console.log('[e2e] Khởi động dịch vụ LLM giả và /embed giả (ngoài ứng dụng)…');
+env.LITELLM_BASE_URL = await startFake('fake-litellm.mjs');
+env.ML_URL = await startFake('fake-ml.mjs');
+env.LITELLM_API_KEY = 'e2e-virtual-key';
+env.CLASSIFY_LLM_ENABLED = 'true';
+env.DRAFT_LLM_ENABLED = 'true';
+env.CLASSIFY_LLM_MODEL = 'e2e-fake-model';
+env.DRAFT_LLM_MODEL = 'e2e-fake-model';
+env.ML_EMBED_ENABLED = 'true';
+
 console.log('[e2e] Áp migration lên DB test…');
 if (run('pnpm --filter @flow/db run db:migrate', env) !== 0) fail('Migration DB test thất bại.');
+
+// Kích hoạt model embedding bằng ĐÚNG lệnh vận hành thật (`kb:switch-embedding`) trỏ vào dịch vụ /embed giả.
+if (!env.DATABASE_WORKER_URL) {
+  fail('Thiếu TEST_DATABASE_WORKER_URL (role cf_worker) để kích hoạt model embedding cho E2E.');
+}
+console.log(`[e2e] Kích hoạt model embedding "${FAKE_ML_MODEL}" (kb:switch-embedding)…`);
+if (run(`pnpm --filter @flow/worker run kb:switch-embedding -- ${FAKE_ML_MODEL}`, env) !== 0) {
+  fail('kb:switch-embedding thất bại.');
+}
 
 const mode = process.env.E2E_WEB_MODE === 'dev' ? 'dev' : 'start';
 if (mode === 'start' && process.env.E2E_SKIP_BUILD !== '1') {
@@ -127,7 +170,39 @@ const web = spawn(webCommand, {
   detached: !isWindows,
 });
 
-const stop = () => killTree(web);
+// Bản web THỨ HAI cho kịch bản "chưa cấu hình AI": cùng DB/bản build, nhưng KHÔNG có dịch vụ LLM (không đặt LITELLM_*, cờ LLM tắt) — kiểm hành vi
+// trung thực khi thiếu dịch vụ thật (không bản mẫu). Cookie đăng nhập không dùng chung giữa hai bản (mỗi bản có BETTER_AUTH_URL riêng).
+const noAiPort = await freePort();
+const noAiBase = `http://localhost:${noAiPort}`;
+const noAiEnv = {
+  ...env,
+  PORT: String(noAiPort),
+  BETTER_AUTH_URL: noAiBase,
+  E2E_BASE_URL: noAiBase,
+  CLASSIFY_LLM_ENABLED: 'false',
+  DRAFT_LLM_ENABLED: 'false',
+};
+for (const name of ['LITELLM_BASE_URL', 'LITELLM_API_KEY']) delete noAiEnv[name];
+console.log(`[e2e] Khởi động web "chưa cấu hình AI" ở cổng ${noAiPort}…`);
+const webNoAi = spawn(
+  mode === 'dev'
+    ? `pnpm --filter @flow/web exec next dev -p ${noAiPort}`
+    : `pnpm --filter @flow/web exec next start -p ${noAiPort}`,
+  {
+    cwd: root,
+    env: mode === 'dev' ? noAiEnv : { ...noAiEnv, NODE_ENV: 'production' },
+    stdio: 'inherit',
+    shell: true,
+    detached: !isWindows,
+  },
+);
+env.E2E_NOAI_BASE_URL = noAiBase;
+
+const stop = () => {
+  killTree(web);
+  killTree(webNoAi);
+  stopFakes();
+};
 process.on('exit', stop);
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => {
@@ -139,6 +214,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 let code = 1;
 try {
   await waitForHealth(`${env.E2E_BASE_URL}/api/health`, web);
+  await waitForHealth(`${noAiBase}/api/health`, webNoAi);
   const extra = process.argv.slice(2).join(' ');
   code = run(`pnpm --filter @flow/e2e exec playwright test ${extra}`.trim(), env);
 } finally {

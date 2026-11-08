@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 
 /** Biến môi trường E2E (do scripts/e2e.mjs đặt, hoặc đặt tay khi chạy `playwright test` trực tiếp). Không in giá trị. */
-export function requireEnv(name: 'E2E_BASE_URL' | 'MAILPIT_URL'): string {
+export function requireEnv(name: 'E2E_BASE_URL' | 'E2E_NOAI_BASE_URL' | 'MAILPIT_URL'): string {
   const value = process.env[name];
   if (!value) throw new Error(`Thiếu biến môi trường ${name}. Chạy bằng \`pnpm e2e\` ở gốc repo.`);
   return value;

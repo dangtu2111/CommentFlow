@@ -1794,14 +1794,14 @@
     "pageTitle": "Knowledge test questions",
     "title": "Test questions before publishing",
     "subtitle": "Write a few sample customer questions with the expected outcome and run them to check the AI handles them correctly before you publish knowledge. Does not use your plan's AI quota.",
-    "mockNote": "Running the simulation (no real AI call). The set is not saved and does not yet block the Publish button; run it again each time.",
+    "mockNote": "Runs on real AI and your shop's real knowledge. The set is not saved and does not yet block the Publish button; run it again each time.",
     "label": "Test question list",
     "hint": "One per line: question | expected action | words the reply must contain (optional, separated by ;). Actions: answer, clarify, redirect, handoff, skip (ignored). Up to {max} lines.",
     "sample": "ship về Hà Nội bao nhiêu | redirect | 20.000đ\náo thun basic size M màu đen giá bao nhiêu? | answer\n😀😀 | skip",
     "submit": "Run test questions",
     "quota": "Ran {used}/{limit} times today",
     "knowledge": {
-      "demo": "Source: sample knowledge (your shop's real knowledge is not connected yet)",
+      "demo": "Source: no real knowledge for your shop yet",
       "kb": "Source: your shop's published knowledge"
     },
     "errors": {
@@ -2017,7 +2017,7 @@
     "pageTitle": "Try AI",
     "title": "Try AI",
     "subtitle": "Type a sample comment to see how AI would classify it, reply, and whether it could auto-send. Does not use your plan's AI quota.",
-    "mockNote": "Running a simulation (no real AI call, sample knowledge). Results only preview the processing flow.",
+    "mockNote": "Runs on real AI and your shop's real knowledge (AI must be configured). Does not use your plan's AI quota and sends nothing to customers.",
     "label": "Sample customer comment",
     "placeholder": "E.g. how much is the basic tee, size M, black?",
     "previousLabel": "Previous turns in the conversation (optional)",
@@ -2026,15 +2026,15 @@
     "submit": "Try",
     "quota": "{used}/{limit} tries used today",
     "llm": {
-      "off": "Intent detection and drafting: simulated (real AI is off)",
+      "off": "Real AI is not configured",
       "extractor": "intent detection",
       "rewriter": "query rewriting",
       "drafter": "reply drafting",
-      "on": "Real AI is running for: {steps}; other steps are simulated"
+      "on": "Real AI is running for: {steps}"
     },
     "knowledge": {
-      "demo": "Source: sample knowledge (your shop's real knowledge is not connected)",
-      "shop": "Source: the shop’s real products (price/stock/variants read from the product store); policies are still sample text",
+      "demo": "Source: no real knowledge for your shop yet",
+      "shop": "Source: your shop's real products, policies and FAQ (price/stock/variants read from the product store)",
       "kb": "Source: your shop's published knowledge — the 0–1 score is the relevance computed by the system"
     },
     "embedding": {
