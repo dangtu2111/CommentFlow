@@ -12,4 +12,12 @@ export {
   type Section,
   splitSections,
 } from './policy-documents';
+export {
+  buildFaqDocuments,
+  buildProductDocuments,
+  buildShopDocuments,
+  type FaqInput,
+  type ProductInput,
+  type ShopProfileInput,
+} from './source-documents';
 export { classifyTopic, type PolicyKind } from './topic';

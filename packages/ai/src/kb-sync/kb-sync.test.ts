@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { detectConflicts } from './conflicts';
 import { buildPolicyDocuments, splitSections } from './policy-documents';
+import { buildFaqDocuments, buildProductDocuments, buildShopDocuments } from './source-documents';
 import { classifyTopic } from './topic';
 
 describe('splitSections — cắt theo mục', () => {
