@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hybridProductScores,
   isProductCacheStale,
   normalizeSearchText,
+  PRODUCT_MATCH_THRESHOLD,
+  PRODUCT_MIN_COSINE,
   pickProductMatch,
+  productScoreFromCosine,
   productSearchText,
   RRF_K,
   reciprocalRankFusion,
@@ -116,5 +120,39 @@ describe('FR-135 isProductCacheStale (cache không trả giá cũ)', () => {
   });
   it('current có thêm sản phẩm không dùng → không ảnh hưởng', () => {
     expect(isProductCacheStale({ a: 1 }, { a: 1, z: 9 })).toBe(false);
+  });
+});
+
+describe('(1b) điểm sản phẩm LAI: trigram + vector tên (cosine)', () => {
+  it('cosine dưới ngưỡng → 0; đúng ngưỡng → đúng ngưỡng chọn sản phẩm; cosine 1 → 1', () => {
+    expect(productScoreFromCosine(PRODUCT_MIN_COSINE - 0.01)).toBe(0);
+    expect(productScoreFromCosine(PRODUCT_MIN_COSINE)).toBeCloseTo(PRODUCT_MATCH_THRESHOLD, 10);
+    expect(productScoreFromCosine(1)).toBeCloseTo(1, 10);
+    expect(productScoreFromCosine(0.9)).toBeGreaterThan(productScoreFromCosine(0.8));
+  });
+
+  it('mỗi sản phẩm lấy điểm LỚN hơn của hai nhánh; chỉ-vector (trigram 0) vẫn có điểm', () => {
+    const scores = hybridProductScores([
+      { id: 'a', similarity: 0.7, cosine: 0.5 },
+      { id: 'b', similarity: 0, cosine: 0.9 },
+      { id: 'c', similarity: 0.2, cosine: null },
+      { id: 'd', similarity: 0, cosine: 0.3 },
+    ]);
+    const byId = Object.fromEntries(scores.map((x) => [x.id, x.score]));
+    expect(byId.a).toBe(0.7);
+    expect(byId.b).toBeCloseTo(productScoreFromCosine(0.9), 10);
+    expect(byId.c).toBe(0.2);
+    expect(byId.d).toBe(0);
+  });
+
+  it('khách gõ lệch chữ ("áo sơ mi trắng" ↔ "Sơ mi nam màu trắng") — trigram thấp nhưng vector cao → được chọn; không đủ cả hai → không chọn', () => {
+    const hit = pickProductMatch(
+      hybridProductScores([{ id: 'p1', similarity: 0.12, cosine: 0.82 }]),
+    );
+    expect(hit).toMatchObject({ status: 'matched', id: 'p1' });
+    const miss = pickProductMatch(
+      hybridProductScores([{ id: 'p1', similarity: 0.12, cosine: 0.4 }]),
+    );
+    expect(miss.status).toBe('none');
   });
 });

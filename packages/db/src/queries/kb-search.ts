@@ -1,5 +1,6 @@
 import {
   ALIAS_MATCH_THRESHOLD,
+  hybridProductScores,
   normalizeSearchText,
   type ProductMatch,
   pickProductMatch,
@@ -225,6 +226,8 @@ export type ProductHit = {
   similarity: number;
   /** Điểm RRF của hai nhánh (để xếp thứ tự). */
   score: number;
+  /** Cosine giữa vector câu hỏi và `name_embedding` (null nếu không có nhánh vector hoặc sản phẩm chưa có vector cùng model). */
+  cosine: number | null;
 };
 
 /**
@@ -263,8 +266,8 @@ export async function searchProducts(
   const semantic =
     input.queryVector && input.embeddingModel
       ? (
-          await tx.execute<{ id: string; name: string }>(sql`
-          SELECT p.id, p.name
+          await tx.execute<{ id: string; name: string; cosine: number }>(sql`
+          SELECT p.id, p.name, (1 - (p.name_embedding <=> ${vectorLiteral(input.queryVector)}::halfvec(1024)))::float8 AS cosine
             FROM cf.products p
            WHERE p.workspace_id = ${input.workspaceId}::uuid AND p.status = 'active'
              AND p.name_embedding IS NOT NULL
@@ -274,6 +277,7 @@ export async function searchProducts(
         ).rows
       : [];
   const similarityOf = new Map(trigram.map((row) => [row.id, Number(row.s)]));
+  const cosineOf = new Map(semantic.map((row) => [row.id, Number(row.cosine)]));
   const nameOf = new Map([...trigram, ...semantic].map((row) => [row.id, row.name]));
   return reciprocalRankFusion([trigram.map((r) => r.id), semantic.map((r) => r.id)])
     .slice(0, limit)
@@ -282,6 +286,7 @@ export async function searchProducts(
       name: nameOf.get(id) ?? '',
       similarity: similarityOf.get(id) ?? 0,
       score,
+      cosine: cosineOf.get(id) ?? null,
     }));
 }
 
@@ -300,7 +305,8 @@ export async function findProductMatch(
   );
   if (byAlias.status !== 'none') return byAlias;
   const hits = await searchProducts(tx, input);
-  return pickProductMatch(hits.map((hit) => ({ id: hit.id, score: hit.similarity })));
+  // (1b) LAI: điểm mỗi sản phẩm = lớn hơn của trigram và cosine vector tên (khách gõ lệch chữ vẫn khớp); thiếu vector → như cũ (chỉ trigram).
+  return pickProductMatch(hybridProductScores(hits));
 }
 
 /**

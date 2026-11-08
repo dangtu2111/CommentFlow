@@ -6,6 +6,7 @@ import {
   listDraftChunkState,
   listFaqItems,
   listPolicyItems,
+  listProductNamesToEmbed,
   listProductsForSync,
   listShopProfiles,
   lockKbPublish,
@@ -13,6 +14,7 @@ import {
   type SyncSourceKind,
   setDraftChunkTopics,
   upsertDraftChunks,
+  writeProductNameVectors,
 } from '@flow/db/runtime';
 import {
   AppError,
@@ -23,6 +25,7 @@ import {
 } from '@flow/shared';
 import type { EmbeddingConfig } from '../embedding/embedding-config';
 import { buildChunkRows } from '../kb-indexing';
+import { reembedWorkspaceProducts } from '../kb-reembed/reembed-products';
 import { buildPolicyDocuments } from './policy-documents';
 import { buildFaqDocuments, buildProductDocuments, buildShopDocuments } from './source-documents';
 import { classifyTopic, type PolicyKind } from './topic';
@@ -39,6 +42,8 @@ export type KbSyncStats = {
   chunksUnchanged: number;
   chunksRemoved: number;
   productsTruncated: boolean;
+  /** Số sản phẩm vừa được nhúng vector tên (FR-127, khớp sản phẩm lai) — những sản phẩm chưa có vector ở model hiện hành. */
+  productNamesEmbedded: number;
 };
 
 /** Các thao tác DB của lõi đồng bộ — tiêm vào để test đơn vị không cần DB; mặc định là hàm thật của `@flow/db`. */
@@ -55,6 +60,8 @@ export type KbSyncOps = {
   refreshMeta: typeof refreshDraftChunkMeta;
   remove: typeof deleteDraftChunks;
   setTopics: typeof setDraftChunkTopics;
+  listProductNamesToEmbed: typeof listProductNamesToEmbed;
+  writeProductNameVectors: typeof writeProductNameVectors;
 };
 
 export const defaultKbSyncOps: KbSyncOps = {
@@ -70,6 +77,8 @@ export const defaultKbSyncOps: KbSyncOps = {
   refreshMeta: refreshDraftChunkMeta,
   remove: deleteDraftChunks,
   setTopics: setDraftChunkTopics,
+  listProductNamesToEmbed,
+  writeProductNameVectors,
 };
 
 export type KbSyncDeps = {
@@ -166,6 +175,7 @@ export async function runKbSync(
     chunksUnchanged: 0,
     chunksRemoved: 0,
     productsTruncated,
+    productNamesEmbedded: 0,
   };
   for (const plan of plans) {
     // Không tạo nguồn rỗng; nguồn đã có mà hết tài liệu → vẫn chạy để xóa đoạn cũ.
@@ -194,5 +204,14 @@ export async function runKbSync(
     stats.chunksWritten += built.rows.length;
     stats.chunksUnchanged += built.unchangedKeys.length;
   }
+  // Vector TÊN sản phẩm (cùng giao dịch, cùng model với đoạn): khớp sản phẩm lai cần vector này; chỉ nhúng sản phẩm còn thiếu/khác model.
+  const productNames = await reembedWorkspaceProducts({
+    embedder: embedding.embedder,
+    ops: {
+      list: (model, limit) => ops.listProductNamesToEmbed(tx, workspaceId, model, limit),
+      write: (model, rows) => ops.writeProductNameVectors(tx, workspaceId, model, rows),
+    },
+  });
+  stats.productNamesEmbedded = productNames.reembedded;
   return stats;
 }

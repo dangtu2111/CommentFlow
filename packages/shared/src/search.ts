@@ -8,6 +8,11 @@ export const RRF_K = 60;
 
 /** Ngưỡng điểm tối thiểu để chọn một sản phẩm (docs/10 §5.1; khởi điểm, hiệu chuẩn bằng bộ đánh giá). */
 export const PRODUCT_MATCH_THRESHOLD = 0.45;
+/**
+ * (1b) Vector tên sản phẩm: cosine tối thiểu để được coi là "gần tên" (khởi điểm CHƯA hiệu chuẩn — hiệu chuẩn bằng bộ gold sản phẩm khi có credit đo;
+ * bge-m3 cho cosine tên ngắn↔tên dài thường 0,5–0,8). Dưới ngưỡng → vector không cho điểm (không bao giờ chọn sản phẩm chỉ vì "hơi giống").
+ */
+export const PRODUCT_MIN_COSINE = 0.62;
 /** Hạng một phải hơn hạng hai ít nhất biên này, nếu không là mơ hồ → AI hỏi lại (FR-128). */
 export const PRODUCT_MATCH_MARGIN = 0.05;
 
@@ -79,6 +84,25 @@ export type ProductMatch =
   | { status: 'matched'; id: string; score: number }
   | { status: 'ambiguous'; ids: string[] }
   | { status: 'none'; reason: 'no_candidates' | 'below_threshold' };
+
+/** Đổi cosine (vector tên) sang thang điểm của `pickProductMatch`: `PRODUCT_MIN_COSINE` ↔ ngưỡng chọn, 1 ↔ 1; dưới ngưỡng → 0. */
+export function productScoreFromCosine(cosine: number): number {
+  if (cosine < PRODUCT_MIN_COSINE) return 0;
+  const span = 1 - PRODUCT_MIN_COSINE;
+  return (
+    PRODUCT_MATCH_THRESHOLD + ((cosine - PRODUCT_MIN_COSINE) / span) * (1 - PRODUCT_MATCH_THRESHOLD)
+  );
+}
+
+/** Điểm LAI mỗi sản phẩm = lớn hơn của độ giống trigram và điểm từ cosine vector tên (thiếu vector → chỉ trigram). */
+export function hybridProductScores(
+  hits: readonly { id: string; similarity: number; cosine: number | null }[],
+): RankedScore[] {
+  return hits.map((h) => ({
+    id: h.id,
+    score: Math.max(h.similarity, h.cosine === null ? 0 : productScoreFromCosine(h.cosine)),
+  }));
+}
 
 /**
  * Chọn sản phẩm từ ứng viên đã có điểm (FR-127/128): dưới ngưỡng → không chọn; hạng hai sát hạng một → mơ hồ (trả các

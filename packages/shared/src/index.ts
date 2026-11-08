@@ -440,13 +440,16 @@ export {
 } from './rule-filter';
 export { readSapoConfig, type SapoConfig } from './sapo-config';
 export {
+  hybridProductScores,
   isProductCacheStale,
   normalizeSearchText,
   PRODUCT_MATCH_MARGIN,
   PRODUCT_MATCH_THRESHOLD,
+  PRODUCT_MIN_COSINE,
   type ProductMatch,
   type ProductSearchInput,
   pickProductMatch,
+  productScoreFromCosine,
   productSearchText,
   type RankedScore,
   RRF_K,

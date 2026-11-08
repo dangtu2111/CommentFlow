@@ -277,11 +277,13 @@ export {
   findSyncSource,
   KB_SYNC_PRODUCT_LIMIT,
   listDraftChunkTexts,
+  listProductNamesToEmbed,
   listProductsForSync,
   type SyncSourceKind,
   setDraftChunkTopics,
   setDraftConflictMarks,
   summarizeDraftChunks,
+  writeProductNameVectors,
 } from './queries/kb-sync';
 export {
   countLeadsByStage,

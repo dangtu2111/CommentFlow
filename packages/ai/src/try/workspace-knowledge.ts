@@ -153,7 +153,15 @@ export async function loadWorkspaceKnowledge(
   const vectorHealth = { failed: false };
   const embedder = params.embedder && vectorBranchUsable(embedding) ? params.embedder : undefined;
   const bind = (t: Database): TryKnowledge => {
-    const products = hasProducts ? createDbProductKnowledge(t, workspaceId) : base;
+    const products = hasProducts
+      ? createDbProductKnowledge(t, workspaceId, {
+          ...(embedder ? { embedder } : {}),
+          onEmbeddingFailure: (error) => {
+            vectorHealth.failed = true;
+            params.onEmbeddingFailure?.(error);
+          },
+        })
+      : base;
     if (!version) return { ...products, searchKb: createDbShopKnowledgeSearch(texts) };
     return createKbTryKnowledge({
       searcher: createDbKbSearcher(t, { workspaceId, versionId: version.id }),

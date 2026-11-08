@@ -11,6 +11,7 @@ import {
   searchProducts,
   setProductNameEmbedding,
 } from '../src/queries/kb-search';
+import { listProductNamesToEmbed, writeProductNameVectors } from '../src/queries/kb-sync';
 import {
   createAdminPool,
   createAppDb,
@@ -442,6 +443,75 @@ describe('FR-127 searchProducts / findProductMatch', () => {
       }),
     );
     expect(hits.map((h) => h.id)).toContain(p);
+  });
+
+  it('(1b) findProductMatch LAI: chữ không giống nhưng vector tên gần → CHỌN; vector xa → không chọn; không có vector → như cũ', async () => {
+    const p = await seedProduct(wsA, 'Mẫu lai độc nhất', { embedding: unit(35) });
+    const byVector = await db.withWorkspace(wsA, (tx) =>
+      findProductMatch(tx, {
+        workspaceId: wsA,
+        queryText: 'khongtrunglai',
+        queryVector: unit(35),
+        embeddingModel: 'bge-m3',
+      }),
+    );
+    expect(byVector).toMatchObject({ status: 'matched', id: p });
+    const far = await db.withWorkspace(wsA, (tx) =>
+      findProductMatch(tx, {
+        workspaceId: wsA,
+        queryText: 'khongtrunglai',
+        queryVector: unit(36),
+        embeddingModel: 'bge-m3',
+      }),
+    );
+    expect(far.status).toBe('none');
+    const noVector = await db.withWorkspace(wsA, (tx) =>
+      findProductMatch(tx, { workspaceId: wsA, queryText: 'khongtrunglai' }),
+    );
+    expect(noVector.status).toBe('none');
+  });
+
+  it('(1b) nhúng bù tên sản phẩm: liệt kê chỉ sản phẩm active thiếu/khác model; ghi chỉ khi tên còn nguyên; không đụng sản phẩm khác workspace', async () => {
+    const missing = await seedProduct(wsA, 'Cần nhúng bù một');
+    const stale = await seedProduct(wsA, 'Cần nhúng bù hai', {
+      embedding: unit(40),
+      model: 'cu-model',
+    });
+    const fresh = await seedProduct(wsA, 'Đã đủ vector', {
+      embedding: unit(41),
+      model: 'bge-m3',
+    });
+    const archived = await seedProduct(wsA, 'Đã lưu trữ', { status: 'archived' });
+    const todo = await db.withWorkspace(wsA, (tx) =>
+      listProductNamesToEmbed(tx, wsA, 'bge-m3', 500),
+    );
+    const ids = todo.map((r) => r.id);
+    expect(ids).toEqual(expect.arrayContaining([missing, stale]));
+    expect(ids).not.toContain(fresh);
+    expect(ids).not.toContain(archived);
+    const written = await db.withJob(wsA, (tx) =>
+      writeProductNameVectors(tx, wsA, 'bge-m3', [
+        { id: missing, name: 'Cần nhúng bù một', embedding: unit(42) },
+        { id: stale, name: 'TÊN ĐÃ ĐỔI', embedding: unit(43) }, // tên khác lúc đọc → không ghi
+      ]),
+    );
+    expect(written).toBe(1);
+    const after = await db.withWorkspace(wsA, (tx) =>
+      listProductNamesToEmbed(tx, wsA, 'bge-m3', 500),
+    );
+    expect(after.map((r) => r.id)).not.toContain(missing);
+    expect(after.map((r) => r.id)).toContain(stale);
+    const otherWs = await db.withWorkspace(wsB, (tx) =>
+      listProductNamesToEmbed(tx, wsB, 'bge-m3', 500),
+    );
+    expect(otherWs.map((r) => r.id)).not.toContain(stale);
+    await expect(
+      db.withJob(wsA, (tx) =>
+        writeProductNameVectors(tx, wsA, 'bge-m3', [
+          { id: stale, name: 'Cần nhúng bù hai', embedding: [1, 2] },
+        ]),
+      ),
+    ).rejects.toThrow(/sai kích thước/);
   });
 
   it('KHÔNG trộn model: vector sản phẩm khác model, hoặc truy vấn không nêu model → không có nhánh vector', async () => {

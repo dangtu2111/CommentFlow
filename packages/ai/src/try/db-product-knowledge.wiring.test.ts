@@ -140,3 +140,39 @@ describe('TRY-AI-REAL createDbShopKnowledgeSearch', () => {
     expect(hits.map((hit) => hit.id.split('.')[0])).toEqual(['policy:a']);
   });
 });
+
+describe('(1b) khớp sản phẩm LAI: vector tên đi kèm khi có embedder', () => {
+  const embedder = { model: 'bge-m3-test', embed: vi.fn() };
+  beforeEach(() => {
+    embedder.embed.mockReset(); // không trả mock ra ngoài: vitest sẽ coi hàm trả về là bước dọn và gọi nó
+  });
+
+  it('có embedder → nhúng từng lời nhắc và truyền queryVector + model cho findProductMatch', async () => {
+    embedder.embed.mockResolvedValue([[0.1, 0.2]]);
+    findProductMatch.mockResolvedValue({ status: 'matched', id: 'p1', score: 0.8 });
+    loadTryProducts.mockResolvedValue([shirt]);
+    const knowledge = createDbProductKnowledge(tx, 'ws1', { embedder });
+    await knowledge.matchProducts(['sơ mi trắng']);
+    expect(embedder.embed).toHaveBeenCalledWith(['sơ mi trắng']);
+    expect(findProductMatch).toHaveBeenCalledWith(tx, {
+      workspaceId: 'ws1',
+      queryText: 'sơ mi trắng',
+      queryVector: [0.1, 0.2],
+      embeddingModel: 'bge-m3-test',
+    });
+  });
+
+  it('embedder lỗi → suy giảm về trigram (không ném), báo onEmbeddingFailure một lần, không kèm nội dung', async () => {
+    embedder.embed.mockImplementation(async () => {
+      throw new Error('boom');
+    });
+    findProductMatch.mockResolvedValue({ status: 'matched', id: 'p1', score: 0.8 });
+    loadTryProducts.mockResolvedValue([shirt]);
+    const onEmbeddingFailure = vi.fn();
+    const knowledge = createDbProductKnowledge(tx, 'ws1', { embedder, onEmbeddingFailure });
+    const result = await knowledge.matchProducts(['áo thun']);
+    expect(result.ids).toEqual(['p1']);
+    expect(findProductMatch).toHaveBeenCalledWith(tx, { workspaceId: 'ws1', queryText: 'áo thun' });
+    expect(onEmbeddingFailure).toHaveBeenCalledTimes(1);
+  });
+});

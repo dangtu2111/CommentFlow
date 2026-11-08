@@ -35,6 +35,8 @@ function fakeOps(over: Partial<KbSyncOps> = {}) {
     refreshMeta: vi.fn(async () => undefined),
     remove: vi.fn(async () => 0),
     setTopics: vi.fn(async () => undefined),
+    listProductNamesToEmbed: vi.fn(async () => []),
+    writeProductNameVectors: vi.fn(async () => 0),
     ...over,
   } as unknown as KbSyncOps;
   return { ops, calls };
@@ -181,5 +183,53 @@ describe('markDraftConflicts', () => {
       },
     ]);
     vi.restoreAllMocks();
+  });
+});
+
+describe('runKbSync — vector TÊN sản phẩm (1b): sản phẩm chưa có vector ở model hiện hành được nhúng', () => {
+  it('nhúng đúng các sản phẩm còn thiếu, ghi kèm model, thống kê số đã nhúng', async () => {
+    const batches = [
+      [
+        { id: 'p1', name: 'Áo thun basic' },
+        { id: 'p2', name: 'Quần jean' },
+      ],
+      [],
+    ];
+    const listProductNamesToEmbed = vi.fn(async () => batches.shift() ?? []);
+    const writeProductNameVectors = vi.fn(async (_t, _w, _m, rows: unknown[]) => rows.length);
+    const { ops } = fakeOps({
+      listProductNamesToEmbed: listProductNamesToEmbed as never,
+      writeProductNameVectors: writeProductNameVectors as never,
+    });
+    const stats = await runKbSync(
+      tx,
+      { workspaceId: WS },
+      { ops, resolveEmbedding: async () => mlConfig },
+    );
+    expect(stats.productNamesEmbedded).toBe(2);
+    expect(listProductNamesToEmbed.mock.calls[0]?.slice(1, 3)).toEqual([WS, 'm']);
+    const call = writeProductNameVectors.mock.calls[0] as unknown[];
+    expect(call.slice(1, 3)).toEqual([WS, 'm']);
+    expect(
+      (call[3] as Array<{ id: string; name: string; embedding: number[] }>).map((r) => [
+        r.id,
+        r.name,
+      ]),
+    ).toEqual([
+      ['p1', 'Áo thun basic'],
+      ['p2', 'Quần jean'],
+    ]);
+    expect((call[3] as Array<{ embedding: number[] }>)[0]?.embedding).toHaveLength(1024);
+  });
+
+  it('không còn sản phẩm thiếu vector → không ghi, thống kê 0', async () => {
+    const { ops } = fakeOps();
+    const stats = await runKbSync(
+      tx,
+      { workspaceId: WS },
+      { ops, resolveEmbedding: async () => mlConfig },
+    );
+    expect(stats.productNamesEmbedded).toBe(0);
+    expect(ops.writeProductNameVectors).not.toHaveBeenCalled();
   });
 });
