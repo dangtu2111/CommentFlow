@@ -85,3 +85,21 @@ Trước = khớp "tên chứa lời nhắc" (`--matcher substring`); sau = pg_t
 **Phát hiện mới ngoài danh sách:** chỉ số "Sai giá" lên 1 ở sswiftly (en-03) là **dương tính giả của guard tiền**: câu trả lời đúng ("$398.00 USD … 4,765 available") bị đánh dấu vì số tồn kho "4,765" (dấu phẩy ngăn nghìn kiểu Anh) bị coi là một khoản tiền không có trong nguồn ("4765"). Giá luôn đúng; lỗi ở cách guard đọc số có dấu phẩy ngăn nghìn/đếm tồn kho trong câu tiếng Anh → thêm nhóm **(8) guard tiền: định dạng số tiếng Anh/tồn kho** (gap `GUARD-MONEY-EN-NUMBERS`). Ở demo-shop "Sai giá" lên 1 ở mixed-25 là mẫu chèn lệnh (câu trả lời nhắc lại chữ "mèo" trong `forbidden`), thuộc nhóm (5), không phải giá.
 
 **Embedder đã dùng (chủ dự án yêu cầu ghi rõ, 08/11):** mọi lượt EVAL ở trên (baseline lẫn sau nhóm 1) KHÔNG dùng embedder nào — không mock, không bge-m3. Cửa hàng mẫu tìm chính sách/FAQ bằng từ khóa (`searchShopTexts`) và khớp sản phẩm bằng pg_trgm; chưa có nhánh vector ở EVAL. Việc chủ dự án bật `ML_EMBED_ENABLED`/`KB_REEMBED_ENABLED` sau đó (trước đó tắt → ô Thử AI dùng embedder mock với `kb_chunks` bge-m3) vì vậy KHÔNG làm sai lệch các số này nên không cần chạy lại; từ nhóm (1) mọi báo cáo EVAL in dòng "Embedder" và "Khớp sản phẩm" ở phần cấu hình. Khi nhóm (1b) thêm nhánh vector cho khớp sản phẩm thì báo cáo sẽ ghi model embedding và EVAL chạy với bge-m3 thật.
+
+## Nhóm sửa (2) — thời gian giao/xử lý (Q-EV2-3, PR #276): trước/sau
+
+Chạy lại 2 bộ qua LiteLLM (gpt-5.6-luna, extract/rewrite/draft), embedder bge-m3 đang hoạt động ở DB nhưng EVAL KHÔNG dùng vector (tìm chính sách bằng từ khóa, sản phẩm bằng pg_trgm). **TRƯỚC** = mã trước #276, **SAU** = mã sau #276; cùng harness nhóm (1), cùng bộ mẫu, mỗi bên một lượt (có dao động LLM giữa hai lượt).
+
+| Bộ / nhóm | Chọn đúng hành động | Có sự kiện bắt buộc | Phân loại |
+|---|---|---|---|
+| demo-shop · Việt có dấu (32) | 84,4% → **90,6%** (27→29/32) | 91,7% → **100%** | 100% → 100% |
+| demo-shop · Việt không dấu (32) | 78,1% → 78,1% | 75,0% → **83,3%** | 93,8% → 96,9% |
+| demo-shop · trộn Việt–Anh (30) | 86,7% → 83,3% (26→25/30) | 91,7% → **100%** | 96,7% → 100% |
+| sswiftly · Anh (32) | 75,0% → **78,1%** (24→25/32) | 58,3% → 58,3% | 100% → 96,9% |
+
+Sai giá/bịa giá: **0 → 0** ở mọi nhóm. Bộ an toàn: không đổi (80% ba nhóm Việt/trộn, 100% nhóm Anh).
+
+**Mẫu bị ảnh hưởng đúng ý định (4/4 chuyển từ "chuyển hướng" sang "trả lời" có nguồn là chính sách Shipping):** `syn2-vi-08`, `syn2-viplain-08`, `syn2-mixed-08` ("thời gian nhận hàng") và `syn2-en-07` ("thời gian xử lý đơn hàng").
+
+**Các mẫu khác đổi kết quả (8 mẫu) KHÔNG do #276** mà do dao động giữa hai lượt gọi LLM (nhãn/`asks` khác nhau với cùng mã): `mixed-15, mixed-18, mixed-21, mixed-27, mixed-28, vi-12, vi-15, viplain-11, viplain-27, en-31`. Trong đó có hai ca ngược Q-EV2-2 cần nhóm (4)/(6): `mixed-21` (đổi trả khi hàng lỗi → "advice/answer", đáng lẽ chuyển người/khiếu nại) và `mixed-27`/`en-31` (hỏi trạng thái đơn bị gán khiếu nại). Việc nhóm (6) (extract trả MÃ CHỦ ĐỀ cố định) nhằm loại bỏ chính loại dao động này.
+
