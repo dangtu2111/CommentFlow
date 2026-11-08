@@ -293,7 +293,7 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     const flow = after.filter((r) => r.slot === 'flow');
     expect(flow).toHaveLength(1);
     expect(flow[0]?.id).toBe(draft);
-    expect((flow[0]?.data as { feeMinor: number }).feeMinor).toBe(25000);
+    expect((flow[0] as { data: { feeMinor: number } }).data.feeMinor).toBe(25000);
     expect((await row(draft)).approved_by).toBe(owner);
     expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft))).toBe(false);
   });
