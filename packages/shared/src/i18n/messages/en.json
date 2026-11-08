@@ -1008,6 +1008,7 @@
         "quota_exhausted": "The AI turns for this period are used up, so AI did not draft a suggestion. Reply manually or press Draft suggestion once more turns are available.",
         "attempts_exhausted": "AI tried several times and could not draft one. Reply manually or press Draft suggestion to retry.",
         "ai_invalid_output": "AI returned an unreadable result. Reply manually or press Draft suggestion to retry.",
+        "claim_unsupported": "The AI draft claimed something the knowledge sources do not state (missing source), so it was not sent. Review and reply manually; if the shop does offer it, add it to the Knowledge base.",
         "policy_conflict": "The shop policies contradict each other on exactly what the customer asked (policy conflict). Review and reply manually, then fix the policies so they match.",
         "customer_post_reply_cap": "This customer already received the maximum number of AI replies under this post in 24 hours. Review and reply manually.",
         "other": "AI needs a person to look at this (for example a complaint, or information not in the knowledge base). Reply manually or press Draft suggestion to retry."

@@ -23,6 +23,7 @@ import type { ConfidenceResult } from '../confidence/confidence';
 import {
   type ActionDecision,
   decideAction,
+  handoffDecision,
   type KbGapTopic,
   type VariantAxis,
 } from '../decide/decide-action';
@@ -32,6 +33,7 @@ import type { DraftLang, DraftResult } from '../draft/draft-result';
 import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
 import { checkGuardMoney, type GuardViolation } from '../guard-money';
 import { checkReplyGuard, type ReplyGuardViolation } from '../guard-reply';
+import { checkConceptSupport } from '../guard-support';
 import { classifyTopic } from '../kb-sync/topic';
 import { type AbbreviationDict, normalizeAndDetectLang } from '../normalize/normalize-lang';
 import type { PromptHistory } from '../prompt-history';
@@ -415,30 +417,33 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const policyConflict = usable.some(
     (c) => c.conflictTopic !== undefined && askedConflictTopics.has(c.conflictTopic),
   );
-  const decision = closing
-    ? replyCapClosingDecision()
-    : decideAction({
-        lang,
-        extract,
-        products: {
-          candidates: products.names.map(shortProductName),
-          missingAxes: products.missingAxes,
-          mentionedCount: extract.product_mentions.length,
-        },
-        topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
-          topic,
-          // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
-          sourced: usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown)),
-        })),
-        thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
-        // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
-        comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
-        risks: { ...turnRisks.risks, policyConflict },
-      });
+  // `decideFor(strict)`: strict = coi mọi ý KHÔNG phải hỏi giá là CHƯA có nguồn (dùng khi guard nghĩa loại bản soạn đầu).
+  const decideFor = (strict: boolean): ActionDecision =>
+    decideAction({
+      lang,
+      extract,
+      products: {
+        candidates: products.names.map(shortProductName),
+        missingAxes: products.missingAxes,
+        mentionedCount: extract.product_mentions.length,
+      },
+      topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
+        topic,
+        // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
+        sourced:
+          !(strict && !isPrice) &&
+          usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown)),
+      })),
+      thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
+      // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
+      comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
+      risks: { ...turnRisks.risks, policyConflict },
+    });
+  let decision = closing ? replyCapClosingDecision() : decideFor(false);
 
   // Giọng văn: của workspace theo ngôn ngữ nhận ra (brand_voice thật); thiếu → giọng mặc định. Bộ soạn và bộ chặn dùng CÙNG giọng.
   const voice = (lang === 'other' ? undefined : input.voices?.[lang]) ?? input.voice;
-  const draft = await deps.drafter.draft({
+  const draftInput = (d: ActionDecision) => ({
     workspaceId: input.workspaceId,
     question: masked,
     lang: lang === 'other' ? 'vi' : lang,
@@ -446,9 +451,25 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     ...(input.variantCount === undefined ? {} : { variantCount: input.variantCount }),
     voice,
     sources: found.map((c) => ({ id: c.id, kind: c.kind, text: c.text, relevance: c.score })),
-    decision,
+    decision: d,
     ...(history ? { history } : {}),
   });
+  let draft = await deps.drafter.draft(draftInput(decision));
+  const usedBy = (d: DraftResult) => found.filter((c) => new Set(d.sources).has(c.id));
+  const unsupported = (d: DraftResult) =>
+    !checkConceptSupport({ reply: d.reply, sources: usedBy(d).map((c) => c.text) }).ok;
+  // GUARD-SEMANTIC-SUPPORT: câu khẳng định COD/ship quốc tế/trả góp/… mà nguồn đã dùng KHÔNG nêu → bỏ bản nháp, soạn lại theo "ý chưa có nguồn" (chuyển hướng);
+  // vẫn bịa → chuyển người. Không bao giờ để câu bịa đi tiếp (nghiêm trọng như sai giá).
+  if (!closing && decision.action !== 'handoff' && unsupported(draft)) {
+    decision = decideFor(true);
+    if (decision.action === 'answer')
+      decision = handoffDecision('claim_unsupported', decision.askedBefore);
+    draft = await deps.drafter.draft(draftInput(decision));
+    if (decision.action !== 'handoff' && unsupported(draft)) {
+      decision = handoffDecision('claim_unsupported', decision.askedBefore);
+      draft = await deps.drafter.draft(draftInput(decision));
+    }
+  }
 
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
