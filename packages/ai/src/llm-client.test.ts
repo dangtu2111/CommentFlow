@@ -103,6 +103,16 @@ describe('createLlmClient.call — yêu cầu gửi đi', () => {
     expect(body.messages).toHaveLength(2);
   });
 
+  it('seed (nếu có) được gửi đi để giảm dao động giữa các lượt; không có thì không gửi trường seed', async () => {
+    const { db } = fakeDb();
+    const withSeed = fakeFetch(() => jsonResponse(okBody()));
+    await client(db, withSeed.fetchImpl).call(input({ seed: 7 }));
+    expect(JSON.parse(String(withSeed.calls[0]?.init.body)).seed).toBe(7);
+    const without = fakeFetch(() => jsonResponse(okBody()));
+    await client(db, without.fetchImpl).call(input());
+    expect('seed' in JSON.parse(String(without.calls[0]?.init.body))).toBe(false);
+  });
+
   it('FR-138 tin nhắn có cache → khối cache_control ephemeral; không có thì giữ chuỗi thường', async () => {
     const { db } = fakeDb();
     const { fetchImpl, calls } = fakeFetch(() => jsonResponse(okBody()));

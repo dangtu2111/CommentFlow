@@ -23,7 +23,12 @@ export interface Extractor {
  * `LLM_UNAVAILABLE` để bước sau chuyển người (FR-032). Lỗi của `llm.call` được ném nguyên.
  * Xin logprob; nếu nhà cung cấp trả về thì `labelSignal.logprob` = xác suất của giá trị nhãn chính.
  */
-export function createLlmExtractor(options: { llm: LlmClient; model: string }): Extractor {
+export function createLlmExtractor(options: {
+  llm: LlmClient;
+  model: string;
+  /** Hạt giống cố định (chỉ EVAL truyền) để các lượt đo ít dao động; production không đặt. */
+  seed?: number;
+}): Extractor {
   return {
     async extract(input) {
       const result = await options.llm.call({
@@ -33,6 +38,7 @@ export function createLlmExtractor(options: { llm: LlmClient; model: string }): 
         promptVersion: EXTRACT_PROMPT_VERSION,
         messages: buildExtractMessages(input),
         temperature: 0,
+        ...(options.seed === undefined ? {} : { seed: options.seed }),
         // Đủ chỗ cho model suy luận (token suy luận tính vào trần); chỉ trả tiền phần dùng thật.
         maxTokens: 2000,
         logprobs: true,

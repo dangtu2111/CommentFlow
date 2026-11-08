@@ -73,6 +73,22 @@ describe('FR-027/FR-162 extractor LLM', () => {
     expect(r.order_intent?.phone).toBeNull();
   });
 
+  it('nhiệt độ 0; có seed cấu hình thì truyền xuống, không có thì không', async () => {
+    const a = fakeLlm(good);
+    await createLlmExtractor({ llm: a.llm, model: 'm', seed: 42 }).extract({
+      workspaceId: WS,
+      text: maskPii('hi'),
+    });
+    expect(a.calls[0]).toMatchObject({ temperature: 0, seed: 42 });
+    const b = fakeLlm(good);
+    await createLlmExtractor({ llm: b.llm, model: 'm' }).extract({
+      workspaceId: WS,
+      text: maskPii('hi'),
+    });
+    expect(b.calls[0]?.temperature).toBe(0);
+    expect(b.calls[0] && 'seed' in b.calls[0]).toBe(false);
+  });
+
   it('không có media → không nhắc ảnh/video trong tin nhắn khách', async () => {
     const { llm, calls } = fakeLlm(good);
     await createLlmExtractor({ llm, model: 'm' }).extract({ workspaceId: WS, text: maskPii('hi') });

@@ -9,6 +9,7 @@ import {
   createLlmRewriter,
   DEMO_ABBREVIATIONS,
   type LlmClient,
+  type TryKnowledge,
 } from '@flow/ai';
 import type { EvalSample } from './dataset';
 import { noopUsageDb, recordUsage } from './recording-llm';
@@ -31,6 +32,10 @@ export type RunnerOptions = {
   /** Số cách diễn đạt KHÁC của câu soạn (0–4); 4 = 5 phiên bản, 2 = 3 phiên bản. */
   variantCount?: number;
   shop: ShopFixture;
+  /** Kiến thức dựng sẵn (đường production: `createProductionKnowledge`); thiếu → dựng từ shop file như cũ. */
+  knowledge?: TryKnowledge;
+  /** Hạt giống cố định cho bước extract (cùng nhiệt độ 0) để các lượt đo ít dao động. */
+  seed?: number;
   /** Bộ chấm điểm pg_trgm: có → khớp sản phẩm ĐÚNG như production (khuyến nghị khi đo thật); thiếu → khớp "tên chứa lời nhắc" cũ. */
   scorer?: TrigramScorer;
   /** Ghi `ai_usage` thật (chỉ backend `litellm`): `db` của dev + workspace dành cho đánh giá. Không có → không ghi DB. */
@@ -49,9 +54,10 @@ function requireEnv(env: RunnerOptions['env'], name: string): string {
 
 export function createRunner(options: RunnerOptions): Runner {
   const knowledge =
-    options.backend === 'mock'
+    options.knowledge ??
+    (options.backend === 'mock'
       ? createDemoKnowledge()
-      : buildShopKnowledge(options.shop, options.scorer ? { scorer: options.scorer } : {});
+      : buildShopKnowledge(options.shop, options.scorer ? { scorer: options.scorer } : {}));
   const dict = createAbbreviationDict(DEMO_ABBREVIATIONS);
   const voice = shopVoice(options.shop);
 
@@ -76,7 +82,11 @@ export function createRunner(options: RunnerOptions): Runner {
           if (!client) return { extractor: createDemoExtractor(), drafter: createDemoDrafter() };
           const llm = recordUsage(client, sink);
           return {
-            extractor: createLlmExtractor({ llm, model: options.models.classify }),
+            extractor: createLlmExtractor({
+              llm,
+              model: options.models.classify,
+              ...(options.seed === undefined ? {} : { seed: options.seed }),
+            }),
             rewriter: createLlmRewriter({ llm, model: options.models.rewrite }),
             drafter: createLlmDrafter({ llm, model: options.models.draft }),
           };
