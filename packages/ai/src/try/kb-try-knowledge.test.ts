@@ -39,6 +39,21 @@ describe('FR-059 KB-TRYAI: Thử AI nối searchKbChunks', () => {
     expect(byId.get('kb:nocos')).toBeCloseTo(1);
   });
 
+  it('chưa nhận ra sản phẩm nào → đoạn của MỘT sản phẩm bất kỳ không được làm nguồn cho câu hỏi chung ("how much?"); đã nhận ra sản phẩm → giữ', async () => {
+    const mk = () =>
+      build([
+        hit({ id: 'policy', productId: null, cosine: 0.6 }),
+        hit({ id: 'prod', productId: '00000000-0000-4000-8000-000000000001', cosine: 0.6 }),
+      ]).knowledge;
+    const none = await mk().searchKb('how much?', { lang: 'en', productIds: [] });
+    expect(none.map((c) => c.id)).toEqual(['kb:policy']);
+    const some = await mk().searchKb('how much?', {
+      lang: 'en',
+      productIds: ['00000000-0000-4000-8000-000000000001'],
+    });
+    expect(some.map((c) => c.id).sort()).toEqual(['kb:policy', 'kb:prod']);
+  });
+
   it('cờ mâu thuẫn trong metadata → conflictTopic; thiếu cờ / chủ đề lạ → không có', async () => {
     const { knowledge } = build([
       hit({ id: 'a', metadata: { conflict_group: 'shipping_time:ngày', topic: 'shipping_time' } }),
