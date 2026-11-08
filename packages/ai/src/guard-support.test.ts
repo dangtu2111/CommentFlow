@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkConceptSupport } from './guard-support';
+import { checkConceptSupport, unsupportedConceptReply } from './guard-support';
 
 const SHIP_ONLY = [
   'Phí ship nội thành 20.000đ, toàn quốc 30.000đ. Giao hàng trong 2–4 ngày làm việc.',
@@ -105,5 +105,86 @@ describe('GUARD-SEMANTIC-SUPPORT — câu khẳng định khái niệm có/khôn
       sources: SHIP_ONLY,
     });
     expect(r.ok).toBe(false);
+  });
+});
+
+describe('chiều PHỦ ĐỊNH: nguồn nói không mà câu nói có (và ngược lại) → loại', () => {
+  const bad = (reply: string, sources: string[], concept: string) => {
+    const r = checkConceptSupport({ reply, sources });
+    expect(r.ok).toBe(false);
+    expect(r.violations.map((v) => v.concept)).toContain(concept);
+  };
+  const good = (reply: string, sources: string[]) =>
+    expect(checkConceptSupport({ reply, sources }).ok).toBe(true);
+
+  it('nguồn PHỦ ĐỊNH, câu KHẲNG ĐỊNH — tiếng Việt có dấu', () => {
+    bad('Shop có hỗ trợ COD bạn nhé.', ['Shop chưa hỗ trợ COD, vui lòng chuyển khoản.'], 'cod');
+    bad(
+      'Shop có ship quốc tế nhé bạn.',
+      ['Hiện shop không ship quốc tế.'],
+      'international_shipping',
+    );
+    bad('Shop có xuất hóa đơn đỏ nhé.', ['Shop không xuất hóa đơn đỏ.'], 'invoice');
+    bad('Shop nhận đổi trả trong 7 ngày.', ['Shop không nhận đổi trả hàng đã mở.'], 'return');
+  });
+
+  it('nguồn PHỦ ĐỊNH, câu KHẲNG ĐỊNH — tiếng Việt không dấu', () => {
+    bad('shop co ho tro tra gop nhe', ['shop khong ho tro tra gop'], 'installment');
+    bad('shop co ho tro cod nha ban', ['shop chua ho tro cod'], 'cod');
+    bad('shop hoan tien 100% nhe', ['shop khong hoan tien'], 'refund');
+  });
+
+  it('nguồn PHỦ ĐỊNH, câu KHẲNG ĐỊNH — tiếng Anh', () => {
+    bad('Yes, we offer cash on delivery.', ['We do not offer COD.'], 'cod');
+    bad('We ship worldwide.', ['No international shipping.'], 'international_shipping');
+    bad(
+      'You can get a refund within 60 days.',
+      ['Items are not eligible for refund after 30 days.'],
+      'refund',
+    );
+    bad(
+      'Yes, you can pay in installments.',
+      ["We don't accept installment payments."],
+      'installment',
+    );
+  });
+
+  it('nguồn KHẲNG ĐỊNH, câu PHỦ ĐỊNH (ngược lại) → loại', () => {
+    bad('Shop không hỗ trợ COD bạn nhé.', ['Hỗ trợ COD toàn quốc.'], 'cod');
+    bad('Sorry, we do not ship internationally.', ['We ship worldwide.'], 'international_shipping');
+    bad('shop khong ho tro tra gop nha', ['Shop co ho tro tra gop 0%.'], 'installment');
+  });
+
+  it('cùng chiều thì hợp lệ (nguồn không / câu không; nguồn có / câu có); nguồn nửa có nửa không → không kết tội', () => {
+    good('Shop chưa hỗ trợ COD bạn nhé.', ['Shop chưa hỗ trợ COD.']);
+    good('We do not offer COD.', ['We do not offer COD, sorry.']);
+    good('Shop có hỗ trợ COD bạn nhé.', ['Hỗ trợ COD toàn quốc.']);
+    good('We ship worldwide.', ['We ship worldwide with tracking.']);
+    good('Shop có COD ở nội thành.', ['COD nội thành có; tỉnh khác không hỗ trợ COD.']);
+  });
+
+  it('dòng "Hỏi:" / câu hỏi trong nguồn (FAQ) không bị đọc là phủ định', () => {
+    good('Shop có COD nhé.', ['Hỏi: Có COD không?\nĐáp: Có, shop hỗ trợ COD toàn quốc.']);
+  });
+
+  it('"không phụ thu" cạnh COD (không phải phủ định COD) không làm câu đúng bị loại', () => {
+    good('Shop có COD, không phụ thu thêm bạn nhé.', ['Hỗ trợ COD toàn quốc, không phụ thu.']);
+  });
+});
+
+describe('unsupportedConceptReply — câu chuyển hướng theo mẫu (không gọi LLM)', () => {
+  it('nêu "chưa có thông tin" về đúng khái niệm, vi và en, và tự qua guard (không phải khẳng định)', () => {
+    const vi = unsupportedConceptReply(['cod', 'installment'], 'vi');
+    expect(vi).toMatch(/COD/);
+    expect(vi).toMatch(/trả góp/);
+    expect(vi).toMatch(/chưa có thông tin/);
+    expect(checkConceptSupport({ reply: vi, sources: [] }).ok).toBe(true);
+    const en = unsupportedConceptReply(['international_shipping'], 'en');
+    expect(en).toMatch(/international/i);
+    expect(checkConceptSupport({ reply: en, sources: [] }).ok).toBe(true);
+  });
+
+  it('không khái niệm nào → câu chung chung vẫn hợp lệ', () => {
+    expect(unsupportedConceptReply([], 'vi')).toMatch(/chưa có thông tin/);
   });
 });

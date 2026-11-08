@@ -33,7 +33,7 @@ import type { DraftLang, DraftResult } from '../draft/draft-result';
 import { DEFAULT_MIN_RELEVANCE, type Drafter } from '../draft/drafter';
 import { checkGuardMoney, type GuardViolation } from '../guard-money';
 import { checkReplyGuard, type ReplyGuardViolation } from '../guard-reply';
-import { checkConceptSupport } from '../guard-support';
+import { checkConceptSupport, unsupportedConceptReply } from '../guard-support';
 import { classifyTopic } from '../kb-sync/topic';
 import { type AbbreviationDict, normalizeAndDetectLang } from '../normalize/normalize-lang';
 import type { PromptHistory } from '../prompt-history';
@@ -456,18 +456,47 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   });
   let draft = await deps.drafter.draft(draftInput(decision));
   const usedBy = (d: DraftResult) => found.filter((c) => new Set(d.sources).has(c.id));
-  const unsupported = (d: DraftResult) =>
-    !checkConceptSupport({ reply: d.reply, sources: usedBy(d).map((c) => c.text) }).ok;
-  // GUARD-SEMANTIC-SUPPORT: câu khẳng định COD/ship quốc tế/trả góp/… mà nguồn đã dùng KHÔNG nêu → bỏ bản nháp, soạn lại theo "ý chưa có nguồn" (chuyển hướng);
-  // vẫn bịa → chuyển người. Không bao giờ để câu bịa đi tiếp (nghiêm trọng như sai giá).
-  if (!closing && decision.action !== 'handoff' && unsupported(draft)) {
-    decision = decideFor(true);
-    if (decision.action === 'answer')
-      decision = handoffDecision('claim_unsupported', decision.askedBefore);
-    draft = await deps.drafter.draft(draftInput(decision));
-    if (decision.action !== 'handoff' && unsupported(draft)) {
-      decision = handoffDecision('claim_unsupported', decision.askedBefore);
-      draft = await deps.drafter.draft(draftInput(decision));
+  // GUARD-SEMANTIC-SUPPORT: câu khẳng định COD/ship quốc tế/trả góp/… mà nguồn đã dùng KHÔNG nêu (hoặc nguồn nói ngược lại) → KHÔNG gọi LLM soạn lại
+  // (giữ ≤ 2 lần gọi LLM/lượt, FR-162): (1) chọn biến thể khác đã có (FR-161) không chứa ý bị loại; (2) không có → câu chuyển hướng THEO MẪU; (3) không còn ý nào để
+  // chuyển hướng → chuyển người (`claim_unsupported`). Không bao giờ để câu bịa đi tiếp (nghiêm trọng như sai giá).
+  if (!closing && decision.action !== 'handoff') {
+    const sourceTexts = usedBy(draft).map((c) => c.text);
+    const supported = (text: string) =>
+      checkConceptSupport({ reply: text, sources: sourceTexts }).ok;
+    const check = checkConceptSupport({ reply: draft.reply, sources: sourceTexts });
+    if (!check.ok) {
+      const variants = draft.variants ?? [];
+      const clean = variants.find(supported);
+      if (clean !== undefined) {
+        draft = {
+          ...draft,
+          reply: clean,
+          variants: variants.filter((v) => v !== clean && supported(v)),
+          claims: draft.claims.filter((claim) => supported(claim.text)),
+        };
+      } else {
+        const strict = decideFor(true);
+        if (strict.action === 'answer' || strict.action === 'handoff') {
+          decision = handoffDecision('claim_unsupported', decision.askedBefore);
+          draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
+        } else {
+          decision = strict;
+          const replyLang = lang === 'en' ? 'en' : 'vi';
+          draft = {
+            reply: unsupportedConceptReply(
+              check.violations.map((v) => v.concept),
+              replyLang,
+            ),
+            lang: replyLang,
+            sources: [],
+            claims: [],
+            unanswered_topics: strict.unansweredTopics,
+            needs_human: false,
+            reason: '',
+            variants: [],
+          };
+        }
+      }
     }
   }
 

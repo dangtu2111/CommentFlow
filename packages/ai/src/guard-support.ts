@@ -97,13 +97,13 @@ const CONCEPTS: readonly Concept[] = [
   },
 ];
 
-/** Câu CHUYỂN HƯỚNG / nêu "chưa có thông tin": không phải khẳng định. */
+/** Câu CHUYỂN HƯỚNG / nêu "chưa có thông tin": không phải khẳng định (cũng không phải phủ định có căn cứ). */
 const ABSENCE =
-  /(chua|khong) (co |nem |thay |ro |xac nhan |ho tro .{0,12}thong tin )?thong tin|chua (ro|nem|xac nhan|thay)|chua co (thong tin|du lieu)|khong (nem|de cap)|ib shop|inbox shop|nhan (tin )?(cho )?shop|lien he (voi )?shop|(does|do|did) not (specify|mention|include|state)|not (specified|mentioned|available|stated)|no information|(don'?t|do not|cannot|can'?t) (have|confirm)|please contact|contact the shop|let (the )?shop know|ho tro them/;
+  /(chua|khong) (co |nem |thay |ro |xac nhan )?thong tin|chua (ro|nem|xac nhan|thay)|chua co (thong tin|du lieu)|khong (nem|de cap)|ib shop|inbox shop|nhan (tin )?(cho )?shop|lien he (voi )?shop|(does|do|did) not (specify|mention|include|state)|not (specified|mentioned|stated)|(information|info|details?) (is |are )?not available|no information|(don'?t|do not|cannot|can'?t) (have|confirm)|please contact|contact the shop|let (the )?shop know|ho tro them/;
 
 const sentencesOf = (text: string): string[] =>
   text
-    .split(/(?<=[.!?…])\s+|\n+/)
+    .split(/(?<=[.!?…;])\s+|;\s*|\n+/)
     .map((s) => s.trim())
     .filter((s) => s !== '');
 
@@ -113,6 +113,38 @@ export type ConceptSupportResult = { ok: boolean; violations: ConceptViolation[]
 /** Có nêu NƯỚC/VÙNG cụ thể trong câu (đã bỏ dấu) → danh sách tên. */
 const countriesIn = (folded: string): string[] =>
   [...folded.matchAll(COUNTRY_WORD)].map((m) => m[1] as string);
+
+/**
+ * Chiều của một câu về một khái niệm: phủ định nếu có từ phủ định đứng ngay trước khái niệm (≤ 3 từ, vd "không hỗ trợ COD", "do not offer COD", "no
+ * international shipping") hoặc ngay sau ("COD không được hỗ trợ", "refunds are not available"). "COD không phụ thu" KHÔNG phải phủ định COD (phủ định
+ * đứng sau nhưng không kèm động từ hỗ trợ/áp dụng). Văn bản đã bỏ dấu, chữ thường.
+ */
+const NEG_PRE =
+  "khong|chua|ko|do not|does not|did not|don't|doesn't|cannot|can't|never|no|not|without|unable to";
+const NEG_POST =
+  "(?:khong|chua|ko) (?:duoc |con )?(?:ho tro|ap dung|nhan|co|cung cap|chap nhan|cho phep)|(?:is|are|isn't|aren't) not|not (?:available|supported|accepted|offered|eligible|possible)|unavailable|ineligible";
+
+function polarityOf(folded: string, concept: Concept): 'pos' | 'neg' {
+  const m = concept.mention.source;
+  const neg = new RegExp(
+    String.raw`\b(?:${NEG_PRE})\s+(?:[a-z']+\s+){0,3}?(?:${m})|(?:${m})\s+(?:[a-z']+\s+){0,3}?(?:${NEG_POST})`,
+  );
+  return neg.test(folded) ? 'neg' : 'pos';
+}
+
+/** Chiều mà các NGUỒN nêu về khái niệm: tập {pos, neg} (bỏ dòng "Hỏi:"/câu hỏi của FAQ). */
+function sourcePolarities(sources: readonly string[], concept: Concept): Set<'pos' | 'neg'> {
+  const found = new Set<'pos' | 'neg'>();
+  for (const source of sources) {
+    for (const raw of sentencesOf(source)) {
+      const line = raw.trim();
+      if (line.endsWith('?') || /^(hoi|q|question)\s*:/i.test(foldText(line))) continue;
+      const folded = foldText(line);
+      if (concept.support.test(folded)) found.add(polarityOf(folded, concept));
+    }
+  }
+  return found;
+}
 
 export function checkConceptSupport(input: {
   reply: string;
@@ -135,9 +167,42 @@ export function checkConceptSupport(input: {
         const inSource = new Set(countriesIn(sourceText));
         supported = claimed.length > 0 && claimed.every((name) => inSource.has(name));
       }
-      if (!supported) violated.add(concept.id);
+      if (!supported) {
+        violated.add(concept.id);
+        continue;
+      }
+      // Có nêu khái niệm: chiều của câu phải KHỚP chiều của nguồn (nguồn "không", câu "có" → loại; ngược lại cũng loại).
+      // Nguồn nửa có nửa không (vd "COD nội thành có; tỉnh khác không") → không đủ căn cứ để kết tội.
+      const sourceSide = sourcePolarities(input.sources, concept);
+      if (sourceSide.size === 1 && !sourceSide.has(polarityOf(sentence, concept))) {
+        violated.add(concept.id);
+      }
     }
   }
   const violations = [...violated].map((concept) => ({ concept }));
   return { ok: violations.length === 0, violations };
+}
+
+const CONCEPT_LABEL: Record<ConceptId, { vi: string; en: string }> = {
+  cod: { vi: 'hình thức thanh toán khi nhận hàng (COD)', en: 'cash on delivery (COD)' },
+  installment: { vi: 'trả góp', en: 'installment payments' },
+  invoice: { vi: 'xuất hóa đơn', en: 'invoices' },
+  international_shipping: { vi: 'giao hàng quốc tế', en: 'international shipping' },
+  return: { vi: 'đổi trả', en: 'returns' },
+  refund: { vi: 'hoàn tiền', en: 'refunds' },
+  warranty: { vi: 'bảo hành', en: 'warranty' },
+};
+
+/**
+ * Câu chuyển hướng THEO MẪU (không gọi LLM) khi bản nháp khẳng định điều nguồn không nêu và không còn biến thể sạch: nói rõ "chưa có thông tin" về đúng
+ * khái niệm và mời chờ nhân viên. Tự qua guard (câu "chưa có thông tin" không bị coi là khẳng định).
+ */
+export function unsupportedConceptReply(concepts: readonly ConceptId[], lang: 'vi' | 'en'): string {
+  const labels = concepts.map((id) => CONCEPT_LABEL[id][lang]);
+  if (lang === 'en') {
+    const about = labels.length > 0 ? ` about ${labels.join(' and ')}` : '';
+    return `Sorry, the shop has no information${about} in its current data. A team member will check and message you shortly.`;
+  }
+  const about = labels.length > 0 ? ` về ${labels.join(' và ')}` : '';
+  return `Bạn ơi, shop chưa có thông tin${about} trong dữ liệu hiện có. Nhân viên shop sẽ kiểm tra và nhắn lại cho bạn sớm nhé.`;
 }
