@@ -1,4 +1,4 @@
-import { AppError } from '@flow/shared';
+import { AppError, assertMockAllowed } from '@flow/shared';
 import { z } from 'zod';
 
 /**
@@ -105,6 +105,8 @@ type MockKey = { alias: string; maxBudgetUsd: number; spentUsd: number };
 
 /** Bản bộ nhớ cho test/dev (mock): không mạng; khóa ngắn, không giống bí mật. */
 export function createMockKeyAdmin(): MockKeyAdmin {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createMockKeyAdmin');
   const keys = new Map<string, MockKey>();
   let counter = 0;
   const need = (key: string): MockKey => {

@@ -1,3 +1,4 @@
+import { assertMockAllowed } from '@flow/shared';
 import type { ExtractResult } from './extract-result';
 import type { ExtractInput, ExtractOutcome, Extractor } from './extractor';
 
@@ -25,6 +26,8 @@ export type ExtractFixture = { match: RegExp; result: ExtractResult };
  * tiên thắng. Dùng cho test và chạy thử khi chưa có khóa LLM.
  */
 export function createFixtureExtractor(fixtures: readonly ExtractFixture[] = []): Extractor {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createFixtureExtractor');
   return {
     async extract(input: ExtractInput) {
       const hit = fixtures.find((fixture) => fixture.match.test(input.text));

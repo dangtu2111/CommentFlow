@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ROUTING, MOCK_MODEL, resolveStepRoute } from './routing';
+import { DEFAULT_ROUTING, resolveStepRoute } from './routing';
 
 describe('FR-034 định tuyến model theo bước (LiteLLM)', () => {
-  it('cờ tắt → mọi bước dùng mock-llm, không dự phòng', () => {
+  it('cờ tắt → KHÔNG có tuyến (không model giả), không dự phòng', () => {
     const route = resolveStepRoute('draft', { ...DEFAULT_ROUTING, enabled: false });
-    expect(route).toEqual({ model: MOCK_MODEL, fallbacks: [], source: 'disabled' });
+    expect(route).toEqual({ model: null, fallbacks: [], source: 'disabled' });
   });
 
   it('cờ bật → bước có tuyến riêng dùng model + dự phòng của bước', () => {

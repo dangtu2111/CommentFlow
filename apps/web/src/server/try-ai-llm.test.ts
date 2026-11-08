@@ -1,4 +1,9 @@
-import { createTryQuota, EXTRACT_UNREADABLE_MESSAGE } from '@flow/ai';
+import {
+  createDemoDrafter,
+  createDemoExtractor,
+  createTryQuota,
+  EXTRACT_UNREADABLE_MESSAGE,
+} from '@flow/ai';
 import { AppError } from '@flow/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createTryAiAction } from './try-ai';
@@ -6,6 +11,8 @@ import { createTryLlmDeps } from './try-ai-llm';
 
 const db = { withWorkspace: vi.fn() };
 const base = { LITELLM_BASE_URL: 'http://litellm.local:4000', LITELLM_API_KEY: 'virtual-key' };
+
+import { demoKnowledgeRunner, demoWiring } from './test-demo-wiring';
 
 describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố định)', () => {
   it('mặc định TẮT: không cờ → không bước nào dùng LLM', () => {
@@ -75,14 +82,15 @@ describe('TRY-AI-REAL lát C — cấu hình LLM (qua LiteLLM, model không cố
     }));
     const run = createTryAiAction({
       quota: createTryQuota({ limit: 3 }),
+      knowledgeRunner: demoKnowledgeRunner,
       now: () => new Date('2026-11-07T00:00:00Z'),
-      llm: { drafter: { draft } as never },
+      llm: { extractor: createDemoExtractor(), drafter: { draft } as never },
     });
     const result = await run(
       { workspaceId: '11111111-1111-4111-8111-111111111111' },
       'ship bao nhiêu',
     );
-    expect(result).toMatchObject({ ok: true, llm: { extractor: false, drafter: true } });
+    expect(result).toMatchObject({ ok: true, llm: { extractor: true, drafter: true } });
   });
 });
 
@@ -98,8 +106,9 @@ describe('FR-032 đầu ra AI không đọc được → "Chuyển người", kh
     const warn = vi.fn();
     const run = createTryAiAction({
       quota: createTryQuota({ limit: 3 }),
+      knowledgeRunner: demoKnowledgeRunner,
       now: () => new Date('2026-11-07T00:00:00Z'),
-      llm: { extractor },
+      llm: { extractor, drafter: createDemoDrafter() },
       warn,
     });
     expect(await run(session, 'ship bao nhiêu')).toEqual({
@@ -112,8 +121,10 @@ describe('FR-032 đầu ra AI không đọc được → "Chuyển người", kh
   it('lỗi mạng/khóa vẫn là "unavailable" (không nhầm với đầu ra hỏng)', async () => {
     const run = createTryAiAction({
       quota: createTryQuota({ limit: 3 }),
+      knowledgeRunner: demoKnowledgeRunner,
       now: () => new Date('2026-11-07T00:00:00Z'),
       llm: {
+        drafter: createDemoDrafter(),
         extractor: {
           async extract() {
             throw new AppError('LLM_UNAVAILABLE', 'Không kết nối được dịch vụ AI.');

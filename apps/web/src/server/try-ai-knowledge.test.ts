@@ -1,6 +1,11 @@
 import { createDemoKnowledge } from '@flow/ai';
 import { describe, expect, it, vi } from 'vitest';
-import { createKnowledgeRunner, isTryAiKbReal, isTryAiProductsReal } from './try-ai-knowledge';
+import {
+  createKnowledgeRunner,
+  isTryAiKbReal,
+  isTryAiProductsReal,
+  NoKnowledgeError,
+} from './try-ai-knowledge';
 
 describe('KB-TRYAI cờ + runner', () => {
   it('cờ chỉ bật khi đúng "true"', () => {
@@ -10,35 +15,35 @@ describe('KB-TRYAI cờ + runner', () => {
     expect(isTryAiKbReal({ TRY_AI_KB_REAL: 'true' })).toBe(true);
   });
 
-  it('cờ TẮT → không đụng DB, nguồn demo', async () => {
+  it('cờ TẮT → không đụng DB, báo chưa có kiến thức (KHÔNG dùng kiến thức mẫu)', async () => {
     const withActor = vi.fn();
     const runner = createKnowledgeRunner({ enabled: false, db: { withActor } });
-    const base = createDemoKnowledge();
-    const out = await runner({ workspaceId: 'w', userId: 'u' }, base, async (k) => k === base);
-    expect(out).toMatchObject({ value: true, source: 'demo' });
+    const run = vi.fn(async () => true);
+    await expect(
+      runner({ workspaceId: 'w', userId: 'u' }, createDemoKnowledge(), run),
+    ).rejects.toBeInstanceOf(NoKnowledgeError);
+    expect(run).not.toHaveBeenCalled();
     expect(withActor).not.toHaveBeenCalled();
   });
 
-  it('cờ BẬT nhưng thiếu userId → demo', async () => {
+  it('cờ BẬT nhưng thiếu userId → NoKnowledgeError', async () => {
     const withActor = vi.fn();
     const runner = createKnowledgeRunner({ enabled: true, db: { withActor } });
-    const out = await runner({ workspaceId: 'w' }, createDemoKnowledge(), async () => 1);
-    expect(out.source).toBe('demo');
+    await expect(
+      runner({ workspaceId: 'w' }, createDemoKnowledge(), async () => 1),
+    ).rejects.toBeInstanceOf(NoKnowledgeError);
     expect(withActor).not.toHaveBeenCalled();
   });
 
-  it('cờ BẬT, chưa có phiên bản xuất bản → demo', async () => {
+  it('cờ BẬT, chưa có phiên bản xuất bản → NoKnowledgeError', async () => {
     const runner = createKnowledgeRunner({
       enabled: true,
       db: { withActor: async (_w, _u, fn) => fn({} as never) },
       currentVersion: async () => null,
     });
-    const out = await runner(
-      { workspaceId: 'w', userId: 'u' },
-      createDemoKnowledge(),
-      async () => 1,
-    );
-    expect(out).toMatchObject({ value: 1, source: 'demo' });
+    await expect(
+      runner({ workspaceId: 'w', userId: 'u' }, createDemoKnowledge(), async () => 1),
+    ).rejects.toBeInstanceOf(NoKnowledgeError);
   });
 
   it('cờ BẬT + có phiên bản → chạy trong withActor, nguồn kb', async () => {
@@ -132,20 +137,7 @@ describe('KB-TRYAI cờ + runner', () => {
     });
   });
 
-  it('nguồn demo: không đọc brand_voice (voices rỗng)', async () => {
-    const runner = createKnowledgeRunner({
-      enabled: false,
-      db: { withActor: async (_w, _u, fn) => fn({} as never) },
-    });
-    const out = await runner(
-      { workspaceId: 'w' },
-      createDemoKnowledge(),
-      async (_k, ctx) => ctx.voices,
-    );
-    expect(out).toMatchObject({ value: {}, source: 'demo' });
-  });
-
-  it('bật sản phẩm thật nhưng workspace chưa có sản phẩm → demo', async () => {
+  it('bật sản phẩm thật nhưng workspace chưa có sản phẩm/chính sách → NoKnowledgeError', async () => {
     const runner = createKnowledgeRunner({
       enabled: false,
       productsEnabled: true,
@@ -153,12 +145,9 @@ describe('KB-TRYAI cờ + runner', () => {
       countProducts: async () => 0,
       shopTexts: async () => [],
     });
-    const out = await runner(
-      { workspaceId: 'w', userId: 'u' },
-      createDemoKnowledge(),
-      async () => 1,
-    );
-    expect(out).toMatchObject({ value: 1, source: 'demo' });
+    await expect(
+      runner({ workspaceId: 'w', userId: 'u' }, createDemoKnowledge(), async () => 1),
+    ).rejects.toBeInstanceOf(NoKnowledgeError);
   });
 
   it('isTryAiProductsReal: mặc định BẬT, chỉ tắt khi đúng "false"', () => {

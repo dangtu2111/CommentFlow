@@ -1,3 +1,4 @@
+import { assertMockAllowed } from '@flow/shared';
 import { type DraftResult, needsHumanResult } from './draft-result';
 import type { Drafter, DraftInput } from './drafter';
 
@@ -11,6 +12,8 @@ export type DraftFixture = { match: RegExp; result: DraftResult };
  * thắng. Dùng cho test và chạy thử khi chưa có khóa LLM.
  */
 export function createFixtureDrafter(fixtures: readonly DraftFixture[] = []): Drafter {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createFixtureDrafter');
   return {
     async draft(input: DraftInput) {
       const hit = fixtures.find((fixture) => fixture.match.test(input.question));

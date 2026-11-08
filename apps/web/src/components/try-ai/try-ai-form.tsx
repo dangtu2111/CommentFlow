@@ -69,7 +69,7 @@ export function TryAiForm({ initialText = '' }: { initialText?: string }) {
               {t('embedding.failed')}
             </p>
           ) : null}
-          {state.vector.off && state.knowledge !== 'demo' ? (
+          {state.vector.off ? (
             <p className="muted">{t(`embedding.off.${state.vector.off}`)}</p>
           ) : null}
           <p className="muted">{t(`voice.${state.voice}`)}</p>

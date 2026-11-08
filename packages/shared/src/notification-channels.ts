@@ -10,6 +10,7 @@ import {
   type NotificationEvent,
   type NotificationPrefs,
 } from './notification-prefs';
+import { assertMockAllowed } from './test-process';
 
 /**
  * Nhà cung cấp thông báo sau interface + bản giả (FR-084, Q-PE1, Xong-mock). Chưa gọi dịch vụ thật.
@@ -41,6 +42,8 @@ export type MockEmailProvider = EmailProvider & {
 export function createMockPushProvider(
   outcomes: Record<string, PushOutcome> = {},
 ): MockPushProvider {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createMockPushProvider');
   const sent: MockPushProvider['sent'] = [];
   return {
     sent,
@@ -53,6 +56,8 @@ export function createMockPushProvider(
 }
 
 export function createMockEmailProvider(): MockEmailProvider {
+  // Bản giả CHỈ cho test tự động/EVAL tự khai báo; tiến trình web/worker nạp → lỗi ngay (chủ dự án chốt 08/11: không mock khi chạy).
+  assertMockAllowed('createMockEmailProvider');
   const sent: MockEmailProvider['sent'] = [];
   return {
     sent,
