@@ -282,11 +282,32 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      # Nguyên nhân lỗi cũ: MỘT lệnh curl vào URL tải của trang release (github.com/.../releases/download), không thử lại, không dự phòng;
+      # điểm tải đó thỉnh thoảng trả 504 (08/11/2026) làm đỏ cả cổng quét bí mật dù code không liên quan. Nay: (1) tải bằng `gh release download` (đường API
+      # có token, không qua URL trang web), (2) dự phòng curl có thử lại, (3) cả hai nằm trong vòng thử lại có chờ.
+      # Toàn vẹn vẫn do checksum cố định bên dưới đảm bảo (sai checksum → dừng), nên đường tải nào cũng an toàn.
       - name: Tải gitleaks và kiểm checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          curl -sSfL -o gitleaks.tar.gz \
-            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
-          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          set -u
+          SUM="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+          ASSET="gitleaks_8.30.1_linux_x64.tar.gz"
+          ok() { echo "$SUM  gitleaks.tar.gz" | sha256sum -c - >/dev/null 2>&1; }
+          if [ -f gitleaks.tar.gz ] && ! ok; then rm -f gitleaks.tar.gz; fi
+          for attempt in 1 2 3 4 5; do
+            if [ -f gitleaks.tar.gz ] && ok; then break; fi
+            rm -f gitleaks.tar.gz "$ASSET"
+            gh release download v8.30.1 -R gitleaks/gitleaks -p "$ASSET" 2>/dev/null && mv "$ASSET" gitleaks.tar.gz || true
+            if [ -f gitleaks.tar.gz ] && ok; then break; fi
+            rm -f gitleaks.tar.gz
+            curl -sSfL --retry 3 --retry-all-errors --retry-delay 5 -o gitleaks.tar.gz               "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/$ASSET" || true
+            if [ -f gitleaks.tar.gz ] && ok; then break; fi
+            echo "lần $attempt: chưa tải được gitleaks hợp lệ, chờ rồi thử lại"
+            rm -f gitleaks.tar.gz
+            sleep $((attempt * 15))
+          done
+          echo "$SUM  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
       - name: Quét toàn bộ lịch sử git
         run: ./gitleaks git --config .gitleaks.toml --redact --verbose .

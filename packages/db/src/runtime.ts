@@ -268,6 +268,7 @@ export {
 } from './queries/kb-search';
 export {
   type ConflictMark,
+  type DraftChunkSummary,
   type DraftChunkText,
   findOrCreateSyncSource,
   findSyncSource,
@@ -277,6 +278,7 @@ export {
   type SyncSourceKind,
   setDraftChunkTopics,
   setDraftConflictMarks,
+  summarizeDraftChunks,
 } from './queries/kb-sync';
 export {
   countLeadsByStage,

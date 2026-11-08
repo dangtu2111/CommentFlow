@@ -202,6 +202,8 @@ export function createShopifySyncHandler(deps: {
   apiVersion?: string;
   logger: Pick<Logger, 'info' | 'warn'>;
   fetchImpl?: typeof fetch;
+  /** Xếp job `kb-sync` khi dữ liệu Shopify (sản phẩm/chính sách) vừa được ghi (gộp ~10 giây/workspace); lỗi xếp job chỉ ghi log. */
+  requestKbSync?: (workspaceId: string) => Promise<void>;
 }): BatchHandler {
   const { db, cipher, enabled, logger } = deps;
   return async (jobs) => {
@@ -260,6 +262,12 @@ export function createShopifySyncHandler(deps: {
         warn: (event) => logger.warn(event, 'đồng bộ Shopify'),
       });
       logger.info({ outcome }, 'đồng bộ Shopify xong');
+      // Chỉ khi đã chạm tới dữ liệu (không bỏ qua / chưa có khóa): đồng bộ lại sản phẩm + chính sách vào bản nháp kiến thức.
+      if (outcome === 'ok' && deps.requestKbSync) {
+        await deps
+          .requestKbSync(workspaceId)
+          .catch(() => logger.warn({ workspaceId }, 'không xếp được kb-sync sau đồng bộ Shopify'));
+      }
     }
   };
 }

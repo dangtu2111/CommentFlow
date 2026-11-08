@@ -5,6 +5,7 @@ import { PageHeader } from '../../../../components/ui/page-header';
 import { getBrand } from '../../../../server/brand';
 import { kbPublish } from '../../../../server/kb-publish';
 import { requireAppUser } from '../../../../server/require-app-user';
+import { syncKnowledgeAction } from './actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('kbPublish');
@@ -15,7 +16,12 @@ export async function generateMetadata() {
  * Phiên bản kiến thức (FR-054, UF-8, US-035): chỉ Owner (Staff nhận 404). Xem thay đổi của bản nháp so với phiên bản
  * đang chạy → Xuất bản; danh sách phiên bản → Khôi phục (tạo phiên bản mới, không sửa bản cũ).
  */
-export default async function KbPublishPage() {
+export default async function KbPublishPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const synced = (await searchParams).synced === '1';
   const { user, workspace } = await requireAppUser({ role: 'owner' });
   const t = await getTranslations('kbPublish');
   let overview: Awaited<ReturnType<ReturnType<typeof kbPublish>['overview']>> | null = null;
@@ -42,6 +48,22 @@ export default async function KbPublishPage() {
         <header className="kb-head">
           <PageHeader title={t('title')} subtitle={t('subtitle')} />
         </header>
+        <div className="tw">
+          <section className="mb-4 space-y-2 rounded-xl bg-surface-container-lowest p-4 shadow-sm">
+            <h2 className="font-label-md text-label-md text-on-surface">{t('sync.title')}</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">{t('sync.body')}</p>
+            {synced ? (
+              <p role="status" className="font-body-sm text-body-sm text-on-surface">
+                {t('sync.queued')}
+              </p>
+            ) : null}
+            <form action={syncKnowledgeAction}>
+              <button type="submit" className="btn">
+                {t('sync.button')}
+              </button>
+            </form>
+          </section>
+        </div>
         {currentNumber === null && preview.ok ? (
           <div className="tw">
             <div

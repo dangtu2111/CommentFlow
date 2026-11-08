@@ -1675,6 +1675,12 @@
     }
   },
   "kbPublish": {
+    "sync": {
+      "title": "Đồng bộ kiến thức",
+      "body": "Đưa thông tin shop, chính sách, câu hỏi thường gặp và sản phẩm (tên, tùy chọn, mô tả — không có giá/tồn) vào bản nháp. Hệ thống tự làm việc này sau mỗi lần bạn lưu; bấm nút nếu muốn làm lại ngay. Việc này không xuất bản gì.",
+      "queued": "Đã xếp việc đồng bộ. Sau ít phút tải lại trang để xem thay đổi của bản nháp, rồi bấm Xuất bản.",
+      "button": "Đồng bộ kiến thức"
+    },
     "conflicts": {
       "title": "Chính sách đang mâu thuẫn nhau",
       "body": "Các câu dưới đây nói khác nhau về cùng một thông tin. Bạn vẫn xuất bản được, nhưng khi khách hỏi đúng chủ đề này AI sẽ chuyển nhân viên thay vì trả lời. Hãy sửa cho khớp rồi xuất bản.",

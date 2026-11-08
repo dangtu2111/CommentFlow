@@ -1,0 +1,1 @@
+| Đồng bộ kiến thức vào bản nháp (dev) | `pnpm --filter @flow/worker kb:sync -- <workspace-uuid>` — chạy `runKbSync`, in số đoạn nháp theo loại + số đoạn có vector + mâu thuẫn (từ chối khi `APP_ENV` staging/production; ở đó dùng nút "Đồng bộ kiến thức" trang Xuất bản) | Cần ml + model embedding hoạt động |

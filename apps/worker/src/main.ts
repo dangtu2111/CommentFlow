@@ -9,7 +9,7 @@ import {
   getMergeWindowSeconds,
 } from '@flow/db';
 import { createFlags } from '@flow/saas-core';
-import { AI_STEP_FLAGS, FLAG_DEFAULTS, PIPELINE_FLAG } from '@flow/shared';
+import { AI_STEP_FLAGS, FLAG_DEFAULTS, kbSyncEnqueueOptions, PIPELINE_FLAG } from '@flow/shared';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
@@ -196,6 +196,10 @@ async function main(): Promise<void> {
       enabled: config.shopify.enabled,
       ...(config.shopify.apiVersion ? { apiVersion: config.shopify.apiVersion } : {}),
       logger,
+      requestKbSync: (workspaceId) =>
+        boss
+          .send(KB_SYNC_QUEUE, { workspaceId }, kbSyncEnqueueOptions(workspaceId))
+          .then(() => undefined),
     }),
   );
   // FR-044: hide — ẩn/bỏ ẩn bình luận; kiểm lại trước khi gọi nền tảng, ẩn lặp lại idempotent. Dùng chung sổ với `send`.
