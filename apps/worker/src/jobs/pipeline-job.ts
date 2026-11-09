@@ -5,10 +5,12 @@ import {
   type Extractor,
   evaluateReplyCap,
   loadWorkspaceKnowledge,
+  type PolicyFacts,
   parseConversationState,
   policyFactsFromRows,
   type Reranker,
   type Rewriter,
+  type StockMode,
   selectCustomerContext,
   type TryKnowledge,
 } from '@flow/ai';
@@ -214,15 +216,7 @@ export async function runPipelineJob(
     max: context.settings.maxAiRepliesPerCustomerPost,
   };
 
-  // Chính sách có cấu trúc ĐÃ DUYỆT (bản nháp không bao giờ vào); chỉ nạp khi cờ bật.
-  const factSlots = (await config.factSlotsEnabled?.(workspaceId))
-    ? {
-        policy: policyFactsFromRows(
-          await db.withJob(workspaceId, (tx) => listApprovedPolicyFacts(tx, workspaceId)),
-        ).policy,
-        stock: { disclose: 'status' as const, lowAt: null },
-      }
-    : undefined;
+  const factSlots = await loadFactSlots(config, workspaceId);
 
   return runCommentPipeline({
     db,
@@ -269,6 +263,21 @@ export async function runPipelineJob(
       traceId: null,
     },
   });
+}
+
+/**
+ * Đường fact plan (ADR 017): cờ DB `cf.ai.fact_slots` TẮT (hoặc không truyền) → `undefined` và KHÔNG đọc `policy_facts` (đường cũ không đổi). BẬT → chỉ nạp chính sách ĐÃ DUYỆT
+ * (`listApprovedPolicyFacts`; `policyFactsFromRows` còn bỏ mọi dòng không phải approved) — bản nháp không bao giờ vào.
+ */
+export async function loadFactSlots(
+  config: Pick<PipelineJobConfig, 'db' | 'factSlotsEnabled'>,
+  workspaceId: string,
+): Promise<{ policy: PolicyFacts; stock: StockMode } | undefined> {
+  if (!config.factSlotsEnabled || !(await config.factSlotsEnabled(workspaceId))) return undefined;
+  const rows = await config.db.withJob(workspaceId, (tx) =>
+    listApprovedPolicyFacts(tx, workspaceId),
+  );
+  return { policy: policyFactsFromRows(rows).policy, stock: { disclose: 'status', lowAt: null } };
 }
 
 /** Handler pg-boss của hàng đợi `pipeline` (batchSize 1). Lỗi tạm → ném để pg-boss thử lại (tối đa 3). */

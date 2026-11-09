@@ -87,3 +87,33 @@ describe('policyFactsFromRows — dòng DB đã duyệt → PolicyFacts của fa
     ]);
   });
 });
+
+describe('policyFactsFromRows — điều kiện/phạm vi và needsReview', () => {
+  it('chuyển conditions/scope vào fact plan', () => {
+    const { policy } = policyFactsFromRows([
+      row('r1', 'returns', { days: 7, conditions: ['còn tem mác'] }),
+      row('w1', 'warranty', { months: 3, scope: 'đường may' }),
+    ]);
+    expect(policy.returns).toEqual({
+      days: 7,
+      none: false,
+      conditions: ['còn tem mác'],
+      sourceId: 'pf:r1',
+    });
+    expect(policy.warranty).toEqual({
+      months: 3,
+      none: false,
+      scope: 'đường may',
+      sourceId: 'pf:w1',
+    });
+  });
+  it('dòng còn needsReview KHÔNG vào fact plan (kể cả đã duyệt) và được báo', () => {
+    const { policy, issues } = policyFactsFromRows([
+      row('n1', 'returns', { days: 7, needsReview: true }),
+    ]);
+    expect(policy.returns).toBeUndefined();
+    expect(issues).toEqual([
+      'Chính sách pf:n1 (returns): còn điều kiện/phạm vi chờ Owner xem lại — bỏ qua.',
+    ]);
+  });
+});

@@ -106,7 +106,13 @@
         "daysMax": 4
       }
     },
-    { "kind": "returns", "data": { "days": 7 } },
-    { "kind": "warranty", "data": { "months": 3 } }
+    {
+      "kind": "returns",
+      "data": {
+        "days": 7,
+        "conditions": ["còn tem mác", "chưa giặt"]
+      }
+    },
+    { "kind": "warranty", "data": { "months": 3, "scope": "đường may" } }
   ]
 }

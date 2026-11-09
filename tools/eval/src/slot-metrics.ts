@@ -1,3 +1,4 @@
+import { suggestPolicyFacts } from '@flow/ai';
 import type { EvalSample } from './dataset';
 import type { SampleOutcome } from './run-sample';
 
@@ -88,7 +89,9 @@ export function renderSlotSummary(s: SlotSummary): string {
 export function renderSlotReport(
   samples: readonly EvalSample[],
   outcomes: ReadonlyMap<string, SampleOutcome>,
+  shop?: Parameters<typeof renderPolicyDiff>[0],
 ): string {
+  const inner = innerCitySamples(samples);
   const lines = sampleReplies(samples, outcomes, 10).map(
     (r) => `- [${r.id}] (${r.action}) KHÁCH: ${r.question}
   TRẢ LỜI: ${r.reply}`,
@@ -101,5 +104,64 @@ export function renderSlotReport(
     '### 10 câu mẫu (trải đều, không chọn lọc)',
     ...lines,
     '',
+    ...(shop ? [renderPolicyDiff(shop), ''] : []),
+    `### Mẫu gắn nhãn "nội thành 20.000đ" (bỏ đúng thiết kế, KHÔNG sửa nhãn): ${inner.length === 0 ? 'không có mẫu nào' : inner.join(', ')}`,
+    '',
   ].join('\n');
+}
+
+const stable = (value: unknown): string =>
+  JSON.stringify(value, (_key, v) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)),
+        )
+      : v,
+  );
+
+/**
+ * Đối chiếu bản Owner khai (`policyFacts` trong shop file) với bộ ĐỀ XUẤT từ văn bản chính sách của chính shop (cùng bộ như worker dùng khi đồng bộ Shopify).
+ * Mỗi dòng: khớp / khác (in cả hai) / chỉ có ở bản khai / chỉ có ở đề xuất.
+ */
+export function renderPolicyDiff(shop: {
+  id: string;
+  texts: ReadonlyArray<{ text: string }>;
+  policyFacts: ReadonlyArray<{ kind: string; data: unknown }>;
+}): string {
+  const suggestions = suggestPolicyFacts(shop.texts.map((t) => t.text).join('\n\n'));
+  const label = (kind: string, data: unknown) =>
+    kind === 'ship_region' ? `ship_region:${(data as { label?: string }).label ?? ''}` : kind;
+  const declared = new Map(shop.policyFacts.map((f) => [label(f.kind, f.data), f]));
+  const suggested = new Map(suggestions.map((f) => [label(f.kind, f.data), f]));
+  const lines: string[] = [];
+  for (const key of new Set([...declared.keys(), ...suggested.keys()])) {
+    const d = declared.get(key);
+    const s = suggested.get(key);
+    if (d && s) {
+      lines.push(
+        stable(d.data) === stable(s.data)
+          ? `- KHỚP ${key}`
+          : `- KHÁC ${key}\n  khai : ${stable(d.data)}\n  đề xuất: ${stable(s.data)}\n  bằng chứng: ${s.evidence}`,
+      );
+    } else if (d) {
+      lines.push(`- CHỈ BẢN KHAI ${key}: ${stable(d.data)} (bộ đề xuất không rút được từ văn bản)`);
+    } else if (s) {
+      lines.push(`- CHỈ ĐỀ XUẤT ${key}: ${stable(s.data)}\n  bằng chứng: ${s.evidence}`);
+    }
+  }
+  return [
+    `### Đối chiếu bản khai ↔ bộ đề xuất (#294) — ${shop.id}`,
+    ...(lines.length > 0 ? lines : ['- (không có dòng nào)']),
+  ].join('\n');
+}
+
+/** Mẫu gắn nhãn/hỏi "nội thành" (đáp án chứa đúng 20.000 hoặc câu hỏi nêu nội thành): bỏ đúng thiết kế vì chính sách nội thành không nêu tên thành phố — liệt kê riêng, KHÔNG sửa nhãn. */
+export function innerCitySamples(samples: readonly EvalSample[]): string[] {
+  const exact20k = /(?<![\d.,])20[.,]000(?![\d])/;
+  return samples
+    .filter((s) => {
+      const must = JSON.stringify(s.expected?.mustContain ?? []);
+      return exact20k.test(must) || /nội thành|noi thanh|within the city|inner city/i.test(s.text);
+    })
+    .map((s) => s.id);
 }

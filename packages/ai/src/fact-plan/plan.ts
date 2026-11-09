@@ -156,7 +156,16 @@ function policyFact(topic: 'returns' | 'warranty' | 'payment', policy: PolicyFac
     if (r.none === true) return known('returns', 'returns', { type: 'none' }, r.sourceId);
     return r.days === null
       ? unknown('returns', 'returns')
-      : known('returns', 'returns', { type: 'days_count', n: r.days }, r.sourceId);
+      : known(
+          'returns',
+          'returns',
+          {
+            type: 'days_count',
+            n: r.days,
+            ...(r.conditions && r.conditions.length > 0 ? { conditions: r.conditions } : {}),
+          },
+          r.sourceId,
+        );
   }
   if (topic === 'warranty') {
     const w = policy.warranty;
@@ -164,7 +173,12 @@ function policyFact(topic: 'returns' | 'warranty' | 'payment', policy: PolicyFac
     if (w.none === true) return known('warranty', 'warranty', { type: 'none' }, w.sourceId);
     return w.months === null
       ? unknown('warranty', 'warranty')
-      : known('warranty', 'warranty', { type: 'months_count', n: w.months }, w.sourceId);
+      : known(
+          'warranty',
+          'warranty',
+          { type: 'months_count', n: w.months, ...(w.scope ? { scope: w.scope } : {}) },
+          w.sourceId,
+        );
   }
   const p = policy.payment;
   return p

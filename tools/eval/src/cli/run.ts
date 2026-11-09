@@ -304,7 +304,7 @@ async function runOnce(variantCount: number, runIndex = 1) {
     values.out as string,
     `eval-${backend}-v${variantCount}-${stamp}${runIndex > 1 ? `-r${runIndex}` : ''}`,
   );
-  const slotSection = factSlots ? renderSlotReport(samples, outcomes) : '';
+  const slotSection = factSlots ? renderSlotReport(samples, outcomes, shop) : '';
   writeFileSync(`${base}.md`, report + slotSection);
   writeFileSync(
     `${base}.jsonl`,

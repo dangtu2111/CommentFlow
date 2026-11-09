@@ -83,12 +83,23 @@ function renderValue(fact: Extract<Fact, { status: 'known' }>, lang: Lang): stri
         return lang === 'vi' ? 'không áp dụng đổi trả' : 'returns are not accepted';
       }
       return lang === 'vi' ? 'không bảo hành' : 'no warranty';
-    case 'days_count':
-      return lang === 'vi'
-        ? `đổi trả trong ${value.n} ngày`
-        : `returns accepted within ${value.n} ${value.n === 1 ? 'day' : 'days'}`;
-    case 'months_count':
+    case 'days_count': {
+      const base =
+        lang === 'vi'
+          ? `đổi trả trong ${value.n} ngày`
+          : `returns accepted within ${value.n} ${value.n === 1 ? 'day' : 'days'}`;
+      const conditions = value.conditions ?? [];
+      if (conditions.length === 0) return base;
+      return `${base} (${lang === 'vi' ? 'điều kiện' : 'conditions'}: ${conditions.join('; ')})`;
+    }
+    case 'months_count': {
+      if (value.scope) {
+        return lang === 'vi'
+          ? `bảo hành ${value.scope} ${value.n} tháng`
+          : `${value.n}-month warranty (${value.scope})`;
+      }
       return lang === 'vi' ? `bảo hành ${value.n} tháng` : `${value.n}-month warranty`;
+    }
     case 'methods':
       return value.methods.map((method) => METHODS[method]?.[lang] ?? method).join(', ');
   }

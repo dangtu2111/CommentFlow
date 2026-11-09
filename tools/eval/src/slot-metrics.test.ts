@@ -71,3 +71,40 @@ describe('sampleReplies / renderSlotReport', () => {
     expect(renderSlotReport([], new Map())).toContain('0/0 (—)');
   });
 });
+
+import { innerCitySamples, renderPolicyDiff } from './slot-metrics';
+
+describe('renderPolicyDiff / innerCitySamples', () => {
+  const shop = {
+    id: 's',
+    texts: [
+      { text: 'Đổi trả trong 7 ngày nếu sản phẩm còn tem mác. Bảo hành 12 tháng. Nhận COD.' },
+    ],
+    policyFacts: [
+      { kind: 'returns', data: { days: 7, conditions: ['còn tem mác'] } },
+      { kind: 'warranty', data: { months: 6 } },
+      { kind: 'payment', data: { methods: ['cod'] } },
+    ],
+  };
+  it('KHỚP / KHÁC / CHỈ BẢN KHAI / CHỈ ĐỀ XUẤT', () => {
+    const text = renderPolicyDiff(shop);
+    expect(text).toContain('- KHỚP returns');
+    expect(text).toContain('- KHÁC warranty');
+    expect(text).toContain('- CHỈ BẢN KHAI payment');
+    expect(text).toContain('- CHỈ ĐỀ XUẤT cod');
+    expect(renderPolicyDiff({ id: 'x', texts: [], policyFacts: [] })).toContain(
+      '(không có dòng nào)',
+    );
+  });
+  it('liệt kê mẫu "nội thành 20.000đ" nhưng không nhầm 320.000', () => {
+    const mk = (id: string, text: string, mustContain: string[] = []) =>
+      ({ id, text, expected: { mustContain } }) as never;
+    expect(
+      innerCitySamples([
+        mk('a', 'ship nội thành bao nhiêu', ['20.000']),
+        mk('b', 'giá', ['320.000']),
+        mk('c', 'inner city fee?'),
+      ]),
+    ).toEqual(['a', 'c']);
+  });
+});

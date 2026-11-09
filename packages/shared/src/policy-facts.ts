@@ -55,9 +55,17 @@ const shipRegion = z
     }
   });
 
-const none = (field: 'days' | 'months', max: number) =>
+const qualifier = z.string().trim().min(1).max(200);
+
+/** Điều kiện/phạm vi chỉ CHÉP NGUYÊN VĂN từ `evidence` (kiểm chuỗi con ở nơi tạo đề xuất); `needsReview` = câu nguồn có điều kiện/phạm vi chưa tách được → Owner phải xem lại (không vào fact plan). */
+const none = (field: 'days' | 'months', max: number, extra: z.ZodRawShape) =>
   z
-    .object({ [field]: z.number().int().min(0).max(max).nullable(), none: z.boolean().optional() })
+    .object({
+      [field]: z.number().int().min(0).max(max).nullable(),
+      none: z.boolean().optional(),
+      needsReview: z.boolean().optional(),
+      ...extra,
+    })
     .strict()
     .superRefine((value, ctx) => {
       const amount = (value as Record<string, number | null>)[field];
@@ -73,8 +81,8 @@ const none = (field: 'days' | 'months', max: number) =>
 const SCHEMAS = {
   ship_region: shipRegion,
   cod: z.object({ value: z.boolean() }).strict(),
-  returns: none('days', 3650),
-  warranty: none('months', 600),
+  returns: none('days', 3650, { conditions: z.array(qualifier).max(10).optional() }),
+  warranty: none('months', 600, { scope: qualifier.optional() }),
   payment: z.object({ methods: z.array(z.enum(PAYMENT_METHODS)).min(1).max(10) }).strict(),
 } as const;
 

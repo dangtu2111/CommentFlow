@@ -37,8 +37,9 @@ export type FactValue =
   | { type: 'stock'; display: 'in' | 'out' | 'count' | 'low'; n?: number }
   /** Chính sách ghi rõ KHÔNG có (không đổi trả / không bảo hành). */
   | { type: 'none' }
-  | { type: 'days_count'; n: number }
-  | { type: 'months_count'; n: number }
+  /** `conditions`/`scope`: nguyên văn từ nguồn chính sách — luôn được ghép vào câu để không khẳng định rộng hơn chính sách. */
+  | { type: 'days_count'; n: number; conditions?: string[] }
+  | { type: 'months_count'; n: number; scope?: string }
   | { type: 'methods'; methods: string[] };
 
 export type Fact =
@@ -63,8 +64,8 @@ export type ShipRow = {
 export type PolicyFacts = {
   shipping: ShipRow[];
   cod?: { value: boolean; sourceId: string } | null;
-  returns?: { days: number | null; none?: boolean; sourceId: string } | null;
-  warranty?: { months: number | null; none?: boolean; sourceId: string } | null;
+  returns?: { days: number | null; none?: boolean; conditions?: string[]; sourceId: string } | null;
+  warranty?: { months: number | null; none?: boolean; scope?: string; sourceId: string } | null;
   payment?: { methods: string[]; sourceId: string } | null;
 };
 

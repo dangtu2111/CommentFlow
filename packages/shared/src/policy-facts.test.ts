@@ -63,6 +63,14 @@ describe('parsePolicyFactData — kiểm dữ liệu chính sách có cấu trú
     expect(parsePolicyFactData('cod', { value: false }).success).toBe(true);
     expect(parsePolicyFactData('cod', { value: 'có' }).success).toBe(false);
     expect(parsePolicyFactData('returns', { days: 7 }).success).toBe(true);
+    expect(parsePolicyFactData('returns', { days: 7, conditions: ['còn tem mác'] }).success).toBe(
+      true,
+    );
+    expect(parsePolicyFactData('returns', { days: 7, conditions: [''] }).success).toBe(false);
+    expect(
+      parsePolicyFactData('warranty', { months: 3, scope: 'đường may', needsReview: true }).success,
+    ).toBe(true);
+    expect(parsePolicyFactData('warranty', { months: 3, scope: '' }).success).toBe(false);
     expect(parsePolicyFactData('returns', { days: null, none: true }).success).toBe(true);
     expect(parsePolicyFactData('returns', { days: 7, none: true }).success).toBe(false);
     expect(parsePolicyFactData('returns', { days: null }).success).toBe(false);
