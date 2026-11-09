@@ -528,7 +528,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // Chủ đề do `extract` trả (enum, Zod) — không đoán bằng từ khóa; mỗi chủ đề chỉ một lần.
   const factTopics: FactTopic[] = slotMode ? [...new Set(extract.topics)] : [];
   // Nơi khách hỏi giao tới → quốc gia (bảng quốc gia/tiểu bang Mỹ + tỉnh/thành VN); không nhận ra → null (không đoán).
-  const destination = slotMode ? resolvePlace(extract.destination ?? masked) : null;
+  // Quét cả câu (masked) CHỈ khi extract báo chủ đề ship_destination; còn lại dùng đúng `extract.destination` — tránh nhầm tên hàng ("Georgia peach dress", "China blue vase") với địa điểm.
+  const destination = slotMode
+    ? resolvePlace(extract.destination ?? (factTopics.includes('ship_destination') ? masked : ''))
+    : null;
   const planProducts: PlanProduct[] =
     slotMode && deps.knowledge.lookupPlanProducts
       ? await deps.knowledge.lookupPlanProducts(products.ids, {

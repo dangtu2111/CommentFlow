@@ -312,3 +312,16 @@ describe('suggest — dòng ship có số thì KHÔNG tạo thêm dòng định 
     expect(rows[0]?.data).toMatchObject({ feeMinor: 30000 });
   });
 });
+
+describe('resolvePlace — không nhầm tên hàng hóa với địa điểm (khi extract.destination null)', () => {
+  it.each(['turkey neck pillow', 'áo len Paris', 'Jordan sneakers size 10', 'Chelsea boots'])(
+    '"%s" → không nhận địa điểm',
+    (text) => {
+      expect(resolvePlace(text)).toBeNull();
+    },
+  );
+  it('tên hàng trùng tên quốc gia/bang vẫn bị nhận bởi resolvePlace — nên pipeline CHỈ quét câu khi extract có chủ đề ship_destination', () => {
+    expect(resolvePlace('Georgia peach dress')?.country).toBe('US');
+    expect(resolvePlace('China blue vase')?.country).toBe('CN');
+  });
+});

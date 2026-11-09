@@ -556,3 +556,43 @@ describe('mọi biến thể CÙNG giá → trả lời giá, không hỏi biế
     );
   });
 });
+
+describe('địa điểm chỉ lấy từ extract.destination hoặc khi có chủ đề ship_destination', () => {
+  const runShip = async (text: string, topics: FactTopic[], destination: string | null) => {
+    const { drafter } = fakeDrafter(draftOf('{fact:price.1}; {fact:ship_fee}.'));
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text,
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: slots([ship()]),
+      },
+      {
+        extractor: createFixtureExtractor([
+          { match: /./, result: { ...extractFor(['giá']), topics, destination } },
+        ]),
+        drafter,
+        knowledge,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it('"Georgia peach dress" hỏi giá + phí ship: KHÔNG bị hiểu là ship tới Mỹ (dòng ship VN vẫn dùng được)', async () => {
+    const r = await runShip(
+      'Georgia peach dress giá bao nhiêu, ship bao nhiêu',
+      ['price', 'ship_fee'],
+      null,
+    );
+    expect(r.factPlan?.facts.find((f) => f.id === 'ship_fee')?.status).toBe('known');
+  });
+  it('hỏi "ship to Georgia?" (có chủ đề ship_destination) thì mới quét câu', async () => {
+    const r = await runShip('do you ship to Georgia', ['ship_destination'], null);
+    expect(r.factPlan?.facts.find((f) => f.id === 'ship_destination')).toMatchObject({
+      status: 'known',
+      value: { ok: false },
+    });
+  });
+});
