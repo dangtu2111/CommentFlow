@@ -37,6 +37,8 @@ export type PipelineContext = {
   /** Tên Page của kênh (cho luật mạo danh, FR-155). */
   pageNames: string[];
   thread: { clarifyCount: number; repeatCount: number; humanHolding: boolean };
+  /** Gợi ý ngôn ngữ trả lời cho câu quá ngắn để nhận ngôn ngữ (xem `resolveLanguageHints`). */
+  language: LanguageHints;
   settings: {
     mergeWindowSeconds: number;
     humanHoldMinutes: number;
@@ -81,6 +83,7 @@ type CommentRow = {
   post_message: string | null;
   post_is_ad: boolean;
   channel_name: string;
+  channel_reply_language: string;
 };
 
 function attachmentTypesOf(raw: unknown): string[] {
@@ -89,6 +92,54 @@ function attachmentTypesOf(raw: unknown): string[] {
     const type = (item as { type?: unknown } | null)?.type;
     return typeof type === 'string' ? [type] : [];
   });
+}
+
+export type LanguageHints = { replyLanguage: 'vi' | 'en' | null; previousLang: 'vi' | 'en' | null };
+
+const asLang = (value: unknown): 'vi' | 'en' | null =>
+  value === 'vi' || value === 'en' ? value : null;
+
+/**
+ * Thứ tự ngôn ngữ cho câu quá ngắn: `channels.reply_language` (khác 'auto') → ngôn ngữ lượt khách trước → `workspaces.default_lang`. `normalizeAndDetectLang` ưu tiên `previousLang` hơn `replyLanguage`,
+ * nên khi kênh chọn cố định thì KHÔNG truyền `previousLang` (kênh thắng); không cố định → `previousLang` đứng trước, mặc định workspace làm `replyLanguage` (cuối cùng).
+ */
+export function resolveLanguageHints(input: {
+  channelLanguage: string;
+  workspaceDefault: string | null;
+  previousLang: string | null;
+}): LanguageHints {
+  const fixed = asLang(input.channelLanguage);
+  if (fixed) return { replyLanguage: fixed, previousLang: null };
+  return {
+    replyLanguage: asLang(input.workspaceDefault),
+    previousLang: asLang(input.previousLang),
+  };
+}
+
+async function workspaceDefaultLang(tx: Database, workspaceId: string): Promise<string | null> {
+  const found = await tx.execute<{ default_lang: string }>(sql`
+    SELECT default_lang FROM core.workspaces WHERE id = ${workspaceId}::uuid`);
+  return found.rows[0]?.default_lang ?? null;
+}
+
+/** Ngôn ngữ đã nhận ra của bình luận khách TRƯỚC đó (cùng bài, cùng người), nếu có. */
+async function previousCustomerLang(
+  tx: Database,
+  input: {
+    workspaceId: string;
+    postId: string;
+    authorExternalId: string;
+    commentId: string;
+    before: Date;
+  },
+): Promise<string | null> {
+  const found = await tx.execute<{ lang: string | null }>(sql`
+    SELECT lang FROM cf.comments
+     WHERE workspace_id = ${input.workspaceId}::uuid AND post_id = ${input.postId}::uuid
+       AND author_external_id = ${input.authorExternalId} AND id <> ${input.commentId}::uuid
+       AND created_time < ${input.before.toISOString()}::timestamptz AND lang IN ('vi', 'en')
+     ORDER BY created_time DESC LIMIT 1`);
+  return found.rows[0]?.lang ?? null;
 }
 
 export async function loadPipelineContext(
@@ -100,7 +151,7 @@ export async function loadPipelineContext(
   const found = await tx.execute<CommentRow>(sql`
     SELECT c.id, c.channel_id, c.post_id, c.external_id, c.parent_external_id, c.author_external_id, c.author_name, c.text,
            c.created_time, c.status, c.is_own, c.deleted_at, c.merged_into_id, c.ingest_source, c.attachments,
-           p.message AS post_message, p.is_ad AS post_is_ad, ch.name AS channel_name
+           p.message AS post_message, p.is_ad AS post_is_ad, ch.name AS channel_name, ch.reply_language AS channel_reply_language
       FROM cf.comments c
       JOIN cf.posts p ON p.id = c.post_id AND p.workspace_id = c.workspace_id
       JOIN cf.channels ch ON ch.id = c.channel_id AND ch.workspace_id = c.workspace_id
@@ -197,6 +248,17 @@ export async function loadPipelineContext(
     postProductIds: products.rows.map((r) => r.product_id),
     pageNames: [row.channel_name],
     thread: { clarifyCount, repeatCount, humanHolding },
+    language: resolveLanguageHints({
+      channelLanguage: row.channel_reply_language,
+      workspaceDefault: await workspaceDefaultLang(tx, workspaceId),
+      previousLang: await previousCustomerLang(tx, {
+        workspaceId,
+        postId: row.post_id,
+        authorExternalId: row.author_external_id,
+        commentId,
+        before: createdTime,
+      }),
+    }),
     settings,
     customerPostReplies24h: await countCustomerPostReplies(
       tx,

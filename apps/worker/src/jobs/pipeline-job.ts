@@ -232,6 +232,9 @@ export async function runPipelineJob(
       voice: { ...DEFAULT_VOICE, do: [], dont: [] },
       ...(Object.keys(voices).length > 0 ? { voices } : {}),
       autoSendEnabled: false,
+      // Câu quá ngắn để nhận ngôn ngữ ("still available?"): kênh cố định → lượt khách trước → mặc định workspace; cùng đường với EVAL.
+      replyLanguage: context.language.replyLanguage,
+      previousLang: context.language.previousLang,
       ...(factSlots ? { factSlots } : {}),
       dict: createAbbreviationDict(abbreviations),
       thread: context.thread,

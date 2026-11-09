@@ -293,3 +293,56 @@ describe('ai_usage qua withJob (nguyên tắc #7)', () => {
     expect(rows[0].workspace_id).toBe(ws);
   });
 });
+
+describe('ngôn ngữ câu ngắn — kênh/lượt trước/mặc định workspace đi tới nhận ngôn ngữ (cùng đường với EVAL)', () => {
+  const langSeen = async (text: string) => {
+    const seen: string[] = [];
+    const id = await addComment('webhook', text);
+    // Bình luận thật luôn có created_time (thời điểm khách gửi); ngữ cảnh lấy lượt khách trước theo mốc này.
+    await admin.query('UPDATE cf.comments SET created_time = now() WHERE id = $1', [id]);
+    await runPipelineJob(
+      config({
+        llm: {
+          extractor: createFixtureExtractor([
+            {
+              match: /./,
+              result: { ...FIXTURE_EXTRACT_DEFAULT, labels: [{ label: 'advice' }], asks: [text] },
+            },
+          ]),
+          drafter: {
+            async draft(input) {
+              seen.push(input.lang);
+              return {
+                reply: 'ok',
+                lang: input.lang === 'en' ? 'en' : 'vi',
+                sources: [],
+                claims: [],
+                unanswered_topics: [],
+                needs_human: true,
+                reason: 'test',
+                variants: [],
+              };
+            },
+          },
+        },
+      }),
+      job(id),
+    );
+    return seen[0];
+  };
+  it('kênh reply_language = en + "still available?" → soạn tiếng Anh', async () => {
+    await admin.query("UPDATE cf.channels SET reply_language = 'en' WHERE id = $1", [channel]);
+    expect(await langSeen('still available?')).toBe('en');
+  });
+  it("kênh 'auto' + lượt khách trước tiếng Anh → câu ngắn theo lượt trước", async () => {
+    await admin.query(
+      `INSERT INTO cf.comments (workspace_id, channel_id, post_id, external_id, author_external_id, author_name, text, status, ingest_source, lang, created_time)
+       VALUES ($1, $2, $3, $4, 'u1', 'Khách A', 'Do you ship to Canada?', 'replied', 'webhook', 'en', now() - interval '3 hours')`,
+      [ws, channel, post, `cm-${randomUUID()}`],
+    );
+    expect(await langSeen('how much?')).toBe('en');
+  });
+  it("kênh 'auto', không có lượt trước → mặc định workspace (vi)", async () => {
+    expect(await langSeen('how much?')).toBe('vi');
+  });
+});
