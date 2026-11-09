@@ -30,7 +30,7 @@ export function inferAttrsFromText(
     if (known[axis] !== null) continue;
     const candidates = distinctValues(variants, axis);
     if (candidates.length === 0) continue;
-    const hits = new Set<string>();
+    const hits = new Map<string, string>();
     words.forEach((word, index) => {
       if (word === '') return;
       const value = normalizeAttrs({ [axis]: word })[axis];
@@ -40,9 +40,10 @@ export function inferAttrsFromText(
         const afterMarker = index > 0 && SIZE_MARKERS.has(words[index - 1] as string);
         if (!shownUpper && !afterMarker) return;
       }
-      hits.add(value);
+      hits.set(value, rawWords[index] as string);
     });
-    if (hits.size === 1) found[axis] = [...hits][0] as string;
+    // Trả CHÍNH chữ khách viết ("L", "trang"): các bước sau tự chuẩn hóa như `attrs_norm`; ảnh chụp extract khớp với cách nhãn gold ghi.
+    if (hits.size === 1) found[axis] = [...hits.values()][0] as string;
   }
   return found;
 }

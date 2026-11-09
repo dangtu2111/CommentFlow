@@ -1109,16 +1109,16 @@ describe('viplain-03: khách nêu đủ size + màu không dấu mà extract b�
     if (result.status !== 'done') throw new Error('expected done');
     return result;
   };
-  it('"ao thun basic L trang con ko a" → answer có {fact:stock.1}, extract được bổ sung size l + màu white', async () => {
+  it('"ao thun basic L trang con ko a" → answer có {fact:stock.1}, extract được bổ sung size L + màu trang', async () => {
     const r = await runShirt('ao thun basic L trang con ko a');
     expect(r.decision.action).toBe('answer');
     expect(r.factPlan?.facts.map((f) => f.id)).toContain('stock.1');
     expect(r.reply).toContain('còn 7');
-    expect(r.extract).toMatchObject({ size: 'l', color: 'white' });
+    expect(r.extract).toMatchObject({ size: 'L', color: 'trang' });
   });
   it('chỉ nêu màu, thiếu size → vẫn hỏi lại size (không đoán)', async () => {
     const r = await runShirt('ao thun basic trang con ko a', 'Bạn chọn size nào ạ?');
     expect(r.decision.action).toBe('clarify');
-    expect(r.extract).toMatchObject({ size: null, color: 'white' });
+    expect(r.extract).toMatchObject({ size: null, color: 'trang' });
   });
 });
