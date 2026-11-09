@@ -269,6 +269,19 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     expect(result.draft.needs_human).toBe(true);
   });
 
+  it('LƯỚI AN TOÀN: needs_human nhưng vẫn viết {fact:…} → mã chỗ giữ chỗ KHÔNG lọt tới khách, chuyển người', async () => {
+    const leak = {
+      ...draftOf('Giá {fact:price.1}, giao {fact:ship_time}.', ['Giá {fact:price.1}.']),
+      needs_human: true,
+      reason: 'x',
+    };
+    const { result } = await run(MIXED_11, ASKS, leak, slots([ship()]));
+    expect(result.decision.action).toBe('handoff');
+    expect(result.reply).not.toContain('{fact:');
+    expect(result.variants.join(' ')).not.toContain('{fact:');
+    expect(result.slotDiagnostics).toEqual({ rawTexts: 2, rejected: 2, chosen: 'handoff' });
+  });
+
   it('thiếu hàm lookupPlanProducts (chưa nối DB) → không có sự kiện sản phẩm: chỉ chính sách + mời; không sập', async () => {
     const { lookupPlanProducts: _omit, ...withoutPlan } = knowledge;
     const { result } = await run(MIXED_11, ASKS, GOOD, slots([ship()]), withoutPlan);

@@ -674,6 +674,22 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     }
   }
 
+  // Lưới an toàn (ADR 017): chế độ chỗ giữ chỗ mà câu CHƯA được code điền (vd. bộ soạn đánh dấu needs_human nhưng vẫn viết {fact:…}) thì KHÔNG bao giờ để mã chỗ giữ chỗ lọt tới khách → chuyển người.
+  if (
+    factPlan !== null &&
+    slotRendered === null &&
+    decision.action !== 'handoff' &&
+    [draft.reply, ...(draft.variants ?? [])].some((text) => /{fact:/.test(text))
+  ) {
+    decision = handoffDecision('claim_unsupported', decision.askedBefore);
+    slotDiagnostics = {
+      rawTexts: 1 + (draft.variants?.length ?? 0),
+      rejected: 1 + (draft.variants?.length ?? 0),
+      chosen: 'handoff',
+    };
+    draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
+  }
+
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   // Chế độ chỗ giữ chỗ: mọi số trong câu do code điền → kiểm số tiền với CHÍNH các giá trị vừa điền (không phải đoạn văn).

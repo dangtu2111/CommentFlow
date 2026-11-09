@@ -233,7 +233,7 @@ const factSlots = values['fact-slots']
         console.error(issues.join(String.fromCharCode(10)));
         process.exit(2);
       }
-      return { policy, stock: { disclose: 'status' as const, lowAt: null } };
+      return { policy, stock: { disclose: 'count' as const, lowAt: null } }; // gold hỏi "còn mấy cái" → giả định Owner bật "Nêu số lượng tồn"
     })()
   : undefined;
 
