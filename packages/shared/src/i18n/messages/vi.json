@@ -3348,6 +3348,7 @@
       },
       "kindTitle": {
         "ship_region": "Vận chuyển (một khu vực)",
+        "cod": "COD chung (thanh toán khi nhận hàng)",
         "returns": "Đổi trả & Hoàn tiền",
         "warranty": "Bảo hành",
         "payment": "Phương thức thanh toán"

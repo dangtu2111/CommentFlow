@@ -3348,6 +3348,7 @@
       },
       "kindTitle": {
         "ship_region": "Shipping (one area)",
+        "cod": "General COD (cash on delivery)",
         "returns": "Returns & refunds",
         "warranty": "Warranty",
         "payment": "Payment methods"
