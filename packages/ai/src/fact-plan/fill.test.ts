@@ -95,10 +95,10 @@ describe('fillSlots', () => {
   it('tồn kho: còn/hết/số lượng/sắp hết', () => {
     const stock = (value: FactValue) => planOf(fact('stock.1', 'stock', value));
     const cases: Array<[FactValue, string, string]> = [
-      [{ type: 'stock', display: 'in' }, 'còn hàng', 'in stock'],
-      [{ type: 'stock', display: 'out' }, 'hết hàng', 'out of stock'],
-      [{ type: 'stock', display: 'count', n: 25 }, 'còn 25 sản phẩm', '25 in stock'],
-      [{ type: 'stock', display: 'low' }, 'sắp hết hàng', 'almost sold out'],
+      [{ type: 'stock', display: 'in' }, 'Còn hàng', 'In stock'],
+      [{ type: 'stock', display: 'out' }, 'Hết hàng', 'Out of stock'],
+      [{ type: 'stock', display: 'count', n: 25 }, 'Còn 25 sản phẩm', '25 in stock'],
+      [{ type: 'stock', display: 'low' }, 'Sắp hết hàng', 'Almost sold out'],
     ];
     for (const [value, vi, en] of cases) {
       expect(fill('{fact:stock.1}', stock(value)).text).toBe(vi);
@@ -123,10 +123,10 @@ describe('fillSlots', () => {
       'We support cash on delivery (COD); returns accepted within 7 days; 12-month warranty.',
     );
     expect(fill('{fact:payment}', policy).text).toBe(
-      'chuyển khoản, thanh toán khi nhận hàng (COD), zalo_pay',
+      'Chuyển khoản, thanh toán khi nhận hàng (COD), zalo_pay',
     );
     expect(fill('{fact:payment}', policy, 'en').text).toBe(
-      'bank transfer, cash on delivery (COD), zalo_pay',
+      'Bank transfer, cash on delivery (COD), zalo_pay',
     );
     const negative = planOf(
       fact('cod', 'cod', { type: 'bool', value: false }),
@@ -134,10 +134,10 @@ describe('fillSlots', () => {
       fact('warranty', 'warranty', { type: 'none' }),
     );
     expect(fill('{fact:cod}; {fact:returns}; {fact:warranty}', negative).text).toBe(
-      'chưa hỗ trợ thanh toán khi nhận hàng (COD); không áp dụng đổi trả; không bảo hành',
+      'Chưa hỗ trợ thanh toán khi nhận hàng (COD); không áp dụng đổi trả; không bảo hành',
     );
     expect(fill('{fact:cod}; {fact:returns}; {fact:warranty}', negative, 'en').text).toBe(
-      'does not support cash on delivery (COD); returns are not accepted; no warranty',
+      'Does not support cash on delivery (COD); returns are not accepted; no warranty',
     );
   });
 
@@ -194,12 +194,12 @@ describe('fillSlots — điều kiện/phạm vi luôn được ghép vào câu 
   );
   it('tiếng Việt', () => {
     expect(fill('{fact:returns}; {fact:warranty}.', p).text).toBe(
-      'đổi trả trong 7 ngày (điều kiện: còn tem mác; chưa giặt); bảo hành đường may 3 tháng.',
+      'Đổi trả trong 7 ngày (điều kiện: còn tem mác; chưa giặt); bảo hành đường may 3 tháng.',
     );
   });
   it('tiếng Anh', () => {
     expect(fill('{fact:returns}; {fact:warranty}.', p, 'en').text).toBe(
-      'returns accepted within 7 days (conditions: còn tem mác; chưa giặt); 3-month warranty (đường may).',
+      'Returns accepted within 7 days (conditions: còn tem mác; chưa giặt); 3-month warranty (đường may).',
     );
   });
 });
@@ -232,7 +232,7 @@ describe('fillSlots — viết hoa chữ đầu khi giá trị mở đầu câu 
       'Good news: we ship to the United States.',
     );
     expect(fill('Giá {fact:price.1}! {fact:ship_destination}', p, 'vi').text).toBe(
-      'Giá $439,99! Shop có giao tới Mỹ',
+      'Giá $439,99! Shop có giao tới Mỹ.',
     );
   });
 });
@@ -270,5 +270,26 @@ describe('fillSlots — câu sự kiện nối sau "là/is/are" thì bỏ cụm 
     expect(fill('Về khu vực giao: {fact:ship_destination}.', p, 'vi').text).toBe(
       'Về khu vực giao: shop giao toàn quốc.',
     );
+  });
+});
+
+describe('fillSlots — đầu câu trả lời và dấu kết câu của câu sự kiện hoàn chỉnh (en-10)', () => {
+  const p = planOf(
+    fact('refund_to', 'refund_to', { type: 'refund_to', to: 'original_payment' }),
+    fact('price.1', 'price', { type: 'money', amountMinor: 43999, currency: 'USD' }),
+  );
+  it('chỗ giữ chỗ ở offset 0 → viết hoa; thiếu dấu kết câu → thêm dấu chấm', () => {
+    expect(fill('{fact:refund_to}', p, 'en').text).toBe(
+      'Refunds go back to the original payment method.',
+    );
+    expect(fill('{fact:refund_to}', p, 'vi').text).toBe(
+      'Hoàn tiền về phương thức thanh toán ban đầu.',
+    );
+  });
+  it('đã có dấu kết câu thì không thêm; giá trị không phải câu hoàn chỉnh thì không thêm', () => {
+    expect(fill('{fact:refund_to}!', p, 'en').text).toBe(
+      'Refunds go back to the original payment method!',
+    );
+    expect(fill('Price {fact:price.1}', p, 'en').text).toBe('Price $439.99');
   });
 });

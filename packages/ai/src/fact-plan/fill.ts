@@ -169,6 +169,8 @@ const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 
 const LEAD_IN_BEFORE_SENTENCE_SLOT =
   /(?:^|(?<=[.!?…]\s))[^.!?…{}]*?(?<![\p{L}\p{N}])(?:là|is|are)\s+(\{fact:(?:ship_destination|refund_to|return_shipping|return_eligibility)\})/giu;
+const ENDS_WITH_SENTENCE_SLOT =
+  /\{fact:(?:ship_destination|refund_to|return_shipping|return_eligibility)\}\s*$/u;
 const DUPLICATE_CON = /(?<![\p{L}\p{N}])(còn)\s+còn(?![\p{L}\p{N}])/giu;
 
 export function fillSlots(template: string, plan: FactPlan, options: { lang: Lang }): FillResult {
@@ -193,18 +195,22 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
     text.replace(LEAD_IN_BEFORE_SENTENCE_SLOT, (_all, slot: string) => `${CAPITALIZE}${slot}`);
   const fillText = (raw: string) => {
     const text = dropLeadIn(raw);
-    return dedupe(
+    const filled = dedupe(
       text
         .replace(SLOT, (whole, id: string, offset: number) => {
           const value = render(id);
           if (value === null) return whole;
           const sentenceStart =
-            AFTER_TERMINATOR.test(text.slice(0, offset)) || text[offset - 1] === CAPITALIZE;
+            offset === 0 ||
+            AFTER_TERMINATOR.test(text.slice(0, offset)) ||
+            text[offset - 1] === CAPITALIZE;
           return sentenceStart ? value.charAt(0).toLocaleUpperCase() + value.slice(1) : value;
         })
         .split(CAPITALIZE)
         .join(''),
     );
+    // Câu kết thúc bằng một sự kiện là CÂU hoàn chỉnh mà thiếu dấu kết câu → thêm dấu chấm.
+    return ENDS_WITH_SENTENCE_SLOT.test(text) && !/[.!?…]$/.test(filled) ? `${filled}.` : filled;
   };
 
   const claims: Claim[] = [];

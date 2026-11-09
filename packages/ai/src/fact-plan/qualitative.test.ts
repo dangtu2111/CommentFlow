@@ -127,12 +127,12 @@ const fill = (text: string, p: ReturnType<typeof plan>, lang: 'vi' | 'en' = 'en'
 describe('fact plan định tính — known khi có giá trị định tính, kể cả không có số', () => {
   it('ship_destination: Hawaii ∈ US → known ok; Canada → known "hiện giao tới Mỹ" (không phủ định)', () => {
     const hawaii = plan({ topics: ['ship_destination'], destination: resolvePlace('Hawaii') });
-    expect(fill('{fact:ship_destination}.', hawaii).text).toBe('we ship to the United States.');
+    expect(fill('{fact:ship_destination}.', hawaii).text).toBe('We ship to the United States.');
     const canada = plan({ topics: ['ship_destination'], destination: resolvePlace('Canada') });
     expect(fill('{fact:ship_destination}.', canada).text).toBe(
-      'we currently ship to the United States.',
+      'We currently ship to the United States.',
     );
-    expect(fill('{fact:ship_destination}.', canada, 'vi').text).toBe('hiện shop giao tới Mỹ.');
+    expect(fill('{fact:ship_destination}.', canada, 'vi').text).toBe('Hiện shop giao tới Mỹ.');
     // Không nêu nơi cụ thể + có dòng toàn quốc → known (nêu nơi shop giao); xem thêm test "ship tỉnh" bên dưới.
     expect(plan({ topics: ['ship_destination'], destination: null }).facts[0]?.status).toBe(
       'known',
@@ -154,7 +154,7 @@ describe('fact plan định tính — known khi có giá trị định tính, k�
       'Fee: calculated at checkout based on your destination and shipping method. Time: shown at checkout.',
     );
     expect(fill('{fact:ship_fee}; {fact:ship_time}', p, 'vi').text).toBe(
-      'được tính khi thanh toán, tùy địa chỉ nhận và hình thức giao; hiển thị khi thanh toán',
+      'Được tính khi thanh toán, tùy địa chỉ nhận và hình thức giao; hiển thị khi thanh toán',
     );
   });
   it('feeMode free / free_over', () => {
@@ -162,13 +162,13 @@ describe('fact plan định tính — known khi có giá trị định tính, k�
       topics: ['ship_fee'],
       policy: { shipping: [{ ...usRow, feeMode: 'free' }] },
     });
-    expect(fill('{fact:ship_fee}', free).text).toBe('free');
+    expect(fill('{fact:ship_fee}', free).text).toBe('Free');
     const over = plan({
       topics: ['ship_fee'],
       policy: { shipping: [{ ...usRow, feeMode: 'free_over', freeOverMinor: 5000 }] },
     });
-    expect(fill('{fact:ship_fee}', over).text).toBe('free on orders over $50.00');
-    expect(fill('{fact:ship_fee}', over, 'vi').text).toBe('miễn phí cho đơn từ $50,00');
+    expect(fill('{fact:ship_fee}', over).text).toBe('Free on orders over $50.00');
+    expect(fill('{fact:ship_fee}', over, 'vi').text).toBe('Miễn phí cho đơn từ $50,00');
     const broken = plan({
       topics: ['ship_fee'],
       policy: { shipping: [{ ...usRow, feeMode: 'free_over' }] },
@@ -180,12 +180,12 @@ describe('fact plan định tính — known khi có giá trị định tính, k�
     expect(
       fill('{fact:refund_to}; {fact:return_shipping}; {fact:return_eligibility}', p).text,
     ).toBe(
-      'refunds go back to the original payment method; for change-of-mind returns, the customer pays return shipping; whether an item can be returned depends on the item',
+      'Refunds go back to the original payment method; for change-of-mind returns, the customer pays return shipping; whether an item can be returned depends on the item.',
     );
     expect(
       fill('{fact:refund_to}; {fact:return_shipping}; {fact:return_eligibility}', p, 'vi').text,
     ).toBe(
-      'hoàn tiền về phương thức thanh toán ban đầu; nếu đổi ý, khách chịu phí ship khi trả hàng; khả năng đổi trả tùy từng sản phẩm',
+      'Hoàn tiền về phương thức thanh toán ban đầu; nếu đổi ý, khách chịu phí ship khi trả hàng; khả năng đổi trả tùy từng sản phẩm.',
     );
     const shop = plan({
       topics: ['return_shipping'],
@@ -194,8 +194,10 @@ describe('fact plan định tính — known khi có giá trị định tính, k�
         returns: { days: null, returnShippingPaidBy: 'shop', sourceId: 'x' },
       },
     });
-    expect(fill('{fact:return_shipping}', shop).text).toBe('we cover return shipping');
-    expect(fill('{fact:return_shipping}', shop, 'vi').text).toBe('shop chịu phí ship khi trả hàng');
+    expect(fill('{fact:return_shipping}', shop).text).toBe('We cover return shipping.');
+    expect(fill('{fact:return_shipping}', shop, 'vi').text).toBe(
+      'Shop chịu phí ship khi trả hàng.',
+    );
     const none = plan({
       topics: ['refund_to', 'return_shipping', 'return_eligibility'],
       policy: { shipping: [] },
@@ -255,7 +257,7 @@ describe('fact plan định tính — known khi có giá trị định tính, k�
       policy: { shipping: [vn, usRow] },
       destination: resolvePlace('Texas'),
     });
-    expect(fill('{fact:ship_fee}', p).text).toContain('calculated at checkout');
+    expect(fill('{fact:ship_fee}', p).text).toContain('alculated at checkout');
     const none = plan({
       topics: ['ship_fee'],
       policy: { shipping: [vn] },
@@ -357,10 +359,10 @@ describe('ship_destination khi khách không nêu nơi cụ thể ("ship tỉnh"
     });
     expect(p.facts.map((f) => f.id)).toEqual(['ship_destination']);
     expect(fillSlots('{fact:ship_destination}.', p, { lang: 'vi' }).text).toBe(
-      'shop giao toàn quốc.',
+      'Shop giao toàn quốc.',
     );
     expect(fillSlots('{fact:ship_destination}.', p, { lang: 'en' }).text).toBe(
-      'we ship nationwide.',
+      'We ship nationwide.',
     );
   });
   it('dòng toàn quốc không phải Việt Nam (US) → nêu quốc gia; chỉ có nội thành hoặc không có dòng → unknown', () => {
@@ -372,7 +374,7 @@ describe('ship_destination khi khách không nêu nơi cụ thể ("ship tỉnh"
       stock: { disclose: 'status', lowAt: null },
     });
     expect(fillSlots('{fact:ship_destination}.', us, { lang: 'en' }).text).toBe(
-      'we ship to the United States.',
+      'We ship to the United States.',
     );
     for (const shipping of [[cityOnly], []]) {
       const p = buildFactPlan({
