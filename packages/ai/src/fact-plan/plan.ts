@@ -1,3 +1,4 @@
+import { normalizeSearchText } from '@flow/shared';
 import { canonicalProvince, findProvinces } from './regions';
 import type {
   Fact,
@@ -234,12 +235,22 @@ function policyFact(
     : unknown('payment', 'payment');
 }
 
+/** Phạm vi bảo hành (vd. "đường may") khớp câu khách: cả cụm, hoặc một từ ≥ 4 ký tự của phạm vi, đều theo ranh giới từ, đã bỏ dấu. KHÔNG đồng nghĩa, KHÔNG LLM. */
+export function scopeMatches(scope: string, customerText: string): boolean {
+  const text = ` ${normalizeSearchText(customerText)} `;
+  const phrase = normalizeSearchText(scope);
+  if (phrase === '') return false;
+  if (text.includes(` ${phrase} `)) return true;
+  return phrase.split(' ').some((word) => word.length >= 4 && text.includes(` ${word} `));
+}
+
 export function buildFactPlan(input: FactPlanInput): FactPlan {
   const facts: Fact[] = [];
   const unknownTopics = new Set<FactTopic>();
   const issues: string[] = [];
   let clarify: FactPlan['clarify'] = null;
   let handoff = false;
+  let requiresHumanReview = false;
   const mark = (topic: FactTopic, fact: Fact) => {
     facts.push(fact);
     if (fact.status === 'unknown') unknownTopics.add(topic);
@@ -405,9 +416,21 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
     else if (topic === 'ship_destination') destinationFact();
     else if (topic === 'cod') cod();
     else if (topic === 'defect') {
-      // Chính sách hàng lỗi/sai hàng KHÔNG có trong policy_facts (5 loại) → luôn chuyển người, không mượn số ngày/điều kiện của đổi trả do không vừa.
-      mark('defect', unknown('defect', 'defect'));
-      handoff = true;
+      // Hàng lỗi/sai hàng KHÔNG có chính sách riêng trong policy_facts (5 loại): mặc định chuyển người, không mượn số ngày/điều kiện của đổi trả do không vừa.
+      // Ngoại lệ: thẻ bảo hành ĐÃ DUYỆT có phạm vi mà CODE khớp được với câu khách → nêu đúng bảo hành (phạm vi + thời hạn), nhưng bắt buộc người duyệt.
+      const warranty = input.policy.warranty;
+      if (
+        warranty?.scope &&
+        warranty.none !== true &&
+        warranty.months !== null &&
+        scopeMatches(warranty.scope, input.customerText ?? '')
+      ) {
+        mark('warranty', policyFact('warranty', input.policy));
+        requiresHumanReview = true;
+      } else {
+        mark('defect', unknown('defect', 'defect'));
+        handoff = true;
+      }
     } else if (
       topic === 'returns' ||
       topic === 'refund_to' ||
@@ -425,5 +448,6 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
     unknownTopics: [...unknownTopics],
     issues,
     ...(handoff ? { handoff } : {}),
+    ...(requiresHumanReview ? { requiresHumanReview } : {}),
   };
 }

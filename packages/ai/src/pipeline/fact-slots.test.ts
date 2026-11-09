@@ -642,3 +642,82 @@ describe('khuyến mãi không phải giá/tồn (mẫu *-28, en-32)', () => {
     },
   );
 });
+
+describe('hàng lỗi trùng phạm vi bảo hành (vi-12): trả lời từ thẻ bảo hành nhưng bắt buộc người duyệt', () => {
+  const warrantyPolicy = (
+    over: Partial<NonNullable<PolicyFacts['warranty']>> | null,
+  ): NonNullable<PipelineInput['factSlots']> => ({
+    policy: {
+      shipping: [],
+      ...(over === null
+        ? {}
+        : { warranty: { months: 3, scope: 'đường may', sourceId: 'pf:w', ...over } }),
+    },
+    stock: { disclose: 'status', lowAt: null },
+  });
+  const noProduct: TryKnowledge = {
+    ...knowledge,
+    matchProducts: async () => ({ ids: [], names: [], missingAxes: [] }),
+    lookupPlanProducts: async () => [],
+    lookupProductFacts: async () => [],
+  };
+  const runDefect = async (
+    text: string,
+    factSlots: NonNullable<PipelineInput['factSlots']>,
+    draft = draftOf('Về bảo hành: {fact:warranty}.'),
+  ) => {
+    const { drafter } = fakeDrafter(draft);
+    const result = await runPipeline(
+      { workspaceId: 'ws1', text, kbVersion: 'v1', voice, autoSendEnabled: true, factSlots },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: { ...extractFor([text]), labels: [{ label: 'advice' }], topics: ['defect'] },
+          },
+        ]),
+        drafter,
+        knowledge: noProduct,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it('"Đường may bị bung thì có được bảo hành không shop" → answer + needsHuman + autoSendPolicy never; câu chỉ nêu phạm vi + thời hạn', async () => {
+    const r = await runDefect(
+      'Đường may bị bung thì có được bảo hành không shop',
+      warrantyPolicy({}),
+    );
+    expect(r.decision).toMatchObject({
+      action: 'answer',
+      needsHuman: true,
+      autoSendPolicy: 'never',
+    });
+    expect(r.reply).toBe('Về bảo hành: bảo hành đường may 3 tháng.');
+    expect(r.riskReasons.review).toEqual(['defect_warranty_scope']);
+  });
+  it('LLM hứa đổi/hoàn khi không có chỗ giữ chỗ returns → từ chối cứng (concept), dùng câu dự phòng', async () => {
+    const r = await runDefect(
+      'Đường may bị bung thì có được bảo hành không shop',
+      warrantyPolicy({}),
+      draftOf('Về bảo hành: {fact:warranty}. Shop sẽ đổi hàng và hoàn tiền cho bạn.'),
+    );
+    expect(r.reply).not.toMatch(/đổi hàng|hoàn tiền/);
+    expect(r.slotDiagnostics?.rejections?.[0]?.codes).toContain('concept');
+    expect(r.decision.needsHuman).toBe(true);
+  });
+  it.each([
+    ['Màu áo bị phai thì có bảo hành không shop', warrantyPolicy({})],
+    ['Khóa kéo hỏng có bảo hành không shop', warrantyPolicy({})],
+    ['Đường may bị bung thì có được bảo hành không shop', warrantyPolicy(null)],
+    ['Đường may bị bung thì có được bảo hành không shop', warrantyPolicy({ scope: undefined })],
+    [
+      'Đường may bị bung thì có được bảo hành không shop',
+      warrantyPolicy({ none: true, months: null }),
+    ],
+  ])('phạm vi không khớp / không có thẻ bảo hành → chuyển người: %s', async (text, slotsInput) => {
+    const r = await runDefect(text, slotsInput);
+    expect(r.decision.action).toBe('handoff');
+    expect(r.reply).toBe('');
+  });
+});

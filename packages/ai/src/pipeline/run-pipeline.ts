@@ -266,7 +266,7 @@ export type TryResult =
       routeReason: RouteReason;
       decision: ActionDecision;
       /** Lý do các cờ rủi ro đang bật (pháp lý/chèn lệnh/mạo danh) — để chẩn đoán và hiển thị. */
-      riskReasons: TurnRisks['reasons'];
+      riskReasons: TurnRisks['reasons'] & { review?: string[] };
       reply: string;
       variants: string[];
       draft: DraftResult;
@@ -551,6 +551,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           products: planProducts,
           topics: factTopics,
           destination,
+          customerText: [masked, ...extract.asks].join(' '),
           // Chỉ coi là "khách nêu địa điểm" khi câu có tỉnh/thành nhận ra được; không có → null (chưa nêu).
           location: findProvinces(masked).length > 0 ? masked : null,
           // Cùng chuẩn hóa với `attrs_norm` của biến thể (FR-129): khóa mau→color, giá trị đen→black.
@@ -632,6 +633,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       risks: { ...turnRisks.risks, legalUnsourced, policyConflict },
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
+  // Hàng lỗi trùng phạm vi bảo hành: có câu trả lời từ thẻ bảo hành nhưng BẮT BUỘC người duyệt, không bao giờ tự gửi (kể cả khi sau này bật auto-reply).
+  if (factPlan?.requiresHumanReview && decision.action !== 'handoff') {
+    decision = { ...decision, needsHuman: true, autoSendPolicy: 'never' };
+  }
   // Phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu → HỎI tỉnh/thành (FR-147), không chuyển hướng. Rủi ro/handoff vẫn thắng.
   // Chủ đề phải chuyển người (hàng lỗi/sai hàng: chưa có chính sách có cấu trúc) — không mượn số ngày/điều kiện của đổi trả.
   if (factPlan?.handoff && decision.action !== 'handoff' && !closing) {
@@ -882,6 +887,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     riskReasons: {
       ...turnRisks.reasons,
       legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
+      ...(factPlan?.requiresHumanReview ? { review: ['defect_warranty_scope'] } : {}),
     },
     reply: draft.reply,
     variants: draft.variants ?? [],

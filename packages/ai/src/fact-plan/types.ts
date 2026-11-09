@@ -133,6 +133,8 @@ export type StockMode = { disclose: 'status' | 'count'; lowAt: number | null };
 export type FactPlanInput = {
   products: PlanProduct[];
   topics: FactTopic[];
+  /** Câu khách + ý hỏi (đã che PII): chỉ để CODE khớp phạm vi bảo hành cho chủ đề `defect` (không gọi LLM, không đồng nghĩa). */
+  customerText?: string;
   /** Nơi giao khách hỏi (đã quy về quốc gia) — chủ đề `ship_destination` và lọc dòng ship theo quốc gia. */
   destination?: { country: string; label: string } | null;
   /** Văn bản nêu địa điểm của khách (nếu có). */
@@ -151,6 +153,8 @@ export type FactPlan = {
   clarify: { ask: 'region' } | null;
   /** Chủ đề có sự kiện `unknown` (nguồn mời ib theo mẫu, ghi `unanswered_topics`). */
   unknownTopics: FactTopic[];
+  /** Có câu trả lời (từ thẻ bảo hành khớp phạm vi) nhưng PHẢI qua người duyệt, không bao giờ tự gửi (hàng lỗi trùng phạm vi bảo hành). */
+  requiresHumanReview?: boolean;
   /** Chủ đề phải chuyển người (vd. hàng lỗi/sai hàng: chưa có chính sách có cấu trúc). */
   handoff?: boolean;
   /** Dòng chính sách không hợp lệ bị bỏ qua (vd "nội thành" thiếu thành phố) — để báo Owner. */

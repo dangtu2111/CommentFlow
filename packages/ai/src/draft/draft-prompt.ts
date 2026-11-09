@@ -249,6 +249,7 @@ function factSlotLines(slots: NonNullable<DraftInput['factSlots']>, hasClarify: 
   return [
     'CHẾ ĐỘ CHỖ GIỮ CHỖ (bắt buộc): MỌI sự kiện (tên sản phẩm, biến thể, giá, phí ship, thời gian, tồn kho, COD, đổi trả, bảo hành, thanh toán, số khách nêu) CHỈ được viết bằng chỗ giữ chỗ {fact:mã} trong khối <facts>; hệ thống sẽ điền giá trị.',
     'KHÔNG viết chữ số, số viết bằng chữ cạnh đơn vị (ngày, tháng, đồng, %), ký hiệu tiền tệ, hay khẳng định có/không về COD/đổi trả/bảo hành/trả góp ngoài chỗ giữ chỗ. Dùng ĐỦ các chỗ giữ chỗ cần thiết; mọi biến thể (variants) dùng CÙNG tập chỗ giữ chỗ với reply. Không nhắc chủ đề không có trong <facts>. sources và claims để mảng rỗng.',
+    'CẤM hứa đổi/hoàn tiền/hoàn hàng (refund, exchange) — chỉ nêu đúng sự kiện trong <facts>.',
     'CẤM tự viết tình trạng hàng (còn hàng, hết hàng, sắp hết, in stock, sold out, available) ngoài chỗ giữ chỗ tồn kho. CẤM tự viết câu mời nhắn tin/inbox/liên hệ/message us — hệ thống tự thêm câu mời cho phần chưa có thông tin.',
     ...(hasClarify
       ? []

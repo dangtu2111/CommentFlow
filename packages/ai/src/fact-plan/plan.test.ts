@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildFactPlan } from './plan';
+import { buildFactPlan, scopeMatches } from './plan';
 import type { FactPlanInput, PlanProduct, PolicyFacts, ShipRow } from './types';
 
 const tote: PlanProduct = {
@@ -476,5 +476,20 @@ describe('fact plan — nhắc biến thể chỉ khi khách đã chọn', () =>
       variantAttrs: { size: 'm', color: 'black' },
     });
     expect(p.facts.map((f) => f.id)).toContain('variant.1');
+  });
+});
+
+describe('scopeMatches — khớp phạm vi bảo hành bằng code (không đồng nghĩa, không LLM)', () => {
+  it.each([
+    ['đường may', 'Đường may bị bung thì có được bảo hành không', true],
+    ['đường may', 'duong may bung', true],
+    ['thân máy', 'máy bị hỏng nặng quá', false],
+    ['thân máy', 'than may hong', true],
+    ['Seams', 'the seams came apart', true],
+    ['đường may', 'Khóa kéo hỏng có bảo hành không', false],
+    ['đường may', 'quần may đo', false],
+    ['', 'bất kỳ', false],
+  ])('%s | %s → %s', (scope, text, expected) => {
+    expect(scopeMatches(scope, text)).toBe(expected);
   });
 });
