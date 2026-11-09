@@ -28,15 +28,14 @@ const DISCARD_NOTICE = {
 
 async function run(
   data: FormData,
+  session: { workspaceId: string; userId: string },
   act: (
     tx: Parameters<Parameters<ReturnType<typeof getDb>['withActor']>[2]>[0],
     input: { workspaceId: string; id: string; rev: number; confirm: boolean },
   ) => Promise<PolicyNotice>,
 ): Promise<never> {
-  const { user, workspace } = await requireAppUser({ role: 'owner' });
   const form = parsePolicyActionForm(data);
   if (!form.ok) redirect(`${BACK}?pn=invalid`);
-  const session = { workspaceId: workspace.id, userId: user.id };
   // Chống bấm đúp/spam: lần thứ hai trong cùng khoảnh khắc (hoặc quá 30 lần/phút) bị chặn, KHÔNG ghi gì.
   if (!(await actionAllowed('uiWrite', session))) redirect(`${BACK}?pn=rate_limited`);
   let notice: PolicyNotice;
@@ -57,21 +56,19 @@ async function run(
 }
 
 export async function approvePolicyAction(data: FormData): Promise<never> {
-  return run(
-    data,
-    async (tx, input) =>
-      APPROVE_NOTICE[
-        await approvePolicyFact(tx, input.workspaceId, input.id, input.rev, {
-          confirmReview: input.confirm,
-        })
-      ],
-  );
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  return run(data, { workspaceId: workspace.id, userId: user.id }, async (tx, input) => {
+    const result = await approvePolicyFact(tx, input.workspaceId, input.id, input.rev, {
+      confirmReview: input.confirm,
+    });
+    return APPROVE_NOTICE[result];
+  });
 }
 
 export async function discardPolicyDraftAction(data: FormData): Promise<never> {
-  return run(
-    data,
-    async (tx, input) =>
-      DISCARD_NOTICE[await discardPolicyDraft(tx, input.workspaceId, input.id, input.rev)],
-  );
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  return run(data, { workspaceId: workspace.id, userId: user.id }, async (tx, input) => {
+    const result = await discardPolicyDraft(tx, input.workspaceId, input.id, input.rev);
+    return DISCARD_NOTICE[result];
+  });
 }
