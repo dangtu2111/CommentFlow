@@ -34,6 +34,8 @@ export type RunContext = {
   variantCount?: number;
   /** Đường fact plan (ADR 017): chính sách đã duyệt + chế độ tồn kho; thiếu → đường cũ. */
   factSlots?: PipelineInput['factSlots'];
+  /** Ngôn ngữ trả lời mặc định của shop (câu ngắn). */
+  replyLanguage?: 'vi' | 'en';
   workspaceId?: string;
   /** Dựng các bước cho MỘT mẫu; mọi lần gọi LLM phải được ghi vào `sink` (qua `recordUsage`). */
   build: (sink: UsageRecord[]) => PipelineParts;
@@ -139,6 +141,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       kbVersion: 'eval',
       voice: context.voice,
       autoSendEnabled: true,
+      ...(context.replyLanguage ? { replyLanguage: context.replyLanguage } : {}),
       ...(context.factSlots ? { factSlots: context.factSlots } : {}),
       ...(context.dict ? { dict: context.dict } : {}),
       ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),

@@ -123,6 +123,10 @@ export type TryInput = {
   /** Bình luận mẫu do người dùng gõ (CHƯA che). */
   text: string;
   kbVersion: string;
+  /** `channels.reply_language` / mặc định của workspace khi câu khách quá ngắn để nhận ngôn ngữ (vd. "still available?"). */
+  replyLanguage?: 'vi' | 'en' | null;
+  /** Ngôn ngữ của lượt khách trước trong cùng luồng (ưu tiên hơn `replyLanguage` khi câu ngắn). */
+  previousLang?: 'vi' | 'en' | null;
   voice: DraftVoice;
   /**
    * Giọng văn THẬT của workspace theo ngôn ngữ (`draftVoicesFromRows`). Ngôn ngữ nhận ra có giọng → dùng giọng đó;
@@ -428,7 +432,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   if (filtered.skip) return { status: 'skipped', billed: false, reason: filtered.reason };
 
   const masked = maskPii(text);
-  const normalized = normalizeAndDetectLang({ text: masked, dict: input.dict });
+  const normalized = normalizeAndDetectLang({
+    text: masked,
+    dict: input.dict,
+    previousLang: input.previousLang ?? null,
+    replyLanguage: input.replyLanguage ?? null,
+  });
   const lang: DraftLang | 'other' = normalized.lang;
 
   // extract và tìm kiếm nhận văn bản ĐÃ chuẩn hóa (viết tắt "bn"→"bao nhiêu", "sz"→"size"…) SAU KHI che PII
@@ -674,7 +683,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
     } else {
       // Tiếng Anh: "we/us" (xưng hô tiếng Việt của voice không áp dụng); xưng hô tùy chỉnh để trống → "shop".
-      const address = describeAddress(voice);
+      const address = describeAddress(voice, replyLang);
       const invite = inviteUnknownText(
         factPlan.unknownTopics,
         replyLang,

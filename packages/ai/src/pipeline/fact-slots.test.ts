@@ -444,3 +444,37 @@ describe('số khách nêu (extract.qty) đi qua customer_measure — không whi
     expect(result.slotDiagnostics?.rejections?.[0]?.codes).toContain('digit');
   });
 });
+
+describe('ngôn ngữ câu ngắn: previousLang → replyLanguage → vi (nhóm 7)', () => {
+  const langOf = async (text: string, over: Partial<PipelineInput> = {}) => {
+    const { drafter, calls } = fakeDrafter(draftOf('{fact:product_name.1} {fact:price.1}.'));
+    await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text,
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: slots([]),
+        ...over,
+      },
+      {
+        extractor: createFixtureExtractor([{ match: /./, result: extractFor(['giá']) }]),
+        drafter,
+        knowledge,
+      },
+    );
+    return calls[0]?.lang;
+  };
+  it.each(['still available?', 'how much?'])(
+    '"%s": replyLanguage "en" → soạn tiếng Anh',
+    async (text) => {
+      expect(await langOf(text, { replyLanguage: 'en' })).toBe('en');
+    },
+  );
+  it('previousLang thắng replyLanguage; không có cả hai → vi', async () => {
+    expect(await langOf('how much?', { previousLang: 'vi', replyLanguage: 'en' })).toBe('vi');
+    expect(await langOf('how much?', { previousLang: 'en' })).toBe('en');
+    expect(await langOf('how much?')).toBe('vi');
+  });
+});

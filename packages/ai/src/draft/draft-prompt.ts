@@ -89,12 +89,22 @@ const CUSTOMER_WORDS: Record<DraftVoice['customerAddress'], string> = {
 };
 
 /** Cách shop xưng và gọi khách theo cấu hình (FR-142); không bao giờ đoán giới tính. */
-export function describeAddress(voice: DraftVoice): { shop: string; customer: string } {
+export function describeAddress(
+  voice: DraftVoice,
+  lang: 'vi' | 'en' = 'vi',
+): { shop: string; customer: string } {
   const shop =
     voice.shopPronoun === 'custom'
       ? (voice.shopPronounCustom?.trim() ?? '')
       : SHOP_WORDS[voice.shopPronoun];
-  return { shop, customer: CUSTOMER_WORDS[voice.customerAddress] };
+  // Cấu hình "you" chỉ cho tiếng Anh: câu tiếng Việt vẫn gọi khách là "bạn" (không để "you" lọt vào câu tiếng Việt); tiếng Anh luôn "you".
+  const customer =
+    lang === 'en'
+      ? 'you'
+      : voice.customerAddress === 'you'
+        ? CUSTOMER_WORDS.ban
+        : CUSTOMER_WORDS[voice.customerAddress];
+  return { shop, customer };
 }
 
 // Khối 1 — CỐ ĐỊNH theo `prompt_version` (không chứa dữ liệu shop hay khách) → luôn trúng cache.
@@ -119,7 +129,7 @@ function bulletList(items: readonly string[]): string {
 // Khối 2 — đổi theo `kb_version` / giọng văn của shop, ít đổi giữa các câu hỏi.
 function buildShopContext(input: DraftInput): MaskedText {
   const { voice } = input;
-  const address = describeAddress(voice);
+  const address = describeAddress(voice, input.lang === 'en' ? 'en' : 'vi');
   const lines = [
     `[kb_version: ${input.kbVersion}]`,
     `Cách xưng: shop xưng "${address.shop}", gọi khách "${address.customer}".`,

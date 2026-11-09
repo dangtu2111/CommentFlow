@@ -110,7 +110,17 @@ describe('FR-142 xưng hô', () => {
         shopPronounCustom: ' Hoa Shop ',
         customerAddress: 'you',
       }),
-    ).toEqual({ shop: 'Hoa Shop', customer: 'you' });
+    ).toEqual({ shop: 'Hoa Shop', customer: 'bạn' });
+  });
+  it('cấu hình "you" chỉ dùng cho tiếng Anh: câu tiếng Việt gọi "bạn" (không để "you" lọt vào câu tiếng Việt); tiếng Anh luôn "you"', () => {
+    const you = { ...voice, customerAddress: 'you' as const };
+    expect(describeAddress(you, 'vi').customer).toBe('bạn');
+    expect(describeAddress(you, 'en').customer).toBe('you');
+    expect(describeAddress({ ...voice, customerAddress: 'anh_chi' }, 'en').customer).toBe('you');
+    const vi = buildDraftMessages({ ...base(), voice: you, lang: 'vi' })[1]?.content ?? '';
+    expect(vi).toContain('gọi khách "bạn"');
+    const en = buildDraftMessages({ ...base(), voice: you, lang: 'en' })[1]?.content ?? '';
+    expect(en).toContain('gọi khách "you"');
   });
   it('khối giọng văn nêu cách xưng và quy tắc nên/không nên; khối 1 cấm đoán giới tính', () => {
     const msgs = buildDraftMessages(base());
