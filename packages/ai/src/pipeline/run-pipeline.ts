@@ -618,6 +618,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       ? {
           factSlots: {
             facts: slotFacts,
+            required: factPlan === null ? [] : requiredFactIds(factPlan),
           },
         }
       : {}),

@@ -68,7 +68,11 @@ export type DraftInput = {
    * DRAFT-FACT-SLOTS (ADR 017): chế độ chỗ giữ chỗ. Danh sách sự kiện CODE đã xác định (chỉ mã + loại, KHÔNG giá trị); bộ soạn chỉ viết sự kiện bằng `{fact:id}`, code điền giá trị.
    * Có trường này → nguồn rỗng không chặn (sự kiện đến từ fact plan, không từ đoạn văn).
    */
-  factSlots?: { facts: Array<{ id: string; kind: string }> };
+  factSlots?: {
+    facts: Array<{ id: string; kind: string }>;
+    /** Mã sự kiện BẮT BUỘC phải dùng trong reply (do code tính: sự kiện đã biết, không gồm tên/biến thể/số khách). */
+    required?: string[];
+  };
   draftId?: string;
 };
 
@@ -164,9 +168,9 @@ function renderDecision(decision: ActionBrief): string[] {
     lines.push(`Cần hỏi khách: ${detail}`);
   }
   if (decision.unansweredTopics.length > 0) {
-    lines.push(
-      `Chủ đề chưa có nguồn (mời ib, không đoán): ${decision.unansweredTopics.join(', ')}`,
-    );
+    // Nhãn theo ngôn ngữ (không nối mã enum thô vào prompt).
+    const labels = decision.unansweredTopics.map((topic) => TOPIC_LABEL_VI[topic] ?? topic);
+    lines.push(`Chủ đề chưa có nguồn (mời ib, không đoán): ${labels.join(', ')}`);
   }
   if (decision.redirectTemplates.length > 0) {
     lines.push(`Mẫu câu mời: ${decision.redirectTemplates.join(', ')}`);
@@ -189,6 +193,17 @@ export function clampVariantCount(count: number): number {
   return Number.isFinite(count) ? Math.min(4, Math.max(0, Math.trunc(count))) : 0;
 }
 
+/** Nhãn chủ đề kiến thức đưa vào prompt (thay mã enum). */
+const TOPIC_LABEL_VI: Record<string, string> = {
+  product_info: 'thông tin sản phẩm',
+  size: 'tư vấn size',
+  shipping: 'vận chuyển',
+  policy: 'chính sách',
+  discount: 'khuyến mãi',
+  order_status: 'tình trạng đơn hàng',
+  other: 'nội dung khác',
+};
+
 const FACT_LABELS: Record<string, string> = {
   product_name: 'tên sản phẩm',
   variant: 'biến thể khách chọn',
@@ -202,13 +217,27 @@ const FACT_LABELS: Record<string, string> = {
   returns: 'câu nói về đổi trả',
   warranty: 'câu nói về bảo hành',
   payment: 'phương thức thanh toán',
+  ship_destination: 'câu nói về khu vực giao hàng',
+  refund_to: 'câu nói về nơi hoàn tiền',
+  return_shipping: 'câu nói về phí ship khi trả hàng',
+  return_eligibility: 'câu nói về điều kiện đổi trả',
 };
 
 /** Luật + danh sách mã sự kiện của chế độ chỗ giữ chỗ (khối 3 — đổi theo từng câu). */
-function factSlotLines(slots: NonNullable<DraftInput['factSlots']>): string[] {
+function factSlotLines(slots: NonNullable<DraftInput['factSlots']>, hasClarify: boolean): string[] {
+  const required = slots.required ?? [];
   return [
     'CHẾ ĐỘ CHỖ GIỮ CHỖ (bắt buộc): MỌI sự kiện (tên sản phẩm, biến thể, giá, phí ship, thời gian, tồn kho, COD, đổi trả, bảo hành, thanh toán, số khách nêu) CHỈ được viết bằng chỗ giữ chỗ {fact:mã} trong khối <facts>; hệ thống sẽ điền giá trị.',
-    'KHÔNG viết chữ số, số viết bằng chữ cạnh đơn vị (ngày, tháng, đồng, %), ký hiệu tiền tệ, hay khẳng định có/không về COD/đổi trả/bảo hành/trả góp ngoài chỗ giữ chỗ. Dùng ĐỦ các chỗ giữ chỗ cần thiết; mọi biến thể (variants) dùng CÙNG tập chỗ giữ chỗ với reply. Không nhắc chủ đề không có trong <facts> (hệ thống tự thêm câu mời). sources và claims để mảng rỗng.',
+    'KHÔNG viết chữ số, số viết bằng chữ cạnh đơn vị (ngày, tháng, đồng, %), ký hiệu tiền tệ, hay khẳng định có/không về COD/đổi trả/bảo hành/trả góp ngoài chỗ giữ chỗ. Dùng ĐỦ các chỗ giữ chỗ cần thiết; mọi biến thể (variants) dùng CÙNG tập chỗ giữ chỗ với reply. Không nhắc chủ đề không có trong <facts>. sources và claims để mảng rỗng.',
+    'CẤM tự viết tình trạng hàng (còn hàng, hết hàng, sắp hết, in stock, sold out, available) ngoài chỗ giữ chỗ tồn kho. CẤM tự viết câu mời nhắn tin/inbox/liên hệ/message us — hệ thống tự thêm câu mời cho phần chưa có thông tin.',
+    ...(hasClarify
+      ? []
+      : [
+          'KHÔNG hỏi thêm khách điều gì (không có dòng "Cần hỏi khách"): không hỏi địa chỉ, tỉnh/thành, size, màu.',
+        ]),
+    ...(required.length > 0
+      ? [`BẮT BUỘC dùng đủ: ${required.map((id) => `{fact:${id}}`).join(' ')}`]
+      : []),
     '<facts>',
     ...slots.facts.map((fact) => `{fact:${fact.id}} — ${FACT_LABELS[fact.kind] ?? fact.kind}`),
     '</facts>',
@@ -230,7 +259,7 @@ export function buildDraftMessages(input: DraftInput): LlmMessage[] {
       ? []
       : [`Số biến thể: ${clampVariantCount(input.variantCount)}`]),
     ...(input.decision ? renderDecision(input.decision) : []),
-    ...(input.factSlots ? factSlotLines(input.factSlots) : []),
+    ...(input.factSlots ? factSlotLines(input.factSlots, input.decision?.clarify != null) : []),
     ...historyLines(input.history),
     `Câu hỏi của khách:\n${question}`,
   ].join('\n');

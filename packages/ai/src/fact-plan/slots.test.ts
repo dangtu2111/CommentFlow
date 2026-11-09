@@ -125,3 +125,41 @@ describe('sameSlotSet — mọi biến thể phải dùng cùng tập chỗ gi�
     expect(sameSlotSet([], [])).toBe(true);
   });
 });
+
+describe('checkSlotText — câu mời chỉ do code viết; không tự viết tình trạng hàng', () => {
+  const plan: FactPlan = {
+    facts: [
+      {
+        id: 'price.1',
+        kind: 'price',
+        status: 'known',
+        value: { type: 'money', amountMinor: 1, currency: 'VND' },
+        sourceId: 'p',
+      },
+      {
+        id: 'stock.1',
+        kind: 'stock',
+        status: 'known',
+        value: { type: 'stock', display: 'in' },
+        sourceId: 'p',
+      },
+    ],
+    clarify: null,
+    unknownTopics: [],
+    issues: [],
+  };
+  it.each([
+    ['Giá {fact:price.1}, bạn inbox shop nhé.', 'invitation'],
+    ['Giá {fact:price.1}. Please message us for details.', 'invitation'],
+    ['Giá {fact:price.1}, bạn liên hệ shop để biết thêm.', 'invitation'],
+    ['{fact:price.1}, còn hàng bạn nhé.', 'stock_claim'],
+    ['{fact:price.1}. It is in stock.', 'stock_claim'],
+    ['{fact:price.1}. Sold out soon.', 'stock_claim'],
+  ])('%s → %s', (text, code) => {
+    expect(checkSlotText(text, plan).violations.map((v) => v.code)).toContain(code);
+  });
+  it('dùng chỗ giữ chỗ tồn kho thì hợp lệ; "available" là từ riêng (không bắt "availability")', () => {
+    expect(checkSlotText('Giá {fact:price.1}, {fact:stock.1}.', plan).ok).toBe(true);
+    expect(checkSlotText('Price {fact:price.1}; check availability soon.', plan).ok).toBe(true);
+  });
+});
