@@ -71,6 +71,8 @@ export async function createProductionKnowledge(input: {
     matchProducts: (mentions) => withTx((k) => k.matchProducts(mentions)),
     lookupProductFacts: (ids) => withTx((k) => k.lookupProductFacts(ids)),
     searchKb: (query, context) => withTx((k) => k.searchKb(query, context)),
+    lookupPlanProducts: (ids, options) =>
+      withTx(async (k) => (k.lookupPlanProducts ? k.lookupPlanProducts(ids, options) : [])),
   };
   return { knowledge, vectorFailures: () => failures, rerankFailures: () => rerankFailures };
 }

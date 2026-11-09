@@ -62,6 +62,8 @@ export const shopFixtureSchema = z.object({
   }),
   products: z.array(productSchema),
   texts: z.array(textSchema),
+  /** Chính sách có cấu trúc ĐÃ DUYỆT bởi Owner (chỉ dùng khi chạy `--fact-slots`; tương đương dòng `cf.policy_facts` status approved). */
+  policyFacts: z.array(z.object({ kind: z.string().min(1), data: z.unknown() })).default([]),
 });
 export type ShopFixture = z.infer<typeof shopFixtureSchema>;
 

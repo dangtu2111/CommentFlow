@@ -126,6 +126,7 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
       },
     ]);
     expect(result.guard).toMatchObject({ ok: true, violations: [], replyViolations: [] });
+    expect(result.slotDiagnostics).toEqual({ rawTexts: 1, rejected: 0, chosen: 'reply' });
     expect(result.factPlan?.facts.map((f) => f.id)).toEqual([
       'product_name.1',
       'price.1',

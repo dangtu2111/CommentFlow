@@ -5,8 +5,11 @@ import {
   type Drafter,
   type Extractor,
   isUnreadableAiOutput,
+  type PipelineInput,
   type Rewriter,
+  requiredFactIds,
   runTryPipeline,
+  type SlotDiagnostics,
   type TryKnowledge,
 } from '@flow/ai';
 import { isAppError, type MaskedText, maskPii } from '@flow/shared';
@@ -29,6 +32,8 @@ export type RunContext = {
   voice: DraftVoice;
   dict?: AbbreviationDict;
   variantCount?: number;
+  /** Đường fact plan (ADR 017): chính sách đã duyệt + chế độ tồn kho; thiếu → đường cũ. */
+  factSlots?: PipelineInput['factSlots'];
   workspaceId?: string;
   /** Dựng các bước cho MỘT mẫu; mọi lần gọi LLM phải được ghi vào `sink` (qua `recordUsage`). */
   build: (sink: UsageRecord[]) => PipelineParts;
@@ -70,6 +75,8 @@ export type SampleOutcome =
         claims: Array<{ text: string; sourceIds: string[] }>;
         moneyViolations: unknown[];
       };
+      /** Chẩn đoán đường fact plan (chỉ khi bật `--fact-slots`). */
+      slot?: SlotOutcome;
       usage: UsageRecord[];
     }
   | {
@@ -81,6 +88,14 @@ export type SampleOutcome =
       detail?: string;
       usage: UsageRecord[];
     };
+
+export type SlotOutcome = {
+  diagnostics: SlotDiagnostics | null;
+  required: number;
+  known: number;
+  unknown: number;
+  clarify: boolean;
+};
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000e01';
 
@@ -124,6 +139,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       kbVersion: 'eval',
       voice: context.voice,
       autoSendEnabled: true,
+      ...(context.factSlots ? { factSlots: context.factSlots } : {}),
       ...(context.dict ? { dict: context.dict } : {}),
       ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
     };
@@ -178,6 +194,17 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
         claims: result.draft.claims.map((c) => ({ text: c.text, sourceIds: c.source_ids })),
         moneyViolations: result.guard.violations,
       },
+      ...(result.factPlan
+        ? {
+            slot: {
+              diagnostics: result.slotDiagnostics ?? null,
+              required: requiredFactIds(result.factPlan).length,
+              known: result.factPlan.facts.filter((f) => f.status === 'known').length,
+              unknown: result.factPlan.facts.filter((f) => f.status !== 'known').length,
+              clarify: Boolean(result.factPlan.clarify),
+            },
+          }
+        : {}),
       usage,
     };
   } catch (error) {

@@ -276,6 +276,8 @@ export type TryResult =
       autoSend: AutoSendPreview;
       /** Fact plan của lượt (chỉ khi bật `factSlots`) — để chẩn đoán/EVAL/giao diện. */
       factPlan?: FactPlan | null;
+      /** Chẩn đoán đường fact plan (EVAL): số câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG / tổng, và câu được chọn. */
+      slotDiagnostics?: SlotDiagnostics;
     };
 
 /** Chủ đề của một câu/đoạn chữ (dùng cho ý hỏi và cho đoạn kiến thức tìm được). */
@@ -562,6 +564,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // DRAFT-FACT-SLOTS: chọn câu ĐẠT guard chỗ giữ chỗ và dùng đủ sự kiện bắt buộc (reply hoặc biến thể), không có thì câu dự phòng do CODE dựng; code điền giá trị, sinh claims/nguồn,
   // thêm câu mời cho chủ đề chưa có thông tin. Không câu nào dùng được → chuyển người. Không gọi LLM thêm (≤ 2 lần/lượt, FR-162).
   let slotRendered: string[] | null = null;
+  let slotDiagnostics: SlotDiagnostics | undefined;
   if (
     factPlan !== null &&
     slotFacts !== null &&
@@ -573,10 +576,23 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     const passes = (text: string) =>
       checkSlots(text, factPlan).ok && required.every((id) => slotIds(text).includes(id));
     const candidates = [draft.reply, ...(draft.variants ?? [])].filter(passes);
+    const rawTexts = [draft.reply, ...(draft.variants ?? [])];
     const base = candidates[0] ?? fallbackTemplate(factPlan, replyLang);
+    const chosenKind: SlotDiagnostics['chosen'] =
+      candidates[0] === undefined
+        ? 'fallback'
+        : candidates[0] === draft.reply
+          ? 'reply'
+          : 'variant';
+    slotDiagnostics = {
+      rawTexts: rawTexts.length,
+      rejected: rawTexts.length - candidates.length,
+      chosen: chosenKind,
+    };
     const filled = base === '' ? null : fillSlots(base, factPlan, { lang: replyLang });
     if (filled === null || filled.missing.length > 0) {
       decision = handoffDecision('claim_unsupported', decision.askedBefore);
+      slotDiagnostics = { ...(slotDiagnostics as SlotDiagnostics), chosen: 'handoff' };
       draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
     } else {
       // Tiếng Anh: "we/us" (xưng hô tiếng Việt của voice không áp dụng); xưng hô tùy chỉnh để trống → "shop".
@@ -729,6 +745,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       replyViolations: replyGuard.violations,
     },
     ...(factPlan === null ? {} : { factPlan }),
+    ...(slotDiagnostics ? { slotDiagnostics } : {}),
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,
       decision,
@@ -744,6 +761,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
  * Tên cũ, cùng MỘT hàm: ô Thử AI gọi như trước (không cổng, không ngữ cảnh chuỗi); worker gọi `runPipeline` với cổng chặn và
  * ngữ cảnh đọc từ DB (PIPE-ORCHESTRATOR). Giữ alias để không đổi các nơi đang import `runTryPipeline`.
  */
+export type SlotDiagnostics = {
+  rawTexts: number;
+  rejected: number;
+  chosen: 'reply' | 'variant' | 'fallback' | 'handoff';
+};
+
 export const runTryPipeline = runPipeline;
 
 export type PipelineInput = TryInput;

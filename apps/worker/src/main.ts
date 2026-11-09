@@ -14,7 +14,13 @@ import {
   getMergeWindowSeconds,
 } from '@flow/db';
 import { createFlags } from '@flow/saas-core';
-import { AI_STEP_FLAGS, FLAG_DEFAULTS, kbSyncEnqueueOptions, PIPELINE_FLAG } from '@flow/shared';
+import {
+  AI_STEP_FLAGS,
+  FACT_SLOTS_FLAG,
+  FLAG_DEFAULTS,
+  kbSyncEnqueueOptions,
+  PIPELINE_FLAG,
+} from '@flow/shared';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
@@ -146,6 +152,8 @@ async function main(): Promise<void> {
           ...(llm.rewriter ? { rewriter: llm.rewriter } : {}),
         },
         pipelineEnabled: pipelineEnabledFor,
+        factSlotsEnabled: (workspaceId: string) =>
+          flags.isEnabled(FACT_SLOTS_FLAG, { workspaceId }),
         turnLimit: config.pipeline.turnLimit,
         // Cờ DB cf.ai.* theo workspace + cấu hình đủ; tắt → lượt bị bỏ qua (`ai_disabled`).
         llmReady: (workspaceId) => (llm?.ready ? llm.ready(workspaceId) : Promise.resolve(false)),

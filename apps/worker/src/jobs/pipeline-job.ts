@@ -6,6 +6,7 @@ import {
   evaluateReplyCap,
   loadWorkspaceKnowledge,
   parseConversationState,
+  policyFactsFromRows,
   type Reranker,
   type Rewriter,
   selectCustomerContext,
@@ -16,6 +17,7 @@ import {
   DEFAULT_MERGE_WINDOW_SECONDS,
   type FlowDb,
   getMergeWindowSeconds,
+  listApprovedPolicyFacts,
   loadPipelineContext,
   mergeCommentGroup,
   requestManualPipelineRun,
@@ -44,6 +46,8 @@ export type PipelineJobConfig = {
   /** `PIPELINE_ENABLED` và `PIPELINE_WORKSPACE_IDS` (Q-POR1) — chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm. */
   /** Cờ DB `cf.pipeline.v2` cho workspace (chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm). */
   pipelineEnabled: (workspaceId: string) => Promise<boolean>;
+  /** Cờ DB `cf.ai.fact_slots` theo workspace (ADR 017): BẬT → câu trả lời đi đường fact plan (số/chính sách do code điền). Thiếu/lỗi đọc cờ → TẮT. */
+  factSlotsEnabled?: (workspaceId: string) => Promise<boolean>;
   /** Hạn mức lượt/tháng (`resolveAiTurnLimit`). */
   turnLimit: number;
   /**
@@ -89,6 +93,8 @@ function perCallKnowledge(
       ),
     lookupProductFacts: (ids) => run((k) => k.lookupProductFacts(ids)),
     searchKb: (query, context) => run((k) => k.searchKb(query, context)),
+    lookupPlanProducts: (ids, options) =>
+      run(async (k) => (k.lookupPlanProducts ? k.lookupPlanProducts(ids, options) : [])),
   };
 }
 
@@ -208,6 +214,16 @@ export async function runPipelineJob(
     max: context.settings.maxAiRepliesPerCustomerPost,
   };
 
+  // Chính sách có cấu trúc ĐÃ DUYỆT (bản nháp không bao giờ vào); chỉ nạp khi cờ bật.
+  const factSlots = (await config.factSlotsEnabled?.(workspaceId))
+    ? {
+        policy: policyFactsFromRows(
+          await db.withJob(workspaceId, (tx) => listApprovedPolicyFacts(tx, workspaceId)),
+        ).policy,
+        stock: { disclose: 'status' as const, lowAt: null },
+      }
+    : undefined;
+
   return runCommentPipeline({
     db,
     workspaceId,
@@ -222,6 +238,7 @@ export async function runPipelineJob(
       voice: { ...DEFAULT_VOICE, do: [], dont: [] },
       ...(Object.keys(voices).length > 0 ? { voices } : {}),
       autoSendEnabled: false,
+      ...(factSlots ? { factSlots } : {}),
       dict: createAbbreviationDict(abbreviations),
       thread: context.thread,
       convo,

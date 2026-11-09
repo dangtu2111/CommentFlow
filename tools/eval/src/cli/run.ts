@@ -8,7 +8,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import type { TryKnowledge } from '@flow/ai';
-import { loadEmbeddingService, resolveEmbeddingConfig } from '@flow/ai';
+import { loadEmbeddingService, policyFactsFromRows, resolveEmbeddingConfig } from '@flow/ai';
 import { allowMockInThisProcess } from '@flow/shared';
 import pg from 'pg';
 import {
@@ -29,6 +29,7 @@ import { costReport, renderReport } from '../report';
 import { type Backend, createRunner, runAll } from '../runner';
 import { shopFixtureSchema } from '../shop';
 import { createPgTrigramScorer, type TrigramScorer } from '../shop-trigram';
+import { renderSlotReport } from '../slot-metrics';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -46,6 +47,8 @@ const { values } = parseArgs({
     out: { type: 'string', default: resolve(ROOT, 'out') },
     'no-reduce': { type: 'boolean', default: false },
     'persist-usage': { type: 'boolean', default: false },
+    // Đường fact plan (ADR 017): dùng `policyFacts` (đã duyệt) trong shop file; code điền số/chính sách. Mặc định tắt = đường cũ.
+    'fact-slots': { type: 'boolean', default: false },
     // Khớp sản phẩm: `trigram` (mặc định khi có DB dev/test) = ĐÚNG như production qua pg_trgm; `substring` = cũ (offline, quá chặt với tên dài).
     matcher: { type: 'string', default: 'trigram' },
     // Nguồn kiến thức: `production` (mặc định với litellm) = nạp shop file vào workspace [EVAL] → đồng bộ → xuất bản → loadWorkspaceKnowledge (vector bge-m3 thật);
@@ -215,6 +218,25 @@ if (backend === 'litellm') {
   }
 }
 
+// Chính sách đã duyệt của shop → fact plan (mỗi dòng như một `cf.policy_facts` approved; nguồn `pf:eval-<n>`).
+const factSlots = values['fact-slots']
+  ? (() => {
+      const { policy, issues } = policyFactsFromRows(
+        shop.policyFacts.map((row, i) => ({
+          id: `eval-${i}`,
+          kind: row.kind,
+          data: row.data,
+          status: 'approved',
+        })),
+      );
+      if (issues.length > 0) {
+        console.error(issues.join(String.fromCharCode(10)));
+        process.exit(2);
+      }
+      return { policy, stock: { disclose: 'status' as const, lowAt: null } };
+    })()
+  : undefined;
+
 async function runOnce(variantCount: number, runIndex = 1) {
   const runner = createRunner({
     backend,
@@ -233,6 +255,7 @@ async function runOnce(variantCount: number, runIndex = 1) {
         : { temperature: Number(values['draft-temperature']) }),
       ...(values['draft-seed'] === undefined ? {} : { seed: Number(values['draft-seed']) }),
     },
+    ...(factSlots ? { factSlots } : {}),
     ...(productionKnowledge ? { knowledge: productionKnowledge } : {}),
     ...(scorer ? { scorer } : {}),
     ...(persistUsage ? { persistUsage } : {}),
@@ -281,7 +304,8 @@ async function runOnce(variantCount: number, runIndex = 1) {
     values.out as string,
     `eval-${backend}-v${variantCount}-${stamp}${runIndex > 1 ? `-r${runIndex}` : ''}`,
   );
-  writeFileSync(`${base}.md`, report);
+  const slotSection = factSlots ? renderSlotReport(samples, outcomes) : '';
+  writeFileSync(`${base}.md`, report + slotSection);
   writeFileSync(
     `${base}.jsonl`,
     `${[...outcomes.values()].map((outcome) => JSON.stringify(outcome)).join('\n')}\n`,
@@ -299,7 +323,7 @@ if (first.cost.overBudget && variantCount > 2 && !values['no-reduce'] && repeats
   console.log('\n⚠ Vượt $2/1.000 lượt — thử giảm biến thể 5 → 3 phiên bản…');
   const reduced = await runOnce(2);
   console.log(
-    `\nSo sánh: 5 phiên bản $${first.cost.totalUsdPer1000.toFixed(3)} → 3 phiên bản $${reduced.cost.totalUsdPer1000.toFixed(3)} / 1.000 lượt` +
+    `\nSo sánh: 5 phiên bản $$first.cost.totalUsdPer1000.toFixed(3)→ 3 phiên bản $$reduced.cost.totalUsdPer1000.toFixed(3)/ 1.000 lượt` +
       (reduced.cost.overBudget ? ' (VẪN vượt trần)' : ' (đạt trần)'),
   );
   console.log(`Đã ghi: ${reduced.base}.md và .jsonl`);

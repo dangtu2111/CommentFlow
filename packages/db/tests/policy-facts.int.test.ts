@@ -296,9 +296,9 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     const after = await db.withWorkspace(ws, (tx) => listApprovedPolicyFacts(tx, ws));
     const flow = after.filter((r) => r.slot === 'flow');
     expect(flow).toHaveLength(1);
-    expect(flow[0]?.id).toBe(draft);
+    expect(flow[0]?.id).toBe(approved); // giữ nguyên id bản đã duyệt
     expect((flow[0] as { data: { feeMinor: number } }).data.feeMinor).toBe(25000);
-    expect((await row(draft)).approved_by).toBe(owner);
+    expect((await row(approved)).approved_by).toBe(owner);
     expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, 1))).toBe(
       'not_found',
     );
@@ -373,7 +373,12 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     ).filter((r) => r.slot === 'replace');
     expect(approvedRows).toHaveLength(1);
     expect((approvedRows[0] as { data: { feeMinor: number } }).data.feeMinor).toBe(20000);
-    expect(old).not.toBe(draft);
+    expect((approvedRows[0] as { id: string }).id).toBe(old); // id bản đã duyệt GIỮ NGUYÊN
+    expect((await row(old)).rev).toBe(2);
+    expect((await row(old)).approved_by).toBe(owner);
+    expect(
+      (await db.withWorkspace(ws, (tx) => listAllPolicyFacts(tx, ws))).some((r) => r.id === draft),
+    ).toBe(false);
   });
 
   it('Staff không duyệt được (RLS), người lạ không duyệt bản của workspace khác', async () => {

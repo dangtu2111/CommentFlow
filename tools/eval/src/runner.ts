@@ -34,6 +34,8 @@ export type RunnerOptions = {
   shop: ShopFixture;
   /** Kiến thức dựng sẵn (đường production: `createProductionKnowledge`); thiếu → dựng từ shop file như cũ. */
   knowledge?: TryKnowledge;
+  /** Đường fact plan (ADR 017): chính sách đã duyệt + chế độ tồn; thiếu → đường cũ. */
+  factSlots?: NonNullable<Parameters<typeof runSample>[1]['factSlots']>;
   /** Hạt giống cố định cho bước extract (cùng nhiệt độ 0) để các lượt đo ít dao động. */
   seed?: number;
   /** Thử nghiệm bước soạn: nhiệt độ khác mặc định và/hoặc seed cố định (đo xen kẽ trước/sau); thiếu → như production. */
@@ -78,6 +80,7 @@ export function createRunner(options: RunnerOptions): Runner {
         knowledge,
         voice,
         dict,
+        ...(options.factSlots ? { factSlots: options.factSlots } : {}),
         ...(options.persistUsage ? { workspaceId: options.persistUsage.workspaceId } : {}),
         ...(options.variantCount === undefined ? {} : { variantCount: options.variantCount }),
         build: (sink): PipelineParts => {

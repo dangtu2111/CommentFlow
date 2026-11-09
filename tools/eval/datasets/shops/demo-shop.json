@@ -93,5 +93,10 @@
       "title": "Warranty",
       "text": "Seams are under warranty for 3 months from the delivery date."
     }
+  ],
+  "policyFacts": [
+    { "kind": "ship_region", "data": { "kind": "nationwide", "label": "Toàn quốc", "feeMinor": 30000, "currency": "VND", "daysMin": 2, "daysMax": 4 } },
+    { "kind": "returns", "data": { "days": 7 } },
+    { "kind": "warranty", "data": { "months": 3 } }
   ]
 }
