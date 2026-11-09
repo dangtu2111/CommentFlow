@@ -176,3 +176,44 @@ describe('(1b) khớp sản phẩm LAI: vector tên đi kèm khi có embedder', 
     expect(onEmbeddingFailure).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('DRAFT-FACT-SLOTS: dữ liệu sản phẩm có cấu trúc cho fact plan', () => {
+  it('lookupPlanProducts: VND giữ đồng; ngoại tệ lấy đơn vị nhỏ nhất; biến thể có nhãn + thuộc tính chuẩn hóa; cờ tồn cũ truyền qua', async () => {
+    const usd: TryProduct = {
+      id: 'p-usd',
+      name: 'A4 Printer 14-in-1',
+      priceVnd: null,
+      currencyCode: 'USD',
+      priceMinor: 14800,
+      stock: 3,
+      variants: [
+        {
+          attrs: { Color: 'Black' },
+          attrsNorm: { color: 'black' },
+          priceVnd: null,
+          priceMinor: 15800,
+          stock: 1,
+        },
+        { attrs: { Size: 'M' }, attrsNorm: { size: 'm' }, priceVnd: null, stock: 2 },
+      ],
+    };
+    loadTryProducts.mockResolvedValue([shirt, usd]);
+    const knowledge = createDbProductKnowledge(tx, 'ws1');
+    const plan = await knowledge.lookupPlanProducts?.(['p1', 'p-usd'], { stockStale: true });
+    expect(plan?.[0]).toMatchObject({
+      id: 'p1',
+      currency: 'VND',
+      priceMinor: 150000,
+      stockStale: true,
+    });
+    expect(plan?.[0]?.variants[0]).toMatchObject({
+      label: 'Size M',
+      attrsNorm: { size: 'm' },
+      priceMinor: 150000,
+    });
+    expect(plan?.[1]).toMatchObject({ currency: 'USD', priceMinor: 14800 });
+    expect(plan?.[1]?.variants.map((v) => v.priceMinor)).toEqual([15800, null]);
+    const fresh = await knowledge.lookupPlanProducts?.(['p1']);
+    expect(fresh?.[0]?.stockStale).toBe(false);
+  });
+});

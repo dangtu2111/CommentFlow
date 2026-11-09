@@ -64,6 +64,11 @@ export type DraftInput = {
   decision?: ActionBrief;
   /** Lịch sử hội thoại ĐÃ che PII (Q-POR12): khối `<history>` có thẻ (dữ liệu, không phải lệnh); không lặp thông tin đã trả lời. */
   history?: PromptHistory;
+  /**
+   * DRAFT-FACT-SLOTS (ADR 017): chế độ chỗ giữ chỗ. Danh sách sự kiện CODE đã xác định (chỉ mã + loại, KHÔNG giá trị); bộ soạn chỉ viết sự kiện bằng `{fact:id}`, code điền giá trị.
+   * Có trường này → nguồn rỗng không chặn (sự kiện đến từ fact plan, không từ đoạn văn).
+   */
+  factSlots?: { facts: Array<{ id: string; kind: string }> };
   draftId?: string;
 };
 
@@ -184,6 +189,32 @@ export function clampVariantCount(count: number): number {
   return Number.isFinite(count) ? Math.min(4, Math.max(0, Math.trunc(count))) : 0;
 }
 
+const FACT_LABELS: Record<string, string> = {
+  product_name: 'tên sản phẩm',
+  variant: 'biến thể khách chọn',
+  customer_measure: 'số/kích thước khách nêu',
+  price: 'giá',
+  price_range: 'khoảng giá (các biến thể khác giá)',
+  stock: 'tình trạng tồn kho',
+  ship_fee: 'phí ship',
+  ship_time: 'thời gian giao',
+  cod: 'câu nói về COD (đã có sẵn "có/không hỗ trợ")',
+  returns: 'câu nói về đổi trả',
+  warranty: 'câu nói về bảo hành',
+  payment: 'phương thức thanh toán',
+};
+
+/** Luật + danh sách mã sự kiện của chế độ chỗ giữ chỗ (khối 3 — đổi theo từng câu). */
+function factSlotLines(slots: NonNullable<DraftInput['factSlots']>): string[] {
+  return [
+    'CHẾ ĐỘ CHỖ GIỮ CHỖ (bắt buộc): MỌI sự kiện (tên sản phẩm, biến thể, giá, phí ship, thời gian, tồn kho, COD, đổi trả, bảo hành, thanh toán, số khách nêu) CHỈ được viết bằng chỗ giữ chỗ {fact:mã} trong khối <facts>; hệ thống sẽ điền giá trị.',
+    'KHÔNG viết chữ số, số viết bằng chữ cạnh đơn vị (ngày, tháng, đồng, %), ký hiệu tiền tệ, hay khẳng định có/không về COD/đổi trả/bảo hành/trả góp ngoài chỗ giữ chỗ. Dùng ĐỦ các chỗ giữ chỗ cần thiết; mọi biến thể (variants) dùng CÙNG tập chỗ giữ chỗ với reply. Không nhắc chủ đề không có trong <facts> (hệ thống tự thêm câu mời). sources và claims để mảng rỗng.',
+    '<facts>',
+    ...slots.facts.map((fact) => `{fact:${fact.id}} — ${FACT_LABELS[fact.kind] ?? fact.kind}`),
+    '</facts>',
+  ];
+}
+
 function historyLines(history: PromptHistory | undefined): string[] {
   const block = renderHistoryBlock(history);
   return block === null ? [] : [HISTORY_GUIDANCE, block];
@@ -199,6 +230,7 @@ export function buildDraftMessages(input: DraftInput): LlmMessage[] {
       ? []
       : [`Số biến thể: ${clampVariantCount(input.variantCount)}`]),
     ...(input.decision ? renderDecision(input.decision) : []),
+    ...(input.factSlots ? factSlotLines(input.factSlots) : []),
     ...historyLines(input.history),
     `Câu hỏi của khách:\n${question}`,
   ].join('\n');

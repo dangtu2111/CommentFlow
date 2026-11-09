@@ -27,7 +27,7 @@ export type HandoffTemplateKey = (typeof HANDOFF_TEMPLATE_KEYS)[number];
 export const VARIANT_AXES = ['size', 'color'] as const;
 export type VariantAxis = (typeof VARIANT_AXES)[number];
 
-export const CLARIFY_ASKS = ['product', 'variant', 'body_measure', 'intent'] as const;
+export const CLARIFY_ASKS = ['product', 'variant', 'body_measure', 'intent', 'region'] as const;
 export type ClarifyAskKind = (typeof CLARIFY_ASKS)[number];
 
 export const DECISION_REASONS = [
@@ -50,6 +50,8 @@ export const DECISION_REASONS = [
   'injection_suspected',
   'variant_missing',
   'body_measure_missing',
+  /** DRAFT-FACT-SLOTS: phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu (hoặc nêu nhiều nơi) → hỏi tỉnh/thành (FR-147), không chuyển hướng. */
+  'region_missing',
   'question_vague',
   'topic_unsourced',
   'stock_stale',
@@ -178,6 +180,22 @@ export function readDecideActionInput(raw: unknown): ParsedInput | null {
 /** Quyết định chuyển người với lý do cho trước (dùng ở pipeline khi guard nghĩa loại bản soạn). */
 export function handoffDecision(reason: DecisionReason, askedBefore = false): ActionDecision {
   return handoff(reason, askedBefore);
+}
+
+/** Câu hỏi lại tỉnh/thành nhận hàng (fact plan chưa xác định được khu vực ship). Code chọn, AI chỉ viết câu hỏi. */
+export function regionClarifyDecision(askedBefore = false): ActionDecision {
+  return {
+    action: 'clarify',
+    reason: 'region_missing',
+    needsHuman: false,
+    needsSupportTag: false,
+    clarify: { ask: 'region', axes: [], options: [] },
+    answeredTopics: [],
+    unansweredTopics: [],
+    redirectTemplates: [],
+    autoSendPolicy: 'allow_clarify',
+    askedBefore,
+  };
 }
 
 function handoff(reason: DecisionReason, askedBefore = false): ActionDecision {
