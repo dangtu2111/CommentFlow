@@ -3336,7 +3336,10 @@
       "invalid": "Yêu cầu không hợp lệ.",
       "unavailable": "Chưa thực hiện được. Thử lại sau ít phút.",
       "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát.",
-      "deleted": "Đã xóa giá trị. AI không còn dùng giá trị này."
+      "deleted": "Đã xóa giá trị. AI không còn dùng giá trị này.",
+      "analyzed": "Đã phân tách: {count} giá trị nháp từ văn bản chính sách. Hãy xem và duyệt bên dưới.",
+      "no_raw": "Chưa có văn bản chính sách thô để phân tách (kết nối Shopify để nạp chính sách).",
+      "analyzed_none": "Không có giá trị mới: các văn bản chưa nêu số ngày/tháng/phí rõ ràng, hoặc đã khớp giá trị đang duyệt. Có thể nhập tay bằng Thêm giá trị."
     },
     "form": {
       "pageTitle": {
@@ -3345,6 +3348,7 @@
       },
       "kindTitle": {
         "ship_region": "Vận chuyển (một khu vực)",
+        "cod": "COD chung (thanh toán khi nhận hàng)",
         "returns": "Đổi trả & Hoàn tiền",
         "warranty": "Bảo hành",
         "payment": "Phương thức thanh toán"
@@ -3401,6 +3405,21 @@
       "methods": "Phương thức đang nhận",
       "invalid": "Giá trị chưa hợp lệ: kiểm tra các ô bắt buộc (ví dụ phí cố định cần số tiền, nội thành cần thành phố)."
     },
-    "updatedAt": "Cập nhật lúc {time}"
+    "updatedAt": "Cập nhật lúc {time}",
+    "raw": {
+      "title": "Từ dữ liệu thô sang giá trị có cấu trúc",
+      "body": "Hệ thống đọc các văn bản chính sách đã nạp (ví dụ từ Shopify) và rút ra giá trị có cấu trúc kèm câu gốc làm bằng chứng. Kết quả chỉ là bản nháp, chưa áp dụng cho khách cho đến khi Owner duyệt.",
+      "count": "{count} văn bản chính sách thô đã nạp",
+      "empty": "Chưa có văn bản chính sách thô. Kết nối Shopify ở trang Nguồn dữ liệu để nạp.",
+      "analyze": "Phân tách tự động",
+      "list": "Xem văn bản thô đã nạp",
+      "kinds": {
+        "shipping": "Vận chuyển",
+        "return": "Đổi trả",
+        "warranty": "Bảo hành",
+        "payment": "Thanh toán",
+        "other": "Khác"
+      }
+    }
   }
 }

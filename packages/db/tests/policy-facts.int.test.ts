@@ -856,3 +856,44 @@ describe('duyệt kiểm lại Zod, xóa bản đã duyệt kèm rev, mốc th�
     expect(typeof (await rowOf('del-b', 'approved'))?.approvedAt).toBe('string');
   });
 });
+
+describe('Owner chạy phân tách văn bản thô qua withActor (không cần worker)', () => {
+  let aws: string;
+  let aowner: string;
+  let astaff: string;
+  beforeAll(async () => {
+    aws = await seedWorkspace(admin);
+    aowner = await seedUser(admin, 'aowner');
+    astaff = await seedUser(admin, 'astaff');
+    await seedMember(admin, aws, aowner, 'owner');
+    await seedMember(admin, aws, astaff, 'staff');
+  });
+  const sug = (slot: string) => ({
+    kind: 'returns' as const,
+    slot,
+    data: { days: 7 },
+    evidence: 'Đổi trả trong 7 ngày',
+  });
+  const run = (userId: string, suggestions: ReturnType<typeof sug>[]) =>
+    db.withActor(aws, userId, (tx) =>
+      refreshPolicySuggestions(tx, aws, 'text_suggested', suggestions, 'policy_items'),
+    );
+  const drafts = async () =>
+    (await db.withWorkspace(aws, (tx) => listAllPolicyFacts(tx, aws))).filter(
+      (r) => r.status === 'draft',
+    );
+
+  it('Owner tạo nháp text_suggested; chạy lại cùng nội dung không tăng rev; không còn đề xuất thì xóa', async () => {
+    expect(await run(aowner, [sug('returns')])).toEqual({ drafted: 1, removed: 0 });
+    const first = (await drafts())[0];
+    expect(first).toMatchObject({ origin: 'text_suggested', kind: 'returns' });
+    await run(aowner, [sug('returns')]);
+    expect((await drafts())[0]?.rev).toBe(first?.rev);
+    expect(await run(aowner, [])).toEqual({ drafted: 0, removed: 1 });
+    expect(await drafts()).toHaveLength(0);
+  });
+
+  it('Staff không tạo được nháp (RLS chặn)', async () => {
+    await expectRejectCode(run(astaff, [sug('returns')]), RLS);
+  });
+});

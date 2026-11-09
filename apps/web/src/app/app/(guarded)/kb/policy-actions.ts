@@ -6,9 +6,12 @@ import {
   discardPolicyDraft,
   editPolicyDraft,
   listAllPolicyFacts,
+  listPolicyItems,
+  refreshPolicySuggestions,
   savePolicyFact,
 } from '@flow/db/runtime';
 import { redirect } from 'next/navigation';
+import { analyzePolicyTexts } from '../../../../lib/kb-policy-analyze';
 import { formToPolicyData } from '../../../../lib/kb-policy-form';
 import { type PolicyNotice, parsePolicyActionForm } from '../../../../lib/kb-policy-notice';
 import { actionAllowed } from '../../../../server/action-guard';
@@ -148,4 +151,33 @@ export async function savePolicyValueAction(data: FormData): Promise<never> {
     notice = 'unavailable';
   }
   redirect(`${BACK}?pn=${notice}`);
+}
+
+/**
+ * Phân tách DỮ LIỆU THÔ (chính sách văn bản đã nạp) thành giá trị có cấu trúc: đọc `policy_items`, chạy bộ đề xuất thuần, làm mới các bản nháp nguồn `text_suggested` (không đụng bản đã duyệt hay
+ * nháp Owner đã sửa tay). Chỉ Owner. Kết quả: `?pn=analyzed&pc=<số nháp>`; không có giá trị mới → `analyzed_none`; chưa có văn bản thô → `no_raw`.
+ */
+export async function analyzePolicyTextAction(): Promise<never> {
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  const session = { workspaceId: workspace.id, userId: user.id };
+  if (!(await actionAllowed('uiWrite', session))) redirect(`${BACK}?pn=rate_limited`);
+  let target = `${BACK}?pn=unavailable`;
+  try {
+    target = await getDb().withActor(session.workspaceId, session.userId, async (tx) => {
+      const items = await listPolicyItems(tx, session.workspaceId);
+      const { textCount, suggestions } = analyzePolicyTexts(items);
+      if (textCount === 0) return `${BACK}?pn=no_raw`;
+      const { drafted } = await refreshPolicySuggestions(
+        tx,
+        session.workspaceId,
+        'text_suggested',
+        suggestions,
+        'policy_items',
+      );
+      return drafted === 0 ? `${BACK}?pn=analyzed_none` : `${BACK}?pn=analyzed&pc=${drafted}`;
+    });
+  } catch {
+    console.error(JSON.stringify({ event: 'policy_facts_analyze_failed' }));
+  }
+  redirect(target);
 }

@@ -3336,7 +3336,10 @@
       "invalid": "Invalid request.",
       "unavailable": "Could not complete. Try again in a few minutes.",
       "rate_limited": "You are acting too fast. Try again in a moment.",
-      "deleted": "Value deleted. AI no longer uses it."
+      "deleted": "Value deleted. AI no longer uses it.",
+      "analyzed": "Parsed: {count} draft values from policy text. Review and approve them below.",
+      "no_raw": "No raw policy text to parse yet (connect Shopify to load policies).",
+      "analyzed_none": "No new values: the texts do not state clear days/months/fees, or they already match the approved values. You can add values by hand."
     },
     "form": {
       "pageTitle": {
@@ -3345,6 +3348,7 @@
       },
       "kindTitle": {
         "ship_region": "Shipping (one area)",
+        "cod": "General COD (cash on delivery)",
         "returns": "Returns & refunds",
         "warranty": "Warranty",
         "payment": "Payment methods"
@@ -3401,6 +3405,21 @@
       "methods": "Accepted methods",
       "invalid": "The value is not valid: check required fields (for example a fixed fee needs an amount, an inner city needs a city)."
     },
-    "updatedAt": "Updated {time}"
+    "updatedAt": "Updated {time}",
+    "raw": {
+      "title": "From raw text to structured values",
+      "body": "The system reads loaded policy texts (for example from Shopify) and extracts structured values with the original sentence as evidence. Results are drafts only and do not apply to customers until the Owner approves.",
+      "count": "{count} raw policy texts loaded",
+      "empty": "No raw policy text yet. Connect Shopify on the Data sources page to load it.",
+      "analyze": "Parse automatically",
+      "list": "View loaded raw texts",
+      "kinds": {
+        "shipping": "Shipping",
+        "return": "Returns",
+        "warranty": "Warranty",
+        "payment": "Payment",
+        "other": "Other"
+      }
+    }
   }
 }

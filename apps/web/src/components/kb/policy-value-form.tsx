@@ -228,6 +228,19 @@ function WarrantyFields({ d, t }: { d: PolicyFormDefaults; t: T }) {
   );
 }
 
+function CodFields({ d, t }: { d: PolicyFormDefaults; t: T }) {
+  const codValue = str(d, 'codValue');
+  const codOptions = options(t, 'codOptions', ['yes', 'no']);
+  return (
+    <SelectField
+      label={t('form.cod')}
+      name="codValue"
+      defaultValue={codValue}
+      options={codOptions}
+    />
+  );
+}
+
 function PaymentFields({ d, t }: { d: PolicyFormDefaults; t: T }) {
   const picked = Array.isArray(d.methods) ? d.methods : [];
   return (
@@ -258,6 +271,7 @@ export async function PolicyValueForm({
   draft,
   labelEditable,
   heading,
+  evidence = null,
 }: {
   kind: EditableKind;
   defaults: PolicyFormDefaults;
@@ -266,6 +280,8 @@ export async function PolicyValueForm({
   draft: { id: string; rev: number } | null;
   labelEditable: boolean;
   heading: 'edit' | 'add';
+  /** Câu gốc trong văn bản mà đề xuất dựa vào (nháp của máy) — để Owner đối chiếu khi sửa. */
+  evidence?: string | null;
 }): Promise<ReactNode> {
   const translator = await getTranslations('kbPolicyFacts');
   const t = translator as unknown as T;
@@ -273,6 +289,8 @@ export async function PolicyValueForm({
   const fields =
     kind === 'ship_region' ? (
       <ShipFields d={defaults} t={t} labelEditable={labelEditable} />
+    ) : kind === 'cod' ? (
+      <CodFields d={defaults} t={t} />
     ) : kind === 'returns' ? (
       <ReturnsFields d={defaults} t={t} />
     ) : kind === 'warranty' ? (
@@ -292,6 +310,14 @@ export async function PolicyValueForm({
               {t('form.draftNote')}
             </p>
           </>
+        ) : null}
+        {evidence ? (
+          <blockquote className="rounded-lg bg-secondary-fixed/40 p-space-md font-body-sm text-body-sm italic text-on-surface-variant">
+            <span className="mb-1 block font-label-sm text-label-sm not-italic text-secondary">
+              {t('evidence.title')}
+            </span>
+            {`“${evidence}”`}
+          </blockquote>
         ) : null}
         {fields}
         <div className="flex items-center justify-end gap-2">

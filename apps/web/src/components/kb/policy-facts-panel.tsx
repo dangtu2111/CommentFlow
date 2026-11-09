@@ -20,6 +20,14 @@ export type PolicyActions = {
   approve: (data: FormData) => Promise<void>;
   discard: (data: FormData) => Promise<void>;
   remove: (data: FormData) => Promise<void>;
+  analyze: () => Promise<void>;
+};
+
+/** Dữ liệu thô đã nạp (chính sách văn bản); không truyền = không hiển thị (Staff không đọc được). */
+export type RawPolicySummary = {
+  count: number;
+  /** Từng văn bản thô (loại, tiêu đề, đoạn đầu) để Owner thấy hệ thống đã nạp gì. */
+  items?: ReadonlyArray<{ kind: string; title: string; excerpt: string }>;
 };
 
 type T = (key: string, values?: Record<string, string | number>) => string;
@@ -38,7 +46,12 @@ const COVERAGE_TONE: Record<PolicyCoverage, string> = {
 };
 
 const isSuccess = (notice: PolicyNotice): boolean =>
-  notice === 'saved' || notice === 'approved' || notice === 'discarded' || notice === 'deleted';
+  notice === 'saved' ||
+  notice === 'approved' ||
+  notice === 'discarded' ||
+  notice === 'deleted' ||
+  notice === 'analyzed' ||
+  notice === 'analyzed_none';
 
 /** Mốc "Cập nhật lúc …" theo giờ Việt Nam; thiếu hoặc sai → không hiện. */
 function updatedText(row: PolicyFactRowView, t: T): string | null {
@@ -554,6 +567,73 @@ function EmptyState({ t }: { t: T }) {
   );
 }
 
+/** Cầu nối "dữ liệu thô → giá trị AI đã phân tách": số văn bản thô đã nạp và nút phân tách tự động (Owner). */
+function RawDataCard({
+  raw,
+  isOwner,
+  actions,
+  t,
+}: {
+  raw: RawPolicySummary;
+  isOwner: boolean;
+  actions: PolicyActions | undefined;
+  t: T;
+}) {
+  return (
+    <section
+      aria-labelledby="policy-raw-data"
+      className="flex flex-wrap items-center justify-between gap-space-md rounded-xl bg-surface-container-lowest p-space-lg shadow-sm"
+    >
+      <div className="max-w-3xl space-y-1">
+        <h2 id="policy-raw-data" className="font-title-md text-title-md text-on-surface">
+          {t('raw.title')}
+        </h2>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">{t('raw.body')}</p>
+        <p className="font-label-md text-label-md text-primary">
+          {raw.count > 0 ? t('raw.count', { count: raw.count }) : t('raw.empty')}
+        </p>
+      </div>
+      {isOwner && raw.items && raw.items.length > 0 ? (
+        <details className="basis-full">
+          <summary className="cursor-pointer font-label-md text-label-md text-primary">
+            {t('raw.list')}
+          </summary>
+          <ul className="mt-space-sm space-y-space-sm">
+            {raw.items.map((item) => (
+              <li
+                key={`${item.kind}-${item.title}`}
+                className="rounded-lg bg-surface-container-low p-space-md"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Chip tone={CHIP_NEUTRAL}>{t(`raw.kinds.${item.kind}`)}</Chip>
+                  <span className="font-title-sm text-title-sm text-on-surface">{item.title}</span>
+                </div>
+                <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
+                  {item.excerpt}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+      {isOwner ? (
+        actions && raw.count > 0 ? (
+          <form action={actions.analyze}>
+            <button
+              type="submit"
+              className="rounded-lg bg-secondary-container px-3 py-1.5 font-label-md text-label-md text-on-secondary-container"
+            >
+              {t('raw.analyze')}
+            </button>
+          </form>
+        ) : (
+          <DisabledAction t={t}>{t('raw.analyze')}</DisabledAction>
+        )
+      ) : null}
+    </section>
+  );
+}
+
 function CoverageStrip({ view, t }: { view: PolicyFactsView; t: T }) {
   return (
     <div className="space-y-space-sm border-t border-outline-variant/40 pt-space-md">
@@ -589,11 +669,15 @@ export async function PolicyFactsPanel({
   isOwner,
   actions,
   notice = null,
+  noticeCount = 0,
+  raw,
 }: {
   view: PolicyFactsView;
   isOwner: boolean;
   actions?: PolicyActions;
   notice?: PolicyNotice | null;
+  noticeCount?: number;
+  raw?: RawPolicySummary;
 }) {
   const translator = await getTranslations('kbPolicyFacts');
   const t = translator as unknown as T;
@@ -608,7 +692,7 @@ export async function PolicyFactsPanel({
               : 'bg-error-container text-on-error-container'
           }`}
         >
-          {t(`notice.${notice}`)}
+          {t(`notice.${notice}`, { count: noticeCount })}
         </p>
       ) : null}
       <section className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
@@ -650,6 +734,7 @@ export async function PolicyFactsPanel({
           </div>
         ) : null}
       </section>
+      {raw ? <RawDataCard raw={raw} isOwner={isOwner} actions={actions} t={t} /> : null}
       {view.cards.map((card) => (
         <CardShell key={card.card} view={card} isOwner={isOwner} actions={actions} t={t}>
           {card.entries.length === 0 ? (
