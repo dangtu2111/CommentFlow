@@ -190,6 +190,8 @@ describe('FR-033 fillOrderIntentPhone', () => {
     cited_price_vnd: null,
     order_intent: orderIntent,
     asks: [],
+    topics: [],
+    destination: null,
   });
 
   it('điền số đầu tiên vào order_intent.phone', () => {

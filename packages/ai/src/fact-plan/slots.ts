@@ -17,7 +17,9 @@ export type SlotViolationCode =
   | 'digit'
   | 'number_word'
   | 'currency_symbol'
-  | 'concept';
+  | 'concept'
+  | 'invitation'
+  | 'stock_claim';
 export type SlotCheck = { ok: boolean; violations: Array<{ code: SlotViolationCode }> };
 
 // Số viết bằng chữ. Từ mơ hồ khi bỏ dấu (ba/năm/sáu/tư/nam/sau) CHỈ nhận dạng có dấu, để không chặn nhầm "sau ngày", "từ".
@@ -121,8 +123,10 @@ const UNITS = [
 ];
 const LETTER_BEFORE = '(?<![\\p{L}\\p{N}])';
 const LETTER_AFTER = '(?![\\p{L}\\p{N}])';
+// Cho phép tối đa 2 từ chữ chen giữa số viết bằng chữ và đơn vị: "one business day", "two working weeks", "ba ngày làm việc", "một tới hai tuần".
+// Đã biết: "one of our days" cũng bị bắt (số-chữ + 2 từ + đơn vị) — chấp nhận, câu LLM viết ngoài chỗ giữ chỗ không cần cấu trúc đó.
 const NUMBER_WORD_UNIT = new RegExp(
-  `${LETTER_BEFORE}(?:${NUMBER_WORDS.join('|')})(?:[\\s-]+(?:${NUMBER_WORDS.join('|')}))*[\\s-]+(?:${UNITS.join('|')})${LETTER_AFTER}`,
+  `${LETTER_BEFORE}(?:${NUMBER_WORDS.join('|')})(?:[\\s-]+(?:${NUMBER_WORDS.join('|')}))*(?:[\\s-]+\\p{L}+){0,2}[\\s-]+(?:${UNITS.join('|')})${LETTER_AFTER}`,
   'iu',
 );
 const CURRENCY_SYMBOL = /[$€£¥₫]|(?<![\p{L}\p{N}])đ(?![\p{L}\p{N}])/u;
@@ -132,11 +136,26 @@ const CONCEPT_SLOT_KINDS: Record<ConceptId, readonly FactKind[]> = {
   cod: ['cod', 'payment'],
   installment: ['payment'],
   invoice: ['payment'],
-  international_shipping: [],
-  return: ['returns'],
-  refund: ['returns'],
+  international_shipping: ['ship_destination'],
+  return: ['returns', 'return_shipping', 'return_eligibility', 'refund_to'],
+  refund: ['returns', 'refund_to', 'return_shipping'],
   warranty: ['warranty'],
 };
+/** Câu mời nhắn tin/inbox/liên hệ: CHỈ code được viết (ADR 017 điểm 5) — bản LLM có câu mời bị từ chối cứng. */
+const INVITATION =
+  /(?<![\p{L}\p{N}])(?:inbox|ib|nhắn tin|nhắn shop|liên hệ (?:với )?(?:shop|cửa hàng|chúng tôi)|gửi tin nhắn|(?:please )?message (?:us|the shop|our shop|shop)|contact (?:us|the shop|our shop|shop)|dm us|reach out to (?:us|the shop|our shop|shop))(?![\p{L}\p{N}])/iu;
+/**
+ * Tình trạng hàng LLM tự viết ngoài chỗ giữ chỗ tồn kho: "còn hàng/hết hàng/còn sẵn", "in stock/out of stock/sold out", và "available" CHỈ khi là vị ngữ khẳng định ("is available",
+ * "still available") hoặc đứng một mình — không bắt "available in black", "available shipping methods", "available options".
+ */
+const STOCK_CLAIM = new RegExp(
+  [
+    String.raw`(?<![\p{L}\p{N}])(?:còn hàng|hết hàng|còn sẵn|sắp hết|in stock|out of stock|sold out)(?![\p{L}\p{N}])`,
+    String.raw`(?<![\p{L}\p{N}])(?:is|are|it's|now|currently|still)\s+available(?![\p{L}\p{N}])(?!\s+(?:in|for|at|on|as|to|with)(?![\p{L}\p{N}]))(?!\s+(?:options?|colou?rs?|sizes?|shipping|methods?))`,
+    String.raw`(?:^|[.!?]\s*)available\s*[.!]?\s*$`,
+  ].join('|'),
+  'iu',
+);
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 
 /** Có khẳng định/nêu khái niệm chính sách ngoài chỗ giữ chỗ cùng loại không (xét từng câu). */
@@ -162,6 +181,8 @@ export function checkSlotText(text: string, plan: FactPlan): SlotCheck {
     else if (fact.status === 'unknown') codes.add('unknown_fact_used');
   }
   const outside = text.replace(SLOT, ' ◇ ');
+  if (INVITATION.test(outside)) codes.add('invitation');
+  if (STOCK_CLAIM.test(outside)) codes.add('stock_claim');
   if (/\d/.test(outside)) codes.add('digit');
   if (NUMBER_WORD_UNIT.test(outside)) codes.add('number_word');
   if (CURRENCY_SYMBOL.test(outside)) codes.add('currency_symbol');

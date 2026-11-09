@@ -67,6 +67,8 @@ export const shopFixtureSchema = z.object({
    * lẫn cách chấm "sự kiện bắt buộc" của câu hỏi tồn kho (nhãn bộ mẫu viết theo giả định của shop).
    */
   stockDisclosure: z.enum(['quantity', 'status']).default('status'),
+  /** Ngôn ngữ trả lời mặc định của shop (`channels.reply_language`) khi câu khách quá ngắn để nhận ngôn ngữ. */
+  replyLanguage: z.enum(['vi', 'en']).default('vi'),
   /** Chính sách có cấu trúc ĐÃ DUYỆT bởi Owner (chỉ dùng khi chạy `--fact-slots`; tương đương dòng `cf.policy_facts` status approved). */
   policyFacts: z.array(z.object({ kind: z.string().min(1), data: z.unknown() })).default([]),
 });
@@ -158,6 +160,7 @@ export function buildShopKnowledge(
 ): TryKnowledge {
   const byId = new Map(shop.products.map((product) => [product.id, product]));
   return {
+    productNames: shop.products.map((product) => product.name),
     async matchProducts(mentions) {
       const ids = new Set<string>();
       for (const mention of mentions) {

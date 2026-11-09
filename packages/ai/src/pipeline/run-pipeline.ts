@@ -10,6 +10,7 @@ import {
   type MaskedText,
   maskPii,
   normalizeAttrs,
+  normalizeSearchText,
   type PriceSource,
   type RuleFilterReason,
   ruleFilter,
@@ -38,7 +39,6 @@ import {
   checkSlotText as checkSlots,
   type FactPlan,
   type FactTopic,
-  factTopicsOf,
   fallbackTemplate,
   fillSlots,
   findProvinces,
@@ -46,6 +46,7 @@ import {
   type PlanProduct,
   type PolicyFacts,
   requiredFactIds,
+  resolvePlace,
   type StockMode,
   slotIds,
 } from '../fact-plan';
@@ -112,6 +113,8 @@ export interface TryKnowledge {
     ids: readonly string[],
     options?: { stockStale?: boolean },
   ): Promise<PlanProduct[]>;
+  /** Tên các sản phẩm đang bán (đã nạp sẵn); dùng để khớp tên không dấu bằng code khi `extract` không trả tên nào. Thiếu → bỏ bước này. */
+  productNames?: readonly string[];
   /** Nhánh `sql`: giá/tồn đọc từ bảng sản phẩm (không vector). */
   lookupProductFacts(ids: readonly string[]): Promise<TryCandidate[]>;
   /** Nhánh `hybrid`: tìm kiến thức (đã biết ngôn ngữ + sản phẩm của bài để lọc, FR-057). */
@@ -123,6 +126,10 @@ export type TryInput = {
   /** Bình luận mẫu do người dùng gõ (CHƯA che). */
   text: string;
   kbVersion: string;
+  /** `channels.reply_language` / mặc định của workspace khi câu khách quá ngắn để nhận ngôn ngữ (vd. "still available?"). */
+  replyLanguage?: 'vi' | 'en' | null;
+  /** Ngôn ngữ của lượt khách trước trong cùng luồng (ưu tiên hơn `replyLanguage` khi câu ngắn). */
+  previousLang?: 'vi' | 'en' | null;
   voice: DraftVoice;
   /**
    * Giọng văn THẬT của workspace theo ngôn ngữ (`draftVoicesFromRows`). Ngôn ngữ nhận ra có giọng → dùng giọng đó;
@@ -194,6 +201,8 @@ const EMPTY_EXTRACT: ExtractOutcome = extractResultSchema.parse({
   cited_price_vnd: null,
   order_intent: null,
   asks: [],
+  topics: [],
+  destination: null,
 });
 
 /** Ngữ cảnh chuỗi (xem `TryInput.thread`). */
@@ -260,7 +269,7 @@ export type TryResult =
       routeReason: RouteReason;
       decision: ActionDecision;
       /** Lý do các cờ rủi ro đang bật (pháp lý/chèn lệnh/mạo danh) — để chẩn đoán và hiển thị. */
-      riskReasons: TurnRisks['reasons'];
+      riskReasons: TurnRisks['reasons'] & { review?: string[] };
       reply: string;
       variants: string[];
       draft: DraftResult;
@@ -330,6 +339,30 @@ function askTopicsOf(
 }
 
 /**
+ * Chế độ chỗ giữ chỗ: chủ đề gửi `decideAction` lấy từ chủ đề `extract` trả (enum) cho nhóm giá/tồn/ship/chính sách — KHÔNG từ regex trên câu ("return shipping" không còn bị coi là ship).
+ * Ý hỏi khác (size, khuyến mãi, đơn hàng…) giữ cách cũ.
+ */
+function slotAskTopics(
+  regexTopics: Array<{ topic: KbGapTopic; isPrice: boolean }>,
+  factTopics: readonly FactTopic[],
+): Array<{ topic: KbGapTopic; isPrice: boolean }> {
+  if (factTopics.length === 0) return regexTopics;
+  const productFactAsked = factTopics.some((t) => t === 'price' || t === 'stock');
+  const kept = regexTopics.filter(
+    ({ topic }) =>
+      topic !== 'shipping' && topic !== 'policy' && !(topic === 'product_info' && productFactAsked),
+  );
+  const fromPlan = factTopics.map((t) => ({ topic: GAP_TOPIC_OF_FACT[t], isPrice: t === 'price' }));
+  const seen = new Set<string>();
+  return [...kept, ...fromPlan].filter(({ topic, isPrice }) => {
+    const key = `${topic}|${isPrice}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * Tên sản phẩm đưa vào `decideAction` (và gợi ý lựa chọn khi hỏi lại): schema chỉ nhận ≤ 120 ký tự, mà tên sản phẩm từ Shopify/Haravan
  * thường dài hơn (tiêu đề SEO 150–255 ký tự). Tên quá dài KHÔNG được làm cả đầu vào "không đọc được" (→ chuyển người oan mọi câu hỏi về
  * sản phẩm đó): cắt gọn ở đây, có dấu "…". Tên đầy đủ vẫn nằm trong nguồn sản phẩm (câu nguồn) để soạn câu.
@@ -342,6 +375,23 @@ export function shortProductName(name: string): string {
     : `${clean.slice(0, MAX_DECISION_PRODUCT_NAME - 1).trimEnd()}…`;
 }
 
+/**
+ * Khách (hoặc câu viết lại) nhắc ĐÚNG tên một sản phẩm trong danh mục nhưng `extract` không trả tên: khớp bằng code, bỏ dấu, theo ranh giới từ, KHÔNG đồng nghĩa, không LLM.
+ * Chỉ nhận khi đúng MỘT tên khớp (nhiều tên → không chọn, tránh gán nhầm).
+ */
+function uniqueNameInTexts(names: readonly string[], texts: readonly string[]): string | null {
+  const haystacks = texts.map((text) => ` ${normalizeSearchText(text)} `);
+  const hits = [
+    ...new Set(
+      names.filter((name) => {
+        const needle = normalizeSearchText(name);
+        return needle !== '' && haystacks.some((text) => text.includes(` ${needle} `));
+      }),
+    ),
+  ];
+  return hits.length === 1 ? (hits[0] as string) : null;
+}
+
 const EMPTY_PRODUCTS: TryProductMatch = { ids: [], names: [], missingAxes: [] };
 
 /**
@@ -352,14 +402,38 @@ async function resolveProductsFor(
   extract: ExtractResult,
   input: TryInput,
   deps: TryDeps,
+  texts: readonly string[],
 ): Promise<TryProductMatch> {
-  const matched = await deps.knowledge.matchProducts(extract.product_mentions);
-  if (matched.ids.length > 0 || extract.product_mentions.length > 0) return matched;
+  let mentions = extract.product_mentions;
+  if (mentions.length === 0) {
+    const named = uniqueNameInTexts(deps.knowledge.productNames ?? [], texts);
+    if (named !== null) mentions = [named];
+  }
+  const matched = await deps.knowledge.matchProducts(mentions);
+  if (matched.ids.length > 0 || mentions.length > 0) return matched;
   const fallbackIds = input.convo?.state?.productIds.length
     ? input.convo.state.productIds
     : (input.convo?.postProductIds ?? []);
   if (fallbackIds.length === 0 || !deps.knowledge.resolveProducts) return matched;
   return deps.knowledge.resolveProducts(fallbackIds);
+}
+
+/** Loại sự kiện chính sách đã biết → nhóm pháp lý (FR-160) mà nó làm có nguồn. */
+const PLAN_LEGAL_TOPIC: Partial<Record<string, string>> = {
+  returns: 'refund',
+  refund_to: 'refund',
+  return_shipping: 'refund',
+  return_eligibility: 'refund',
+  warranty: 'warranty',
+};
+
+/** Mọi biến thể cùng MỘT giá (đã biết, kể cả giá chung của sản phẩm) → khách không cần chọn biến thể để biết giá. */
+function hasUniformVariantPrice(product: PlanProduct): boolean {
+  if (product.variants.length === 0) return false;
+  const prices = new Set(
+    product.variants.map((variant) => variant.priceMinor ?? product.priceMinor),
+  );
+  return prices.size === 1 && !prices.has(null);
 }
 
 const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
@@ -371,6 +445,11 @@ const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
   returns: 'policy',
   warranty: 'policy',
   payment: 'policy',
+  ship_destination: 'shipping',
+  refund_to: 'policy',
+  return_shipping: 'policy',
+  return_eligibility: 'policy',
+  defect: 'policy',
 };
 
 /** Chủ đề kiến thức (shipping/policy) đã có đủ sự kiện trong fact plan chưa; `null` = fact plan không phụ trách chủ đề này (giữ cách cũ). */
@@ -388,7 +467,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   if (filtered.skip) return { status: 'skipped', billed: false, reason: filtered.reason };
 
   const masked = maskPii(text);
-  const normalized = normalizeAndDetectLang({ text: masked, dict: input.dict });
+  const normalized = normalizeAndDetectLang({
+    text: masked,
+    dict: input.dict,
+    previousLang: input.previousLang ?? null,
+    replyLanguage: input.replyLanguage ?? null,
+  });
   const lang: DraftLang | 'other' = normalized.lang;
 
   // extract và tìm kiếm nhận văn bản ĐÃ chuẩn hóa (viết tắt "bn"→"bao nhiêu", "sz"→"size"…) SAU KHI che PII
@@ -415,7 +499,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // Khách trả lời ngắn ("M đen") mà lượt trước còn ý đang chờ → thừa hưởng ý đó (Q-POR12).
   const extract = closing ? rawExtract : carryOverAsks(rawExtract, state);
   const label = primaryLabel(extract);
-  const products = closing ? EMPTY_PRODUCTS : await resolveProductsFor(extract, input, deps);
+  const products = closing
+    ? EMPTY_PRODUCTS
+    : await resolveProductsFor(extract, input, deps, [forModel]);
   // `rewriteQuery` chạy SAU extract (cần biết đã nhận được sản phẩm chưa): chỉ tốn LLM khi câu ngắn/mơ hồ và chưa có sản phẩm.
   const rewritten =
     deps.rewriter && !closing
@@ -467,9 +553,21 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   };
   // DRAFT-FACT-SLOTS: fact plan do CODE lập (0 lần gọi LLM) khi workspace bật cờ.
   const slotMode = input.factSlots !== undefined && !closing;
-  const factTopics: FactTopic[] = slotMode
-    ? factTopicsOf([masked, ...extract.asks].join(', '))
-    : [];
+  // Chủ đề do `extract` trả (enum, Zod) — không đoán bằng từ khóa; mỗi chủ đề chỉ một lần.
+  const extractedTopics: FactTopic[] = slotMode ? [...new Set(extract.topics)] : [];
+  // Hỏi khuyến mãi/giảm giá KHÔNG phải hỏi giá/tồn: khi có ý hỏi được xếp 'discount' mà chưa nhận ra sản phẩm nào → bỏ price/stock (chủ đề vẫn do extract trả; code chỉ lọc theo ý hỏi đã có).
+  const discountAsked = extract.asks.some((ask) => topicOf(ask) === 'discount');
+  // Khách nhắc một sản phẩm mà danh mục KHÔNG có ("shop có bán giày k"): không thêm chủ đề giá/tồn từ fact plan → giữ đường cũ (chuyển hướng), không hỏi lại "sản phẩm nào".
+  const mentionedButUnknown = extract.product_mentions.length > 0 && products.ids.length === 0;
+  const factTopics: FactTopic[] =
+    (discountAsked || mentionedButUnknown) && products.ids.length === 0
+      ? extractedTopics.filter((topic) => topic !== 'price' && topic !== 'stock')
+      : extractedTopics;
+  // Nơi khách hỏi giao tới → quốc gia (bảng quốc gia/tiểu bang Mỹ + tỉnh/thành VN); không nhận ra → null (không đoán).
+  // Quét cả câu (masked) CHỈ khi extract báo chủ đề ship_destination; còn lại dùng đúng `extract.destination` — tránh nhầm tên hàng ("Georgia peach dress", "China blue vase") với địa điểm.
+  const destination = slotMode
+    ? resolvePlace(extract.destination ?? (factTopics.includes('ship_destination') ? masked : ''))
+    : null;
   const planProducts: PlanProduct[] =
     slotMode && deps.knowledge.lookupPlanProducts
       ? await deps.knowledge.lookupPlanProducts(products.ids, {
@@ -482,6 +580,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       ? buildFactPlan({
           products: planProducts,
           topics: factTopics,
+          destination,
+          customerText: [masked, ...extract.asks].join(' '),
           // Chỉ coi là "khách nêu địa điểm" khi câu có tỉnh/thành nhận ra được; không có → null (chưa nêu).
           location: findProvinces(masked).length > 0 ? masked : null,
           // Cùng chuẩn hóa với `attrs_norm` của biến thể (FR-129): khóa mau→color, giá trị đen→black.
@@ -489,11 +589,26 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
             ...(extract.size ? { size: extract.size } : {}),
             ...(extract.color ? { color: extract.color } : {}),
           }),
-          measures: /\d/.test(sizeText) ? [sizeText] : [],
+          // Số KHÁCH nêu đi qua chỗ giữ chỗ customer_measure: kích thước có chữ số (size 29, 1m58) và số lượng đặt (extract.qty). Không whitelist số khác trong câu khách.
+          measures: [
+            ...(/\d/.test(sizeText) ? [sizeText] : []),
+            ...(extract.qty === null ? [] : [String(extract.qty)]),
+          ],
           policy: input.factSlots.policy,
           stock: input.factSlots.stock,
         })
       : null;
+  // FR-160 ở chế độ chỗ giữ chỗ: nhóm pháp lý (hoàn tiền/bảo hành) ĐÃ có nguồn nếu fact plan có sự kiện ĐÃ BIẾT cùng nhóm (nguồn = dòng chính sách đã duyệt `pf:<id>`); chưa biết → vẫn chưa nguồn.
+  const planLegalCovered = new Set<string>(
+    (factPlan?.facts ?? []).flatMap((fact) =>
+      fact.status === 'known' && PLAN_LEGAL_TOPIC[fact.kind]
+        ? [PLAN_LEGAL_TOPIC[fact.kind] as string]
+        : [],
+    ),
+  );
+  const legalReasons = turnRisks.reasons.legal.filter((topic) => !planLegalCovered.has(topic));
+  const legalUnsourced =
+    factPlan === null ? turnRisks.risks.legalUnsourced : legalReasons.length > 0;
   // Chính sách mâu thuẫn: chỉ khi đoạn DÙNG ĐƯỢC (qua ngưỡng) thuộc nhóm mâu thuẫn của đúng chủ đề khách hỏi; ý khác trả lời bình thường.
   const askedConflictTopics = new Set(
     (extract.asks.length > 0 ? extract.asks : [masked]).flatMap(conflictTopicsOfAsk),
@@ -501,17 +616,49 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const policyConflict = usable.some(
     (c) => c.conflictTopic !== undefined && askedConflictTopics.has(c.conflictTopic),
   );
+  // Hỏi CHỈ giá mà mọi biến thể CÙNG giá → trả lời giá, không hỏi size/màu (kiểm TRƯỚC khi hỏi biến thể). Có biến thể khác giá hoặc thiếu giá → vẫn hỏi như cũ.
+  let missingAxes = products.missingAxes;
+  const asksOnlyPrice = (() => {
+    const asked = askTopicsOf(extract.asks, label);
+    return asked.length > 0 && asked.every(({ isPrice }) => isPrice);
+  })();
+  if (
+    asksOnlyPrice &&
+    missingAxes.length > 0 &&
+    products.ids.length > 0 &&
+    deps.knowledge.lookupPlanProducts
+  ) {
+    const candidates =
+      planProducts.length > 0
+        ? planProducts
+        : await deps.knowledge.lookupPlanProducts(products.ids, {
+            ...(turnRisks.risks.stockStale ? { stockStale: true } : {}),
+          });
+    if (candidates.length > 0 && candidates.every(hasUniformVariantPrice)) missingAxes = [];
+  }
   // `decideFor(strict)`: strict = coi mọi ý KHÔNG phải hỏi giá là CHƯA có nguồn (dùng khi guard nghĩa loại bản soạn đầu).
+  // Hàng lỗi trùng phạm vi bảo hành: nhãn CHÍNH là advice/price, nhãn phụ complaint, và plan đã khớp phạm vi thẻ bảo hành (requiresHumanReview) → không để nhãn phụ ép chuyển người;
+  // câu trả lời vẫn bắt buộc người duyệt (không tự gửi). Nhãn chính complaint, hoặc phạm vi không khớp (plan.handoff) → giữ chuyển người.
+  const waiveSecondaryComplaint =
+    factPlan?.requiresHumanReview === true &&
+    (label === 'advice' || label === 'price') &&
+    extract.labels.some((item) => item.label === 'complaint');
+  const decideExtract = waiveSecondaryComplaint
+    ? { ...extract, labels: extract.labels.filter((item) => item.label !== 'complaint') }
+    : extract;
   const decideFor = (strict: boolean): ActionDecision =>
     decideAction({
       lang,
-      extract,
+      extract: decideExtract,
       products: {
         candidates: products.names.map(shortProductName),
-        missingAxes: products.missingAxes,
+        missingAxes,
         mentionedCount: extract.product_mentions.length,
       },
-      topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
+      topics: (factPlan === null
+        ? askTopicsOf(extract.asks, label)
+        : slotAskTopics(askTopicsOf(extract.asks, label), factTopics)
+      ).map(({ topic, isPrice }) => ({
         topic,
         // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
         sourced:
@@ -522,11 +669,21 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
       // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
       comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
-      risks: { ...turnRisks.risks, policyConflict },
+      risks: { ...turnRisks.risks, legalUnsourced, policyConflict },
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
+  // Hàng lỗi trùng phạm vi bảo hành: có câu trả lời từ thẻ bảo hành nhưng BẮT BUỘC người duyệt, không bao giờ tự gửi (kể cả khi sau này bật auto-reply).
+  if (factPlan?.requiresHumanReview && decision.action !== 'handoff') {
+    decision = { ...decision, needsHuman: true, autoSendPolicy: 'never' };
+  }
   // Phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu → HỎI tỉnh/thành (FR-147), không chuyển hướng. Rủi ro/handoff vẫn thắng.
-  if (factPlan?.clarify && (decision.action === 'answer' || decision.action === 'redirect')) {
+  // Chủ đề phải chuyển người (hàng lỗi/sai hàng: chưa có chính sách có cấu trúc) — không mượn số ngày/điều kiện của đổi trả.
+  if (factPlan?.handoff && decision.action !== 'handoff' && !closing) {
+    decision = handoffDecision('claim_unsupported', decision.askedBefore);
+  } else if (
+    factPlan?.clarify &&
+    (decision.action === 'answer' || decision.action === 'redirect')
+  ) {
     decision = regionClarifyDecision(decision.askedBefore);
   }
 
@@ -539,6 +696,30 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           .filter((fact) => fact.status === 'known')
           .map((fact) => ({ id: fact.id, kind: fact.kind }))
       : null;
+  // Chế độ chỗ giữ chỗ: đoạn nguồn chính sách CÙNG chủ đề với sự kiện đã có (hoặc chính đoạn plan lấy làm nguồn) không đưa vào prompt — giá trị đã nằm ở chỗ giữ chỗ, để bộ soạn không chép số/chữ từ văn xuôi (vi-07). Đoạn khác giữ nguyên.
+  const slotCoveredTopics = new Set<KbGapTopic>(
+    slotFacts === null
+      ? []
+      : (factPlan?.facts ?? []).flatMap((fact) =>
+          fact.status === 'known' && fact.kind in GAP_TOPIC_OF_FACT
+            ? [GAP_TOPIC_OF_FACT[fact.kind as FactTopic]]
+            : [],
+        ),
+  );
+  const slotPlanSourceIds = new Set(
+    slotFacts === null
+      ? []
+      : (factPlan?.facts ?? []).flatMap((fact) => (fact.status === 'known' ? [fact.sourceId] : [])),
+  );
+  const promptSources = found.filter(
+    (c) =>
+      slotFacts === null ||
+      c.kind === 'product' ||
+      !(
+        slotPlanSourceIds.has(c.id) ||
+        (c.kind === 'policy' && c.topics.some((topic) => slotCoveredTopics.has(topic)))
+      ),
+  );
   const draftInput = (d: ActionDecision) => ({
     workspaceId: input.workspaceId,
     question: masked,
@@ -546,7 +727,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     kbVersion: input.kbVersion,
     ...(input.variantCount === undefined ? {} : { variantCount: input.variantCount }),
     voice,
-    sources: found.map((c) => ({ id: c.id, kind: c.kind, text: c.text, relevance: c.score })),
+    sources: promptSources.map((c) => ({
+      id: c.id,
+      kind: c.kind,
+      text: c.text,
+      relevance: c.score,
+    })),
     // Có sự kiện trong fact plan thì bộ soạn viết như `answer` (câu mời cho phần chưa rõ do CODE thêm), tránh lời nhắc "mẫu câu mời" trùng với câu mời của code.
     decision:
       slotFacts !== null && d.action === 'redirect'
@@ -556,6 +742,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       ? {
           factSlots: {
             facts: slotFacts,
+            required: factPlan === null ? [] : requiredFactIds(factPlan),
           },
         }
       : {}),
@@ -569,10 +756,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   if (
     factPlan !== null &&
     slotFacts !== null &&
-    (decision.action === 'answer' || decision.action === 'redirect') &&
-    // Bộ soạn đặt needs_human nhưng VẪN viết chỗ giữ chỗ → vẫn phải qua bước kiểm/điền (không để mã {fact:…} đi tiếp); needs_human trần (không chỗ giữ chỗ) giữ nguyên.
-    (!draft.needs_human ||
-      [draft.reply, ...(draft.variants ?? [])].some((text) => slotIds(text).length > 0))
+    // `slotFacts !== null` = plan có sự kiện bắt buộc: bộ soạn đặt needs_human trần (không chỗ giữ chỗ, câu rỗng) coi như 0 câu đạt → câu dự phòng do code dựng (không bỏ qua khối này).
+    // Plan không có sự kiện bắt buộc thì không vào đây, needs_human đi đường cũ.
+    (decision.action === 'answer' || decision.action === 'redirect')
   ) {
     const replyLang = lang === 'en' ? 'en' : 'vi';
     const required = requiredFactIds(factPlan);
@@ -591,6 +777,16 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       rawTexts: rawTexts.length,
       rejected: rawTexts.length - candidates.length,
       chosen: chosenKind,
+      // Lý do từ chối cứng từng câu (EVAL/chẩn đoán): mã vi phạm guard chỗ giữ chỗ + sự kiện bắt buộc còn thiếu.
+      rejections: rawTexts.flatMap((text, index) => {
+        const codes = checkSlots(text, factPlan).violations.map((v) => v.code as string);
+        const used = slotIds(text);
+        const missing = required.filter((id) => !used.includes(id));
+        if (missing.length > 0) codes.push(`missing_required:${missing.join('+')}`);
+        return codes.length > 0
+          ? [{ text, which: index === 0 ? ('reply' as const) : ('variant' as const), codes }]
+          : [];
+      }),
     };
     const filled = base === '' ? null : fillSlots(base, factPlan, { lang: replyLang });
     if (filled === null || filled.missing.length > 0) {
@@ -599,7 +795,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
     } else {
       // Tiếng Anh: "we/us" (xưng hô tiếng Việt của voice không áp dụng); xưng hô tùy chỉnh để trống → "shop".
-      const address = describeAddress(voice);
+      const address = describeAddress(voice, replyLang);
       const invite = inviteUnknownText(
         factPlan.unknownTopics,
         replyLang,
@@ -696,6 +892,20 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
   }
 
+  // FR-140: bản nháp KHÔNG dùng được (bộ soạn đánh dấu needs_human — vd. claim trỏ nguồn sai — hoặc reply rỗng) mà hành động vẫn là answer/redirect/clarify → KHÔNG để nhãn "trả lời" đi kèm câu rỗng:
+  // đổi thành chuyển người (không gọi LLM thêm). Câu rỗng chỉ hợp lệ khi hành động là handoff.
+  let draftUnusable = false;
+  if (
+    decision.action !== 'handoff' &&
+    slotRendered === null &&
+    // needs_human là bình thường ở redirect/clarify (mời nhân viên); chỉ KHÔNG dùng được khi câu rỗng, hoặc action là answer mà bộ soạn lại xin người.
+    (draft.reply.trim() === '' || (decision.action === 'answer' && draft.needs_human))
+  ) {
+    draftUnusable = true;
+    decision = handoffDecision('claim_unsupported', decision.askedBefore);
+    draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
+  }
+
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   // Chế độ chỗ giữ chỗ: mọi số trong câu do code điền → kiểm số tiền với CHÍNH các giá trị vừa điền (không phải đoạn văn).
@@ -755,7 +965,18 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     route: routed.route,
     routeReason: routed.reason,
     decision,
-    riskReasons: turnRisks.reasons,
+    riskReasons: {
+      ...turnRisks.reasons,
+      legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
+      ...(factPlan?.requiresHumanReview || draftUnusable
+        ? {
+            review: [
+              ...(factPlan?.requiresHumanReview ? ['defect_warranty_scope'] : []),
+              ...(draftUnusable ? ['fr140_draft_unusable'] : []),
+            ],
+          }
+        : {}),
+    },
     reply: draft.reply,
     variants: draft.variants ?? [],
     draft,
@@ -789,6 +1010,7 @@ export type SlotDiagnostics = {
   chosen: 'reply' | 'variant' | 'fallback' | 'handoff';
   /** Lưới chặn CUỐI (mã {fact:…} còn sót sau bước kiểm/điền) đã kích hoạt — mục tiêu 0. */
   finalNetTriggered?: boolean;
+  rejections?: Array<{ text: string; which: 'reply' | 'variant'; codes: string[] }>;
 };
 
 export const runTryPipeline = runPipeline;

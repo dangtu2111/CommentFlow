@@ -1,6 +1,6 @@
 import { isAppError } from '@flow/shared';
 import { describe, expect, it } from 'vitest';
-import { hasLabel, parseExtractOutput, primaryLabel } from './extract-result';
+import { extractResultSchema, hasLabel, parseExtractOutput, primaryLabel } from './extract-result';
 
 const base = {
   labels: [{ label: 'price' }],
@@ -157,5 +157,38 @@ describe('FR-145 labels[]', () => {
     );
     expect(hasLabel(r, 'complaint')).toBe(true);
     expect(hasLabel(r, 'spam')).toBe(false);
+  });
+});
+
+describe('extractResultSchema — topics (enum) và destination', () => {
+  const base = {
+    labels: [{ label: 'advice' }],
+    product_mentions: [],
+    refers_to_image: false,
+    size: null,
+    color: null,
+    height_cm: null,
+    weight_kg: null,
+    qty: null,
+    cited_price_vnd: null,
+    order_intent: null,
+    asks: [],
+  };
+  it('thiếu topics/destination (dữ liệu cũ) → rỗng/null', () => {
+    const r = extractResultSchema.parse(base);
+    expect(r.topics).toEqual([]);
+    expect(r.destination).toBeNull();
+  });
+  it('nhận enum chủ đề + nơi giao; chủ đề lạ bị từ chối', () => {
+    const r = extractResultSchema.parse({
+      ...base,
+      topics: ['ship_destination', 'defect'],
+      destination: ' Hawaii ',
+    });
+    expect(r.topics).toEqual(['ship_destination', 'defect']);
+    expect(r.destination).toBe('Hawaii');
+    expect(extractResultSchema.safeParse({ ...base, topics: ['ship_everything'] }).success).toBe(
+      false,
+    );
   });
 });

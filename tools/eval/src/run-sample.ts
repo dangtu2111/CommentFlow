@@ -34,6 +34,8 @@ export type RunContext = {
   variantCount?: number;
   /** Đường fact plan (ADR 017): chính sách đã duyệt + chế độ tồn kho; thiếu → đường cũ. */
   factSlots?: PipelineInput['factSlots'];
+  /** Ngôn ngữ trả lời mặc định của shop (câu ngắn). */
+  replyLanguage?: 'vi' | 'en';
   workspaceId?: string;
   /** Dựng các bước cho MỘT mẫu; mọi lần gọi LLM phải được ghi vào `sink` (qua `recordUsage`). */
   build: (sink: UsageRecord[]) => PipelineParts;
@@ -46,6 +48,9 @@ export type ExtractSnapshot = {
   qty: number | null;
   /** Các ý hỏi model tách ra (chẩn đoán chủ đề). */
   asks: string[];
+  /** Chủ đề sự kiện extract trả (enum) và nơi giao khách nêu — để chẩn đoán lệch hành động. */
+  topics: string[];
+  destination: string | null;
 };
 
 export type SampleOutcome =
@@ -57,6 +62,10 @@ export type SampleOutcome =
       /** Lý do `decideAction` (chẩn đoán lệch hành động). */
       reason: string;
       unansweredTopics: string[];
+      /** Quyết định cần người (decision.needsHuman), chính sách tự gửi, và lý do rủi ro/duyệt — để rà mẫu "cần người". */
+      needsHuman: boolean;
+      autoSendPolicy: string;
+      riskReasons: Record<string, string[] | undefined>;
       lang: string;
       reply: string;
       variants: string[];
@@ -124,6 +133,8 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
           color: result.color,
           qty: result.qty,
           asks: [...result.asks],
+          topics: [...result.topics],
+          destination: result.destination,
         };
         return result;
       },
@@ -139,6 +150,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       kbVersion: 'eval',
       voice: context.voice,
       autoSendEnabled: true,
+      ...(context.replyLanguage ? { replyLanguage: context.replyLanguage } : {}),
       ...(context.factSlots ? { factSlots: context.factSlots } : {}),
       ...(context.dict ? { dict: context.dict } : {}),
       ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
@@ -178,6 +190,9 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       action: result.decision.action,
       reason: result.decision.reason,
       unansweredTopics: [...result.decision.unansweredTopics],
+      needsHuman: result.decision.needsHuman,
+      autoSendPolicy: result.decision.autoSendPolicy,
+      riskReasons: result.riskReasons,
       lang: result.draft.lang,
       reply: result.reply,
       variants: result.variants,

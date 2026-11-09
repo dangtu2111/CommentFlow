@@ -10,7 +10,15 @@ import { z } from 'zod';
  * (`decideAction` chuyển người); (2) `checkDraftLegal` kiểm bản nháp AI trước khi tới nhân viên/cổng tự gửi.
  */
 
-export const LEGAL_TOPICS = ['authenticity', 'invoice', 'warranty', 'origin', 'refund'] as const;
+export const LEGAL_TOPICS = [
+  'authenticity',
+  'invoice',
+  'warranty',
+  'origin',
+  'refund',
+  'refund_guarantee',
+  'regulatory_claim',
+] as const;
 export type LegalTopic = (typeof LEGAL_TOPICS)[number];
 
 /** Trần độ dài mỗi văn bản / số đoạn nguồn: quá → không đọc được → đóng (chống tốn CPU). */
@@ -26,7 +34,16 @@ const TOPIC_PATTERNS: Record<LegalTopic, RegExp> = {
   origin: /\b(nguon goc|xuat xu|nhap khau|xach tay|noi dia|san xuat tai|made in|origins?)\b/,
   refund:
     /\b(hoan tien|hoan lai tien|hoan tra|doi tra|tra hang|hoan hang|doi hang|tra lai tien|refund\w*|returns?|money back)\b/,
+  // Cam kết hoàn tiền ("guarantee a refund", "money-back guarantee", "bao hoàn tiền", "hoàn tiền 100%"): cần nguồn nêu đúng cam kết đó. `PLAN_LEGAL_TOPIC` KHÔNG ánh xạ nhóm này
+  // (fact plan không có sự kiện tương ứng nên không được coi là "đã phủ").
+  refund_guarantee:
+    /\b(guarantee(?:d)?\b.{0,20}\brefund\w*|money back guarantee|cam ket hoan tien|bao hoan tien|hoan tien 100)/,
+  // Khẳng định quy định/y tế (FDA, được chứng nhận, điều trị…). Từ tiếng Việt có dấu xét riêng trên chữ gốc (REGULATORY_VI_PATTERN): "chữa" bỏ dấu thành "chua" trùng "chưa".
+  regulatory_claim: /\b(fda|approved|certified|clinically)\b/,
 };
+
+/** Tiếng Việt có dấu: "chữa", "điều trị", "trị dứt" — xét trên chữ gốc (chưa bỏ dấu) để không chặn nhầm "chưa". */
+const REGULATORY_VI_PATTERN = /(?<![\p{L}])(?:chữa|điều trị|trị dứt)(?![\p{L}])/u;
 
 /**
  * "VAT" xét trên chữ gốc (chưa bỏ dấu): bỏ dấu sẽ biến "vật liệu" thành "vat lieu" và chặn nhầm.
@@ -51,8 +68,12 @@ function normalizeForMatch(text: string): string {
 export function detectLegalTopics(text: string): LegalTopic[] {
   const folded = normalizeForMatch(text);
   const hasVat = VAT_PATTERN.test(lightNormalize(text).replace(/\s+/g, ' '));
+  const hasRegulatoryVi = REGULATORY_VI_PATTERN.test(lightNormalize(text));
   return LEGAL_TOPICS.filter(
-    (topic) => TOPIC_PATTERNS[topic].test(folded) || (topic === 'invoice' && hasVat),
+    (topic) =>
+      TOPIC_PATTERNS[topic].test(folded) ||
+      (topic === 'invoice' && hasVat) ||
+      (topic === 'regulatory_claim' && hasRegulatoryVi),
   );
 }
 

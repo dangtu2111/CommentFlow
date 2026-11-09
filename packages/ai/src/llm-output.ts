@@ -1,6 +1,7 @@
 import { AppError, COMMENT_LABELS } from '@flow/shared';
 import { EXTRACT_UNREADABLE_MESSAGE } from './classify/extract-result';
 import { CLAIM_KINDS, DRAFT_LANGS, DRAFT_UNREADABLE_MESSAGE } from './draft/draft-result';
+import { FACT_TOPICS } from './fact-plan/types';
 
 /**
  * Đầu ra có cấu trúc của LLM (docs/09 §4): dùng structured output GỐC qua LiteLLM (`response_format: json_schema`) để
@@ -28,6 +29,8 @@ export const EXTRACT_RESPONSE_FORMAT: ResponseFormat = {
       'cited_price_vnd',
       'order_intent',
       'asks',
+      'topics',
+      'destination',
     ],
     properties: {
       labels: {
@@ -64,6 +67,8 @@ export const EXTRACT_RESPONSE_FORMAT: ResponseFormat = {
         ],
       },
       asks: stringList,
+      topics: { type: 'array', items: { type: 'string', enum: [...FACT_TOPICS] } },
+      destination: { type: ['string', 'null'] },
     },
   },
 };

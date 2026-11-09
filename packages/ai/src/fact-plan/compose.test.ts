@@ -109,3 +109,71 @@ describe('inviteUnknownText — câu mời theo xưng hô cấu hình (mặc đ�
     }
   });
 });
+
+describe('fallbackTemplate / inviteUnknownText — sự kiện định tính mới', () => {
+  const qualitative: FactPlan = {
+    facts: [
+      known('ship_destination', 'ship_destination'),
+      known('refund_to', 'refund_to'),
+      known('return_shipping', 'return_shipping'),
+      known('return_eligibility', 'return_eligibility'),
+    ],
+    clarify: null,
+    unknownTopics: [],
+    issues: [],
+  };
+  it('mỗi loại có câu dự phòng vi/en chỉ gồm chỗ giữ chỗ + lời văn cố định (qua guard)', () => {
+    for (const lang of ['vi', 'en'] as const) {
+      const text = fallbackTemplate(qualitative, lang);
+      for (const id of ['ship_destination', 'refund_to', 'return_shipping', 'return_eligibility']) {
+        expect(text).toContain(`{fact:${id}}`);
+      }
+      expect(checkSlotText(text, qualitative).ok).toBe(true);
+    }
+  });
+  it('câu mời gọi tên chủ đề mới theo ngôn ngữ', () => {
+    const address = { shop: 'we', customer: 'you' };
+    const topics = [
+      'ship_destination',
+      'refund_to',
+      'return_shipping',
+      'return_eligibility',
+      'defect',
+    ] as const;
+    expect(inviteUnknownText(topics, 'en', address)).toBe(
+      'For shipping destinations, refunds, return shipping, return eligibility and defective items, please message us and we will help.',
+    );
+    expect(inviteUnknownText(['defect'], 'vi', { shop: 'shop', customer: 'bạn' })).toBe(
+      'Phần hàng lỗi, bạn nhắn shop để được hỗ trợ nhé.',
+    );
+  });
+});
+
+describe('fallbackTemplate — ghép biến thể khách chọn (giá/tồn đúng biến thể)', () => {
+  const withVariant: FactPlan = {
+    facts: [
+      known('product_name.1', 'product_name'),
+      known('variant.1', 'variant'),
+      known('price.1', 'price'),
+      known('stock.1', 'stock'),
+    ],
+    clarify: null,
+    unknownTopics: [],
+    issues: [],
+  };
+  it('có variant.n → "{tên} ({biến thể}) giá …"; không có thì như cũ', () => {
+    expect(fallbackTemplate(withVariant, 'vi')).toBe(
+      '{fact:product_name.1} ({fact:variant.1}) giá {fact:price.1}. {fact:product_name.1} ({fact:variant.1}): {fact:stock.1}.',
+    );
+    expect(fallbackTemplate(withVariant, 'en')).toBe(
+      '{fact:product_name.1} ({fact:variant.1}) is {fact:price.1}. {fact:product_name.1} ({fact:variant.1}): {fact:stock.1}.',
+    );
+    const noVariant = {
+      ...withVariant,
+      facts: withVariant.facts.filter((f) => f.kind !== 'variant'),
+    };
+    expect(fallbackTemplate(noVariant, 'vi')).toBe(
+      '{fact:product_name.1} giá {fact:price.1}. {fact:product_name.1}: {fact:stock.1}.',
+    );
+  });
+});

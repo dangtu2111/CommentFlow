@@ -1,3 +1,4 @@
+import { normalizeSearchText } from '@flow/shared';
 import { canonicalProvince, findProvinces } from './regions';
 import type {
   Fact,
@@ -160,7 +161,44 @@ function resolveRow(
 
 // ── Chính sách ──────────────────────────────────────────────────────────────
 
-function policyFact(topic: 'returns' | 'warranty' | 'payment', policy: PolicyFacts): Fact {
+function policyFact(
+  topic:
+    | 'returns'
+    | 'refund_to'
+    | 'return_shipping'
+    | 'return_eligibility'
+    | 'warranty'
+    | 'payment',
+  policy: PolicyFacts,
+): Fact {
+  if (topic === 'refund_to') {
+    const r = policy.returns;
+    return r?.refundTo
+      ? known('refund_to', 'refund_to', { type: 'refund_to', to: r.refundTo }, r.sourceId)
+      : unknown('refund_to', 'refund_to');
+  }
+  if (topic === 'return_shipping') {
+    const r = policy.returns;
+    return r?.returnShippingPaidBy
+      ? known(
+          'return_shipping',
+          'return_shipping',
+          { type: 'return_shipping', payer: r.returnShippingPaidBy },
+          r.sourceId,
+        )
+      : unknown('return_shipping', 'return_shipping');
+  }
+  if (topic === 'return_eligibility') {
+    const r = policy.returns;
+    return r?.eligibility
+      ? known(
+          'return_eligibility',
+          'return_eligibility',
+          { type: 'return_eligibility', mode: r.eligibility },
+          r.sourceId,
+        )
+      : unknown('return_eligibility', 'return_eligibility');
+  }
   if (topic === 'returns') {
     const r = policy.returns;
     if (!r) return unknown('returns', 'returns');
@@ -197,11 +235,22 @@ function policyFact(topic: 'returns' | 'warranty' | 'payment', policy: PolicyFac
     : unknown('payment', 'payment');
 }
 
+/** Phạm vi bảo hành (vd. "đường may") khớp câu khách: cả cụm, hoặc một từ ≥ 4 ký tự của phạm vi, đều theo ranh giới từ, đã bỏ dấu. KHÔNG đồng nghĩa, KHÔNG LLM. */
+export function scopeMatches(scope: string, customerText: string): boolean {
+  const text = ` ${normalizeSearchText(customerText)} `;
+  const phrase = normalizeSearchText(scope);
+  if (phrase === '') return false;
+  if (text.includes(` ${phrase} `)) return true;
+  return phrase.split(' ').some((word) => word.length >= 4 && text.includes(` ${word} `));
+}
+
 export function buildFactPlan(input: FactPlanInput): FactPlan {
   const facts: Fact[] = [];
   const unknownTopics = new Set<FactTopic>();
   const issues: string[] = [];
   let clarify: FactPlan['clarify'] = null;
+  let handoff = false;
+  let requiresHumanReview = false;
   const mark = (topic: FactTopic, fact: Fact) => {
     facts.push(fact);
     if (fact.status === 'unknown') unknownTopics.add(topic);
@@ -214,7 +263,13 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
     facts.push(
       known(`product_name.${n}`, 'product_name', { type: 'text', text: product.name }, product.id),
     );
-    if (chosen !== null && input.topics.some((t) => t === 'price' || t === 'stock')) {
+    // Nêu biến thể trong câu CHỈ khi khách đã nêu size/màu; biến thể duy nhất tự chọn (khách không chọn) không được nhắc tên (vd. "Ships From China Mainland").
+    const customerChoseVariant = Object.keys(input.variantAttrs ?? {}).length > 0;
+    if (
+      chosen !== null &&
+      customerChoseVariant &&
+      input.topics.some((t) => t === 'price' || t === 'stock')
+    ) {
       facts.push(
         known(`variant.${n}`, 'variant', { type: 'text', text: chosen.label }, product.id),
       );
@@ -237,10 +292,53 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
 
   const { rows, issues: rowIssues } = validShipRows(input.policy.shipping);
   issues.push(...rowIssues);
+  // Khách hỏi giao tới quốc gia nào → chỉ xét các dòng giao tới quốc gia đó (dòng không ghi destinations = Việt Nam).
+  const countriesOf = (row: ShipRow) => row.destinations ?? ['VN'];
+  const deliverable =
+    input.destination === undefined || input.destination === null
+      ? rows
+      : rows.filter((row) => countriesOf(row).includes(input.destination?.country ?? ''));
+  const destinationFact = () => {
+    const place = input.destination;
+    if (rows.length === 0)
+      return mark('ship_destination', unknown('ship_destination', 'ship_destination'));
+    if (place === undefined || place === null) {
+      // Khách hỏi "ship tỉnh?" không nêu nơi cụ thể: có dòng toàn quốc thì trả lời "giao toàn quốc"; không có → chưa biết (không đoán).
+      const nationwide = rows.find((row) => row.kind === 'nationwide');
+      if (!nationwide)
+        return mark('ship_destination', unknown('ship_destination', 'ship_destination'));
+      return mark(
+        'ship_destination',
+        known(
+          'ship_destination',
+          'ship_destination',
+          {
+            type: 'destination',
+            ok: true,
+            place: countriesOf(nationwide)[0] as string,
+            shipsTo: [...new Set(rows.flatMap(countriesOf))],
+            nationwide: true,
+          },
+          nationwide.sourceId,
+        ),
+      );
+    }
+    const hit = rows.find((row) => countriesOf(row).includes(place.country));
+    const shipsTo = [...new Set(rows.flatMap(countriesOf))];
+    mark(
+      'ship_destination',
+      known(
+        'ship_destination',
+        'ship_destination',
+        { type: 'destination', ok: hit !== undefined, place: place.country, shipsTo },
+        (hit ?? (rows[0] as ShipRow)).sourceId,
+      ),
+    );
+  };
   const shipping = (topic: 'ship_fee' | 'ship_time') => {
     const signature = (row: ShipRow) =>
-      `${row.feeMinor}|${row.daysMin}|${row.daysMax}|${row.currency}`;
-    const resolved = resolveRow(rows, input.location, signature);
+      `${row.feeMode ?? ''}|${row.freeOverMinor ?? ''}|${row.daysMode ?? ''}|${row.feeMinor}|${row.daysMin}|${row.daysMax}|${row.currency}`;
+    const resolved = resolveRow(deliverable, input.location, signature);
     if (resolved.kind === 'ask') {
       clarify = { ask: 'region' };
       facts.push(unknown(topic, topic));
@@ -249,9 +347,27 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
     if (resolved.kind === 'unknown') return mark(topic, unknown(topic, topic));
     const { row } = resolved;
     if (topic === 'ship_fee') {
+      const mode = row.feeMode ?? (row.feeMinor === null ? null : 'fixed');
+      if (mode === 'at_checkout' || mode === 'free') {
+        return mark(topic, known(topic, topic, { type: 'fee_mode', mode }, row.sourceId));
+      }
+      if (mode === 'free_over') {
+        if (row.freeOverMinor === undefined || row.freeOverMinor === null) {
+          return mark(topic, unknown(topic, topic));
+        }
+        return mark(
+          topic,
+          known(
+            topic,
+            topic,
+            { type: 'fee_mode', mode, overMinor: row.freeOverMinor, currency: row.currency },
+            row.sourceId,
+          ),
+        );
+      }
       return mark(
         topic,
-        row.feeMinor === null
+        mode === null || row.feeMinor === null
           ? unknown(topic, topic)
           : known(
               topic,
@@ -261,9 +377,16 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
             ),
       );
     }
+    const daysMode = row.daysMode ?? (row.daysMin === null ? 'not_stated' : 'range');
+    if (daysMode === 'at_checkout') {
+      return mark(
+        topic,
+        known(topic, topic, { type: 'days_mode', mode: 'at_checkout' }, row.sourceId),
+      );
+    }
     mark(
       topic,
-      row.daysMin === null || row.daysMax === null
+      daysMode === 'not_stated' || row.daysMin === null || row.daysMax === null
         ? unknown(topic, topic)
         : known(topic, topic, { type: 'days', min: row.daysMin, max: row.daysMax }, row.sourceId),
     );
@@ -288,12 +411,75 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
     mark('cod', known('cod', 'cod', { type: 'bool', value: row.cod }, row.sourceId));
   };
 
+  // Phí và thời gian giao nằm cùng một dòng ship: khách hỏi một trong hai mà dòng có đủ cả hai → cấp cả hai (cùng sourceId), tránh bộ soạn tự dùng mã còn lại. Thiếu một → chỉ cấp cái được hỏi.
+  const shipPair = (topic: 'ship_fee' | 'ship_time') => {
+    shipping(topic);
+    const other = topic === 'ship_fee' ? 'ship_time' : 'ship_fee';
+    if (input.topics.includes(other)) return;
+    const before = facts.length;
+    const hadUnknown = unknownTopics.has(other);
+    shipping(other);
+    const added = facts.slice(before);
+    if (added.every((fact) => fact.status === 'known')) {
+      facts.splice(
+        before,
+        added.length,
+        ...added.map((fact) => ({ ...fact, optional: true as const })),
+      );
+      return;
+    }
+    facts.length = before;
+    if (!hadUnknown) unknownTopics.delete(other);
+  };
   for (const topic of input.topics) {
-    if (topic === 'ship_fee' || topic === 'ship_time') shipping(topic);
+    if (topic === 'ship_fee' || topic === 'ship_time') shipPair(topic);
+    else if (topic === 'ship_destination') destinationFact();
     else if (topic === 'cod') cod();
-    else if (topic === 'returns' || topic === 'warranty' || topic === 'payment') {
-      mark(topic, policyFact(topic, input.policy));
+    else if (topic === 'defect') {
+      // Hàng lỗi/sai hàng KHÔNG có chính sách riêng trong policy_facts (5 loại): mặc định chuyển người, không mượn số ngày/điều kiện của đổi trả do không vừa.
+      // Ngoại lệ: thẻ bảo hành ĐÃ DUYỆT có phạm vi mà CODE khớp được với câu khách → nêu đúng bảo hành (phạm vi + thời hạn), nhưng bắt buộc người duyệt.
+      const warranty = input.policy.warranty;
+      if (
+        warranty?.scope &&
+        warranty.none !== true &&
+        warranty.months !== null &&
+        scopeMatches(warranty.scope, input.customerText ?? '')
+      ) {
+        mark('warranty', policyFact('warranty', input.policy));
+        requiresHumanReview = true;
+      } else {
+        mark('defect', unknown('defect', 'defect'));
+        handoff = true;
+      }
+    } else if (
+      topic === 'returns' ||
+      topic === 'refund_to' ||
+      topic === 'return_shipping' ||
+      topic === 'return_eligibility' ||
+      topic === 'warranty' ||
+      topic === 'payment'
+    ) {
+      const r = input.policy.returns;
+      const qualitative = r && r.none !== true && r.days === null;
+      if (
+        topic === 'returns' &&
+        qualitative &&
+        (r.refundTo || r.returnShippingPaidBy || r.eligibility)
+      ) {
+        // Không có số ngày nhưng có sự kiện định tính (hoàn về đâu, ai trả ship, khả năng đổi trả) → cấp các sự kiện đó thay vì "chưa biết".
+        for (const sub of ['return_eligibility', 'refund_to', 'return_shipping'] as const) {
+          const fact = policyFact(sub, input.policy);
+          if (fact.status === 'known') mark(sub, fact);
+        }
+      } else mark(topic, policyFact(topic, input.policy));
     }
   }
-  return { facts, clarify, unknownTopics: [...unknownTopics], issues };
+  return {
+    facts,
+    clarify,
+    unknownTopics: [...unknownTopics],
+    issues,
+    ...(handoff ? { handoff } : {}),
+    ...(requiresHumanReview ? { requiresHumanReview } : {}),
+  };
 }

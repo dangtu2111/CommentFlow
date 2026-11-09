@@ -13,15 +13,21 @@ const CONTEXT_KINDS: ReadonlySet<FactKind> = new Set([
 /** Sự kiện ĐÃ BIẾT mà câu trả lời phải nêu (không gồm tên/biến thể/số khách — chỉ là chất liệu câu). */
 export function requiredFactIds(plan: FactPlan): string[] {
   return plan.facts
-    .filter((fact) => fact.status === 'known' && !CONTEXT_KINDS.has(fact.kind))
+    .filter((fact) => fact.status === 'known' && !fact.optional && !CONTEXT_KINDS.has(fact.kind))
     .map((fact) => fact.id);
 }
 
 const suffixOf = (id: string): string => id.slice(id.indexOf('.'));
-const nameOf = (id: string, plan: FactPlan): string =>
-  id.includes('.') && plan.facts.some((fact) => fact.id === `product_name${suffixOf(id)}`)
-    ? `{fact:product_name${suffixOf(id)}}`
+/** Tên sản phẩm (+ biến thể khách chọn nếu có) cho câu dự phòng: "Áo thun ({fact:variant.1})" — giá/tồn của biến thể phải đi kèm đúng biến thể đó. */
+const nameOf = (id: string, plan: FactPlan): string => {
+  if (!id.includes('.')) return '';
+  const suffix = suffixOf(id);
+  if (!plan.facts.some((fact) => fact.id === `product_name${suffix}`)) return '';
+  const variant = plan.facts.some((fact) => fact.id === `variant${suffix}`)
+    ? ` ({fact:variant${suffix}})`
     : '';
+  return `{fact:product_name${suffix}}${variant}`;
+};
 
 const LINES: Record<
   'vi' | 'en',
@@ -36,6 +42,10 @@ const LINES: Record<
     cod: (id) => `Shop {fact:${id}}.`,
     returns: (id) => `Về đổi trả: {fact:${id}}.`,
     warranty: (id) => `Về bảo hành: {fact:${id}}.`,
+    ship_destination: (id) => `Về khu vực giao: {fact:${id}}.`,
+    refund_to: (id) => `Về hoàn tiền: {fact:${id}}.`,
+    return_shipping: (id) => `Về phí ship khi trả hàng: {fact:${id}}.`,
+    return_eligibility: (id) => `Về điều kiện đổi trả: {fact:${id}}.`,
     payment: (id) => `Thanh toán: {fact:${id}}.`,
   },
   en: {
@@ -48,6 +58,10 @@ const LINES: Record<
     cod: (id) => `We {fact:${id}}.`,
     returns: (id) => `Returns: {fact:${id}}.`,
     warranty: (id) => `Warranty: {fact:${id}}.`,
+    ship_destination: (id) => `Shipping destinations: {fact:${id}}.`,
+    refund_to: (id) => `Refunds: {fact:${id}}.`,
+    return_shipping: (id) => `Return shipping: {fact:${id}}.`,
+    return_eligibility: (id) => `Return eligibility: {fact:${id}}.`,
     payment: (id) => `Payment: {fact:${id}}.`,
   },
 };
@@ -55,7 +69,7 @@ const LINES: Record<
 /** Câu dự phòng do code dựng từ các sự kiện bắt buộc (chỉ chỗ giữ chỗ + lời văn cố định); rỗng nếu không có gì cần nói. */
 export function fallbackTemplate(plan: FactPlan, lang: 'vi' | 'en'): string {
   const lines = plan.facts.flatMap((fact) => {
-    if (fact.status !== 'known' || CONTEXT_KINDS.has(fact.kind)) return [];
+    if (fact.status !== 'known' || fact.optional || CONTEXT_KINDS.has(fact.kind)) return [];
     const line = LINES[lang][fact.kind]?.(fact.id, nameOf(fact.id, plan));
     return line === undefined ? [] : [line];
   });
@@ -69,6 +83,11 @@ const TOPIC_LABELS: Record<FactTopic, { vi: string; en: string }> = {
   ship_time: { vi: 'thời gian giao hàng', en: 'delivery time' },
   cod: { vi: 'thanh toán COD', en: 'cash on delivery' },
   returns: { vi: 'đổi trả', en: 'returns' },
+  ship_destination: { vi: 'khu vực giao hàng', en: 'shipping destinations' },
+  refund_to: { vi: 'hoàn tiền', en: 'refunds' },
+  return_shipping: { vi: 'phí ship khi trả hàng', en: 'return shipping' },
+  return_eligibility: { vi: 'điều kiện đổi trả', en: 'return eligibility' },
+  defect: { vi: 'hàng lỗi', en: 'defective items' },
   warranty: { vi: 'bảo hành', en: 'warranty' },
   payment: { vi: 'thanh toán', en: 'payment' },
 };

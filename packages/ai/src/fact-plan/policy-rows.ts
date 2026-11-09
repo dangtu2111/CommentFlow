@@ -40,6 +40,10 @@ export function policyFactsFromRows(rows: readonly PolicyFactInputRow[]): {
           daysMin: d.daysMin,
           daysMax: d.daysMax,
           ...(d.cod === undefined ? {} : { cod: d.cod }),
+          ...(d.feeMode === undefined ? {} : { feeMode: d.feeMode }),
+          ...(d.freeOverMinor === undefined ? {} : { freeOverMinor: d.freeOverMinor }),
+          ...(d.daysMode === undefined ? {} : { daysMode: d.daysMode }),
+          ...(d.destinations === undefined ? {} : { destinations: d.destinations }),
           sourceId,
         };
         policy.shipping.push(shipRow);
@@ -49,11 +53,21 @@ export function policyFactsFromRows(rows: readonly PolicyFactInputRow[]): {
         policy.cod = { value: (parsed.data as { value: boolean }).value, sourceId };
         break;
       case 'returns': {
-        const d = parsed.data as { days: number | null; none?: boolean; conditions?: string[] };
+        const d = parsed.data as {
+          days: number | null;
+          none?: boolean;
+          conditions?: string[];
+          refundTo?: 'original_payment' | null;
+          returnShippingPaidBy?: 'customer_change_of_mind' | 'shop' | null;
+          eligibility?: 'varies_by_item' | null;
+        };
         policy.returns = {
           days: d.days,
           none: d.none === true,
           ...(d.conditions ? { conditions: d.conditions } : {}),
+          ...(d.refundTo ? { refundTo: d.refundTo } : {}),
+          ...(d.returnShippingPaidBy ? { returnShippingPaidBy: d.returnShippingPaidBy } : {}),
+          ...(d.eligibility ? { eligibility: d.eligibility } : {}),
           sourceId,
         };
         break;

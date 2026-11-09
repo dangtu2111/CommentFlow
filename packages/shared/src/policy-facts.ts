@@ -29,9 +29,32 @@ const shipRegion = z
     daysMin: days,
     daysMax: days,
     cod: z.boolean().nullable().optional(),
+    /** Phí định tính (ENUM); thiếu = suy từ `feeMinor`. `fixed` bắt buộc `feeMinor`; `free_over` bắt buộc `freeOverMinor`. */
+    feeMode: z.enum(['fixed', 'at_checkout', 'free', 'free_over']).optional(),
+    freeOverMinor: z.number().int().min(0).max(1_000_000_000_000).nullable().optional(),
+    daysMode: z.enum(['range', 'at_checkout', 'not_stated']).optional(),
+    /** Quốc gia giao tới (ISO 3166-1 alpha-2); thiếu = ["VN"]. */
+    destinations: z
+      .array(z.string().regex(/^[A-Z]{2}$/))
+      .min(1)
+      .max(250)
+      .optional(),
   })
   .strict()
   .superRefine((row, ctx) => {
+    if (row.feeMode === 'fixed' && row.feeMinor === null) {
+      ctx.addIssue({ code: 'custom', path: ['feeMinor'], message: 'Phí cố định phải có số tiền.' });
+    }
+    if (
+      row.feeMode === 'free_over' &&
+      (row.freeOverMinor === undefined || row.freeOverMinor === null)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['freeOverMinor'],
+        message: 'Miễn phí từ ngưỡng phải có ngưỡng.',
+      });
+    }
     if (row.kind === 'city' && row.city === undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -58,7 +81,12 @@ const shipRegion = z
 const qualifier = z.string().trim().min(1).max(200);
 
 /** Điều kiện/phạm vi chỉ CHÉP NGUYÊN VĂN từ `evidence` (kiểm chuỗi con ở nơi tạo đề xuất); `needsReview` = câu nguồn có điều kiện/phạm vi chưa tách được → Owner phải xem lại (không vào fact plan). */
-const none = (field: 'days' | 'months', max: number, extra: z.ZodRawShape) =>
+const none = (
+  field: 'days' | 'months',
+  max: number,
+  extra: z.ZodRawShape,
+  qualitative: readonly string[] = [],
+) =>
   z
     .object({
       [field]: z.number().int().min(0).max(max).nullable(),
@@ -73,7 +101,10 @@ const none = (field: 'days' | 'months', max: number, extra: z.ZodRawShape) =>
       if (isNone && amount !== null) {
         ctx.addIssue({ code: 'custom', message: 'Ghi "không có" thì không kèm số.' });
       }
-      if (!isNone && amount === null) {
+      const hasQualitative = qualitative.some(
+        (key) => (value as Record<string, unknown>)[key] != null,
+      );
+      if (!isNone && amount === null && !hasQualitative) {
         ctx.addIssue({ code: 'custom', message: 'Thiếu số (hoặc đánh dấu "không có").' });
       }
     });
@@ -81,7 +112,17 @@ const none = (field: 'days' | 'months', max: number, extra: z.ZodRawShape) =>
 const SCHEMAS = {
   ship_region: shipRegion,
   cod: z.object({ value: z.boolean() }).strict(),
-  returns: none('days', 3650, { conditions: z.array(qualifier).max(10).optional() }),
+  returns: none(
+    'days',
+    3650,
+    {
+      conditions: z.array(qualifier).max(10).optional(),
+      refundTo: z.enum(['original_payment']).nullable().optional(),
+      returnShippingPaidBy: z.enum(['customer_change_of_mind', 'shop']).nullable().optional(),
+      eligibility: z.enum(['varies_by_item']).nullable().optional(),
+    },
+    ['refundTo', 'returnShippingPaidBy', 'eligibility'],
+  ),
   warranty: none('months', 600, { scope: qualifier.optional() }),
   payment: z.object({ methods: z.array(z.enum(PAYMENT_METHODS)).min(1).max(10) }).strict(),
 } as const;

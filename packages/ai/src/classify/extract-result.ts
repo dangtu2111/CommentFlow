@@ -1,5 +1,6 @@
 import { AppError, COMMENT_LABELS, type CommentLabel } from '@flow/shared';
 import { z } from 'zod';
+import { FACT_TOPICS } from '../fact-plan/types';
 
 /**
  * Kết quả bước `extract` (FR-162): MỘT object có cấu trúc, mọi bước sau chỉ đọc object này.
@@ -60,6 +61,10 @@ export const extractResultSchema = z.object({
     })
     .nullable(),
   asks: textList,
+  /** Chủ đề sự kiện câu hỏi THẬT SỰ hỏi (enum). Thiếu (dữ liệu cũ) → rỗng. */
+  topics: z.array(z.enum(FACT_TOPICS)).default([]),
+  /** Nơi khách muốn giao tới (chỉ tên nơi, vd. "Canada", "Hawaii", "Hà Nội"); chỉ để tra bảng quốc gia/tỉnh. */
+  destination: optionalText.optional().transform((value) => value ?? null),
 });
 
 export type ExtractResult = z.output<typeof extractResultSchema>;

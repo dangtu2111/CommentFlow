@@ -9,6 +9,10 @@ export type SlotSummary = {
   slotted: number;
   rawTexts: number;
   rejected: number;
+  /** CỔNG từ chối cứng: số MẪU phải dùng câu dự phòng/chuyển người vì mọi bản của LLM bị từ chối (có ít nhất một bản bị từ chối). */
+  fallbackSamples: number;
+  /** Id các mẫu đó (để liệt kê từng câu). */
+  fallbackSampleIds: string[];
   chosen: Record<string, number>;
   requiredFacts: number;
   knownFacts: number;
@@ -27,6 +31,8 @@ export function summarizeSlots(outcomes: Iterable<SampleOutcome>): SlotSummary {
     slotted: 0,
     rawTexts: 0,
     rejected: 0,
+    fallbackSamples: 0,
+    fallbackSampleIds: [],
     chosen: {},
     requiredFacts: 0,
     knownFacts: 0,
@@ -53,6 +59,10 @@ export function summarizeSlots(outcomes: Iterable<SampleOutcome>): SlotSummary {
       s.rejected += diag.rejected;
       s.chosen[diag.chosen] = (s.chosen[diag.chosen] ?? 0) + 1;
       if (diag.finalNetTriggered) s.finalNetTriggered += 1;
+      if ((diag.chosen === 'fallback' || diag.chosen === 'handoff') && diag.rejected > 0) {
+        s.fallbackSamples += 1;
+        s.fallbackSampleIds.push(outcome.id);
+      }
     }
   }
   return s;
@@ -83,7 +93,8 @@ export function renderSlotSummary(s: SlotSummary): string {
   return [
     '## Đường fact plan (ADR 017)',
     `- Lượt đi đường fact plan: ${s.slotted}/${s.total}`,
-    `- Câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG: ${s.rejected}/${s.rawTexts} (${pct(s.rejected, s.rawTexts)}); câu được chọn: ${JSON.stringify(s.chosen)}`,
+    `- CỔNG từ chối cứng — MẪU phải dùng câu dự phòng/chuyển người vì bị từ chối: ${s.fallbackSamples}/${s.slotted} (${pct(s.fallbackSamples, s.slotted)}; cổng: demo < 5%, sswiftly < 10%)${s.fallbackSampleIds.length > 0 ? ` — ${s.fallbackSampleIds.join(', ')}` : ''}`,
+    `- (chỉ theo dõi chi phí, không phải cổng) bản nháp LLM bị từ chối cứng: ${s.rejected}/${s.rawTexts} (${pct(s.rejected, s.rawTexts)}); câu được chọn: ${JSON.stringify(s.chosen)}`,
     `- Sự kiện bắt buộc: ${s.requiredFacts}; đã biết ${s.knownFacts}, chưa biết (câu mời) ${s.unknownFacts}; hỏi lại tỉnh/thành: ${s.clarify}`,
     `- Câu cuối còn số/khẳng định ngoài chỗ giữ chỗ (guard tiền trên giá trị code điền): ${s.finalMoneyViolations}`,
     `- Lưới chặn CUỐI ({fact:…} còn sót) kích hoạt: ${s.finalNetTriggered} (mục tiêu 0)`,
@@ -107,6 +118,8 @@ export function renderSlotReport(
     '',
     renderSlotSummary(summarizeSlots(outcomes.values())),
     '',
+    renderNeedsHuman(outcomes),
+    '',
     '### 10 câu mẫu (trải đều, không chọn lọc)',
     ...lines,
     '',
@@ -114,6 +127,21 @@ export function renderSlotReport(
     `### Mẫu gắn nhãn "nội thành 20.000đ" (bỏ đúng thiết kế, KHÔNG sửa nhãn): ${inner.length === 0 ? 'không có mẫu nào' : inner.join(', ')}`,
     '',
   ].join('\n');
+}
+
+/** Mẫu có `needsHuman = true` (kèm hành động, chính sách tự gửi, lý do rủi ro/duyệt) để Owner rà. */
+export function renderNeedsHuman(outcomes: ReadonlyMap<string, SampleOutcome>): string {
+  const rows = [...outcomes.values()].flatMap((o) =>
+    o.ok && o.needsHuman
+      ? [
+          `- ${o.id}: ${o.action}/${o.reason}, autoSend=${o.autoSendPolicy}, riskReasons=${JSON.stringify(o.riskReasons)}`,
+        ]
+      : [],
+  );
+  return [
+    `### Mẫu needsHuman = true (${rows.length})`,
+    ...(rows.length > 0 ? rows : ['- (không có)']),
+  ].join(String.fromCharCode(10));
 }
 
 const stable = (value: unknown): string =>

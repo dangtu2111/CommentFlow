@@ -1,4 +1,5 @@
 import { currencyExponent } from '@flow/shared';
+import { countryName } from './destinations';
 import { SLOT, slotIds } from './slots';
 import type { Fact, FactPlan, FactValue } from './types';
 
@@ -102,6 +103,49 @@ function renderValue(fact: Extract<Fact, { status: 'known' }>, lang: Lang): stri
     }
     case 'methods':
       return value.methods.map((method) => METHODS[method]?.[lang] ?? method).join(', ');
+    case 'fee_mode': {
+      if (value.mode === 'free') return lang === 'vi' ? 'miễn phí' : 'free';
+      if (value.mode === 'at_checkout') {
+        return lang === 'vi'
+          ? 'được tính khi thanh toán, tùy địa chỉ nhận và hình thức giao'
+          : 'calculated at checkout based on your destination and shipping method';
+      }
+      const over = formatMoney(
+        { amountMinor: value.overMinor ?? -1, currency: value.currency ?? 'VND' },
+        lang,
+      );
+      if (over === null) return null;
+      return lang === 'vi' ? `miễn phí cho đơn từ ${over}` : `free on orders over ${over}`;
+    }
+    case 'days_mode':
+      return lang === 'vi' ? 'hiển thị khi thanh toán' : 'shown at checkout';
+    case 'destination': {
+      if (value.ok && value.nationwide && value.place === 'VN') {
+        return lang === 'vi' ? 'shop giao toàn quốc' : 'we ship nationwide';
+      }
+      if (value.ok) {
+        return lang === 'vi'
+          ? `shop có giao tới ${countryName(value.place, 'vi')}`
+          : `we ship to ${countryName(value.place, 'en')}`;
+      }
+      const list = value.shipsTo.map((code) => countryName(code, lang)).join(', ');
+      return lang === 'vi' ? `hiện shop giao tới ${list}` : `we currently ship to ${list}`;
+    }
+    case 'refund_to':
+      return lang === 'vi'
+        ? 'hoàn tiền về phương thức thanh toán ban đầu'
+        : 'refunds go back to the original payment method';
+    case 'return_shipping':
+      if (value.payer === 'shop') {
+        return lang === 'vi' ? 'shop chịu phí ship khi trả hàng' : 'we cover return shipping';
+      }
+      return lang === 'vi'
+        ? 'nếu đổi ý, khách chịu phí ship khi trả hàng'
+        : 'for change-of-mind returns, the customer pays return shipping';
+    case 'return_eligibility':
+      return lang === 'vi'
+        ? 'khả năng đổi trả tùy từng sản phẩm'
+        : 'whether an item can be returned depends on the item';
   }
 }
 
@@ -123,6 +167,16 @@ export type FillResult = {
 
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 
+const LEAD_IN_BEFORE_SENTENCE_SLOT =
+  /(?:^|(?<=[.!?…]\s))[^.!?…{}]*?(?<![\p{L}\p{N}])(?:là|is|are)\s+(\{fact:(?:ship_destination|refund_to|return_shipping|return_eligibility)\})/giu;
+const ENDS_WITH_SENTENCE_SLOT =
+  /\{fact:(?:ship_destination|refund_to|return_shipping|return_eligibility)\}\s*$/u;
+const SENTENCE_SLOT_KINDS: ReadonlySet<string> = new Set([
+  'ship_destination',
+  'refund_to',
+  'return_shipping',
+  'return_eligibility',
+]);
 const DUPLICATE_CON = /(?<![\p{L}\p{N}])(còn)\s+còn(?![\p{L}\p{N}])/giu;
 
 export function fillSlots(template: string, plan: FactPlan, options: { lang: Lang }): FillResult {
@@ -138,8 +192,44 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
   };
   // Lời dẫn của bộ soạn + cụm điền có thể lặp từ ("hiện còn" + "còn 5 sản phẩm"): gộp "còn còn" → "còn" (chỉ chữ, không đụng giá trị đã điền).
   const dedupe = (text: string) => text.replace(DUPLICATE_CON, '$1');
-  const fillText = (text: string) =>
-    dedupe(text.replace(SLOT, (whole, id: string) => render(id) ?? whole));
+  // Viết hoa chữ đầu của giá trị khi nó mở đầu một câu mới (đứng sau ". ", "! ", "? "): "…$439.99. We ship to …".
+  const AFTER_TERMINATOR = /[.!?…]\s+$/;
+  // Giá trị là CÂU hoàn chỉnh (khu vực giao, hoàn tiền về đâu, ai trả phí ship khi trả hàng, điều kiện đổi trả) mà bộ soạn nối sau "là/is/are" ("Phí ship toàn quốc là {fact:…}")
+  // → bỏ cụm dẫn đó, câu sự kiện đứng riêng (viết hoa chữ đầu).
+  const CAPITALIZE = String.fromCharCode(0x200b);
+  const dropLeadIn = (text: string) =>
+    text.replace(LEAD_IN_BEFORE_SENTENCE_SLOT, (_all, slot: string) => `${CAPITALIZE}${slot}`);
+  const fillText = (raw: string) => {
+    const text = dropLeadIn(raw);
+    // Hai câu sự kiện hoàn chỉnh đứng liền nhau không dấu ("{fact:a} {fact:b}") → thêm dấu chấm sau câu trước, câu sau viết hoa.
+    let previousSentenceSlotEnd = -1;
+    const filled = dedupe(
+      text
+        .replace(SLOT, (whole, id: string, offset: number) => {
+          const value = render(id);
+          if (value === null) return whole;
+          const followsSentenceSlot =
+            previousSentenceSlotEnd >= 0 &&
+            /^\s+$/.test(text.slice(previousSentenceSlotEnd, offset));
+          const sentenceStart =
+            offset === 0 ||
+            followsSentenceSlot ||
+            AFTER_TERMINATOR.test(text.slice(0, offset)) ||
+            text[offset - 1] === CAPITALIZE;
+          const isSentenceSlot = SENTENCE_SLOT_KINDS.has(byId.get(id)?.kind ?? '');
+          previousSentenceSlotEnd = isSentenceSlot ? offset + whole.length : -1;
+          const shown = sentenceStart
+            ? value.charAt(0).toLocaleUpperCase() + value.slice(1)
+            : value;
+          const nextIsSlot = /^\s+\{fact:/.test(text.slice(offset + whole.length));
+          return isSentenceSlot && nextIsSlot && !/[.!?…]$/.test(shown) ? `${shown}.` : shown;
+        })
+        .split(CAPITALIZE)
+        .join(''),
+    );
+    // Câu kết thúc bằng một sự kiện là CÂU hoàn chỉnh mà thiếu dấu kết câu → thêm dấu chấm.
+    return ENDS_WITH_SENTENCE_SLOT.test(text) && !/[.!?…]$/.test(filled) ? `${filled}.` : filled;
+  };
 
   const claims: Claim[] = [];
   const sourceIds: string[] = [];

@@ -81,6 +81,7 @@ export function createRunner(options: RunnerOptions): Runner {
         voice,
         dict,
         ...(options.factSlots ? { factSlots: options.factSlots } : {}),
+        replyLanguage: options.shop.replyLanguage,
         ...(options.persistUsage ? { workspaceId: options.persistUsage.workspaceId } : {}),
         ...(options.variantCount === undefined ? {} : { variantCount: options.variantCount }),
         build: (sink): PipelineParts => {

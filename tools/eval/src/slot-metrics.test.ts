@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { EvalSample } from './dataset';
 import type { SampleOutcome } from './run-sample';
-import { renderSlotReport, sampleReplies, summarizeSlots } from './slot-metrics';
+import {
+  renderNeedsHuman,
+  renderSlotReport,
+  renderSlotSummary,
+  sampleReplies,
+  summarizeSlots,
+} from './slot-metrics';
 
 const ok = (id: string, over: Partial<Extract<SampleOutcome, { ok: true }>> = {}): SampleOutcome =>
   ({
@@ -43,6 +49,21 @@ describe('summarizeSlots', () => {
       finalMoneyViolations: 1,
       actions: { answer: 3 },
     });
+  });
+  it('CỔNG từ chối cứng tính theo MẪU dùng dự phòng/chuyển người vì bị từ chối, không theo số bản nháp', () => {
+    const handoffSlot = {
+      ...slot('reply', 2),
+      diagnostics: { rawTexts: 3, rejected: 2, chosen: 'handoff' as const },
+    };
+    const s = summarizeSlots([
+      ok('a', { slot: slot('reply', 2) }), // có bản bị từ chối nhưng vẫn chọn được bản đạt → không tính
+      ok('b', { slot: slot('fallback', 3) }),
+      ok('c', { slot: handoffSlot }),
+      ok('d', { slot: slot('fallback', 0) }), // dự phòng nhưng không có bản nào bị từ chối → không tính
+    ]);
+    expect(s.fallbackSamples).toBe(2);
+    expect(s.fallbackSampleIds).toEqual(['b', 'c']);
+    expect(renderSlotSummary(s)).toContain('2/4 (50.0%');
   });
   it('lượt không có chẩn đoán vẫn được tính vào slotted', () => {
     const s = summarizeSlots([ok('a', { slot: { ...slot('reply', 0), diagnostics: null } })]);
@@ -161,5 +182,20 @@ describe('chấm sự kiện bắt buộc theo chế độ tồn kho của shop 
       },
     });
     expect(summarizeSlots([o]).finalNetTriggered).toBe(1);
+  });
+});
+
+describe('renderNeedsHuman', () => {
+  it('liệt kê mẫu needsHuman = true kèm hành động, autoSend, lý do; không có thì ghi (không có)', () => {
+    const rows = new Map([
+      ['a', ok('a', { needsHuman: true, autoSendPolicy: 'never', riskReasons: { review: ['x'] } })],
+      ['b', ok('b')],
+    ]);
+    const text = renderNeedsHuman(rows);
+    expect(text).toContain('needsHuman = true (1)');
+    expect(text).toContain('a: answer/');
+    expect(text).toContain('autoSend=never');
+    expect(text).not.toContain('b:');
+    expect(renderNeedsHuman(new Map([['b', ok('b')]]))).toContain('(không có)');
   });
 });

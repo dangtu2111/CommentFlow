@@ -91,7 +91,7 @@ describe('bộ soạn chế độ chỗ giữ chỗ', () => {
     const { llm, calls } = fakeLlm(slotReply);
     const result = await createLlmDrafter({ llm, model: 'm' }).draft(input({ sources: [] }));
     expect(calls).toHaveLength(1);
-    expect(calls[0]?.promptVersion).toBe(`${DRAFT_PROMPT_VERSION}+slots@1`);
+    expect(calls[0]?.promptVersion).toBe(`${DRAFT_PROMPT_VERSION}+slots@2`);
     expect(result.needs_human).toBe(false);
     expect(result.reply).toContain('{fact:price.1}');
     expect(result.variants.length).toBeGreaterThanOrEqual(1);
@@ -103,5 +103,55 @@ describe('bộ soạn chế độ chỗ giữ chỗ', () => {
     const result = await createLlmDrafter({ llm, model: 'm' }).draft(rest);
     expect(calls).toHaveLength(0);
     expect(result.needs_human).toBe(true);
+  });
+});
+
+describe('prompt chế độ chỗ giữ chỗ — mã BẮT BUỘC, cấm tình trạng hàng/câu mời/hỏi thêm', () => {
+  it('liệt kê "BẮT BUỘC dùng đủ" đúng các mã code tính; cấm còn/hết hàng, câu mời; cấm hỏi thêm khi không có "Cần hỏi khách"', () => {
+    const text = userText(
+      input({
+        factSlots: {
+          facts: [
+            { id: 'product_name.1', kind: 'product_name' },
+            { id: 'price.1', kind: 'price' },
+            { id: 'ship_destination', kind: 'ship_destination' },
+          ],
+          required: ['price.1', 'ship_destination'],
+        },
+      }),
+    );
+    expect(text).toContain('BẮT BUỘC dùng đủ: {fact:price.1} {fact:ship_destination}');
+    expect(text).toContain('{fact:ship_destination} — câu nói về khu vực giao hàng');
+    expect(text).toMatch(/CẤM tự viết tình trạng hàng/);
+    expect(text).toMatch(/CẤM tự viết câu mời/);
+    expect(text).toMatch(/KHÔNG hỏi thêm khách/);
+  });
+  it('có "Cần hỏi khách" thì không có câu cấm hỏi thêm', () => {
+    const text = userText(
+      input({
+        decision: {
+          action: 'clarify',
+          clarify: { ask: 'variant', axes: ['size'], options: [] },
+          unansweredTopics: [],
+          redirectTemplates: [],
+        },
+      }),
+    );
+    expect(text).not.toMatch(/KHÔNG hỏi thêm khách/);
+  });
+  it('nhãn chủ đề chưa có nguồn theo ngôn ngữ, không nối mã enum thô', () => {
+    const text = userText(
+      input({
+        factSlots: undefined,
+        decision: {
+          action: 'redirect',
+          clarify: null,
+          unansweredTopics: ['shipping', 'policy'],
+          redirectTemplates: [],
+        },
+      }),
+    );
+    expect(text).toContain('Chủ đề chưa có nguồn (mời ib, không đoán): vận chuyển, chính sách');
+    expect(text).not.toContain('shipping, policy');
   });
 });

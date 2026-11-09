@@ -1,4 +1,5 @@
 import { COMMENT_LABELS, type MaskedText, unsafeMarkMasked } from '@flow/shared';
+import { FACT_TOPICS } from '../fact-plan/types';
 import type { LlmMessage } from '../llm-client';
 import { HISTORY_GUIDANCE, type PromptHistory, renderHistoryBlock } from '../prompt-history';
 
@@ -23,6 +24,8 @@ const SYSTEM_PROMPT = unsafeMarkMasked(
     'size, color: chuỗi hoặc null. height_cm, weight_kg: số hoặc null. qty: số nguyên hoặc null. cited_price_vnd: giá khách nhắc (số nguyên VND) hoặc null.',
     'order_intent: null nếu không đặt hàng, ngược lại {items: mảng chuỗi, phone: null, address: chuỗi hoặc null}. Văn bản đã che số điện thoại/email: không đoán.',
     'asks: mảng các ý khách hỏi (ví dụ giá, size, màu, tồn kho, ship).',
+    `topics: mảng chủ đề sự kiện câu hỏi THẬT SỰ hỏi, chỉ chọn trong: ${FACT_TOPICS.join(', ')}. Quy tắc: price=hỏi giá; stock=còn/hết hàng, còn mấy cái; ship_fee=phí ship; ship_time=bao lâu nhận hàng; ship_destination=hỏi có giao tới nơi X không ("do you ship to Canada") — KHÔNG kèm ship_fee/ship_time nếu không hỏi phí/thời gian; cod=thanh toán khi nhận hàng; returns=đổi trả trong mấy ngày/có đổi trả không; refund_to=tiền hoàn về đâu ("refund to my card"); return_shipping=ai trả phí ship khi trả hàng; return_eligibility=mặt hàng nào đổi trả được; defect=hàng lỗi/hỏng/sai hàng/damaged/defective/wrong item (KHÔNG phải đổi trả vì không vừa); warranty=bảo hành ("guarantee a refund" là returns/refund_to, KHÔNG phải warranty); payment=hình thức thanh toán. Hỏi giảm giá/khuyến mãi/discount/voucher/"mua N cái có giảm không"/"buy N get a discount" KHÔNG phải price và KHÔNG phải stock: không đánh dấu chủ đề nào cho ý đó. Không hỏi gì thuộc các chủ đề này thì mảng rỗng.`,
+    'destination: tên nơi khách muốn giao tới nếu có (vd "Canada", "Hawaii", "Hà Nội"), không thì null.',
     'Chỉ tách thông tin có trong bình luận; không có thì null/mảng rỗng. Không bịa số.',
   ].join('\n'),
 );

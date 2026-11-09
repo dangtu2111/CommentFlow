@@ -61,9 +61,17 @@ describe('checkSlotText — từ chối cứng mọi sự kiện ngoài chỗ gi
       'Delivery takes two days',
       'It costs thirty-five dollars',
       'Within one week',
+      'Orders are processed within one business day',
+      'Delivery takes two working weeks',
+      'Giao trong ba ngày làm việc',
+      'Giao trong một tới hai tuần',
     ]) {
       expect(codes(text)).toContain('number_word');
     }
+  });
+
+  it('đã biết: "one of our days" cũng bị bắt (số-chữ + 2 từ + đơn vị) — chấp nhận', () => {
+    expect(codes('It happens one of our days')).toContain('number_word');
   });
 
   it('cách nói thường không có đơn vị KHÔNG bị chặn nhầm', () => {
@@ -74,6 +82,8 @@ describe('checkSlotText — từ chối cứng mọi sự kiện ngoài chỗ gi
       'Sau ngày hôm nay shop kiểm lại nhé',
       'One moment please',
       'Both of you are welcome',
+      'One of our team will reply soon',
+      'Hai bên cứ thoải mái trao đổi nhé',
     ]) {
       expect(codes(text)).toEqual([]);
     }
@@ -123,5 +133,64 @@ describe('sameSlotSet — mọi biến thể phải dùng cùng tập chỗ gi�
     expect(sameSlotSet(['a', 'b'], ['b', 'a', 'a'])).toBe(true);
     expect(sameSlotSet(['a'], ['a', 'b'])).toBe(false);
     expect(sameSlotSet([], [])).toBe(true);
+  });
+});
+
+describe('checkSlotText — câu mời chỉ do code viết; không tự viết tình trạng hàng', () => {
+  const plan: FactPlan = {
+    facts: [
+      {
+        id: 'price.1',
+        kind: 'price',
+        status: 'known',
+        value: { type: 'money', amountMinor: 1, currency: 'VND' },
+        sourceId: 'p',
+      },
+      {
+        id: 'stock.1',
+        kind: 'stock',
+        status: 'known',
+        value: { type: 'stock', display: 'in' },
+        sourceId: 'p',
+      },
+    ],
+    clarify: null,
+    unknownTopics: [],
+    issues: [],
+  };
+  it.each([
+    ['Giá {fact:price.1}, bạn inbox shop nhé.', 'invitation'],
+    ['Giá {fact:price.1}. Please message us for details.', 'invitation'],
+    ['Giá {fact:price.1}, bạn liên hệ shop để biết thêm.', 'invitation'],
+    ['Price {fact:price.1}. Please contact us for more.', 'invitation'],
+    ['Price {fact:price.1}. DM us anytime.', 'invitation'],
+    ['{fact:price.1}, còn hàng bạn nhé.', 'stock_claim'],
+    ['{fact:price.1}. It is in stock.', 'stock_claim'],
+    ['{fact:price.1}. Sold out soon.', 'stock_claim'],
+    ['{fact:price.1}. The item is available.', 'stock_claim'],
+    ['{fact:price.1}. Still available!', 'stock_claim'],
+    ['{fact:price.1}. Hiện còn sẵn nhé.', 'stock_claim'],
+    ['{fact:price.1}. Available.', 'stock_claim'],
+  ])('DƯƠNG: %s → %s', (text, code) => {
+    expect(checkSlotText(text, plan).violations.map((v) => v.code)).toContain(code);
+  });
+  it.each([
+    'Price {fact:price.1}, available in black or white.',
+    'Price {fact:price.1}. Available shipping methods are shown at checkout.',
+    'Price {fact:price.1}. Available options: S, M, L.',
+    'Price {fact:price.1}; check availability soon.',
+    'Price {fact:price.1}. Is it available in size M?',
+    'Price {fact:price.1}, available for pre-order.',
+    'Giá {fact:price.1}, bạn có thể liên hệ đơn vị vận chuyển để theo dõi.',
+    'Price {fact:price.1}. Please contact the carrier for tracking.',
+    'Giá {fact:price.1}, liên hệ hãng để bảo hành.',
+    'Price {fact:price.1}. Reach out to the carrier.',
+  ])('ÂM (không bắt nhầm): %s', (text) => {
+    const codes = checkSlotText(text, plan).violations.map((v) => v.code);
+    expect(codes).not.toContain('stock_claim');
+    expect(codes).not.toContain('invitation');
+  });
+  it('dùng chỗ giữ chỗ tồn kho thì hợp lệ', () => {
+    expect(checkSlotText('Giá {fact:price.1}, {fact:stock.1}.', plan).ok).toBe(true);
   });
 });
