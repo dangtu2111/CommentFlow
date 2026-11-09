@@ -237,10 +237,14 @@ const FACT_LABELS: Record<string, string> = {
   returns: 'câu nói về đổi trả',
   warranty: 'câu nói về bảo hành',
   payment: 'phương thức thanh toán',
-  ship_destination: 'câu nói về khu vực giao hàng',
-  refund_to: 'câu nói về nơi hoàn tiền',
-  return_shipping: 'câu nói về phí ship khi trả hàng',
-  return_eligibility: 'câu nói về điều kiện đổi trả',
+  ship_destination:
+    'câu nói về khu vực giao hàng (đã là câu hoàn chỉnh, đặt riêng một câu, không nối sau "là/is")',
+  refund_to:
+    'câu nói về nơi hoàn tiền (đã là câu hoàn chỉnh, đặt riêng một câu, không nối sau "là/is")',
+  return_shipping:
+    'câu nói về phí ship khi trả hàng (đã là câu hoàn chỉnh, đặt riêng một câu, không nối sau "là/is")',
+  return_eligibility:
+    'câu nói về điều kiện đổi trả (đã là câu hoàn chỉnh, đặt riêng một câu, không nối sau "là/is")',
 };
 
 /** Luật + danh sách mã sự kiện của chế độ chỗ giữ chỗ (khối 3 — đổi theo từng câu). */

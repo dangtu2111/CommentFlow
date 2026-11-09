@@ -167,6 +167,8 @@ export type FillResult = {
 
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 
+const LEAD_IN_BEFORE_SENTENCE_SLOT =
+  /(?:^|(?<=[.!?…]\s))[^.!?…{}]*?(?<![\p{L}\p{N}])(?:là|is|are)\s+(\{fact:(?:ship_destination|refund_to|return_shipping|return_eligibility)\})/giu;
 const DUPLICATE_CON = /(?<![\p{L}\p{N}])(còn)\s+còn(?![\p{L}\p{N}])/giu;
 
 export function fillSlots(template: string, plan: FactPlan, options: { lang: Lang }): FillResult {
@@ -184,16 +186,26 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
   const dedupe = (text: string) => text.replace(DUPLICATE_CON, '$1');
   // Viết hoa chữ đầu của giá trị khi nó mở đầu một câu mới (đứng sau ". ", "! ", "? "): "…$439.99. We ship to …".
   const AFTER_TERMINATOR = /[.!?…]\s+$/;
-  const fillText = (text: string) =>
-    dedupe(
-      text.replace(SLOT, (whole, id: string, offset: number) => {
-        const value = render(id);
-        if (value === null) return whole;
-        return AFTER_TERMINATOR.test(text.slice(0, offset))
-          ? value.charAt(0).toLocaleUpperCase() + value.slice(1)
-          : value;
-      }),
+  // Giá trị là CÂU hoàn chỉnh (khu vực giao, hoàn tiền về đâu, ai trả phí ship khi trả hàng, điều kiện đổi trả) mà bộ soạn nối sau "là/is/are" ("Phí ship toàn quốc là {fact:…}")
+  // → bỏ cụm dẫn đó, câu sự kiện đứng riêng (viết hoa chữ đầu).
+  const CAPITALIZE = String.fromCharCode(0x200b);
+  const dropLeadIn = (text: string) =>
+    text.replace(LEAD_IN_BEFORE_SENTENCE_SLOT, (_all, slot: string) => `${CAPITALIZE}${slot}`);
+  const fillText = (raw: string) => {
+    const text = dropLeadIn(raw);
+    return dedupe(
+      text
+        .replace(SLOT, (whole, id: string, offset: number) => {
+          const value = render(id);
+          if (value === null) return whole;
+          const sentenceStart =
+            AFTER_TERMINATOR.test(text.slice(0, offset)) || text[offset - 1] === CAPITALIZE;
+          return sentenceStart ? value.charAt(0).toLocaleUpperCase() + value.slice(1) : value;
+        })
+        .split(CAPITALIZE)
+        .join(''),
     );
+  };
 
   const claims: Claim[] = [];
   const sourceIds: string[] = [];

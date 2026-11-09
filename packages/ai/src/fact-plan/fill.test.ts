@@ -236,3 +236,39 @@ describe('fillSlots — viết hoa chữ đầu khi giá trị mở đầu câu 
     );
   });
 });
+
+describe('fillSlots — câu sự kiện nối sau "là/is/are" thì bỏ cụm dẫn (mẫu vi-35)', () => {
+  const p = planOf(
+    fact('ship_destination', 'ship_destination', {
+      type: 'destination',
+      ok: true,
+      place: 'VN',
+      shipsTo: ['VN'],
+      nationwide: true,
+    }),
+    fact('ship_fee', 'ship_fee', { type: 'fee_mode', mode: 'free' }),
+    fact('refund_to', 'refund_to', { type: 'refund_to', to: 'original_payment' }),
+  );
+  it('"Phí ship toàn quốc là {fact:ship_destination}." → "Shop giao toàn quốc."', () => {
+    expect(fill('Phí ship toàn quốc là {fact:ship_destination}.', p, 'vi').text).toBe(
+      'Shop giao toàn quốc.',
+    );
+    expect(fill('The destination is {fact:ship_destination}.', p, 'en').text).toBe(
+      'We ship nationwide.',
+    );
+    expect(fill('Hoàn tiền là {fact:refund_to}.', p, 'vi').text).toBe(
+      'Hoàn tiền về phương thức thanh toán ban đầu.',
+    );
+  });
+  it('chỉ cắt trong CÂU chứa nó; câu trước giữ nguyên; giá trị dạng cụm danh từ (ship_fee) không bị cắt', () => {
+    expect(fill('Cảm ơn bạn. Khu vực giao là {fact:ship_destination}.', p, 'vi').text).toBe(
+      'Cảm ơn bạn. Shop giao toàn quốc.',
+    );
+    expect(fill('Phí ship là {fact:ship_fee}.', p, 'vi').text).toBe('Phí ship là miễn phí.');
+  });
+  it('không có "là/is/are" ngay trước chỗ giữ chỗ thì giữ nguyên lời dẫn', () => {
+    expect(fill('Về khu vực giao: {fact:ship_destination}.', p, 'vi').text).toBe(
+      'Về khu vực giao: shop giao toàn quốc.',
+    );
+  });
+});
