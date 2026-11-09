@@ -8,6 +8,7 @@ export const POLICY_NOTICES = [
   'saved',
   'approved',
   'discarded',
+  'deleted',
   'stale',
   'needs_review',
   'not_found',

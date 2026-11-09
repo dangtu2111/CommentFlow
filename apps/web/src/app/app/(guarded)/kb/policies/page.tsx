@@ -7,7 +7,11 @@ import { buildPolicyFactsView } from '../../../../../lib/kb-policy-view';
 import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
-import { approvePolicyAction, discardPolicyDraftAction } from '../policy-actions';
+import {
+  approvePolicyAction,
+  deleteApprovedPolicyAction,
+  discardPolicyDraftAction,
+} from '../policy-actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('kbPolicyFacts');
@@ -35,7 +39,11 @@ export default async function KbPoliciesPage({ searchParams }: { searchParams: S
             view={buildPolicyFactsView(facts)}
             isOwner={isOwner}
             notice={policyNoticeOf(query.pn)}
-            actions={{ approve: approvePolicyAction, discard: discardPolicyDraftAction }}
+            actions={{
+              approve: approvePolicyAction,
+              discard: discardPolicyDraftAction,
+              remove: deleteApprovedPolicyAction,
+            }}
           />
         </div>
       </KbFrame>

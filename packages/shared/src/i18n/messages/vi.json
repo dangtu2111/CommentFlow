@@ -3310,7 +3310,9 @@
       "discard": "Bỏ qua đề xuất",
       "add": "Thêm giá trị",
       "addRegion": "Thêm khu vực",
-      "soon": "Sắp có"
+      "soon": "Sắp có",
+      "delete": "Xóa",
+      "deleteConfirm": "Xác nhận xóa"
     },
     "empty": {
       "title": "Chưa có giá trị đã duyệt",
@@ -3333,7 +3335,8 @@
       "not_found": "Không tìm thấy giá trị này (có thể đã được xử lý).",
       "invalid": "Yêu cầu không hợp lệ.",
       "unavailable": "Chưa thực hiện được. Thử lại sau ít phút.",
-      "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát."
+      "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát.",
+      "deleted": "Đã xóa giá trị. AI không còn dùng giá trị này."
     },
     "form": {
       "pageTitle": {
@@ -3397,6 +3400,7 @@
       "scopeHint": "Ví dụ: đường may. Để trống nếu bảo hành toàn bộ.",
       "methods": "Phương thức đang nhận",
       "invalid": "Giá trị chưa hợp lệ: kiểm tra các ô bắt buộc (ví dụ phí cố định cần số tiền, nội thành cần thành phố)."
-    }
+    },
+    "updatedAt": "Cập nhật lúc {time}"
   }
 }

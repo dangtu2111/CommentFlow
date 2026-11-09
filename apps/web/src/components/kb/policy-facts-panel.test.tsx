@@ -115,6 +115,14 @@ describe('PolicyFactsPanel', () => {
     expect(out).toContain('payment.bank_transfer');
   });
 
+  it('mốc cập nhật theo giờ Việt Nam khi có; thiếu hoặc sai thì không hiện', async () => {
+    const ok = await html([row({ updatedAt: '2026-11-09 13:12:14.0018+00' })], true);
+    expect(ok).toContain('updatedAt|{&quot;time&quot;:&quot;');
+    expect(ok).toContain('20:12:14');
+    expect(await html([row({ updatedAt: 'khong-phai-ngay' })], true)).not.toContain('updatedAt|');
+    expect(await html([row({})], true)).not.toContain('updatedAt|');
+  });
+
   it('các chế độ phí/thời gian khác: miễn phí, miễn phí từ ngưỡng, tính khi thanh toán, chưa nêu', async () => {
     const mk = (id: string, label: string, over: object) =>
       row({ id, slot: label, data: { ...ship, label, ...over } });
@@ -205,7 +213,11 @@ describe('PolicyFactsPanel', () => {
   });
 
   describe('có Server Action (Owner)', () => {
-    const actions = { approve: async () => {}, discard: async () => {} };
+    const actions = {
+      approve: async () => {},
+      discard: async () => {},
+      remove: async () => {},
+    };
     const draftRow = (needs: boolean) =>
       row({
         id: 'd1',
@@ -243,6 +255,26 @@ describe('PolicyFactsPanel', () => {
       expect(out).toContain('href="/app/kb/policies/edit?kind=ship_region"');
       expect(out).toContain('href="/app/kb/policies/edit?kind=payment"');
       expect(await withActions([row({ id: 'a1' })], false)).not.toContain('/app/kb/policies/edit');
+    });
+
+    it('bản đã duyệt có nút Xóa hai bước (id + rev ẩn); Staff không có; thông báo deleted là status', async () => {
+      const out = await withActions([row({ id: 'a9', rev: 7 })], true);
+      expect(out).toContain('actions.delete');
+      expect(out).toContain('actions.deleteConfirm');
+      expect(out).toContain('name="id" value="a9"');
+      expect(out).toContain('name="rev" value="7"');
+      const staff = await withActions([row({ id: 'a9' })], false);
+      expect(staff).not.toContain('actions.deleteConfirm');
+      const done = renderToStaticMarkup(
+        await PolicyFactsPanel({
+          view: buildPolicyFactsView([]),
+          isOwner: true,
+          actions,
+          notice: 'deleted',
+        }),
+      );
+      expect(done).toContain('role="status"');
+      expect(done).toContain('notice.deleted');
     });
 
     it('đề xuất đã rõ điều kiện → không có ô tick; Staff không có form', async () => {

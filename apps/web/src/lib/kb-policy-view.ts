@@ -19,6 +19,8 @@ export type PolicyFactRowView = {
   evidence: string | null;
   sourceRef: string | null;
   rev: number;
+  /** Mốc cập nhật cuối (chuỗi thời gian từ DB); thiếu thì không hiện. */
+  updatedAt?: string | null;
 };
 
 export const POLICY_CARDS = ['ship', 'returns', 'warranty', 'payment'] as const;
