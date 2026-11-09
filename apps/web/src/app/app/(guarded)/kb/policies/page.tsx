@@ -1,13 +1,14 @@
-import { listAllPolicyFacts } from '@flow/db/runtime';
+import { listAllPolicyFacts, listPolicyItems } from '@flow/db/runtime';
 import { getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
 import { PolicyFactsPanel } from '../../../../../components/kb/policy-facts-panel';
-import { policyNoticeOf } from '../../../../../lib/kb-policy-notice';
+import { policyCountOf, policyNoticeOf } from '../../../../../lib/kb-policy-notice';
 import { buildPolicyFactsView } from '../../../../../lib/kb-policy-view';
 import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import {
+  analyzePolicyTextAction,
   approvePolicyAction,
   deleteApprovedPolicyAction,
   discardPolicyDraftAction,
@@ -28,9 +29,12 @@ export default async function KbPoliciesPage({ searchParams }: { searchParams: S
   const { user, workspace } = await requireAppUser({});
   const isOwner = workspace.role === 'owner';
   const query = await searchParams;
-  const facts = await getDb().withActor(workspace.id, user.id, (tx) =>
-    listAllPolicyFacts(tx, workspace.id),
-  );
+  const [facts, rawCount] = await getDb().withActor(workspace.id, user.id, async (tx) => {
+    const rows = await listAllPolicyFacts(tx, workspace.id);
+    // Văn bản thô chỉ Owner đọc (RLS bảng chính sách văn bản); Staff không có số này.
+    const raw = isOwner ? (await listPolicyItems(tx, workspace.id)).length : null;
+    return [rows, raw] as const;
+  });
   return (
     <main className="app-page app-page-wide">
       <KbFrame active="kbPolicies">
@@ -39,10 +43,13 @@ export default async function KbPoliciesPage({ searchParams }: { searchParams: S
             view={buildPolicyFactsView(facts)}
             isOwner={isOwner}
             notice={policyNoticeOf(query.pn)}
+            noticeCount={policyCountOf(query.pc)}
+            {...(rawCount === null ? {} : { raw: { count: rawCount } })}
             actions={{
               approve: approvePolicyAction,
               discard: discardPolicyDraftAction,
               remove: deleteApprovedPolicyAction,
+              analyze: analyzePolicyTextAction,
             }}
           />
         </div>

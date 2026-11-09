@@ -217,6 +217,7 @@ describe('PolicyFactsPanel', () => {
       approve: async () => {},
       discard: async () => {},
       remove: async () => {},
+      analyze: async () => {},
     };
     const draftRow = (needs: boolean) =>
       row({
@@ -275,6 +276,39 @@ describe('PolicyFactsPanel', () => {
       );
       expect(done).toContain('role="status"');
       expect(done).toContain('notice.deleted');
+    });
+
+    it('khối dữ liệu thô: có văn bản → nút Phân tách tự động hoạt động; chưa có → nút khóa; Staff không có nút; thông báo analyzed kèm số', async () => {
+      const render = async (
+        raw: { count: number } | undefined,
+        isOwner: boolean,
+        notice: 'analyzed' | 'no_raw' | null = null,
+      ) =>
+        renderToStaticMarkup(
+          await PolicyFactsPanel({
+            view: buildPolicyFactsView([]),
+            isOwner,
+            actions,
+            notice,
+            noticeCount: 3,
+            ...(raw ? { raw } : {}),
+          }),
+        );
+      const some = await render({ count: 4 }, true);
+      expect(some).toContain('raw.title');
+      expect(some).toContain('raw.count|{&quot;count&quot;:4}');
+      expect(some).toMatch(/<button type="submit"[^>]*>raw\.analyze/);
+      const none = await render({ count: 0 }, true);
+      expect(none).toContain('raw.empty');
+      expect(none).toMatch(/<button type="button" disabled[^>]*>raw\.analyze/);
+      const staff = await render({ count: 4 }, false);
+      expect(staff).toContain('raw.count');
+      expect(staff).not.toContain('raw.analyze');
+      expect(await render(undefined, false)).not.toContain('raw.title');
+      const analyzed = await render({ count: 4 }, true, 'analyzed');
+      expect(analyzed).toContain('role="status"');
+      expect(analyzed).toContain('notice.analyzed|{&quot;count&quot;:3}');
+      expect(await render({ count: 0 }, true, 'no_raw')).toContain('role="alert"');
     });
 
     it('đề xuất đã rõ điều kiện → không có ô tick; Staff không có form', async () => {

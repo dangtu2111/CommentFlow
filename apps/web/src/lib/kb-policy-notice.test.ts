@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePolicyActionForm, policyNoticeOf } from './kb-policy-notice';
+import { parsePolicyActionForm, policyCountOf, policyNoticeOf } from './kb-policy-notice';
 
 const ID = '11111111-1111-4111-8111-111111111111';
 const form = (fields: Record<string, string>) => {
@@ -35,5 +35,17 @@ describe('parsePolicyActionForm', () => {
     { rev: '1' },
   ])('form sai %j → ok=false', (fields) => {
     expect(parsePolicyActionForm(form(fields as Record<string, string>))).toEqual({ ok: false });
+  });
+});
+
+describe('policyCountOf', () => {
+  it('đọc số nguyên không âm; sai, âm, quá lớn hoặc thiếu → 0', () => {
+    expect(policyCountOf('5')).toBe(5);
+    expect(policyCountOf(['2', '9'])).toBe(2);
+    expect(policyCountOf('-1')).toBe(0);
+    expect(policyCountOf('1.5')).toBe(0);
+    expect(policyCountOf('x')).toBe(0);
+    expect(policyCountOf('99999')).toBe(0);
+    expect(policyCountOf(undefined)).toBe(0);
   });
 });

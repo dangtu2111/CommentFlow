@@ -9,6 +9,8 @@ export const POLICY_NOTICES = [
   'approved',
   'discarded',
   'deleted',
+  'analyzed',
+  'no_raw',
   'stale',
   'needs_review',
   'not_found',
@@ -33,4 +35,15 @@ export function parsePolicyActionForm(data: FormData): PolicyActionForm {
   const rev = z.coerce.number().int().min(1).safeParse(data.get('rev'));
   if (!id.success || !rev.success) return { ok: false };
   return { ok: true, id: id.data, rev: rev.data, confirm: data.get('confirm') === 'on' };
+}
+
+/** Số giá trị vừa phân tách (`?pc=`), dùng kèm thông báo `analyzed`; sai/âm → 0. */
+export function policyCountOf(value: string | string[] | undefined): number {
+  const parsed = z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(10_000)
+    .safeParse(Array.isArray(value) ? value[0] : value);
+  return parsed.success ? parsed.data : 0;
 }
