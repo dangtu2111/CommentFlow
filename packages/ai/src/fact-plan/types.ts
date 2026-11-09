@@ -7,8 +7,13 @@ export type FactTopic =
   | 'stock'
   | 'ship_fee'
   | 'ship_time'
+  | 'ship_destination'
   | 'cod'
   | 'returns'
+  | 'refund_to'
+  | 'return_shipping'
+  | 'return_eligibility'
+  | 'defect'
   | 'warranty'
   | 'payment';
 
@@ -21,8 +26,13 @@ export type FactKind =
   | 'stock'
   | 'ship_fee'
   | 'ship_time'
+  | 'ship_destination'
   | 'cod'
   | 'returns'
+  | 'refund_to'
+  | 'return_shipping'
+  | 'return_eligibility'
+  | 'defect'
   | 'warranty'
   | 'payment';
 
@@ -40,7 +50,20 @@ export type FactValue =
   /** `conditions`/`scope`: nguyên văn từ nguồn chính sách — luôn được ghép vào câu để không khẳng định rộng hơn chính sách. */
   | { type: 'days_count'; n: number; conditions?: string[] }
   | { type: 'months_count'; n: number; scope?: string }
-  | { type: 'methods'; methods: string[] };
+  | { type: 'methods'; methods: string[] }
+  /** Phí ship định tính (ENUM; code viết câu theo ngôn ngữ khách). `free_over`: miễn phí từ `overMinor`. */
+  | {
+      type: 'fee_mode';
+      mode: 'at_checkout' | 'free' | 'free_over';
+      overMinor?: number;
+      currency?: string;
+    }
+  | { type: 'days_mode'; mode: 'at_checkout' }
+  /** Giao tới nơi khách hỏi: `ok` = nằm trong vùng giao; `shipsTo` = các quốc gia shop giao (mã ISO) để nêu khi không khớp. */
+  | { type: 'destination'; ok: boolean; place: string; shipsTo: string[] }
+  | { type: 'refund_to'; to: 'original_payment' }
+  | { type: 'return_shipping'; payer: 'customer_change_of_mind' | 'shop' }
+  | { type: 'return_eligibility'; mode: 'varies_by_item' };
 
 export type Fact =
   | { id: string; kind: FactKind; status: 'known'; value: FactValue; sourceId: string }
@@ -56,6 +79,12 @@ export type ShipRow = {
   currency: string;
   daysMin: number | null;
   daysMax: number | null;
+  /** Phí định tính; thiếu = suy từ `feeMinor` (có số → `fixed`). */
+  feeMode?: 'fixed' | 'at_checkout' | 'free' | 'free_over';
+  freeOverMinor?: number | null;
+  daysMode?: 'range' | 'at_checkout' | 'not_stated';
+  /** Mã quốc gia giao tới (ISO); thiếu = `["VN"]`. */
+  destinations?: string[];
   /** Dòng có nói riêng về COD thì ưu tiên hơn `cod` chung. */
   cod?: boolean | null;
   sourceId: string;
@@ -64,7 +93,15 @@ export type ShipRow = {
 export type PolicyFacts = {
   shipping: ShipRow[];
   cod?: { value: boolean; sourceId: string } | null;
-  returns?: { days: number | null; none?: boolean; conditions?: string[]; sourceId: string } | null;
+  returns?: {
+    days: number | null;
+    none?: boolean;
+    conditions?: string[];
+    refundTo?: 'original_payment' | null;
+    returnShippingPaidBy?: 'customer_change_of_mind' | 'shop' | null;
+    eligibility?: 'varies_by_item' | null;
+    sourceId: string;
+  } | null;
   warranty?: { months: number | null; none?: boolean; scope?: string; sourceId: string } | null;
   payment?: { methods: string[]; sourceId: string } | null;
 };
@@ -93,6 +130,8 @@ export type StockMode = { disclose: 'status' | 'count'; lowAt: number | null };
 export type FactPlanInput = {
   products: PlanProduct[];
   topics: FactTopic[];
+  /** Nơi giao khách hỏi (đã quy về quốc gia) — chủ đề `ship_destination` và lọc dòng ship theo quốc gia. */
+  destination?: { country: string; label: string } | null;
   /** Văn bản nêu địa điểm của khách (nếu có). */
   location?: string | null;
   /** Thuộc tính biến thể khách nêu (đã chuẩn hóa), nếu có. */
@@ -109,6 +148,8 @@ export type FactPlan = {
   clarify: { ask: 'region' } | null;
   /** Chủ đề có sự kiện `unknown` (nguồn mời ib theo mẫu, ghi `unanswered_topics`). */
   unknownTopics: FactTopic[];
+  /** Chủ đề phải chuyển người (vd. hàng lỗi/sai hàng: chưa có chính sách có cấu trúc). */
+  handoff?: boolean;
   /** Dòng chính sách không hợp lệ bị bỏ qua (vd "nội thành" thiếu thành phố) — để báo Owner. */
   issues: string[];
 };

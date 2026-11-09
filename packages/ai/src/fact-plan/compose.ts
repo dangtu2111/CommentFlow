@@ -36,6 +36,10 @@ const LINES: Record<
     cod: (id) => `Shop {fact:${id}}.`,
     returns: (id) => `Về đổi trả: {fact:${id}}.`,
     warranty: (id) => `Về bảo hành: {fact:${id}}.`,
+    ship_destination: (id) => `Về khu vực giao: {fact:${id}}.`,
+    refund_to: (id) => `Về hoàn tiền: {fact:${id}}.`,
+    return_shipping: (id) => `Về phí ship khi trả hàng: {fact:${id}}.`,
+    return_eligibility: (id) => `Về điều kiện đổi trả: {fact:${id}}.`,
     payment: (id) => `Thanh toán: {fact:${id}}.`,
   },
   en: {
@@ -48,6 +52,10 @@ const LINES: Record<
     cod: (id) => `We {fact:${id}}.`,
     returns: (id) => `Returns: {fact:${id}}.`,
     warranty: (id) => `Warranty: {fact:${id}}.`,
+    ship_destination: (id) => `Shipping destinations: {fact:${id}}.`,
+    refund_to: (id) => `Refunds: {fact:${id}}.`,
+    return_shipping: (id) => `Return shipping: {fact:${id}}.`,
+    return_eligibility: (id) => `Return eligibility: {fact:${id}}.`,
     payment: (id) => `Payment: {fact:${id}}.`,
   },
 };
@@ -69,6 +77,11 @@ const TOPIC_LABELS: Record<FactTopic, { vi: string; en: string }> = {
   ship_time: { vi: 'thời gian giao hàng', en: 'delivery time' },
   cod: { vi: 'thanh toán COD', en: 'cash on delivery' },
   returns: { vi: 'đổi trả', en: 'returns' },
+  ship_destination: { vi: 'khu vực giao hàng', en: 'shipping destinations' },
+  refund_to: { vi: 'hoàn tiền', en: 'refunds' },
+  return_shipping: { vi: 'phí ship khi trả hàng', en: 'return shipping' },
+  return_eligibility: { vi: 'điều kiện đổi trả', en: 'return eligibility' },
+  defect: { vi: 'hàng lỗi', en: 'defective items' },
   warranty: { vi: 'bảo hành', en: 'warranty' },
   payment: { vi: 'thanh toán', en: 'payment' },
 };

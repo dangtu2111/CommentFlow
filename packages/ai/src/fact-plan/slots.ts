@@ -132,9 +132,9 @@ const CONCEPT_SLOT_KINDS: Record<ConceptId, readonly FactKind[]> = {
   cod: ['cod', 'payment'],
   installment: ['payment'],
   invoice: ['payment'],
-  international_shipping: [],
-  return: ['returns'],
-  refund: ['returns'],
+  international_shipping: ['ship_destination'],
+  return: ['returns', 'return_shipping', 'return_eligibility', 'refund_to'],
+  refund: ['returns', 'refund_to', 'return_shipping'],
   warranty: ['warranty'],
 };
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;

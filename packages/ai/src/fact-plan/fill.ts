@@ -1,4 +1,5 @@
 import { currencyExponent } from '@flow/shared';
+import { countryName } from './destinations';
 import { SLOT, slotIds } from './slots';
 import type { Fact, FactPlan, FactValue } from './types';
 
@@ -102,6 +103,46 @@ function renderValue(fact: Extract<Fact, { status: 'known' }>, lang: Lang): stri
     }
     case 'methods':
       return value.methods.map((method) => METHODS[method]?.[lang] ?? method).join(', ');
+    case 'fee_mode': {
+      if (value.mode === 'free') return lang === 'vi' ? 'miễn phí' : 'free';
+      if (value.mode === 'at_checkout') {
+        return lang === 'vi'
+          ? 'được tính khi thanh toán, tùy địa chỉ nhận và hình thức giao'
+          : 'calculated at checkout based on your destination and shipping method';
+      }
+      const over = formatMoney(
+        { amountMinor: value.overMinor ?? -1, currency: value.currency ?? 'VND' },
+        lang,
+      );
+      if (over === null) return null;
+      return lang === 'vi' ? `miễn phí cho đơn từ ${over}` : `free on orders over ${over}`;
+    }
+    case 'days_mode':
+      return lang === 'vi' ? 'hiển thị khi thanh toán' : 'shown at checkout';
+    case 'destination': {
+      if (value.ok) {
+        return lang === 'vi'
+          ? `shop có giao tới ${countryName(value.place, 'vi')}`
+          : `we ship to ${countryName(value.place, 'en')}`;
+      }
+      const list = value.shipsTo.map((code) => countryName(code, lang)).join(', ');
+      return lang === 'vi' ? `hiện shop giao tới ${list}` : `we currently ship to ${list}`;
+    }
+    case 'refund_to':
+      return lang === 'vi'
+        ? 'hoàn tiền về phương thức thanh toán ban đầu'
+        : 'refunds go back to the original payment method';
+    case 'return_shipping':
+      if (value.payer === 'shop') {
+        return lang === 'vi' ? 'shop chịu phí ship khi trả hàng' : 'we cover return shipping';
+      }
+      return lang === 'vi'
+        ? 'nếu đổi ý, khách chịu phí ship khi trả hàng'
+        : 'for change-of-mind returns, the customer pays return shipping';
+    case 'return_eligibility':
+      return lang === 'vi'
+        ? 'khả năng đổi trả tùy từng sản phẩm'
+        : 'whether an item can be returned depends on the item';
   }
 }
 

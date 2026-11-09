@@ -2804,7 +2804,19 @@
         "feeMinor": null,
         "currency": "USD",
         "daysMin": null,
-        "daysMax": null
+        "daysMax": null,
+        "feeMode": "at_checkout",
+        "daysMode": "at_checkout",
+        "destinations": ["US"]
+      }
+    },
+    {
+      "kind": "returns",
+      "data": {
+        "days": null,
+        "refundTo": "original_payment",
+        "returnShippingPaidBy": "customer_change_of_mind",
+        "eligibility": "varies_by_item"
       }
     }
   ]

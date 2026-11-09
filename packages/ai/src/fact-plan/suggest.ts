@@ -1,5 +1,10 @@
 import { normalizeSearchText, type PolicyFactKind } from '@flow/shared';
+import { countryName } from './destinations';
 import { findProvinces, PROVINCES } from './regions';
+import { currencyOfCountry, qualitativeReturns, qualitativeShip } from './suggest-qualitative';
+
+/** Bằng chứng gồm nhiều câu nguyên văn: nối bằng dấu này (mỗi đoạn là một câu trích nguyên văn). */
+export const EVIDENCE_JOIN = ' ¦ ';
 
 /**
  * ĐỀ XUẤT chính sách có cấu trúc từ văn bản (chính sách Shopify hoặc văn bản Owner nhập) — DRAFT-FACT-SLOTS PR 3. Quy tắc bất biến (ADR 017): mỗi đề xuất mang NGUYÊN VĂN câu làm bằng chứng, mọi số trong
@@ -252,5 +257,57 @@ export function suggestPolicyFacts(text: string): PolicySuggestion[] {
         found.set(key, null);
     }
   }
-  return [...found.values()].filter((s): s is PolicySuggestion => s !== null);
+  const result = [...found.values()].filter((s): s is PolicySuggestion => s !== null);
+  return mergeQualitative(result, sentencesOf(text));
+}
+
+/** Gộp đề xuất ĐỊNH TÍNH (enum) vào dòng đã có cùng loại, hoặc tạo dòng mới khi chưa có số nào. Bằng chứng nối các câu liên quan (mỗi câu nguyên văn). */
+function mergeQualitative(base: PolicySuggestion[], sentences: string[]): PolicySuggestion[] {
+  const out = [...base];
+  const returns = qualitativeReturns(sentences);
+  if (returns) {
+    const enums = {
+      ...(returns.refundTo ? { refundTo: returns.refundTo } : {}),
+      ...(returns.returnShippingPaidBy
+        ? { returnShippingPaidBy: returns.returnShippingPaidBy }
+        : {}),
+      ...(returns.eligibility ? { eligibility: returns.eligibility } : {}),
+    };
+    const existing = out.find((s) => s.kind === 'returns');
+    if (existing) {
+      existing.data = { ...existing.data, ...enums };
+      existing.evidence = [...new Set([existing.evidence, ...returns.evidence])].join(
+        EVIDENCE_JOIN,
+      );
+    } else {
+      out.push({
+        kind: 'returns',
+        slot: 'returns',
+        data: { days: null, ...enums },
+        evidence: returns.evidence.join(EVIDENCE_JOIN),
+      });
+    }
+  }
+  const ship = qualitativeShip(sentences);
+  if (ship && !out.some((s) => s.kind === 'ship_region')) {
+    const first = ship.destinations[0] as string;
+    const label = countryName(first, 'en').replace(/^the /, '');
+    out.push({
+      kind: 'ship_region',
+      slot: normalizeSearchText(label).slice(0, 100),
+      data: {
+        kind: 'nationwide',
+        label,
+        feeMinor: null,
+        currency: currencyOfCountry(first),
+        daysMin: null,
+        daysMax: null,
+        destinations: ship.destinations,
+        ...(ship.feeMode ? { feeMode: ship.feeMode } : {}),
+        ...(ship.daysMode ? { daysMode: ship.daysMode } : { daysMode: 'not_stated' }),
+      },
+      evidence: ship.evidence.join(EVIDENCE_JOIN),
+    });
+  }
+  return out;
 }
