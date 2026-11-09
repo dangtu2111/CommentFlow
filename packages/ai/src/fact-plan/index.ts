@@ -3,6 +3,7 @@
 export { fallbackTemplate, inviteUnknownText, requiredFactIds } from './compose';
 export { type Claim, type FillResult, fillSlots, formatMoney } from './fill';
 export { buildFactPlan } from './plan';
+export { type PolicyFactInputRow, policyFactsFromRows } from './policy-rows';
 export { canonicalProvince, findProvinces, PROVINCES, sameProvince } from './regions';
 export {
   checkSlotText,

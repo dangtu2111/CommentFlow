@@ -344,6 +344,15 @@ export {
   markPipelineTurnCharged,
   releasePipelineTurn,
 } from './queries/pipeline-turns';
+export {
+  approvePolicyFact,
+  deletePolicyFact,
+  listAllPolicyFacts,
+  listApprovedPolicyFacts,
+  type PolicyFactRow,
+  type SavePolicyFactInput,
+  savePolicyFact,
+} from './queries/policy-facts';
 export { createPostNote } from './queries/post-notes';
 export { linkProductsToPosts } from './queries/post-products';
 export {

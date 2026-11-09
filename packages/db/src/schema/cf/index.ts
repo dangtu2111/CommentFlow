@@ -13,6 +13,7 @@ export * from './kb';
 export * from './kb-content';
 export * from './leads';
 export * from './pipeline-turns';
+export * from './policy-facts';
 export * from './post-notes';
 export * from './post-products';
 export * from './posts';
