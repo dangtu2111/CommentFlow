@@ -3323,6 +3323,16 @@
     "legacy": {
       "title": "Text policies",
       "hint": "This text feeds knowledge search and is the source AI uses to suggest the values above."
+    },
+    "notice": {
+      "approved": "Approved. AI will use this value to answer customers.",
+      "discarded": "Suggestion discarded.",
+      "stale": "Someone or the system just updated this row. Review the new version and approve again.",
+      "needs_review": "This suggestion has conditions that could not be split: tick the confirmation that you read them correctly before approving.",
+      "not_found": "This value was not found (it may already be handled).",
+      "invalid": "Invalid request.",
+      "unavailable": "Could not complete. Try again in a few minutes.",
+      "rate_limited": "You are acting too fast. Try again in a moment."
     }
   }
 }

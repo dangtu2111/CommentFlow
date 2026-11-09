@@ -3323,6 +3323,16 @@
     "legacy": {
       "title": "Chính sách dạng văn bản",
       "hint": "Văn bản này nuôi bộ tìm kiếm tri thức và là nguồn để AI rút giá trị đề xuất ở trên."
+    },
+    "notice": {
+      "approved": "Đã duyệt. AI sẽ dùng giá trị này để trả lời khách.",
+      "discarded": "Đã bỏ đề xuất.",
+      "stale": "Có người hoặc hệ thống vừa cập nhật dòng này. Hãy xem lại bản mới rồi duyệt lại.",
+      "needs_review": "Đề xuất còn điều kiện chưa tách được: hãy tick xác nhận đã đọc đúng điều kiện trước khi duyệt.",
+      "not_found": "Không tìm thấy giá trị này (có thể đã được xử lý).",
+      "invalid": "Yêu cầu không hợp lệ.",
+      "unavailable": "Chưa thực hiện được. Thử lại sau ít phút.",
+      "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát."
     }
   }
 }

@@ -14,11 +14,13 @@ import {
 } from '../../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
 import { PolicyFactsPanel } from '../../../../../components/kb/policy-facts-panel';
+import { policyNoticeOf } from '../../../../../lib/kb-policy-notice';
 import { buildPolicyFactsView } from '../../../../../lib/kb-policy-view';
 import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import { createPolicyAction, deletePolicyAction, updatePolicyAction } from '../actions';
+import { approvePolicyAction, discardPolicyDraftAction } from '../policy-actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('kbContent');
@@ -58,7 +60,12 @@ export default async function KbPoliciesPage({ searchParams }: { searchParams: S
     <main className="app-page app-page-wide">
       <KbFrame active="kbPolicies">
         <div className="tw space-y-space-lg">
-          <PolicyFactsPanel view={factsView} isOwner={isOwner} />
+          <PolicyFactsPanel
+            view={factsView}
+            isOwner={isOwner}
+            notice={policyNoticeOf(query.pn)}
+            actions={{ approve: approvePolicyAction, discard: discardPolicyDraftAction }}
+          />
           {isOwner ? (
             <>
               <KbPageHead title={t('policies.title')} subtitle={t('policies.subtitle')} />

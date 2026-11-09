@@ -203,4 +203,52 @@ describe('PolicyFactsPanel', () => {
     expect(full).toContain('returns.elig_varies_by_item');
     expect(full).toContain('chưa giặt');
   });
+
+  describe('có Server Action (Owner)', () => {
+    const actions = { approve: async () => {}, discard: async () => {} };
+    const draftRow = (needs: boolean) =>
+      row({
+        id: 'd1',
+        rev: 5,
+        kind: 'returns',
+        slot: 'returns',
+        data: needs ? { days: 7, needsReview: true } : { days: 7 },
+        status: 'draft',
+        origin: 'text_suggested',
+        evidence: 'Đổi trả 7 ngày',
+      });
+    const withActions = async (
+      rows: PolicyFactRowView[],
+      isOwner: boolean,
+      notice: 'approved' | 'stale' | null = null,
+    ) =>
+      renderToStaticMarkup(
+        await PolicyFactsPanel({ view: buildPolicyFactsView(rows), isOwner, actions, notice }),
+      );
+
+    it('form có id + rev ẩn; nút Duyệt/Bỏ hoạt động; đề xuất cần xác nhận → ô tick bắt buộc', async () => {
+      const out = await withActions([draftRow(true)], true);
+      expect(out).toContain('name="id" value="d1"');
+      expect(out).toContain('name="rev" value="5"');
+      expect(out).toMatch(/<input type="checkbox"[^>]*name="confirm"/);
+      expect(out).toMatch(/<input type="checkbox" required=""[^>]*name="confirm"/);
+      expect(out).toContain('actions.approve');
+      expect(out).toContain('actions.discard');
+    });
+
+    it('đề xuất đã rõ điều kiện → không có ô tick; Staff không có form', async () => {
+      const out = await withActions([draftRow(false)], true);
+      expect(out).not.toContain('name="confirm"');
+      const staff = await withActions([draftRow(false)], false);
+      expect(staff).not.toContain('name="rev"');
+    });
+
+    it('thông báo: thành công dùng role=status, lỗi dùng role=alert', async () => {
+      expect(await withActions([], true, 'approved')).toContain('role="status"');
+      expect(await withActions([], true, 'approved')).toContain('notice.approved');
+      const stale = await withActions([], true, 'stale');
+      expect(stale).toContain('role="alert"');
+      expect(stale).toContain('notice.stale');
+    });
+  });
 });

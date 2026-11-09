@@ -1,6 +1,7 @@
 import { formatMinorAmount, type ShipRegionData } from '@flow/shared';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import type { PolicyNotice } from '../../lib/kb-policy-notice';
 import {
   isEditedByOwner,
   isShipRegionRow,
@@ -13,6 +14,12 @@ import {
   type PolicyFactsView,
 } from '../../lib/kb-policy-view';
 import { Icon, type IconName } from '../ui/icon';
+
+/** Server Action nhận FormData (Duyệt / Bỏ). Không truyền → nút hiển thị khóa (route [MẪU], chưa nối). */
+export type PolicyActions = {
+  approve: (data: FormData) => Promise<void>;
+  discard: (data: FormData) => Promise<void>;
+};
 
 type T = (key: string, values?: Record<string, string | number>) => string;
 
@@ -253,7 +260,17 @@ function DisabledAction({
 }
 
 /** Khối nháp chờ duyệt (đề xuất của máy hoặc bản Owner đã sửa): giá trị mới, trích dẫn nguyên văn, so với bản đang duyệt, nút thao tác. */
-function DraftBlock({ entry, isOwner, t }: { entry: PolicyEntry; isOwner: boolean; t: T }) {
+function DraftBlock({
+  entry,
+  isOwner,
+  actions,
+  t,
+}: {
+  entry: PolicyEntry;
+  isOwner: boolean;
+  actions: PolicyActions | undefined;
+  t: T;
+}) {
   const draft = entry.draft;
   if (draft === null) return null;
   return (
@@ -291,21 +308,54 @@ function DraftBlock({ entry, isOwner, t }: { entry: PolicyEntry; isOwner: boolea
           <ValueBlock row={entry.approved} t={t} />
         )}
       </div>
-      {needsReview(draft) ? (
-        <label className="flex items-start gap-2 font-body-sm text-body-sm text-on-surface">
-          <input type="checkbox" disabled className="mt-0.5" />
-          {t('confirm')}
-        </label>
-      ) : null}
-      {isOwner ? (
-        <div className="flex flex-wrap justify-end gap-2">
-          <DisabledAction t={t}>{t('actions.discard')}</DisabledAction>
-          <DisabledAction t={t}>{t('actions.edit')}</DisabledAction>
-          <DisabledAction t={t} primary>
-            {t('actions.approve')}
-          </DisabledAction>
-        </div>
-      ) : null}
+      {isOwner && actions ? (
+        <form className="space-y-space-md">
+          <input type="hidden" name="id" value={draft.id} />
+          <input type="hidden" name="rev" value={draft.rev} />
+          {needsReview(draft) ? (
+            <label className="flex items-start gap-2 font-body-sm text-body-sm text-on-surface">
+              <input type="checkbox" name="confirm" required className="mt-0.5" />
+              {t('confirm')}
+            </label>
+          ) : null}
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="submit"
+              formAction={actions.discard}
+              formNoValidate
+              className="rounded-lg bg-surface-container px-3 py-1.5 font-label-md text-label-md text-on-surface-variant"
+            >
+              {t('actions.discard')}
+            </button>
+            <DisabledAction t={t}>{t('actions.edit')}</DisabledAction>
+            <button
+              type="submit"
+              formAction={actions.approve}
+              className="rounded-lg bg-primary-container px-3 py-1.5 font-label-md text-label-md text-on-primary"
+            >
+              {t('actions.approve')}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <>
+          {needsReview(draft) ? (
+            <label className="flex items-start gap-2 font-body-sm text-body-sm text-on-surface">
+              <input type="checkbox" disabled className="mt-0.5" />
+              {t('confirm')}
+            </label>
+          ) : null}
+          {isOwner ? (
+            <div className="flex flex-wrap justify-end gap-2">
+              <DisabledAction t={t}>{t('actions.discard')}</DisabledAction>
+              <DisabledAction t={t}>{t('actions.edit')}</DisabledAction>
+              <DisabledAction t={t} primary>
+                {t('actions.approve')}
+              </DisabledAction>
+            </div>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
@@ -340,7 +390,17 @@ function ShipSummary({ data, t }: { data: ShipRegionData; t: T }) {
 }
 
 /** Một mục của thẻ: bản đang duyệt (nếu có) + khối nháp chờ duyệt (nếu có). Chỉ có nháp → chỉ hiện khối nháp. */
-function EntryRow({ entry, isOwner, t }: { entry: PolicyEntry; isOwner: boolean; t: T }) {
+function EntryRow({
+  entry,
+  isOwner,
+  actions,
+  t,
+}: {
+  entry: PolicyEntry;
+  isOwner: boolean;
+  actions: PolicyActions | undefined;
+  t: T;
+}) {
   const { approved, draft } = entry;
   const shown = approved ?? draft;
   if (shown === null) return null;
@@ -363,7 +423,7 @@ function EntryRow({ entry, isOwner, t }: { entry: PolicyEntry; isOwner: boolean;
           ) : null}
         </div>
       ) : null}
-      <DraftBlock entry={entry} isOwner={isOwner} t={t} />
+      <DraftBlock entry={entry} isOwner={isOwner} actions={actions} t={t} />
     </div>
   );
 }
@@ -455,14 +515,30 @@ function CoverageStrip({ view, t }: { view: PolicyFactsView; t: T }) {
 export async function PolicyFactsPanel({
   view,
   isOwner,
+  actions,
+  notice = null,
 }: {
   view: PolicyFactsView;
   isOwner: boolean;
+  actions?: PolicyActions;
+  notice?: PolicyNotice | null;
 }) {
   const translator = await getTranslations('kbPolicyFacts');
   const t = translator as unknown as T;
   return (
     <div className="space-y-space-lg">
+      {notice ? (
+        <p
+          role={notice === 'approved' || notice === 'discarded' ? 'status' : 'alert'}
+          className={`rounded-lg px-space-md py-space-sm font-body-md text-body-md ${
+            notice === 'approved' || notice === 'discarded'
+              ? 'bg-surface-container-low text-primary'
+              : 'bg-error-container text-on-error-container'
+          }`}
+        >
+          {t(`notice.${notice}`)}
+        </p>
+      ) : null}
       <section className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
         <div className="flex flex-wrap items-start justify-between gap-space-md">
           <div>
@@ -509,7 +585,13 @@ export async function PolicyFactsPanel({
           ) : (
             <div className="space-y-space-md">
               {card.entries.map((entry) => (
-                <EntryRow key={entry.slot} entry={entry} isOwner={isOwner} t={t} />
+                <EntryRow
+                  key={entry.slot}
+                  entry={entry}
+                  isOwner={isOwner}
+                  actions={actions}
+                  t={t}
+                />
               ))}
             </div>
           )}
