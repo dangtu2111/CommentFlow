@@ -61,9 +61,17 @@ describe('checkSlotText — từ chối cứng mọi sự kiện ngoài chỗ gi
       'Delivery takes two days',
       'It costs thirty-five dollars',
       'Within one week',
+      'Orders are processed within one business day',
+      'Delivery takes two working weeks',
+      'Giao trong ba ngày làm việc',
+      'Giao trong một tới hai tuần',
     ]) {
       expect(codes(text)).toContain('number_word');
     }
+  });
+
+  it('đã biết: "one of our days" cũng bị bắt (số-chữ + 2 từ + đơn vị) — chấp nhận', () => {
+    expect(codes('It happens one of our days')).toContain('number_word');
   });
 
   it('cách nói thường không có đơn vị KHÔNG bị chặn nhầm', () => {
@@ -74,6 +82,8 @@ describe('checkSlotText — từ chối cứng mọi sự kiện ngoài chỗ gi
       'Sau ngày hôm nay shop kiểm lại nhé',
       'One moment please',
       'Both of you are welcome',
+      'One of our team will reply soon',
+      'Hai bên cứ thoải mái trao đổi nhé',
     ]) {
       expect(codes(text)).toEqual([]);
     }

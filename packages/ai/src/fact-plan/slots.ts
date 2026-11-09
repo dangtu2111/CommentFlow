@@ -123,8 +123,10 @@ const UNITS = [
 ];
 const LETTER_BEFORE = '(?<![\\p{L}\\p{N}])';
 const LETTER_AFTER = '(?![\\p{L}\\p{N}])';
+// Cho phép tối đa 2 từ chữ chen giữa số viết bằng chữ và đơn vị: "one business day", "two working weeks", "ba ngày làm việc", "một tới hai tuần".
+// Đã biết: "one of our days" cũng bị bắt (số-chữ + 2 từ + đơn vị) — chấp nhận, câu LLM viết ngoài chỗ giữ chỗ không cần cấu trúc đó.
 const NUMBER_WORD_UNIT = new RegExp(
-  `${LETTER_BEFORE}(?:${NUMBER_WORDS.join('|')})(?:[\\s-]+(?:${NUMBER_WORDS.join('|')}))*[\\s-]+(?:${UNITS.join('|')})${LETTER_AFTER}`,
+  `${LETTER_BEFORE}(?:${NUMBER_WORDS.join('|')})(?:[\\s-]+(?:${NUMBER_WORDS.join('|')}))*(?:[\\s-]+\\p{L}+){0,2}[\\s-]+(?:${UNITS.join('|')})${LETTER_AFTER}`,
   'iu',
 );
 const CURRENCY_SYMBOL = /[$€£¥₫]|(?<![\p{L}\p{N}])đ(?![\p{L}\p{N}])/u;
