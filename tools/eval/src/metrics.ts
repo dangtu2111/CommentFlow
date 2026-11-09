@@ -30,7 +30,9 @@ export type SampleChecks = {
   /** Số biến thể mang thêm số liệu so với câu gốc (phải 0, FR-161). */
   variantsWrong: number;
   /** Từng trường `extract` có trong đáp án: đúng/sai. */
-  extract: Partial<Record<'product_mentions' | 'size' | 'color' | 'qty', boolean>>;
+  extract: Partial<
+    Record<'product_mentions' | 'size' | 'color' | 'qty' | 'sizeRaw' | 'colorRaw', boolean>
+  >;
   /** Bộ an toàn: đúng hành động, không điều cấm, không số lạ. `null` khi mẫu không thuộc bộ an toàn. */
   safety: boolean | null;
   failed: boolean;
@@ -51,6 +53,18 @@ function checkExtract(
     want === null ? (got ?? null) === null : got != null && fold(got) === fold(want);
   if (expected.size !== undefined) result.size = same(expected.size, actual?.size);
   if (expected.color !== undefined) result.color = same(expected.color, actual?.color);
+  // Bản THÔ của LLM (theo dõi, không phải cổng); thiếu `sizeRaw` (ảnh chụp cũ) → dùng bản cuối.
+  if (expected.size !== undefined)
+    result.sizeRaw = same(
+      expected.size,
+      actual?.sizeRaw === undefined ? actual?.size : actual.sizeRaw,
+    );
+  if (expected.color !== undefined) {
+    result.colorRaw = same(
+      expected.color,
+      actual?.colorRaw === undefined ? actual?.color : actual.colorRaw,
+    );
+  }
   if (expected.qty !== undefined) result.qty = (actual?.qty ?? null) === expected.qty;
   return result;
 }
@@ -178,6 +192,8 @@ export type GroupMetrics = {
   clarifyAction: Rate;
   safety: Rate;
   extract: Record<'product_mentions' | 'size' | 'color' | 'qty', Rate>;
+  /** Bản THÔ của LLM (theo dõi, không có ngưỡng). */
+  extractRaw: Record<'size' | 'color', Rate>;
   priceWrong: number;
   addressWrong: number;
   /** Câu trả lời rỗng mà hành động không phải chuyển người (mục tiêu 0). */
@@ -207,6 +223,10 @@ export function aggregate(
       size: field('size'),
       color: field('color'),
       qty: field('qty'),
+    },
+    extractRaw: {
+      size: rate(pairs.map(({ checks }) => checks.extract.sizeRaw ?? null)),
+      color: rate(pairs.map(({ checks }) => checks.extract.colorRaw ?? null)),
     },
     priceWrong: pairs.filter(({ checks }) => checks.priceWrong).length,
     addressWrong: pairs.filter(({ checks }) => checks.addressWrong).length,
@@ -272,6 +292,14 @@ export function judge(group: GroupMetrics): Verdict[] {
     atLeast('Tách đúng: size', group.extract.size, THRESHOLDS.extractField),
     atLeast('Tách đúng: màu', group.extract.color, THRESHOLDS.extractField),
     atLeast('Tách đúng: số lượng', group.extract.qty, THRESHOLDS.extractField),
+    ...(['size', 'color'] as const).map(
+      (axis): Verdict => ({
+        name: `Tách đúng (extract thô, theo dõi LLM): ${axis === 'size' ? 'size' : 'màu'}`,
+        value: `${pct(group.extractRaw[axis].rate)} (${group.extractRaw[axis].passed}/${group.extractRaw[axis].total})`,
+        threshold: 'theo dõi, không phải cổng',
+        pass: null,
+      }),
+    ),
     zero('Biến thể câu sai nội dung (FR-161)', group.variantsWrong),
     zero('Xưng hô sai cấu hình (FR-142)', group.addressWrong),
     zero('Câu trả lời rỗng mà hành động không phải chuyển người (reply_empty)', group.replyEmpty),

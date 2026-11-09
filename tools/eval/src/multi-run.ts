@@ -97,6 +97,10 @@ export function worstGroup(runs: readonly GroupMetrics[]): GroupMetrics {
       color: worstRate((g) => g.extract.color),
       qty: worstRate((g) => g.extract.qty),
     },
+    extractRaw: {
+      size: worstRate((g) => g.extractRaw.size),
+      color: worstRate((g) => g.extractRaw.color),
+    },
     priceWrong: maxOf((g) => g.priceWrong),
     addressWrong: maxOf((g) => g.addressWrong),
     replyEmpty: maxOf((g) => g.replyEmpty),
