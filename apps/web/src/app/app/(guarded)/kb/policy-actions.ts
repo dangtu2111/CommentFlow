@@ -6,17 +6,15 @@ import {
   discardPolicyDraft,
   editPolicyDraft,
   listAllPolicyFacts,
-  listPolicyItems,
-  refreshPolicySuggestions,
   savePolicyFact,
 } from '@flow/db/runtime';
 import { redirect } from 'next/navigation';
-import { analyzePolicyTexts } from '../../../../lib/kb-policy-analyze';
 import { formToPolicyData } from '../../../../lib/kb-policy-form';
 import { type PolicyNotice, parsePolicyActionForm } from '../../../../lib/kb-policy-notice';
 import { actionAllowed } from '../../../../server/action-guard';
 import { getDb } from '../../../../server/db';
 import { requireAppUser } from '../../../../server/require-app-user';
+import { shopifyConnect } from '../../../../server/shopify-runtime';
 
 /**
  * Duyệt / Bỏ giá trị chính sách có cấu trúc (ADR 017) — chỉ Owner (Staff nhận 404 ở `requireAppUser`, gọi đầu MỖI action). Workspace và người dùng lấy từ phiên;
@@ -154,30 +152,20 @@ export async function savePolicyValueAction(data: FormData): Promise<never> {
 }
 
 /**
- * Phân tách DỮ LIỆU THÔ (chính sách văn bản đã nạp) thành giá trị có cấu trúc: đọc `policy_items`, chạy bộ đề xuất thuần, làm mới các bản nháp nguồn `text_suggested` (không đụng bản đã duyệt hay
- * nháp Owner đã sửa tay). Chỉ Owner. Kết quả: `?pn=analyzed&pc=<số nháp>`; không có giá trị mới → `analyzed_none`; chưa có văn bản thô → `no_raw`.
+ * Đồng bộ lại từ Shopify ngay trên trang Chính sách: việc đọc mọi chính sách và tự rút giá trị vào từng thẻ do job đồng bộ làm (không có bước phân tách thủ công). Chỉ Owner; thao tác NẶNG
+ * nên chặn bấm đúp/dồn (`uiHeavy`) và DB giữ thời gian chờ nguyên tử. Kết quả: `?pn=sync_queued` (đã xếp job) | `sync_recent` (vừa đồng bộ, chờ) | `rate_limited` | `unavailable`.
  */
-export async function analyzePolicyTextAction(): Promise<never> {
+export async function syncPoliciesFromShopifyAction(): Promise<never> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
-  const session = { workspaceId: workspace.id, userId: user.id };
-  if (!(await actionAllowed('uiWrite', session))) redirect(`${BACK}?pn=rate_limited`);
-  let target = `${BACK}?pn=unavailable`;
+  const who = { userId: user.id, workspaceId: workspace.id };
+  if (!(await actionAllowed('uiHeavy', who))) redirect(`${BACK}?pn=rate_limited`);
+  let notice: PolicyNotice = 'unavailable';
   try {
-    target = await getDb().withActor(session.workspaceId, session.userId, async (tx) => {
-      const items = await listPolicyItems(tx, session.workspaceId);
-      const { textCount, suggestions } = analyzePolicyTexts(items);
-      if (textCount === 0) return `${BACK}?pn=no_raw`;
-      const { drafted } = await refreshPolicySuggestions(
-        tx,
-        session.workspaceId,
-        'text_suggested',
-        suggestions,
-        'policy_items',
-      );
-      return drafted === 0 ? `${BACK}?pn=analyzed_none` : `${BACK}?pn=analyzed&pc=${drafted}`;
-    });
+    const result = await shopifyConnect().sync(who);
+    notice =
+      result === 'queued' ? 'sync_queued' : result === 'recent' ? 'sync_recent' : 'unavailable';
   } catch {
-    console.error(JSON.stringify({ event: 'policy_facts_analyze_failed' }));
+    console.error(JSON.stringify({ event: 'policy_facts_sync_failed' }));
   }
-  redirect(target);
+  redirect(`${BACK}?pn=${notice}`);
 }

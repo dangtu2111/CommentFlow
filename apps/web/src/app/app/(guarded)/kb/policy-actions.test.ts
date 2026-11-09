@@ -7,8 +7,7 @@ const mocks = vi.hoisted(() => ({
   edit: vi.fn(),
   list: vi.fn(),
   save: vi.fn(),
-  items: vi.fn(),
-  refresh: vi.fn(),
+  sync: vi.fn(),
   allowed: vi.fn(),
   withActor: vi.fn(),
   requireAppUser: vi.fn(),
@@ -22,8 +21,6 @@ vi.mock('@flow/db/runtime', async (importOriginal) => ({
   editPolicyDraft: mocks.edit,
   listAllPolicyFacts: mocks.list,
   savePolicyFact: mocks.save,
-  listPolicyItems: mocks.items,
-  refreshPolicySuggestions: mocks.refresh,
 }));
 vi.mock('next/navigation', () => ({
   redirect: (to: string) => {
@@ -31,15 +28,18 @@ vi.mock('next/navigation', () => ({
   },
 }));
 vi.mock('../../../../server/action-guard', () => ({ actionAllowed: mocks.allowed }));
+vi.mock('../../../../server/shopify-runtime', () => ({
+  shopifyConnect: () => ({ sync: mocks.sync }),
+}));
 vi.mock('../../../../server/db', () => ({ getDb: () => ({ withActor: mocks.withActor }) }));
 vi.mock('../../../../server/require-app-user', () => ({ requireAppUser: mocks.requireAppUser }));
 
 import {
-  analyzePolicyTextAction,
   approvePolicyAction,
   deleteApprovedPolicyAction,
   discardPolicyDraftAction,
   savePolicyValueAction,
+  syncPoliciesFromShopifyAction,
 } from './policy-actions';
 
 const ID = '11111111-1111-4111-8111-111111111111';
@@ -215,40 +215,33 @@ describe('deleteApprovedPolicyAction', () => {
   });
 });
 
-describe('analyzePolicyTextAction', () => {
-  const item = (content: string) => ({ title: 't', content });
-  it('có văn bản thô → làm mới nháp text_suggested, báo số nháp; chỉ Owner', async () => {
-    mocks.items.mockResolvedValue([item('Khách được đổi trả trong 7 ngày kể từ khi nhận hàng.')]);
-    mocks.refresh.mockResolvedValue({ drafted: 2, removed: 0 });
-    expect(await redirectOf(analyzePolicyTextAction())).toBe('/app/kb/policies?pn=analyzed&pc=2');
-    expect(mocks.requireAppUser).toHaveBeenCalledWith({ role: 'owner' });
-    expect(mocks.refresh).toHaveBeenCalledWith(
-      {},
-      'w1',
-      'text_suggested',
-      expect.arrayContaining([expect.objectContaining({ kind: 'returns' })]),
-      'policy_items',
-    );
-  });
+describe('syncPoliciesFromShopifyAction', () => {
+  it.each([
+    ['queued', 'sync_queued'],
+    ['recent', 'sync_recent'],
+    ['not_found', 'unavailable'],
+  ])(
+    'kết quả đồng bộ %s → ?pn=%s; chỉ Owner, workspace/người dùng từ phiên',
+    async (result, pn) => {
+      mocks.sync.mockResolvedValue(result);
+      expect(await redirectOf(syncPoliciesFromShopifyAction())).toBe(`/app/kb/policies?pn=${pn}`);
+      expect(mocks.requireAppUser).toHaveBeenCalledWith({ role: 'owner' });
+      expect(mocks.sync).toHaveBeenCalledWith({ userId: 'u1', workspaceId: 'w1' });
+      expect(mocks.allowed).toHaveBeenCalledWith('uiHeavy', { userId: 'u1', workspaceId: 'w1' });
+    },
+  );
 
-  it('có văn bản nhưng không rút được/không có nháp mới → analyzed_none', async () => {
-    mocks.items.mockResolvedValue([item('Shop luôn hỗ trợ khách hàng tận tình.')]);
-    mocks.refresh.mockResolvedValue({ drafted: 0, removed: 0 });
-    expect(await redirectOf(analyzePolicyTextAction())).toBe('/app/kb/policies?pn=analyzed_none');
-  });
-
-  it('chưa có văn bản thô → no_raw, không ghi', async () => {
-    mocks.items.mockResolvedValue([item('   ')]);
-    expect(await redirectOf(analyzePolicyTextAction())).toBe('/app/kb/policies?pn=no_raw');
-    expect(mocks.refresh).not.toHaveBeenCalled();
-  });
-
-  it('giới hạn tốc độ → rate_limited; lỗi bất ngờ → unavailable', async () => {
+  it('giới hạn tốc độ → rate_limited, không xếp job; lỗi bất ngờ → unavailable', async () => {
     mocks.allowed.mockResolvedValueOnce(false);
-    expect(await redirectOf(analyzePolicyTextAction())).toBe('/app/kb/policies?pn=rate_limited');
-    mocks.items.mockRejectedValue(new Error('boom'));
+    expect(await redirectOf(syncPoliciesFromShopifyAction())).toBe(
+      '/app/kb/policies?pn=rate_limited',
+    );
+    expect(mocks.sync).not.toHaveBeenCalled();
+    mocks.sync.mockRejectedValue(new Error('boom'));
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(await redirectOf(analyzePolicyTextAction())).toBe('/app/kb/policies?pn=unavailable');
+    expect(await redirectOf(syncPoliciesFromShopifyAction())).toBe(
+      '/app/kb/policies?pn=unavailable',
+    );
     spy.mockRestore();
   });
 });

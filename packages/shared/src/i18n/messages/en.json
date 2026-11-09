@@ -3337,9 +3337,8 @@
       "unavailable": "Could not complete. Try again in a few minutes.",
       "rate_limited": "You are acting too fast. Try again in a moment.",
       "deleted": "Value deleted. AI no longer uses it.",
-      "analyzed": "Parsed: {count} draft values from policy text. Review and approve them below.",
-      "no_raw": "No raw policy text to parse yet (connect Shopify to load policies).",
-      "analyzed_none": "No new values: the texts do not state clear days/months/fees, or they already match the approved values. You can add values by hand."
+      "sync_queued": "Shopify sync queued. Reload in a few minutes to see the extracted values.",
+      "sync_recent": "A sync just ran; wait a moment and try again."
     },
     "form": {
       "pageTitle": {
@@ -3407,12 +3406,21 @@
     },
     "updatedAt": "Updated {time}",
     "raw": {
-      "title": "From raw text to structured values",
-      "body": "The system reads loaded policy texts (for example from Shopify) and extracts structured values with the original sentence as evidence. Results are drafts only and do not apply to customers until the Owner approves.",
+      "title": "Raw data from Shopify — parsed automatically on sync",
+      "body": "When you sync Shopify, the system reads every policy, extracts structured values into the cards below (with the original sentence as evidence) and lists what it could not parse. Results are drafts awaiting Owner approval.",
       "count": "{count} raw policy texts loaded",
-      "empty": "No raw policy text yet. Connect Shopify on the Data sources page to load it.",
-      "analyze": "Parse automatically",
       "list": "View loaded raw texts",
+      "notConnected": "Shopify is not connected. Connect it on the Data sources page to load policies.",
+      "neverSynced": "Never synced.",
+      "lastSync": "Last sync: {time}",
+      "syncFailed": "The last sync did not succeed.",
+      "policiesLoaded": "{count} policies loaded",
+      "policiesSkipped": "Could not load policies (missing read_legal_policies permission or a temporary error).",
+      "factsDrafted": "{count} draft values extracted automatically",
+      "factsNone": "No clear value to extract (see the unparsed sentences below).",
+      "factsSkipped": "The automatic extraction step was skipped because of a temporary error.",
+      "resyncHint": "Synced before automatic extraction existed? Sync again.",
+      "resync": "Sync again from Shopify",
       "kinds": {
         "shipping": "Shipping",
         "return": "Returns",
