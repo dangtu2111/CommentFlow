@@ -14,6 +14,8 @@ Agent vừa làm: Claude Code (một phiên, một nhánh, năm vòng sửa trê
 
 **Vòng 5 — lỗ thiết kế viplain-08.** Plan có sự kiện bắt buộc + bộ soạn trả `needs_human` trần (câu rỗng) → không bỏ qua khối chỗ giữ chỗ, dùng câu dự phòng (`chosen = fallback`, tính vào cổng dự phòng); prompt thêm "Không đặt needs_human vì thiếu đoạn nguồn"; EVAL ghi `needsHuman/autoSendPolicy/riskReasons` vào jsonl và liệt kê mẫu `needsHuman = true` trong báo cáo.
 
+**Vòng 6 — an toàn + pháp lý.** `slots.ts` `NUMBER_WORD_UNIT`: cho phép tối đa 2 từ chữ chen giữa số-chữ và đơn vị ("one business day", "một tới hai tuần"; đã biết "one of our days" cũng bị bắt); `legal-rules.ts`: thêm nhóm `refund_guarantee` và `regulatory_claim` (cần nguồn, FR-160; `PLAN_LEGAL_TOPIC` không ánh xạ) → en-23/en-24 chuyển người; gap `FR160-FDA-GUARANTEE` Xong; `q-adr017-eval-gate.md` (sswiftly ≥ 10/12, chỉ en-07/en-14 được trượt).
+
 ## File đã đọc + điều rút ra
 
 - `fact-plan/{plan,fill,compose,slots,types}.ts`: plan do code lập; `optional` = được dùng không bắt buộc (không vào `requiredFactIds`/câu dự phòng); `fill` xử lý lời dẫn, hoa/chấm câu; guard từ chối cứng chữ số, số bằng chữ, khẳng định khái niệm, câu mời, tình trạng hàng.
@@ -27,7 +29,7 @@ Agent vừa làm: Claude Code (một phiên, một nhánh, năm vòng sửa trê
 
 ## Còn lại / gap giữ nguyên
 
-- `POLICY-DRAFT-OWNER-EDIT` (bắt buộc trước màn Chính sách có cấu trúc), `ADVICE-SIZE-VARIANT-BLOCK` (vi-30/viplain-30/mixed-30), `FR160-FDA-GUARANTEE` (en-23/24; en-24 đang ra `answer`, chờ quyết định), `PRODUCT-QA-SIZE-COMPAT` (en-14/15), en-22, viplain-03 + tách size/màu nhóm không dấu.
+- `POLICY-DRAFT-OWNER-EDIT` (bắt buộc trước màn Chính sách có cấu trúc), `ADVICE-SIZE-VARIANT-BLOCK` (vi-30/viplain-30/mixed-30), en-07 (thời gian xử lý đơn chưa là sự kiện), `PRODUCT-QA-SIZE-COMPAT` (en-14/15), en-22, viplain-03 + tách size/màu nhóm không dấu.
 - Cờ `cf.ai.fact_slots`: chỉ bật `[EVAL]`; Shop Thử 2 chưa bật cho tới khi sswiftly và demo có cờ ≥ không cờ.
 
 ## Chủ dự án kiểm chéo
