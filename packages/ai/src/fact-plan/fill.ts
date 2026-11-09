@@ -171,6 +171,12 @@ const LEAD_IN_BEFORE_SENTENCE_SLOT =
   /(?:^|(?<=[.!?…]\s))[^.!?…{}]*?(?<![\p{L}\p{N}])(?:là|is|are)\s+(\{fact:(?:ship_destination|refund_to|return_shipping|return_eligibility)\})/giu;
 const ENDS_WITH_SENTENCE_SLOT =
   /\{fact:(?:ship_destination|refund_to|return_shipping|return_eligibility)\}\s*$/u;
+const SENTENCE_SLOT_KINDS: ReadonlySet<string> = new Set([
+  'ship_destination',
+  'refund_to',
+  'return_shipping',
+  'return_eligibility',
+]);
 const DUPLICATE_CON = /(?<![\p{L}\p{N}])(còn)\s+còn(?![\p{L}\p{N}])/giu;
 
 export function fillSlots(template: string, plan: FactPlan, options: { lang: Lang }): FillResult {
@@ -195,16 +201,28 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
     text.replace(LEAD_IN_BEFORE_SENTENCE_SLOT, (_all, slot: string) => `${CAPITALIZE}${slot}`);
   const fillText = (raw: string) => {
     const text = dropLeadIn(raw);
+    // Hai câu sự kiện hoàn chỉnh đứng liền nhau không dấu ("{fact:a} {fact:b}") → thêm dấu chấm sau câu trước, câu sau viết hoa.
+    let previousSentenceSlotEnd = -1;
     const filled = dedupe(
       text
         .replace(SLOT, (whole, id: string, offset: number) => {
           const value = render(id);
           if (value === null) return whole;
+          const followsSentenceSlot =
+            previousSentenceSlotEnd >= 0 &&
+            /^\s+$/.test(text.slice(previousSentenceSlotEnd, offset));
           const sentenceStart =
             offset === 0 ||
+            followsSentenceSlot ||
             AFTER_TERMINATOR.test(text.slice(0, offset)) ||
             text[offset - 1] === CAPITALIZE;
-          return sentenceStart ? value.charAt(0).toLocaleUpperCase() + value.slice(1) : value;
+          const isSentenceSlot = SENTENCE_SLOT_KINDS.has(byId.get(id)?.kind ?? '');
+          previousSentenceSlotEnd = isSentenceSlot ? offset + whole.length : -1;
+          const shown = sentenceStart
+            ? value.charAt(0).toLocaleUpperCase() + value.slice(1)
+            : value;
+          const nextIsSlot = /^\s+\{fact:/.test(text.slice(offset + whole.length));
+          return isSentenceSlot && nextIsSlot && !/[.!?…]$/.test(shown) ? `${shown}.` : shown;
         })
         .split(CAPITALIZE)
         .join(''),

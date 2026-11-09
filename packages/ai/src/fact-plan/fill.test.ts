@@ -293,3 +293,18 @@ describe('fillSlots — đầu câu trả lời và dấu kết câu của câu 
     expect(fill('Price {fact:price.1}', p, 'en').text).toBe('Price $439.99');
   });
 });
+
+describe('fillSlots — các câu sự kiện hoàn chỉnh đứng liền nhau (en-08)', () => {
+  const p = planOf(
+    fact('return_eligibility', 'return_eligibility', {
+      type: 'return_eligibility',
+      mode: 'varies_by_item',
+    }),
+    fact('refund_to', 'refund_to', { type: 'refund_to', to: 'original_payment' }),
+  );
+  it('"{a} {b}" → "A. B."', () => {
+    expect(fill('{fact:return_eligibility} {fact:refund_to}', p, 'en').text).toBe(
+      'Whether an item can be returned depends on the item. Refunds go back to the original payment method.',
+    );
+  });
+});
