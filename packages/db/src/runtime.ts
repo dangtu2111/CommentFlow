@@ -348,6 +348,8 @@ export {
   type ApprovePolicyFactResult,
   approvePolicyFact,
   deletePolicyFact,
+  type EditPolicyDraftResult,
+  editPolicyDraft,
   listAllPolicyFacts,
   listApprovedPolicyFacts,
   type PolicyFactRow,

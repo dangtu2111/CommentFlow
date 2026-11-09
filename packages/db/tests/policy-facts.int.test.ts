@@ -5,6 +5,7 @@ import type { FlowDb } from '../src/client';
 import {
   approvePolicyFact,
   deletePolicyFact,
+  editPolicyDraft,
   listAllPolicyFacts,
   listApprovedPolicyFacts,
   refreshPolicySuggestions,
@@ -532,5 +533,145 @@ describe('refreshPolicySuggestions — hệ thống làm mới đề xuất', ()
       evidence: 'x',
     };
     expect(await run([bad as never])).toEqual({ drafted: 0, removed: 0 });
+  });
+});
+
+describe('POLICY-DRAFT-OWNER-EDIT — Owner sửa tay nháp thì đồng bộ không ghi đè', () => {
+  let ews: string;
+  let eowner: string;
+  let estaff: string;
+  beforeAll(async () => {
+    ews = await seedWorkspace(admin);
+    eowner = await seedUser(admin, 'eowner');
+    estaff = await seedUser(admin, 'estaff');
+    await seedMember(admin, ews, eowner, 'owner');
+    await seedMember(admin, ews, estaff, 'staff');
+  });
+  const sug = (slot: string, feeMinor: number) => ({
+    kind: 'ship_region' as const,
+    slot,
+    data: { ...nationwide, feeMinor },
+    evidence: `Phí ship ${feeMinor}`,
+  });
+  const sync = (suggestions: ReturnType<typeof sug>[]) =>
+    db.withJob(ews, (tx) =>
+      refreshPolicySuggestions(tx, ews, 'shopify_suggested', suggestions, 'shopify:policies'),
+    );
+  const draftOf = async (slot: string) =>
+    (await db.withWorkspace(ews, (tx) => listAllPolicyFacts(tx, ews))).find(
+      (r) => r.slot === slot && r.status === 'draft',
+    );
+
+  it('sửa nháp của máy → thành nháp origin manual (giữ evidence); đồng bộ sau (đổi nội dung hoặc không còn đề xuất) KHÔNG ghi đè/xóa', async () => {
+    await sync([sug('oe-a', 30000)]);
+    const seen = await draftOf('oe-a');
+    expect(seen?.origin).toBe('shopify_suggested');
+    const edited = await db.withActor(ews, eowner, (tx) =>
+      editPolicyDraft(
+        tx,
+        ews,
+        seen?.id as string,
+        seen?.rev as number,
+        { ...nationwide, feeMinor: 25000 },
+        eowner,
+      ),
+    );
+    expect(edited).toBe('edited');
+    const mine = await draftOf('oe-a');
+    expect(mine).toMatchObject({ origin: 'manual', evidence: 'Phí ship 30000' });
+    expect(mine?.data).toMatchObject({ feeMinor: 25000 });
+    await sync([sug('oe-a', 99000)]);
+    expect((await draftOf('oe-a'))?.data).toMatchObject({ feeMinor: 25000 });
+    await sync([]);
+    expect(await draftOf('oe-a')).toBeDefined();
+  });
+
+  it('sửa tiếp nháp manual tại chỗ; lệch rev → stale; không có → not_found; dữ liệu sai → lỗi, không ghi', async () => {
+    await sync([sug('oe-b', 30000)]);
+    const seen = await draftOf('oe-b');
+    await db.withActor(ews, eowner, (tx) =>
+      editPolicyDraft(
+        tx,
+        ews,
+        seen?.id as string,
+        seen?.rev as number,
+        { ...nationwide, feeMinor: 1 },
+        eowner,
+      ),
+    );
+    const mine = await draftOf('oe-b');
+    expect(
+      await db.withActor(ews, eowner, (tx) =>
+        editPolicyDraft(
+          tx,
+          ews,
+          mine?.id as string,
+          mine?.rev as number,
+          { ...nationwide, feeMinor: 2 },
+          eowner,
+        ),
+      ),
+    ).toBe('edited');
+    expect(
+      await db.withActor(ews, eowner, (tx) =>
+        editPolicyDraft(
+          tx,
+          ews,
+          mine?.id as string,
+          mine?.rev as number,
+          { ...nationwide, feeMinor: 3 },
+          eowner,
+        ),
+      ),
+    ).toBe('stale');
+    expect(
+      await db.withActor(ews, eowner, (tx) =>
+        editPolicyDraft(tx, ews, '00000000-0000-4000-8000-0000000000aa', 1, nationwide, eowner),
+      ),
+    ).toBe('not_found');
+    const latest = await draftOf('oe-b');
+    await expect(
+      db.withActor(ews, eowner, (tx) =>
+        editPolicyDraft(
+          tx,
+          ews,
+          latest?.id as string,
+          latest?.rev as number,
+          { kind: 'city' },
+          eowner,
+        ),
+      ),
+    ).rejects.toThrow();
+    expect((await draftOf('oe-b'))?.rev).toBe(latest?.rev);
+  });
+
+  it('nháp manual vẫn duyệt được bằng approvePolicyFact; Staff không sửa được', async () => {
+    await sync([sug('oe-c', 30000)]);
+    const seen = await draftOf('oe-c');
+    // Staff không thấy dòng ở bước khóa (FOR UPDATE tuân RLS cập nhật) → not_found, nháp không đổi.
+    expect(
+      await db.withActor(ews, estaff, (tx) =>
+        editPolicyDraft(tx, ews, seen?.id as string, seen?.rev as number, nationwide, estaff),
+      ),
+    ).toBe('not_found');
+    expect((await draftOf('oe-c'))?.origin).toBe('shopify_suggested');
+    await db.withActor(ews, eowner, (tx) =>
+      editPolicyDraft(
+        tx,
+        ews,
+        seen?.id as string,
+        seen?.rev as number,
+        { ...nationwide, feeMinor: 10000 },
+        eowner,
+      ),
+    );
+    const mine = await draftOf('oe-c');
+    expect(
+      await db.withActor(ews, eowner, (tx) =>
+        approvePolicyFact(tx, ews, mine?.id as string, mine?.rev as number),
+      ),
+    ).toBe('approved');
+    const approved = await db.withWorkspace(ews, (tx) => listApprovedPolicyFacts(tx, ews));
+    expect(approved.find((r) => r.slot === 'oe-c')?.data).toMatchObject({ feeMinor: 10000 });
   });
 });
