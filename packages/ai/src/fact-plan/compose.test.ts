@@ -148,3 +148,32 @@ describe('fallbackTemplate / inviteUnknownText — sự kiện định tính m�
     );
   });
 });
+
+describe('fallbackTemplate — ghép biến thể khách chọn (giá/tồn đúng biến thể)', () => {
+  const withVariant: FactPlan = {
+    facts: [
+      known('product_name.1', 'product_name'),
+      known('variant.1', 'variant'),
+      known('price.1', 'price'),
+      known('stock.1', 'stock'),
+    ],
+    clarify: null,
+    unknownTopics: [],
+    issues: [],
+  };
+  it('có variant.n → "{tên} ({biến thể}) giá …"; không có thì như cũ', () => {
+    expect(fallbackTemplate(withVariant, 'vi')).toBe(
+      '{fact:product_name.1} ({fact:variant.1}) giá {fact:price.1}. {fact:product_name.1} ({fact:variant.1}): {fact:stock.1}.',
+    );
+    expect(fallbackTemplate(withVariant, 'en')).toBe(
+      '{fact:product_name.1} ({fact:variant.1}) is {fact:price.1}. {fact:product_name.1} ({fact:variant.1}): {fact:stock.1}.',
+    );
+    const noVariant = {
+      ...withVariant,
+      facts: withVariant.facts.filter((f) => f.kind !== 'variant'),
+    };
+    expect(fallbackTemplate(noVariant, 'vi')).toBe(
+      '{fact:product_name.1} giá {fact:price.1}. {fact:product_name.1}: {fact:stock.1}.',
+    );
+  });
+});

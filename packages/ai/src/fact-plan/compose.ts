@@ -18,10 +18,16 @@ export function requiredFactIds(plan: FactPlan): string[] {
 }
 
 const suffixOf = (id: string): string => id.slice(id.indexOf('.'));
-const nameOf = (id: string, plan: FactPlan): string =>
-  id.includes('.') && plan.facts.some((fact) => fact.id === `product_name${suffixOf(id)}`)
-    ? `{fact:product_name${suffixOf(id)}}`
+/** Tên sản phẩm (+ biến thể khách chọn nếu có) cho câu dự phòng: "Áo thun ({fact:variant.1})" — giá/tồn của biến thể phải đi kèm đúng biến thể đó. */
+const nameOf = (id: string, plan: FactPlan): string => {
+  if (!id.includes('.')) return '';
+  const suffix = suffixOf(id);
+  if (!plan.facts.some((fact) => fact.id === `product_name${suffix}`)) return '';
+  const variant = plan.facts.some((fact) => fact.id === `variant${suffix}`)
+    ? ` ({fact:variant${suffix}})`
     : '';
+  return `{fact:product_name${suffix}}${variant}`;
+};
 
 const LINES: Record<
   'vi' | 'en',
