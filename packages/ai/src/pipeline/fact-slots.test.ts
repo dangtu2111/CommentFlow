@@ -478,3 +478,81 @@ describe('ngôn ngữ câu ngắn: previousLang → replyLanguage → vi (nhóm 
     expect(await langOf('how much?')).toBe('vi');
   });
 });
+
+describe('mọi biến thể CÙNG giá → trả lời giá, không hỏi biến thể (mẫu sswiftly 02/05); khác giá vẫn hỏi', () => {
+  const productWith = (prices: number[]): PlanProduct => ({
+    id: 'p-set',
+    name: 'Shower set',
+    currency: 'USD',
+    priceMinor: null,
+    stock: 5,
+    variants: prices.map((priceMinor, i) => ({
+      label: `Color ${i}`,
+      attrsNorm: { color: `c${i}` },
+      priceMinor,
+      stock: 1,
+    })),
+  });
+  const runPrices = async (prices: number[], factSlots?: PipelineInput['factSlots']) => {
+    const askVariant = new Set(prices).size > 1 || prices.includes(null as never);
+    const { drafter } = fakeDrafter(
+      draftOf(
+        askVariant ? 'Which color would you like?' : '{fact:product_name.1} is {fact:price.1}.',
+      ),
+    );
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text: 'how much is the shower set',
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        ...(factSlots ? { factSlots } : {}),
+      },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: {
+              ...extractFor(['how much']),
+              product_mentions: ['shower set'],
+              topics: ['price'],
+            },
+          },
+        ]),
+        drafter,
+        knowledge: {
+          ...knowledge,
+          matchProducts: async () => ({
+            ids: ['p-set'],
+            names: ['Shower set'],
+            missingAxes: ['color'],
+          }),
+          lookupPlanProducts: async () => [productWith(prices)],
+          lookupProductFacts: async () => [
+            {
+              ...toteCandidate,
+              id: 'p-set',
+              title: 'Shower set',
+              text: unsafeMarkMasked('Shower set: price $59.00'),
+            },
+          ],
+        },
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it('cùng giá → answer (có và không bật fact plan)', async () => {
+    const withSlots = await runPrices([5900, 5900], slots([]));
+    expect(withSlots.decision.action).toBe('answer');
+    expect(withSlots.reply).toBe('Shower set is $59.00.');
+    expect((await runPrices([5900, 5900])).decision.action).toBe('answer');
+  });
+  it('khác giá hoặc thiếu giá → vẫn hỏi biến thể', async () => {
+    expect((await runPrices([5900, 6900], slots([]))).decision.reason).toBe('variant_missing');
+    expect((await runPrices([5900, null as never], slots([]))).decision.reason).toBe(
+      'variant_missing',
+    );
+  });
+});

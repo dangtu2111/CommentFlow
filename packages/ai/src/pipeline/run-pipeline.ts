@@ -401,6 +401,15 @@ const PLAN_LEGAL_TOPIC: Partial<Record<string, string>> = {
   warranty: 'warranty',
 };
 
+/** Mọi biến thể cùng MỘT giá (đã biết, kể cả giá chung của sản phẩm) → khách không cần chọn biến thể để biết giá. */
+function hasUniformVariantPrice(product: PlanProduct): boolean {
+  if (product.variants.length === 0) return false;
+  const prices = new Set(
+    product.variants.map((variant) => variant.priceMinor ?? product.priceMinor),
+  );
+  return prices.size === 1 && !prices.has(null);
+}
+
 const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
   price: 'product_info',
   stock: 'product_info',
@@ -567,6 +576,26 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const policyConflict = usable.some(
     (c) => c.conflictTopic !== undefined && askedConflictTopics.has(c.conflictTopic),
   );
+  // Hỏi CHỈ giá mà mọi biến thể CÙNG giá → trả lời giá, không hỏi size/màu (kiểm TRƯỚC khi hỏi biến thể). Có biến thể khác giá hoặc thiếu giá → vẫn hỏi như cũ.
+  let missingAxes = products.missingAxes;
+  const asksOnlyPrice = (() => {
+    const asked = askTopicsOf(extract.asks, label);
+    return asked.length > 0 && asked.every(({ isPrice }) => isPrice);
+  })();
+  if (
+    asksOnlyPrice &&
+    missingAxes.length > 0 &&
+    products.ids.length > 0 &&
+    deps.knowledge.lookupPlanProducts
+  ) {
+    const candidates =
+      planProducts.length > 0
+        ? planProducts
+        : await deps.knowledge.lookupPlanProducts(products.ids, {
+            ...(turnRisks.risks.stockStale ? { stockStale: true } : {}),
+          });
+    if (candidates.length > 0 && candidates.every(hasUniformVariantPrice)) missingAxes = [];
+  }
   // `decideFor(strict)`: strict = coi mọi ý KHÔNG phải hỏi giá là CHƯA có nguồn (dùng khi guard nghĩa loại bản soạn đầu).
   const decideFor = (strict: boolean): ActionDecision =>
     decideAction({
@@ -574,7 +603,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       extract,
       products: {
         candidates: products.names.map(shortProductName),
-        missingAxes: products.missingAxes,
+        missingAxes,
         mentionedCount: extract.product_mentions.length,
       },
       topics: (factPlan === null
