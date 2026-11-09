@@ -579,7 +579,7 @@ describe('POLICY-DRAFT-OWNER-EDIT — Owner sửa tay nháp thì đồng bộ kh
     expect(edited).toBe('edited');
     const mine = await draftOf('oe-a');
     expect(mine).toMatchObject({ origin: 'manual', evidence: 'Phí ship 30000' });
-    expect((mine?.data as { feeMinor: number }).feeMinor).toBe(25000);
+    expect(mine?.data).toMatchObject({ feeMinor: 25000 });
     await sync([sug('oe-a', 99000)]);
     expect((await draftOf('oe-a'))?.data).toMatchObject({ feeMinor: 25000 });
     await sync([]);
