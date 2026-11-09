@@ -10,6 +10,7 @@ import {
   type MaskedText,
   maskPii,
   normalizeAttrs,
+  normalizeSearchText,
   type PriceSource,
   type RuleFilterReason,
   ruleFilter,
@@ -112,6 +113,8 @@ export interface TryKnowledge {
     ids: readonly string[],
     options?: { stockStale?: boolean },
   ): Promise<PlanProduct[]>;
+  /** Tên các sản phẩm đang bán (đã nạp sẵn); dùng để khớp tên không dấu bằng code khi `extract` không trả tên nào. Thiếu → bỏ bước này. */
+  productNames?: readonly string[];
   /** Nhánh `sql`: giá/tồn đọc từ bảng sản phẩm (không vector). */
   lookupProductFacts(ids: readonly string[]): Promise<TryCandidate[]>;
   /** Nhánh `hybrid`: tìm kiến thức (đã biết ngôn ngữ + sản phẩm của bài để lọc, FR-057). */
@@ -372,6 +375,23 @@ export function shortProductName(name: string): string {
     : `${clean.slice(0, MAX_DECISION_PRODUCT_NAME - 1).trimEnd()}…`;
 }
 
+/**
+ * Khách (hoặc câu viết lại) nhắc ĐÚNG tên một sản phẩm trong danh mục nhưng `extract` không trả tên: khớp bằng code, bỏ dấu, theo ranh giới từ, KHÔNG đồng nghĩa, không LLM.
+ * Chỉ nhận khi đúng MỘT tên khớp (nhiều tên → không chọn, tránh gán nhầm).
+ */
+function uniqueNameInTexts(names: readonly string[], texts: readonly string[]): string | null {
+  const haystacks = texts.map((text) => ` ${normalizeSearchText(text)} `);
+  const hits = [
+    ...new Set(
+      names.filter((name) => {
+        const needle = normalizeSearchText(name);
+        return needle !== '' && haystacks.some((text) => text.includes(` ${needle} `));
+      }),
+    ),
+  ];
+  return hits.length === 1 ? (hits[0] as string) : null;
+}
+
 const EMPTY_PRODUCTS: TryProductMatch = { ids: [], names: [], missingAxes: [] };
 
 /**
@@ -382,9 +402,15 @@ async function resolveProductsFor(
   extract: ExtractResult,
   input: TryInput,
   deps: TryDeps,
+  texts: readonly string[],
 ): Promise<TryProductMatch> {
-  const matched = await deps.knowledge.matchProducts(extract.product_mentions);
-  if (matched.ids.length > 0 || extract.product_mentions.length > 0) return matched;
+  let mentions = extract.product_mentions;
+  if (mentions.length === 0) {
+    const named = uniqueNameInTexts(deps.knowledge.productNames ?? [], texts);
+    if (named !== null) mentions = [named];
+  }
+  const matched = await deps.knowledge.matchProducts(mentions);
+  if (matched.ids.length > 0 || mentions.length > 0) return matched;
   const fallbackIds = input.convo?.state?.productIds.length
     ? input.convo.state.productIds
     : (input.convo?.postProductIds ?? []);
@@ -473,7 +499,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // Khách trả lời ngắn ("M đen") mà lượt trước còn ý đang chờ → thừa hưởng ý đó (Q-POR12).
   const extract = closing ? rawExtract : carryOverAsks(rawExtract, state);
   const label = primaryLabel(extract);
-  const products = closing ? EMPTY_PRODUCTS : await resolveProductsFor(extract, input, deps);
+  const products = closing
+    ? EMPTY_PRODUCTS
+    : await resolveProductsFor(extract, input, deps, [forModel]);
   // `rewriteQuery` chạy SAU extract (cần biết đã nhận được sản phẩm chưa): chỉ tốn LLM khi câu ngắn/mơ hồ và chưa có sản phẩm.
   const rewritten =
     deps.rewriter && !closing

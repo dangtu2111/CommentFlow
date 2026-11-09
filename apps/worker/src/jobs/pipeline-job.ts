@@ -83,10 +83,12 @@ function perCallKnowledge(
   db: FlowDb,
   workspaceId: string,
   bind: (tx: Database) => TryKnowledge,
+  productNames: readonly string[],
 ): TryKnowledge {
   const run = <T>(fn: (k: TryKnowledge) => Promise<T>): Promise<T> =>
     db.withJob(workspaceId, (tx) => fn(bind(tx)));
   return {
+    productNames,
     matchProducts: (mentions) => run((k) => k.matchProducts(mentions)),
     // Nhận sản phẩm theo id (lượt trước / gắn bài, Q-POR12): thiếu trong nguồn gốc thì không có đường dự phòng này.
     resolveProducts: (ids) =>
@@ -192,7 +194,9 @@ export async function runPipelineJob(
   if (loaded?.embedding.state === 'mismatch') {
     config.onEmbeddingMismatch?.(workspaceId, loaded.embedding.mismatches);
   }
-  const knowledge = loaded ? perCallKnowledge(db, workspaceId, loaded.bind) : EMPTY_KNOWLEDGE;
+  const knowledge = loaded
+    ? perCallKnowledge(db, workspaceId, loaded.bind, loaded.context.productNames)
+    : EMPTY_KNOWLEDGE;
   const voices = loaded?.context.voices ?? {};
   const abbreviations = loaded?.context.abbreviations ?? {};
 

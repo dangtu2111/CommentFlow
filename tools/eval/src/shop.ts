@@ -160,6 +160,7 @@ export function buildShopKnowledge(
 ): TryKnowledge {
   const byId = new Map(shop.products.map((product) => [product.id, product]));
   return {
+    productNames: shop.products.map((product) => product.name),
     async matchProducts(mentions) {
       const ids = new Set<string>();
       for (const mention of mentions) {

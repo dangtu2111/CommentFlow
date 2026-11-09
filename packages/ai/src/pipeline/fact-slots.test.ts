@@ -898,3 +898,68 @@ describe('FR-140: needs_human ở redirect/clarify là bình thường (không b
     expect((calls[0]?.sources ?? []).map((source) => source.id)).toContain('policy:ship');
   });
 });
+
+describe('khách nhắc đúng tên sản phẩm (không dấu) mà extract không trả tên → khớp bằng code (viplain-06)', () => {
+  const byName: TryKnowledge = {
+    ...knowledge,
+    productNames: ['Túi tote canvas', 'Áo thun basic'],
+    lookupPlanProducts: async (ids) => (ids.includes('p-tote') ? [tote] : []),
+    lookupProductFacts: async (ids) => (ids.includes('p-tote') ? [toteCandidate] : []),
+    matchProducts: async (mentions) =>
+      mentions.includes('Túi tote canvas')
+        ? { ids: ['p-tote'], names: ['Túi tote canvas'], missingAxes: [] }
+        : { ids: [], names: [], missingAxes: [] },
+  };
+  const runName = async (text: string, mentions: string[], names = byName) => {
+    const { drafter } = fakeDrafter(
+      draftOf(
+        mentions.length === 0 && text.startsWith('tui tote canvas con')
+          ? '{fact:product_name.1}: {fact:stock.1}.'
+          : 'Sorry.',
+      ),
+    );
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text,
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: slots([ship()]),
+      },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: {
+              ...extractFor(['còn mấy cái']),
+              labels: [{ label: 'advice' }],
+              topics: ['stock'],
+              product_mentions: mentions,
+            },
+          },
+        ]),
+        drafter,
+        knowledge: names,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it('"tui tote canvas con hg k" → khớp đúng một tên → answer', async () => {
+    const r = await runName('tui tote canvas con hg k', []);
+    expect(r.decision.action).toBe('answer');
+  });
+  it('extract đã trả tên (không khớp) → KHÔNG dùng bước khớp tên: redirect như cũ', async () => {
+    const r = await runName('tui tote canvas con hg p co ban giay k', ['giày']);
+    expect(r.decision.action).toBe('redirect');
+  });
+  it('không tên nào khớp → vẫn hỏi lại sản phẩm nào', async () => {
+    const r = await runName('con hang k', []);
+    expect(r.decision.action).toBe('clarify');
+  });
+  it('khớp hai tên → không chọn (tránh gán nhầm)', async () => {
+    const r = await runName('tui tote canvas hay ao thun basic con hg k', []);
+    expect(r.decision.action).toBe('clarify');
+  });
+});
