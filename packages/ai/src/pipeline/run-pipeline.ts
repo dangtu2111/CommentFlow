@@ -591,6 +591,14 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       rawTexts: rawTexts.length,
       rejected: rawTexts.length - candidates.length,
       chosen: chosenKind,
+      // Lý do từ chối cứng từng câu (EVAL/chẩn đoán): mã vi phạm guard chỗ giữ chỗ + sự kiện bắt buộc còn thiếu.
+      rejections: rawTexts.flatMap((text) => {
+        const codes = checkSlots(text, factPlan).violations.map((v) => v.code as string);
+        const used = slotIds(text);
+        const missing = required.filter((id) => !used.includes(id));
+        if (missing.length > 0) codes.push(`missing_required:${missing.join('+')}`);
+        return codes.length > 0 ? [{ text, codes }] : [];
+      }),
     };
     const filled = base === '' ? null : fillSlots(base, factPlan, { lang: replyLang });
     if (filled === null || filled.missing.length > 0) {
@@ -789,6 +797,7 @@ export type SlotDiagnostics = {
   chosen: 'reply' | 'variant' | 'fallback' | 'handoff';
   /** Lưới chặn CUỐI (mã {fact:…} còn sót sau bước kiểm/điền) đã kích hoạt — mục tiêu 0. */
   finalNetTriggered?: boolean;
+  rejections?: Array<{ text: string; codes: string[] }>;
 };
 
 export const runTryPipeline = runPipeline;

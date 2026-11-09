@@ -126,7 +126,12 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
       },
     ]);
     expect(result.guard).toMatchObject({ ok: true, violations: [], replyViolations: [] });
-    expect(result.slotDiagnostics).toEqual({ rawTexts: 1, rejected: 0, chosen: 'reply' });
+    expect(result.slotDiagnostics).toEqual({
+      rawTexts: 1,
+      rejected: 0,
+      chosen: 'reply',
+      rejections: [],
+    });
     expect(result.factPlan?.facts.map((f) => f.id)).toEqual([
       'product_name.1',
       'price.1',
@@ -364,6 +369,17 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     );
     if (result.status !== 'done') throw new Error('expected done');
     expect(result.reply).toBe('Áo thun basic hiện còn 5 sản phẩm bạn nhé.');
+  });
+
+  it('chẩn đoán ghi LÝ DO từ chối cứng từng câu (mã guard + sự kiện bắt buộc còn thiếu)', async () => {
+    const bad = draftOf('Giá 99.000đ nhé!');
+    const { result } = await run(MIXED_11, ASKS, bad, slots([ship()]));
+    expect(result.slotDiagnostics?.rejections).toEqual([
+      {
+        text: 'Giá 99.000đ nhé!',
+        codes: ['digit', 'missing_required:price.1+ship_time'],
+      },
+    ]);
   });
 
   it('thiếu hàm lookupPlanProducts (chưa nối DB) → không có sự kiện sản phẩm: chỉ chính sách + mời; không sập', async () => {
