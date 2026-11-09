@@ -133,6 +133,13 @@ const processChunk: TryCandidate = {
   topics: ['other'],
 };
 
+const noProductKnowledge: TryKnowledge = {
+  ...knowledge,
+  matchProducts: async () => ({ ids: [], names: [], missingAxes: [] }),
+  lookupPlanProducts: async () => [],
+  lookupProductFacts: async () => [],
+};
+
 const MIXED_11 = 'Tote bag giá bao nhiêu, ship Hà Nội mất mấy ngày?';
 const ASKS = ['giá', 'thời gian giao hàng'];
 const GOOD = draftOf(
@@ -300,9 +307,20 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     expect(result.reply).not.toContain('{fact:');
   });
 
-  it('bộ soạn đã trả needs_human → giữ nguyên (không dựng câu thay)', async () => {
+  it('viplain-08: plan có sự kiện bắt buộc + bộ soạn trả needs_human trần (câu rỗng) → answer bằng câu DỰ PHÒNG, chosen = fallback, tính vào cổng dự phòng', async () => {
     const nh = { ...draftOf(''), needs_human: true, reason: 'x' };
     const { result } = await run(MIXED_11, ASKS, nh, slots([ship()]));
+    expect(result.decision.action).toBe('answer');
+    expect(result.slotDiagnostics).toMatchObject({ chosen: 'fallback', rejected: 1 });
+    expect(result.draft.needs_human).toBe(false);
+    expect(result.reply).toContain('99.000đ');
+    expect(result.reply).toContain('2–4 ngày');
+  });
+
+  it('plan KHÔNG có sự kiện bắt buộc: needs_human trần giữ nguyên đường cũ (không dựng câu thay)', async () => {
+    const nh = { ...draftOf(''), needs_human: true, reason: 'x' };
+    const { result } = await run(MIXED_11, ASKS, nh, slots([]), noProductKnowledge);
+    expect(result.slotDiagnostics).toBeUndefined();
     expect(result.draft.needs_human).toBe(true);
   });
 

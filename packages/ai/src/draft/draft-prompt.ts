@@ -260,6 +260,7 @@ function factSlotLines(slots: NonNullable<DraftInput['factSlots']>, hasClarify: 
       : [
           'KHÔNG hỏi thêm khách điều gì (không có dòng "Cần hỏi khách"): không hỏi địa chỉ, tỉnh/thành, size, màu.',
         ]),
+    'Không đặt needs_human vì thiếu đoạn nguồn — sự kiện đã nằm trong <facts>.',
     ...(required.length > 0
       ? [`BẮT BUỘC dùng đủ: ${required.map((id) => `{fact:${id}}`).join(' ')}`]
       : []),

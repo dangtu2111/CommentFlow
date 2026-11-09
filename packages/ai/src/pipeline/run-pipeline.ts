@@ -757,9 +757,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     factPlan !== null &&
     slotFacts !== null &&
     (decision.action === 'answer' || decision.action === 'redirect') &&
-    // Bộ soạn đặt needs_human nhưng VẪN viết chỗ giữ chỗ → vẫn phải qua bước kiểm/điền (không để mã {fact:…} đi tiếp); needs_human trần (không chỗ giữ chỗ) giữ nguyên.
-    (!draft.needs_human ||
-      [draft.reply, ...(draft.variants ?? [])].some((text) => slotIds(text).length > 0))
+    // `slotFacts !== null` = plan có sự kiện bắt buộc: bộ soạn đặt needs_human trần (không chỗ giữ chỗ, câu rỗng) coi như 0 câu đạt → câu dự phòng do code dựng (không bỏ qua khối này).
+    // Plan không có sự kiện bắt buộc thì không vào đây, needs_human đi đường cũ.
   ) {
     const replyLang = lang === 'en' ? 'en' : 'vi';
     const required = requiredFactIds(factPlan);
