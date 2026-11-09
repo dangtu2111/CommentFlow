@@ -1,6 +1,6 @@
 {
   "project_id": "15298527895734533184",
-  "synced_at": "2026-11-06T18:31:48.414Z",
+  "synced_at": "2026-11-09T12:00:00.000Z",
   "screens": [
     {
       "stitch_id": "f96e516f1a6d41fb943b3b4c4fc065e2",
@@ -317,6 +317,25 @@
       "updated": null,
       "files": [
         "cai-dat-chinh-sua-thong-tin-ca-nhan-edit-profile-modal.html"
+      ]
+    },
+    {
+      "stitch_id": "ef76c4d1601d4120b54bf05a54a580a5",
+      "name": "Cơ sở kiến thức - Chính sách có cấu trúc (Desktop 1440px)",
+      "slug": "kb-policies-structured",
+      "updated": null,
+      "files": [
+        "kb-policies-structured.html",
+        "kb-policies-structured.png"
+      ]
+    },
+    {
+      "stitch_id": "b3cd9deba42240c5b4a0059fe02286dc",
+      "name": "Cơ sở kiến thức - Chính sách có cấu trúc (Mobile 390px)",
+      "slug": "kb-policies-structured-mobile",
+      "updated": null,
+      "files": [
+        "kb-policies-structured-mobile.png"
       ]
     }
   ]
