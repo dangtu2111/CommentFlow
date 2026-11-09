@@ -596,3 +596,48 @@ describe('địa điểm chỉ lấy từ extract.destination hoặc khi có ch�
     });
   });
 });
+
+describe('khuyến mãi không phải giá/tồn (mẫu *-28, en-32)', () => {
+  const noProduct: TryKnowledge = {
+    ...knowledge,
+    matchProducts: async () => ({ ids: [], names: [], missingAxes: [] }),
+    lookupPlanProducts: async () => [],
+    lookupProductFacts: async () => [],
+  };
+  const runDiscount = async (text: string, ask: string) => {
+    const { drafter } = fakeDrafter(draftOf('Sorry.'));
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text,
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: slots([ship()]),
+      },
+      {
+        // LLM đánh dấu nhầm price cho ý hỏi giảm giá; code lọc theo ý hỏi đã có.
+        extractor: createFixtureExtractor([
+          { match: /./, result: { ...extractFor([ask]), topics: ['price'], product_mentions: [] } },
+        ]),
+        drafter,
+        knowledge: noProduct,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it.each([
+    ['Mua 2 cái có giảm k shop', 'mua 2 cái có giảm giá không'],
+    ['if I buy 3 do I get a discount?', 'discount when buying 3'],
+  ])(
+    '"%s" → redirect/topic_unsourced, chủ đề chưa trả lời = discount, không hỏi lại sản phẩm',
+    async (text, ask) => {
+      const r = await runDiscount(text, ask);
+      expect(r.decision.action).toBe('redirect');
+      expect(r.decision.reason).toBe('topic_unsourced');
+      expect(r.decision.unansweredTopics).toEqual(['discount']);
+      expect(r.decision.clarify).toBeNull();
+    },
+  );
+});

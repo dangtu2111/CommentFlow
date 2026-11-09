@@ -526,7 +526,13 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // DRAFT-FACT-SLOTS: fact plan do CODE lập (0 lần gọi LLM) khi workspace bật cờ.
   const slotMode = input.factSlots !== undefined && !closing;
   // Chủ đề do `extract` trả (enum, Zod) — không đoán bằng từ khóa; mỗi chủ đề chỉ một lần.
-  const factTopics: FactTopic[] = slotMode ? [...new Set(extract.topics)] : [];
+  const extractedTopics: FactTopic[] = slotMode ? [...new Set(extract.topics)] : [];
+  // Hỏi khuyến mãi/giảm giá KHÔNG phải hỏi giá/tồn: khi có ý hỏi được xếp 'discount' mà chưa nhận ra sản phẩm nào → bỏ price/stock (chủ đề vẫn do extract trả; code chỉ lọc theo ý hỏi đã có).
+  const discountAsked = extract.asks.some((ask) => topicOf(ask) === 'discount');
+  const factTopics: FactTopic[] =
+    discountAsked && products.ids.length === 0
+      ? extractedTopics.filter((topic) => topic !== 'price' && topic !== 'stock')
+      : extractedTopics;
   // Nơi khách hỏi giao tới → quốc gia (bảng quốc gia/tiểu bang Mỹ + tỉnh/thành VN); không nhận ra → null (không đoán).
   // Quét cả câu (masked) CHỈ khi extract báo chủ đề ship_destination; còn lại dùng đúng `extract.destination` — tránh nhầm tên hàng ("Georgia peach dress", "China blue vase") với địa điểm.
   const destination = slotMode
