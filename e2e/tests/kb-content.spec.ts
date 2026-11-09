@@ -177,43 +177,23 @@ function runScenarios(locale: Locale) {
     }
   });
 
-  test('Chính sách: thêm rồi xóa; nội dung rỗng bị từ chối', async ({ browser }) => {
+  test('Chính sách: chỉ còn trang có cấu trúc — bốn thẻ trống, không còn form văn bản', async ({
+    browser,
+  }) => {
     const { context, page } = await open(browser, '/app/kb/policies');
     try {
-      await pace(page, 1200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
-      const title = `Đổi trả ${tag}`;
-      const form = page
-        .locator('form')
-        .filter({ has: page.locator('textarea[name=content]') })
-        .last();
-      await form.getByLabel(t('kbContent.policies.titleLabel'), { exact: true }).fill(title);
-      await form.getByLabel(t('kbContent.policies.content'), { exact: true }).fill('   ');
-      // Nội dung chỉ có khoảng trắng: trình duyệt cho gửi (không `required` với khoảng trắng) nhưng máy chủ từ chối.
-      await form.getByRole('button', { name: t('kbContent.add'), exact: true }).click();
-      await expect(page.getByText(t('kbContent.notice.invalid'))).toBeVisible();
-
-      await form.getByLabel(t('kbContent.policies.titleLabel'), { exact: true }).fill(title);
-      await form
-        .getByLabel(t('kbContent.policies.content'), { exact: true })
-        .fill('Đổi trong 7 ngày');
-      await form.getByRole('button', { name: t('kbContent.add'), exact: true }).click();
       await expect(
-        page.getByRole('status').filter({ hasText: t('kbContent.notice.saved') }),
+        page.getByRole('heading', { name: t('kbPolicyFacts.title'), exact: true }),
       ).toBeVisible();
-      await expect(
-        page.getByLabel(t('kbContent.policies.titleLabel'), { exact: true }).first(),
-      ).toHaveValue(title);
-
-      await pace(page, 1200);
-      // Tiêu đề nằm trong ô nhập (không phải chữ trong thẻ) nên tìm thẻ theo giá trị ô `title`.
-      await page
-        .locator('section')
-        .filter({ has: page.locator(`input[name=title][value="${title}"]`) })
-        .getByRole('button', { name: t('kbContent.delete'), exact: true })
-        .click();
-      await expect(
-        page.getByRole('status').filter({ hasText: t('kbContent.notice.deleted') }),
-      ).toBeVisible();
+      for (const card of ['ship', 'returns', 'warranty', 'payment']) {
+        await expect(
+          page.getByRole('heading', { name: t(`kbPolicyFacts.cards.${card}.title`), exact: true }),
+        ).toBeVisible();
+      }
+      // Workspace mới chưa có giá trị nào: mỗi thẻ báo trống.
+      await expect(page.getByText(t('kbPolicyFacts.empty.title'))).toHaveCount(4);
+      // Biểu mẫu chính sách văn bản cũ đã bỏ.
+      await expect(page.locator('textarea[name=content]')).toHaveCount(0);
     } finally {
       await context.close();
     }
