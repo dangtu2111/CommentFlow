@@ -34,6 +34,7 @@ export {
   type PipelineRiskInputs,
   type PipelineThread,
   runPipeline,
+  type SlotDiagnostics,
 } from './run-pipeline';
 export {
   createTurnGate,

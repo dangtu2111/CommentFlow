@@ -17,6 +17,12 @@ export function policyFactsFromRows(rows: readonly PolicyFactInputRow[]): {
     if (row.status !== 'approved') continue;
     const sourceId = `pf:${row.id}`;
     const parsed = parsePolicyFactData(row.kind, row.data);
+    if (parsed.success && (parsed.data as { needsReview?: boolean }).needsReview === true) {
+      issues.push(
+        `Chính sách ${sourceId} (${row.kind}): còn điều kiện/phạm vi chờ Owner xem lại — bỏ qua.`,
+      );
+      continue;
+    }
     if (!parsed.success) {
       issues.push(`Chính sách ${sourceId} (${row.kind}): dữ liệu không hợp lệ — bỏ qua.`);
       continue;
@@ -43,13 +49,23 @@ export function policyFactsFromRows(rows: readonly PolicyFactInputRow[]): {
         policy.cod = { value: (parsed.data as { value: boolean }).value, sourceId };
         break;
       case 'returns': {
-        const d = parsed.data as { days: number | null; none?: boolean };
-        policy.returns = { days: d.days, none: d.none === true, sourceId };
+        const d = parsed.data as { days: number | null; none?: boolean; conditions?: string[] };
+        policy.returns = {
+          days: d.days,
+          none: d.none === true,
+          ...(d.conditions ? { conditions: d.conditions } : {}),
+          sourceId,
+        };
         break;
       }
       case 'warranty': {
-        const d = parsed.data as { months: number | null; none?: boolean };
-        policy.warranty = { months: d.months, none: d.none === true, sourceId };
+        const d = parsed.data as { months: number | null; none?: boolean; scope?: string };
+        policy.warranty = {
+          months: d.months,
+          none: d.none === true,
+          ...(d.scope ? { scope: d.scope } : {}),
+          sourceId,
+        };
         break;
       }
       default:

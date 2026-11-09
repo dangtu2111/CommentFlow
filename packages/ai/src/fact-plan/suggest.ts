@@ -65,11 +65,78 @@ const isNegated = (norm: string, subject: RegExp): boolean =>
   new RegExp(String.raw`\b(khong|ko|chua|no)\b[^,.;]{0,30}${subject.source}`).test(norm) ||
   new RegExp(String.raw`${subject.source}[^,.;]{0,20}\b(khong|ko|not)\b`).test(norm);
 
+const NOT_L = String.raw`(?<![\p{L}\p{N}])`;
+const NOT_R = String.raw`(?![\p{L}\p{N}])`;
+const EXCLUSION = new RegExp(
+  `${NOT_L}(ngoại trừ|trừ|không áp dụng|chỉ áp dụng|chỉ|except|excluding|only|unless|not include|không bao gồm)${NOT_R}`,
+  'iu',
+);
+const GENERIC_SCOPE = /^(sản phẩm|hàng|toàn bộ|tất cả|chính hãng|the product|all|everything)$/iu;
+const CONDITION_LEAD = /^(?:sản phẩm|hàng hóa|hàng|the items?|items?|the product)\s+/iu;
+const CONDITION_START =
+  /(?:^|[\s,])(?<!từ\s)(?:nếu|với điều kiện|miễn là|khi|if|provided that|as long as|when)\s+(.+?)[.;!]?$/iu;
+const CONDITION_SPLIT = new RegExp(String.raw`\s*(?:,|;|${NOT_L}(?:và|and)${NOT_R})\s*`, 'iu');
+
+/** Điều kiện của đổi trả: phần sau "nếu/với điều kiện/if…", tách theo "và/,/;/and"; MỖI mục phải là chuỗi con NGUYÊN VĂN của câu. Không tách được hoặc có loại trừ → `review`. */
+function returnConditions(sentence: string): { conditions: string[]; review: boolean } {
+  const lead = CONDITION_START.exec(sentence);
+  const exclusion = EXCLUSION.test(sentence);
+  if (!lead) return { conditions: [], review: exclusion };
+  const parts = (lead[1] as string)
+    .split(CONDITION_SPLIT)
+    .map((part) => part.trim().replace(CONDITION_LEAD, '').trim())
+    .filter((part) => part.length > 0);
+  const conditions = parts.filter((part) => sentence.includes(part));
+  return {
+    conditions,
+    review: exclusion || conditions.length === 0 || conditions.length !== parts.length,
+  };
+}
+
+const WARRANTY_BETWEEN = /bảo hành\s+(.+?)\s+\d{1,3}\s*(?:tháng|năm)/iu;
+const WARRANTY_TRAILING = new RegExp(
+  String.raw`bảo hành.*?\d{1,3}\s*(?:tháng|năm)\s+(?:cho|đối với)\s+(.+?)(?=\s+(?:kể từ|tính từ|từ)${NOT_R}|[.,;!]|$)`,
+  'iu',
+);
+const WARRANTY_EN_LEAD = /^(.+?)\s+(?:are|is)\s+(?:under|covered by)\s+(?:a\s+)?warranty/iu;
+const WARRANTY_EN_ON =
+  /warranty\s+(?:on|for|covers)\s+(?:the\s+)?(.+?)(?=\s+(?:for|of)\s+\d|[.,;!]|$)/iu;
+
+/** Phạm vi của bảo hành ("bảo hành đường may 3 tháng", "…cho thân máy", "Seams are under warranty…"): chép nguyên văn; có loại trừ mà không tách được → `review`. */
+function warrantyScope(sentence: string): { scope: string | null; review: boolean } {
+  const exclusion = EXCLUSION.test(sentence);
+  const candidates: string[] = [];
+  const between = WARRANTY_BETWEEN.exec(sentence);
+  if (between) candidates.push((between[1] as string).replace(/^(?:cho|đối với|:)\s+/iu, ''));
+  const trailing = WARRANTY_TRAILING.exec(sentence);
+  if (trailing) candidates.push(trailing[1] as string);
+  const enLead = WARRANTY_EN_LEAD.exec(sentence);
+  if (enLead) candidates.push(enLead[1] as string);
+  const enOn = WARRANTY_EN_ON.exec(sentence);
+  if (enOn) candidates.push(enOn[1] as string);
+  const scopes = candidates
+    .map((c) =>
+      c
+        .replace(/chính hãng/giu, '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    )
+    .filter((c) => c.length > 0 && !GENERIC_SCOPE.test(c));
+  const scope = scopes.find((c) => sentence.includes(c)) ?? null;
+  return { scope, review: exclusion && scope === null };
+}
+
+/** Cụm loại trừ/giới hạn KHÔNG phải "không có chính sách" ("không bao gồm phụ kiện"): bỏ trước khi xét phủ định. */
+const withoutExclusions = (norm: string) =>
+  norm.replace(/khong bao gom|khong ap dụng|khong ap dung|ngoai tru|not include|excluding/g, ' ');
+
 function suggestReturns(sentence: string, norm: string): PolicySuggestion | null {
-  if (!/\b(doi tra|doi hang|tra hang|hoan tien|hoan hang|return|refund|exchange)\b/.test(norm))
+  if (
+    !/\b(doi tra|doi hang|tra hang|hoan tien|hoan hang|returns?|refunds?|exchanges?)\b/.test(norm)
+  )
     return null;
   if (/\b(tu|tren|toi thieu|duoi|over|above|min)\b\s*\d/.test(norm)) return null;
-  if (isNegated(norm, /(doi tra|doi|tra hang|hoan tien|hoan|return|refund)/)) {
+  if (isNegated(withoutExclusions(norm), /(doi tra|doi|tra hang|hoan tien|hoan|return|refund)/)) {
     return {
       kind: 'returns',
       slot: 'returns',
@@ -80,12 +147,22 @@ function suggestReturns(sentence: string, norm: string): PolicySuggestion | null
   const d = days(sentence);
   if (!d || d.min !== d.max) return null;
   if (!valueAppearsInEvidence(d.source, sentence)) return null;
-  return { kind: 'returns', slot: 'returns', data: { days: d.max }, evidence: sentence };
+  const { conditions, review } = returnConditions(sentence);
+  return {
+    kind: 'returns',
+    slot: 'returns',
+    data: {
+      days: d.max,
+      ...(conditions.length > 0 ? { conditions } : {}),
+      ...(review ? { needsReview: true } : {}),
+    },
+    evidence: sentence,
+  };
 }
 
 function suggestWarranty(sentence: string, norm: string): PolicySuggestion | null {
   if (!/\b(bao hanh|warranty|guarantee)\b/.test(norm)) return null;
-  if (isNegated(norm, /(bao hanh|warranty)/)) {
+  if (isNegated(withoutExclusions(norm), /(bao hanh|warranty)/)) {
     return {
       kind: 'warranty',
       slot: 'warranty',
@@ -99,7 +176,13 @@ function suggestWarranty(sentence: string, norm: string): PolicySuggestion | nul
   const n = Number(m[1]);
   const months = /^(nam|years?)$/.test(m[2] as string) ? n * 12 : n;
   if (!valueAppearsInEvidence([n], sentence)) return null;
-  return { kind: 'warranty', slot: 'warranty', data: { months }, evidence: sentence };
+  const { scope, review } = warrantyScope(sentence);
+  return {
+    kind: 'warranty',
+    slot: 'warranty',
+    data: { months, ...(scope ? { scope } : {}), ...(review ? { needsReview: true } : {}) },
+    evidence: sentence,
+  };
 }
 
 function suggestCod(sentence: string, norm: string): PolicySuggestion | null {

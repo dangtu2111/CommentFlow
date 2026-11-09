@@ -19,7 +19,10 @@ describe('suggestPolicyFacts — chỉ đề xuất khi số có nguyên văn tr
 
   it('bảo hành: tháng, năm → tháng, không bảo hành', () => {
     expect(one('Bảo hành chính hãng 12 tháng.', 'warranty')?.data).toEqual({ months: 12 });
-    expect(one('Bảo hành 2 năm cho thân máy.', 'warranty')?.data).toEqual({ months: 24 });
+    expect(one('Bảo hành 2 năm cho thân máy.', 'warranty')?.data).toEqual({
+      months: 24,
+      scope: 'thân máy',
+    });
     expect(one('Hàng thanh lý không bảo hành.', 'warranty')?.data).toEqual({
       months: null,
       none: true,
@@ -75,6 +78,60 @@ describe('suggestPolicyFacts — chỉ đề xuất khi số có nguyên văn tr
     ).toBeUndefined();
     expect(one('Đổi trả trong 7 ngày. Chính sách đổi trả: 7 ngày.', 'returns')?.data).toEqual({
       days: 7,
+    });
+  });
+
+  it('điều kiện/phạm vi chỉ chép NGUYÊN VĂN; "kể từ khi nhận hàng" không phải điều kiện', () => {
+    expect(
+      one('Đổi trả trong 7 ngày nếu sản phẩm còn tem mác và chưa giặt.', 'returns')?.data,
+    ).toEqual({
+      days: 7,
+      conditions: ['còn tem mác', 'chưa giặt'],
+    });
+    expect(
+      one(
+        'Returns are accepted within 7 days if the item still has its tags and is unwashed.',
+        'returns',
+      )?.data,
+    ).toEqual({
+      days: 7,
+      conditions: ['still has its tags', 'is unwashed'],
+    });
+    expect(one('Đổi trả trong 7 ngày kể từ khi nhận hàng.', 'returns')?.data).toEqual({ days: 7 });
+    expect(one('Bảo hành đường may 3 tháng kể từ ngày nhận hàng.', 'warranty')?.data).toEqual({
+      months: 3,
+      scope: 'đường may',
+    });
+    expect(
+      one('Seams are under warranty for 3 months from the delivery date.', 'warranty')?.data,
+    ).toEqual({ months: 3, scope: 'Seams' });
+    expect(one('Warranty on seams for 3 months.', 'warranty')?.data).toEqual({
+      months: 3,
+      scope: 'seams',
+    });
+    expect(one('Bảo hành chính hãng 12 tháng cho sản phẩm.', 'warranty')?.data).toEqual({
+      months: 12,
+    });
+    for (const text of [
+      'Đổi trả trong 7 ngày nếu sản phẩm còn tem mác.',
+      'Bảo hành đường may 3 tháng.',
+    ]) {
+      const evidence = suggestPolicyFacts(text)[0]?.evidence ?? '';
+      const data = suggestPolicyFacts(text)[0]?.data as { conditions?: string[]; scope?: string };
+      for (const part of [...(data.conditions ?? []), ...(data.scope ? [data.scope] : [])])
+        expect(evidence).toContain(part);
+    }
+  });
+
+  it('điều kiện/phạm vi mà không tách được → nháp gắn needsReview (không bỏ trống điều kiện)', () => {
+    expect(one('Đổi trả trong 7 ngày, trừ hàng giảm giá.', 'returns')?.data).toMatchObject({
+      days: 7,
+      needsReview: true,
+    });
+    expect(one('Đổi trả trong 7 ngày nếu.', 'returns')?.data).toMatchObject({ days: 7 });
+    expect(one('Bảo hành 12 tháng, không bao gồm phụ kiện.', 'warranty')?.data).toMatchObject({
+      months: 12,
+      needsReview: true,
     });
   });
 

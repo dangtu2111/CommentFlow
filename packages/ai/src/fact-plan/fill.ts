@@ -83,12 +83,23 @@ function renderValue(fact: Extract<Fact, { status: 'known' }>, lang: Lang): stri
         return lang === 'vi' ? 'không áp dụng đổi trả' : 'returns are not accepted';
       }
       return lang === 'vi' ? 'không bảo hành' : 'no warranty';
-    case 'days_count':
-      return lang === 'vi'
-        ? `đổi trả trong ${value.n} ngày`
-        : `returns accepted within ${value.n} ${value.n === 1 ? 'day' : 'days'}`;
-    case 'months_count':
+    case 'days_count': {
+      const base =
+        lang === 'vi'
+          ? `đổi trả trong ${value.n} ngày`
+          : `returns accepted within ${value.n} ${value.n === 1 ? 'day' : 'days'}`;
+      const conditions = value.conditions ?? [];
+      if (conditions.length === 0) return base;
+      return `${base} (${lang === 'vi' ? 'điều kiện' : 'conditions'}: ${conditions.join('; ')})`;
+    }
+    case 'months_count': {
+      if (value.scope) {
+        return lang === 'vi'
+          ? `bảo hành ${value.scope} ${value.n} tháng`
+          : `${value.n}-month warranty (${value.scope})`;
+      }
       return lang === 'vi' ? `bảo hành ${value.n} tháng` : `${value.n}-month warranty`;
+    }
     case 'methods':
       return value.methods.map((method) => METHODS[method]?.[lang] ?? method).join(', ');
   }
@@ -112,6 +123,8 @@ export type FillResult = {
 
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 
+const DUPLICATE_CON = /(?<![\p{L}\p{N}])(còn)\s+còn(?![\p{L}\p{N}])/giu;
+
 export function fillSlots(template: string, plan: FactPlan, options: { lang: Lang }): FillResult {
   const byId = new Map(plan.facts.map((fact) => [fact.id, fact]));
   const missing: string[] = [];
@@ -123,7 +136,10 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
     if (out !== null && !rendered.includes(out)) rendered.push(out);
     return out;
   };
-  const fillText = (text: string) => text.replace(SLOT, (whole, id: string) => render(id) ?? whole);
+  // Lời dẫn của bộ soạn + cụm điền có thể lặp từ ("hiện còn" + "còn 5 sản phẩm"): gộp "còn còn" → "còn" (chỉ chữ, không đụng giá trị đã điền).
+  const dedupe = (text: string) => text.replace(DUPLICATE_CON, '$1');
+  const fillText = (text: string) =>
+    dedupe(text.replace(SLOT, (whole, id: string) => render(id) ?? whole));
 
   const claims: Claim[] = [];
   const sourceIds: string[] = [];

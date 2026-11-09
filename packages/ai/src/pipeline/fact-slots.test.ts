@@ -126,6 +126,7 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
       },
     ]);
     expect(result.guard).toMatchObject({ ok: true, violations: [], replyViolations: [] });
+    expect(result.slotDiagnostics).toEqual({ rawTexts: 1, rejected: 0, chosen: 'reply' });
     expect(result.factPlan?.facts.map((f) => f.id)).toEqual([
       'product_name.1',
       'price.1',
@@ -266,6 +267,103 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     const nh = { ...draftOf(''), needs_human: true, reason: 'x' };
     const { result } = await run(MIXED_11, ASKS, nh, slots([ship()]));
     expect(result.draft.needs_human).toBe(true);
+  });
+
+  it('GỐC LỖI (syn2-vi-11): bộ soạn đặt needs_human nhưng viết {fact:…} hợp lệ → VẪN qua bước kiểm/điền, code điền giá trị, không để mã lọt', async () => {
+    const leak = {
+      ...draftOf('Túi tote canvas giá {fact:price.1}, giao đến Hà Nội trong {fact:ship_time}.', [
+        'Giá {fact:price.1}.',
+      ]),
+      needs_human: true,
+      reason: 'x',
+    };
+    const { result } = await run(MIXED_11, ASKS, leak, slots([ship()]));
+    expect(result.decision.action).toBe('answer');
+    expect(result.reply).toBe('Túi tote canvas giá 99.000đ, giao đến Hà Nội trong 2–4 ngày.');
+    expect(result.draft.needs_human).toBe(false);
+    expect(result.slotDiagnostics).toMatchObject({ rejected: 1, chosen: 'reply' });
+    expect(result.slotDiagnostics?.finalNetTriggered).toBeUndefined();
+  });
+
+  it('needs_human + {fact:…} KHÔNG có trong plan / unknown → bị từ chối cứng ngay lúc kiểm, đi câu dự phòng do code dựng', async () => {
+    const bad = {
+      ...draftOf('Giá {fact:price.9}, giao {fact:ship_cod}.', []),
+      needs_human: true,
+      reason: 'x',
+    };
+    const { result } = await run(MIXED_11, ASKS, bad, slots([ship()]));
+    expect(result.reply).not.toContain('{fact:');
+    expect(result.slotDiagnostics).toMatchObject({ rejected: 1, chosen: 'fallback' });
+    expect(result.slotDiagnostics?.finalNetTriggered).toBeUndefined();
+  });
+
+  it('LƯỚI CHẶN CUỐI: ngoài đường điền (clarify) mà câu còn {fact:…} → chuyển người, ghi finalNetTriggered', async () => {
+    const rows = [
+      ship({ kind: 'city', label: 'Nội thành Hà Nội', city: 'Hà Nội', feeMinor: 20000 }),
+      ship(),
+    ];
+    const leak = draftOf('Phí ship {fact:ship_fee}, bạn ở tỉnh nào ạ?');
+    const { result } = await run('Tote bag ship bao nhiêu', ['phí ship'], leak, slots(rows));
+    expect(result.decision.action).toBe('handoff');
+    expect(result.reply).not.toContain('{fact:');
+    expect(result.slotDiagnostics).toMatchObject({ chosen: 'handoff', finalNetTriggered: true });
+  });
+
+  it('khách nói "đen"/size M → khớp biến thể (attrs_norm: đen→black) và nêu ĐÚNG số của biến thể, không phải số tổng sản phẩm', async () => {
+    const shirt: PlanProduct = {
+      id: 'p-shirt',
+      name: 'Áo thun basic',
+      currency: 'VND',
+      priceMinor: 150000,
+      stock: 26,
+      variants: [
+        {
+          label: 'Size M, Màu Đen',
+          attrsNorm: { size: 'm', color: 'black' },
+          priceMinor: 150000,
+          stock: 5,
+        },
+        {
+          label: 'Size M, Màu Trắng',
+          attrsNorm: { size: 'm', color: 'white' },
+          priceMinor: 150000,
+          stock: 9,
+        },
+      ],
+    };
+    const know: TryKnowledge = {
+      ...knowledge,
+      matchProducts: async () => ({ ids: ['p-shirt'], names: ['Áo thun basic'], missingAxes: [] }),
+      lookupPlanProducts: async () => [shirt],
+      lookupProductFacts: async () => [
+        {
+          ...toteCandidate,
+          id: 'p-shirt',
+          title: 'Áo thun basic',
+          text: unsafeMarkMasked('Áo thun basic: giá 150.000đ.'),
+        },
+      ],
+    };
+    const { drafter } = fakeDrafter(draftOf('{fact:product_name.1} hiện {fact:stock.1} bạn nhé.'));
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text: 'Áo thun basic size M màu đen còn mấy cái',
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: { policy: policy([]), stock: { disclose: 'count', lowAt: null } },
+      },
+      {
+        extractor: createFixtureExtractor([
+          { match: /./, result: { ...extractFor(['còn mấy cái']), size: 'M', color: 'đen' } },
+        ]),
+        drafter,
+        knowledge: know,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    expect(result.reply).toBe('Áo thun basic hiện còn 5 sản phẩm bạn nhé.');
   });
 
   it('thiếu hàm lookupPlanProducts (chưa nối DB) → không có sự kiện sản phẩm: chỉ chính sách + mời; không sập', async () => {

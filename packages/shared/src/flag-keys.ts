@@ -11,6 +11,9 @@ export const AI_STEP_FLAGS = {
 /** Cờ theo workspace: pipeline TỰ chạy cho bình luận mới của workspace (thay `PIPELINE_ENABLED` + `PIPELINE_WORKSPACE_IDS`). Mặc định TẮT. */
 export const PIPELINE_FLAG = 'cf.pipeline.v2';
 
+/** Cờ theo workspace: câu trả lời đi đường fact plan (số/chính sách do code điền, ADR 017). Mặc định TẮT; bật bằng `pnpm flags:set`. */
+export const FACT_SLOTS_FLAG = 'cf.ai.fact_slots';
+
 export type AiStep = keyof typeof AI_STEP_FLAGS;
 
 export const FLAG_DEFAULTS: Readonly<Record<string, boolean>> = {
@@ -18,4 +21,5 @@ export const FLAG_DEFAULTS: Readonly<Record<string, boolean>> = {
   [AI_STEP_FLAGS.draft]: false,
   [AI_STEP_FLAGS.rewrite]: false,
   [PIPELINE_FLAG]: false,
+  [FACT_SLOTS_FLAG]: false,
 };

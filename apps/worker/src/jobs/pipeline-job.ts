@@ -5,9 +5,12 @@ import {
   type Extractor,
   evaluateReplyCap,
   loadWorkspaceKnowledge,
+  type PolicyFacts,
   parseConversationState,
+  policyFactsFromRows,
   type Reranker,
   type Rewriter,
+  type StockMode,
   selectCustomerContext,
   type TryKnowledge,
 } from '@flow/ai';
@@ -16,6 +19,7 @@ import {
   DEFAULT_MERGE_WINDOW_SECONDS,
   type FlowDb,
   getMergeWindowSeconds,
+  listApprovedPolicyFacts,
   loadPipelineContext,
   mergeCommentGroup,
   requestManualPipelineRun,
@@ -44,6 +48,8 @@ export type PipelineJobConfig = {
   /** `PIPELINE_ENABLED` và `PIPELINE_WORKSPACE_IDS` (Q-POR1) — chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm. */
   /** Cờ DB `cf.pipeline.v2` cho workspace (chỉ chặn đường TỰ ĐỘNG; `manual` là nhân viên chủ động bấm). */
   pipelineEnabled: (workspaceId: string) => Promise<boolean>;
+  /** Cờ DB `cf.ai.fact_slots` theo workspace (ADR 017): BẬT → câu trả lời đi đường fact plan (số/chính sách do code điền). Thiếu/lỗi đọc cờ → TẮT. */
+  factSlotsEnabled?: (workspaceId: string) => Promise<boolean>;
   /** Hạn mức lượt/tháng (`resolveAiTurnLimit`). */
   turnLimit: number;
   /**
@@ -89,6 +95,8 @@ function perCallKnowledge(
       ),
     lookupProductFacts: (ids) => run((k) => k.lookupProductFacts(ids)),
     searchKb: (query, context) => run((k) => k.searchKb(query, context)),
+    lookupPlanProducts: (ids, options) =>
+      run(async (k) => (k.lookupPlanProducts ? k.lookupPlanProducts(ids, options) : [])),
   };
 }
 
@@ -208,6 +216,8 @@ export async function runPipelineJob(
     max: context.settings.maxAiRepliesPerCustomerPost,
   };
 
+  const factSlots = await loadFactSlots(config, workspaceId);
+
   return runCommentPipeline({
     db,
     workspaceId,
@@ -222,6 +232,7 @@ export async function runPipelineJob(
       voice: { ...DEFAULT_VOICE, do: [], dont: [] },
       ...(Object.keys(voices).length > 0 ? { voices } : {}),
       autoSendEnabled: false,
+      ...(factSlots ? { factSlots } : {}),
       dict: createAbbreviationDict(abbreviations),
       thread: context.thread,
       convo,
@@ -252,6 +263,21 @@ export async function runPipelineJob(
       traceId: null,
     },
   });
+}
+
+/**
+ * Đường fact plan (ADR 017): cờ DB `cf.ai.fact_slots` TẮT (hoặc không truyền) → `undefined` và KHÔNG đọc `policy_facts` (đường cũ không đổi). BẬT → chỉ nạp chính sách ĐÃ DUYỆT
+ * (`listApprovedPolicyFacts`; `policyFactsFromRows` còn bỏ mọi dòng không phải approved) — bản nháp không bao giờ vào.
+ */
+export async function loadFactSlots(
+  config: Pick<PipelineJobConfig, 'db' | 'factSlotsEnabled'>,
+  workspaceId: string,
+): Promise<{ policy: PolicyFacts; stock: StockMode } | undefined> {
+  if (!config.factSlotsEnabled || !(await config.factSlotsEnabled(workspaceId))) return undefined;
+  const rows = await config.db.withJob(workspaceId, (tx) =>
+    listApprovedPolicyFacts(tx, workspaceId),
+  );
+  return { policy: policyFactsFromRows(rows).policy, stock: { disclose: 'status', lowAt: null } };
 }
 
 /** Handler pg-boss của hàng đợi `pipeline` (batchSize 1). Lỗi tạm → ném để pg-boss thử lại (tối đa 3). */

@@ -7,7 +7,11 @@ import type { FactTopic } from './types';
  */
 const RULES: ReadonlyArray<{ topic: FactTopic; pattern: RegExp }> = [
   { topic: 'price', pattern: /\bgia\b|bao nhieu|\bprice\b|how much|\bcost\b|bn tien/ },
-  { topic: 'stock', pattern: /con hang|het hang|ton kho|in stock|available|sold out|con khong/ },
+  {
+    topic: 'stock',
+    pattern:
+      /con hang|het hang|ton kho|\bstock\b|available|sold out|con (khong|ko|hk|hg|hok|hong|k)\b|con (may|bao nhieu|nhieu)/,
+  },
   {
     topic: 'returns',
     pattern: /doi tra|hoan tra|doi hang|tra hang|\breturns?\b|exchange|refund|hoan tien/,

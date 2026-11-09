@@ -9,7 +9,7 @@ import {
   type KbTopic,
   type MaskedText,
   maskPii,
-  normalizeSearchText,
+  normalizeAttrs,
   type PriceSource,
   type RuleFilterReason,
   ruleFilter,
@@ -276,6 +276,8 @@ export type TryResult =
       autoSend: AutoSendPreview;
       /** Fact plan của lượt (chỉ khi bật `factSlots`) — để chẩn đoán/EVAL/giao diện. */
       factPlan?: FactPlan | null;
+      /** Chẩn đoán đường fact plan (EVAL): số câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG / tổng, và câu được chọn. */
+      slotDiagnostics?: SlotDiagnostics;
     };
 
 /** Chủ đề của một câu/đoạn chữ (dùng cho ý hỏi và cho đoạn kiến thức tìm được). */
@@ -482,10 +484,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           topics: factTopics,
           // Chỉ coi là "khách nêu địa điểm" khi câu có tỉnh/thành nhận ra được; không có → null (chưa nêu).
           location: findProvinces(masked).length > 0 ? masked : null,
-          variantAttrs: {
-            ...(extract.size ? { size: normalizeSearchText(extract.size) } : {}),
-            ...(extract.color ? { color: normalizeSearchText(extract.color) } : {}),
-          },
+          // Cùng chuẩn hóa với `attrs_norm` của biến thể (FR-129): khóa mau→color, giá trị đen→black.
+          variantAttrs: normalizeAttrs({
+            ...(extract.size ? { size: extract.size } : {}),
+            ...(extract.color ? { color: extract.color } : {}),
+          }),
           measures: /\d/.test(sizeText) ? [sizeText] : [],
           policy: input.factSlots.policy,
           stock: input.factSlots.stock,
@@ -562,21 +565,37 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // DRAFT-FACT-SLOTS: chọn câu ĐẠT guard chỗ giữ chỗ và dùng đủ sự kiện bắt buộc (reply hoặc biến thể), không có thì câu dự phòng do CODE dựng; code điền giá trị, sinh claims/nguồn,
   // thêm câu mời cho chủ đề chưa có thông tin. Không câu nào dùng được → chuyển người. Không gọi LLM thêm (≤ 2 lần/lượt, FR-162).
   let slotRendered: string[] | null = null;
+  let slotDiagnostics: SlotDiagnostics | undefined;
   if (
     factPlan !== null &&
     slotFacts !== null &&
     (decision.action === 'answer' || decision.action === 'redirect') &&
-    !draft.needs_human
+    // Bộ soạn đặt needs_human nhưng VẪN viết chỗ giữ chỗ → vẫn phải qua bước kiểm/điền (không để mã {fact:…} đi tiếp); needs_human trần (không chỗ giữ chỗ) giữ nguyên.
+    (!draft.needs_human ||
+      [draft.reply, ...(draft.variants ?? [])].some((text) => slotIds(text).length > 0))
   ) {
     const replyLang = lang === 'en' ? 'en' : 'vi';
     const required = requiredFactIds(factPlan);
     const passes = (text: string) =>
       checkSlots(text, factPlan).ok && required.every((id) => slotIds(text).includes(id));
     const candidates = [draft.reply, ...(draft.variants ?? [])].filter(passes);
+    const rawTexts = [draft.reply, ...(draft.variants ?? [])];
     const base = candidates[0] ?? fallbackTemplate(factPlan, replyLang);
+    const chosenKind: SlotDiagnostics['chosen'] =
+      candidates[0] === undefined
+        ? 'fallback'
+        : candidates[0] === draft.reply
+          ? 'reply'
+          : 'variant';
+    slotDiagnostics = {
+      rawTexts: rawTexts.length,
+      rejected: rawTexts.length - candidates.length,
+      chosen: chosenKind,
+    };
     const filled = base === '' ? null : fillSlots(base, factPlan, { lang: replyLang });
     if (filled === null || filled.missing.length > 0) {
       decision = handoffDecision('claim_unsupported', decision.askedBefore);
+      slotDiagnostics = { ...(slotDiagnostics as SlotDiagnostics), chosen: 'handoff' };
       draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
     } else {
       // Tiếng Anh: "we/us" (xưng hô tiếng Việt của voice không áp dụng); xưng hô tùy chỉnh để trống → "shop".
@@ -597,6 +616,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       slotRendered = filled.rendered;
       draft = {
         ...draft,
+        needs_human: false,
+        reason: '',
         reply: withInvite(filled.text),
         variants: others,
         sources: filled.sourceIds,
@@ -656,6 +677,23 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         }
       }
     }
+  }
+
+  // Lưới an toàn (ADR 017): chế độ chỗ giữ chỗ mà câu CHƯA được code điền (vd. bộ soạn đánh dấu needs_human nhưng vẫn viết {fact:…}) thì KHÔNG bao giờ để mã chỗ giữ chỗ lọt tới khách → chuyển người.
+  if (
+    factPlan !== null &&
+    slotRendered === null &&
+    decision.action !== 'handoff' &&
+    [draft.reply, ...(draft.variants ?? [])].some((text) => /{fact:/.test(text))
+  ) {
+    decision = handoffDecision('claim_unsupported', decision.askedBefore);
+    slotDiagnostics = {
+      rawTexts: 1 + (draft.variants?.length ?? 0),
+      rejected: 1 + (draft.variants?.length ?? 0),
+      chosen: 'handoff',
+      finalNetTriggered: true,
+    };
+    draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
   }
 
   const usedIds = new Set(draft.sources);
@@ -729,6 +767,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       replyViolations: replyGuard.violations,
     },
     ...(factPlan === null ? {} : { factPlan }),
+    ...(slotDiagnostics ? { slotDiagnostics } : {}),
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,
       decision,
@@ -744,6 +783,14 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
  * Tên cũ, cùng MỘT hàm: ô Thử AI gọi như trước (không cổng, không ngữ cảnh chuỗi); worker gọi `runPipeline` với cổng chặn và
  * ngữ cảnh đọc từ DB (PIPE-ORCHESTRATOR). Giữ alias để không đổi các nơi đang import `runTryPipeline`.
  */
+export type SlotDiagnostics = {
+  rawTexts: number;
+  rejected: number;
+  chosen: 'reply' | 'variant' | 'fallback' | 'handoff';
+  /** Lưới chặn CUỐI (mã {fact:…} còn sót sau bước kiểm/điền) đã kích hoạt — mục tiêu 0. */
+  finalNetTriggered?: boolean;
+};
+
 export const runTryPipeline = runPipeline;
 
 export type PipelineInput = TryInput;

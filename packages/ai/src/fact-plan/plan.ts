@@ -32,6 +32,10 @@ function chosenVariant(
   product: PlanProduct,
   attrs: Record<string, string> | null | undefined,
 ): PlanVariant | null {
+  // Sản phẩm chỉ có MỘT biến thể: khách không cần chọn — chính nó.
+  if (product.variants.length === 1 && (!attrs || Object.keys(attrs).length === 0)) {
+    return product.variants[0] as PlanVariant;
+  }
   if (!attrs || Object.keys(attrs).length === 0) return null;
   const matches = product.variants.filter((variant) =>
     Object.entries(attrs).every(([key, value]) => variant.attrsNorm[key] === value),
@@ -76,9 +80,16 @@ function stockFact(
   mode: StockMode,
 ): Fact {
   const id = `stock.${n}`;
+  const sourceId = product.id;
+  // Sản phẩm CÓ biến thể mà chưa chọn được đúng một biến thể: KHÔNG bao giờ nêu SỐ LƯỢNG (số tổng/đầu sản phẩm không phải số của loại khách hỏi) — chỉ còn/hết hàng theo các biến thể.
+  if (variant === null && product.variants.length > 0) {
+    const stocks = product.variants.map((v) => v.stock);
+    if (product.stockStale === true || stocks.every((s) => s === null)) return unknown(id, 'stock');
+    const anyIn = stocks.some((s) => s !== null && s > 0);
+    return known(id, 'stock', { type: 'stock', display: anyIn ? 'in' : 'out' }, sourceId);
+  }
   const stock = variant === null ? product.stock : variant.stock;
   if (product.stockStale === true || stock === null) return unknown(id, 'stock');
-  const sourceId = product.id;
   if (stock <= 0) return known(id, 'stock', { type: 'stock', display: 'out' }, sourceId);
   if (mode.lowAt !== null && stock <= mode.lowAt) {
     return known(id, 'stock', { type: 'stock', display: 'low' }, sourceId);
@@ -156,7 +167,16 @@ function policyFact(topic: 'returns' | 'warranty' | 'payment', policy: PolicyFac
     if (r.none === true) return known('returns', 'returns', { type: 'none' }, r.sourceId);
     return r.days === null
       ? unknown('returns', 'returns')
-      : known('returns', 'returns', { type: 'days_count', n: r.days }, r.sourceId);
+      : known(
+          'returns',
+          'returns',
+          {
+            type: 'days_count',
+            n: r.days,
+            ...(r.conditions && r.conditions.length > 0 ? { conditions: r.conditions } : {}),
+          },
+          r.sourceId,
+        );
   }
   if (topic === 'warranty') {
     const w = policy.warranty;
@@ -164,7 +184,12 @@ function policyFact(topic: 'returns' | 'warranty' | 'payment', policy: PolicyFac
     if (w.none === true) return known('warranty', 'warranty', { type: 'none' }, w.sourceId);
     return w.months === null
       ? unknown('warranty', 'warranty')
-      : known('warranty', 'warranty', { type: 'months_count', n: w.months }, w.sourceId);
+      : known(
+          'warranty',
+          'warranty',
+          { type: 'months_count', n: w.months, ...(w.scope ? { scope: w.scope } : {}) },
+          w.sourceId,
+        );
   }
   const p = policy.payment;
   return p

@@ -53,7 +53,35 @@ function checkExtract(
   return result;
 }
 
-export function checkSample(sample: EvalSample, outcome: SampleOutcome): SampleChecks {
+export type StockDisclosure = 'quantity' | 'status';
+export type CheckOptions = { stockDisclosure?: StockDisclosure };
+
+const IN_STOCK_REPLY = /(còn hàng|hết hàng|sắp hết|in stock|out of stock|sold out|available)/i;
+
+/** Mẫu có sự kiện bắt buộc loại tồn kho — THEO NHÃN GOLD `expected.factKinds` (không đoán từ chữ trong câu hỏi). */
+export function isStockSample(sample: EvalSample): boolean {
+  return sample.expected.factKinds?.includes('stock') ?? false;
+}
+
+/** Từ khóa số (≤ 3 chữ số) của mẫu gắn nhãn tồn kho, chế độ `status`: câu nói "còn hàng/hết hàng" đạt; chế độ `quantity` hoặc mẫu không gắn nhãn: phải có đúng từ khóa. */
+export function termPresent(
+  sample: EvalSample,
+  reply: string,
+  term: string,
+  mode: StockDisclosure,
+): boolean {
+  if (mode === 'status' && isStockSample(sample) && /^\d{1,3}$/.test(term)) {
+    return IN_STOCK_REPLY.test(reply);
+  }
+  return includesFolded(reply, term);
+}
+
+export function checkSample(
+  sample: EvalSample,
+  outcome: SampleOutcome,
+  options: CheckOptions = {},
+): SampleChecks {
+  const mode = options.stockDisclosure ?? 'quantity';
   const { expected } = sample;
   if (!outcome.ok) {
     const failedExtract = Object.fromEntries(
@@ -86,7 +114,7 @@ export function checkSample(sample: EvalSample, outcome: SampleOutcome): SampleC
     lang: hasReply ? outcome.lang === expected.lang : null,
     facts:
       expected.mustContain.length > 0
-        ? expected.mustContain.every((term) => includesFolded(outcome.reply, term))
+        ? expected.mustContain.every((term) => termPresent(sample, outcome.reply, term, mode))
         : null,
     claimSourced: hasReply
       ? !outcome.replyViolations.some(
@@ -187,10 +215,11 @@ export type EvalMetrics = {
 export function computeMetrics(
   samples: readonly EvalSample[],
   outcomes: ReadonlyMap<string, SampleOutcome>,
+  options: CheckOptions = {},
 ): EvalMetrics {
   const pairs = samples.flatMap((sample) => {
     const outcome = outcomes.get(sample.id);
-    return outcome ? [{ sample, checks: checkSample(sample, outcome) }] : [];
+    return outcome ? [{ sample, checks: checkSample(sample, outcome, options) }] : [];
   });
   const byGroup = Object.fromEntries(
     LANG_GROUPS.map((group) => [

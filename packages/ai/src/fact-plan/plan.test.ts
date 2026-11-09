@@ -366,3 +366,67 @@ describe('fact plan — COD, đổi trả, bảo hành, thanh toán', () => {
     ).toEqual(['cod']);
   });
 });
+
+describe('buildFactPlan — điều kiện/phạm vi đi cùng giá trị chính sách', () => {
+  it('conditions/scope được chuyển vào sự kiện', () => {
+    const p = buildFactPlan({
+      topics: ['returns', 'warranty'],
+      products: [],
+      policy: {
+        shipping: [],
+        returns: { days: 7, conditions: ['còn tem mác'], sourceId: 'pf:1' },
+        warranty: { months: 3, scope: 'đường may', sourceId: 'pf:2' },
+      },
+      location: null,
+      stock: { disclose: 'status', lowAt: null },
+    } as never);
+    expect(p.facts.find((f) => f.id === 'returns')).toMatchObject({
+      value: { type: 'days_count', n: 7, conditions: ['còn tem mác'] },
+    });
+    expect(p.facts.find((f) => f.id === 'warranty')).toMatchObject({
+      value: { type: 'months_count', n: 3, scope: 'đường may' },
+    });
+  });
+});
+
+describe('fact plan — tồn kho khi sản phẩm có biến thể mà chưa chọn được một biến thể', () => {
+  const variantsOf = (stocks: Array<number | null>): PlanProduct => ({
+    ...shirt,
+    stock: 26,
+    variants: stocks.map((stock, i) => ({
+      label: `v${i}`,
+      attrsNorm: { size: `s${i}` },
+      priceMinor: 150000,
+      stock,
+    })),
+  });
+  const stockOf = (product: PlanProduct) =>
+    byId(
+      plan({ products: [product], topics: ['stock'], stock: { disclose: 'count', lowAt: null } }),
+      'stock.1',
+    );
+  it('KHÔNG nêu số lượng (kể cả khi Owner bật nêu số); còn/hết theo các biến thể', () => {
+    expect(stockOf(variantsOf([5, 0]))).toMatchObject({ value: { type: 'stock', display: 'in' } });
+    expect(stockOf(variantsOf([0, 0]))).toMatchObject({ value: { type: 'stock', display: 'out' } });
+    expect(stockOf(variantsOf([null, null]))?.status).toBe('unknown');
+    expect(stockOf({ ...variantsOf([5]), stockStale: true })?.status).toBe('unknown');
+  });
+});
+
+describe('fact plan — sản phẩm chỉ có MỘT biến thể', () => {
+  it('khách không nêu size/màu vẫn dùng biến thể duy nhất (tồn kho đúng số của nó)', () => {
+    const one: PlanProduct = {
+      ...shirt,
+      stock: 3,
+      variants: [
+        { label: 'Xanh, M', attrsNorm: { color: 'blue', size: 'm' }, priceMinor: 320000, stock: 3 },
+      ],
+    };
+    const p = plan({
+      products: [one],
+      topics: ['stock'],
+      stock: { disclose: 'count', lowAt: null },
+    });
+    expect(byId(p, 'stock.1')).toMatchObject({ value: { type: 'stock', display: 'count', n: 3 } });
+  });
+});

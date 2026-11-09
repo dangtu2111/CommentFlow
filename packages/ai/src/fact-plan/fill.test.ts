@@ -182,3 +182,34 @@ describe('fillSlots', () => {
     ]);
   });
 });
+
+describe('fillSlots — điều kiện/phạm vi luôn được ghép vào câu (không khẳng định rộng hơn chính sách)', () => {
+  const p = planOf(
+    fact('returns', 'returns', {
+      type: 'days_count',
+      n: 7,
+      conditions: ['còn tem mác', 'chưa giặt'],
+    }),
+    fact('warranty', 'warranty', { type: 'months_count', n: 3, scope: 'đường may' }),
+  );
+  it('tiếng Việt', () => {
+    expect(fill('{fact:returns}; {fact:warranty}.', p).text).toBe(
+      'đổi trả trong 7 ngày (điều kiện: còn tem mác; chưa giặt); bảo hành đường may 3 tháng.',
+    );
+  });
+  it('tiếng Anh', () => {
+    expect(fill('{fact:returns}; {fact:warranty}.', p, 'en').text).toBe(
+      'returns accepted within 7 days (conditions: còn tem mác; chưa giặt); 3-month warranty (đường may).',
+    );
+  });
+});
+
+describe('fillSlots — gộp từ "còn" lặp do lời dẫn + cụm điền', () => {
+  const p = planOf(fact('stock.1', 'stock', { type: 'stock', display: 'count', n: 5 }));
+  it('"hiện còn {fact}" → "hiện còn 5 sản phẩm" (không "còn còn")', () => {
+    expect(fill('Áo hiện còn {fact:stock.1} bạn nhé.', p).text).toBe(
+      'Áo hiện còn 5 sản phẩm bạn nhé.',
+    );
+    expect(fill('Áo hiện {fact:stock.1}.', p).text).toBe('Áo hiện còn 5 sản phẩm.');
+  });
+});
