@@ -76,9 +76,16 @@ function stockFact(
   mode: StockMode,
 ): Fact {
   const id = `stock.${n}`;
+  const sourceId = product.id;
+  // Sản phẩm CÓ biến thể mà chưa chọn được đúng một biến thể: KHÔNG bao giờ nêu SỐ LƯỢNG (số tổng/đầu sản phẩm không phải số của loại khách hỏi) — chỉ còn/hết hàng theo các biến thể.
+  if (variant === null && product.variants.length > 0) {
+    const stocks = product.variants.map((v) => v.stock);
+    if (product.stockStale === true || stocks.every((s) => s === null)) return unknown(id, 'stock');
+    const anyIn = stocks.some((s) => s !== null && s > 0);
+    return known(id, 'stock', { type: 'stock', display: anyIn ? 'in' : 'out' }, sourceId);
+  }
   const stock = variant === null ? product.stock : variant.stock;
   if (product.stockStale === true || stock === null) return unknown(id, 'stock');
-  const sourceId = product.id;
   if (stock <= 0) return known(id, 'stock', { type: 'stock', display: 'out' }, sourceId);
   if (mode.lowAt !== null && stock <= mode.lowAt) {
     return known(id, 'stock', { type: 'stock', display: 'low' }, sourceId);

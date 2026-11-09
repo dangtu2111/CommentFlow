@@ -309,6 +309,63 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     expect(result.slotDiagnostics).toMatchObject({ chosen: 'handoff', finalNetTriggered: true });
   });
 
+  it('khách nói "đen"/size M → khớp biến thể (attrs_norm: đen→black) và nêu ĐÚNG số của biến thể, không phải số tổng sản phẩm', async () => {
+    const shirt: PlanProduct = {
+      id: 'p-shirt',
+      name: 'Áo thun basic',
+      currency: 'VND',
+      priceMinor: 150000,
+      stock: 26,
+      variants: [
+        {
+          label: 'Size M, Màu Đen',
+          attrsNorm: { size: 'm', color: 'black' },
+          priceMinor: 150000,
+          stock: 5,
+        },
+        {
+          label: 'Size M, Màu Trắng',
+          attrsNorm: { size: 'm', color: 'white' },
+          priceMinor: 150000,
+          stock: 9,
+        },
+      ],
+    };
+    const know: TryKnowledge = {
+      ...knowledge,
+      matchProducts: async () => ({ ids: ['p-shirt'], names: ['Áo thun basic'], missingAxes: [] }),
+      lookupPlanProducts: async () => [shirt],
+      lookupProductFacts: async () => [
+        {
+          ...toteCandidate,
+          id: 'p-shirt',
+          title: 'Áo thun basic',
+          text: unsafeMarkMasked('Áo thun basic: giá 150.000đ.'),
+        },
+      ],
+    };
+    const { drafter } = fakeDrafter(draftOf('{fact:product_name.1} hiện {fact:stock.1} bạn nhé.'));
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text: 'Áo thun basic size M màu đen còn mấy cái',
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: { policy: policy([]), stock: { disclose: 'count', lowAt: null } },
+      },
+      {
+        extractor: createFixtureExtractor([
+          { match: /./, result: { ...extractFor(['còn mấy cái']), size: 'M', color: 'đen' } },
+        ]),
+        drafter,
+        knowledge: know,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    expect(result.reply).toBe('Áo thun basic hiện còn 5 sản phẩm bạn nhé.');
+  });
+
   it('thiếu hàm lookupPlanProducts (chưa nối DB) → không có sự kiện sản phẩm: chỉ chính sách + mời; không sập', async () => {
     const { lookupPlanProducts: _omit, ...withoutPlan } = knowledge;
     const { result } = await run(MIXED_11, ASKS, GOOD, slots([ship()]), withoutPlan);

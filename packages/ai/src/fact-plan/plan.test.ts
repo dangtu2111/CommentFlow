@@ -388,3 +388,27 @@ describe('buildFactPlan — điều kiện/phạm vi đi cùng giá trị chính
     });
   });
 });
+
+describe('fact plan — tồn kho khi sản phẩm có biến thể mà chưa chọn được một biến thể', () => {
+  const variantsOf = (stocks: Array<number | null>): PlanProduct => ({
+    ...shirt,
+    stock: 26,
+    variants: stocks.map((stock, i) => ({
+      label: `v${i}`,
+      attrsNorm: { size: `s${i}` },
+      priceMinor: 150000,
+      stock,
+    })),
+  });
+  const stockOf = (product: PlanProduct) =>
+    byId(
+      plan({ products: [product], topics: ['stock'], stock: { disclose: 'count', lowAt: null } }),
+      'stock.1',
+    );
+  it('KHÔNG nêu số lượng (kể cả khi Owner bật nêu số); còn/hết theo các biến thể', () => {
+    expect(stockOf(variantsOf([5, 0]))).toMatchObject({ value: { type: 'stock', display: 'in' } });
+    expect(stockOf(variantsOf([0, 0]))).toMatchObject({ value: { type: 'stock', display: 'out' } });
+    expect(stockOf(variantsOf([null, null]))?.status).toBe('unknown');
+    expect(stockOf({ ...variantsOf([5]), stockStale: true })?.status).toBe('unknown');
+  });
+});

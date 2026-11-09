@@ -9,7 +9,7 @@ import {
   type KbTopic,
   type MaskedText,
   maskPii,
-  normalizeSearchText,
+  normalizeAttrs,
   type PriceSource,
   type RuleFilterReason,
   ruleFilter,
@@ -484,10 +484,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           topics: factTopics,
           // Chỉ coi là "khách nêu địa điểm" khi câu có tỉnh/thành nhận ra được; không có → null (chưa nêu).
           location: findProvinces(masked).length > 0 ? masked : null,
-          variantAttrs: {
-            ...(extract.size ? { size: normalizeSearchText(extract.size) } : {}),
-            ...(extract.color ? { color: normalizeSearchText(extract.color) } : {}),
-          },
+          // Cùng chuẩn hóa với `attrs_norm` của biến thể (FR-129): khóa mau→color, giá trị đen→black.
+          variantAttrs: normalizeAttrs({
+            ...(extract.size ? { size: extract.size } : {}),
+            ...(extract.color ? { color: extract.color } : {}),
+          }),
           measures: /\d/.test(sizeText) ? [sizeText] : [],
           policy: input.factSlots.policy,
           stock: input.factSlots.stock,

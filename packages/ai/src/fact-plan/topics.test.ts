@@ -43,3 +43,19 @@ describe('phí ship nói bằng "giá ship"', () => {
     expect(factTopicsOf('Giá ship ra Huế')).toEqual(['ship_fee']);
   });
 });
+
+describe('factTopicsOf — tồn kho nói tắt/không dấu', () => {
+  it.each([
+    'Áo thun basic size M màu đen còn mấy cái',
+    'ao thun basic den sz S con may cai',
+    'jean ong rong sz 29 con hk shop',
+    'Basic tee size L còn stock không',
+    'Floral dress còn available không ạ',
+    'còn bao nhiêu cái',
+  ])('%s → stock', (text) => {
+    expect(factTopicsOf(text)).toContain('stock');
+  });
+  it('"con" trong từ khác không phải tồn kho', () => {
+    expect(factTopicsOf('con gái mình mặc size nào')).not.toContain('stock');
+  });
+});
