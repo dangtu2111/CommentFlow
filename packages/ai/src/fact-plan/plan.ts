@@ -293,7 +293,7 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
       known(
         'ship_destination',
         'ship_destination',
-        { type: 'destination', ok: hit !== undefined, place: place.label, shipsTo },
+        { type: 'destination', ok: hit !== undefined, place: place.country, shipsTo },
         (hit ?? (rows[0] as ShipRow)).sourceId,
       ),
     );

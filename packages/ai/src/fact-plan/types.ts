@@ -2,20 +2,23 @@
  * DRAFT-FACT-SLOTS (ADR 017): "fact plan" do CODE lập trước bước soạn — mỗi sự kiện cần nói có giá trị từ dữ liệu có cấu trúc hoặc `unknown`. LLM chỉ viết câu với chỗ giữ chỗ
  * `{fact:id}`; code điền giá trị. Không có số/khẳng định nào do model tự viết.
  */
-export type FactTopic =
-  | 'price'
-  | 'stock'
-  | 'ship_fee'
-  | 'ship_time'
-  | 'ship_destination'
-  | 'cod'
-  | 'returns'
-  | 'refund_to'
-  | 'return_shipping'
-  | 'return_eligibility'
-  | 'defect'
-  | 'warranty'
-  | 'payment';
+/** Chủ đề sự kiện do bước `extract` trả (enum, Zod) — KHÔNG đoán bằng từ khóa. Chỉ đánh dấu chủ đề câu hỏi THẬT SỰ hỏi. */
+export const FACT_TOPICS = [
+  'price',
+  'stock',
+  'ship_fee',
+  'ship_time',
+  'ship_destination',
+  'cod',
+  'returns',
+  'refund_to',
+  'return_shipping',
+  'return_eligibility',
+  'defect',
+  'warranty',
+  'payment',
+] as const;
+export type FactTopic = (typeof FACT_TOPICS)[number];
 
 export type FactKind =
   | 'product_name'

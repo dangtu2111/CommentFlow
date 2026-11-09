@@ -15,6 +15,8 @@ export const FIXTURE_EXTRACT_DEFAULT: ExtractOutcome = {
   cited_price_vnd: null,
   order_intent: null,
   asks: [],
+  topics: [],
+  destination: null,
   // Bản MOCK: thay cho xác suất nhãn của `ml` (chưa có), không phải số model tự ghi.
   labelSignal: { ml: 0.5 },
 };

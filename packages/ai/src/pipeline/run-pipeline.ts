@@ -38,7 +38,6 @@ import {
   checkSlotText as checkSlots,
   type FactPlan,
   type FactTopic,
-  factTopicsOf,
   fallbackTemplate,
   fillSlots,
   findProvinces,
@@ -46,6 +45,7 @@ import {
   type PlanProduct,
   type PolicyFacts,
   requiredFactIds,
+  resolvePlace,
   type StockMode,
   slotIds,
 } from '../fact-plan';
@@ -194,6 +194,8 @@ const EMPTY_EXTRACT: ExtractOutcome = extractResultSchema.parse({
   cited_price_vnd: null,
   order_intent: null,
   asks: [],
+  topics: [],
+  destination: null,
 });
 
 /** Ngữ cảnh chuỗi (xem `TryInput.thread`). */
@@ -330,6 +332,30 @@ function askTopicsOf(
 }
 
 /**
+ * Chế độ chỗ giữ chỗ: chủ đề gửi `decideAction` lấy từ chủ đề `extract` trả (enum) cho nhóm giá/tồn/ship/chính sách — KHÔNG từ regex trên câu ("return shipping" không còn bị coi là ship).
+ * Ý hỏi khác (size, khuyến mãi, đơn hàng…) giữ cách cũ.
+ */
+function slotAskTopics(
+  regexTopics: Array<{ topic: KbGapTopic; isPrice: boolean }>,
+  factTopics: readonly FactTopic[],
+): Array<{ topic: KbGapTopic; isPrice: boolean }> {
+  if (factTopics.length === 0) return regexTopics;
+  const productFactAsked = factTopics.some((t) => t === 'price' || t === 'stock');
+  const kept = regexTopics.filter(
+    ({ topic }) =>
+      topic !== 'shipping' && topic !== 'policy' && !(topic === 'product_info' && productFactAsked),
+  );
+  const fromPlan = factTopics.map((t) => ({ topic: GAP_TOPIC_OF_FACT[t], isPrice: t === 'price' }));
+  const seen = new Set<string>();
+  return [...kept, ...fromPlan].filter(({ topic, isPrice }) => {
+    const key = `${topic}|${isPrice}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * Tên sản phẩm đưa vào `decideAction` (và gợi ý lựa chọn khi hỏi lại): schema chỉ nhận ≤ 120 ký tự, mà tên sản phẩm từ Shopify/Haravan
  * thường dài hơn (tiêu đề SEO 150–255 ký tự). Tên quá dài KHÔNG được làm cả đầu vào "không đọc được" (→ chuyển người oan mọi câu hỏi về
  * sản phẩm đó): cắt gọn ở đây, có dấu "…". Tên đầy đủ vẫn nằm trong nguồn sản phẩm (câu nguồn) để soạn câu.
@@ -362,6 +388,15 @@ async function resolveProductsFor(
   return deps.knowledge.resolveProducts(fallbackIds);
 }
 
+/** Loại sự kiện chính sách đã biết → nhóm pháp lý (FR-160) mà nó làm có nguồn. */
+const PLAN_LEGAL_TOPIC: Partial<Record<string, string>> = {
+  returns: 'refund',
+  refund_to: 'refund',
+  return_shipping: 'refund',
+  return_eligibility: 'refund',
+  warranty: 'warranty',
+};
+
 const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
   price: 'product_info',
   stock: 'product_info',
@@ -371,6 +406,11 @@ const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
   returns: 'policy',
   warranty: 'policy',
   payment: 'policy',
+  ship_destination: 'shipping',
+  refund_to: 'policy',
+  return_shipping: 'policy',
+  return_eligibility: 'policy',
+  defect: 'policy',
 };
 
 /** Chủ đề kiến thức (shipping/policy) đã có đủ sự kiện trong fact plan chưa; `null` = fact plan không phụ trách chủ đề này (giữ cách cũ). */
@@ -467,9 +507,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   };
   // DRAFT-FACT-SLOTS: fact plan do CODE lập (0 lần gọi LLM) khi workspace bật cờ.
   const slotMode = input.factSlots !== undefined && !closing;
-  const factTopics: FactTopic[] = slotMode
-    ? factTopicsOf([masked, ...extract.asks].join(', '))
-    : [];
+  // Chủ đề do `extract` trả (enum, Zod) — không đoán bằng từ khóa; mỗi chủ đề chỉ một lần.
+  const factTopics: FactTopic[] = slotMode ? [...new Set(extract.topics)] : [];
+  // Nơi khách hỏi giao tới → quốc gia (bảng quốc gia/tiểu bang Mỹ + tỉnh/thành VN); không nhận ra → null (không đoán).
+  const destination = slotMode ? resolvePlace(extract.destination ?? masked) : null;
   const planProducts: PlanProduct[] =
     slotMode && deps.knowledge.lookupPlanProducts
       ? await deps.knowledge.lookupPlanProducts(products.ids, {
@@ -482,6 +523,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       ? buildFactPlan({
           products: planProducts,
           topics: factTopics,
+          destination,
           // Chỉ coi là "khách nêu địa điểm" khi câu có tỉnh/thành nhận ra được; không có → null (chưa nêu).
           location: findProvinces(masked).length > 0 ? masked : null,
           // Cùng chuẩn hóa với `attrs_norm` của biến thể (FR-129): khóa mau→color, giá trị đen→black.
@@ -494,6 +536,17 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           stock: input.factSlots.stock,
         })
       : null;
+  // FR-160 ở chế độ chỗ giữ chỗ: nhóm pháp lý (hoàn tiền/bảo hành) ĐÃ có nguồn nếu fact plan có sự kiện ĐÃ BIẾT cùng nhóm (nguồn = dòng chính sách đã duyệt `pf:<id>`); chưa biết → vẫn chưa nguồn.
+  const planLegalCovered = new Set<string>(
+    (factPlan?.facts ?? []).flatMap((fact) =>
+      fact.status === 'known' && PLAN_LEGAL_TOPIC[fact.kind]
+        ? [PLAN_LEGAL_TOPIC[fact.kind] as string]
+        : [],
+    ),
+  );
+  const legalReasons = turnRisks.reasons.legal.filter((topic) => !planLegalCovered.has(topic));
+  const legalUnsourced =
+    factPlan === null ? turnRisks.risks.legalUnsourced : legalReasons.length > 0;
   // Chính sách mâu thuẫn: chỉ khi đoạn DÙNG ĐƯỢC (qua ngưỡng) thuộc nhóm mâu thuẫn của đúng chủ đề khách hỏi; ý khác trả lời bình thường.
   const askedConflictTopics = new Set(
     (extract.asks.length > 0 ? extract.asks : [masked]).flatMap(conflictTopicsOfAsk),
@@ -511,7 +564,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         missingAxes: products.missingAxes,
         mentionedCount: extract.product_mentions.length,
       },
-      topics: askTopicsOf(extract.asks, label).map(({ topic, isPrice }) => ({
+      topics: (factPlan === null
+        ? askTopicsOf(extract.asks, label)
+        : slotAskTopics(askTopicsOf(extract.asks, label), factTopics)
+      ).map(({ topic, isPrice }) => ({
         topic,
         // Hỏi giá mà sản phẩm chưa có giá → coi như CHƯA có nguồn (→ chuyển hướng), không để AI nói "chưa có giá" như một câu trả lời.
         sourced:
@@ -522,11 +578,17 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
       // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
       comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
-      risks: { ...turnRisks.risks, policyConflict },
+      risks: { ...turnRisks.risks, legalUnsourced, policyConflict },
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
   // Phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu → HỎI tỉnh/thành (FR-147), không chuyển hướng. Rủi ro/handoff vẫn thắng.
-  if (factPlan?.clarify && (decision.action === 'answer' || decision.action === 'redirect')) {
+  // Chủ đề phải chuyển người (hàng lỗi/sai hàng: chưa có chính sách có cấu trúc) — không mượn số ngày/điều kiện của đổi trả.
+  if (factPlan?.handoff && decision.action !== 'handoff' && !closing) {
+    decision = handoffDecision('claim_unsupported', decision.askedBefore);
+  } else if (
+    factPlan?.clarify &&
+    (decision.action === 'answer' || decision.action === 'redirect')
+  ) {
     decision = regionClarifyDecision(decision.askedBefore);
   }
 
@@ -763,7 +825,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     route: routed.route,
     routeReason: routed.reason,
     decision,
-    riskReasons: turnRisks.reasons,
+    riskReasons: {
+      ...turnRisks.reasons,
+      legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
+    },
     reply: draft.reply,
     variants: draft.variants ?? [],
     draft,

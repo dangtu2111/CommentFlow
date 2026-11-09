@@ -302,3 +302,13 @@ describe('schema Zod — định tính', () => {
     ).toBe(false);
   });
 });
+
+describe('suggest — dòng ship có số thì KHÔNG tạo thêm dòng định tính', () => {
+  it('đã có ship_region từ câu có số → giữ một dòng', () => {
+    const rows = suggestPolicyFacts(
+      'Phí ship toàn quốc 30.000đ, giao trong 2-4 ngày. We currently ship to United States.',
+    ).filter((s) => s.kind === 'ship_region');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.data).toMatchObject({ feeMinor: 30000 });
+  });
+});

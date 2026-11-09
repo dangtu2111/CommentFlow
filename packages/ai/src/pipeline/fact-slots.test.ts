@@ -4,7 +4,7 @@ import type { ExtractResult } from '../classify/extract-result';
 import { createFixtureExtractor, FIXTURE_EXTRACT_DEFAULT } from '../classify/fixture-extractor';
 import type { DraftResult } from '../draft/draft-result';
 import type { Drafter, DraftInput } from '../draft/drafter';
-import type { PlanProduct, PolicyFacts, ShipRow } from '../fact-plan';
+import type { FactTopic, PlanProduct, PolicyFacts, ShipRow } from '../fact-plan';
 import type { TryCandidate, TryKnowledge } from '../try/try-pipeline';
 import { type PipelineInput, runPipeline } from './run-pipeline';
 
@@ -47,10 +47,21 @@ const slots = (rows: ShipRow[]): NonNullable<PipelineInput['factSlots']> => ({
   policy: policy(rows),
   stock: { disclose: 'status', lowAt: null },
 });
+// Chủ đề do `extract` trả (enum) — trong test dựng từ ý hỏi bằng bảng nhỏ (KHÔNG có hàm đoán từ khóa trong mã thật).
+const TOPIC_OF_ASK: Record<string, FactTopic> = {
+  giá: 'price',
+  price: 'price',
+  'phí ship': 'ship_fee',
+  'thời gian': 'ship_time',
+  'thời gian giao hàng': 'ship_time',
+  'delivery time': 'ship_time',
+  'còn mấy cái': 'stock',
+};
 const extractFor = (asks: string[], label: 'price' | 'advice' = 'price'): ExtractResult => ({
   ...FIXTURE_EXTRACT_DEFAULT,
   labels: [{ label }],
   asks,
+  topics: asks.flatMap((ask) => (TOPIC_OF_ASK[ask] ? [TOPIC_OF_ASK[ask]] : [])),
   product_mentions: ['tote'],
 });
 const draftOf = (reply: string, variants: string[] = []): DraftResult => ({
@@ -173,7 +184,7 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     );
     // Bản của LLM dùng sự kiện `unknown` (ship_time) → bị từ chối; câu dự phòng do code dựng + câu mời cho phần chưa rõ.
     expect(result.reply).toBe(
-      '14-in-1 Bench A4 is $58.90. For shipping fees and delivery time, please message us and we will help.',
+      '14-in-1 Bench A4 is $58.90. For delivery time, please message us and we will help.',
     );
   });
 
