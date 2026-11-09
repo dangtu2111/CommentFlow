@@ -100,3 +100,46 @@ describe('policySlotOf — định danh trong workspace', () => {
     expect(policySlotOf('ship_region', { label: 'a'.repeat(300) })).toHaveLength(100);
   });
 });
+
+describe('ship_region định tính (feeMode/daysMode/destinations)', () => {
+  const base = {
+    kind: 'nationwide',
+    label: 'US',
+    feeMinor: null,
+    currency: 'USD',
+    daysMin: null,
+    daysMax: null,
+  };
+  it('fixed bắt buộc có số tiền; free_over bắt buộc có ngưỡng', () => {
+    expect(parsePolicyFactData('ship_region', { ...base, feeMode: 'fixed' }).success).toBe(false);
+    expect(
+      parsePolicyFactData('ship_region', { ...base, feeMode: 'fixed', feeMinor: 3000 }).success,
+    ).toBe(true);
+    expect(parsePolicyFactData('ship_region', { ...base, feeMode: 'free_over' }).success).toBe(
+      false,
+    );
+    expect(
+      parsePolicyFactData('ship_region', { ...base, feeMode: 'free_over', freeOverMinor: null })
+        .success,
+    ).toBe(false);
+    expect(
+      parsePolicyFactData('ship_region', { ...base, feeMode: 'free_over', freeOverMinor: 5000 })
+        .success,
+    ).toBe(true);
+  });
+  it('at_checkout/free, daysMode, destinations ISO', () => {
+    expect(
+      parsePolicyFactData('ship_region', {
+        ...base,
+        feeMode: 'at_checkout',
+        daysMode: 'at_checkout',
+        destinations: ['US'],
+      }).success,
+    ).toBe(true);
+    expect(parsePolicyFactData('ship_region', { ...base, feeMode: 'free' }).success).toBe(true);
+    expect(parsePolicyFactData('ship_region', { ...base, destinations: ['usa'] }).success).toBe(
+      false,
+    );
+    expect(parsePolicyFactData('ship_region', { ...base, destinations: [] }).success).toBe(false);
+  });
+});
