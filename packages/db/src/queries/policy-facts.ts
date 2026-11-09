@@ -88,6 +88,60 @@ export async function savePolicyFact(tx: Database, input: SavePolicyFactInput): 
   return (same.rows[0] as { id: string }).id;
 }
 
+export type EditPolicyDraftResult = 'edited' | 'not_found' | 'stale';
+
+/**
+ * Owner sửa tay một bản NHÁP (điều kiện/phạm vi/số liệu), KÈM `rev` đang xem. Dấu "đã qua tay Owner" = `origin = 'manual'` (không cần cột mới; `origin` bất biến và hệ thống không được ghi `manual`):
+ * nháp của máy (`shopify_suggested`/`text_suggested`) được THAY bằng nháp `manual` cùng (kind, slot), giữ evidence/source_ref để Owner còn thấy nguồn; nháp đã `manual` thì cập nhật tại chỗ.
+ * `data` sai cấu trúc → ném lỗi, không ghi. Lệch `rev` → 'stale'. Chạy trong MỘT giao dịch `withActor` của Owner. `needsReview` do Owner tự xác nhận khi duyệt, không bị gỡ ở đây.
+ */
+export async function editPolicyDraft(
+  tx: Database,
+  workspaceId: string,
+  id: string,
+  expectedRev: number,
+  data: unknown,
+  createdBy: string,
+): Promise<EditPolicyDraftResult> {
+  const found = await tx.execute<{
+    kind: PolicyFactKind;
+    slot: string;
+    rev: number;
+    origin: PolicyFactOrigin;
+    evidence: string | null;
+    sourceRef: string | null;
+  }>(sql`
+    SELECT kind, slot, rev, origin, evidence, source_ref AS "sourceRef" FROM cf.policy_facts
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'
+       FOR UPDATE`);
+  const row = found.rows[0];
+  if (!row) return 'not_found';
+  if (row.rev !== expectedRev) return 'stale';
+  const parsed = parsePolicyFactData(row.kind, data);
+  if (!parsed.success) throw new Error('Dữ liệu chính sách không hợp lệ.');
+  if (row.origin === 'manual') {
+    await tx.execute(sql`
+      UPDATE cf.policy_facts SET data = ${JSON.stringify(parsed.data)}::jsonb
+       WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'`);
+    return 'edited';
+  }
+  await tx.execute(
+    sql`DELETE FROM cf.policy_facts WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'`,
+  );
+  await savePolicyFact(tx, {
+    workspaceId,
+    kind: row.kind,
+    slot: row.slot,
+    data: parsed.data,
+    status: 'draft',
+    origin: 'manual',
+    evidence: row.evidence,
+    sourceRef: row.sourceRef,
+    createdBy,
+  });
+  return 'edited';
+}
+
 export type ApprovePolicyFactResult = 'approved' | 'not_found' | 'stale' | 'needs_review';
 
 /**
@@ -162,12 +216,18 @@ export async function refreshPolicySuggestions(
   sourceRef: string | null = null,
 ): Promise<{ drafted: number; removed: number }> {
   const approved = await listApprovedPolicyFacts(tx, workspaceId);
+  // Bản nháp Owner đã sửa tay (origin = 'manual') — đồng bộ KHÔNG được ghi đè hay xóa (POLICY-DRAFT-OWNER-EDIT).
+  const ownerTouched = await tx.execute<{ kind: string; slot: string }>(sql`
+    SELECT kind, slot FROM cf.policy_facts
+     WHERE workspace_id = ${workspaceId}::uuid AND status = 'draft' AND origin = 'manual'`);
+  const touched = new Set(ownerTouched.rows.map((row) => `${row.kind}\u0000${row.slot}`));
   const keep = new Set<string>();
   let drafted = 0;
   for (const suggestion of suggestions) {
     const parsed = parsePolicyFactData(suggestion.kind, suggestion.data);
     if (!parsed.success) continue;
     const key = `${suggestion.kind}\u0000${suggestion.slot}`;
+    if (touched.has(key)) continue;
     const sameApproved = approved.some(
       (row) =>
         row.kind === suggestion.kind &&
