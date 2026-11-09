@@ -3420,6 +3420,12 @@
         "payment": "Thanh toán",
         "other": "Khác"
       }
+    },
+    "leftover": {
+      "title": "Thông tin khác từ văn bản thô ({count} câu chưa phân tách)",
+      "hint": "Các câu dưới đây có trong văn bản chính sách đã nạp nhưng chưa thành giá trị có cấu trúc (không nêu số/điều kiện rõ ràng hoặc thuộc chủ đề khác). AI chưa dùng chúng để trả lời bằng sự kiện; bạn có thể nhập giá trị tương ứng bằng Sửa tay / Thêm giá trị.",
+      "otherTitle": "Thông tin khác",
+      "otherDesc": "Các câu trong văn bản thô không thuộc ship, đổi trả, bảo hành, thanh toán (ví dụ giờ làm việc, liên hệ, quyền riêng tư)."
     }
   }
 }

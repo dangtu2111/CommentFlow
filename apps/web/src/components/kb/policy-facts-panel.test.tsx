@@ -361,4 +361,44 @@ describe('PolicyFactsPanel', () => {
       expect(stale).toContain('notice.stale');
     });
   });
+
+  it('câu chưa phân tách: mỗi thẻ có khối gập đúng số câu; mục "Thông tin khác" khi có câu ngoài 4 chủ đề; không có thì không hiện', async () => {
+    const entry = (sentence: string) => ({ title: 'Chính sách vận chuyển', sentence });
+    const leftover = {
+      byCard: {
+        ship: [entry('Phí giao hàng nội thành là 20.000đ.'), entry('Shop giao hàng cả cuối tuần.')],
+        returns: [],
+        warranty: [entry('Sản phẩm được bảo hành tại cửa hàng.')],
+        payment: [],
+        other: [entry('Shop mở cửa từ 8 giờ sáng.')],
+      },
+      total: 4,
+    };
+    const out = renderToStaticMarkup(
+      await PolicyFactsPanel({ view: buildPolicyFactsView([]), isOwner: true, leftover }),
+    );
+    expect(out).toContain('leftover.title|{&quot;count&quot;:2}');
+    expect(out).toContain('leftover.title|{&quot;count&quot;:1}');
+    expect(out).toContain('Phí giao hàng nội thành là 20.000đ.');
+    expect(out).toContain('Sản phẩm được bảo hành tại cửa hàng.');
+    expect(out).toContain('leftover.otherTitle');
+    expect(out).toContain('Shop mở cửa từ 8 giờ sáng.');
+    const none = renderToStaticMarkup(
+      await PolicyFactsPanel({
+        view: buildPolicyFactsView([]),
+        isOwner: true,
+        leftover: {
+          byCard: { ship: [], returns: [], warranty: [], payment: [], other: [] },
+          total: 0,
+        },
+      }),
+    );
+    expect(none).not.toContain('leftover.title');
+    expect(none).not.toContain('leftover.otherTitle');
+    expect(
+      renderToStaticMarkup(
+        await PolicyFactsPanel({ view: buildPolicyFactsView([]), isOwner: false }),
+      ),
+    ).not.toContain('leftover.');
+  });
 });

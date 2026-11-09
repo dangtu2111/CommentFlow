@@ -1,6 +1,7 @@
 import { formatMinorAmount, type ShipRegionData } from '@flow/shared';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import type { PolicyLeftover } from '../../lib/kb-policy-leftover';
 import type { PolicyNotice } from '../../lib/kb-policy-notice';
 import {
   isEditedByOwner,
@@ -511,12 +512,14 @@ function CardShell({
   actions,
   t,
   children,
+  leftover = [],
 }: {
   view: PolicyCardView;
   isOwner: boolean;
   actions: PolicyActions | undefined;
   t: T;
   children: ReactNode;
+  leftover?: LeftoverList;
 }) {
   const id = `policy-card-${view.card}`;
   return (
@@ -554,7 +557,38 @@ function CardShell({
         ) : null}
       </div>
       {children}
+      <LeftoverBlock sentences={leftover} t={t} />
     </section>
+  );
+}
+
+type LeftoverList = PolicyLeftover['byCard']['ship'];
+
+/** Câu trong dữ liệu thô chưa thành giá trị có cấu trúc (gập lại; chỉ Owner thấy vì văn bản thô chỉ Owner đọc). */
+function LeftoverBlock({ sentences, t }: { sentences: LeftoverList; t: T }) {
+  if (sentences.length === 0) return null;
+  return (
+    <details className="rounded-xl bg-surface-container-low p-space-md">
+      <summary className="cursor-pointer font-label-md text-label-md text-on-surface-variant">
+        {t('leftover.title', { count: sentences.length })}
+      </summary>
+      <p className="mt-space-sm font-body-sm text-body-sm text-on-surface-variant">
+        {t('leftover.hint')}
+      </p>
+      <ul className="mt-space-sm space-y-space-sm">
+        {sentences.map((item) => (
+          <li
+            key={`${item.title}-${item.sentence}`}
+            className="rounded-lg bg-surface-container-lowest p-space-sm font-body-sm text-body-sm text-on-surface"
+          >
+            <span className="block font-label-sm text-label-sm text-on-surface-variant">
+              {item.title}
+            </span>
+            {item.sentence}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -671,6 +705,7 @@ export async function PolicyFactsPanel({
   notice = null,
   noticeCount = 0,
   raw,
+  leftover,
 }: {
   view: PolicyFactsView;
   isOwner: boolean;
@@ -678,6 +713,7 @@ export async function PolicyFactsPanel({
   notice?: PolicyNotice | null;
   noticeCount?: number;
   raw?: RawPolicySummary;
+  leftover?: PolicyLeftover;
 }) {
   const translator = await getTranslations('kbPolicyFacts');
   const t = translator as unknown as T;
@@ -736,7 +772,14 @@ export async function PolicyFactsPanel({
       </section>
       {raw ? <RawDataCard raw={raw} isOwner={isOwner} actions={actions} t={t} /> : null}
       {view.cards.map((card) => (
-        <CardShell key={card.card} view={card} isOwner={isOwner} actions={actions} t={t}>
+        <CardShell
+          key={card.card}
+          view={card}
+          isOwner={isOwner}
+          actions={actions}
+          t={t}
+          leftover={leftover?.byCard[card.card]}
+        >
           {card.entries.length === 0 ? (
             <EmptyState t={t} />
           ) : (
@@ -754,6 +797,22 @@ export async function PolicyFactsPanel({
           )}
         </CardShell>
       ))}
+      {leftover && leftover.byCard.other.length > 0 ? (
+        <section
+          aria-labelledby="policy-card-other"
+          className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md"
+        >
+          <div>
+            <h2 id="policy-card-other" className="font-title-md text-title-md text-on-surface">
+              {t('leftover.otherTitle')}
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {t('leftover.otherDesc')}
+            </p>
+          </div>
+          <LeftoverBlock sentences={leftover.byCard.other} t={t} />
+        </section>
+      ) : null}
     </div>
   );
 }

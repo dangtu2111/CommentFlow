@@ -3420,6 +3420,12 @@
         "payment": "Payment",
         "other": "Other"
       }
+    },
+    "leftover": {
+      "title": "Other information from raw text ({count} sentences not parsed)",
+      "hint": "These sentences are in the loaded policy text but did not become structured values (no clear number/condition, or another topic). AI does not use them as facts yet; you can enter the matching value with Edit / Add value.",
+      "otherTitle": "Other information",
+      "otherDesc": "Sentences in the raw text outside shipping, returns, warranty and payment (for example opening hours, contact, privacy)."
     }
   }
 }

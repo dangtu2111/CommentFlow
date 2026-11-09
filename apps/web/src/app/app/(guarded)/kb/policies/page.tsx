@@ -2,6 +2,7 @@ import { listAllPolicyFacts, listPolicyItems } from '@flow/db/runtime';
 import { getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
 import { PolicyFactsPanel } from '../../../../../components/kb/policy-facts-panel';
+import { buildPolicyLeftover } from '../../../../../lib/kb-policy-leftover';
 import { policyCountOf, policyNoticeOf } from '../../../../../lib/kb-policy-notice';
 import { buildPolicyFactsView } from '../../../../../lib/kb-policy-view';
 import { getBrand } from '../../../../../server/brand';
@@ -44,6 +45,14 @@ export default async function KbPoliciesPage({ searchParams }: { searchParams: S
     const raw = isOwner ? await listPolicyItems(tx, workspace.id) : null;
     return [rows, raw] as const;
   });
+  // Câu trong dữ liệu thô chưa thành giá trị có cấu trúc (chỉ Owner: văn bản thô chỉ Owner đọc).
+  const leftover =
+    rawItems === null
+      ? null
+      : buildPolicyLeftover(
+          rawItems,
+          facts.map((fact) => fact.evidence),
+        );
   return (
     <main className="app-page app-page-wide">
       <KbFrame active="kbPolicies">
@@ -53,6 +62,7 @@ export default async function KbPoliciesPage({ searchParams }: { searchParams: S
             isOwner={isOwner}
             notice={policyNoticeOf(query.pn)}
             noticeCount={policyCountOf(query.pc)}
+            {...(leftover === null ? {} : { leftover })}
             {...(rawItems === null
               ? {}
               : { raw: { count: rawItems.length, items: rawItems.map(rawView) } })}
