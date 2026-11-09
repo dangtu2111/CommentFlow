@@ -35,3 +35,10 @@ Agent vừa làm: Claude Code (một phiên, một nhánh, năm vòng sửa trê
 ## Chủ dự án kiểm chéo
 
 Prompt (`draft-prompt.ts`, `extract-prompt.ts`), guard (`slots.ts`), điều kiện FR-140 và `waiveSecondaryComplaint` (`run-pipeline.ts`), schema Zod `policy_facts`, đọc thêm cột sẵn có trong `loadPipelineContext`.
+
+## Bổ sung sau #296 (PR #297–#299)
+
+- #297: `editPolicyDraft` + `refreshPolicySuggestions` bỏ qua nháp `manual` (xem `docs/handoff/feat-policy-owner-edit.md`); #298: lưu ý UI.
+- #299 (`fix/extract-attr-no-diacritics`): `attr-from-text.ts` bổ sung size/màu khách nêu mà extract bỏ sót (màu không dấu cần ngữ cảnh: sau "mau", liền kề size/tên sản phẩm; size từ LLM được định vị trong câu); EVAL ghi cả extract thô và cuối. Đo `out/fs-q12`: demo có dấu 36/37, không dấu 31/32 (tách size 5/5, màu 5/5), trộn 29/30; viplain-03 answer; 0 lần chạy lỗi.
+- Gap mới: `LABEL-SECONDARY-COMPLAINT` (nhãn phụ complaint ép handoff, viplain-09). Khi đọc báo cáo EVAL: xem dòng "lần chạy lỗi" trước (mẫu `ok:false` do LLM_UNAVAILABLE làm cổng đỏ giả).
+
