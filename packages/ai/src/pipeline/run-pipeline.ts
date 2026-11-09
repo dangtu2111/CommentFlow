@@ -825,6 +825,19 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
   }
 
+  // FR-140: bản nháp KHÔNG dùng được (bộ soạn đánh dấu needs_human — vd. claim trỏ nguồn sai — hoặc reply rỗng) mà hành động vẫn là answer/redirect/clarify → KHÔNG để nhãn "trả lời" đi kèm câu rỗng:
+  // đổi thành chuyển người (không gọi LLM thêm). Câu rỗng chỉ hợp lệ khi hành động là handoff.
+  let draftUnusable = false;
+  if (
+    decision.action !== 'handoff' &&
+    slotRendered === null &&
+    (draft.needs_human || draft.reply.trim() === '')
+  ) {
+    draftUnusable = true;
+    decision = handoffDecision('claim_unsupported', decision.askedBefore);
+    draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
+  }
+
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   // Chế độ chỗ giữ chỗ: mọi số trong câu do code điền → kiểm số tiền với CHÍNH các giá trị vừa điền (không phải đoạn văn).
@@ -887,7 +900,14 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     riskReasons: {
       ...turnRisks.reasons,
       legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
-      ...(factPlan?.requiresHumanReview ? { review: ['defect_warranty_scope'] } : {}),
+      ...(factPlan?.requiresHumanReview || draftUnusable
+        ? {
+            review: [
+              ...(factPlan?.requiresHumanReview ? ['defect_warranty_scope'] : []),
+              ...(draftUnusable ? ['fr140_draft_unusable'] : []),
+            ],
+          }
+        : {}),
     },
     reply: draft.reply,
     variants: draft.variants ?? [],

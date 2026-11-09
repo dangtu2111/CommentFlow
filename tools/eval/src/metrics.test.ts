@@ -263,3 +263,36 @@ describe('altLabels — nhãn thay thế được chấp nhận (Q-EV2-2/5/6)', 
     expect(ok('price')).toBe(false);
   });
 });
+
+describe('reply_empty — nhãn không phải chuyển người mà câu rỗng luôn tính SAI hành động', () => {
+  it('answer + reply rỗng → sai hành động dù khớp gold; handoff + reply rỗng → hợp lệ', () => {
+    const empty = checkSample(
+      sample({ action: 'answer' }),
+      outcome({ action: 'answer', reply: '  ' }),
+    );
+    expect(empty.replyEmpty).toBe(true);
+    expect(empty.action).toBe(false);
+    const handoff = checkSample(
+      sample({ action: 'handoff' }),
+      outcome({ action: 'handoff', reply: '' }),
+    );
+    expect(handoff.replyEmpty).toBe(false);
+    expect(handoff.action).toBe(true);
+    const fine = checkSample(sample({ action: 'answer' }), outcome({ action: 'answer' }));
+    expect(fine.replyEmpty).toBe(false);
+  });
+  it('tổng hợp đếm replyEmpty và ngưỡng báo "bằng 0"', () => {
+    const samples = [sample({ action: 'answer' }), sample({ action: 'answer' })].map((s, i) => ({
+      ...s,
+      id: `s${i}`,
+    }));
+    const outcomes = new Map<string, SampleOutcome>([
+      ['s0', { ...outcome({ action: 'answer', reply: '' }), id: 's0' } as SampleOutcome],
+      ['s1', { ...outcome({ action: 'answer' }), id: 's1' } as SampleOutcome],
+    ]);
+    const metrics = computeMetrics(samples, outcomes);
+    expect(metrics.all.replyEmpty).toBe(1);
+    const rows = judge(metrics.all);
+    expect(rows.find((r) => r.name.includes('reply_empty'))?.pass).toBe(false);
+  });
+});

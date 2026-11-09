@@ -99,6 +99,7 @@ export function worstGroup(runs: readonly GroupMetrics[]): GroupMetrics {
     },
     priceWrong: maxOf((g) => g.priceWrong),
     addressWrong: maxOf((g) => g.addressWrong),
+    replyEmpty: maxOf((g) => g.replyEmpty),
     variantsWrong: maxOf((g) => g.variantsWrong),
   };
 }

@@ -721,3 +721,53 @@ describe('hàng lỗi trùng phạm vi bảo hành (vi-12): trả lời từ th�
     expect(r.reply).toBe('');
   });
 });
+
+describe('FR-140: bản nháp không dùng được KHÔNG được mang nhãn trả lời (mẫu en-07)', () => {
+  const answerWith = async (draft: DraftResult, factSlots?: PipelineInput['factSlots']) => {
+    const { drafter } = fakeDrafter(draft);
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text: 'Tote bag giá bao nhiêu',
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        ...(factSlots ? { factSlots } : {}),
+      },
+      {
+        extractor: createFixtureExtractor([{ match: /./, result: extractFor(['giá']) }]),
+        drafter,
+        knowledge,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it.each([
+    [
+      'needs_human (claim trỏ nguồn sai) + reply rỗng',
+      { ...draftOf(''), needs_human: true, reason: 'claim_source' },
+    ],
+    ['reply rỗng dù needs_human false', draftOf('   ')],
+    ['needs_human true dù có chữ', { ...draftOf('Giá 99.000đ ạ'), needs_human: true, reason: 'x' }],
+  ])('%s → chuyển người, ghi lý do FR-140', async (_name, draft) => {
+    const r = await answerWith(draft);
+    expect(r.decision.action).toBe('handoff');
+    expect(r.decision.reason).toBe('claim_unsupported');
+    expect(r.reply).toBe('');
+    expect(r.riskReasons.review).toContain('fr140_draft_unusable');
+  });
+  it('câu hợp lệ: không bị đổi, không ghi lý do', async () => {
+    const r = await answerWith(draftOf('Túi tote canvas giá 99.000đ ạ'));
+    expect(r.decision.action).not.toBe('handoff');
+    expect(r.riskReasons.review).toBeUndefined();
+  });
+  it('đường chỗ giữ chỗ: câu đã được code điền thì không bị coi là rỗng', async () => {
+    const r = await answerWith(
+      draftOf('{fact:product_name.1} giá {fact:price.1}.'),
+      slots([ship()]),
+    );
+    expect(r.decision.action).toBe('answer');
+    expect(r.reply).toBe('Túi tote canvas giá 99.000đ.');
+  });
+});
