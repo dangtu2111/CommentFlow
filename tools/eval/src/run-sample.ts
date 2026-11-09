@@ -183,6 +183,14 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       pipelineDeps,
     );
     if (result.status !== 'done') return { ok: false, id: sample.id, errorKind: 'skipped', usage };
+    // size/màu CUỐI CÙNG pipeline dùng (đã bổ sung bằng code từ giá trị biến thể khi extract bỏ sót): ảnh chụp phản ánh đúng thứ quyết định/soạn câu dựa vào.
+    if (snapshot) {
+      snapshot = {
+        ...(snapshot as ExtractSnapshot),
+        size: result.extract.size,
+        color: result.extract.color,
+      };
+    }
     return {
       ok: true,
       id: sample.id,

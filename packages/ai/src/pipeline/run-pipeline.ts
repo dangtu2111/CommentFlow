@@ -63,6 +63,7 @@ import { type RouteKind, type RouteReason, routeQuery } from '../route/route';
 import { classifyAsk } from '../route/route-topics';
 import { type AutoSendPreview, decideAutoSendPreview } from '../try/auto-send-preview';
 import type { DraftVoicesByLang } from '../try/brand-voice';
+import { inferAttrsFromText } from './attr-from-text';
 import { type ConversationState, carryOverAsks, nextConversationState } from './conversation-state';
 import { evaluateReplyCap, replyCapClosingDecision } from './reply-cap';
 
@@ -392,6 +393,30 @@ function uniqueNameInTexts(names: readonly string[], texts: readonly string[]): 
   return hits.length === 1 ? (hits[0] as string) : null;
 }
 
+async function withInferredAttrs<T extends ExtractResult>(
+  extract: T,
+  products: TryProductMatch,
+  deps: TryDeps,
+  text: string,
+): Promise<T> {
+  if (
+    products.ids.length !== 1 ||
+    (extract.size !== null && extract.color !== null) ||
+    !deps.knowledge.lookupPlanProducts
+  ) {
+    return extract;
+  }
+  const [product] = await deps.knowledge.lookupPlanProducts(products.ids);
+  if (!product) return extract;
+  const found = inferAttrsFromText(text, product.variants, {
+    size: extract.size,
+    color: extract.color,
+  });
+  return found.size === extract.size && found.color === extract.color
+    ? extract
+    : { ...extract, size: found.size, color: found.color };
+}
+
 const EMPTY_PRODUCTS: TryProductMatch = { ids: [], names: [], missingAxes: [] };
 
 /**
@@ -497,11 +522,13 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         ...(history ? { history } : {}),
       });
   // Khách trả lời ngắn ("M đen") mà lượt trước còn ý đang chờ → thừa hưởng ý đó (Q-POR12).
-  const extract = closing ? rawExtract : carryOverAsks(rawExtract, state);
-  const label = primaryLabel(extract);
+  const extractBase = closing ? rawExtract : carryOverAsks(rawExtract, state);
+  const label = primaryLabel(extractBase);
   const products = closing
     ? EMPTY_PRODUCTS
-    : await resolveProductsFor(extract, input, deps, [forModel]);
+    : await resolveProductsFor(extractBase, input, deps, [forModel]);
+  // Đã khớp đúng MỘT sản phẩm mà `extract` bỏ sót size/màu (tiếng Việt không dấu): bổ sung bằng so khớp từ-với-giá-trị-biến-thể của CHÍNH sản phẩm đó (code, không LLM, không đồng nghĩa).
+  const extract = await withInferredAttrs(extractBase, products, deps, masked);
   // `rewriteQuery` chạy SAU extract (cần biết đã nhận được sản phẩm chưa): chỉ tốn LLM khi câu ngắn/mơ hồ và chưa có sản phẩm.
   const rewritten =
     deps.rewriter && !closing

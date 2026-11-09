@@ -1035,3 +1035,90 @@ describe('khách nhắc đúng tên sản phẩm (không dấu) mà extract khô
     expect(r.decision.action).toBe('clarify');
   });
 });
+
+describe('viplain-03: khách nêu đủ size + màu không dấu mà extract bỏ sót → bổ sung bằng code, trả lời tồn kho', () => {
+  const shirt: PlanProduct = {
+    id: 'p-shirt',
+    name: 'Áo thun basic',
+    currency: 'VND',
+    priceMinor: 150000,
+    stock: 20,
+    variants: [
+      {
+        label: 'size S, trắng',
+        attrsNorm: { size: 's', color: 'white' },
+        priceMinor: 150000,
+        stock: 4,
+      },
+      {
+        label: 'size L, trắng',
+        attrsNorm: { size: 'l', color: 'white' },
+        priceMinor: 150000,
+        stock: 7,
+      },
+      {
+        label: 'size L, đen',
+        attrsNorm: { size: 'l', color: 'black' },
+        priceMinor: 150000,
+        stock: 0,
+      },
+    ],
+  };
+  const shirtKnowledge: TryKnowledge = {
+    ...knowledge,
+    matchProducts: async () => ({
+      ids: ['p-shirt'],
+      names: ['Áo thun basic'],
+      missingAxes: ['size', 'color'],
+    }),
+    lookupPlanProducts: async () => [shirt],
+    lookupProductFacts: async () => [{ ...toteCandidate, id: 'p-shirt', title: 'Áo thun basic' }],
+  };
+  const runShirt = async (
+    text: string,
+    reply = '{fact:product_name.1} {fact:variant.1}: {fact:stock.1}.',
+  ) => {
+    const { drafter } = fakeDrafter(draftOf(reply));
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text,
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: { policy: policy([]), stock: { disclose: 'count', lowAt: null } },
+      },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: {
+              ...extractFor(['còn hàng']),
+              labels: [{ label: 'advice' }],
+              topics: ['stock'],
+              product_mentions: ['ao thun basic'],
+              size: null,
+              color: null,
+            },
+          },
+        ]),
+        drafter,
+        knowledge: shirtKnowledge,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it('"ao thun basic L trang con ko a" → answer có {fact:stock.1}, extract được bổ sung size l + màu white', async () => {
+    const r = await runShirt('ao thun basic L trang con ko a');
+    expect(r.decision.action).toBe('answer');
+    expect(r.factPlan?.facts.map((f) => f.id)).toContain('stock.1');
+    expect(r.reply).toContain('còn 7');
+    expect(r.extract).toMatchObject({ size: 'l', color: 'white' });
+  });
+  it('chỉ nêu màu, thiếu size → vẫn hỏi lại size (không đoán)', async () => {
+    const r = await runShirt('ao thun basic trang con ko a', 'Bạn chọn size nào ạ?');
+    expect(r.decision.action).toBe('clarify');
+    expect(r.extract).toMatchObject({ size: null, color: 'white' });
+  });
+});
