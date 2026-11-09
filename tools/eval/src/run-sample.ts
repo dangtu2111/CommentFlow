@@ -62,6 +62,10 @@ export type SampleOutcome =
       /** Lý do `decideAction` (chẩn đoán lệch hành động). */
       reason: string;
       unansweredTopics: string[];
+      /** Quyết định cần người (decision.needsHuman), chính sách tự gửi, và lý do rủi ro/duyệt — để rà mẫu "cần người". */
+      needsHuman: boolean;
+      autoSendPolicy: string;
+      riskReasons: Record<string, string[] | undefined>;
       lang: string;
       reply: string;
       variants: string[];
@@ -186,6 +190,9 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       action: result.decision.action,
       reason: result.decision.reason,
       unansweredTopics: [...result.decision.unansweredTopics],
+      needsHuman: result.decision.needsHuman,
+      autoSendPolicy: result.decision.autoSendPolicy,
+      riskReasons: result.riskReasons,
       lang: result.draft.lang,
       reply: result.reply,
       variants: result.variants,

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { EvalSample } from './dataset';
 import type { SampleOutcome } from './run-sample';
-import { renderSlotReport, renderSlotSummary, sampleReplies, summarizeSlots } from './slot-metrics';
+import {
+  renderNeedsHuman,
+  renderSlotReport,
+  renderSlotSummary,
+  sampleReplies,
+  summarizeSlots,
+} from './slot-metrics';
 
 const ok = (id: string, over: Partial<Extract<SampleOutcome, { ok: true }>> = {}): SampleOutcome =>
   ({
@@ -176,5 +182,20 @@ describe('chấm sự kiện bắt buộc theo chế độ tồn kho của shop 
       },
     });
     expect(summarizeSlots([o]).finalNetTriggered).toBe(1);
+  });
+});
+
+describe('renderNeedsHuman', () => {
+  it('liệt kê mẫu needsHuman = true kèm hành động, autoSend, lý do; không có thì ghi (không có)', () => {
+    const rows = new Map([
+      ['a', ok('a', { needsHuman: true, autoSendPolicy: 'never', riskReasons: { review: ['x'] } })],
+      ['b', ok('b')],
+    ]);
+    const text = renderNeedsHuman(rows);
+    expect(text).toContain('needsHuman = true (1)');
+    expect(text).toContain('a: answer/');
+    expect(text).toContain('autoSend=never');
+    expect(text).not.toContain('b:');
+    expect(renderNeedsHuman(new Map([['b', ok('b')]]))).toContain('(không có)');
   });
 });

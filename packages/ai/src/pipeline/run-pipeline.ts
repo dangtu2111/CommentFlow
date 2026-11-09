@@ -756,9 +756,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   if (
     factPlan !== null &&
     slotFacts !== null &&
-    (decision.action === 'answer' || decision.action === 'redirect') &&
     // `slotFacts !== null` = plan có sự kiện bắt buộc: bộ soạn đặt needs_human trần (không chỗ giữ chỗ, câu rỗng) coi như 0 câu đạt → câu dự phòng do code dựng (không bỏ qua khối này).
     // Plan không có sự kiện bắt buộc thì không vào đây, needs_human đi đường cũ.
+    (decision.action === 'answer' || decision.action === 'redirect')
   ) {
     const replyLang = lang === 'en' ? 'en' : 'vi';
     const required = requiredFactIds(factPlan);
