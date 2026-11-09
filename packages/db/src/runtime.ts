@@ -347,7 +347,9 @@ export {
 export {
   type ApprovePolicyFactResult,
   approvePolicyFact,
+  type DeleteApprovedPolicyResult,
   type DiscardPolicyDraftResult,
+  deleteApprovedPolicyFact,
   deletePolicyFact,
   discardPolicyDraft,
   type EditPolicyDraftResult,

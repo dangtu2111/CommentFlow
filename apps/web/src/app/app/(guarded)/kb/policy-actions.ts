@@ -2,6 +2,7 @@
 
 import {
   approvePolicyFact,
+  deleteApprovedPolicyFact,
   discardPolicyDraft,
   editPolicyDraft,
   listAllPolicyFacts,
@@ -25,10 +26,17 @@ const APPROVE_NOTICE = {
   stale: 'stale',
   not_found: 'not_found',
   needs_review: 'needs_review',
+  invalid: 'invalid',
 } as const satisfies Record<string, PolicyNotice>;
 
 const DISCARD_NOTICE = {
   discarded: 'discarded',
+  stale: 'stale',
+  not_found: 'not_found',
+} as const satisfies Record<string, PolicyNotice>;
+
+const DELETE_NOTICE = {
+  deleted: 'deleted',
   stale: 'stale',
   not_found: 'not_found',
 } as const satisfies Record<string, PolicyNotice>;
@@ -77,6 +85,14 @@ export async function discardPolicyDraftAction(data: FormData): Promise<never> {
   return run(data, { workspaceId: workspace.id, userId: user.id }, async (tx, input) => {
     const result = await discardPolicyDraft(tx, input.workspaceId, input.id, input.rev);
     return DISCARD_NOTICE[result];
+  });
+}
+
+export async function deleteApprovedPolicyAction(data: FormData): Promise<never> {
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  return run(data, { workspaceId: workspace.id, userId: user.id }, async (tx, input) => {
+    const result = await deleteApprovedPolicyFact(tx, input.workspaceId, input.id, input.rev);
+    return DELETE_NOTICE[result];
   });
 }
 

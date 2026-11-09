@@ -19,6 +19,7 @@ import { Icon, type IconName } from '../ui/icon';
 export type PolicyActions = {
   approve: (data: FormData) => Promise<void>;
   discard: (data: FormData) => Promise<void>;
+  remove: (data: FormData) => Promise<void>;
 };
 
 type T = (key: string, values?: Record<string, string | number>) => string;
@@ -35,6 +36,18 @@ const COVERAGE_TONE: Record<PolicyCoverage, string> = {
   draft: 'border-tertiary-fixed-dim bg-tertiary-fixed text-on-tertiary-fixed-variant',
   none: 'border-outline-variant bg-surface-container text-on-surface-variant',
 };
+
+const isSuccess = (notice: PolicyNotice): boolean =>
+  notice === 'saved' || notice === 'approved' || notice === 'discarded' || notice === 'deleted';
+
+/** Mốc "Cập nhật lúc …" theo giờ Việt Nam; thiếu hoặc sai → không hiện. */
+function updatedText(row: PolicyFactRowView, t: T): string | null {
+  if (!row.updatedAt) return null;
+  const date = new Date(row.updatedAt);
+  if (Number.isNaN(date.getTime())) return null;
+  const time = date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false });
+  return t('updatedAt', { time });
+}
 
 function Chip({ tone, children }: { tone: string; children: ReactNode }) {
   return (
@@ -70,6 +83,11 @@ function RowChips({ row, t }: { row: PolicyFactRowView; t: T }) {
           <Icon name="warning" size={12} />
           {t('chips.needsReview')}
         </Chip>
+      ) : null}
+      {updatedText(row, t) ? (
+        <span className="font-body-sm text-body-sm text-on-surface-variant">
+          {updatedText(row, t)}
+        </span>
       ) : null}
     </div>
   );
@@ -441,9 +459,27 @@ function EntryRow({
           {isOwner ? (
             <div className="flex justify-end gap-2">
               {actions ? (
-                <LinkAction href={`${EDIT_PAGE}?kind=${approved.kind}&id=${approved.id}`}>
-                  {t('actions.edit')}
-                </LinkAction>
+                <>
+                  <details className="relative">
+                    <summary className="cursor-pointer list-none rounded-lg bg-surface-container px-3 py-1.5 font-label-md text-label-md text-error">
+                      {t('actions.delete')}
+                    </summary>
+                    <form className="absolute right-0 z-10 mt-1 rounded-lg bg-surface-container-lowest p-space-sm shadow-lg">
+                      <input type="hidden" name="id" value={approved.id} />
+                      <input type="hidden" name="rev" value={approved.rev} />
+                      <button
+                        type="submit"
+                        formAction={actions.remove}
+                        className="whitespace-nowrap rounded-lg bg-error px-3 py-1.5 font-label-md text-label-md text-on-error"
+                      >
+                        {t('actions.deleteConfirm')}
+                      </button>
+                    </form>
+                  </details>
+                  <LinkAction href={`${EDIT_PAGE}?kind=${approved.kind}&id=${approved.id}`}>
+                    {t('actions.edit')}
+                  </LinkAction>
+                </>
               ) : (
                 <DisabledAction t={t}>{t('actions.edit')}</DisabledAction>
               )}
@@ -565,9 +601,9 @@ export async function PolicyFactsPanel({
     <div className="space-y-space-lg">
       {notice ? (
         <p
-          role={notice === 'approved' || notice === 'discarded' ? 'status' : 'alert'}
+          role={isSuccess(notice) ? 'status' : 'alert'}
           className={`rounded-lg px-space-md py-space-sm font-body-md text-body-md ${
-            notice === 'approved' || notice === 'discarded'
+            isSuccess(notice)
               ? 'bg-surface-container-low text-primary'
               : 'bg-error-container text-on-error-container'
           }`}

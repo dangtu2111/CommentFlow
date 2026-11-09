@@ -20,7 +20,11 @@ import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import { createPolicyAction, deletePolicyAction, updatePolicyAction } from '../actions';
-import { approvePolicyAction, discardPolicyDraftAction } from '../policy-actions';
+import {
+  approvePolicyAction,
+  deleteApprovedPolicyAction,
+  discardPolicyDraftAction,
+} from '../policy-actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('kbContent');
@@ -64,7 +68,11 @@ export default async function KbPoliciesPage({ searchParams }: { searchParams: S
             view={factsView}
             isOwner={isOwner}
             notice={policyNoticeOf(query.pn)}
-            actions={{ approve: approvePolicyAction, discard: discardPolicyDraftAction }}
+            actions={{
+              approve: approvePolicyAction,
+              discard: discardPolicyDraftAction,
+              remove: deleteApprovedPolicyAction,
+            }}
           />
           {isOwner ? (
             <>
