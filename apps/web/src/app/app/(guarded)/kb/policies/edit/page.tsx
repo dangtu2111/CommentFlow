@@ -58,6 +58,7 @@ export default async function KbPolicyEditPage({ searchParams }: { searchParams:
             draft={draft}
             labelEditable={kind === 'ship_region' && base === null}
             heading={heading}
+            evidence={base?.evidence ?? null}
           />
         </div>
       </KbFrame>

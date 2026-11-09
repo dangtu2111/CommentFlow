@@ -8,9 +8,9 @@ import {
 /**
  * Biểu mẫu Sửa tay / Thêm giá trị chính sách có cấu trúc (ADR 017): chuyển `FormData` thành `data` đã kiểm bằng Zod của `@flow/shared` (nguồn sự thật duy nhất; `parsePolicyFactData`),
  * và ngược lại tạo giá trị mặc định cho biểu mẫu từ `data` đang có. Thuần, không đọc DB/phiên. Mọi giá trị chỉ là DỮ LIỆU: workspace/người dùng lấy từ phiên ở Server Action.
- * Chỉ nhận 4 loại hiển thị ở trang (ship_region, returns, warranty, payment); COD chung (`cod`) không có biểu mẫu riêng.
+ * Nhận 5 loại hiển thị ở trang (ship_region, cod = COD chung, returns, warranty, payment); `cod` có nút Sửa tay ở thẻ Ship nên phải có biểu mẫu.
  */
-export const EDITABLE_KINDS = ['ship_region', 'returns', 'warranty', 'payment'] as const;
+export const EDITABLE_KINDS = ['ship_region', 'cod', 'returns', 'warranty', 'payment'] as const;
 export type EditableKind = (typeof EDITABLE_KINDS)[number];
 
 export const isEditableKind = (value: unknown): value is EditableKind =>
@@ -97,6 +97,10 @@ function warrantyData(data: FormData): Record<string, unknown> {
   };
 }
 
+function codData(data: FormData): Record<string, unknown> {
+  return { value: text(data, 'codValue') === 'yes' };
+}
+
 function paymentData(data: FormData): Record<string, unknown> {
   const picked = data
     .getAll('methods')
@@ -111,11 +115,13 @@ export function formToPolicyData(data: FormData): PolicyFormParse {
   const raw =
     kind === 'ship_region'
       ? shipData(data)
-      : kind === 'returns'
-        ? returnsData(data)
-        : kind === 'warranty'
-          ? warrantyData(data)
-          : paymentData(data);
+      : kind === 'cod'
+        ? codData(data)
+        : kind === 'returns'
+          ? returnsData(data)
+          : kind === 'warranty'
+            ? warrantyData(data)
+            : paymentData(data);
   const parsed = parsePolicyFactData(kind, raw);
   if (!parsed.success) return { ok: false };
   const slot = policySlotOf(kind, parsed.data as { label?: string });
@@ -162,6 +168,7 @@ export function policyFormDefaults(kind: EditableKind, data: unknown): PolicyFor
       eligibility: str(d.eligibility),
     };
   }
+  if (kind === 'cod') return { codValue: d.value === false ? 'no' : 'yes' };
   if (kind === 'warranty') {
     return { months: str(d.months), none: d.none === true ? 'on' : '', scope: str(d.scope) };
   }

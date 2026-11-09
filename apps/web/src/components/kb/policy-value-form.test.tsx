@@ -106,4 +106,18 @@ describe('PolicyValueForm', () => {
     expect(p).toMatch(/<input(?=[^>]*value="cod")(?=[^>]*checked)[^>]*>/);
     expect(p).not.toMatch(/<input(?=[^>]*value="card")(?=[^>]*checked)[^>]*>/);
   });
+
+  it('COD chung: một ô chọn Có/Không điền sẵn', async () => {
+    const out = await html({ kind: 'cod', defaults: policyFormDefaults('cod', { value: false }) });
+    expect(out).toContain('name="codValue"');
+    expect(out).toMatch(/<option value="no" selected/);
+    expect(out).toContain('form.kindTitle.cod');
+  });
+
+  it('có câu gốc (nháp của máy) thì hiện khối trích dẫn để đối chiếu; không có thì không', async () => {
+    const withEvidence = await html({ evidence: 'Đổi trả trong 7 ngày' });
+    expect(withEvidence).toContain('evidence.title');
+    expect(withEvidence).toContain('Đổi trả trong 7 ngày');
+    expect(await html({})).not.toContain('evidence.title');
+  });
 });

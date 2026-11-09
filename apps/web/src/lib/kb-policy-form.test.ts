@@ -30,7 +30,8 @@ describe('parseWholeNumber / splitItems / isEditableKind', () => {
   });
   it('chỉ 4 loại có biểu mẫu', () => {
     expect(isEditableKind('returns')).toBe(true);
-    expect(isEditableKind('cod')).toBe(false);
+    expect(isEditableKind('cod')).toBe(true);
+    expect(isEditableKind('cash')).toBe(false);
     expect(isEditableKind(5)).toBe(false);
   });
 });
@@ -112,7 +113,7 @@ describe('formToPolicyData — ship_region', () => {
   });
   it('thiếu nhãn hoặc loại lạ → sai', () => {
     expect(formToPolicyData(form({ ...base, label: '' }))).toEqual({ ok: false });
-    expect(formToPolicyData(form({ ...base, kind: 'cod' }))).toEqual({ ok: false });
+    expect(formToPolicyData(form({ ...base, kind: 'cash' }))).toEqual({ ok: false });
     expect(formToPolicyData(form({}))).toEqual({ ok: false });
   });
 });
@@ -218,5 +219,19 @@ describe('policyFormDefaults', () => {
     });
     expect(policyFormDefaults('payment', { methods: ['cod'] })).toEqual({ methods: ['cod'] });
     expect(policyFormDefaults('payment', null)).toEqual({ methods: [] });
+  });
+});
+
+describe('COD chung', () => {
+  it('đọc form COD: Có / Không → { value }; slot = cod', () => {
+    const yes = formToPolicyData(form({ kind: 'cod', codValue: 'yes' }));
+    expect(yes).toMatchObject({ ok: true, slot: 'cod', data: { value: true } });
+    const no = formToPolicyData(form({ kind: 'cod', codValue: 'no' }));
+    expect(no.ok && no.data).toEqual({ value: false });
+  });
+  it('giá trị mặc định: có mặc định "yes", false → "no"', () => {
+    expect(policyFormDefaults('cod', { value: false })).toEqual({ codValue: 'no' });
+    expect(policyFormDefaults('cod', { value: true })).toEqual({ codValue: 'yes' });
+    expect(policyFormDefaults('cod', null)).toEqual({ codValue: 'yes' });
   });
 });
