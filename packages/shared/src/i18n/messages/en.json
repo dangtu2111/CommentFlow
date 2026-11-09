@@ -3189,5 +3189,140 @@
       "outHours": "Outside working hours",
       "saveFor": "Save {lang} voice"
     }
+  },
+  "kbPolicyFacts": {
+    "title": "Structured policies",
+    "subtitle": "AI answers about shipping, returns, warranty and payment using only the approved values here.",
+    "onlyApproved": "Approved values only",
+    "roleOwner": "You are signed in as Owner (you can edit and approve).",
+    "roleStaff": "View only: only the Owner can edit and approve policies to keep commitments to customers safe.",
+    "coverage": {
+      "title": "Policy coverage for AI",
+      "hint": "For any empty card, AI invites the customer to message the shop instead of answering.",
+      "approved": "Approved",
+      "draft": "Draft only",
+      "none": "Not set",
+      "ship": "Shipping",
+      "returns": "Returns",
+      "warranty": "Warranty",
+      "payment": "Payment"
+    },
+    "banner": {
+      "title": "AI suggested {count} values awaiting approval",
+      "body": "These values do not apply to customers until the Owner approves them.",
+      "view": "Review each value"
+    },
+    "cards": {
+      "ship": {
+        "title": "Shipping",
+        "desc": "Used when customers ask about shipping fees, delivery time and COD."
+      },
+      "returns": {
+        "title": "Returns & refunds",
+        "desc": "Return days, item conditions, refunds and who pays return shipping."
+      },
+      "warranty": {
+        "title": "Warranty",
+        "desc": "Warranty period and scope, or state that the shop offers no warranty."
+      },
+      "payment": {
+        "title": "Payment methods",
+        "desc": "AI lists the enabled methods when customers ask how they can pay."
+      }
+    },
+    "ship": {
+      "name": "Display name",
+      "area": "Area",
+      "fee": "Shipping fee",
+      "time": "Delivery time",
+      "destination": "Ships to",
+      "cod": "COD",
+      "source": "Source & status",
+      "areaNationwide": "Nationwide",
+      "areaCity": "{city} inner city",
+      "areaRegion": "{count} provinces",
+      "fee_fixed": "Fixed: {amount}",
+      "fee_free": "Free",
+      "fee_free_over": "Free on orders ≥ {amount}",
+      "fee_at_checkout": "Calculated at checkout",
+      "fee_unknown": "Not stated",
+      "days_range": "{min} - {max} days",
+      "days_same": "{n} days",
+      "days_at_checkout": "Shown at checkout",
+      "days_unknown": "Not stated",
+      "cod_yes": "Yes",
+      "cod_no": "No",
+      "cod_unknown": "Not stated",
+      "dest_VN": "Vietnam"
+    },
+    "returns": {
+      "days": "Return window",
+      "conditions": "Item conditions",
+      "refundTo": "Refund to",
+      "shippingPaidBy": "Return shipping",
+      "eligibility": "Eligibility",
+      "daysValue": "{n} days",
+      "none": "Returns not accepted",
+      "notStated": "Not stated",
+      "refund_original_payment": "Original payment method",
+      "paid_shop": "Shop pays",
+      "paid_customer_change_of_mind": "Customer pays for change of mind",
+      "elig_varies_by_item": "Depends on the item"
+    },
+    "warranty": {
+      "months": "Period",
+      "scope": "Scope",
+      "monthsValue": "{n} months",
+      "none": "No warranty",
+      "notStated": "Not stated"
+    },
+    "payment": {
+      "methods": "Enabled methods",
+      "cod": "Cash on delivery (COD)",
+      "bank_transfer": "Bank transfer",
+      "card": "Card",
+      "installment": "Installments",
+      "cash": "Cash"
+    },
+    "chips": {
+      "approved": "Approved",
+      "draft": "Draft",
+      "manual": "Manual",
+      "shopify_suggested": "Suggested from Shopify",
+      "text_suggested": "Suggested from text",
+      "editedByOwner": "Edited by hand",
+      "needsReview": "Confirm conditions"
+    },
+    "evidence": {
+      "title": "Quoted from the source text"
+    },
+    "proposed": {
+      "title": "AI suggested value"
+    },
+    "current": {
+      "title": "Currently approved value",
+      "none": "Nothing has been approved yet."
+    },
+    "confirm": "I confirm I read the conditions correctly and agree that AI may use this.",
+    "actions": {
+      "approve": "Approve this value",
+      "edit": "Edit",
+      "discard": "Discard suggestion",
+      "add": "Add value",
+      "addRegion": "Add area",
+      "soon": "Coming soon"
+    },
+    "empty": {
+      "title": "No approved value yet",
+      "body": "AI will invite the customer to message the shop instead of answering about this."
+    },
+    "error": {
+      "title": "Could not load policies",
+      "body": "Please reload the page. AI keeps using only the values approved earlier."
+    },
+    "legacy": {
+      "title": "Text policies",
+      "hint": "This text feeds knowledge search and is the source AI uses to suggest the values above."
+    }
   }
 }
