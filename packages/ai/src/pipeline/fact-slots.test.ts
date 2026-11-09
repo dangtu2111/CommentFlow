@@ -405,3 +405,42 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     expect(calls[0]?.factSlots).toBeUndefined();
   });
 });
+
+describe('số khách nêu (extract.qty) đi qua customer_measure — không whitelist số trong câu khách', () => {
+  const orderDraft = draftOf(
+    '{fact:product_name.1} giá {fact:price.1}, shop ghi nhận bạn lấy {fact:customer_measure.1} cái nhé!',
+  );
+  const runQty = (draft: DraftResult) => {
+    const { drafter } = fakeDrafter(draft);
+    return runPipeline(
+      {
+        workspaceId: 'ws1',
+        text: 'Túi tote bao nhiêu, em lấy 1 cái',
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: slots([]),
+      },
+      {
+        extractor: createFixtureExtractor([
+          { match: /./, result: { ...extractFor(['giá']), qty: 1 } },
+        ]),
+        drafter,
+        knowledge,
+      },
+    );
+  };
+  it('"lấy {fact:customer_measure.1} cái" hợp lệ: code điền số lượng khách nêu', async () => {
+    const result = await runQty(orderDraft);
+    if (result.status !== 'done') throw new Error('expected done');
+    expect(result.reply).toBe('Túi tote canvas giá 99.000đ, shop ghi nhận bạn lấy 1 cái nhé!');
+    expect(result.slotDiagnostics?.rejected).toBe(0);
+  });
+  it('viết thẳng "lấy 1 cái" (chữ số ngoài chỗ giữ chỗ) vẫn bị từ chối cứng', async () => {
+    const result = await runQty(
+      draftOf('{fact:product_name.1} giá {fact:price.1}, bạn lấy 1 cái nhé!'),
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    expect(result.slotDiagnostics?.rejections?.[0]?.codes).toContain('digit');
+  });
+});

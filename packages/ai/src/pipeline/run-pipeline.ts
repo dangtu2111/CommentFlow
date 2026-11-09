@@ -531,7 +531,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
             ...(extract.size ? { size: extract.size } : {}),
             ...(extract.color ? { color: extract.color } : {}),
           }),
-          measures: /\d/.test(sizeText) ? [sizeText] : [],
+          // Số KHÁCH nêu đi qua chỗ giữ chỗ customer_measure: kích thước có chữ số (size 29, 1m58) và số lượng đặt (extract.qty). Không whitelist số khác trong câu khách.
+          measures: [
+            ...(/\d/.test(sizeText) ? [sizeText] : []),
+            ...(extract.qty === null ? [] : [String(extract.qty)]),
+          ],
           policy: input.factSlots.policy,
           stock: input.factSlots.stock,
         })
