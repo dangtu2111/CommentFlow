@@ -194,3 +194,22 @@ describe('defect (hàng lỗi/sai hàng) — chủ đề riêng, KHÔNG dùng re
     expect(r.factPlan?.facts.map((f) => f.kind)).toEqual(['refund_to']);
   });
 });
+
+describe('FR-160: cam kết hoàn tiền / khẳng định quy định → chuyển người (en-23, en-24)', () => {
+  it('en-23 "Is the mole removal pen FDA approved?" → handoff legal_unsourced', async () => {
+    const r = await ask('Is the mole removal pen FDA approved?', []);
+    expect(r.decision).toMatchObject({ action: 'handoff', reason: 'legal_unsourced' });
+    expect(r.riskReasons.legal).toContain('regulatory_claim');
+  });
+  it('en-24 "do you guarantee a refund if it does not work within 30 days?" → handoff dù plan có sự kiện đổi trả', async () => {
+    const r = await ask('do you guarantee a refund if it does not work within 30 days?', [
+      'refund_to',
+    ]);
+    expect(r.decision).toMatchObject({ action: 'handoff', reason: 'legal_unsourced' });
+    expect(r.riskReasons.legal).toContain('refund_guarantee');
+  });
+  it('câu hỏi trả hàng thông thường (không cam kết) vẫn answer', async () => {
+    const r = await ask("can I return it if I don't like it?", ['return_eligibility']);
+    expect(r.decision.action).toBe('answer');
+  });
+});

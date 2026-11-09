@@ -36,7 +36,9 @@ describe('FR-160 nhận ra nhóm cam kết pháp lý/uy tín', () => {
   });
 
   it('FR-160 trả đúng thứ tự cố định, không trùng', () => {
-    const all = detectLegalTopics('bảo hành, hoàn tiền, chính hãng, VAT, nguồn gốc, bảo hành');
+    const all = detectLegalTopics(
+      'bảo hành, hoàn tiền, chính hãng, VAT, nguồn gốc, bảo hành, money back guarantee, FDA',
+    );
     expect(all).toEqual([...LEGAL_TOPICS]);
   });
 });
@@ -208,7 +210,10 @@ describe('FR-160 property-based', () => {
   });
 
   it('FR-160 nguồn nhắc đủ mọi nhóm được hỏi thì gỡ cờ', () => {
-    const full = src('all', 'chính hãng, hóa đơn VAT, bảo hành, nguồn gốc, hoàn tiền');
+    const full = src(
+      'all',
+      'chính hãng, hóa đơn VAT, bảo hành, nguồn gốc, hoàn tiền, money back guarantee, FDA approved',
+    );
     fc.assert(
       fc.property(fc.string(), (text) => {
         return !evaluateLegalRules({ customerText: text, sources: [full] }).legalUnsourced;
@@ -223,11 +228,52 @@ describe('FR-160 property-based', () => {
       warranty: 'bảo hành',
       origin: 'nguồn gốc',
       refund: 'hoàn tiền',
+      refund_guarantee: 'bao hoàn tiền',
+      regulatory_claim: 'FDA',
     };
     fc.assert(
       fc.property(fc.string(), fc.constantFrom(...LEGAL_TOPICS), (pad, topic) => {
         return !checkDraftLegal({ draftText: `${pad} ${word[topic]}`, sources: [] }).ok;
       }),
     );
+  });
+});
+
+describe('FR-160 nhóm cam kết hoàn tiền và khẳng định quy định/y tế', () => {
+  it.each([
+    ['Is the mole removal pen FDA approved?', 'regulatory_claim'],
+    ['Will you guarantee a refund if it does not work?', 'refund_guarantee'],
+    ['Is there a money-back guarantee?', 'refund_guarantee'],
+    ['Shop cam kết hoàn tiền không?', 'refund_guarantee'],
+    ['bao hoàn tiền 100% nhé', 'refund_guarantee'],
+    ['Sản phẩm này có chữa được mụn không', 'regulatory_claim'],
+    ['kem này điều trị nám được không', 'regulatory_claim'],
+    ['Is it clinically tested and certified?', 'regulatory_claim'],
+  ])('%s → %s', (text, topic) => {
+    expect(detectLegalTopics(text)).toContain(topic);
+  });
+  it('câu thường không bị nhận nhầm: "chưa", câu hỏi trả hàng thông thường, khóa kéo hỏng', () => {
+    for (const text of [
+      'Shop chưa trả lời mình',
+      "can I return it if I don't like it?",
+      'Khóa kéo hỏng thì sao',
+      'How long is the guarantee on the motor?',
+    ]) {
+      expect(detectLegalTopics(text)).not.toContain('refund_guarantee');
+      expect(detectLegalTopics(text)).not.toContain('regulatory_claim');
+    }
+  });
+  it('nguồn không nhắc cam kết hoàn tiền/quy định → legalUnsourced; nguồn nhắc đúng → gỡ cờ', () => {
+    const asked = 'Is it FDA approved? Do you guarantee a refund?';
+    expect(
+      evaluateLegalRules({ customerText: asked, sources: [src('a', 'Returns within 30 days')] })
+        .unsourced,
+    ).toEqual(expect.arrayContaining(['refund_guarantee', 'regulatory_claim']));
+    expect(
+      evaluateLegalRules({
+        customerText: asked,
+        sources: [src('b', 'FDA approved. We guarantee a full refund.')],
+      }).legalUnsourced,
+    ).toBe(false);
   });
 });
