@@ -49,7 +49,8 @@ export function inferAttrsFromText(
   const rawWords = text.split(/[\s,;.!?()]+/).filter((word) => word !== '');
   const words = rawWords.map((word) => normalizeSearchText(word));
   const found: AttrsFound = { ...known };
-  let sizeIndex = -1;
+  // Size đã có từ `extract` (LLM): định vị trong câu (khớp sau khi bỏ dấu, lấy vị trí đầu) để xét "liền kề size" cho màu; không thấy → -1.
+  let sizeIndex = known.size === null ? -1 : words.indexOf(normalizeSearchText(known.size));
   for (const axis of ['size', 'color'] as const) {
     if (known[axis] !== null) continue;
     const candidates = distinctValues(variants, axis);

@@ -65,4 +65,19 @@ describe('inferAttrsFromText — size/màu khách nêu mà extract bỏ sót (kh
       expect(inferAttrsFromText('shop co m hang k', shirt, none, name).size).toBeNull();
     });
   });
+
+  describe('size đã có từ LLM: định vị trong câu để xét liền kề (viplain-03)', () => {
+    const name = ['áo thun basic'];
+    const withSize = (text: string) =>
+      inferAttrsFromText(text, shirt, { size: 'L', color: null }, name);
+    it('"ao thun basic L trang con ko a" + size L từ LLM → color trang', () => {
+      expect(withSize('ao thun basic L trang con ko a')).toEqual({ size: 'L', color: 'trang' });
+    });
+    it('"ao thun basic ship den Ha Noi" + size L giả định → color null (den không liền kề size lẫn tên)', () => {
+      expect(withSize('ao thun basic ship den Ha Noi').color).toBeNull();
+    });
+    it('size LLM không thấy trong câu → không có điểm neo, màu không dấu ngoài ngữ cảnh vẫn null', () => {
+      expect(withSize('cho hoi den khi nao co hang').color).toBeNull();
+    });
+  });
 });
