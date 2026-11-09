@@ -182,8 +182,18 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
   };
   // Lời dẫn của bộ soạn + cụm điền có thể lặp từ ("hiện còn" + "còn 5 sản phẩm"): gộp "còn còn" → "còn" (chỉ chữ, không đụng giá trị đã điền).
   const dedupe = (text: string) => text.replace(DUPLICATE_CON, '$1');
+  // Viết hoa chữ đầu của giá trị khi nó mở đầu một câu mới (đứng sau ". ", "! ", "? "): "…$439.99. We ship to …".
+  const AFTER_TERMINATOR = /[.!?…]\s+$/;
   const fillText = (text: string) =>
-    dedupe(text.replace(SLOT, (whole, id: string) => render(id) ?? whole));
+    dedupe(
+      text.replace(SLOT, (whole, id: string, offset: number) => {
+        const value = render(id);
+        if (value === null) return whole;
+        return AFTER_TERMINATOR.test(text.slice(0, offset))
+          ? value.charAt(0).toLocaleUpperCase() + value.slice(1)
+          : value;
+      }),
+    );
 
   const claims: Claim[] = [];
   const sourceIds: string[] = [];

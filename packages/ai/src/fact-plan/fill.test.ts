@@ -213,3 +213,26 @@ describe('fillSlots — gộp từ "còn" lặp do lời dẫn + cụm điền',
     expect(fill('Áo hiện {fact:stock.1}.', p).text).toBe('Áo hiện còn 5 sản phẩm.');
   });
 });
+
+describe('fillSlots — viết hoa chữ đầu khi giá trị mở đầu câu mới', () => {
+  const p = planOf(
+    fact('price.1', 'price', { type: 'money', amountMinor: 43999, currency: 'USD' }),
+    fact('ship_destination', 'ship_destination', {
+      type: 'destination',
+      ok: true,
+      place: 'US',
+      shipsTo: ['US'],
+    }),
+  );
+  it('sau dấu chấm → "We ship to…"; giữa câu giữ nguyên chữ thường', () => {
+    expect(fill('Price {fact:price.1}. {fact:ship_destination}.', p, 'en').text).toBe(
+      'Price $439.99. We ship to the United States.',
+    );
+    expect(fill('Good news: {fact:ship_destination}.', p, 'en').text).toBe(
+      'Good news: we ship to the United States.',
+    );
+    expect(fill('Giá {fact:price.1}! {fact:ship_destination}', p, 'vi').text).toBe(
+      'Giá $439,99! Shop có giao tới Mỹ',
+    );
+  });
+});

@@ -430,3 +430,51 @@ describe('fact plan — sản phẩm chỉ có MỘT biến thể', () => {
     expect(byId(p, 'stock.1')).toMatchObject({ value: { type: 'stock', display: 'count', n: 3 } });
   });
 });
+
+describe('fact plan — nhắc biến thể chỉ khi khách đã chọn', () => {
+  const single: PlanProduct = {
+    ...shirt,
+    stock: 3,
+    variants: [
+      {
+        label: 'Ships From China Mainland',
+        attrsNorm: { ships_from: 'china mainland' },
+        priceMinor: 43999,
+        stock: 3,
+      },
+    ],
+  };
+  it('biến thể duy nhất tự chọn: giá/tồn theo biến thể nhưng KHÔNG có sự kiện variant (không nhắc tên biến thể)', () => {
+    const p = plan({
+      products: [single],
+      topics: ['price', 'stock'],
+      stock: { disclose: 'count', lowAt: null },
+    });
+    expect(p.facts.map((f) => f.id)).toEqual(['product_name.1', 'price.1', 'stock.1']);
+  });
+  it('khách nêu size/màu khớp biến thể → có sự kiện variant', () => {
+    const two: PlanProduct = {
+      ...shirt,
+      variants: [
+        {
+          label: 'Size M, Đen',
+          attrsNorm: { size: 'm', color: 'black' },
+          priceMinor: 150000,
+          stock: 5,
+        },
+        {
+          label: 'Size L, Đen',
+          attrsNorm: { size: 'l', color: 'black' },
+          priceMinor: 150000,
+          stock: 2,
+        },
+      ],
+    };
+    const p = plan({
+      products: [two],
+      topics: ['price'],
+      variantAttrs: { size: 'm', color: 'black' },
+    });
+    expect(p.facts.map((f) => f.id)).toContain('variant.1');
+  });
+});

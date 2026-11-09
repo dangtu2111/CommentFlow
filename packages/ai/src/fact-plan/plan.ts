@@ -252,7 +252,13 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
     facts.push(
       known(`product_name.${n}`, 'product_name', { type: 'text', text: product.name }, product.id),
     );
-    if (chosen !== null && input.topics.some((t) => t === 'price' || t === 'stock')) {
+    // Nêu biến thể trong câu CHỈ khi khách đã nêu size/màu; biến thể duy nhất tự chọn (khách không chọn) không được nhắc tên (vd. "Ships From China Mainland").
+    const customerChoseVariant = Object.keys(input.variantAttrs ?? {}).length > 0;
+    if (
+      chosen !== null &&
+      customerChoseVariant &&
+      input.topics.some((t) => t === 'price' || t === 'stock')
+    ) {
       facts.push(
         known(`variant.${n}`, 'variant', { type: 'text', text: chosen.label }, product.id),
       );
