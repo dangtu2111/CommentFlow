@@ -408,10 +408,12 @@ async function withInferredAttrs<T extends ExtractResult>(
   }
   const [product] = await deps.knowledge.lookupPlanProducts(products.ids);
   if (!product) return extract;
-  const found = inferAttrsFromText(text, product.variants, {
-    size: extract.size,
-    color: extract.color,
-  });
+  const found = inferAttrsFromText(
+    text,
+    product.variants,
+    { size: extract.size, color: extract.color },
+    extract.product_mentions,
+  );
   return found.size === extract.size && found.color === extract.color
     ? extract
     : { ...extract, size: found.size, color: found.color };

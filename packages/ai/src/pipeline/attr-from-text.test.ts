@@ -27,7 +27,7 @@ describe('inferAttrsFromText — size/màu khách nêu mà extract bỏ sót (kh
     expect(inferAttrsFromText('vay hoa nhi con hg', [], none)).toEqual(none);
   });
   it('giá trị đã có thì giữ nguyên, không ghi đè', () => {
-    expect(inferAttrsFromText('ao L den', shirt, { size: 'Xl', color: null })).toEqual({
+    expect(inferAttrsFromText('ao mau den', shirt, { size: 'Xl', color: null })).toEqual({
       size: 'Xl',
       color: 'den',
     });
@@ -44,5 +44,25 @@ describe('inferAttrsFromText — size/màu khách nêu mà extract bỏ sót (kh
   });
   it('không khớp giá trị nào của sản phẩm → null', () => {
     expect(inferAttrsFromText('ao mau do size XXL', shirt, none)).toEqual(none);
+  });
+
+  describe('màu không dấu cần ngữ cảnh (chặn đồng âm)', () => {
+    const name = ['ao thun basic'];
+    const colorOf = (text: string) => inferAttrsFromText(text, shirt, none, name).color;
+    it('"ship den Ha Noi", "den khi nao co hang" → null', () => {
+      expect(colorOf('ao thun basic ship den Ha Noi mat bao lau')).toBeNull();
+      expect(colorOf('cho minh hoi den khi nao co hang')).toBeNull();
+    });
+    it('sau "mau", liền kề size đã nhận, hoặc liền kề tên sản phẩm → nhận', () => {
+      expect(colorOf('ao thun basic L trang')).toBe('trang');
+      expect(colorOf('ao thun basic mau trang')).toBe('trang');
+      expect(colorOf('ao thun basic trang con k')).toBe('trang');
+      expect(colorOf('lay trang L')).toBe('trang');
+    });
+    it('màu có dấu hoặc tên tiếng Anh nhận ở bất kỳ vị trí; "shop co m hang k" → size null', () => {
+      expect(colorOf('ship tới Hà Nội, mình lấy màu đen nhé, ship nhanh')).toBe('đen');
+      expect(colorOf('co white khong')).toBe('white');
+      expect(inferAttrsFromText('shop co m hang k', shirt, none, name).size).toBeNull();
+    });
   });
 });
