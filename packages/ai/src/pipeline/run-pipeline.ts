@@ -637,10 +637,19 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     if (candidates.length > 0 && candidates.every(hasUniformVariantPrice)) missingAxes = [];
   }
   // `decideFor(strict)`: strict = coi mọi ý KHÔNG phải hỏi giá là CHƯA có nguồn (dùng khi guard nghĩa loại bản soạn đầu).
+  // Hàng lỗi trùng phạm vi bảo hành: nhãn CHÍNH là advice/price, nhãn phụ complaint, và plan đã khớp phạm vi thẻ bảo hành (requiresHumanReview) → không để nhãn phụ ép chuyển người;
+  // câu trả lời vẫn bắt buộc người duyệt (không tự gửi). Nhãn chính complaint, hoặc phạm vi không khớp (plan.handoff) → giữ chuyển người.
+  const waiveSecondaryComplaint =
+    factPlan?.requiresHumanReview === true &&
+    (label === 'advice' || label === 'price') &&
+    extract.labels.some((item) => item.label === 'complaint');
+  const decideExtract = waiveSecondaryComplaint
+    ? { ...extract, labels: extract.labels.filter((item) => item.label !== 'complaint') }
+    : extract;
   const decideFor = (strict: boolean): ActionDecision =>
     decideAction({
       lang,
-      extract,
+      extract: decideExtract,
       products: {
         candidates: products.names.map(shortProductName),
         missingAxes,

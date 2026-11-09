@@ -686,6 +686,7 @@ describe('hàng lỗi trùng phạm vi bảo hành (vi-12): trả lời từ th�
     text: string,
     factSlots: NonNullable<PipelineInput['factSlots']>,
     draft = draftOf('Về bảo hành: {fact:warranty}.'),
+    labels: Array<{ label: string }> = [{ label: 'advice' }],
   ) => {
     const { drafter } = fakeDrafter(draft);
     const result = await runPipeline(
@@ -694,7 +695,11 @@ describe('hàng lỗi trùng phạm vi bảo hành (vi-12): trả lời từ th�
         extractor: createFixtureExtractor([
           {
             match: /./,
-            result: { ...extractFor([text]), labels: [{ label: 'advice' }], topics: ['defect'] },
+            result: {
+              ...extractFor([text]),
+              labels: labels as ExtractResult['labels'],
+              topics: ['defect'],
+            },
           },
         ]),
         drafter,
@@ -716,6 +721,38 @@ describe('hàng lỗi trùng phạm vi bảo hành (vi-12): trả lời từ th�
     });
     expect(r.reply).toBe('Về bảo hành: bảo hành đường may 3 tháng.');
     expect(r.riskReasons.review).toEqual(['defect_warranty_scope']);
+  });
+  it('vi-12: nhãn chính advice + nhãn phụ complaint + khớp phạm vi → answer, bắt buộc người duyệt, không tự gửi', async () => {
+    const r = await runDefect(
+      'Đường may bị bung thì có được bảo hành không shop',
+      warrantyPolicy({}),
+      draftOf('Về bảo hành: {fact:warranty}.'),
+      [{ label: 'advice' }, { label: 'complaint' }],
+    );
+    expect(r.decision).toMatchObject({
+      action: 'answer',
+      needsHuman: true,
+      autoSendPolicy: 'never',
+    });
+    expect(r.reply).toBe('Về bảo hành: bảo hành đường may 3 tháng.');
+    expect(r.riskReasons.review).toEqual(['defect_warranty_scope']);
+  });
+  it('nhãn phụ complaint nhưng phạm vi KHÔNG khớp → vẫn chuyển người; nhãn CHÍNH complaint → vẫn chuyển người', async () => {
+    const mismatch = await runDefect(
+      'Khóa kéo hỏng có bảo hành không shop',
+      warrantyPolicy({}),
+      draftOf('x'),
+      [{ label: 'advice' }, { label: 'complaint' }],
+    );
+    expect(mismatch.decision.action).toBe('handoff');
+    const primary = await runDefect(
+      'Đường may bị bung thì có được bảo hành không shop',
+      warrantyPolicy({}),
+      draftOf('x'),
+      [{ label: 'complaint' }, { label: 'advice' }],
+    );
+    expect(primary.decision.action).toBe('handoff');
+    expect(primary.decision.reason).toBe('complaint');
   });
   it('LLM hứa đổi/hoàn khi không có chỗ giữ chỗ returns → từ chối cứng (concept), dùng câu dự phòng', async () => {
     const r = await runDefect(
