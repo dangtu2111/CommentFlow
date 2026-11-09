@@ -529,8 +529,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const extractedTopics: FactTopic[] = slotMode ? [...new Set(extract.topics)] : [];
   // Hỏi khuyến mãi/giảm giá KHÔNG phải hỏi giá/tồn: khi có ý hỏi được xếp 'discount' mà chưa nhận ra sản phẩm nào → bỏ price/stock (chủ đề vẫn do extract trả; code chỉ lọc theo ý hỏi đã có).
   const discountAsked = extract.asks.some((ask) => topicOf(ask) === 'discount');
+  // Khách nhắc một sản phẩm mà danh mục KHÔNG có ("shop có bán giày k"): không thêm chủ đề giá/tồn từ fact plan → giữ đường cũ (chuyển hướng), không hỏi lại "sản phẩm nào".
+  const mentionedButUnknown = extract.product_mentions.length > 0 && products.ids.length === 0;
   const factTopics: FactTopic[] =
-    discountAsked && products.ids.length === 0
+    (discountAsked || mentionedButUnknown) && products.ids.length === 0
       ? extractedTopics.filter((topic) => topic !== 'price' && topic !== 'stock')
       : extractedTopics;
   // Nơi khách hỏi giao tới → quốc gia (bảng quốc gia/tiểu bang Mỹ + tỉnh/thành VN); không nhận ra → null (không đoán).

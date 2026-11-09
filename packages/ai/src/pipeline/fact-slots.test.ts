@@ -771,3 +771,52 @@ describe('FR-140: bản nháp không dùng được KHÔNG được mang nhãn t
     expect(r.reply).toBe('Túi tote canvas giá 99.000đ.');
   });
 });
+
+describe('sản phẩm được nhắc nhưng không có trong danh mục → đường cũ (redirect), không hỏi lại "sản phẩm nào" (viplain-24)', () => {
+  const noProduct: TryKnowledge = {
+    ...knowledge,
+    matchProducts: async () => ({ ids: [], names: [], missingAxes: [] }),
+    lookupPlanProducts: async () => [],
+    lookupProductFacts: async () => [],
+  };
+  const runAsk = async (text: string, ask: string, mentions: string[]) => {
+    const { drafter } = fakeDrafter(draftOf('Sorry.'));
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text,
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots: slots([ship()]),
+      },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: {
+              ...extractFor([ask]),
+              labels: [{ label: 'advice' }],
+              topics: ['stock'],
+              product_mentions: mentions,
+            },
+          },
+        ]),
+        drafter,
+        knowledge: noProduct,
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    return result;
+  };
+  it('"shop có bán giày k" (nhắc "giày", danh mục không có) → redirect/topic_unsourced', async () => {
+    const r = await runAsk('shop có bán giày k', 'còn hàng giày không', ['giày']);
+    expect(r.decision.action).toBe('redirect');
+    expect(r.decision.reason).toBe('topic_unsourced');
+  });
+  it('"how much?" (không nhắc sản phẩm nào) vẫn hỏi lại sản phẩm nào (clarify/product_unknown)', async () => {
+    const r = await runAsk('how much?', 'how much', []);
+    expect(r.decision.action).toBe('clarify');
+    expect(r.decision.reason).toBe('product_unknown');
+  });
+});
