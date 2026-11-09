@@ -833,7 +833,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   if (
     decision.action !== 'handoff' &&
     slotRendered === null &&
-    (draft.needs_human || draft.reply.trim() === '')
+    // needs_human là bình thường ở redirect/clarify (mời nhân viên); chỉ KHÔNG dùng được khi câu rỗng, hoặc action là answer mà bộ soạn lại xin người.
+    (draft.reply.trim() === '' || (decision.action === 'answer' && draft.needs_human))
   ) {
     draftUnusable = true;
     decision = handoffDecision('claim_unsupported', decision.askedBefore);

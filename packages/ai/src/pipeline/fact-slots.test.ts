@@ -820,3 +820,42 @@ describe('sản phẩm được nhắc nhưng không có trong danh mục → đ
     expect(r.decision.reason).toBe('product_unknown');
   });
 });
+
+describe('FR-140: needs_human ở redirect/clarify là bình thường (không bị đổi thành chuyển người)', () => {
+  it('redirect có câu mời + needs_human true → giữ redirect, giữ câu', async () => {
+    const { drafter } = fakeDrafter({
+      ...draftOf('Bạn ơi, shop chưa có thông tin về khuyến mãi. Bạn ib shop nhé.'),
+      needs_human: true,
+      reason: 'redirect',
+    });
+    const result = await runPipeline(
+      {
+        workspaceId: 'ws1',
+        text: 'Mua 2 cái có giảm k shop',
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+      },
+      {
+        extractor: createFixtureExtractor([
+          {
+            match: /./,
+            result: {
+              ...extractFor(['mua 2 cái có giảm giá không']),
+              labels: [{ label: 'advice' }],
+            },
+          },
+        ]),
+        drafter,
+        knowledge: {
+          ...knowledge,
+          matchProducts: async () => ({ ids: [], names: [], missingAxes: [] }),
+        },
+      },
+    );
+    if (result.status !== 'done') throw new Error('expected done');
+    expect(result.decision.action).toBe('redirect');
+    expect(result.reply).toContain('ib shop');
+    expect(result.riskReasons.review).toBeUndefined();
+  });
+});
