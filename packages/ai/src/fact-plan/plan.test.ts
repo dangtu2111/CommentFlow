@@ -493,3 +493,59 @@ describe('scopeMatches — khớp phạm vi bảo hành bằng code (không đ�
     expect(scopeMatches(scope, text)).toBe(expected);
   });
 });
+
+describe('buildFactPlan — cặp phí/thời gian ship và đổi trả định tính', () => {
+  it('hỏi phí mà dòng có cả ngày → cấp luôn ship_time cùng nguồn; ngược lại cũng vậy', () => {
+    const p = plan({ topics: ['ship_fee'], policy: policy({ shipping: [ship()] }) });
+    expect(byId(p, 'ship_fee')).toMatchObject({ status: 'known', sourceId: 'kb:ship' });
+    expect(byId(p, 'ship_time')).toMatchObject({ status: 'known', sourceId: 'kb:ship' });
+    const q = plan({ topics: ['ship_time'], policy: policy({ shipping: [ship()] }) });
+    expect(byId(q, 'ship_fee')).toMatchObject({ status: 'known', sourceId: 'kb:ship' });
+  });
+
+  it('dòng thiếu ngày → chỉ ship_fee, không thêm unknown cho ship_time', () => {
+    const p = plan({
+      topics: ['ship_fee'],
+      policy: policy({ shipping: [ship({ daysMin: null, daysMax: null })] }),
+    });
+    expect(byId(p, 'ship_fee')?.status).toBe('known');
+    expect(byId(p, 'ship_time')).toBeUndefined();
+    expect(p.unknownTopics).toEqual([]);
+  });
+
+  it('dòng thiếu phí → chỉ ship_time', () => {
+    const p = plan({
+      topics: ['ship_time'],
+      policy: policy({ shipping: [ship({ feeMinor: null })] }),
+    });
+    expect(byId(p, 'ship_time')?.status).toBe('known');
+    expect(byId(p, 'ship_fee')).toBeUndefined();
+  });
+
+  it('returns không có ngày nhưng có refundTo/eligibility → cấp sự kiện định tính, không unknown', () => {
+    const p = plan({
+      topics: ['returns'],
+      policy: policy({
+        returns: {
+          days: null,
+          refundTo: 'original_payment',
+          eligibility: 'varies_by_item',
+          sourceId: 'pf:r',
+        },
+      }),
+    });
+    expect(p.unknownTopics).toEqual([]);
+    expect(byId(p, 'return_eligibility')).toMatchObject({ status: 'known', sourceId: 'pf:r' });
+    expect(byId(p, 'refund_to')).toMatchObject({ status: 'known', sourceId: 'pf:r' });
+    expect(byId(p, 'return_shipping')).toBeUndefined();
+    expect(byId(p, 'returns')).toBeUndefined();
+  });
+
+  it('returns không ngày và không trường định tính nào → vẫn unknown', () => {
+    const p = plan({
+      topics: ['returns'],
+      policy: policy({ returns: { days: null, sourceId: 'pf:r' } }),
+    });
+    expect(p.unknownTopics).toEqual(['returns']);
+  });
+});

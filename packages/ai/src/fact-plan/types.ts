@@ -69,7 +69,15 @@ export type FactValue =
   | { type: 'return_eligibility'; mode: 'varies_by_item' };
 
 export type Fact =
-  | { id: string; kind: FactKind; status: 'known'; value: FactValue; sourceId: string }
+  | {
+      id: string;
+      kind: FactKind;
+      status: 'known';
+      value: FactValue;
+      sourceId: string;
+      /** Được PHÉP dùng nhưng không bắt buộc (sự kiện đi kèm cùng dòng nguồn, vd. thời gian giao khi khách chỉ hỏi phí). */
+      optional?: true;
+    }
   | { id: string; kind: FactKind; status: 'unknown' };
 
 export type ShipRow = {

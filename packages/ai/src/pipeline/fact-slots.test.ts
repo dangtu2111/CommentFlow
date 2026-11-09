@@ -116,6 +116,23 @@ const run = async (
   return { result, calls };
 };
 
+const policyShipChunk: TryCandidate = {
+  id: 'policy:ship',
+  kind: 'policy',
+  title: 'Vận chuyển',
+  text: unsafeMarkMasked('Giao toàn quốc, phí 30.000đ, 2-4 ngày.'),
+  score: 0.9,
+  topics: ['shipping'],
+};
+const processChunk: TryCandidate = {
+  id: 'kb:process',
+  kind: 'kb',
+  title: 'Xử lý đơn',
+  text: unsafeMarkMasked('Shop xử lý đơn trong 1 ngày.'),
+  score: 0.8,
+  topics: ['other'],
+};
+
 const MIXED_11 = 'Tote bag giá bao nhiêu, ship Hà Nội mất mấy ngày?';
 const ASKS = ['giá', 'thời gian giao hàng'];
 const GOOD = draftOf(
@@ -147,13 +164,17 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
       'product_name.1',
       'price.1',
       'ship_time',
+      'ship_fee',
     ]);
     // LLM nhận danh sách mã sự kiện, KHÔNG nhận giá trị.
     expect(calls[0]?.factSlots?.facts.map((f) => f.id)).toEqual([
       'product_name.1',
       'price.1',
       'ship_time',
+      'ship_fee',
     ]);
+    // Phí ship chỉ được PHÉP dùng (cùng dòng nguồn), không bắt buộc.
+    expect(calls[0]?.factSlots?.required).toEqual(['price.1', 'ship_time']);
   });
 
   it('không có chính sách ship → phần ship là unknown: trả lời phần giá, CODE thêm câu mời theo xưng hô, ghi chủ đề chưa trả lời', async () => {
@@ -262,7 +283,7 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
   it('biến thể hợp lệ CÙNG tập chỗ giữ chỗ được điền và giữ làm biến thể; biến thể khác tập bị bỏ', async () => {
     const draft = draftOf('{fact:product_name.1} giá {fact:price.1}, giao {fact:ship_time} nhé!', [
       'Giá {fact:product_name.1} là {fact:price.1}, giao {fact:ship_time} bạn nhé.',
-      '{fact:product_name.1} giá {fact:price.1}, giao {fact:ship_time}, ship {fact:ship_fee} nhé.',
+      '{fact:product_name.1} giá {fact:price.1}, giao {fact:ship_time}, ship {fact:warranty} nhé.',
     ]);
     const { result } = await run(MIXED_11, ASKS, draft, slots([ship()]));
     expect(result.reply).toBe('Túi tote canvas giá 99.000đ, giao 2–4 ngày nhé!');
@@ -857,5 +878,23 @@ describe('FR-140: needs_human ở redirect/clarify là bình thường (không b
     expect(result.decision.action).toBe('redirect');
     expect(result.reply).toContain('ib shop');
     expect(result.riskReasons.review).toBeUndefined();
+  });
+
+  it('nguồn chính sách ship không vào prompt khi plan đã có ship_fee/ship_time; đoạn "xử lý đơn 1 ngày" vẫn có', async () => {
+    const withChunks: TryKnowledge = {
+      ...knowledge,
+      searchKb: async () => [policyShipChunk, processChunk],
+    };
+    const { calls } = await run(MIXED_11, ASKS, GOOD, slots([ship()]), withChunks);
+    const ids = (calls[0]?.sources ?? []).map((source) => source.id);
+    expect(ids).not.toContain('policy:ship');
+    expect(ids).toContain('kb:process');
+    expect(ids).toContain('p-tote');
+  });
+
+  it('cờ tắt: nguồn chính sách vẫn vào prompt như cũ', async () => {
+    const withChunks: TryKnowledge = { ...knowledge, searchKb: async () => [policyShipChunk] };
+    const { calls } = await run(MIXED_11, ASKS, GOOD, undefined, withChunks);
+    expect((calls[0]?.sources ?? []).map((source) => source.id)).toContain('policy:ship');
   });
 });

@@ -659,6 +659,30 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           .filter((fact) => fact.status === 'known')
           .map((fact) => ({ id: fact.id, kind: fact.kind }))
       : null;
+  // Chế độ chỗ giữ chỗ: đoạn nguồn chính sách CÙNG chủ đề với sự kiện đã có (hoặc chính đoạn plan lấy làm nguồn) không đưa vào prompt — giá trị đã nằm ở chỗ giữ chỗ, để bộ soạn không chép số/chữ từ văn xuôi (vi-07). Đoạn khác giữ nguyên.
+  const slotCoveredTopics = new Set<KbGapTopic>(
+    slotFacts === null
+      ? []
+      : (factPlan?.facts ?? []).flatMap((fact) =>
+          fact.status === 'known' && fact.kind in GAP_TOPIC_OF_FACT
+            ? [GAP_TOPIC_OF_FACT[fact.kind as FactTopic]]
+            : [],
+        ),
+  );
+  const slotPlanSourceIds = new Set(
+    slotFacts === null
+      ? []
+      : (factPlan?.facts ?? []).flatMap((fact) => (fact.status === 'known' ? [fact.sourceId] : [])),
+  );
+  const promptSources = found.filter(
+    (c) =>
+      slotFacts === null ||
+      c.kind === 'product' ||
+      !(
+        slotPlanSourceIds.has(c.id) ||
+        (c.kind === 'policy' && c.topics.some((topic) => slotCoveredTopics.has(topic)))
+      ),
+  );
   const draftInput = (d: ActionDecision) => ({
     workspaceId: input.workspaceId,
     question: masked,
@@ -666,7 +690,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     kbVersion: input.kbVersion,
     ...(input.variantCount === undefined ? {} : { variantCount: input.variantCount }),
     voice,
-    sources: found.map((c) => ({ id: c.id, kind: c.kind, text: c.text, relevance: c.score })),
+    sources: promptSources.map((c) => ({
+      id: c.id,
+      kind: c.kind,
+      text: c.text,
+      relevance: c.score,
+    })),
     // Có sự kiện trong fact plan thì bộ soạn viết như `answer` (câu mời cho phần chưa rõ do CODE thêm), tránh lời nhắc "mẫu câu mời" trùng với câu mời của code.
     decision:
       slotFacts !== null && d.action === 'redirect'

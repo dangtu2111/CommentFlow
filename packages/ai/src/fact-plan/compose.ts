@@ -13,7 +13,7 @@ const CONTEXT_KINDS: ReadonlySet<FactKind> = new Set([
 /** Sự kiện ĐÃ BIẾT mà câu trả lời phải nêu (không gồm tên/biến thể/số khách — chỉ là chất liệu câu). */
 export function requiredFactIds(plan: FactPlan): string[] {
   return plan.facts
-    .filter((fact) => fact.status === 'known' && !CONTEXT_KINDS.has(fact.kind))
+    .filter((fact) => fact.status === 'known' && !fact.optional && !CONTEXT_KINDS.has(fact.kind))
     .map((fact) => fact.id);
 }
 
@@ -69,7 +69,7 @@ const LINES: Record<
 /** Câu dự phòng do code dựng từ các sự kiện bắt buộc (chỉ chỗ giữ chỗ + lời văn cố định); rỗng nếu không có gì cần nói. */
 export function fallbackTemplate(plan: FactPlan, lang: 'vi' | 'en'): string {
   const lines = plan.facts.flatMap((fact) => {
-    if (fact.status !== 'known' || CONTEXT_KINDS.has(fact.kind)) return [];
+    if (fact.status !== 'known' || fact.optional || CONTEXT_KINDS.has(fact.kind)) return [];
     const line = LINES[lang][fact.kind]?.(fact.id, nameOf(fact.id, plan));
     return line === undefined ? [] : [line];
   });

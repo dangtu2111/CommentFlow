@@ -411,8 +411,28 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
     mark('cod', known('cod', 'cod', { type: 'bool', value: row.cod }, row.sourceId));
   };
 
+  // Phí và thời gian giao nằm cùng một dòng ship: khách hỏi một trong hai mà dòng có đủ cả hai → cấp cả hai (cùng sourceId), tránh bộ soạn tự dùng mã còn lại. Thiếu một → chỉ cấp cái được hỏi.
+  const shipPair = (topic: 'ship_fee' | 'ship_time') => {
+    shipping(topic);
+    const other = topic === 'ship_fee' ? 'ship_time' : 'ship_fee';
+    if (input.topics.includes(other)) return;
+    const before = facts.length;
+    const hadUnknown = unknownTopics.has(other);
+    shipping(other);
+    const added = facts.slice(before);
+    if (added.every((fact) => fact.status === 'known')) {
+      facts.splice(
+        before,
+        added.length,
+        ...added.map((fact) => ({ ...fact, optional: true as const })),
+      );
+      return;
+    }
+    facts.length = before;
+    if (!hadUnknown) unknownTopics.delete(other);
+  };
   for (const topic of input.topics) {
-    if (topic === 'ship_fee' || topic === 'ship_time') shipping(topic);
+    if (topic === 'ship_fee' || topic === 'ship_time') shipPair(topic);
     else if (topic === 'ship_destination') destinationFact();
     else if (topic === 'cod') cod();
     else if (topic === 'defect') {
@@ -439,7 +459,19 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
       topic === 'warranty' ||
       topic === 'payment'
     ) {
-      mark(topic, policyFact(topic, input.policy));
+      const r = input.policy.returns;
+      const qualitative = r && r.none !== true && r.days === null;
+      if (
+        topic === 'returns' &&
+        qualitative &&
+        (r.refundTo || r.returnShippingPaidBy || r.eligibility)
+      ) {
+        // Không có số ngày nhưng có sự kiện định tính (hoàn về đâu, ai trả ship, khả năng đổi trả) → cấp các sự kiện đó thay vì "chưa biết".
+        for (const sub of ['return_eligibility', 'refund_to', 'return_shipping'] as const) {
+          const fact = policyFact(sub, input.policy);
+          if (fact.status === 'known') mark(sub, fact);
+        }
+      } else mark(topic, policyFact(topic, input.policy));
     }
   }
   return {
