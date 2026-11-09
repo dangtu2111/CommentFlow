@@ -929,6 +929,23 @@ describe('FR-140: needs_human ở redirect/clarify là bình thường (không b
     expect(ids).toContain('p-tote');
   });
 
+  it('đoạn chính sách KHÁC id nhưng cùng chủ đề (shipping) cũng bỏ; chính sách chủ đề khác (discount) giữ', async () => {
+    const sameTopic: TryCandidate = { ...policyShipChunk, id: 'policy:ship-2' };
+    const otherTopic: TryCandidate = {
+      ...policyShipChunk,
+      id: 'policy:promo',
+      topics: ['discount'],
+    };
+    const withChunks: TryKnowledge = {
+      ...knowledge,
+      searchKb: async () => [sameTopic, otherTopic],
+    };
+    const { calls } = await run(MIXED_11, ASKS, GOOD, slots([ship()]), withChunks);
+    const ids = (calls[0]?.sources ?? []).map((source) => source.id);
+    expect(ids).not.toContain('policy:ship-2');
+    expect(ids).toContain('policy:promo');
+  });
+
   it('cờ tắt: nguồn chính sách vẫn vào prompt như cũ', async () => {
     const withChunks: TryKnowledge = { ...knowledge, searchKb: async () => [policyShipChunk] };
     const { calls } = await run(MIXED_11, ASKS, GOOD, undefined, withChunks);
