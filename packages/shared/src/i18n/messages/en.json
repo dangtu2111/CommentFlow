@@ -3310,7 +3310,9 @@
       "discard": "Discard suggestion",
       "add": "Add value",
       "addRegion": "Add area",
-      "soon": "Coming soon"
+      "soon": "Coming soon",
+      "delete": "Delete",
+      "deleteConfirm": "Confirm delete"
     },
     "empty": {
       "title": "No approved value yet",
@@ -3333,7 +3335,8 @@
       "not_found": "This value was not found (it may already be handled).",
       "invalid": "Invalid request.",
       "unavailable": "Could not complete. Try again in a few minutes.",
-      "rate_limited": "You are acting too fast. Try again in a moment."
+      "rate_limited": "You are acting too fast. Try again in a moment.",
+      "deleted": "Value deleted. AI no longer uses it."
     },
     "form": {
       "pageTitle": {
@@ -3397,6 +3400,7 @@
       "scopeHint": "For example: seams. Leave empty if everything is covered.",
       "methods": "Accepted methods",
       "invalid": "The value is not valid: check required fields (for example a fixed fee needs an amount, an inner city needs a city)."
-    }
+    },
+    "updatedAt": "Updated {time}"
   }
 }

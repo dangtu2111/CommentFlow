@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   approve: vi.fn(),
   discard: vi.fn(),
+  remove: vi.fn(),
   edit: vi.fn(),
   list: vi.fn(),
   save: vi.fn(),
@@ -14,6 +15,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@flow/db/runtime', () => ({
   approvePolicyFact: mocks.approve,
   discardPolicyDraft: mocks.discard,
+  deleteApprovedPolicyFact: mocks.remove,
   editPolicyDraft: mocks.edit,
   listAllPolicyFacts: mocks.list,
   savePolicyFact: mocks.save,
@@ -29,6 +31,7 @@ vi.mock('../../../../server/require-app-user', () => ({ requireAppUser: mocks.re
 
 import {
   approvePolicyAction,
+  deleteApprovedPolicyAction,
   discardPolicyDraftAction,
   savePolicyValueAction,
 } from './policy-actions';
@@ -188,5 +191,20 @@ describe('savePolicyValueAction', () => {
       '/app/kb/policies?pn=unavailable',
     );
     spy.mockRestore();
+  });
+});
+
+describe('deleteApprovedPolicyAction', () => {
+  it.each([
+    ['deleted', 'deleted'],
+    ['stale', 'stale'],
+    ['not_found', 'not_found'],
+  ])('kết quả %s → ?pn=%s; chỉ Owner, id/rev từ form', async (result, pn) => {
+    mocks.remove.mockResolvedValue(result);
+    expect(await redirectOf(deleteApprovedPolicyAction(form({ id: ID, rev: '6' })))).toBe(
+      `/app/kb/policies?pn=${pn}`,
+    );
+    expect(mocks.requireAppUser).toHaveBeenCalledWith({ role: 'owner' });
+    expect(mocks.remove).toHaveBeenCalledWith({}, 'w1', ID, 6);
   });
 });

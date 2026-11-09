@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FlowDb } from '../src/client';
 import {
   approvePolicyFact,
+  deleteApprovedPolicyFact,
   deletePolicyFact,
   discardPolicyDraft,
   editPolicyDraft,
@@ -750,5 +751,108 @@ describe('discardPolicyDraft — Owner bỏ nháp kèm rev', () => {
       ),
     ).toBe('not_found');
     expect(await draft('dd-c')).toBeDefined();
+  });
+});
+
+describe('duyệt kiểm lại Zod, xóa bản đã duyệt kèm rev, mốc thời gian', () => {
+  let bws: string;
+  let bowner: string;
+  let bstaff: string;
+  beforeAll(async () => {
+    bws = await seedWorkspace(admin);
+    bowner = await seedUser(admin, 'bowner');
+    bstaff = await seedUser(admin, 'bstaff');
+    await seedMember(admin, bws, bowner, 'owner');
+    await seedMember(admin, bws, bstaff, 'staff');
+  });
+  const rowOf = async (slot: string, status: 'draft' | 'approved') =>
+    (await db.withWorkspace(bws, (tx) => listAllPolicyFacts(tx, bws))).find(
+      (r) => r.slot === slot && r.status === status,
+    );
+
+  it('nháp có data sai cấu trúc (lọt vào bảng) → duyệt trả invalid, vẫn là nháp', async () => {
+    await admin.query(
+      `INSERT INTO cf.policy_facts (workspace_id, kind, slot, data, status, origin, evidence)
+       VALUES ($1, 'ship_region', 'bad-slot', '{"kind":"city"}'::jsonb, 'draft', 'shopify_suggested', 'x')`,
+      [bws],
+    );
+    const bad = await rowOf('bad-slot', 'draft');
+    expect(
+      await db.withActor(bws, bowner, (tx) =>
+        approvePolicyFact(tx, bws, bad?.id as string, bad?.rev as number),
+      ),
+    ).toBe('invalid');
+    expect(await rowOf('bad-slot', 'draft')).toBeDefined();
+    expect(await rowOf('bad-slot', 'approved')).toBeUndefined();
+  });
+
+  it('xóa bản đã duyệt: lệch rev → stale; Staff không xóa được; đúng rev → xóa, nháp cùng slot giữ nguyên', async () => {
+    await db.withActor(bws, bowner, (tx) =>
+      savePolicyFact(tx, base({ workspaceId: bws, slot: 'del-a', data: nationwide })),
+    );
+    await db.withJob(bws, (tx) =>
+      refreshPolicySuggestions(
+        tx,
+        bws,
+        'shopify_suggested',
+        [
+          {
+            kind: 'ship_region',
+            slot: 'del-a',
+            data: { ...nationwide, feeMinor: 1 },
+            evidence: 'e',
+          },
+        ],
+        'shopify:policies',
+      ),
+    );
+    const approved = await rowOf('del-a', 'approved');
+    expect(
+      await db.withActor(bws, bowner, (tx) =>
+        deleteApprovedPolicyFact(tx, bws, approved?.id as string, (approved?.rev as number) + 1),
+      ),
+    ).toBe('stale');
+    expect(
+      await db.withActor(bws, bstaff, (tx) =>
+        deleteApprovedPolicyFact(tx, bws, approved?.id as string, approved?.rev as number),
+      ),
+    ).toBe('not_found');
+    expect(await rowOf('del-a', 'approved')).toBeDefined();
+    expect(
+      await db.withActor(bws, bowner, (tx) =>
+        deleteApprovedPolicyFact(tx, bws, approved?.id as string, approved?.rev as number),
+      ),
+    ).toBe('deleted');
+    expect(await rowOf('del-a', 'approved')).toBeUndefined();
+    expect(await rowOf('del-a', 'draft')).toBeDefined();
+    expect(
+      await db.withActor(bws, bowner, (tx) =>
+        deleteApprovedPolicyFact(tx, bws, approved?.id as string, approved?.rev as number),
+      ),
+    ).toBe('not_found');
+  });
+
+  it('không xóa được nháp bằng hàm xóa bản đã duyệt; dòng có mốc cập nhật và duyệt', async () => {
+    await db.withJob(bws, (tx) =>
+      refreshPolicySuggestions(
+        tx,
+        bws,
+        'shopify_suggested',
+        [{ kind: 'ship_region', slot: 'del-b', data: nationwide, evidence: 'e' }],
+        'shopify:policies',
+      ),
+    );
+    const draft = await rowOf('del-b', 'draft');
+    expect(typeof draft?.updatedAt).toBe('string');
+    expect(draft?.approvedAt).toBeNull();
+    expect(
+      await db.withActor(bws, bowner, (tx) =>
+        deleteApprovedPolicyFact(tx, bws, draft?.id as string, draft?.rev as number),
+      ),
+    ).toBe('not_found');
+    await db.withActor(bws, bowner, (tx) =>
+      approvePolicyFact(tx, bws, draft?.id as string, draft?.rev as number),
+    );
+    expect(typeof (await rowOf('del-b', 'approved'))?.approvedAt).toBe('string');
   });
 });
