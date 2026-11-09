@@ -43,8 +43,12 @@ export type RunContext = {
 
 export type ExtractSnapshot = {
   product_mentions: string[];
+  /** Bản CUỐI pipeline dùng (đã bổ sung bằng code từ giá trị biến thể khi extract bỏ sót). */
   size: string | null;
   color: string | null;
+  /** Bản THÔ của LLM (theo dõi chất lượng extract, không phải cổng). */
+  sizeRaw?: string | null;
+  colorRaw?: string | null;
   qty: number | null;
   /** Các ý hỏi model tách ra (chẩn đoán chủ đề). */
   asks: string[];
@@ -131,6 +135,8 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
           product_mentions: result.product_mentions,
           size: result.size,
           color: result.color,
+          sizeRaw: result.size,
+          colorRaw: result.color,
           qty: result.qty,
           asks: [...result.asks],
           topics: [...result.topics],

@@ -99,7 +99,11 @@ describe('EVAL-RUNNER chấm một mẫu (docs/14 §4.2)', () => {
       }),
     );
     expect(checks.facts).toBe(true);
-    expect(checks.extract).toEqual({ color: true, product_mentions: true });
+    expect(checks.extract).toEqual({
+      color: true,
+      colorRaw: true,
+      product_mentions: true,
+    });
   });
 
   it('sai nhãn/hành động/ngôn ngữ/sự kiện/trường extract bị tính trượt', () => {
@@ -297,5 +301,51 @@ describe('reply_empty — nhãn không phải chuyển người mà câu rỗng 
     expect(metrics.all.replyEmpty).toBe(1);
     const rows = judge(metrics.all);
     expect(rows.find((r) => r.name.includes('reply_empty'))?.pass).toBe(false);
+  });
+});
+
+describe('Tách đúng: bản cuối (cổng) và bản thô của LLM (theo dõi)', () => {
+  const snap = (over: Record<string, unknown>) => ({
+    product_mentions: ['ao thun'],
+    size: null,
+    color: null,
+    qty: null,
+    asks: [],
+    topics: [],
+    destination: null,
+    ...over,
+  });
+  const run = (extract: ReturnType<typeof snap>) =>
+    checkSample(
+      sample({ extract: { size: 'L', color: 'trang' } }),
+      outcome({ extract: extract as never }),
+    );
+  it('code bổ sung đúng: cổng (bản cuối) đạt, bản thô (LLM bỏ sót) trượt', () => {
+    const checks = run(snap({ size: 'L', color: 'trang', sizeRaw: null, colorRaw: null }));
+    expect(checks.extract).toMatchObject({
+      size: true,
+      color: true,
+      sizeRaw: false,
+      colorRaw: false,
+    });
+  });
+  it('thiếu bản thô (ảnh chụp cũ) → dùng bản cuối', () => {
+    const checks = run(snap({ size: 'L', color: 'trang' }));
+    expect(checks.extract).toMatchObject({ sizeRaw: true, colorRaw: true });
+  });
+  it('báo cáo: dòng theo dõi extract thô không phải cổng (pass = null), cổng tính trên bản cuối', () => {
+    const pairs = [
+      {
+        sample: sample({ extract: { size: 'L', color: 'trang' } }),
+        checks: run(snap({ size: 'L', color: 'trang', sizeRaw: null, colorRaw: 'trang' })),
+      },
+    ];
+    const verdicts = judge(aggregate(pairs));
+    expect(verdicts.find((v) => v.name === 'Tách đúng: size')).toMatchObject({ pass: true });
+    const raw = verdicts.filter((v) => v.name.startsWith('Tách đúng (extract thô'));
+    expect(raw.map((v) => [v.value, v.pass])).toEqual([
+      ['0.0% (0/1)', null],
+      ['100.0% (1/1)', null],
+    ]);
   });
 });
