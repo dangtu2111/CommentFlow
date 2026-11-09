@@ -288,14 +288,91 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     expect(before.find((r) => r.slot === 'flow')?.id).toBe(approved);
     expect(before.some((r) => r.id === draft)).toBe(false);
 
-    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft))).toBe(true);
+    expect((await row(draft)).rev).toBe(1);
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, 1))).toBe(
+      'approved',
+    );
     const after = await db.withWorkspace(ws, (tx) => listApprovedPolicyFacts(tx, ws));
     const flow = after.filter((r) => r.slot === 'flow');
     expect(flow).toHaveLength(1);
     expect(flow[0]?.id).toBe(draft);
     expect((flow[0] as { data: { feeMinor: number } }).data.feeMinor).toBe(25000);
     expect((await row(draft)).approved_by).toBe(owner);
-    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft))).toBe(false);
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, 1))).toBe(
+      'not_found',
+    );
+  });
+
+  it('duyệt LẦN ĐẦU (chưa có bản đã duyệt cùng slot): thăng cấp nháp, đóng dấu người duyệt', async () => {
+    const draft = await db.withJob(ws, (tx) =>
+      savePolicyFact(
+        tx,
+        base({ slot: 'first-approve', status: 'draft', origin: 'text_suggested', evidence: 'e' }),
+      ),
+    );
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, 1))).toBe(
+      'approved',
+    );
+    const r = await row(draft);
+    expect(r.status).toBe('approved');
+    expect(r.approved_by).toBe(owner);
+  });
+
+  it('duyệt kèm rev: worker làm mới nháp giữa lúc Owner xem → duyệt bị từ chối (stale), nháp giữ nguyên; xem lại rev mới thì duyệt được', async () => {
+    const mk = (feeMinor: number) =>
+      db.withJob(ws, (tx) =>
+        savePolicyFact(
+          tx,
+          base({
+            slot: 'stale-rev',
+            status: 'draft',
+            origin: 'shopify_suggested',
+            evidence: 'e',
+            data: { ...nationwide, feeMinor },
+          }),
+        ),
+      );
+    const draft = await mk(25000);
+    const seenRev = (await row(draft)).rev; // Owner đang xem rev này
+    await mk(99000); // worker làm mới nháp → rev tăng
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, seenRev))).toBe(
+      'stale',
+    );
+    const after = await row(draft);
+    expect(after.status).toBe('draft');
+    expect(after.data.feeMinor).toBe(99000);
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, after.rev))).toBe(
+      'approved',
+    );
+    expect((await row(draft)).data.feeMinor).toBe(99000);
+  });
+
+  it('duyệt thay thế khi đã có bản đã duyệt cùng slot: một giao dịch, không lỗi unique, chỉ còn một bản đã duyệt', async () => {
+    const old = await db.withActor(ws, owner, (tx) =>
+      savePolicyFact(tx, base({ slot: 'replace', data: { ...nationwide, feeMinor: 30000 } })),
+    );
+    const draft = await db.withJob(ws, (tx) =>
+      savePolicyFact(
+        tx,
+        base({
+          slot: 'replace',
+          status: 'draft',
+          origin: 'text_suggested',
+          evidence: 'e',
+          data: { ...nationwide, feeMinor: 20000 },
+        }),
+      ),
+    );
+    const rev = (await row(draft)).rev;
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, rev))).toBe(
+      'approved',
+    );
+    const approvedRows = (
+      await db.withWorkspace(ws, (tx) => listApprovedPolicyFacts(tx, ws))
+    ).filter((r) => r.slot === 'replace');
+    expect(approvedRows).toHaveLength(1);
+    expect((approvedRows[0] as { data: { feeMinor: number } }).data.feeMinor).toBe(20000);
+    expect(old).not.toBe(draft);
   });
 
   it('Staff không duyệt được (RLS), người lạ không duyệt bản của workspace khác', async () => {
@@ -305,10 +382,12 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
         base({ slot: 'staff-approve', status: 'draft', origin: 'text_suggested', evidence: 'e' }),
       ),
     );
-    expect(await db.withActor(ws, staff, (tx) => approvePolicyFact(tx, ws, draft))).toBe(false);
-    expect(await db.withActor(other, otherOwner, (tx) => approvePolicyFact(tx, other, draft))).toBe(
-      false,
+    expect(await db.withActor(ws, staff, (tx) => approvePolicyFact(tx, ws, draft, 1))).toBe(
+      'not_found',
     );
+    expect(
+      await db.withActor(other, otherOwner, (tx) => approvePolicyFact(tx, other, draft, 1)),
+    ).toBe('not_found');
     expect((await row(draft)).status).toBe('draft');
   });
 

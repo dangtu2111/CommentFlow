@@ -80,28 +80,33 @@ export async function savePolicyFact(tx: Database, input: SavePolicyFactInput): 
   return (result.rows[0] as { id: string }).id;
 }
 
+export type ApprovePolicyFactResult = 'approved' | 'not_found' | 'stale';
+
 /**
- * Owner duyệt một bản NHÁP: thay bản đã duyệt cũ của cùng (kind, slot) (nếu có) bằng nội dung bản nháp; bản nháp được thăng cấp. Trả `true` nếu có bản nháp để duyệt.
- * Phải chạy trong MỘT giao dịch `withActor` của Owner (trigger từ chối nếu không phải Owner).
+ * Owner duyệt một bản NHÁP, KÈM `rev` Owner đang xem: khóa dòng nháp rồi so `rev`; lệch (worker vừa làm mới nháp) → 'stale', KHÔNG duyệt. Khớp → trong MỘT giao dịch: xóa bản đã duyệt cũ của
+ * cùng (kind, slot) (nếu có) rồi thăng cấp bản nháp (không vi phạm unique). Phải chạy trong MỘT giao dịch `withActor` của Owner (trigger từ chối nếu không phải Owner).
  */
 export async function approvePolicyFact(
   tx: Database,
   workspaceId: string,
   id: string,
-): Promise<boolean> {
-  const draft = await tx.execute<{ kind: string; slot: string }>(sql`
-    SELECT kind, slot FROM cf.policy_facts
-     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'`);
+  expectedRev: number,
+): Promise<ApprovePolicyFactResult> {
+  const draft = await tx.execute<{ kind: string; slot: string; rev: number }>(sql`
+    SELECT kind, slot, rev FROM cf.policy_facts
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'
+       FOR UPDATE`);
   const row = draft.rows[0];
-  if (!row) return false;
+  if (!row) return 'not_found';
+  if (row.rev !== expectedRev) return 'stale';
   await tx.execute(sql`
     DELETE FROM cf.policy_facts
      WHERE workspace_id = ${workspaceId}::uuid AND kind = ${row.kind} AND slot = ${row.slot} AND status = 'approved'`);
   const updated = await tx.execute(sql`
     UPDATE cf.policy_facts SET status = 'approved'
-     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft' AND rev = ${expectedRev}
     RETURNING id`);
-  return updated.rows.length > 0;
+  return updated.rows.length > 0 ? 'approved' : 'stale';
 }
 
 export async function deletePolicyFact(
