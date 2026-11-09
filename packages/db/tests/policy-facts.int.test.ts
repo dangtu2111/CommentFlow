@@ -5,6 +5,7 @@ import type { FlowDb } from '../src/client';
 import {
   approvePolicyFact,
   deletePolicyFact,
+  discardPolicyDraft,
   editPolicyDraft,
   listAllPolicyFacts,
   listApprovedPolicyFacts,
@@ -673,5 +674,81 @@ describe('POLICY-DRAFT-OWNER-EDIT — Owner sửa tay nháp thì đồng bộ kh
     ).toBe('approved');
     const approved = await db.withWorkspace(ews, (tx) => listApprovedPolicyFacts(tx, ews));
     expect(approved.find((r) => r.slot === 'oe-c')?.data).toMatchObject({ feeMinor: 10000 });
+  });
+});
+
+describe('discardPolicyDraft — Owner bỏ nháp kèm rev', () => {
+  let dws: string;
+  let downer: string;
+  let dstaff: string;
+  beforeAll(async () => {
+    dws = await seedWorkspace(admin);
+    downer = await seedUser(admin, 'downer');
+    dstaff = await seedUser(admin, 'dstaff');
+    await seedMember(admin, dws, downer, 'owner');
+    await seedMember(admin, dws, dstaff, 'staff');
+  });
+  const sug = (slot: string) => ({
+    kind: 'ship_region' as const,
+    slot,
+    data: { ...nationwide, feeMinor: 30000 },
+    evidence: 'Phí ship 30000',
+  });
+  const draft = async (slot: string) =>
+    (await db.withWorkspace(dws, (tx) => listAllPolicyFacts(tx, dws))).find(
+      (r) => r.slot === slot && r.status === 'draft',
+    );
+  const seed = (slot: string) =>
+    db.withJob(dws, (tx) =>
+      refreshPolicySuggestions(tx, dws, 'shopify_suggested', [sug(slot)], 'shopify:policies'),
+    );
+
+  it('đúng rev → xóa nháp; lệch rev → stale và giữ nguyên; không có → not_found', async () => {
+    await seed('dd-a');
+    const seen = await draft('dd-a');
+    expect(
+      await db.withActor(dws, downer, (tx) =>
+        discardPolicyDraft(tx, dws, seen?.id as string, (seen?.rev as number) + 1),
+      ),
+    ).toBe('stale');
+    expect(await draft('dd-a')).toBeDefined();
+    expect(
+      await db.withActor(dws, downer, (tx) =>
+        discardPolicyDraft(tx, dws, seen?.id as string, seen?.rev as number),
+      ),
+    ).toBe('discarded');
+    expect(await draft('dd-a')).toBeUndefined();
+    expect(
+      await db.withActor(dws, downer, (tx) =>
+        discardPolicyDraft(tx, dws, seen?.id as string, seen?.rev as number),
+      ),
+    ).toBe('not_found');
+  });
+
+  it('không bao giờ xóa bản đã duyệt; Staff không bỏ được nháp', async () => {
+    await db.withActor(dws, downer, (tx) =>
+      savePolicyFact(tx, base({ workspaceId: dws, slot: 'dd-b', data: nationwide })),
+    );
+    const approved = (await db.withWorkspace(dws, (tx) => listApprovedPolicyFacts(tx, dws))).find(
+      (r) => r.slot === 'dd-b',
+    );
+    expect(
+      await db.withActor(dws, downer, (tx) =>
+        discardPolicyDraft(tx, dws, approved?.id as string, approved?.rev as number),
+      ),
+    ).toBe('not_found');
+    expect(
+      (await db.withWorkspace(dws, (tx) => listApprovedPolicyFacts(tx, dws))).some(
+        (r) => r.slot === 'dd-b',
+      ),
+    ).toBe(true);
+    await seed('dd-c');
+    const seen = await draft('dd-c');
+    expect(
+      await db.withActor(dws, dstaff, (tx) =>
+        discardPolicyDraft(tx, dws, seen?.id as string, seen?.rev as number),
+      ),
+    ).toBe('not_found');
+    expect(await draft('dd-c')).toBeDefined();
   });
 });

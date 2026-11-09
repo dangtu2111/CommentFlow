@@ -187,6 +187,31 @@ export async function approvePolicyFact(
   return updated.rows.length > 0 ? 'approved' : 'stale';
 }
 
+export type DiscardPolicyDraftResult = 'discarded' | 'not_found' | 'stale';
+
+/**
+ * Owner BỎ một bản NHÁP (đề xuất của máy hoặc bản đã sửa tay), KÈM `rev` đang xem: khóa dòng nháp, so `rev`; lệch (worker vừa làm mới) → 'stale', KHÔNG xóa. KHÔNG bao giờ đụng bản ĐÃ DUYỆT
+ * (khác `deletePolicyFact`). Chạy trong `withActor` của Owner (RLS/trigger là hàng rào thật).
+ */
+export async function discardPolicyDraft(
+  tx: Database,
+  workspaceId: string,
+  id: string,
+  expectedRev: number,
+): Promise<DiscardPolicyDraftResult> {
+  const found = await tx.execute<{ rev: number }>(sql`
+    SELECT rev FROM cf.policy_facts
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'
+       FOR UPDATE`);
+  const row = found.rows[0];
+  if (!row) return 'not_found';
+  if (row.rev !== expectedRev) return 'stale';
+  await tx.execute(
+    sql`DELETE FROM cf.policy_facts WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'`,
+  );
+  return 'discarded';
+}
+
 export async function deletePolicyFact(
   tx: Database,
   workspaceId: string,
