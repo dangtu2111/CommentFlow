@@ -48,6 +48,9 @@ export type ExtractSnapshot = {
   qty: number | null;
   /** Các ý hỏi model tách ra (chẩn đoán chủ đề). */
   asks: string[];
+  /** Chủ đề sự kiện extract trả (enum) và nơi giao khách nêu — để chẩn đoán lệch hành động. */
+  topics: string[];
+  destination: string | null;
 };
 
 export type SampleOutcome =
@@ -126,6 +129,8 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
           color: result.color,
           qty: result.qty,
           asks: [...result.asks],
+          topics: [...result.topics],
+          destination: result.destination,
         };
         return result;
       },

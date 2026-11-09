@@ -388,6 +388,7 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     expect(result.slotDiagnostics?.rejections).toEqual([
       {
         text: 'Giá 99.000đ nhé!',
+        which: 'reply',
         codes: ['digit', 'missing_required:price.1+ship_time'],
       },
     ]);
