@@ -20,6 +20,7 @@ import {
 } from '../budget';
 import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
+import { analyzeGuardRejections, renderGuardAnalysis } from '../guard-analysis';
 import { checkSample, computeMetrics } from '../metrics';
 import { findFlakySamples, renderMultiRun } from '../multi-run';
 import type { ProductionKnowledgeInfo } from '../production/prepare';
@@ -312,7 +313,7 @@ async function runOnce(variantCount: number, runIndex = 1) {
   );
   const slotSection = `${renderFactBreakdown(samples, outcomes, shop.stockDisclosure)}${
     factSlots ? renderSlotReport(samples, outcomes, shop) : ''
-  }`;
+  }${renderGuardAnalysis(analyzeGuardRejections(outcomes.values()))}`;
   writeFileSync(`${base}.md`, report + slotSection);
   writeFileSync(
     `${base}.jsonl`,

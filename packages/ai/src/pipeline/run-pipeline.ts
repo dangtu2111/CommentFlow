@@ -288,7 +288,17 @@ export type TryResult =
       factPlan?: FactPlan | null;
       /** Chẩn đoán đường fact plan (EVAL): số câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG / tổng, và câu được chọn. */
       slotDiagnostics?: SlotDiagnostics;
+      /** Dấu vết guard CHỈ ĐỂ QUAN SÁT (EVAL/chẩn đoán lỗi oan vs thật): không ảnh hưởng quyết định. */
+      guardTrace?: GuardTrace;
     };
+
+/**
+ * Dấu vết bước guard khái niệm (GUARD-SEMANTIC-SUPPORT): bản nháp gốc bị loại vì khẳng định khái niệm mà nguồn ĐÃ DÙNG không nêu — ghi khái niệm bị bắt, câu gốc và các nguồn đã dùng để sau này
+ * kiểm khái niệm đó có nằm ở đoạn nào khác trong `candidates` không (lỗi oan do nguồn khai thiếu). Chỉ quan sát, không đổi hành vi.
+ */
+export type GuardTrace = {
+  concept?: { concepts: string[]; draftReply: string; usedIds: string[] };
+};
 
 /** Chủ đề của một câu/đoạn chữ (dùng cho ý hỏi và cho đoạn kiến thức tìm được). */
 export function topicOf(ask: string): KbGapTopic {
@@ -867,6 +877,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       };
     }
   }
+  let guardTrace: GuardTrace | undefined;
   const usedBy = (d: DraftResult) => found.filter((c) => new Set(d.sources).has(c.id));
   // GUARD-SEMANTIC-SUPPORT: câu khẳng định COD/ship quốc tế/trả góp/… mà nguồn đã dùng KHÔNG nêu (hoặc nguồn nói ngược lại) → KHÔNG gọi LLM soạn lại
   // (giữ ≤ 2 lần gọi LLM/lượt, FR-162): (1) chọn biến thể khác đã có (FR-161) không chứa ý bị loại; (2) không có → câu chuyển hướng THEO MẪU; (3) không còn ý nào để
@@ -877,6 +888,13 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       checkConceptSupport({ reply: text, sources: sourceTexts }).ok;
     const check = checkConceptSupport({ reply: draft.reply, sources: sourceTexts });
     if (!check.ok) {
+      guardTrace = {
+        concept: {
+          concepts: check.violations.map((v) => v.concept),
+          draftReply: draft.reply,
+          usedIds: [...draft.sources],
+        },
+      };
       const variants = draft.variants ?? [];
       const clean = variants.find(supported);
       if (clean !== undefined) {
@@ -1026,6 +1044,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     },
     ...(factPlan === null ? {} : { factPlan }),
     ...(slotDiagnostics ? { slotDiagnostics } : {}),
+    ...(guardTrace ? { guardTrace } : {}),
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,
       decision,
