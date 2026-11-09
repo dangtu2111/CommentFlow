@@ -22,7 +22,8 @@ const DAY_RANGE = /(\d{1,3})\s*(?:-|–|đến|tới|to)\s*(\d{1,3})\s*(?:ngày|
 const DAY_ONE = /(\d{1,3})\s*-?\s*(?:ngày|days?)(?![\p{L}])/giu;
 const SENTENCE_SPLIT = /(?<=[.!?;])\s+|\n+/;
 
-function sentencesOf(text: string): string[] {
+/** Tách văn bản chính sách thành câu (dùng chung với màn hình để liệt kê câu CHƯA phân tách được). */
+export function sentencesOf(text: string): string[] {
   return text
     .replace(/\r\n?/g, '\n')
     .split(SENTENCE_SPLIT)
