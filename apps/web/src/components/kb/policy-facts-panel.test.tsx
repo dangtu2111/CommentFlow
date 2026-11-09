@@ -217,7 +217,7 @@ describe('PolicyFactsPanel', () => {
       approve: async () => {},
       discard: async () => {},
       remove: async () => {},
-      analyze: async () => {},
+      sync: async () => {},
     };
     const draftRow = (needs: boolean) =>
       row({
@@ -278,37 +278,75 @@ describe('PolicyFactsPanel', () => {
       expect(done).toContain('notice.deleted');
     });
 
-    it('khối dữ liệu thô: có văn bản → nút Phân tách tự động hoạt động; chưa có → nút khóa; Staff không có nút; thông báo analyzed kèm số', async () => {
+    it('khối dữ liệu thô: trạng thái đồng bộ Shopify (chưa kết nối / chưa đồng bộ / lỗi / bỏ qua chính sách / số giá trị tự rút) và nút Đồng bộ lại chỉ cho Owner', async () => {
       const render = async (
-        raw: { count: number } | undefined,
+        sync: Record<string, unknown> | null | undefined,
         isOwner: boolean,
-        notice: 'analyzed' | 'no_raw' | null = null,
+        count = 4,
       ) =>
         renderToStaticMarkup(
           await PolicyFactsPanel({
             view: buildPolicyFactsView([]),
             isOwner,
             actions,
-            notice,
-            noticeCount: 3,
-            ...(raw ? { raw } : {}),
+            raw: { count, ...(sync === undefined ? {} : { sync: sync as never }) },
           }),
         );
-      const some = await render({ count: 4 }, true);
-      expect(some).toContain('raw.title');
-      expect(some).toContain('raw.count|{&quot;count&quot;:4}');
-      expect(some).toMatch(/<button type="submit"[^>]*>raw\.analyze/);
-      const none = await render({ count: 0 }, true);
-      expect(none).toContain('raw.empty');
-      expect(none).toMatch(/<button type="button" disabled[^>]*>raw\.analyze/);
-      const staff = await render({ count: 4 }, false);
-      expect(staff).toContain('raw.count');
-      expect(staff).not.toContain('raw.analyze');
-      expect(await render(undefined, false)).not.toContain('raw.title');
-      const analyzed = await render({ count: 4 }, true, 'analyzed');
-      expect(analyzed).toContain('role="status"');
-      expect(analyzed).toContain('notice.analyzed|{&quot;count&quot;:3}');
-      expect(await render({ count: 0 }, true, 'no_raw')).toContain('role="alert"');
+      const at = '2026-11-09T13:12:14.000Z';
+      expect(await render(null, true)).toContain('raw.notConnected');
+      expect(await render({ syncedAt: null, ok: false }, true)).toContain('raw.neverSynced');
+      const failed = await render({ syncedAt: at, ok: false }, true);
+      expect(failed).toContain('raw.lastSync');
+      expect(failed).toContain('raw.syncFailed');
+      expect(await render({ syncedAt: at, ok: true, policiesSkipped: true }, true)).toContain(
+        'raw.policiesSkipped',
+      );
+      const drafted = await render(
+        { syncedAt: at, ok: true, policiesUpdated: 4, factsDrafted: 3 },
+        true,
+      );
+      expect(drafted).toContain('raw.policiesLoaded|{&quot;count&quot;:4}');
+      expect(drafted).toContain('raw.factsDrafted|{&quot;count&quot;:3}');
+      expect(drafted).toContain('20:12:14');
+      expect(
+        await render({ syncedAt: at, ok: true, policiesUpdated: 4, factsDrafted: 0 }, true),
+      ).toContain('raw.factsNone');
+      expect(
+        await render({ syncedAt: at, ok: true, policiesUpdated: 4, factsSkipped: true }, true),
+      ).toContain('raw.factsSkipped');
+      // Đồng bộ trước khi có bước tự rút: không có số → gợi ý đồng bộ lại.
+      expect(await render({ syncedAt: at, ok: true, policiesUpdated: 4 }, true)).toContain(
+        'raw.resyncHint',
+      );
+      expect(drafted).toMatch(/<button type="submit"[^>]*>raw\.resync/);
+      expect(await render({ syncedAt: at, ok: true }, false)).not.toMatch(/raw\.resync(?!Hint)/);
+      // Chưa kết nối: không có nút Đồng bộ lại.
+      expect(await render(null, true)).not.toMatch(/raw\.resync(?!Hint)/);
+      // Chưa nối thao tác (route mẫu): nút khóa.
+      const locked = renderToStaticMarkup(
+        await PolicyFactsPanel({
+          view: buildPolicyFactsView([]),
+          isOwner: true,
+          raw: { count: 1, sync: { syncedAt: at, ok: true } },
+        }),
+      );
+      expect(locked).toMatch(/<button type="button" disabled[^>]*>raw\.resync/);
+    });
+
+    it('thông báo sync_queued là status; sync_recent là cảnh báo', async () => {
+      const render = async (notice: 'sync_queued' | 'sync_recent') =>
+        renderToStaticMarkup(
+          await PolicyFactsPanel({
+            view: buildPolicyFactsView([]),
+            isOwner: true,
+            actions,
+            notice,
+          }),
+        );
+      const queued = await render('sync_queued');
+      expect(queued).toContain('role="status"');
+      expect(queued).toContain('notice.sync_queued');
+      expect(await render('sync_recent')).toContain('role="alert"');
     });
 
     it('danh sách văn bản thô: Owner thấy loại, tiêu đề, đoạn đầu; Staff và danh sách rỗng thì không', async () => {
@@ -333,19 +371,6 @@ describe('PolicyFactsPanel', () => {
       expect(await render({ count: 3 }, true)).not.toContain('raw.list');
     });
 
-    it('thông báo analyzed_none (không có giá trị mới) là status', async () => {
-      const out = renderToStaticMarkup(
-        await PolicyFactsPanel({
-          view: buildPolicyFactsView([]),
-          isOwner: true,
-          actions,
-          notice: 'analyzed_none',
-        }),
-      );
-      expect(out).toContain('role="status"');
-      expect(out).toContain('notice.analyzed_none');
-    });
-
     it('đề xuất đã rõ điều kiện → không có ô tick; Staff không có form', async () => {
       const out = await withActions([draftRow(false)], true);
       expect(out).not.toContain('name="confirm"');
@@ -360,5 +385,45 @@ describe('PolicyFactsPanel', () => {
       expect(stale).toContain('role="alert"');
       expect(stale).toContain('notice.stale');
     });
+  });
+
+  it('câu chưa phân tách: mỗi thẻ có khối gập đúng số câu; mục "Thông tin khác" khi có câu ngoài 4 chủ đề; không có thì không hiện', async () => {
+    const entry = (sentence: string) => ({ title: 'Chính sách vận chuyển', sentence });
+    const leftover = {
+      byCard: {
+        ship: [entry('Phí giao hàng nội thành là 20.000đ.'), entry('Shop giao hàng cả cuối tuần.')],
+        returns: [],
+        warranty: [entry('Sản phẩm được bảo hành tại cửa hàng.')],
+        payment: [],
+        other: [entry('Shop mở cửa từ 8 giờ sáng.')],
+      },
+      total: 4,
+    };
+    const out = renderToStaticMarkup(
+      await PolicyFactsPanel({ view: buildPolicyFactsView([]), isOwner: true, leftover }),
+    );
+    expect(out).toContain('leftover.title|{&quot;count&quot;:2}');
+    expect(out).toContain('leftover.title|{&quot;count&quot;:1}');
+    expect(out).toContain('Phí giao hàng nội thành là 20.000đ.');
+    expect(out).toContain('Sản phẩm được bảo hành tại cửa hàng.');
+    expect(out).toContain('leftover.otherTitle');
+    expect(out).toContain('Shop mở cửa từ 8 giờ sáng.');
+    const none = renderToStaticMarkup(
+      await PolicyFactsPanel({
+        view: buildPolicyFactsView([]),
+        isOwner: true,
+        leftover: {
+          byCard: { ship: [], returns: [], warranty: [], payment: [], other: [] },
+          total: 0,
+        },
+      }),
+    );
+    expect(none).not.toContain('leftover.title');
+    expect(none).not.toContain('leftover.otherTitle');
+    expect(
+      renderToStaticMarkup(
+        await PolicyFactsPanel({ view: buildPolicyFactsView([]), isOwner: false }),
+      ),
+    ).not.toContain('leftover.');
   });
 });

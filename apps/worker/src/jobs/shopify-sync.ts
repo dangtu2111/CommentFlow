@@ -58,7 +58,9 @@ export type ShopifySyncDeps = {
     policies: Array<{ type: string; title: string; content: string }>,
   ) => Promise<{ policiesUpdated: number; policiesRemoved: number }>;
   /** Đề xuất chính sách có cấu trúc (nháp, Owner duyệt) từ văn bản chính sách; LỖI không làm hỏng việc nạp. Không truyền = bỏ qua. */
-  suggestPolicyFacts?: (policies: Array<{ type: string; content: string }>) => Promise<void>;
+  suggestPolicyFacts?: (
+    policies: Array<{ type: string; content: string }>,
+  ) => Promise<number | undefined>;
   buildPlan: (catalog: ShopifyCatalog) => ImportProductPlan[];
   apply: (plan: ImportProductPlan[]) => Promise<ShopifySyncSummary>;
   record: (result: ShopifySyncResult, summary: ShopifySyncDetail) => Promise<void>;
@@ -155,18 +157,25 @@ export function currencyWarning(
 }
 
 /** Đề xuất nháp chính sách có cấu trúc: LỖI chỉ cảnh báo (đề xuất là phần phụ, không được làm hỏng việc nạp). */
+type PolicyFactsDetail = { policyFactsDrafted?: number; policyFactsSkipped?: true };
+type PolicySyncDetail =
+  | ({ policiesUpdated: number } & PolicyFactsDetail)
+  | { policiesSkipped: true };
+
 async function suggestFromPolicies(
   deps: ShopifySyncDeps,
   policies: Array<{ type: string; content: string }>,
-): Promise<void> {
-  if (!deps.suggestPolicyFacts) return;
+): Promise<PolicyFactsDetail> {
+  if (!deps.suggestPolicyFacts) return {};
   try {
-    await deps.suggestPolicyFacts(policies);
+    const drafted = await deps.suggestPolicyFacts(policies);
+    return typeof drafted === 'number' ? { policyFactsDrafted: drafted } : {};
   } catch (error) {
     deps.warn({
       event: 'shopify_policy_suggestions_skipped',
       reason: isPlatformError(error) ? error.code : 'unknown',
     });
+    return { policyFactsSkipped: true };
   }
 }
 
@@ -178,7 +187,7 @@ async function syncPolicies(
   deps: ShopifySyncDeps,
   shopDomain: string,
   accessToken: string,
-): Promise<{ policiesUpdated: number } | { policiesSkipped: true }> {
+): Promise<PolicySyncDetail> {
   try {
     const policies = await deps.fetchPolicies(shopDomain, accessToken);
     const plain = policies.map((policy) => ({
@@ -187,8 +196,8 @@ async function syncPolicies(
       content: htmlToPlainText(policy.body),
     }));
     const applied = await deps.applyPolicies(plain);
-    await suggestFromPolicies(deps, plain);
-    return { policiesUpdated: applied.policiesUpdated };
+    const suggested = await suggestFromPolicies(deps, plain);
+    return { policiesUpdated: applied.policiesUpdated, ...suggested };
   } catch (error) {
     deps.warn({
       event: 'shopify_policies_skipped',
@@ -272,7 +281,7 @@ export function createShopifySyncHandler(deps: {
               'shopify_suggested',
               suggestPolicyFacts(policies.map((policy) => policy.content).join('\n\n')),
               'shopify:policies',
-            ).then(() => undefined),
+            ).then((result) => result.drafted),
           ),
         buildPlan: buildShopifyImportPlan,
         apply: (plan) =>

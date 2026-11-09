@@ -3337,9 +3337,8 @@
       "unavailable": "Chưa thực hiện được. Thử lại sau ít phút.",
       "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát.",
       "deleted": "Đã xóa giá trị. AI không còn dùng giá trị này.",
-      "analyzed": "Đã phân tách: {count} giá trị nháp từ văn bản chính sách. Hãy xem và duyệt bên dưới.",
-      "no_raw": "Chưa có văn bản chính sách thô để phân tách (kết nối Shopify để nạp chính sách).",
-      "analyzed_none": "Không có giá trị mới: các văn bản chưa nêu số ngày/tháng/phí rõ ràng, hoặc đã khớp giá trị đang duyệt. Có thể nhập tay bằng Thêm giá trị."
+      "sync_queued": "Đã xếp lệnh đồng bộ Shopify. Vài phút sau tải lại trang để xem các giá trị tự rút.",
+      "sync_recent": "Vừa đồng bộ gần đây, hãy chờ một lát rồi thử lại."
     },
     "form": {
       "pageTitle": {
@@ -3407,12 +3406,21 @@
     },
     "updatedAt": "Cập nhật lúc {time}",
     "raw": {
-      "title": "Từ dữ liệu thô sang giá trị có cấu trúc",
-      "body": "Hệ thống đọc các văn bản chính sách đã nạp (ví dụ từ Shopify) và rút ra giá trị có cấu trúc kèm câu gốc làm bằng chứng. Kết quả chỉ là bản nháp, chưa áp dụng cho khách cho đến khi Owner duyệt.",
+      "title": "Dữ liệu thô từ Shopify — tự phân tách khi đồng bộ",
+      "body": "Khi đồng bộ Shopify, hệ thống tự đọc mọi chính sách, rút giá trị có cấu trúc vào từng thẻ bên dưới (kèm câu gốc làm bằng chứng) và liệt kê phần chưa phân tách được. Kết quả là bản nháp chờ Owner duyệt.",
       "count": "{count} văn bản chính sách thô đã nạp",
-      "empty": "Chưa có văn bản chính sách thô. Kết nối Shopify ở trang Nguồn dữ liệu để nạp.",
-      "analyze": "Phân tách tự động",
       "list": "Xem văn bản thô đã nạp",
+      "notConnected": "Chưa kết nối Shopify. Kết nối ở trang Nguồn dữ liệu để nạp chính sách.",
+      "neverSynced": "Chưa đồng bộ lần nào.",
+      "lastSync": "Đồng bộ gần nhất: {time}",
+      "syncFailed": "Lần đồng bộ gần nhất chưa thành công.",
+      "policiesLoaded": "{count} chính sách đã nạp",
+      "policiesSkipped": "Chưa nạp được chính sách (thiếu quyền read_legal_policies hoặc lỗi tạm).",
+      "factsDrafted": "{count} giá trị nháp đã tự rút",
+      "factsNone": "Chưa có giá trị rõ ràng để tự rút (xem các câu chưa phân tách bên dưới).",
+      "factsSkipped": "Bước tự rút giá trị bị bỏ qua do lỗi tạm.",
+      "resyncHint": "Đã đồng bộ trước khi có bước tự rút? Hãy đồng bộ lại.",
+      "resync": "Đồng bộ lại từ Shopify",
       "kinds": {
         "shipping": "Vận chuyển",
         "return": "Đổi trả",
@@ -3420,6 +3428,12 @@
         "payment": "Thanh toán",
         "other": "Khác"
       }
+    },
+    "leftover": {
+      "title": "Thông tin khác từ văn bản thô ({count} câu chưa phân tách)",
+      "hint": "Các câu dưới đây có trong văn bản chính sách đã nạp nhưng chưa thành giá trị có cấu trúc (không nêu số/điều kiện rõ ràng hoặc thuộc chủ đề khác). AI chưa dùng chúng để trả lời bằng sự kiện; bạn có thể nhập giá trị tương ứng bằng Sửa tay / Thêm giá trị.",
+      "otherTitle": "Thông tin khác",
+      "otherDesc": "Các câu trong văn bản thô không thuộc ship, đổi trả, bảo hành, thanh toán (ví dụ giờ làm việc, liên hệ, quyền riêng tư)."
     }
   }
 }

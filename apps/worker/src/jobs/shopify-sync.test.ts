@@ -174,6 +174,32 @@ describe('runShopifySync', () => {
       'ok',
       expect.not.objectContaining({ policiesSkipped: true }),
     );
+    // Đề xuất lỗi được ghi vào kết quả đồng bộ để trang Chính sách báo rõ.
+    expect(record).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ policiesUpdated: 1, policyFactsSkipped: true }),
+    );
+  });
+
+  it('ghi số giá trị chính sách đã tự rút vào kết quả đồng bộ (kể cả 0); không có bộ đề xuất thì không ghi', async () => {
+    const withDrafts = setup({ suggestPolicyFacts: async () => 3 });
+    await runShopifySync(withDrafts.deps);
+    expect(withDrafts.record).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ policiesUpdated: 1, policyFactsDrafted: 3 }),
+    );
+    const none = setup({ suggestPolicyFacts: async () => 0 });
+    await runShopifySync(none.deps);
+    expect(none.record).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ policyFactsDrafted: 0 }),
+    );
+    const withoutSuggester = setup({});
+    await runShopifySync(withoutSuggester.deps);
+    expect(withoutSuggester.record).toHaveBeenCalledWith(
+      'ok',
+      expect.not.objectContaining({ policyFactsDrafted: expect.anything() }),
+    );
   });
 
   it('nạp chính sách vào DB lỗi → cũng chỉ bỏ qua chính sách', async () => {
