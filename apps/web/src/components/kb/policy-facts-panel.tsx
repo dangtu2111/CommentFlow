@@ -21,11 +21,23 @@ export type PolicyActions = {
   approve: (data: FormData) => Promise<void>;
   discard: (data: FormData) => Promise<void>;
   remove: (data: FormData) => Promise<void>;
-  analyze: () => Promise<void>;
+  sync: () => Promise<void>;
 };
 
 /** Dữ liệu thô đã nạp (chính sách văn bản); không truyền = không hiển thị (Staff không đọc được). */
+/** Kết quả lần đồng bộ Shopify gần nhất (từ `shopify_stores`); null = chưa kết nối. */
+export type ShopifySyncStatus = {
+  syncedAt: string | null;
+  ok: boolean;
+  policiesUpdated?: number;
+  policiesSkipped?: boolean;
+  factsDrafted?: number;
+  factsSkipped?: boolean;
+};
+
 export type RawPolicySummary = {
+  /** Trạng thái đồng bộ Shopify; thiếu = chưa kết nối. */
+  sync?: ShopifySyncStatus | null;
   count: number;
   /** Từng văn bản thô (loại, tiêu đề, đoạn đầu) để Owner thấy hệ thống đã nạp gì. */
   items?: ReadonlyArray<{ kind: string; title: string; excerpt: string }>;
@@ -51,8 +63,7 @@ const isSuccess = (notice: PolicyNotice): boolean =>
   notice === 'approved' ||
   notice === 'discarded' ||
   notice === 'deleted' ||
-  notice === 'analyzed' ||
-  notice === 'analyzed_none';
+  notice === 'sync_queued';
 
 /** Mốc "Cập nhật lúc …" theo giờ Việt Nam; thiếu hoặc sai → không hiện. */
 function updatedText(row: PolicyFactRowView, t: T): string | null {
@@ -601,7 +612,27 @@ function EmptyState({ t }: { t: T }) {
   );
 }
 
-/** Cầu nối "dữ liệu thô → giá trị AI đã phân tách": số văn bản thô đã nạp và nút phân tách tự động (Owner). */
+/** Các dòng trạng thái đồng bộ Shopify (chưa kết nối / chưa đồng bộ / lỗi / số chính sách đã nạp và số giá trị đã tự rút). */
+function syncStatusLines(raw: RawPolicySummary, t: T): string[] {
+  const sync = raw.sync;
+  if (!sync) return [t('raw.notConnected')];
+  if (sync.syncedAt === null) return [t('raw.neverSynced')];
+  const date = new Date(sync.syncedAt);
+  const time = Number.isNaN(date.getTime())
+    ? sync.syncedAt
+    : date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false });
+  const lines = [t('raw.lastSync', { time })];
+  if (!sync.ok) return [...lines, t('raw.syncFailed')];
+  if (sync.policiesSkipped) return [...lines, t('raw.policiesSkipped')];
+  lines.push(t('raw.policiesLoaded', { count: sync.policiesUpdated ?? raw.count }));
+  if (sync.factsSkipped) lines.push(t('raw.factsSkipped'));
+  else if (sync.factsDrafted === undefined) lines.push(t('raw.resyncHint'));
+  else if (sync.factsDrafted > 0) lines.push(t('raw.factsDrafted', { count: sync.factsDrafted }));
+  else lines.push(t('raw.factsNone'));
+  return lines;
+}
+
+/** Dữ liệu thô từ Shopify: trạng thái lần đồng bộ gần nhất (việc phân tách do job đồng bộ làm), số văn bản thô và nút Đồng bộ lại (Owner). */
 function RawDataCard({
   raw,
   isOwner,
@@ -613,6 +644,7 @@ function RawDataCard({
   actions: PolicyActions | undefined;
   t: T;
 }) {
+  const status = syncStatusLines(raw, t);
   return (
     <section
       aria-labelledby="policy-raw-data"
@@ -623,10 +655,26 @@ function RawDataCard({
           {t('raw.title')}
         </h2>
         <p className="font-body-sm text-body-sm text-on-surface-variant">{t('raw.body')}</p>
-        <p className="font-label-md text-label-md text-primary">
-          {raw.count > 0 ? t('raw.count', { count: raw.count }) : t('raw.empty')}
-        </p>
+        <ul className="font-label-md text-label-md text-primary">
+          {status.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
       </div>
+      {isOwner && raw.sync ? (
+        actions ? (
+          <form action={actions.sync}>
+            <button
+              type="submit"
+              className="rounded-lg bg-secondary-container px-3 py-1.5 font-label-md text-label-md text-on-secondary-container"
+            >
+              {t('raw.resync')}
+            </button>
+          </form>
+        ) : (
+          <DisabledAction t={t}>{t('raw.resync')}</DisabledAction>
+        )
+      ) : null}
       {isOwner && raw.items && raw.items.length > 0 ? (
         <details className="basis-full">
           <summary className="cursor-pointer font-label-md text-label-md text-primary">
@@ -649,20 +697,6 @@ function RawDataCard({
             ))}
           </ul>
         </details>
-      ) : null}
-      {isOwner ? (
-        actions && raw.count > 0 ? (
-          <form action={actions.analyze}>
-            <button
-              type="submit"
-              className="rounded-lg bg-secondary-container px-3 py-1.5 font-label-md text-label-md text-on-secondary-container"
-            >
-              {t('raw.analyze')}
-            </button>
-          </form>
-        ) : (
-          <DisabledAction t={t}>{t('raw.analyze')}</DisabledAction>
-        )
       ) : null}
     </section>
   );
@@ -703,7 +737,6 @@ export async function PolicyFactsPanel({
   isOwner,
   actions,
   notice = null,
-  noticeCount = 0,
   raw,
   leftover,
 }: {
@@ -711,7 +744,6 @@ export async function PolicyFactsPanel({
   isOwner: boolean;
   actions?: PolicyActions;
   notice?: PolicyNotice | null;
-  noticeCount?: number;
   raw?: RawPolicySummary;
   leftover?: PolicyLeftover;
 }) {
@@ -728,7 +760,7 @@ export async function PolicyFactsPanel({
               : 'bg-error-container text-on-error-container'
           }`}
         >
-          {t(`notice.${notice}`, { count: noticeCount })}
+          {t(`notice.${notice}`)}
         </p>
       ) : null}
       <section className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">

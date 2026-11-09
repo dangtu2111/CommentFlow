@@ -29,6 +29,9 @@ export type ShopifySyncDetail = Partial<ShopifySyncSummary> & {
   /** Số chính sách cửa hàng đã nạp/cập nhật; `policiesSkipped` = bỏ qua (thiếu quyền read_legal_policies hoặc lỗi tạm). */
   policiesUpdated?: number;
   policiesSkipped?: true;
+  /** Số giá trị chính sách có cấu trúc (nháp) vừa tự rút từ văn bản chính sách; `policyFactsSkipped` = bước rút bị bỏ qua do lỗi tạm. */
+  policyFactsDrafted?: number;
+  policyFactsSkipped?: true;
   /**
    * Cửa hàng dùng tiền tệ KHÁC VND (mã 3 chữ cái hoa, hoặc `OTHER`): giá được lưu theo đơn vị nhỏ nhất của tiền tệ gốc và AI báo giá
    * đúng như nguồn, KHÔNG quy đổi (Q-SFP1). Không có khóa này = VND.
