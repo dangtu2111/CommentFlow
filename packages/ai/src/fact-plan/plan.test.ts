@@ -412,3 +412,21 @@ describe('fact plan — tồn kho khi sản phẩm có biến thể mà chưa ch
     expect(stockOf({ ...variantsOf([5]), stockStale: true })?.status).toBe('unknown');
   });
 });
+
+describe('fact plan — sản phẩm chỉ có MỘT biến thể', () => {
+  it('khách không nêu size/màu vẫn dùng biến thể duy nhất (tồn kho đúng số của nó)', () => {
+    const one: PlanProduct = {
+      ...shirt,
+      stock: 3,
+      variants: [
+        { label: 'Xanh, M', attrsNorm: { color: 'blue', size: 'm' }, priceMinor: 320000, stock: 3 },
+      ],
+    };
+    const p = plan({
+      products: [one],
+      topics: ['stock'],
+      stock: { disclose: 'count', lowAt: null },
+    });
+    expect(byId(p, 'stock.1')).toMatchObject({ value: { type: 'stock', display: 'count', n: 3 } });
+  });
+});

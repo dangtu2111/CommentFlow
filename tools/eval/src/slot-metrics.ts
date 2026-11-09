@@ -1,6 +1,6 @@
 import { suggestPolicyFacts } from '@flow/ai';
 import type { EvalSample } from './dataset';
-import { isStockTerm, type StockDisclosure, termPresent } from './metrics';
+import { isStockSample, type StockDisclosure, termPresent } from './metrics';
 import type { SampleOutcome } from './run-sample';
 
 /** Tổng hợp đường fact plan của MỘT lượt đo (`--fact-slots`): từ chối cứng, sự kiện bắt buộc, số ngoài chỗ giữ chỗ, hành động. */
@@ -179,12 +179,14 @@ export function renderFactBreakdown(
   mode: StockDisclosure,
 ): string {
   const tally = { all: [0, 0], stock: [0, 0], other: [0, 0] } as Record<string, [number, number]>;
+  let unlabeled = 0;
   for (const sample of samples) {
     const must = sample.expected.mustContain;
     const outcome = outcomes.get(sample.id);
     if (must.length === 0 || !outcome) continue;
     const ok = outcome.ok && must.every((term) => termPresent(sample, outcome.reply, term, mode));
-    const group = must.some((term) => isStockTerm(sample, term)) ? 'stock' : 'other';
+    if (sample.expected.factKinds === undefined) unlabeled += 1;
+    const group = isStockSample(sample) ? 'stock' : 'other';
     for (const key of ['all', group]) {
       (tally[key] as [number, number])[1] += 1;
       if (ok) (tally[key] as [number, number])[0] += 1;
@@ -199,6 +201,9 @@ export function renderFactBreakdown(
     row('Tổng', tally.all as [number, number]),
     row('Riêng tồn kho', tally.stock as [number, number]),
     row('Ngoài tồn kho', tally.other as [number, number]),
+    unlabeled > 0
+      ? `- Lưu ý: ${unlabeled} mẫu có sự kiện bắt buộc CHƯA có nhãn gold expected.factKinds — được tính vào "ngoài tồn kho"; chủ dự án gán nhãn để tách đúng.`
+      : '',
     '',
   ].join(String.fromCharCode(10));
 }

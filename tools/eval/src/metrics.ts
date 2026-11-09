@@ -56,23 +56,23 @@ function checkExtract(
 export type StockDisclosure = 'quantity' | 'status';
 export type CheckOptions = { stockDisclosure?: StockDisclosure };
 
-const STOCK_QUESTION = /(còn\s|còn$|con\s(ko|hk|hg|may|k)(?![\p{L}])|stock|available)/iu;
-const NOT_STOCK = /(đổi|doi|return|exchange)/i;
 const IN_STOCK_REPLY = /(còn hàng|hết hàng|sắp hết|in stock|out of stock|sold out|available)/i;
 
-/** Từ khóa bắt buộc là SỐ LƯỢNG TỒN: số nguyên ≤ 3 chữ số trong mẫu hỏi tồn kho (không phải đổi trả). Chỉ để chấm theo chế độ nêu tồn của shop; KHÔNG sửa nhãn. */
-export function isStockTerm(sample: EvalSample, term: string): boolean {
-  return /^\d{1,3}$/.test(term) && STOCK_QUESTION.test(sample.text) && !NOT_STOCK.test(sample.text);
+/** Mẫu có sự kiện bắt buộc loại tồn kho — THEO NHÃN GOLD `expected.factKinds` (không đoán từ chữ trong câu hỏi). */
+export function isStockSample(sample: EvalSample): boolean {
+  return sample.expected.factKinds?.includes('stock') ?? false;
 }
 
-/** Chế độ `status`: câu nói "còn hàng/hết hàng" đạt cho từ khóa số lượng tồn; chế độ `quantity`: phải có đúng con số. */
+/** Từ khóa số (≤ 3 chữ số) của mẫu gắn nhãn tồn kho, chế độ `status`: câu nói "còn hàng/hết hàng" đạt; chế độ `quantity` hoặc mẫu không gắn nhãn: phải có đúng từ khóa. */
 export function termPresent(
   sample: EvalSample,
   reply: string,
   term: string,
   mode: StockDisclosure,
 ): boolean {
-  if (mode === 'status' && isStockTerm(sample, term)) return IN_STOCK_REPLY.test(reply);
+  if (mode === 'status' && isStockSample(sample) && /^\d{1,3}$/.test(term)) {
+    return IN_STOCK_REPLY.test(reply);
+  }
   return includesFolded(reply, term);
 }
 

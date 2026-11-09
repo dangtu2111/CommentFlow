@@ -32,6 +32,10 @@ function chosenVariant(
   product: PlanProduct,
   attrs: Record<string, string> | null | undefined,
 ): PlanVariant | null {
+  // Sản phẩm chỉ có MỘT biến thể: khách không cần chọn — chính nó.
+  if (product.variants.length === 1 && (!attrs || Object.keys(attrs).length === 0)) {
+    return product.variants[0] as PlanVariant;
+  }
   if (!attrs || Object.keys(attrs).length === 0) return null;
   const matches = product.variants.filter((variant) =>
     Object.entries(attrs).every(([key, value]) => variant.attrsNorm[key] === value),

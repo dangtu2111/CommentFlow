@@ -123,6 +123,8 @@ export type FillResult = {
 
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 
+const DUPLICATE_CON = /(?<![\p{L}\p{N}])(còn)\s+còn(?![\p{L}\p{N}])/giu;
+
 export function fillSlots(template: string, plan: FactPlan, options: { lang: Lang }): FillResult {
   const byId = new Map(plan.facts.map((fact) => [fact.id, fact]));
   const missing: string[] = [];
@@ -134,7 +136,10 @@ export function fillSlots(template: string, plan: FactPlan, options: { lang: Lan
     if (out !== null && !rendered.includes(out)) rendered.push(out);
     return out;
   };
-  const fillText = (text: string) => text.replace(SLOT, (whole, id: string) => render(id) ?? whole);
+  // Lời dẫn của bộ soạn + cụm điền có thể lặp từ ("hiện còn" + "còn 5 sản phẩm"): gộp "còn còn" → "còn" (chỉ chữ, không đụng giá trị đã điền).
+  const dedupe = (text: string) => text.replace(DUPLICATE_CON, '$1');
+  const fillText = (text: string) =>
+    dedupe(text.replace(SLOT, (whole, id: string) => render(id) ?? whole));
 
   const claims: Claim[] = [];
   const sourceIds: string[] = [];

@@ -203,3 +203,13 @@ describe('fillSlots — điều kiện/phạm vi luôn được ghép vào câu 
     );
   });
 });
+
+describe('fillSlots — gộp từ "còn" lặp do lời dẫn + cụm điền', () => {
+  const p = planOf(fact('stock.1', 'stock', { type: 'stock', display: 'count', n: 5 }));
+  it('"hiện còn {fact}" → "hiện còn 5 sản phẩm" (không "còn còn")', () => {
+    expect(fill('Áo hiện còn {fact:stock.1} bạn nhé.', p).text).toBe(
+      'Áo hiện còn 5 sản phẩm bạn nhé.',
+    );
+    expect(fill('Áo hiện {fact:stock.1}.', p).text).toBe('Áo hiện còn 5 sản phẩm.');
+  });
+});

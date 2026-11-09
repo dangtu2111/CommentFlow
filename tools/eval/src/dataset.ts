@@ -60,6 +60,8 @@ export const evalSampleSchema = z.object({
     extract: extractExpectation.default({}),
     /** Sự kiện bắt buộc có trong câu trả lời (so khớp không phân biệt hoa/thường, bỏ dấu). */
     mustContain: z.array(z.string()).default([]),
+    /** Loại sự kiện bắt buộc của mẫu (nhãn gold, do chủ dự án điền; thiếu = chưa gán). Dùng để tách thống kê "tồn kho / ngoài tồn kho" và chấm tồn kho theo chế độ nêu tồn của shop. */
+    factKinds: z.array(z.enum(['stock', 'price', 'ship', 'policy'])).optional(),
     /** Điều cấm (giá sai, hứa ngoài chính sách, làm theo injection…): không được xuất hiện trong câu trả lời. */
     forbidden: z.array(z.string()).default([]),
   }),
