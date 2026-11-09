@@ -24,7 +24,11 @@ export type PolicyActions = {
 };
 
 /** Dữ liệu thô đã nạp (chính sách văn bản); không truyền = không hiển thị (Staff không đọc được). */
-export type RawPolicySummary = { count: number };
+export type RawPolicySummary = {
+  count: number;
+  /** Từng văn bản thô (loại, tiêu đề, đoạn đầu) để Owner thấy hệ thống đã nạp gì. */
+  items?: ReadonlyArray<{ kind: string; title: string; excerpt: string }>;
+};
 
 type T = (key: string, values?: Record<string, string | number>) => string;
 
@@ -46,7 +50,8 @@ const isSuccess = (notice: PolicyNotice): boolean =>
   notice === 'approved' ||
   notice === 'discarded' ||
   notice === 'deleted' ||
-  notice === 'analyzed';
+  notice === 'analyzed' ||
+  notice === 'analyzed_none';
 
 /** Mốc "Cập nhật lúc …" theo giờ Việt Nam; thiếu hoặc sai → không hiện. */
 function updatedText(row: PolicyFactRowView, t: T): string | null {
@@ -588,6 +593,29 @@ function RawDataCard({
           {raw.count > 0 ? t('raw.count', { count: raw.count }) : t('raw.empty')}
         </p>
       </div>
+      {isOwner && raw.items && raw.items.length > 0 ? (
+        <details className="basis-full">
+          <summary className="cursor-pointer font-label-md text-label-md text-primary">
+            {t('raw.list')}
+          </summary>
+          <ul className="mt-space-sm space-y-space-sm">
+            {raw.items.map((item) => (
+              <li
+                key={`${item.kind}-${item.title}`}
+                className="rounded-lg bg-surface-container-low p-space-md"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Chip tone={CHIP_NEUTRAL}>{t(`raw.kinds.${item.kind}`)}</Chip>
+                  <span className="font-title-sm text-title-sm text-on-surface">{item.title}</span>
+                </div>
+                <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
+                  {item.excerpt}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
       {isOwner ? (
         actions && raw.count > 0 ? (
           <form action={actions.analyze}>

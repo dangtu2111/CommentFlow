@@ -3338,7 +3338,8 @@
       "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát.",
       "deleted": "Đã xóa giá trị. AI không còn dùng giá trị này.",
       "analyzed": "Đã phân tách: {count} giá trị nháp từ văn bản chính sách. Hãy xem và duyệt bên dưới.",
-      "no_raw": "Chưa có văn bản chính sách thô để phân tách (kết nối Shopify để nạp chính sách)."
+      "no_raw": "Chưa có văn bản chính sách thô để phân tách (kết nối Shopify để nạp chính sách).",
+      "analyzed_none": "Không có giá trị mới: các văn bản chưa nêu số ngày/tháng/phí rõ ràng, hoặc đã khớp giá trị đang duyệt. Có thể nhập tay bằng Thêm giá trị."
     },
     "form": {
       "pageTitle": {
@@ -3409,7 +3410,15 @@
       "body": "Hệ thống đọc các văn bản chính sách đã nạp (ví dụ từ Shopify) và rút ra giá trị có cấu trúc kèm câu gốc làm bằng chứng. Kết quả chỉ là bản nháp, chưa áp dụng cho khách cho đến khi Owner duyệt.",
       "count": "{count} văn bản chính sách thô đã nạp",
       "empty": "Chưa có văn bản chính sách thô. Kết nối Shopify ở trang Nguồn dữ liệu để nạp.",
-      "analyze": "Phân tách tự động"
+      "analyze": "Phân tách tự động",
+      "list": "Xem văn bản thô đã nạp",
+      "kinds": {
+        "shipping": "Vận chuyển",
+        "return": "Đổi trả",
+        "warranty": "Bảo hành",
+        "payment": "Thanh toán",
+        "other": "Khác"
+      }
     }
   }
 }

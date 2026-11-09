@@ -155,7 +155,7 @@ export async function savePolicyValueAction(data: FormData): Promise<never> {
 
 /**
  * Phân tách DỮ LIỆU THÔ (chính sách văn bản đã nạp) thành giá trị có cấu trúc: đọc `policy_items`, chạy bộ đề xuất thuần, làm mới các bản nháp nguồn `text_suggested` (không đụng bản đã duyệt hay
- * nháp Owner đã sửa tay). Chỉ Owner. Kết quả: `?pn=analyzed&pc=<số nháp>`; chưa có văn bản thô → `no_raw`.
+ * nháp Owner đã sửa tay). Chỉ Owner. Kết quả: `?pn=analyzed&pc=<số nháp>`; không có giá trị mới → `analyzed_none`; chưa có văn bản thô → `no_raw`.
  */
 export async function analyzePolicyTextAction(): Promise<never> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
@@ -174,7 +174,7 @@ export async function analyzePolicyTextAction(): Promise<never> {
         suggestions,
         'policy_items',
       );
-      return `${BACK}?pn=analyzed&pc=${drafted}`;
+      return drafted === 0 ? `${BACK}?pn=analyzed_none` : `${BACK}?pn=analyzed&pc=${drafted}`;
     });
   } catch {
     console.error(JSON.stringify({ event: 'policy_facts_analyze_failed' }));

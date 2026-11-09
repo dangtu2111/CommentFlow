@@ -10,6 +10,7 @@ export const POLICY_NOTICES = [
   'discarded',
   'deleted',
   'analyzed',
+  'analyzed_none',
   'no_raw',
   'stale',
   'needs_review',

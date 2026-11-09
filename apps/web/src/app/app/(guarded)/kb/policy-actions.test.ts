@@ -231,6 +231,12 @@ describe('analyzePolicyTextAction', () => {
     );
   });
 
+  it('có văn bản nhưng không rút được/không có nháp mới → analyzed_none', async () => {
+    mocks.items.mockResolvedValue([item('Shop luôn hỗ trợ khách hàng tận tình.')]);
+    mocks.refresh.mockResolvedValue({ drafted: 0, removed: 0 });
+    expect(await redirectOf(analyzePolicyTextAction())).toBe('/app/kb/policies?pn=analyzed_none');
+  });
+
   it('chưa có văn bản thô → no_raw, không ghi', async () => {
     mocks.items.mockResolvedValue([item('   ')]);
     expect(await redirectOf(analyzePolicyTextAction())).toBe('/app/kb/policies?pn=no_raw');

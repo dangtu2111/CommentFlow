@@ -311,6 +311,41 @@ describe('PolicyFactsPanel', () => {
       expect(await render({ count: 0 }, true, 'no_raw')).toContain('role="alert"');
     });
 
+    it('danh sách văn bản thô: Owner thấy loại, tiêu đề, đoạn đầu; Staff và danh sách rỗng thì không', async () => {
+      const raw = {
+        count: 2,
+        items: [
+          { kind: 'shipping', title: 'Chính sách vận chuyển', excerpt: 'Giao toàn quốc 2-4 ngày' },
+          { kind: 'return', title: 'Chính sách đổi trả', excerpt: 'Đổi trả trong 7 ngày' },
+        ],
+      };
+      const render = async (r: typeof raw | { count: number }, isOwner: boolean) =>
+        renderToStaticMarkup(
+          await PolicyFactsPanel({ view: buildPolicyFactsView([]), isOwner, actions, raw: r }),
+        );
+      const owner = await render(raw, true);
+      expect(owner).toContain('raw.list');
+      expect(owner).toContain('Chính sách vận chuyển');
+      expect(owner).toContain('Giao toàn quốc 2-4 ngày');
+      expect(owner).toContain('raw.kinds.shipping');
+      expect(owner).toContain('raw.kinds.return');
+      expect(await render(raw, false)).not.toContain('Giao toàn quốc 2-4 ngày');
+      expect(await render({ count: 3 }, true)).not.toContain('raw.list');
+    });
+
+    it('thông báo analyzed_none (không có giá trị mới) là status', async () => {
+      const out = renderToStaticMarkup(
+        await PolicyFactsPanel({
+          view: buildPolicyFactsView([]),
+          isOwner: true,
+          actions,
+          notice: 'analyzed_none',
+        }),
+      );
+      expect(out).toContain('role="status"');
+      expect(out).toContain('notice.analyzed_none');
+    });
+
     it('đề xuất đã rõ điều kiện → không có ô tick; Staff không có form', async () => {
       const out = await withActions([draftRow(false)], true);
       expect(out).not.toContain('name="confirm"');
