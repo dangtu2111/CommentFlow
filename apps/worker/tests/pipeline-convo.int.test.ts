@@ -15,6 +15,7 @@ let ws: string;
 let channel: string;
 let post: string;
 let product: string;
+let jean: string;
 const author = 'khach-1';
 
 beforeAll(async () => {
@@ -72,6 +73,23 @@ beforeEach(async () => {
       ],
     );
   }
+  // Sản phẩm có biến thể KHÁC giá (ADR 017: mọi biến thể cùng giá thì trả lời luôn, không hỏi biến thể) — dùng cho đường vàng 2 lượt.
+  jean = (
+    await admin.query(
+      "INSERT INTO cf.products (workspace_id, name, search_text, price_vnd, stock, status) VALUES ($1, 'Quần jean ống rộng', 'quan jean ong rong', 400000, 6, 'active') RETURNING id",
+      [ws],
+    )
+  ).rows[0].id;
+  for (const [size, price] of [
+    ['29', 400000],
+    ['30', 450000],
+  ] as const) {
+    await admin.query(
+      `INSERT INTO cf.product_variants (workspace_id, product_id, attrs, attrs_norm, price_vnd, stock, status)
+       VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, 3, 'active')`,
+      [ws, jean, JSON.stringify({ Size: size }), JSON.stringify({ size }), price],
+    );
+  }
 });
 
 async function addComment(text: string, minutesAgo: number): Promise<string> {
@@ -95,6 +113,25 @@ function config(): PipelineJobConfig {
         labels: [{ label: 'price' }],
         product_mentions: ['áo thun basic'],
         asks: ['giá'],
+      },
+    },
+    {
+      match: /jean ống rộng/i,
+      result: {
+        ...FIXTURE_EXTRACT_DEFAULT,
+        labels: [{ label: 'price' }],
+        product_mentions: ['quần jean ống rộng'],
+        asks: ['giá'],
+      },
+    },
+    // Lượt 2 của jean: khách chỉ trả lời "29".
+    {
+      match: /^29$/,
+      result: {
+        ...FIXTURE_EXTRACT_DEFAULT,
+        labels: [{ label: 'advice' }],
+        size: '29',
+        asks: [],
       },
     },
     // Lượt 2: khách chỉ trả lời "M đen" — không nêu tên sản phẩm, không nêu ý hỏi mới.
@@ -124,11 +161,21 @@ function config(): PipelineJobConfig {
           variants: [],
         };
       }
+      const isJean =
+        JSON.stringify(input.history ?? '').includes('jean') || input.question.includes('jean');
       return {
-        reply: 'Dạ áo thun basic size M màu đen giá 150.000đ ạ',
+        reply: isJean
+          ? 'Dạ quần jean ống rộng size 29 giá 400.000đ ạ'
+          : 'Dạ áo thun basic size M màu đen giá 150.000đ ạ',
         lang: 'vi',
-        sources: [product],
-        claims: [{ text: 'Giá 150.000đ', source_ids: [product], kind: 'fact' }],
+        sources: [isJean ? jean : product],
+        claims: [
+          {
+            text: isJean ? 'Giá 400.000đ' : 'Giá 150.000đ',
+            source_ids: [isJean ? jean : product],
+            kind: 'fact',
+          },
+        ],
         unanswered_topics: [],
         needs_human: false,
         reason: '',
@@ -163,34 +210,42 @@ const draftOf = async (id: string) =>
   ).rows[0];
 
 describe('đường vàng 2 lượt trên DB thật', () => {
-  it('"áo thun basic giá bn?" → hỏi lại size/màu → "M đen" → trả lời 150.000đ (không hỏi lại lần 2)', async () => {
+  it('mọi biến thể CÙNG giá (áo thun basic): "áo thun basic giá bn?" → trả lời 150.000đ ngay, không hỏi size/màu (ADR 017)', async () => {
+    const first = await addComment('áo thun basic giá bn?', 120);
+    expect((await run(first)).kind).toBe('written');
+    const d1 = await draftOf(first);
+    expect(d1.action).toBe('answer');
+    expect(d1.text).toContain('150.000');
+  });
+
+  it('biến thể KHÁC giá (quần jean): "giá bn?" → hỏi lại size → "29" → trả lời 400.000đ (không hỏi lại lần 2)', async () => {
     calls.extractHistory = [];
     calls.draftHistory = [];
-    const first = await addComment('áo thun basic giá bn?', 120);
+    const first = await addComment('quần jean ống rộng giá bn?', 120);
     expect((await run(first)).kind).toBe('written');
     const d1 = await draftOf(first);
     expect(d1).toMatchObject({ action: 'clarify', reason: 'variant_missing' });
     // Trạng thái hội thoại có cấu trúc được ghi cho lượt sau.
     expect(d1.context_refs).toContainEqual({
       type: 'state',
-      productIds: [product],
+      productIds: [jean],
       pendingAsks: ['giá'],
     });
 
-    // Khách trả lời "M đen" (lượt sau; thứ tự thời gian: sau lượt 1).
-    const second = await addComment('M đen', 30);
+    // Khách trả lời "29" (lượt sau; thứ tự thời gian: sau lượt 1).
+    const second = await addComment('29', 30);
     expect((await run(second)).kind).toBe('written');
     const d2 = await draftOf(second);
     expect(d2.action).toBe('answer');
-    expect(d2.text).toContain('150.000');
+    expect(d2.text).toContain('400.000');
     expect(d2.reason).toBe('all_sourced');
     // Lịch sử thật (lượt khách trước) đã tới extract và bước soạn của lượt 2.
-    expect(JSON.stringify(calls.extractHistory[1])).toContain('áo thun basic giá bn?');
-    expect(JSON.stringify(calls.draftHistory[1])).toContain('áo thun basic giá bn?');
+    expect(JSON.stringify(calls.extractHistory[1])).toContain('quần jean ống rộng giá bn?');
+    expect(JSON.stringify(calls.draftHistory[1])).toContain('quần jean ống rộng giá bn?');
     // Không còn ý đang chờ sau khi đã trả lời.
     expect(d2.context_refs).toContainEqual({
       type: 'state',
-      productIds: [product],
+      productIds: [jean],
       pendingAsks: [],
     });
   });
