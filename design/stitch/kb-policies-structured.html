@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cơ sở kiến thức › Chính sách có cấu trúc - CommentFlow AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', 'sans-serif'],
+          },
+          colors: {
+            teal: {
+              50: '#E3FAFC',
+              100: '#C5F6FA',
+              200: '#99E9F2',
+              500: '#1098AD',
+              600: '#0B7285', // Màu chính Flow Teal
+              700: '#095C6B',
+              800: '#06424D',
+            },
+            violet: {
+              50: '#F3F0FF',
+              100: '#E5DBFF',
+              200: '#D0BFFF',
+              500: '#7950F2',
+              600: '#6741D9', // Spark Violet - CHỈ DÙNG CHO AI ĐỀ XUẤT
+              700: '#5F3DC4',
+            },
+            neutral: {
+              25: '#FBFDFE',
+              50: '#F6F8F9',
+              100: '#EDF1F3',
+              200: '#DDE3E7',
+              300: '#CED6DC',
+              400: '#9FB0BA',
+              500: '#6C7E8A',
+              600: '#4A5A66',
+              700: '#2A363F',
+              800: '#1A242B',
+              900: '#0F1C24',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 20;
+      font-size: 20px;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 20;
+    }
+    /* Tab active style */
+    .tab-item.active {
+      color: #0B7285;
+      border-bottom: 2px solid #0B7285;
+      font-weight: 600;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F6F8F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CED6DC;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="bg-neutral-50 text-neutral-900 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ================= TOP APP BAR (64px) ================= -->
+  <header class="h-16 bg-white border-b border-neutral-200 sticky top-0 z-40 flex items-center justify-between px-6">
+    <div class="flex items-center gap-6">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
+          CF
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-neutral-900 text-lg tracking-tight">Comment<span class="text-teal-600">Flow</span></span>
+          <span class="bg-violet-600 text-white text-[11px] font-semibold px-1.5 py-0.5 rounded tracking-wide">AI</span>
+        </div>
+      </div>
+
+      <div class="h-5 w-px bg-neutral-200"></div>
+
+      <!-- Workspace switcher -->
+      <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-50 text-sm font-medium text-neutral-800 transition">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span>An Nhiên Store (Thời trang)</span>
+        <span class="material-symbols-outlined text-neutral-500 text-base">expand_more</span>
+      </button>
+
+      <!-- Sub-tag Dữ liệu mẫu -->
+      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
+        <span class="w-1.5 h-1.5 rounded-full bg-neutral-400 mr-1.5"></span>
+        Dữ liệu mẫu
+      </span>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="flex items-center gap-4">
+      <!-- AI Status & Kill Switch -->
+      <div class="flex items-center gap-3 bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-200">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-xs font-medium text-neutral-700">AI tự động: Đang chạy (3 kênh)</span>
+        </div>
+        <button class="px-2.5 py-1 rounded bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold hover:bg-rose-100 flex items-center gap-1 transition">
+          <span class="material-symbols-outlined text-sm">power_settings_new</span>
+          Dừng khẩn cấp
+        </button>
+      </div>
+
+      <!-- Role indicator -->
+      <div class="flex items-center gap-2 border-l border-neutral-200 pl-4">
+        <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-semibold text-xs flex items-center justify-center border border-teal-200">
+          NL
+        </div>
+        <div class="text-left">
+          <div class="text-xs font-semibold text-neutral-900 leading-tight">Nguyễn Linh</div>
+          <div class="text-[11px] font-medium text-teal-700 leading-tight">Chủ shop (Owner)</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN LAYOUT WITH SIDEBAR ================= -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- LEFT SIDEBAR (256px) -->
+    <aside class="w-64 bg-white border-r border-neutral-200 flex flex-col justify-between shrink-0 select-none">
+      <div class="py-4 space-y-6">
+        <!-- Section: Tác nghiệp -->
+        <div class="px-3">
+          <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">Vận hành trực ca</div>
+          <nav class="space-y-0.5">
+            <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-neutral-500">chat_bubble</span>
+                <span>Bình luận</span>
+              </div>
+              <span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-neutral-100 text-neutral-700">18</span>
+            </a>
+            <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-neutral-500">forum</span>
+                <span>Tin nhắn</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            </a>
+            <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-neutral-500">group</span>
+                <span>Khách tiềm năng</span>
+              </div>
+            </a>
+            <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-neutral-500">article</span>
+                <span>Bài viết</span>
+              </div>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Section: Trí tuệ & Cài đặt -->
+        <div class="px-3">
+          <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">Hệ thống & AI</div>
+          <nav class="space-y-0.5">
+            <!-- Active item -->
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-teal-50 text-teal-800 text-sm font-semibold border-l-4 border-teal-600 -ml-1">
+              <span class="material-symbols-outlined text-teal-600 fill">auto_stories</span>
+              <span>Cơ sở kiến thức</span>
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <span class="material-symbols-outlined text-neutral-500">smart_toy</span>
+              <span>Tự động hóa</span>
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <span class="material-symbols-outlined text-neutral-500">bar_chart</span>
+              <span>Báo cáo</span>
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <span class="material-symbols-outlined text-neutral-500">shield</span>
+              <span>Quy tắc spam</span>
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <span class="material-symbols-outlined text-neutral-500">history</span>
+              <span>Nhật ký</span>
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-600 hover:bg-neutral-50 text-sm font-medium">
+              <span class="material-symbols-outlined text-neutral-500">settings</span>
+              <span>Cài đặt</span>
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Quota Meter Footer -->
+      <div class="p-3 border-t border-neutral-200 bg-neutral-25">
+        <div class="bg-white p-3 rounded-lg border border-neutral-200 shadow-sm space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-neutral-700">Lượt AI tháng này</span>
+            <span class="font-bold text-neutral-900">2.140 / 3.000</span>
+          </div>
+          <div class="w-full bg-neutral-100 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-teal-600 h-1.5 rounded-full" style="width: 71.3%"></div>
+          </div>
+          <div class="flex justify-between items-center pt-1 text-[11px] text-neutral-500">
+            <span>Gói Growth</span>
+            <a href="#" class="text-teal-600 font-semibold hover:underline">Mua thêm</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col overflow-y-auto bg-neutral-50">
+
+      <!-- SUB-NAVIGATION BAR FOR KNOWLEDGE BASE (10 mục) -->
+      <div class="bg-white border-b border-neutral-200 px-8 shrink-0">
+        <nav class="flex items-center space-x-6 overflow-x-auto text-sm no-scrollbar">
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Nguồn dữ liệu</a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Thông tin cửa hàng</a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Sản phẩm</a>
+          <!-- ACTIVE TAB: Chính sách -->
+          <a href="#" class="py-3.5 tab-item active text-teal-600 font-semibold whitespace-nowrap border-b-2 border-teal-600 flex items-center gap-1.5">
+            <span>Chính sách</span>
+            <span class="bg-teal-50 text-teal-700 text-xs px-1.5 py-0.2 rounded-full border border-teal-200">Đang chọn</span>
+          </a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Hỏi – đáp (FAQ)</a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Tài liệu</a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Giọng văn</a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Quy tắc & Giới hạn</a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Từ điển viết tắt</a>
+          <a href="#" class="py-3.5 text-neutral-600 hover:text-neutral-900 font-medium whitespace-nowrap">Kiểm thử & Phiên bản</a>
+        </nav>
+      </div>
+
+      <!-- PAGE BODY CONTAINER -->
+      <div class="max-w-7xl w-full mx-auto p-8 space-y-6">
+
+        <!-- ================= 1. ĐẦU TRANG & ĐỘ PHỦ ================= -->
+        <div class="bg-white rounded-xl border border-neutral-200 p-6 shadow-sm space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-bold text-neutral-900 tracking-tight">Chính sách có cấu trúc</h1>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="material-symbols-outlined text-sm">verified_user</span>
+                  Chỉ dùng dữ liệu đã duyệt
+                </span>
+              </div>
+              <p class="text-sm text-neutral-600 mt-1">
+                AI chỉ trả lời về ship, đổi trả, bảo hành, thanh toán bằng các giá trị đã duyệt ở đây.
+              </p>
+            </div>
+
+            <!-- Role Badge Notice -->
+            <div class="flex items-center gap-2 bg-neutral-50 px-3 py-2 rounded-lg border border-neutral-200 text-xs text-neutral-600 shrink-0">
+              <span class="material-symbols-outlined text-teal-600 text-base">admin_panel_settings</span>
+              <span>Bạn đang đăng nhập quyền <strong class="text-neutral-900">Owner</strong> (đầy đủ quyền sửa & duyệt)</span>
+            </div>
+          </div>
+
+          <!-- Dải "Độ phủ" chính sách (4 thẻ nhỏ) -->
+          <div class="space-y-2 pt-2 border-t border-neutral-100">
+            <div class="flex items-center justify-between">
+              <div class="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                <span>Độ phủ chính sách cho AI</span>
+                <span class="text-neutral-400 font-normal">(4 nhóm cốt lõi)</span>
+              </div>
+              <span class="text-xs text-neutral-500 italic">Thẻ nào còn trống, AI sẽ mời khách nhắn tin thay vì trả lời.</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <!-- Thẻ Ship -->
+              <div class="p-3 rounded-lg border border-emerald-200 bg-emerald-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-base">local_shipping</span>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-neutral-800">Vận chuyển (Ship)</div>
+                    <div class="text-[11px] text-emerald-700 font-medium">2 khu vực áp dụng</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Đã duyệt
+                </span>
+              </div>
+
+              <!-- Thẻ Đổi trả -->
+              <div class="p-3 rounded-lg border border-amber-200 bg-amber-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-base">assignment_return</span>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-neutral-800">Đổi trả</div>
+                    <div class="text-[11px] text-amber-700 font-medium">1 đề xuất mới từ AI</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                  Chỉ có nháp
+                </span>
+              </div>
+
+              <!-- Thẻ Bảo hành -->
+              <div class="p-3 rounded-lg border border-neutral-200 bg-neutral-50 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-neutral-200 text-neutral-700 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-base">verified</span>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-neutral-800">Bảo hành</div>
+                    <div class="text-[11px] text-neutral-500">Chưa cấu hình</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-neutral-200 text-neutral-700">
+                  Chưa có
+                </span>
+              </div>
+
+              <!-- Thẻ Thanh toán -->
+              <div class="p-3 rounded-lg border border-emerald-200 bg-emerald-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-base">payments</span>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-neutral-800">Thanh toán</div>
+                    <div class="text-[11px] text-emerald-700 font-medium">2 phương thức bật</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Đã duyệt
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BANNER AI ĐỀ XUẤT (Spark Violet nhạt #F3F0FF, chữ #6741D9) -->
+          <div class="bg-violet-50 border border-violet-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start sm:items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-lg">auto_awesome</span>
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-neutral-900 flex items-center gap-2">
+                  <span>AI đề xuất <span class="text-violet-700 font-bold">2 giá trị mới</span> từ chính sách văn bản website & Shopify</span>
+                  <span class="px-2 py-0.2 rounded text-[11px] font-semibold bg-violet-100 text-violet-700 border border-violet-200">Đang chờ duyệt</span>
+                </div>
+                <p class="text-xs text-neutral-600 mt-0.5">
+                  AI trích xuất tự động từ trang <em>Chính sách đổi hàng</em> (quét lúc 14:20 hôm nay). Các giá trị này chưa áp dụng cho khách cho đến khi bạn bấm Duyệt.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button class="px-3.5 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-semibold hover:bg-violet-700 transition flex items-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-sm">visibility</span>
+                <span>Xem từng giá trị</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= 2. BỐN THẺ CHÍNH SÁCH CHI TIẾT ================= -->
+        <div class="space-y-6">
+
+          <!-- THẺ 1: VẬN CHUYỂN (SHIP) -->
+          <section class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-neutral-200 flex flex-wrap items-center justify-between gap-3 bg-neutral-25">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-xl text-teal-700">local_shipping</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-neutral-900">1. Chính sách Vận chuyển (Ship)</h2>
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Đã duyệt</span>
+                  </div>
+                  <p class="text-xs text-neutral-500">Áp dụng trả lời tự động khi khách hỏi về phí giao hàng, thời gian nhận hàng và hình thức COD.</p>
+                </div>
+              </div>
+              <button class="px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 text-xs font-semibold flex items-center gap-1.5 transition">
+                <span class="material-symbols-outlined text-base">add</span>
+                <span>Thêm khu vực</span>
+              </button>
+            </div>
+
+            <!-- Table of shipping areas -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-neutral-50 text-neutral-600 font-semibold border-b border-neutral-200">
+                    <th class="py-3 px-4">Tên hiển thị</th>
+                    <th class="py-3 px-4">Khu vực áp dụng</th>
+                    <th class="py-3 px-4">Phí ship</th>
+                    <th class="py-3 px-4">Thời gian giao</th>
+                    <th class="py-3 px-4">Giao tới</th>
+                    <th class="py-3 px-4">COD</th>
+                    <th class="py-3 px-4">Nguồn & Trạng thái</th>
+                    <th class="py-3 px-4 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-200">
+                  <!-- Row 1: Toàn quốc -->
+                  <tr class="hover:bg-neutral-50/80 transition">
+                    <td class="py-3.5 px-4 font-semibold text-neutral-900">
+                      Toàn quốc
+                      <div class="text-[11px] font-normal text-neutral-500">Mặc định nếu ngoài HN</div>
+                    </td>
+                    <td class="py-3.5 px-4 text-neutral-700">Tất cả tỉnh thành</td>
+                    <td class="py-3.5 px-4">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-neutral-800 bg-neutral-100 font-medium">
+                        Cố định: 30.000đ
+                      </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-neutral-700 font-medium">Khoảng 2 - 4 ngày</td>
+                    <td class="py-3.5 px-4 text-neutral-600">Việt Nam</td>
+                    <td class="py-3.5 px-4">
+                      <span class="inline-flex items-center text-emerald-700 font-semibold gap-1">
+                        <span class="material-symbols-outlined text-sm">check_circle</span> Có
+                      </span>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-1.5">
+                          <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Đã duyệt</span>
+                          <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200">Nhập tay</span>
+                        </div>
+                        <span class="text-[10px] text-neutral-400">Bởi Nguyễn Linh lúc 10:15 12/10</span>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4 text-right">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button class="px-2.5 py-1 rounded text-neutral-600 hover:bg-neutral-100 text-xs font-medium border border-neutral-200">Sửa</button>
+                        <button class="p-1 rounded text-neutral-400 hover:text-rose-600 hover:bg-rose-50"><span class="material-symbols-outlined text-base">delete</span></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Row 2: Nội thành Hà Nội (Miễn phí từ mức đơn) -->
+                  <tr class="hover:bg-neutral-50/80 transition bg-emerald-50/20">
+                    <td class="py-3.5 px-4 font-semibold text-neutral-900">
+                      Nội thành Hà Nội
+                      <div class="text-[11px] font-normal text-teal-700">Freeship từ 2 sản phẩm</div>
+                    </td>
+                    <td class="py-3.5 px-4 text-neutral-700">12 quận nội thành HN</td>
+                    <td class="py-3.5 px-4">
+                      <div class="space-y-0.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-emerald-800 bg-emerald-100 font-semibold">
+                          Miễn phí từ đơn ≥ 500.000đ
+                        </span>
+                        <div class="text-[11px] text-neutral-500">Dưới 500k: 20.000đ</div>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4 text-neutral-700 font-medium">Trong ngày hoặc 24h</td>
+                    <td class="py-3.5 px-4 text-neutral-600">Việt Nam</td>
+                    <td class="py-3.5 px-4">
+                      <span class="inline-flex items-center text-emerald-700 font-semibold gap-1">
+                        <span class="material-symbols-outlined text-sm">check_circle</span> Có
+                      </span>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-1.5">
+                          <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Đã duyệt</span>
+                          <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200">Đã sửa tay</span>
+                        </div>
+                        <span class="text-[10px] text-neutral-400">Cập nhật lần cuối bởi Nguyễn Linh lúc 09:30</span>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4 text-right">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button class="px-2.5 py-1 rounded text-neutral-600 hover:bg-neutral-100 text-xs font-medium border border-neutral-200">Sửa</button>
+                        <button class="p-1 rounded text-neutral-400 hover:text-rose-600 hover:bg-rose-50"><span class="material-symbols-outlined text-base">delete</span></button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+
+          <!-- THẺ 2: ĐỔI TRẢ (KÈM DÒNG AI ĐỀ XUẤT CẦN DUYỆT) -->
+          <section class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-neutral-200 flex flex-wrap items-center justify-between gap-3 bg-neutral-25">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-xl text-amber-700">assignment_return</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-neutral-900">2. Chính sách Đổi trả & Hoàn tiền</h2>
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-amber-50 text-amber-800 border border-amber-300">Có 1 bản nháp chờ duyệt</span>
+                  </div>
+                  <p class="text-xs text-neutral-500">Quy định số ngày cho phép đổi size/mẫu, điều kiện hàng và chi phí vận chuyển phát sinh.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Structured Value Component Showcase (Có đầy đủ các chip & so sánh theo yêu cầu) -->
+            <div class="p-6 space-y-6">
+
+              <!-- Dòng 1: Giá trị AI ĐỀ XUẤT CHƯA DUYỆT (Spark Violet Card) -->
+              <div class="rounded-xl border-2 border-violet-300 bg-violet-50/40 p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Chip trạng thái -->
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      Nháp (Chưa duyệt)
+                    </span>
+                    <!-- Chip nguồn tím -->
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-xs">auto_awesome</span>
+                      Đề xuất từ văn bản chính sách website
+                    </span>
+                    <!-- Chip cảnh báo điều kiện -->
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-xs">warning</span>
+                      Cần xác nhận điều kiện
+                    </span>
+                  </div>
+                  <div class="text-xs text-neutral-500">
+                    Cập nhật tự động bởi hệ thống AI lúc 14:20 hôm nay
+                  </div>
+                </div>
+
+                <!-- Structured breakdown grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-white p-4 rounded-lg border border-violet-100">
+                  <div>
+                    <span class="text-[11px] font-bold text-neutral-400 uppercase">Số ngày đổi trả</span>
+                    <div class="text-base font-bold text-neutral-900 mt-0.5 flex items-center gap-1">
+                      <span>7 ngày</span>
+                      <span class="text-xs font-normal text-neutral-500">(kể từ lúc nhận)</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span class="text-[11px] font-bold text-neutral-400 uppercase">Điều kiện hàng đổi</span>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                      <span class="px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 text-xs font-medium">Còn nguyên tem mác</span>
+                      <span class="px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 text-xs font-medium">Chưa qua giặt tẩy</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span class="text-[11px] font-bold text-neutral-400 uppercase">Phí ship khi trả hàng</span>
+                    <div class="text-sm font-semibold text-neutral-900 mt-1">
+                      Shop chịu nếu hàng lỗi; Khách chịu nếu đổi size/mẫu
+                    </div>
+                  </div>
+
+                  <div>
+                    <span class="text-[11px] font-bold text-neutral-400 uppercase">Hoàn tiền & Phạm vi</span>
+                    <div class="text-sm font-medium text-neutral-800 mt-1">
+                      Về phương thức ban đầu • Áp dụng mọi sản phẩm
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Khối "Trích từ văn bản gốc" & So sánh -->
+                <div class="bg-white rounded-lg p-4 border border-violet-200 space-y-3">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-violet-900 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-sm text-violet-600">format_quote</span>
+                      Trích từ văn bản gốc (Chính sách đổi hàng website):
+                    </span>
+                    <span class="text-neutral-400">Trích xuất đoạn 3</span>
+                  </div>
+                  <p class="text-xs text-neutral-700 italic bg-neutral-50 p-2.5 rounded border border-neutral-200 leading-relaxed">
+                    "...Khách hàng được quyền đổi trả hàng trong vòng <mark class="bg-violet-200 text-violet-900 font-semibold px-1 rounded">7 ngày</mark> nếu sản phẩm <mark class="bg-violet-200 text-violet-900 font-semibold px-1 rounded">còn nguyên tem mác và chưa giặt</mark>. Nếu sản phẩm bị lỗi sản xuất, shop chịu <mark class="bg-violet-200 text-violet-900 font-semibold px-1 rounded">100% phí ship 2 chiều</mark>..."
+                  </p>
+
+                  <!-- So sánh AI đề xuất vs Giá trị đang duyệt -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs border-t border-neutral-100">
+                    <div class="bg-violet-50/60 p-2.5 rounded border border-violet-200">
+                      <span class="text-[11px] font-bold text-violet-800 uppercase block mb-1">Giá trị AI đề xuất mới:</span>
+                      <div class="text-neutral-900 font-medium">Đổi trả 7 ngày, còn tem mác, hoàn tiền về phương thức ban đầu.</div>
+                    </div>
+                    <div class="bg-neutral-50 p-2.5 rounded border border-neutral-200">
+                      <span class="text-[11px] font-bold text-neutral-500 uppercase block mb-1">Giá trị hiện đang duyệt:</span>
+                      <div class="text-neutral-500 italic">Chưa có giá trị nào được duyệt trước đó.</div>
+                    </div>
+                  </div>
+
+                  <!-- Checkbox xác nhận điều kiện -->
+                  <div class="pt-2 flex items-center gap-2">
+                    <input type="checkbox" id="confirmCondition" class="rounded border-neutral-300 text-teal-600 focus:ring-teal-500 w-4 h-4 cursor-pointer" checked>
+                    <label for="confirmCondition" class="text-xs font-semibold text-neutral-800 cursor-pointer">
+                      Tôi xác nhận đã đọc đúng điều kiện hàng đổi (còn tem, chưa giặt) và đồng ý cho AI dùng nội dung này.
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Sticky Action Bar for Row -->
+                <div class="flex items-center justify-between pt-2">
+                  <div class="text-xs text-neutral-500 italic">
+                    AI sẽ mời khách nhắn tin vì chưa có thông tin này được duyệt.
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="px-3 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition">
+                      Bỏ qua đề xuất
+                    </button>
+                    <button class="px-3 py-1.5 rounded-lg border border-teal-300 bg-teal-50 text-teal-700 text-xs font-semibold hover:bg-teal-100 transition">
+                      Sửa tay
+                    </button>
+                    <!-- Nút Duyệt chính -->
+                    <button class="px-4 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 transition shadow-sm flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-sm">check_circle</span>
+                      <span>Duyệt giá trị này</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+
+          <!-- THẺ 3: BẢO HÀNH (TRẠNG THÁI TRỐNG / CHƯA CÓ GIÁ TRỊ) -->
+          <section class="bg-white rounded-xl border border-neutral-200 shadow-sm p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-xl">verified</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-neutral-900">3. Chính sách Bảo hành</h2>
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-neutral-100 text-neutral-600">Chưa có</span>
+                  </div>
+                  <p class="text-xs text-neutral-500">Quy định thời hạn bảo hành đường may, phụ kiện hoặc thông báo shop không áp dụng bảo hành.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State Box -->
+            <div class="border-2 border-dashed border-neutral-200 rounded-xl p-8 text-center bg-neutral-25 space-y-3">
+              <div class="w-10 h-10 rounded-full bg-neutral-100 text-neutral-400 mx-auto flex items-center justify-center">
+                <span class="material-symbols-outlined text-2xl">help_outline</span>
+              </div>
+              <div class="max-w-md mx-auto">
+                <div class="text-sm font-semibold text-neutral-800">Chưa có giá trị đã duyệt</div>
+                <p class="text-xs text-neutral-500 mt-1 leading-relaxed">
+                  AI sẽ mời khách nhắn tin thay vì trả lời nếu khách hỏi về bảo hành sản phẩm. Bạn có thể thêm giá trị mới hoặc chọn "Không bảo hành".
+                </p>
+              </div>
+              <div class="flex items-center justify-center gap-3 pt-2">
+                <button class="px-3.5 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 transition flex items-center gap-1.5 shadow-sm">
+                  <span class="material-symbols-outlined text-sm">add</span>
+                  <span>Thêm thời hạn & phạm vi</span>
+                </button>
+                <button class="px-3.5 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 text-xs font-medium hover:bg-neutral-50 transition">
+                  Đặt "Không bảo hành"
+                </button>
+              </div>
+            </div>
+          </section>
+
+
+          <!-- THẺ 4: THANH TOÁN (CHIP BẬT/TẮT ĐÃ DUYỆT) -->
+          <section class="bg-white rounded-xl border border-neutral-200 shadow-sm p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-xl text-teal-700">payments</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-neutral-900">4. Phương thức Thanh toán được chấp nhận</h2>
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Đã duyệt</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200">Nhập tay</span>
+                  </div>
+                  <p class="text-xs text-neutral-500">Các phương thức bật sẽ được AI liệt kê khi khách hỏi "Shop nhận thanh toán qua đâu?".</p>
+                </div>
+              </div>
+              <button class="px-3 py-1 rounded text-teal-700 hover:bg-teal-50 text-xs font-semibold border border-teal-200">
+                Sửa danh sách
+              </button>
+            </div>
+
+            <!-- Chips for payment methods -->
+            <div class="flex flex-wrap gap-3 pt-2">
+              <!-- COD (Bật) -->
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-lg border-2 border-teal-600 bg-teal-50 text-teal-900 text-xs font-bold">
+                <span class="material-symbols-outlined text-teal-600 text-base">local_shipping</span>
+                <span>Thanh toán khi nhận hàng (COD)</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 ml-1"></span>
+              </div>
+
+              <!-- Chuyển khoản (Bật) -->
+              <div class="flex items-center gap-2 px-3.5 py-2 rounded-lg border-2 border-teal-600 bg-teal-50 text-teal-900 text-xs font-bold">
+                <span class="material-symbols-outlined text-teal-600 text-base">account_balance</span>
+                <span>Chuyển khoản</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 ml-1"></span>
+              </div>
+
+              <!-- Thẻ (Tắt) -->
+              <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-400 text-xs font-medium cursor-not-allowed">
+                <span class="material-symbols-outlined text-base">credit_card</span>
+                <span>Thẻ tín dụng / Ghi nợ (Tắt)</span>
+              </div>
+
+              <!-- Trả góp (Tắt) -->
+              <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-400 text-xs font-medium cursor-not-allowed">
+                <span class="material-symbols-outlined text-base">pie_chart</span>
+                <span>Trả góp (Tắt)</span>
+              </div>
+
+              <!-- Tiền mặt tại cửa hàng (Tắt) -->
+              <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-400 text-xs font-medium cursor-not-allowed">
+                <span class="material-symbols-outlined text-base">storefront</span>
+                <span>Tiền mặt tại cửa hàng (Tắt)</span>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-neutral-400 pt-1">
+              * Ghi chú: Không hỗ trợ thẻ hoặc tiền mặt tại quầy vì shop chỉ bán online.
+            </div>
+          </section>
+
+        </div>
+
+
+        <!-- ================= 4. KHU VỰC THỂ HIỆN ĐỦ CÁC TRẠNG THÁI GIAO DIỆN (MỖI TRẠNG THÁI 1 KHUNG RIÊNG) ================= -->
+        <div class="pt-8 border-t border-neutral-200 space-y-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-2">
+              <span class="material-symbols-outlined text-teal-600">layers</span>
+              Trưng bày các trạng thái & Hộp thoại theo đặc tả yêu cầu
+            </h3>
+            <span class="text-xs bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded border border-neutral-200">Đặc tả Mục 4</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- TRẠNG THÁI A: KHÓA MỀM CHO STAFF (CHỈ OWNER ĐƯỢC SỬA VÀ DUYỆT) -->
+            <div class="bg-white rounded-xl border border-neutral-300 p-5 space-y-3 relative overflow-hidden shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-700 uppercase">Trạng thái: Khóa mềm cho nhân viên (Staff)</span>
+                <span class="px-2 py-0.5 rounded bg-neutral-100 text-neutral-600 text-[11px] font-semibold">Staff View</span>
+              </div>
+              
+              <!-- Banner giải thích -->
+              <div class="bg-neutral-100 border border-neutral-200 rounded-lg p-3 text-xs text-neutral-700 flex items-center gap-2">
+                <span class="material-symbols-outlined text-neutral-500 text-base">lock</span>
+                <span><strong>Chế độ chỉ xem:</strong> Chỉ Owner được sửa và duyệt chính sách để đảm bảo an toàn cam kết với khách.</span>
+              </div>
+
+              <!-- Thẻ giả lập bị vô hiệu hóa -->
+              <div class="p-3 bg-neutral-50 rounded-lg border border-neutral-200 opacity-60 pointer-events-none space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="font-bold text-neutral-900">Phí giao hàng ngoại thành</span>
+                  <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">Đã duyệt</span>
+                </div>
+                <div class="text-xs text-neutral-600">30.000đ • Giao 3-4 ngày</div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-1">
+                <button class="px-3 py-1.5 rounded bg-neutral-100 text-neutral-400 text-xs font-semibold cursor-not-allowed border border-neutral-200" title="Chỉ Owner được sửa và duyệt">
+                  Sửa giá trị
+                </button>
+                <button class="px-3 py-1.5 rounded bg-neutral-100 text-neutral-400 text-xs font-semibold cursor-not-allowed border border-neutral-200" title="Chỉ Owner được sửa và duyệt">
+                  Duyệt
+                </button>
+              </div>
+            </div>
+
+            <!-- TRẠNG THÁI B: ĐANG TẢI (SKELETON / KHUNG XƯƠNG) -->
+            <div class="bg-white rounded-xl border border-neutral-200 p-5 space-y-4 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-700 uppercase">Trạng thái: Đang tải (Khung xương Skeleton)</span>
+                <span class="text-xs text-neutral-400">Loading State</span>
+              </div>
+
+              <div class="space-y-3 animate-pulse">
+                <div class="h-4 bg-neutral-200 rounded w-1/3"></div>
+                <div class="h-8 bg-neutral-100 rounded w-full"></div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div class="h-16 bg-neutral-100 rounded"></div>
+                  <div class="h-16 bg-neutral-100 rounded"></div>
+                  <div class="h-16 bg-neutral-100 rounded"></div>
+                </div>
+                <div class="h-4 bg-neutral-100 rounded w-2/3"></div>
+              </div>
+            </div>
+
+            <!-- TRẠNG THÁI C: LỖI TẢI (ERROR STATE) -->
+            <div class="bg-white rounded-xl border border-rose-200 p-5 space-y-3 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-rose-700 uppercase">Trạng thái: Lỗi đồng bộ / Lỗi tải</span>
+                <span class="text-xs text-rose-500 font-semibold">Error State</span>
+              </div>
+
+              <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 text-xs text-rose-800 space-y-2">
+                <div class="font-bold flex items-center gap-1.5 text-rose-900">
+                  <span class="material-symbols-outlined text-base">error</span>
+                  <span>Không thể tải dữ liệu chính sách từ máy chủ</span>
+                </div>
+                <p>Kết nối bị gián đoạn khi đồng bộ lại từ Shopify. Các câu trả lời của AI hiện tạm dùng giá trị cache đã duyệt gần nhất.</p>
+                <div class="pt-1">
+                  <button class="px-3 py-1 bg-white border border-rose-300 rounded text-rose-700 hover:bg-rose-100 font-semibold transition">
+                    Thử tải lại
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- HỘP THOẠI 1: XÁC NHẬN DUYỆT (CONFIRMATION MODAL) -->
+            <div class="bg-white rounded-xl border-2 border-teal-600 p-5 space-y-3 shadow-md">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-teal-800 uppercase flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">open_in_new</span>
+                  Hộp thoại: Xác nhận duyệt chính sách
+                </span>
+                <span class="text-[11px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-semibold border border-teal-200">Modal Preview</span>
+              </div>
+
+              <div class="space-y-2 text-xs">
+                <div class="font-bold text-neutral-900 text-sm">Xác nhận duyệt chính sách Vận chuyển?</div>
+                <div class="p-3 bg-teal-50 rounded-lg border border-teal-200 text-teal-900 leading-relaxed">
+                  <span class="font-bold">Lưu ý quan trọng:</span> AI sẽ dùng giá trị này để trả lời trực tiếp cho khách hàng trên Facebook Comment và Messenger ngay khi bạn duyệt.
+                </div>
+                <div class="text-neutral-500 text-[11px]">
+                  Giá trị sẽ áp dụng: <em>"Nội thành Hà Nội - Freeship đơn từ 500.000đ"</em>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2 border-t border-neutral-100">
+                <button class="px-3 py-1.5 rounded border border-neutral-300 text-xs font-medium text-neutral-600">Đóng</button>
+                <button class="px-3.5 py-1.5 rounded bg-teal-600 text-white text-xs font-bold hover:bg-teal-700">Đồng ý duyệt</button>
+              </div>
+            </div>
+
+            <!-- HỘP THOẠI 2: THAY BẢN ĐÃ DUYỆT (SO SÁNH BẢN CŨ VÀ MỚI) -->
+            <div class="bg-white rounded-xl border border-neutral-300 p-5 space-y-3 shadow-md">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-800 uppercase">Hộp thoại: Thay bản đã duyệt (So sánh Diff)</span>
+                <span class="text-[11px] bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded font-semibold">Diff Viewer</span>
+              </div>
+
+              <div class="space-y-2 text-xs">
+                <div class="font-semibold text-neutral-900">So sánh trước khi duyệt ghi đè:</div>
+                <div class="grid grid-cols-2 gap-2 p-2.5 bg-neutral-50 rounded-lg border border-neutral-200 text-xs">
+                  <div>
+                    <span class="text-[10px] font-bold text-neutral-400 uppercase">Bản cũ đang chạy</span>
+                    <div class="text-neutral-600 line-through mt-0.5">Freeship cho đơn từ 700.000đ</div>
+                  </div>
+                  <div>
+                    <span class="text-[10px] font-bold text-emerald-600 uppercase">Bản mới đề xuất</span>
+                    <div class="text-emerald-700 font-bold mt-0.5">Freeship cho đơn từ 500.000đ</div>
+                  </div>
+                </div>
+                <div class="text-[11px] text-neutral-500">
+                  Bạn đã sửa tay giá trị này, lần đồng bộ sau sẽ không tự động ghi đè.
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2 border-t border-neutral-100">
+                <button class="px-3 py-1.5 rounded border border-neutral-300 text-xs font-medium">Hủy</button>
+                <button class="px-3.5 py-1.5 rounded bg-teal-600 text-white text-xs font-bold">Xác nhận thay thế</button>
+              </div>
+            </div>
+
+            <!-- HỘP THOẠI 3: XUNG ĐỘT PHIÊN BẢN (VERSION CONFLICT) -->
+            <div class="bg-white rounded-xl border border-amber-300 p-5 space-y-3 shadow-md">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-800 uppercase flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm text-amber-600">sync_problem</span>
+                  Hộp thoại: Xung đột phiên bản
+                </span>
+                <span class="text-[11px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-semibold border border-amber-200">Conflict</span>
+              </div>
+
+              <div class="space-y-2 text-xs">
+                <div class="font-bold text-amber-900 text-sm">Cảnh báo đồng thời sửa đổi</div>
+                <p class="text-neutral-700 leading-relaxed">
+                  Có người vừa cập nhật dòng này lúc 14:22 (Nguyễn Mai Linh). Vui lòng tải lại để xem bản mới nhất trước khi bấm duyệt.
+                </p>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2 border-t border-neutral-100">
+                <button class="px-3 py-1.5 rounded border border-neutral-300 text-xs font-medium">Giữ bản của tôi</button>
+                <button class="px-3.5 py-1.5 rounded bg-amber-600 text-white text-xs font-bold hover:bg-amber-700">Tải lại bản mới</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+</body>
+</html>

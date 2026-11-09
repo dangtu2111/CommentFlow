@@ -21,9 +21,12 @@ export type PolicyFactRow = {
   evidence: string | null;
   sourceRef: string | null;
   rev: number;
+  /** Lần cập nhật cuối và lần duyệt (null khi chưa duyệt) — để màn hình ghi "Cập nhật lúc …". */
+  updatedAt: string;
+  approvedAt: string | null;
 };
 
-const SELECT = sql`id, kind, slot, data, status, origin, evidence, source_ref AS "sourceRef", rev`;
+const SELECT = sql`id, kind, slot, data, status, origin, evidence, source_ref AS "sourceRef", rev, updated_at AS "updatedAt", approved_at AS "approvedAt"`;
 
 /** Chỉ bản ĐÃ DUYỆT — đây là nguồn DUY NHẤT của fact plan; bản nháp không bao giờ vào đây. */
 export async function listApprovedPolicyFacts(
@@ -142,7 +145,12 @@ export async function editPolicyDraft(
   return 'edited';
 }
 
-export type ApprovePolicyFactResult = 'approved' | 'not_found' | 'stale' | 'needs_review';
+export type ApprovePolicyFactResult =
+  | 'approved'
+  | 'not_found'
+  | 'stale'
+  | 'needs_review'
+  | 'invalid';
 
 /**
  * Owner duyệt một bản NHÁP, KÈM `rev` Owner đang xem: khóa dòng nháp rồi so `rev`; lệch (worker vừa làm mới nháp) → 'stale', KHÔNG duyệt. Khớp → trong MỘT giao dịch: nếu đã có bản duyệt cùng
@@ -155,13 +163,21 @@ export async function approvePolicyFact(
   expectedRev: number,
   options: { confirmReview?: boolean } = {},
 ): Promise<ApprovePolicyFactResult> {
-  const draft = await tx.execute<{ kind: string; slot: string; rev: number; review: boolean }>(sql`
-    SELECT kind, slot, rev, coalesce((data->>'needsReview')::boolean, false) AS review FROM cf.policy_facts
+  const draft = await tx.execute<{
+    kind: string;
+    slot: string;
+    rev: number;
+    review: boolean;
+    data: unknown;
+  }>(sql`
+    SELECT kind, slot, rev, data, coalesce((data->>'needsReview')::boolean, false) AS review FROM cf.policy_facts
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'
        FOR UPDATE`);
   const row = draft.rows[0];
   if (!row) return 'not_found';
   if (row.rev !== expectedRev) return 'stale';
+  // Dữ liệu sắp thành giá trị AI dùng để trả lời khách: kiểm lại bằng Zod lúc duyệt (không tin dữ liệu đã nằm trong bảng); sai cấu trúc → không duyệt.
+  if (!parsePolicyFactData(row.kind, row.data).success) return 'invalid';
   // Đề xuất của máy còn điều kiện/phạm vi chưa tách được (needsReview): Owner phải XÁC NHẬN rõ (đã chỉnh/đọc điều kiện) mới duyệt; khi xác nhận, cờ được gỡ khỏi bản đã duyệt.
   if (row.review && options.confirmReview !== true) return 'needs_review';
   const strip = options.confirmReview === true;
@@ -185,6 +201,56 @@ export async function approvePolicyFact(
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft' AND rev = ${expectedRev}
     RETURNING id`);
   return updated.rows.length > 0 ? 'approved' : 'stale';
+}
+
+export type DeleteApprovedPolicyResult = 'deleted' | 'not_found' | 'stale';
+
+/**
+ * Owner XÓA một giá trị ĐÃ DUYỆT (vd. một khu vực ship), KÈM `rev` đang xem: khóa dòng, so `rev`; lệch → 'stale', KHÔNG xóa. Chỉ xóa dòng `approved` (nháp cùng slot, nếu có, giữ nguyên để Owner
+ * còn duyệt lại). Sau khi xóa, AI không còn giá trị này (thẻ trống → mời khách nhắn tin). Chạy trong `withActor` của Owner (RLS: chỉ Owner xóa bản đã duyệt).
+ */
+export async function deleteApprovedPolicyFact(
+  tx: Database,
+  workspaceId: string,
+  id: string,
+  expectedRev: number,
+): Promise<DeleteApprovedPolicyResult> {
+  const found = await tx.execute<{ rev: number }>(sql`
+    SELECT rev FROM cf.policy_facts
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'approved'
+       FOR UPDATE`);
+  const row = found.rows[0];
+  if (!row) return 'not_found';
+  if (row.rev !== expectedRev) return 'stale';
+  await tx.execute(
+    sql`DELETE FROM cf.policy_facts WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'approved'`,
+  );
+  return 'deleted';
+}
+
+export type DiscardPolicyDraftResult = 'discarded' | 'not_found' | 'stale';
+
+/**
+ * Owner BỎ một bản NHÁP (đề xuất của máy hoặc bản đã sửa tay), KÈM `rev` đang xem: khóa dòng nháp, so `rev`; lệch (worker vừa làm mới) → 'stale', KHÔNG xóa. KHÔNG bao giờ đụng bản ĐÃ DUYỆT
+ * (khác `deletePolicyFact`). Chạy trong `withActor` của Owner (RLS/trigger là hàng rào thật).
+ */
+export async function discardPolicyDraft(
+  tx: Database,
+  workspaceId: string,
+  id: string,
+  expectedRev: number,
+): Promise<DiscardPolicyDraftResult> {
+  const found = await tx.execute<{ rev: number }>(sql`
+    SELECT rev FROM cf.policy_facts
+     WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'
+       FOR UPDATE`);
+  const row = found.rows[0];
+  if (!row) return 'not_found';
+  if (row.rev !== expectedRev) return 'stale';
+  await tx.execute(
+    sql`DELETE FROM cf.policy_facts WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'`,
+  );
+  return 'discarded';
 }
 
 export async function deletePolicyFact(

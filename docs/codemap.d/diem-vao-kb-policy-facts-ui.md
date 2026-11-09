@@ -1,0 +1,1 @@
+| Trang Chính sách có cấu trúc (ADR 017, PR A chỉ đọc) | `buildPolicyFactsView`, `PolicyFactsPanel` | `apps/web/src/lib/kb-policy-view.ts` · `components/kb/policy-facts-panel.tsx` (theo `design/stitch/kb-policies-structured.*`) · `app/app/(guarded)/kb/policies/page.tsx` · route [MẪU] `app/dev/ui/kb-policies/` · `e2e/tools/shot-kb-policies.mjs` |

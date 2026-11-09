@@ -3189,5 +3189,218 @@
       "outHours": "Ngoài giờ làm việc",
       "saveFor": "Lưu giọng văn {lang}"
     }
+  },
+  "kbPolicyFacts": {
+    "title": "Chính sách có cấu trúc",
+    "subtitle": "AI chỉ trả lời về ship, đổi trả, bảo hành, thanh toán bằng các giá trị đã duyệt ở đây.",
+    "onlyApproved": "Chỉ dùng giá trị đã duyệt",
+    "roleOwner": "Bạn đang đăng nhập quyền Owner (được sửa và duyệt).",
+    "roleStaff": "Chế độ chỉ xem: chỉ Owner được sửa và duyệt chính sách để đảm bảo an toàn cam kết với khách.",
+    "coverage": {
+      "title": "Độ phủ chính sách cho AI",
+      "hint": "Thẻ nào còn trống, AI sẽ mời khách nhắn tin thay vì trả lời.",
+      "approved": "Đã duyệt",
+      "draft": "Chỉ có nháp",
+      "none": "Chưa có",
+      "ship": "Vận chuyển",
+      "returns": "Đổi trả",
+      "warranty": "Bảo hành",
+      "payment": "Thanh toán"
+    },
+    "banner": {
+      "title": "AI đề xuất {count} giá trị đang chờ duyệt",
+      "body": "Các giá trị này chưa áp dụng cho khách cho đến khi Owner bấm Duyệt.",
+      "view": "Xem từng giá trị"
+    },
+    "cards": {
+      "ship": {
+        "title": "Vận chuyển (Ship)",
+        "desc": "Áp dụng khi khách hỏi phí giao hàng, thời gian nhận hàng và hình thức COD."
+      },
+      "returns": {
+        "title": "Đổi trả & Hoàn tiền",
+        "desc": "Số ngày đổi trả, điều kiện hàng, hoàn tiền và ai chịu phí ship khi trả hàng."
+      },
+      "warranty": {
+        "title": "Bảo hành",
+        "desc": "Thời hạn và phạm vi bảo hành, hoặc ghi rõ shop không bảo hành."
+      },
+      "payment": {
+        "title": "Phương thức thanh toán",
+        "desc": "AI liệt kê các phương thức đang bật khi khách hỏi nhận thanh toán thế nào."
+      }
+    },
+    "ship": {
+      "name": "Tên hiển thị",
+      "area": "Khu vực áp dụng",
+      "fee": "Phí ship",
+      "time": "Thời gian giao",
+      "destination": "Giao tới",
+      "cod": "COD",
+      "source": "Nguồn & trạng thái",
+      "areaNationwide": "Toàn quốc",
+      "areaCity": "Nội thành {city}",
+      "areaRegion": "{count} tỉnh/thành",
+      "fee_fixed": "Cố định: {amount}",
+      "fee_free": "Miễn phí",
+      "fee_free_over": "Miễn phí từ đơn ≥ {amount}",
+      "fee_at_checkout": "Tính khi thanh toán",
+      "fee_unknown": "Chưa nêu",
+      "days_range": "{min} - {max} ngày",
+      "days_same": "{n} ngày",
+      "days_at_checkout": "Hiện khi thanh toán",
+      "days_unknown": "Chưa nêu",
+      "cod_yes": "Có",
+      "cod_no": "Không",
+      "cod_unknown": "Chưa nêu",
+      "dest_VN": "Việt Nam"
+    },
+    "returns": {
+      "days": "Số ngày đổi trả",
+      "conditions": "Điều kiện hàng",
+      "refundTo": "Hoàn tiền về",
+      "shippingPaidBy": "Phí ship khi trả hàng",
+      "eligibility": "Khả năng đổi trả",
+      "daysValue": "{n} ngày",
+      "none": "Không áp dụng đổi trả",
+      "notStated": "Chưa nêu",
+      "refund_original_payment": "Về phương thức thanh toán ban đầu",
+      "paid_shop": "Shop chịu",
+      "paid_customer_change_of_mind": "Khách chịu nếu đổi ý",
+      "elig_varies_by_item": "Tùy từng sản phẩm"
+    },
+    "warranty": {
+      "months": "Thời hạn",
+      "scope": "Phạm vi",
+      "monthsValue": "{n} tháng",
+      "none": "Không bảo hành",
+      "notStated": "Chưa nêu"
+    },
+    "payment": {
+      "methods": "Phương thức đang bật",
+      "cod": "Thanh toán khi nhận hàng (COD)",
+      "bank_transfer": "Chuyển khoản",
+      "card": "Thẻ",
+      "installment": "Trả góp",
+      "cash": "Tiền mặt"
+    },
+    "chips": {
+      "approved": "Đã duyệt",
+      "draft": "Nháp",
+      "manual": "Nhập tay",
+      "shopify_suggested": "Đề xuất từ Shopify",
+      "text_suggested": "Đề xuất từ văn bản",
+      "editedByOwner": "Đã sửa tay",
+      "needsReview": "Cần xác nhận điều kiện"
+    },
+    "evidence": {
+      "title": "Trích từ văn bản gốc"
+    },
+    "proposed": {
+      "title": "Giá trị AI đề xuất"
+    },
+    "current": {
+      "title": "Giá trị hiện đang duyệt",
+      "none": "Chưa có giá trị nào được duyệt trước đó."
+    },
+    "confirm": "Tôi xác nhận đã đọc đúng điều kiện và đồng ý cho AI dùng nội dung này.",
+    "actions": {
+      "approve": "Duyệt giá trị này",
+      "edit": "Sửa tay",
+      "discard": "Bỏ qua đề xuất",
+      "add": "Thêm giá trị",
+      "addRegion": "Thêm khu vực",
+      "soon": "Sắp có",
+      "delete": "Xóa",
+      "deleteConfirm": "Xác nhận xóa"
+    },
+    "empty": {
+      "title": "Chưa có giá trị đã duyệt",
+      "body": "AI sẽ mời khách nhắn tin thay vì trả lời nếu khách hỏi về mục này."
+    },
+    "error": {
+      "title": "Không tải được chính sách",
+      "body": "Vui lòng tải lại trang. AI vẫn chỉ dùng các giá trị đã duyệt trước đó."
+    },
+    "legacy": {
+      "title": "Chính sách dạng văn bản",
+      "hint": "Văn bản này nuôi bộ tìm kiếm tri thức và là nguồn để AI rút giá trị đề xuất ở trên."
+    },
+    "notice": {
+      "saved": "Đã lưu thành bản nháp. Bấm Duyệt để AI bắt đầu dùng giá trị này.",
+      "approved": "Đã duyệt. AI sẽ dùng giá trị này để trả lời khách.",
+      "discarded": "Đã bỏ đề xuất.",
+      "stale": "Có người hoặc hệ thống vừa cập nhật dòng này. Hãy xem lại bản mới rồi duyệt lại.",
+      "needs_review": "Đề xuất còn điều kiện chưa tách được: hãy tick xác nhận đã đọc đúng điều kiện trước khi duyệt.",
+      "not_found": "Không tìm thấy giá trị này (có thể đã được xử lý).",
+      "invalid": "Yêu cầu không hợp lệ.",
+      "unavailable": "Chưa thực hiện được. Thử lại sau ít phút.",
+      "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát.",
+      "deleted": "Đã xóa giá trị. AI không còn dùng giá trị này."
+    },
+    "form": {
+      "pageTitle": {
+        "edit": "Sửa giá trị chính sách",
+        "add": "Thêm giá trị chính sách"
+      },
+      "kindTitle": {
+        "ship_region": "Vận chuyển (một khu vực)",
+        "returns": "Đổi trả & Hoàn tiền",
+        "warranty": "Bảo hành",
+        "payment": "Phương thức thanh toán"
+      },
+      "intro": "Giá trị lưu thành bản NHÁP. Bấm Duyệt ở trang Chính sách để AI bắt đầu dùng.",
+      "draftNote": "Bạn đang sửa một bản nháp đang chờ duyệt; bản đã sửa tay sẽ không bị đồng bộ ghi đè.",
+      "save": "Lưu thành nháp",
+      "cancel": "Quay lại",
+      "unset": "Chưa nêu",
+      "label": "Tên hiển thị",
+      "labelHint": "Ví dụ: Toàn quốc, Nội thành Hà Nội. Không đổi được sau khi tạo.",
+      "regionKind": "Loại khu vực",
+      "regionKinds": {
+        "nationwide": "Toàn quốc",
+        "city": "Nội thành một thành phố",
+        "region": "Danh sách tỉnh/thành"
+      },
+      "city": "Thành phố",
+      "places": "Tỉnh/thành",
+      "placesHint": "Mỗi dòng hoặc cách nhau bằng dấu phẩy.",
+      "feeMode": "Phí ship",
+      "feeModes": {
+        "fixed": "Cố định",
+        "free": "Miễn phí",
+        "free_over": "Miễn phí từ mức đơn",
+        "at_checkout": "Tính khi thanh toán"
+      },
+      "feeAmount": "Số tiền phí (đồng)",
+      "freeOverAmount": "Miễn phí từ đơn (đồng)",
+      "daysMode": "Thời gian giao",
+      "daysModes": {
+        "range": "Khoảng ngày",
+        "at_checkout": "Hiện khi thanh toán",
+        "not_stated": "Chưa nêu"
+      },
+      "daysMin": "Từ (ngày)",
+      "daysMax": "Đến (ngày)",
+      "cod": "Thanh toán khi nhận hàng (COD)",
+      "codOptions": {
+        "yes": "Có",
+        "no": "Không",
+        "unknown": "Chưa nêu"
+      },
+      "destinations": "Giao tới (mã quốc gia)",
+      "destinationsHint": "Ví dụ: VN, US. Để trống = Việt Nam.",
+      "returnsDays": "Số ngày đổi trả",
+      "returnsNone": "Shop không áp dụng đổi trả",
+      "conditions": "Điều kiện hàng",
+      "conditionsHint": "Mỗi dòng một điều kiện, ví dụ: Còn nguyên tem mác.",
+      "warrantyMonths": "Thời hạn bảo hành (tháng)",
+      "warrantyNone": "Shop không bảo hành",
+      "scope": "Phạm vi bảo hành",
+      "scopeHint": "Ví dụ: đường may. Để trống nếu bảo hành toàn bộ.",
+      "methods": "Phương thức đang nhận",
+      "invalid": "Giá trị chưa hợp lệ: kiểm tra các ô bắt buộc (ví dụ phí cố định cần số tiền, nội thành cần thành phố)."
+    },
+    "updatedAt": "Cập nhật lúc {time}"
   }
 }

@@ -32,6 +32,7 @@ Chạy `/stitch-sync` trong Claude Code ở GĐ0 (MCP Stitch đã cấu hình s�
 
 | Màn hình | File | Mục trong prompt UI/Admin | Trạng thái đã vẽ | Còn thiếu |
 |---|---|---|---|---|
+| Cơ sở kiến thức – Chính sách có cấu trúc (desktop 1440 + mobile 390) | kb-policies-structured.html, kb-policies-structured.png, kb-policies-structured-mobile.png | 7.3 (ADR 017) | Đủ: 4 thẻ (Ship/Đổi trả/Bảo hành/Thanh toán), trạng thái Nháp/Đã duyệt + nguồn + "Đã sửa tay", banner AI đề xuất, trích văn bản gốc, tick xác nhận điều kiện, khóa mềm Staff, trống/tải/lỗi, hộp thoại duyệt/thay bản/xung đột | thiếu .html mobile (chỉ ảnh); số liệu trong ảnh là DỮ LIỆU MẪU, không dùng |
 | Chào mừng nhân viên mới | staff-welcome.html, staff-welcome.png | chưa khớp | |  |
 | Lỗi 403 Staff vs Owner | error-403.html, error-403.png | 7.8 | |  |
 | Cài đặt – Xác nhận tắt 2FA | settings-2fa-disable-modal.png | 7.6 | | thiếu .html; **nội dung bịa, không dùng:** "Meta Tech Partner / tạm ngưng sau 24 giờ", "8 mã dự phòng" (thật: 10 mã, tắt đòi mật khẩu, Owner/Admin không được tắt — ADR 004 §4) |
