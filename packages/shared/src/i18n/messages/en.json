@@ -3325,6 +3325,7 @@
       "hint": "This text feeds knowledge search and is the source AI uses to suggest the values above."
     },
     "notice": {
+      "saved": "Saved as a draft. Click Approve for AI to start using this value.",
       "approved": "Approved. AI will use this value to answer customers.",
       "discarded": "Suggestion discarded.",
       "stale": "Someone or the system just updated this row. Review the new version and approve again.",
@@ -3333,6 +3334,69 @@
       "invalid": "Invalid request.",
       "unavailable": "Could not complete. Try again in a few minutes.",
       "rate_limited": "You are acting too fast. Try again in a moment."
+    },
+    "form": {
+      "pageTitle": {
+        "edit": "Edit policy value",
+        "add": "Add policy value"
+      },
+      "kindTitle": {
+        "ship_region": "Shipping (one area)",
+        "returns": "Returns & refunds",
+        "warranty": "Warranty",
+        "payment": "Payment methods"
+      },
+      "intro": "The value is saved as a DRAFT. Click Approve on the Policies page for AI to start using it.",
+      "draftNote": "You are editing a draft awaiting approval; a hand-edited draft will not be overwritten by sync.",
+      "save": "Save as draft",
+      "cancel": "Back",
+      "unset": "Not stated",
+      "label": "Display name",
+      "labelHint": "For example: Nationwide, Hanoi inner city. Cannot be changed after creation.",
+      "regionKind": "Area type",
+      "regionKinds": {
+        "nationwide": "Nationwide",
+        "city": "Inner city of one city",
+        "region": "List of provinces"
+      },
+      "city": "City",
+      "places": "Provinces",
+      "placesHint": "One per line or separated by commas.",
+      "feeMode": "Shipping fee",
+      "feeModes": {
+        "fixed": "Fixed",
+        "free": "Free",
+        "free_over": "Free over an order amount",
+        "at_checkout": "Calculated at checkout"
+      },
+      "feeAmount": "Fee amount (VND)",
+      "freeOverAmount": "Free on orders from (VND)",
+      "daysMode": "Delivery time",
+      "daysModes": {
+        "range": "Range of days",
+        "at_checkout": "Shown at checkout",
+        "not_stated": "Not stated"
+      },
+      "daysMin": "From (days)",
+      "daysMax": "To (days)",
+      "cod": "Cash on delivery (COD)",
+      "codOptions": {
+        "yes": "Yes",
+        "no": "No",
+        "unknown": "Not stated"
+      },
+      "destinations": "Ships to (country codes)",
+      "destinationsHint": "For example: VN, US. Empty = Vietnam.",
+      "returnsDays": "Return window (days)",
+      "returnsNone": "The shop does not accept returns",
+      "conditions": "Item conditions",
+      "conditionsHint": "One condition per line, for example: Tags still attached.",
+      "warrantyMonths": "Warranty period (months)",
+      "warrantyNone": "The shop offers no warranty",
+      "scope": "Warranty scope",
+      "scopeHint": "For example: seams. Leave empty if everything is covered.",
+      "methods": "Accepted methods",
+      "invalid": "The value is not valid: check required fields (for example a fixed fee needs an amount, an inner city needs a city)."
     }
   }
 }

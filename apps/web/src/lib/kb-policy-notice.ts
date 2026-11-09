@@ -5,6 +5,7 @@ import { z } from 'zod';
  * (so `rev` lệch) → tải lại để xem bản mới rồi duyệt lại; `needs_review` = đề xuất còn điều kiện chưa tách được, Owner phải tick xác nhận.
  */
 export const POLICY_NOTICES = [
+  'saved',
   'approved',
   'discarded',
   'stale',

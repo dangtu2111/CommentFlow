@@ -3325,6 +3325,7 @@
       "hint": "Văn bản này nuôi bộ tìm kiếm tri thức và là nguồn để AI rút giá trị đề xuất ở trên."
     },
     "notice": {
+      "saved": "Đã lưu thành bản nháp. Bấm Duyệt để AI bắt đầu dùng giá trị này.",
       "approved": "Đã duyệt. AI sẽ dùng giá trị này để trả lời khách.",
       "discarded": "Đã bỏ đề xuất.",
       "stale": "Có người hoặc hệ thống vừa cập nhật dòng này. Hãy xem lại bản mới rồi duyệt lại.",
@@ -3333,6 +3334,69 @@
       "invalid": "Yêu cầu không hợp lệ.",
       "unavailable": "Chưa thực hiện được. Thử lại sau ít phút.",
       "rate_limited": "Bạn thao tác quá nhanh. Thử lại sau giây lát."
+    },
+    "form": {
+      "pageTitle": {
+        "edit": "Sửa giá trị chính sách",
+        "add": "Thêm giá trị chính sách"
+      },
+      "kindTitle": {
+        "ship_region": "Vận chuyển (một khu vực)",
+        "returns": "Đổi trả & Hoàn tiền",
+        "warranty": "Bảo hành",
+        "payment": "Phương thức thanh toán"
+      },
+      "intro": "Giá trị lưu thành bản NHÁP. Bấm Duyệt ở trang Chính sách để AI bắt đầu dùng.",
+      "draftNote": "Bạn đang sửa một bản nháp đang chờ duyệt; bản đã sửa tay sẽ không bị đồng bộ ghi đè.",
+      "save": "Lưu thành nháp",
+      "cancel": "Quay lại",
+      "unset": "Chưa nêu",
+      "label": "Tên hiển thị",
+      "labelHint": "Ví dụ: Toàn quốc, Nội thành Hà Nội. Không đổi được sau khi tạo.",
+      "regionKind": "Loại khu vực",
+      "regionKinds": {
+        "nationwide": "Toàn quốc",
+        "city": "Nội thành một thành phố",
+        "region": "Danh sách tỉnh/thành"
+      },
+      "city": "Thành phố",
+      "places": "Tỉnh/thành",
+      "placesHint": "Mỗi dòng hoặc cách nhau bằng dấu phẩy.",
+      "feeMode": "Phí ship",
+      "feeModes": {
+        "fixed": "Cố định",
+        "free": "Miễn phí",
+        "free_over": "Miễn phí từ mức đơn",
+        "at_checkout": "Tính khi thanh toán"
+      },
+      "feeAmount": "Số tiền phí (đồng)",
+      "freeOverAmount": "Miễn phí từ đơn (đồng)",
+      "daysMode": "Thời gian giao",
+      "daysModes": {
+        "range": "Khoảng ngày",
+        "at_checkout": "Hiện khi thanh toán",
+        "not_stated": "Chưa nêu"
+      },
+      "daysMin": "Từ (ngày)",
+      "daysMax": "Đến (ngày)",
+      "cod": "Thanh toán khi nhận hàng (COD)",
+      "codOptions": {
+        "yes": "Có",
+        "no": "Không",
+        "unknown": "Chưa nêu"
+      },
+      "destinations": "Giao tới (mã quốc gia)",
+      "destinationsHint": "Ví dụ: VN, US. Để trống = Việt Nam.",
+      "returnsDays": "Số ngày đổi trả",
+      "returnsNone": "Shop không áp dụng đổi trả",
+      "conditions": "Điều kiện hàng",
+      "conditionsHint": "Mỗi dòng một điều kiện, ví dụ: Còn nguyên tem mác.",
+      "warrantyMonths": "Thời hạn bảo hành (tháng)",
+      "warrantyNone": "Shop không bảo hành",
+      "scope": "Phạm vi bảo hành",
+      "scopeHint": "Ví dụ: đường may. Để trống nếu bảo hành toàn bộ.",
+      "methods": "Phương thức đang nhận",
+      "invalid": "Giá trị chưa hợp lệ: kiểm tra các ô bắt buộc (ví dụ phí cố định cần số tiền, nội thành cần thành phố)."
     }
   }
 }

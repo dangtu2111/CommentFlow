@@ -33,3 +33,7 @@
   - Chỉ báo "Độ phủ sự kiện": thẻ nào còn trống (AI sẽ mời ib thay vì trả lời) và gợi ý điền.
   - Tùy chọn Owner "Nêu số lượng tồn" / "Báo sắp hết khi ≤ N" (STOCK-DISCLOSURE-OPTION) đặt ở Quy tắc & Giới hạn, hiển thị ví dụ câu.
   - Cần cả bản 1440px và 390px.
+
+# Màn thiếu thiết kế Stitch (feat/kb-policies-edit, 09/11/2026)
+
+- **Chính sách có cấu trúc › Hộp thoại "Sửa giá trị" / "Thêm giá trị"** (4 loại: khu vực ship, đổi trả, bảo hành, thanh toán): bản Stitch `kb-policies-structured` có nút "Sửa tay" nhưng chưa vẽ biểu mẫu. Hiện dựng bằng thành phần Cơ sở kiến thức sẵn có (`policy-value-form.tsx`, trang `/app/kb/policies/edit`); cần thiết kế riêng cả desktop 1440px và mobile 390px (các ô theo từng loại, lỗi nhập, ghi chú "lưu thành nháp, bấm Duyệt để áp dụng").
