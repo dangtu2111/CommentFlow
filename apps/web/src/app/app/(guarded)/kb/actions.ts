@@ -2,22 +2,14 @@
 
 import {
   createFaqItem,
-  createPolicyItem,
   deleteFaqItem,
-  deletePolicyItem,
   updateFaqItem,
-  updatePolicyItem,
   upsertBrandVoice,
   upsertShopProfile,
 } from '@flow/db/runtime';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import {
-  formToBrandVoice,
-  formToFaq,
-  formToPolicy,
-  formToShopProfile,
-} from '../../../../lib/kb-content-form';
+import { formToBrandVoice, formToFaq, formToShopProfile } from '../../../../lib/kb-content-form';
 import { actionAllowed } from '../../../../server/action-guard';
 import { getDb } from '../../../../server/db';
 import { requestKbSync } from '../../../../server/kb-sync-request';
@@ -41,7 +33,6 @@ type Session = { workspaceId: string; userId: string };
 type Tx = Parameters<Parameters<ReturnType<typeof getDb>['withActor']>[2]>[0];
 
 const SHOP = '/app/kb/shop';
-const POLICIES = '/app/kb/policies';
 const FAQ = '/app/kb/faq';
 const VOICE = '/app/kb/voice';
 
@@ -121,38 +112,4 @@ export async function deleteFaqAction(data: FormData): Promise<never> {
   if (!id) redirect(`${FAQ}?n=not_found`);
   const session = { workspaceId: workspace.id, userId: user.id };
   return write(FAQ, session, (tx) => deleteFaqItem(tx, session.workspaceId, id), 'deleted');
-}
-
-export async function createPolicyAction(data: FormData): Promise<never> {
-  const { user, workspace } = await requireAppUser({ role: 'owner' });
-  const parsed = formToPolicy(data);
-  if (!parsed.ok) redirect(`${POLICIES}?n=invalid`);
-  const session = { workspaceId: workspace.id, userId: user.id };
-  return write(POLICIES, session, async (tx) => {
-    await createPolicyItem(tx, session.workspaceId, parsed.input);
-    return true;
-  });
-}
-
-export async function updatePolicyAction(data: FormData): Promise<never> {
-  const { user, workspace } = await requireAppUser({ role: 'owner' });
-  const id = idOf(data);
-  const parsed = formToPolicy(data);
-  if (!id) redirect(`${POLICIES}?n=not_found`);
-  if (!parsed.ok) redirect(`${POLICIES}?n=invalid`);
-  const session = { workspaceId: workspace.id, userId: user.id };
-  return write(POLICIES, session, (tx) =>
-    updatePolicyItem(tx, session.workspaceId, id, {
-      title: parsed.input.title,
-      content: parsed.input.content,
-    }),
-  );
-}
-
-export async function deletePolicyAction(data: FormData): Promise<never> {
-  const { user, workspace } = await requireAppUser({ role: 'owner' });
-  const id = idOf(data);
-  if (!id) redirect(`${POLICIES}?n=not_found`);
-  const session = { workspaceId: workspace.id, userId: user.id };
-  return write(POLICIES, session, (tx) => deletePolicyItem(tx, session.workspaceId, id), 'deleted');
 }
