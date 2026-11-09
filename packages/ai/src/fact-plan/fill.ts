@@ -120,6 +120,9 @@ function renderValue(fact: Extract<Fact, { status: 'known' }>, lang: Lang): stri
     case 'days_mode':
       return lang === 'vi' ? 'hiển thị khi thanh toán' : 'shown at checkout';
     case 'destination': {
+      if (value.ok && value.nationwide && value.place === 'VN') {
+        return lang === 'vi' ? 'shop giao toàn quốc' : 'we ship nationwide';
+      }
       if (value.ok) {
         return lang === 'vi'
           ? `shop có giao tới ${countryName(value.place, 'vi')}`

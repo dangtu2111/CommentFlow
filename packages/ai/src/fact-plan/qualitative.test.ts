@@ -133,8 +133,9 @@ describe('fact plan định tính — known khi có giá trị định tính, k�
       'we currently ship to the United States.',
     );
     expect(fill('{fact:ship_destination}.', canada, 'vi').text).toBe('hiện shop giao tới Mỹ.');
+    // Không nêu nơi cụ thể + có dòng toàn quốc → known (nêu nơi shop giao); xem thêm test "ship tỉnh" bên dưới.
     expect(plan({ topics: ['ship_destination'], destination: null }).facts[0]?.status).toBe(
-      'unknown',
+      'known',
     );
     expect(
       buildFactPlan({
@@ -323,5 +324,65 @@ describe('resolvePlace — không nhầm tên hàng hóa với địa điểm (k
   it('tên hàng trùng tên quốc gia/bang vẫn bị nhận bởi resolvePlace — nên pipeline CHỈ quét câu khi extract có chủ đề ship_destination', () => {
     expect(resolvePlace('Georgia peach dress')?.country).toBe('US');
     expect(resolvePlace('China blue vase')?.country).toBe('CN');
+  });
+});
+
+describe('ship_destination khi khách không nêu nơi cụ thể ("ship tỉnh")', () => {
+  const vn: ShipRow = {
+    kind: 'nationwide',
+    label: 'Toàn quốc',
+    feeMinor: 30000,
+    currency: 'VND',
+    daysMin: 2,
+    daysMax: 4,
+    sourceId: 'pf:vn',
+  };
+  const cityOnly: ShipRow = {
+    kind: 'city',
+    label: 'Nội thành Hà Nội',
+    city: 'Hà Nội',
+    feeMinor: 20000,
+    currency: 'VND',
+    daysMin: 1,
+    daysMax: 1,
+    sourceId: 'pf:hn',
+  };
+  it('có dòng toàn quốc → "shop giao toàn quốc" / "we ship nationwide"; KHÔNG tự thêm ship_fee/ship_time', () => {
+    const p = buildFactPlan({
+      products: [],
+      topics: ['ship_destination'],
+      policy: { shipping: [vn, cityOnly] },
+      destination: null,
+      stock: { disclose: 'status', lowAt: null },
+    });
+    expect(p.facts.map((f) => f.id)).toEqual(['ship_destination']);
+    expect(fillSlots('{fact:ship_destination}.', p, { lang: 'vi' }).text).toBe(
+      'shop giao toàn quốc.',
+    );
+    expect(fillSlots('{fact:ship_destination}.', p, { lang: 'en' }).text).toBe(
+      'we ship nationwide.',
+    );
+  });
+  it('dòng toàn quốc không phải Việt Nam (US) → nêu quốc gia; chỉ có nội thành hoặc không có dòng → unknown', () => {
+    const us = buildFactPlan({
+      products: [],
+      topics: ['ship_destination'],
+      policy: { shipping: [usRow] },
+      destination: null,
+      stock: { disclose: 'status', lowAt: null },
+    });
+    expect(fillSlots('{fact:ship_destination}.', us, { lang: 'en' }).text).toBe(
+      'we ship to the United States.',
+    );
+    for (const shipping of [[cityOnly], []]) {
+      const p = buildFactPlan({
+        products: [],
+        topics: ['ship_destination'],
+        policy: { shipping },
+        destination: null,
+        stock: { disclose: 'status', lowAt: null },
+      });
+      expect(p.facts[0]?.status).toBe('unknown');
+    }
   });
 });

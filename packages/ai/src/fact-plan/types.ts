@@ -63,7 +63,7 @@ export type FactValue =
     }
   | { type: 'days_mode'; mode: 'at_checkout' }
   /** Giao tới nơi khách hỏi: `ok` = nằm trong vùng giao; `shipsTo` = các quốc gia shop giao (mã ISO) để nêu khi không khớp. */
-  | { type: 'destination'; ok: boolean; place: string; shipsTo: string[] }
+  | { type: 'destination'; ok: boolean; place: string; shipsTo: string[]; nationwide?: boolean }
   | { type: 'refund_to'; to: 'original_payment' }
   | { type: 'return_shipping'; payer: 'customer_change_of_mind' | 'shop' }
   | { type: 'return_eligibility'; mode: 'varies_by_item' };

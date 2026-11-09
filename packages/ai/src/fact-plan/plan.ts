@@ -283,8 +283,28 @@ export function buildFactPlan(input: FactPlanInput): FactPlan {
       : rows.filter((row) => countriesOf(row).includes(input.destination?.country ?? ''));
   const destinationFact = () => {
     const place = input.destination;
-    if (rows.length === 0 || place === undefined || place === null) {
+    if (rows.length === 0)
       return mark('ship_destination', unknown('ship_destination', 'ship_destination'));
+    if (place === undefined || place === null) {
+      // Khách hỏi "ship tỉnh?" không nêu nơi cụ thể: có dòng toàn quốc thì trả lời "giao toàn quốc"; không có → chưa biết (không đoán).
+      const nationwide = rows.find((row) => row.kind === 'nationwide');
+      if (!nationwide)
+        return mark('ship_destination', unknown('ship_destination', 'ship_destination'));
+      return mark(
+        'ship_destination',
+        known(
+          'ship_destination',
+          'ship_destination',
+          {
+            type: 'destination',
+            ok: true,
+            place: countriesOf(nationwide)[0] as string,
+            shipsTo: [...new Set(rows.flatMap(countriesOf))],
+            nationwide: true,
+          },
+          nationwide.sourceId,
+        ),
+      );
     }
     const hit = rows.find((row) => countriesOf(row).includes(place.country));
     const shipsTo = [...new Set(rows.flatMap(countriesOf))];
