@@ -46,3 +46,8 @@ next-env.d.ts
 /docs/plans/QUYET_DINH_CHO_DUYET.md
 /docs/CAN_BAN_CUNG_CAP.md
 /docs/testing/KIEM_TRA_TAY.md
+
+# Sản phẩm phụ của công cụ/đo thử — không commit
+prwatch.*
+tools/eval/datasets/_tmp-*
+packages/ai/.vitest/
