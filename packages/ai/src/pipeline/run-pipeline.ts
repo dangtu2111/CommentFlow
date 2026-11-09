@@ -668,8 +668,16 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // `decideFor(strict)`: strict = coi mọi ý KHÔNG phải hỏi giá là CHƯA có nguồn (dùng khi guard nghĩa loại bản soạn đầu).
   // Hàng lỗi trùng phạm vi bảo hành: nhãn CHÍNH là advice/price, nhãn phụ complaint, và plan đã khớp phạm vi thẻ bảo hành (requiresHumanReview) → không để nhãn phụ ép chuyển người;
   // câu trả lời vẫn bắt buộc người duyệt (không tự gửi). Nhãn chính complaint, hoặc phạm vi không khớp (plan.handoff) → giữ chuyển người.
+  // Mở rộng (LABEL-SECONDARY-COMPLAINT): câu hỏi đổi trả THƯỜNG ("mặc không vừa được đổi không") — chủ đề thuộc nhóm đổi trả, KHÔNG phải hàng lỗi (`defect`), plan không chuyển người và đã có sự kiện
+  // đổi trả ĐÃ BIẾT — nhãn phụ complaint cũng không ép chuyển người (trả lời từ chính sách đã duyệt, không cần người duyệt thêm).
+  const RETURN_KINDS = ['returns', 'refund_to', 'return_shipping', 'return_eligibility'];
+  const ordinaryReturnQuestion =
+    factPlan !== null &&
+    factPlan.handoff !== true &&
+    !factTopics.includes('defect') &&
+    factPlan.facts.some((fact) => fact.status === 'known' && RETURN_KINDS.includes(fact.kind));
   const waiveSecondaryComplaint =
-    factPlan?.requiresHumanReview === true &&
+    (factPlan?.requiresHumanReview === true || ordinaryReturnQuestion) &&
     (label === 'advice' || label === 'price') &&
     extract.labels.some((item) => item.label === 'complaint');
   const decideExtract = waiveSecondaryComplaint

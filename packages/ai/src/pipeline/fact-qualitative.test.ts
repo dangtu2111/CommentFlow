@@ -213,3 +213,33 @@ describe('FR-160: cam kết hoàn tiền / khẳng định quy định → chuy�
     expect(r.decision.action).toBe('answer');
   });
 });
+
+describe('LABEL-SECONDARY-COMPLAINT: nhãn phụ complaint không ép chuyển người ở câu hỏi đổi trả thường', () => {
+  const both = { labels: [{ label: 'advice' }, { label: 'complaint' }] } as never;
+  it('đổi trả thường + sự kiện đổi trả đã biết + nhãn phụ complaint → answer (không cần người duyệt thêm)', async () => {
+    const r = await ask("it doesn't fit, can I return it?", ['return_eligibility'], both);
+    expect(r.decision.action).toBe('answer');
+    expect(r.decision.reason).not.toBe('complaint');
+    expect(r.reply).toContain('depends on the item');
+  });
+  it('nhãn CHÍNH complaint → vẫn chuyển người', async () => {
+    const r = await ask("it doesn't fit, can I return it?", ['return_eligibility'], {
+      labels: [{ label: 'complaint' }, { label: 'advice' }],
+    } as never);
+    expect(r.decision).toMatchObject({ action: 'handoff', reason: 'complaint' });
+  });
+  it('hàng lỗi (defect) → vẫn chuyển người dù nhãn chính advice', async () => {
+    const r = await ask(
+      'item arrived broken, can I return it?',
+      ['defect', 'return_eligibility'],
+      both,
+    );
+    expect(r.decision.action).toBe('handoff');
+  });
+  it('chưa có sự kiện đổi trả đã biết (shop chưa khai) → vẫn chuyển người', async () => {
+    const r = await ask("it doesn't fit, can I return it?", ['return_eligibility'], both, {
+      shipping: [],
+    });
+    expect(r.decision.action).toBe('handoff');
+  });
+});
