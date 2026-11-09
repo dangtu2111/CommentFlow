@@ -12,6 +12,7 @@ export {
   sameSlotSet,
   slotIds,
 } from './slots';
+export { type PolicySuggestion, suggestPolicyFacts, valueAppearsInEvidence } from './suggest';
 export { factTopicsOf } from './topics';
 export type {
   Fact,

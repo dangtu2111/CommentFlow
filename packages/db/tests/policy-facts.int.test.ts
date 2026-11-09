@@ -7,6 +7,7 @@ import {
   deletePolicyFact,
   listAllPolicyFacts,
   listApprovedPolicyFacts,
+  refreshPolicySuggestions,
   savePolicyFact,
 } from '../src/queries/policy-facts';
 import {
@@ -411,5 +412,70 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
       ),
       CHECK,
     );
+  });
+});
+
+describe('refreshPolicySuggestions — hệ thống làm mới đề xuất', () => {
+  let rws: string;
+  let rowner: string;
+  beforeAll(async () => {
+    rws = await seedWorkspace(admin);
+    rowner = await seedUser(admin, 'rowner');
+    await seedMember(admin, rws, rowner, 'owner');
+  });
+  const sug = (slot: string, feeMinor: number) => ({
+    kind: 'ship_region' as const,
+    slot,
+    data: { ...nationwide, feeMinor },
+    evidence: `Phí ship ${feeMinor}`,
+  });
+  const run = (
+    suggestions: ReturnType<typeof sug>[],
+    origin: 'shopify_suggested' | 'text_suggested' = 'shopify_suggested',
+  ) =>
+    db.withJob(rws, (tx) =>
+      refreshPolicySuggestions(tx, rws, origin, suggestions, 'shopify:policies'),
+    );
+  const draftOf = async (slot: string) =>
+    (await db.withWorkspace(rws, (tx) => listAllPolicyFacts(tx, rws))).find(
+      (r) => r.slot === slot && r.status === 'draft',
+    );
+
+  it('tạo nháp; đồng bộ lại cùng nội dung KHÔNG tăng rev; đổi nội dung thì tăng; không còn được đề xuất thì xóa', async () => {
+    expect(await run([sug('rf-a', 30000)])).toEqual({ drafted: 1, removed: 0 });
+    const first = await draftOf('rf-a');
+    expect(first?.rev).toBe(1);
+    await run([sug('rf-a', 30000)]);
+    expect((await draftOf('rf-a'))?.rev).toBe(1);
+    await run([sug('rf-a', 35000)]);
+    expect((await draftOf('rf-a'))?.rev).toBe(2);
+    expect(await run([])).toEqual({ drafted: 0, removed: 1 });
+    expect(await draftOf('rf-a')).toBeUndefined();
+  });
+
+  it('trùng hệt bản ĐÃ DUYỆT → không tạo nháp; không bao giờ đụng bản đã duyệt hay nháp của nguồn khác', async () => {
+    await db.withActor(rws, rowner, (tx) =>
+      savePolicyFact(
+        tx,
+        base({ workspaceId: rws, slot: 'rf-b', data: { ...nationwide, feeMinor: 30000 } }),
+      ),
+    );
+    expect(await run([sug('rf-b', 30000)])).toEqual({ drafted: 0, removed: 0 });
+    expect(await draftOf('rf-b')).toBeUndefined();
+    await run([sug('rf-c', 20000)], 'text_suggested');
+    await run([]); // làm mới nguồn shopify (rỗng) không xóa nháp text_suggested
+    expect(await draftOf('rf-c')).toBeDefined();
+    const approved = await db.withWorkspace(rws, (tx) => listApprovedPolicyFacts(tx, rws));
+    expect(approved.some((r) => r.slot === 'rf-b')).toBe(true);
+  });
+
+  it('đề xuất sai cấu trúc bị bỏ (không ghi, không làm hỏng lượt)', async () => {
+    const bad = {
+      kind: 'ship_region' as const,
+      slot: 'rf-bad',
+      data: { kind: 'city' },
+      evidence: 'x',
+    };
+    expect(await run([bad as never])).toEqual({ drafted: 0, removed: 0 });
   });
 });

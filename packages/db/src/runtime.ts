@@ -345,11 +345,14 @@ export {
   releasePipelineTurn,
 } from './queries/pipeline-turns';
 export {
+  type ApprovePolicyFactResult,
   approvePolicyFact,
   deletePolicyFact,
   listAllPolicyFacts,
   listApprovedPolicyFacts,
   type PolicyFactRow,
+  type PolicySuggestionInput,
+  refreshPolicySuggestions,
   type SavePolicyFactInput,
   savePolicyFact,
 } from './queries/policy-facts';
