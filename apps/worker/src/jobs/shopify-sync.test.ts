@@ -150,6 +150,32 @@ describe('runShopifySync', () => {
     expect(JSON.stringify(warn.mock.calls)).not.toContain('read_legal_policies');
   });
 
+  it('đề xuất chính sách có cấu trúc: gọi sau khi nạp chính sách, truyền văn bản thuần', async () => {
+    const suggestPolicyFacts = vi.fn().mockResolvedValue(undefined);
+    const { deps, applyPolicies } = setup({ suggestPolicyFacts });
+    await runShopifySync(deps);
+    expect(suggestPolicyFacts).toHaveBeenCalledWith([
+      expect.objectContaining({ type: 'REFUND_POLICY', content: '7 ngày' }),
+    ]);
+    expect(applyPolicies).toHaveBeenCalledTimes(1);
+  });
+
+  it('đề xuất lỗi KHÔNG làm hỏng việc nạp chính sách/sản phẩm: vẫn ok, chỉ cảnh báo, không đánh dấu bỏ qua chính sách', async () => {
+    const { deps, record, warn } = setup({
+      suggestPolicyFacts: async () => {
+        throw new Error('boom');
+      },
+    });
+    expect(await runShopifySync(deps)).toBe('ok');
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'shopify_policy_suggestions_skipped' }),
+    );
+    expect(record).toHaveBeenCalledWith(
+      'ok',
+      expect.not.objectContaining({ policiesSkipped: true }),
+    );
+  });
+
   it('nạp chính sách vào DB lỗi → cũng chỉ bỏ qua chính sách', async () => {
     const { deps, record } = setup({
       applyPolicies: async () => {
