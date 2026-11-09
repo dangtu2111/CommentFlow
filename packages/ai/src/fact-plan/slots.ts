@@ -141,10 +141,19 @@ const CONCEPT_SLOT_KINDS: Record<ConceptId, readonly FactKind[]> = {
 };
 /** Câu mời nhắn tin/inbox/liên hệ: CHỈ code được viết (ADR 017 điểm 5) — bản LLM có câu mời bị từ chối cứng. */
 const INVITATION =
-  /(?<![\p{L}\p{N}])(?:inbox|ib|nhắn tin|nhắn shop|liên hệ|gửi tin nhắn|(?:please )?message (?:us|the shop|our shop|shop)|contact (?:us|the shop|our shop)|dm us|reach out)(?![\p{L}\p{N}])/iu;
-/** Tình trạng hàng LLM tự viết ngoài chỗ giữ chỗ tồn kho. */
-const STOCK_CLAIM =
-  /(?<![\p{L}\p{N}])(?:còn hàng|hết hàng|sắp hết|in stock|out of stock|sold out|available)(?![\p{L}\p{N}])/iu;
+  /(?<![\p{L}\p{N}])(?:inbox|ib|nhắn tin|nhắn shop|liên hệ (?:với )?(?:shop|cửa hàng|chúng tôi)|gửi tin nhắn|(?:please )?message (?:us|the shop|our shop|shop)|contact (?:us|the shop|our shop|shop)|dm us|reach out to (?:us|the shop|our shop|shop))(?![\p{L}\p{N}])/iu;
+/**
+ * Tình trạng hàng LLM tự viết ngoài chỗ giữ chỗ tồn kho: "còn hàng/hết hàng/còn sẵn", "in stock/out of stock/sold out", và "available" CHỈ khi là vị ngữ khẳng định ("is available",
+ * "still available") hoặc đứng một mình — không bắt "available in black", "available shipping methods", "available options".
+ */
+const STOCK_CLAIM = new RegExp(
+  [
+    String.raw`(?<![\p{L}\p{N}])(?:còn hàng|hết hàng|còn sẵn|sắp hết|in stock|out of stock|sold out)(?![\p{L}\p{N}])`,
+    String.raw`(?<![\p{L}\p{N}])(?:is|are|it's|now|currently|still)\s+available(?![\p{L}\p{N}])(?!\s+(?:in|for|at|on|as|to|with)(?![\p{L}\p{N}]))(?!\s+(?:options?|colou?rs?|sizes?|shipping|methods?))`,
+    String.raw`(?:^|[.!?]\s*)available\s*[.!]?\s*$`,
+  ].join('|'),
+  'iu',
+);
 const SENTENCE_BREAK = /(?<=[.!?…])\s+|\n+/;
 
 /** Có khẳng định/nêu khái niệm chính sách ngoài chỗ giữ chỗ cùng loại không (xét từng câu). */

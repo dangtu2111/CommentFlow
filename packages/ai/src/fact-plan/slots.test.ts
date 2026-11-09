@@ -152,14 +152,35 @@ describe('checkSlotText — câu mời chỉ do code viết; không tự viết 
     ['Giá {fact:price.1}, bạn inbox shop nhé.', 'invitation'],
     ['Giá {fact:price.1}. Please message us for details.', 'invitation'],
     ['Giá {fact:price.1}, bạn liên hệ shop để biết thêm.', 'invitation'],
+    ['Price {fact:price.1}. Please contact us for more.', 'invitation'],
+    ['Price {fact:price.1}. DM us anytime.', 'invitation'],
     ['{fact:price.1}, còn hàng bạn nhé.', 'stock_claim'],
     ['{fact:price.1}. It is in stock.', 'stock_claim'],
     ['{fact:price.1}. Sold out soon.', 'stock_claim'],
-  ])('%s → %s', (text, code) => {
+    ['{fact:price.1}. The item is available.', 'stock_claim'],
+    ['{fact:price.1}. Still available!', 'stock_claim'],
+    ['{fact:price.1}. Hiện còn sẵn nhé.', 'stock_claim'],
+    ['{fact:price.1}. Available.', 'stock_claim'],
+  ])('DƯƠNG: %s → %s', (text, code) => {
     expect(checkSlotText(text, plan).violations.map((v) => v.code)).toContain(code);
   });
-  it('dùng chỗ giữ chỗ tồn kho thì hợp lệ; "available" là từ riêng (không bắt "availability")', () => {
+  it.each([
+    'Price {fact:price.1}, available in black or white.',
+    'Price {fact:price.1}. Available shipping methods are shown at checkout.',
+    'Price {fact:price.1}. Available options: S, M, L.',
+    'Price {fact:price.1}; check availability soon.',
+    'Price {fact:price.1}. Is it available in size M?',
+    'Price {fact:price.1}, available for pre-order.',
+    'Giá {fact:price.1}, bạn có thể liên hệ đơn vị vận chuyển để theo dõi.',
+    'Price {fact:price.1}. Please contact the carrier for tracking.',
+    'Giá {fact:price.1}, liên hệ hãng để bảo hành.',
+    'Price {fact:price.1}. Reach out to the carrier.',
+  ])('ÂM (không bắt nhầm): %s', (text) => {
+    const codes = checkSlotText(text, plan).violations.map((v) => v.code);
+    expect(codes).not.toContain('stock_claim');
+    expect(codes).not.toContain('invitation');
+  });
+  it('dùng chỗ giữ chỗ tồn kho thì hợp lệ', () => {
     expect(checkSlotText('Giá {fact:price.1}, {fact:stock.1}.', plan).ok).toBe(true);
-    expect(checkSlotText('Price {fact:price.1}; check availability soon.', plan).ok).toBe(true);
   });
 });
