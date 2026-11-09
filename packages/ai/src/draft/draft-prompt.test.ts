@@ -1,5 +1,6 @@
-import { maskPii, unsafeMarkMasked } from '@flow/shared';
+import { KB_GAP_TOPICS, maskPii, unsafeMarkMasked } from '@flow/shared';
 import { describe, expect, it } from 'vitest';
+import { HANDOFF_TEMPLATE_KEYS } from '../decide/decide-action';
 import {
   type ActionBrief,
   buildDraftMessages,
@@ -172,7 +173,7 @@ describe('FR-147 FR-141 khối hành động đã chọn (LLM chỉ viết câu)
     expect(productAsk).toContain('Áo B');
     const redirectUser = buildDraftMessages(base({ decision: redirect }))[2]?.content ?? '';
     expect(redirectUser).toContain('Hành động: redirect');
-    expect(redirectUser).toContain('shipping');
+    expect(redirectUser).toContain('vận chuyển');
   });
 
   it('không có quyết định → khối người dùng không có dòng hành động (tương thích cũ)', () => {
@@ -258,5 +259,33 @@ describe('Q-LLM2 số biến thể cấu hình được (variantCount)', () => {
     expect(clampVariantCount(2.9)).toBe(2);
     expect(clampVariantCount(Number.NaN)).toBe(0);
     expect(userBlock({ variantCount: 99 })).toContain('Số biến thể: 4');
+  });
+});
+
+describe('prompt không chứa mã enum thô của KbGapTopic / HandoffTemplateKey', () => {
+  const ENUM_CODES = [...KB_GAP_TOPICS, ...HANDOFF_TEMPLATE_KEYS];
+  it('mọi chủ đề chưa nguồn và mẫu câu mời đều ra nhãn tiếng Việt', () => {
+    const text =
+      buildDraftMessages({
+        ...base(),
+        decision: {
+          action: 'redirect',
+          clarify: null,
+          unansweredTopics: [...KB_GAP_TOPICS],
+          redirectTemplates: [...HANDOFF_TEMPLATE_KEYS],
+        },
+      }).at(-1)?.content ?? '';
+    const lines = text
+      .split('\n')
+      .filter((line) => line.startsWith('Chủ đề chưa có nguồn') || line.startsWith('Mẫu câu mời'));
+    expect(lines).toHaveLength(2);
+    for (const line of lines) {
+      for (const code of ENUM_CODES) {
+        expect(line, `mã "${code}" lọt vào: ${line}`).not.toMatch(
+          new RegExp(String.raw`(?<![\p{L}\p{N}_])${code}(?![\p{L}\p{N}_])`, 'u'),
+        );
+      }
+    }
+    expect(text).not.toMatch(/product_info|order_status|stock_check/);
   });
 });

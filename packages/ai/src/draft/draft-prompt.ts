@@ -183,7 +183,8 @@ function renderDecision(decision: ActionBrief): string[] {
     lines.push(`Chủ đề chưa có nguồn (mời ib, không đoán): ${labels.join(', ')}`);
   }
   if (decision.redirectTemplates.length > 0) {
-    lines.push(`Mẫu câu mời: ${decision.redirectTemplates.join(', ')}`);
+    const templates = decision.redirectTemplates.map((key) => TEMPLATE_LABEL_VI[key] ?? key);
+    lines.push(`Mẫu câu mời: ${templates.join(', ')}`);
   }
   if (decision.redirectTemplates.includes('stock_check')) {
     // FR-151: tồn kho chưa chắc → không nói còn hàng / số lượng, chỉ mời shop kiểm kho.
@@ -206,12 +207,21 @@ export function clampVariantCount(count: number): number {
 /** Nhãn chủ đề kiến thức đưa vào prompt (thay mã enum). */
 const TOPIC_LABEL_VI: Record<string, string> = {
   product_info: 'thông tin sản phẩm',
-  size: 'tư vấn size',
+  size: 'tư vấn kích cỡ',
   shipping: 'vận chuyển',
   policy: 'chính sách',
   discount: 'khuyến mãi',
   order_status: 'tình trạng đơn hàng',
   other: 'nội dung khác',
+};
+
+/** Nhãn tiếng Việt cho mẫu câu mời (thay mã `HandoffTemplateKey` thô trong prompt). */
+const TEMPLATE_LABEL_VI: Record<string, string> = {
+  shipping: 'mời hỏi về vận chuyển',
+  discount: 'mời hỏi về khuyến mãi',
+  order_status: 'mời hỏi về tình trạng đơn hàng',
+  stock_check: 'mời để shop kiểm tra tồn kho',
+  other: 'mời nhắn shop',
 };
 
 const FACT_LABELS: Record<string, string> = {
