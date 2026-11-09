@@ -1,0 +1,1 @@
+| Sửa tay / Thêm giá trị chính sách có cấu trúc (PR B2) | `formToPolicyData`, `policyFormDefaults`, `savePolicyValueAction`, `PolicyValueForm` | `apps/web/src/lib/kb-policy-form.ts` · `app/app/(guarded)/kb/policy-actions.ts` · `components/kb/policy-value-form.tsx` · trang `app/app/(guarded)/kb/policies/edit/page.tsx` |

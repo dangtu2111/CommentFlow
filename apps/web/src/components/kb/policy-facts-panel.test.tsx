@@ -236,6 +236,15 @@ describe('PolicyFactsPanel', () => {
       expect(out).toContain('actions.discard');
     });
 
+    it('liên kết Sửa tay / Thêm trỏ đúng biểu mẫu (kind + id); Staff không có liên kết', async () => {
+      const out = await withActions([row({ id: 'a1' }), draftRow(false)], true);
+      expect(out).toContain('href="/app/kb/policies/edit?kind=ship_region&amp;id=a1"');
+      expect(out).toContain('href="/app/kb/policies/edit?kind=returns&amp;id=d1"');
+      expect(out).toContain('href="/app/kb/policies/edit?kind=ship_region"');
+      expect(out).toContain('href="/app/kb/policies/edit?kind=payment"');
+      expect(await withActions([row({ id: 'a1' })], false)).not.toContain('/app/kb/policies/edit');
+    });
+
     it('đề xuất đã rõ điều kiện → không có ô tick; Staff không có form', async () => {
       const out = await withActions([draftRow(false)], true);
       expect(out).not.toContain('name="confirm"');

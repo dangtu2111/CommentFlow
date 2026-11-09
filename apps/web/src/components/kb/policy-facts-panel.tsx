@@ -259,6 +259,26 @@ function DisabledAction({
   );
 }
 
+const EDIT_PAGE = '/app/kb/policies/edit';
+const KIND_OF_CARD: Record<PolicyCard, string> = {
+  ship: 'ship_region',
+  returns: 'returns',
+  warranty: 'warranty',
+  payment: 'payment',
+};
+
+/** Liên kết tới biểu mẫu Sửa tay/Thêm (chỉ Owner, khi đã nối thao tác). */
+function LinkAction({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      className="rounded-lg bg-surface-container px-3 py-1.5 font-label-md text-label-md text-primary"
+    >
+      {children}
+    </a>
+  );
+}
+
 /** Khối nháp chờ duyệt (đề xuất của máy hoặc bản Owner đã sửa): giá trị mới, trích dẫn nguyên văn, so với bản đang duyệt, nút thao tác. */
 function DraftBlock({
   entry,
@@ -327,7 +347,9 @@ function DraftBlock({
             >
               {t('actions.discard')}
             </button>
-            <DisabledAction t={t}>{t('actions.edit')}</DisabledAction>
+            <LinkAction href={`${EDIT_PAGE}?kind=${draft.kind}&id=${draft.id}`}>
+              {t('actions.edit')}
+            </LinkAction>
             <button
               type="submit"
               formAction={actions.approve}
@@ -418,7 +440,13 @@ function EntryRow({
           )}
           {isOwner ? (
             <div className="flex justify-end gap-2">
-              <DisabledAction t={t}>{t('actions.edit')}</DisabledAction>
+              {actions ? (
+                <LinkAction href={`${EDIT_PAGE}?kind=${approved.kind}&id=${approved.id}`}>
+                  {t('actions.edit')}
+                </LinkAction>
+              ) : (
+                <DisabledAction t={t}>{t('actions.edit')}</DisabledAction>
+              )}
             </div>
           ) : null}
         </div>
@@ -431,11 +459,13 @@ function EntryRow({
 function CardShell({
   view,
   isOwner,
+  actions,
   t,
   children,
 }: {
   view: PolicyCardView;
   isOwner: boolean;
+  actions: PolicyActions | undefined;
   t: T;
   children: ReactNode;
 }) {
@@ -463,9 +493,15 @@ function CardShell({
           </div>
         </div>
         {isOwner ? (
-          <DisabledAction t={t}>
-            {view.card === 'ship' ? t('actions.addRegion') : t('actions.add')}
-          </DisabledAction>
+          actions ? (
+            <LinkAction href={`${EDIT_PAGE}?kind=${KIND_OF_CARD[view.card]}`}>
+              {view.card === 'ship' ? t('actions.addRegion') : t('actions.add')}
+            </LinkAction>
+          ) : (
+            <DisabledAction t={t}>
+              {view.card === 'ship' ? t('actions.addRegion') : t('actions.add')}
+            </DisabledAction>
+          )
         ) : null}
       </div>
       {children}
@@ -579,7 +615,7 @@ export async function PolicyFactsPanel({
         ) : null}
       </section>
       {view.cards.map((card) => (
-        <CardShell key={card.card} view={card} isOwner={isOwner} t={t}>
+        <CardShell key={card.card} view={card} isOwner={isOwner} actions={actions} t={t}>
           {card.entries.length === 0 ? (
             <EmptyState t={t} />
           ) : (
