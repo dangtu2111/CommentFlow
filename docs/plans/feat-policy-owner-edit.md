@@ -25,6 +25,11 @@ Không có.
 
 Sửa: `packages/db/src/queries/policy-facts.ts` (`editPolicyDraft`, `refreshPolicySuggestions` bỏ qua slot đã `manual`), `packages/db/src/runtime.ts` (export), `packages/db/tests/policy-facts.int.test.ts`, `docs/gap-matrix.md`.
 
+## Lưu ý cho UI (màn "Chính sách có cấu trúc", PR 4)
+
+- **Id đổi sau khi lưu:** sửa nháp của máy sẽ XÓA dòng cũ và TẠO dòng mới (id đổi, `rev` về 1). Màn hình phải TẢI LẠI danh sách sau khi lưu, không giữ id/rev cũ (duyệt kèm id cũ sẽ ra `not_found`).
+- **Nhãn "đã sửa tay":** nháp `manual` giữ `evidence` của máy (câu trích từ văn bản gốc). Màn hình gắn nhãn "đã sửa tay" (theo `origin = 'manual'`) cạnh trích dẫn nguồn, để Owner biết số liệu không còn đúng nguyên văn trích dẫn.
+
 ## Migration
 
 Không.
