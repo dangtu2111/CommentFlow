@@ -36,6 +36,13 @@ describe('FR-136 classifyAsk — chủ đề của một ý hỏi', () => {
     ['số lượng tồn', 'stock'],
     ['inventory', 'stock'],
     ['availability', 'stock'],
+    // Hỏi số lượng nói tắt (mẫu vi-04): phải là tồn kho, không phải 'other'.
+    ['còn mấy cái', 'stock'],
+    ['con may cai', 'stock'],
+    ['còn bao nhiêu', 'stock'],
+    ['còn nhiều không', 'stock'],
+    ['còn ít không', 'stock'],
+    ['còn đủ không', 'stock'],
   ])('%s → %s', (ask, topic) => {
     expect(classifyAsk(ask)).toBe(topic);
   });

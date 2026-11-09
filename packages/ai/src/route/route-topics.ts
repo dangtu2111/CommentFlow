@@ -19,7 +19,7 @@ const OTHER_INTENT =
 const TOPIC_PATTERNS: ReadonlyArray<readonly [AskTopic, RegExp]> = [
   [
     'stock',
-    /\b(con hang|het hang|con khong|con ko|con k|ton kho|so luong ton|in stock|stock|available|availability|inventory)\b/,
+    /\b(con hang|het hang|con khong|con ko|con k|con may|con bao nhieu|con nhieu|con it|con du|ton kho|so luong ton|in stock|stock|available|availability|inventory)\b/,
   ],
   ['size', /\b(size|kich co|kich thuoc|sz)\b/],
   ['color', /\b(mau|color|colour)\b/],
