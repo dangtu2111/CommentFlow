@@ -381,6 +381,56 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     ).toBe(false);
   });
 
+  it('needsReview: đề xuất máy chưa qua tay Owner KHÔNG duyệt được; Owner xác nhận → duyệt và cờ được gỡ (không cần đổi trigger/RLS)', async () => {
+    const flagged = {
+      kind: 'returns' as const,
+      slot: 'returns',
+      data: { days: 7, needsReview: true },
+      evidence: 'Đổi trả trong 7 ngày, trừ hàng giảm giá.',
+    };
+    const draft = await db.withJob(ws, (tx) =>
+      savePolicyFact(tx, base({ ...flagged, status: 'draft', origin: 'text_suggested' })),
+    );
+    const rev = (await row(draft)).rev;
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, rev))).toBe(
+      'needs_review',
+    );
+    expect((await row(draft)).status).toBe('draft');
+    expect(
+      await db.withActor(ws, owner, (tx) =>
+        approvePolicyFact(tx, ws, draft, rev, { confirmReview: true }),
+      ),
+    ).toBe('approved');
+    const after = await row(draft);
+    expect(after.status).toBe('approved');
+    expect(after.data).toEqual({ days: 7 });
+    expect(after.approved_by).toBe(owner);
+  });
+
+  it('needsReview + đã có bản duyệt cùng slot: xác nhận → bản duyệt (giữ id) nhận dữ liệu đã gỡ cờ', async () => {
+    const old = await db.withActor(ws, owner, (tx) =>
+      savePolicyFact(tx, base({ kind: 'warranty', slot: 'warranty', data: { months: 6 } })),
+    );
+    const draft = await db.withJob(ws, (tx) =>
+      savePolicyFact(
+        tx,
+        base({
+          kind: 'warranty',
+          slot: 'warranty',
+          status: 'draft',
+          origin: 'text_suggested',
+          evidence: 'e',
+          data: { months: 12, needsReview: true },
+        }),
+      ),
+    );
+    const rev = (await row(draft)).rev;
+    await db.withActor(ws, owner, (tx) =>
+      approvePolicyFact(tx, ws, draft, rev, { confirmReview: true }),
+    );
+    expect((await row(old)).data).toEqual({ months: 12 });
+  });
+
   it('Staff không duyệt được (RLS), người lạ không duyệt bản của workspace khác', async () => {
     const draft = await db.withJob(ws, (tx) =>
       savePolicyFact(

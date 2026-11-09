@@ -29,7 +29,7 @@ import { costReport, renderReport } from '../report';
 import { type Backend, createRunner, runAll } from '../runner';
 import { shopFixtureSchema } from '../shop';
 import { createPgTrigramScorer, type TrigramScorer } from '../shop-trigram';
-import { renderSlotReport } from '../slot-metrics';
+import { renderFactBreakdown, renderSlotReport } from '../slot-metrics';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -233,7 +233,13 @@ const factSlots = values['fact-slots']
         console.error(issues.join(String.fromCharCode(10)));
         process.exit(2);
       }
-      return { policy, stock: { disclose: 'count' as const, lowAt: null } }; // gold hỏi "còn mấy cái" → giả định Owner bật "Nêu số lượng tồn"
+      return {
+        policy,
+        stock: {
+          disclose: shop.stockDisclosure === 'quantity' ? ('count' as const) : ('status' as const),
+          lowAt: null,
+        },
+      };
     })()
   : undefined;
 
@@ -263,7 +269,7 @@ async function runOnce(variantCount: number, runIndex = 1) {
   const outcomes = await runAll(samples, runner, Number(values.concurrency), (done, total) => {
     if (done % 10 === 0 || done === total) process.stderr.write(`  ${done}/${total}\r`);
   });
-  const metrics = computeMetrics(samples, outcomes);
+  const metrics = computeMetrics(samples, outcomes, { stockDisclosure: shop.stockDisclosure });
   const cost = costReport(outcomes, samples.length);
   const report = renderReport({
     title: `EVAL-RUNNER — ${backend}, ${variantCount + 1} phiên bản câu soạn`,
@@ -304,7 +310,9 @@ async function runOnce(variantCount: number, runIndex = 1) {
     values.out as string,
     `eval-${backend}-v${variantCount}-${stamp}${runIndex > 1 ? `-r${runIndex}` : ''}`,
   );
-  const slotSection = factSlots ? renderSlotReport(samples, outcomes, shop) : '';
+  const slotSection = `${renderFactBreakdown(samples, outcomes, shop.stockDisclosure)}${
+    factSlots ? renderSlotReport(samples, outcomes, shop) : ''
+  }`;
   writeFileSync(`${base}.md`, report + slotSection);
   writeFileSync(
     `${base}.jsonl`,

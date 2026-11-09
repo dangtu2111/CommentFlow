@@ -569,7 +569,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     factPlan !== null &&
     slotFacts !== null &&
     (decision.action === 'answer' || decision.action === 'redirect') &&
-    !draft.needs_human
+    // Bộ soạn đặt needs_human nhưng VẪN viết chỗ giữ chỗ → vẫn phải qua bước kiểm/điền (không để mã {fact:…} đi tiếp); needs_human trần (không chỗ giữ chỗ) giữ nguyên.
+    (!draft.needs_human ||
+      [draft.reply, ...(draft.variants ?? [])].some((text) => slotIds(text).length > 0))
   ) {
     const replyLang = lang === 'en' ? 'en' : 'vi';
     const required = requiredFactIds(factPlan);
@@ -613,6 +615,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       slotRendered = filled.rendered;
       draft = {
         ...draft,
+        needs_human: false,
+        reason: '',
         reply: withInvite(filled.text),
         variants: others,
         sources: filled.sourceIds,
@@ -686,6 +690,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       rawTexts: 1 + (draft.variants?.length ?? 0),
       rejected: 1 + (draft.variants?.length ?? 0),
       chosen: 'handoff',
+      finalNetTriggered: true,
     };
     draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
   }
@@ -781,6 +786,8 @@ export type SlotDiagnostics = {
   rawTexts: number;
   rejected: number;
   chosen: 'reply' | 'variant' | 'fallback' | 'handoff';
+  /** Lưới chặn CUỐI (mã {fact:…} còn sót sau bước kiểm/điền) đã kích hoạt — mục tiêu 0. */
+  finalNetTriggered?: boolean;
 };
 
 export const runTryPipeline = runPipeline;

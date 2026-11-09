@@ -62,6 +62,11 @@ export const shopFixtureSchema = z.object({
   }),
   products: z.array(productSchema),
   texts: z.array(textSchema),
+  /**
+   * Cách shop nêu tồn kho: `quantity` = nêu số lượng (Owner bật "Nêu số lượng tồn"); `status` = chỉ còn/hết hàng (MẶC ĐỊNH sản phẩm cho shop thật). Quyết định cả chế độ fact plan
+   * lẫn cách chấm "sự kiện bắt buộc" của câu hỏi tồn kho (nhãn bộ mẫu viết theo giả định của shop).
+   */
+  stockDisclosure: z.enum(['quantity', 'status']).default('status'),
   /** Chính sách có cấu trúc ĐÃ DUYỆT bởi Owner (chỉ dùng khi chạy `--fact-slots`; tương đương dòng `cf.policy_facts` status approved). */
   policyFacts: z.array(z.object({ kind: z.string().min(1), data: z.unknown() })).default([]),
 });

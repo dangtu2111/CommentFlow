@@ -108,3 +108,52 @@ describe('renderPolicyDiff / innerCitySamples', () => {
     ).toEqual(['a', 'c']);
   });
 });
+
+import { isStockTerm, termPresent } from './metrics';
+import { renderFactBreakdown } from './slot-metrics';
+
+describe('chấm sự kiện bắt buộc theo chế độ tồn kho của shop', () => {
+  const mk = (id: string, text: string, mustContain: string[]) =>
+    ({ id, text, expected: { mustContain } }) as never as EvalSample;
+  const stock = mk('s1', 'Váy hoa nhí còn hàng không ạ', ['3']);
+  const ret = mk('r1', 'Mua về không vừa có đổi được không shop', ['7']);
+  const price = mk('p1', 'Váy hoa nhí bao nhiêu', ['320.000']);
+
+  it('isStockTerm: chỉ số nguyên ≤ 3 chữ số trong câu hỏi tồn kho, không phải đổi trả', () => {
+    expect(isStockTerm(stock, '3')).toBe(true);
+    expect(isStockTerm(ret, '7')).toBe(false);
+    expect(isStockTerm(price, '320.000')).toBe(false);
+    expect(isStockTerm(mk('x', 'còn mấy cái', ['5']), '5')).toBe(true);
+  });
+  it('status: "còn hàng" đạt; quantity: phải có số', () => {
+    expect(termPresent(stock, 'Váy hoa nhí hiện còn hàng nhé', '3', 'status')).toBe(true);
+    expect(termPresent(stock, 'Váy hoa nhí hiện còn hàng nhé', '3', 'quantity')).toBe(false);
+    expect(termPresent(stock, 'Còn 3 sản phẩm', '3', 'quantity')).toBe(true);
+    expect(termPresent(stock, 'Chào bạn', '3', 'status')).toBe(false);
+    expect(termPresent(ret, 'Đổi trong 7 ngày', '7', 'status')).toBe(true);
+  });
+  it('renderFactBreakdown tách tổng / tồn kho / ngoài tồn kho', () => {
+    const out = new Map<string, SampleOutcome>([
+      ['s1', ok('s1', { reply: 'còn hàng' })],
+      ['r1', ok('r1', { reply: 'Đổi trong 7 ngày' })],
+      ['p1', ok('p1', { reply: 'Giá 999' })],
+    ]);
+    const text = renderFactBreakdown([stock, ret, price], out, 'status');
+    expect(text).toContain('Tổng: 2/3');
+    expect(text).toContain('Riêng tồn kho: 1/1');
+    expect(text).toContain('Ngoài tồn kho: 1/2');
+    expect(renderFactBreakdown([], new Map(), 'quantity')).toContain('Tổng: 0/0');
+  });
+  it('đếm lưới chặn cuối', () => {
+    const o = ok('n', {
+      slot: {
+        diagnostics: { rawTexts: 1, rejected: 1, chosen: 'handoff', finalNetTriggered: true },
+        required: 1,
+        known: 1,
+        unknown: 0,
+        clarify: false,
+      },
+    });
+    expect(summarizeSlots([o]).finalNetTriggered).toBe(1);
+  });
+});

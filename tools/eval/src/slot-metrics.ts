@@ -1,5 +1,6 @@
 import { suggestPolicyFacts } from '@flow/ai';
 import type { EvalSample } from './dataset';
+import { isStockTerm, type StockDisclosure, termPresent } from './metrics';
 import type { SampleOutcome } from './run-sample';
 
 /** Tổng hợp đường fact plan của MỘT lượt đo (`--fact-slots`): từ chối cứng, sự kiện bắt buộc, số ngoài chỗ giữ chỗ, hành động. */
@@ -15,6 +16,8 @@ export type SlotSummary = {
   clarify: number;
   /** Câu CUỐI còn số tiền/%/ngày/SĐT/link lạ (guard tiền chạy trên giá trị code điền): kỳ vọng 0. */
   finalMoneyViolations: number;
+  /** Số lần lưới chặn CUỐI ({fact:…} còn sót sau bước kiểm/điền) kích hoạt — mục tiêu 0. */
+  finalNetTriggered: number;
   actions: Record<string, number>;
 };
 
@@ -30,6 +33,7 @@ export function summarizeSlots(outcomes: Iterable<SampleOutcome>): SlotSummary {
     unknownFacts: 0,
     clarify: 0,
     finalMoneyViolations: 0,
+    finalNetTriggered: 0,
     actions: {},
   };
   for (const outcome of outcomes) {
@@ -48,6 +52,7 @@ export function summarizeSlots(outcomes: Iterable<SampleOutcome>): SlotSummary {
       s.rawTexts += diag.rawTexts;
       s.rejected += diag.rejected;
       s.chosen[diag.chosen] = (s.chosen[diag.chosen] ?? 0) + 1;
+      if (diag.finalNetTriggered) s.finalNetTriggered += 1;
     }
   }
   return s;
@@ -81,6 +86,7 @@ export function renderSlotSummary(s: SlotSummary): string {
     `- Câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG: ${s.rejected}/${s.rawTexts} (${pct(s.rejected, s.rawTexts)}); câu được chọn: ${JSON.stringify(s.chosen)}`,
     `- Sự kiện bắt buộc: ${s.requiredFacts}; đã biết ${s.knownFacts}, chưa biết (câu mời) ${s.unknownFacts}; hỏi lại tỉnh/thành: ${s.clarify}`,
     `- Câu cuối còn số/khẳng định ngoài chỗ giữ chỗ (guard tiền trên giá trị code điền): ${s.finalMoneyViolations}`,
+    `- Lưới chặn CUỐI ({fact:…} còn sót) kích hoạt: ${s.finalNetTriggered} (mục tiêu 0)`,
     `- Hành động: ${JSON.stringify(s.actions)}`,
   ].join('\n');
 }
@@ -164,4 +170,35 @@ export function innerCitySamples(samples: readonly EvalSample[]): string[] {
       return exact20k.test(must) || /nội thành|noi thanh|within the city|inner city/i.test(s.text);
     })
     .map((s) => s.id);
+}
+
+/** Sự kiện bắt buộc (mustContain) tách: tổng / riêng tồn kho / ngoài tồn kho — chấm theo chế độ nêu tồn của shop. */
+export function renderFactBreakdown(
+  samples: readonly EvalSample[],
+  outcomes: ReadonlyMap<string, SampleOutcome>,
+  mode: StockDisclosure,
+): string {
+  const tally = { all: [0, 0], stock: [0, 0], other: [0, 0] } as Record<string, [number, number]>;
+  for (const sample of samples) {
+    const must = sample.expected.mustContain;
+    const outcome = outcomes.get(sample.id);
+    if (must.length === 0 || !outcome) continue;
+    const ok = outcome.ok && must.every((term) => termPresent(sample, outcome.reply, term, mode));
+    const group = must.some((term) => isStockTerm(sample, term)) ? 'stock' : 'other';
+    for (const key of ['all', group]) {
+      (tally[key] as [number, number])[1] += 1;
+      if (ok) (tally[key] as [number, number])[0] += 1;
+    }
+  }
+  const row = (name: string, [passed, total]: [number, number]) =>
+    `- ${name}: ${passed}/${total}${total === 0 ? '' : ` (${((passed / total) * 100).toFixed(1)}%)`}`;
+  return [
+    '',
+    '',
+    `## Sự kiện bắt buộc (chế độ tồn kho của shop: ${mode === 'quantity' ? 'nêu số lượng' : 'chỉ còn/hết hàng'})`,
+    row('Tổng', tally.all as [number, number]),
+    row('Riêng tồn kho', tally.stock as [number, number]),
+    row('Ngoài tồn kho', tally.other as [number, number]),
+    '',
+  ].join(String.fromCharCode(10));
 }

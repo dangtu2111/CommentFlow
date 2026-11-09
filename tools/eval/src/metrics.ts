@@ -53,7 +53,35 @@ function checkExtract(
   return result;
 }
 
-export function checkSample(sample: EvalSample, outcome: SampleOutcome): SampleChecks {
+export type StockDisclosure = 'quantity' | 'status';
+export type CheckOptions = { stockDisclosure?: StockDisclosure };
+
+const STOCK_QUESTION = /(còn\s|còn$|con\s(ko|hk|hg|may|k)(?![\p{L}])|stock|available)/iu;
+const NOT_STOCK = /(đổi|doi|return|exchange)/i;
+const IN_STOCK_REPLY = /(còn hàng|hết hàng|sắp hết|in stock|out of stock|sold out|available)/i;
+
+/** Từ khóa bắt buộc là SỐ LƯỢNG TỒN: số nguyên ≤ 3 chữ số trong mẫu hỏi tồn kho (không phải đổi trả). Chỉ để chấm theo chế độ nêu tồn của shop; KHÔNG sửa nhãn. */
+export function isStockTerm(sample: EvalSample, term: string): boolean {
+  return /^\d{1,3}$/.test(term) && STOCK_QUESTION.test(sample.text) && !NOT_STOCK.test(sample.text);
+}
+
+/** Chế độ `status`: câu nói "còn hàng/hết hàng" đạt cho từ khóa số lượng tồn; chế độ `quantity`: phải có đúng con số. */
+export function termPresent(
+  sample: EvalSample,
+  reply: string,
+  term: string,
+  mode: StockDisclosure,
+): boolean {
+  if (mode === 'status' && isStockTerm(sample, term)) return IN_STOCK_REPLY.test(reply);
+  return includesFolded(reply, term);
+}
+
+export function checkSample(
+  sample: EvalSample,
+  outcome: SampleOutcome,
+  options: CheckOptions = {},
+): SampleChecks {
+  const mode = options.stockDisclosure ?? 'quantity';
   const { expected } = sample;
   if (!outcome.ok) {
     const failedExtract = Object.fromEntries(
@@ -86,7 +114,7 @@ export function checkSample(sample: EvalSample, outcome: SampleOutcome): SampleC
     lang: hasReply ? outcome.lang === expected.lang : null,
     facts:
       expected.mustContain.length > 0
-        ? expected.mustContain.every((term) => includesFolded(outcome.reply, term))
+        ? expected.mustContain.every((term) => termPresent(sample, outcome.reply, term, mode))
         : null,
     claimSourced: hasReply
       ? !outcome.replyViolations.some(
@@ -187,10 +215,11 @@ export type EvalMetrics = {
 export function computeMetrics(
   samples: readonly EvalSample[],
   outcomes: ReadonlyMap<string, SampleOutcome>,
+  options: CheckOptions = {},
 ): EvalMetrics {
   const pairs = samples.flatMap((sample) => {
     const outcome = outcomes.get(sample.id);
-    return outcome ? [{ sample, checks: checkSample(sample, outcome) }] : [];
+    return outcome ? [{ sample, checks: checkSample(sample, outcome, options) }] : [];
   });
   const byGroup = Object.fromEntries(
     LANG_GROUPS.map((group) => [

@@ -88,7 +88,7 @@ export async function savePolicyFact(tx: Database, input: SavePolicyFactInput): 
   return (same.rows[0] as { id: string }).id;
 }
 
-export type ApprovePolicyFactResult = 'approved' | 'not_found' | 'stale';
+export type ApprovePolicyFactResult = 'approved' | 'not_found' | 'stale' | 'needs_review';
 
 /**
  * Owner duyệt một bản NHÁP, KÈM `rev` Owner đang xem: khóa dòng nháp rồi so `rev`; lệch (worker vừa làm mới nháp) → 'stale', KHÔNG duyệt. Khớp → trong MỘT giao dịch: nếu đã có bản duyệt cùng
@@ -99,18 +99,22 @@ export async function approvePolicyFact(
   workspaceId: string,
   id: string,
   expectedRev: number,
+  options: { confirmReview?: boolean } = {},
 ): Promise<ApprovePolicyFactResult> {
-  const draft = await tx.execute<{ kind: string; slot: string; rev: number }>(sql`
-    SELECT kind, slot, rev FROM cf.policy_facts
+  const draft = await tx.execute<{ kind: string; slot: string; rev: number; review: boolean }>(sql`
+    SELECT kind, slot, rev, coalesce((data->>'needsReview')::boolean, false) AS review FROM cf.policy_facts
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'
        FOR UPDATE`);
   const row = draft.rows[0];
   if (!row) return 'not_found';
   if (row.rev !== expectedRev) return 'stale';
+  // Đề xuất của máy còn điều kiện/phạm vi chưa tách được (needsReview): Owner phải XÁC NHẬN rõ (đã chỉnh/đọc điều kiện) mới duyệt; khi xác nhận, cờ được gỡ khỏi bản đã duyệt.
+  if (row.review && options.confirmReview !== true) return 'needs_review';
+  const strip = options.confirmReview === true;
   // Đã có bản duyệt cùng (kind, slot): GIỮ NGUYÊN id của nó (pf:<id> ổn định cho claims/lịch sử/kiểm tra trước khi gửi) — chép data/evidence/source_ref từ nháp sang, rồi xóa nháp.
   const replaced = await tx.execute(sql`
     UPDATE cf.policy_facts AS cur
-       SET data = d.data, evidence = d.evidence, source_ref = d.source_ref
+       SET data = CASE WHEN ${strip}::boolean THEN d.data - 'needsReview' ELSE d.data END, evidence = d.evidence, source_ref = d.source_ref
       FROM cf.policy_facts AS d
      WHERE cur.workspace_id = ${workspaceId}::uuid AND cur.kind = ${row.kind} AND cur.slot = ${row.slot} AND cur.status = 'approved'
        AND d.workspace_id = cur.workspace_id AND d.id = ${id}::uuid AND d.status = 'draft' AND d.rev = ${expectedRev}
@@ -122,7 +126,8 @@ export async function approvePolicyFact(
     return 'approved';
   }
   const updated = await tx.execute(sql`
-    UPDATE cf.policy_facts SET status = 'approved'
+    UPDATE cf.policy_facts
+       SET status = 'approved', data = CASE WHEN ${strip}::boolean THEN data - 'needsReview' ELSE data END
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft' AND rev = ${expectedRev}
     RETURNING id`);
   return updated.rows.length > 0 ? 'approved' : 'stale';

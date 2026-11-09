@@ -94,6 +94,7 @@
       "text": "Seams are under warranty for 3 months from the delivery date."
     }
   ],
+  "stockDisclosure": "quantity",
   "policyFacts": [
     {
       "kind": "ship_region",

@@ -269,17 +269,44 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
     expect(result.draft.needs_human).toBe(true);
   });
 
-  it('LƯỚI AN TOÀN: needs_human nhưng vẫn viết {fact:…} → mã chỗ giữ chỗ KHÔNG lọt tới khách, chuyển người', async () => {
+  it('GỐC LỖI (syn2-vi-11): bộ soạn đặt needs_human nhưng viết {fact:…} hợp lệ → VẪN qua bước kiểm/điền, code điền giá trị, không để mã lọt', async () => {
     const leak = {
-      ...draftOf('Giá {fact:price.1}, giao {fact:ship_time}.', ['Giá {fact:price.1}.']),
+      ...draftOf('Túi tote canvas giá {fact:price.1}, giao đến Hà Nội trong {fact:ship_time}.', [
+        'Giá {fact:price.1}.',
+      ]),
       needs_human: true,
       reason: 'x',
     };
     const { result } = await run(MIXED_11, ASKS, leak, slots([ship()]));
+    expect(result.decision.action).toBe('answer');
+    expect(result.reply).toBe('Túi tote canvas giá 99.000đ, giao đến Hà Nội trong 2–4 ngày.');
+    expect(result.draft.needs_human).toBe(false);
+    expect(result.slotDiagnostics).toMatchObject({ rejected: 1, chosen: 'reply' });
+    expect(result.slotDiagnostics?.finalNetTriggered).toBeUndefined();
+  });
+
+  it('needs_human + {fact:…} KHÔNG có trong plan / unknown → bị từ chối cứng ngay lúc kiểm, đi câu dự phòng do code dựng', async () => {
+    const bad = {
+      ...draftOf('Giá {fact:price.9}, giao {fact:ship_cod}.', []),
+      needs_human: true,
+      reason: 'x',
+    };
+    const { result } = await run(MIXED_11, ASKS, bad, slots([ship()]));
+    expect(result.reply).not.toContain('{fact:');
+    expect(result.slotDiagnostics).toMatchObject({ rejected: 1, chosen: 'fallback' });
+    expect(result.slotDiagnostics?.finalNetTriggered).toBeUndefined();
+  });
+
+  it('LƯỚI CHẶN CUỐI: ngoài đường điền (clarify) mà câu còn {fact:…} → chuyển người, ghi finalNetTriggered', async () => {
+    const rows = [
+      ship({ kind: 'city', label: 'Nội thành Hà Nội', city: 'Hà Nội', feeMinor: 20000 }),
+      ship(),
+    ];
+    const leak = draftOf('Phí ship {fact:ship_fee}, bạn ở tỉnh nào ạ?');
+    const { result } = await run('Tote bag ship bao nhiêu', ['phí ship'], leak, slots(rows));
     expect(result.decision.action).toBe('handoff');
     expect(result.reply).not.toContain('{fact:');
-    expect(result.variants.join(' ')).not.toContain('{fact:');
-    expect(result.slotDiagnostics).toEqual({ rawTexts: 2, rejected: 2, chosen: 'handoff' });
+    expect(result.slotDiagnostics).toMatchObject({ chosen: 'handoff', finalNetTriggered: true });
   });
 
   it('thiếu hàm lookupPlanProducts (chưa nối DB) → không có sự kiện sản phẩm: chỉ chính sách + mời; không sập', async () => {
