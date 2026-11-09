@@ -2796,6 +2796,16 @@
     }
   ],
   "policyFacts": [
-    { "kind": "ship_region", "data": { "kind": "nationwide", "label": "United States", "feeMinor": null, "currency": "USD", "daysMin": null, "daysMax": null } }
+    {
+      "kind": "ship_region",
+      "data": {
+        "kind": "nationwide",
+        "label": "United States",
+        "feeMinor": null,
+        "currency": "USD",
+        "daysMin": null,
+        "daysMax": null
+      }
+    }
   ]
 }
