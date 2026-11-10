@@ -1,6 +1,5 @@
 'use server';
 
-import { classifyTopic } from '@flow/ai';
 import {
   approvePolicyFact,
   deleteApprovedPolicyFact,
@@ -77,8 +76,6 @@ export async function approvePolicyAction(data: FormData): Promise<never> {
   return run(data, { workspaceId: workspace.id, userId: user.id }, async (tx, input) => {
     const result = await approvePolicyFact(tx, input.workspaceId, input.id, input.rev, {
       confirmReview: input.confirm,
-      // Gap chỉ tự đóng khi câu mẫu hỏi đổi trả: dùng bộ phân loại chủ đề sẵn có (không regex mới).
-      isReturnsQuestion: (sample) => classifyTopic(sample, 'other') === 'return',
     });
     return APPROVE_NOTICE[result];
   });

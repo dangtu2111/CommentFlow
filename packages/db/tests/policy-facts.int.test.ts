@@ -322,19 +322,28 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     expect(r.approved_by).toBe(owner);
   });
 
-  it('KB-GAPS-FROM-HANDOFF: duyệt thẻ → đóng gap ĐANG MỞ cùng chủ đề của workspace mình, không đụng chủ đề khác/workspace khác', async () => {
-    const gap = async (w: string, topic: string) =>
+  it('M3-1: duyệt thẻ → đóng gap ĐANG MỞ có fact_topic khớp; không đụng chủ đề khác, gap fact_topic NULL, workspace khác', async () => {
+    const gap = async (w: string, topic: string, factTopic: string | null) =>
       (
         await admin.query(
-          `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked) VALUES ($1, $2, 'q') RETURNING id`,
-          [w, topic],
+          `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked, fact_topic, product_id)
+           VALUES ($1, $2, 'q', $3, $4) RETURNING id`,
+          [w, topic, factTopic, factTopic === null ? null : await productFor(w, factTopic)],
+        )
+      ).rows[0].id as string;
+    const productFor = async (w: string, label: string) =>
+      (
+        await admin.query(
+          `INSERT INTO cf.products (workspace_id, name, status) VALUES ($1, $2, 'active') RETURNING id`,
+          [w, `sp-${label}`],
         )
       ).rows[0].id as string;
     const status = async (id: string) =>
       (await admin.query('SELECT status FROM cf.kb_gaps WHERE id = $1', [id])).rows[0].status;
-    const mine = await gap(ws, 'shipping');
-    const otherTopic = await gap(ws, 'policy');
-    const foreign = await gap(other, 'shipping');
+    const fee = await gap(ws, 'shipping', 'ship_fee');
+    const unknownShip = await gap(ws, 'shipping', null);
+    const warranty = await gap(ws, 'policy', 'warranty');
+    const foreign = await gap(other, 'shipping', 'ship_fee');
     const draft = await db.withJob(ws, (tx) =>
       savePolicyFact(
         tx,
@@ -344,22 +353,33 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, 1))).toBe(
       'approved',
     );
-    expect(await status(mine)).toBe('resolved');
-    expect(await status(otherTopic)).toBe('open'); // policy không tự đóng khi duyệt thẻ ship
+    expect(await status(fee)).toBe('resolved');
+    expect(await status(unknownShip)).toBe('open'); // chưa rõ chủ đề mịn → không tự đóng
+    expect(await status(warranty)).toBe('open'); // thẻ ship không trả lời bảo hành
     expect(await status(foreign)).toBe('open');
   });
 
-  it('M2b: duyệt thẻ payment KHÔNG đóng gap bảo hành; duyệt returns chỉ đóng gap policy hỏi đổi trả', async () => {
-    const gap = async (w: string, q: string) =>
-      (
+  it('M3-1: payment/warranty/cod nay tự đóng được khi fact_topic khớp; thẻ khác loại không đóng', async () => {
+    const w = await seedWorkspace(admin);
+    await seedMember(admin, w, owner, 'owner');
+    const gap = async (factTopic: string, n: number) => {
+      const product = (
         await admin.query(
-          `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked) VALUES ($1, 'policy', $2) RETURNING id`,
-          [w, q],
+          `INSERT INTO cf.products (workspace_id, name, status) VALUES ($1, $2, 'active') RETURNING id`,
+          [w, `sp-${n}`],
         )
       ).rows[0].id as string;
+      return (
+        await admin.query(
+          `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked, fact_topic, product_id)
+           VALUES ($1, 'policy', 'q', $2, $3) RETURNING id`,
+          [w, factTopic, product],
+        )
+      ).rows[0].id as string;
+    };
     const status = async (id: string) =>
       (await admin.query('SELECT status FROM cf.kb_gaps WHERE id = $1', [id])).rows[0].status;
-    const approve = async (w: string, kind: 'payment' | 'returns', slot: string, data: unknown) => {
+    const approve = async (kind: 'payment' | 'warranty', slot: string, data: unknown) => {
       const draft = await db.withJob(w, (tx) =>
         savePolicyFact(
           tx,
@@ -374,26 +394,17 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
           }),
         ),
       );
-      return db.withActor(w, owner, (tx) =>
-        approvePolicyFact(tx, w, draft, 1, { isReturnsQuestion: (q) => /đổi trả/.test(q) }),
-      );
+      return db.withActor(w, owner, (tx) => approvePolicyFact(tx, w, draft, 1));
     };
-    // Gap bảo hành: duyệt payment và cả returns đều KHÔNG đóng.
-    const ws1 = await seedWorkspace(admin);
-    await seedMember(admin, ws1, owner, 'owner');
-    const warranty = await gap(ws1, 'bảo hành bao lâu vậy shop');
-    expect(await approve(ws1, 'payment', 'm2b-pay', { methods: ['cod'] })).toBe('approved');
-    expect(await status(warranty)).toBe('open');
-    expect(await approve(ws1, 'returns', 'm2b-ret', { days: 7 })).toBe('approved');
-    expect(await status(warranty)).toBe('open');
-    // Gap hỏi đổi trả (workspace riêng vì khóa duy nhất theo chủ đề): duyệt returns đóng, payment thì không.
-    const ws2 = await seedWorkspace(admin);
-    await seedMember(admin, ws2, owner, 'owner');
-    const returns = await gap(ws2, 'mặc không vừa có đổi trả được không');
-    expect(await approve(ws2, 'payment', 'm2b-pay', { methods: ['cod'] })).toBe('approved');
-    expect(await status(returns)).toBe('open');
-    expect(await approve(ws2, 'returns', 'm2b-ret', { days: 7 })).toBe('approved');
-    expect(await status(returns)).toBe('resolved');
+    const warranty = await gap('warranty', 1);
+    const payment = await gap('payment', 2);
+    expect(await approve('payment', 'm31-pay', { methods: ['cod'] })).toBe('approved');
+    expect(await status(payment)).toBe('resolved');
+    expect(await status(warranty)).toBe('open'); // duyệt payment KHÔNG đóng gap bảo hành
+    expect(await approve('warranty', 'm31-war', { months: 3, scope: 'đường may' })).toBe(
+      'approved',
+    );
+    expect(await status(warranty)).toBe('resolved');
   });
 
   it('duyệt kèm rev: worker làm mới nháp giữa lúc Owner xem → duyệt bị từ chối (stale), nháp giữ nguyên; xem lại rev mới thì duyệt được', async () => {

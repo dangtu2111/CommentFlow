@@ -63,14 +63,15 @@ export async function recordKbGap(
   record: KbGapRecord,
 ): Promise<RecordedKbGap> {
   const result = await tx.execute<{ id: string; count: number; status: KbGapStatus }>(sql`
-    INSERT INTO cf.kb_gaps AS g (workspace_id, topic, sample_question_masked, product_id)
-    VALUES (${workspaceId}::uuid, ${record.topic}, ${record.sampleQuestionMasked}, ${record.productId}::uuid)
+    INSERT INTO cf.kb_gaps AS g (workspace_id, topic, sample_question_masked, product_id, fact_topic)
+    VALUES (${workspaceId}::uuid, ${record.topic}, ${record.sampleQuestionMasked}, ${record.productId}::uuid, ${record.factTopic})
     ON CONFLICT (workspace_id, topic, (coalesce(product_id, '00000000-0000-0000-0000-000000000000'::uuid)))
     DO UPDATE SET
       count = g.count + 1,
       last_seen_at = now(),
       updated_at = now(),
       sample_question_masked = EXCLUDED.sample_question_masked,
+      fact_topic = CASE WHEN g.fact_topic IS NOT DISTINCT FROM EXCLUDED.fact_topic THEN g.fact_topic ELSE NULL END,
       status = CASE WHEN g.status = 'resolved' THEN 'open' ELSE g.status END,
       resolved_by_source_id = CASE WHEN g.status = 'resolved' THEN NULL ELSE g.resolved_by_source_id END
     RETURNING g.id, g.count, g.status`);
@@ -127,46 +128,25 @@ export async function setKbGapStatus(
 }
 
 /**
- * Thẻ chính sách vừa được duyệt → đóng mọi gap ĐANG MỞ cùng chủ đề của workspace (cùng giao dịch với lần duyệt). Chỉ đổi `status`; trả số dòng đã đóng.
- * Gắn sản phẩm không liên quan (thẻ chính sách không theo sản phẩm). Chạy trong `withActor` của Owner (trigger `kb_gaps_guard_update` cho phép đổi trạng thái).
+ * Thẻ chính sách vừa được duyệt → đóng gap ĐANG MỞ có `fact_topic` thuộc `factTopics` (khớp CHÍNH XÁC theo chủ đề mịn, M3-1; thay cách đóng thô của M2b).
+ * Gap `fact_topic` NULL (cũ, hoặc gộp nhiều chủ đề) không bao giờ tự đóng. Chỉ đổi `status`; trả số dòng đã đóng.
+ * Chạy trong `withActor` của Owner (trigger `kb_gaps_guard_update` cho phép đổi trạng thái).
  */
-export async function resolveOpenKbGapsByTopic(
+export async function resolveOpenKbGapsByFactTopics(
   tx: Database,
   workspaceId: string,
-  topic: KbGapTopic,
+  factTopics: readonly string[],
 ): Promise<number> {
+  if (factTopics.length === 0) return 0;
   const updated = await tx
     .update(kbGaps)
     .set({ status: 'resolved', resolvedBySourceId: null, updatedAt: sql`now()` })
     .where(
-      and(eq(kbGaps.workspaceId, workspaceId), eq(kbGaps.topic, topic), eq(kbGaps.status, 'open')),
-    )
-    .returning({ id: kbGaps.id });
-  return updated.length;
-}
-
-/**
- * Như `resolveOpenKbGapsByTopic` nhưng chỉ đóng gap mở cùng chủ đề mà `matches(câu hỏi mẫu đã che PII)` đúng (khớp CHÍNH XÁC, M2b). Không có gap khớp → 0.
- */
-export async function resolveOpenKbGapsMatching(
-  tx: Database,
-  workspaceId: string,
-  topic: KbGapTopic,
-  matches: (sampleQuestionMasked: string) => boolean,
-): Promise<number> {
-  const open = await tx
-    .select({ id: kbGaps.id, sample: kbGaps.sampleQuestionMasked })
-    .from(kbGaps)
-    .where(
-      and(eq(kbGaps.workspaceId, workspaceId), eq(kbGaps.topic, topic), eq(kbGaps.status, 'open')),
-    );
-  const ids = open.filter((row) => matches(row.sample)).map((row) => row.id);
-  if (ids.length === 0) return 0;
-  const updated = await tx
-    .update(kbGaps)
-    .set({ status: 'resolved', resolvedBySourceId: null, updatedAt: sql`now()` })
-    .where(
-      and(eq(kbGaps.workspaceId, workspaceId), inArray(kbGaps.id, ids), eq(kbGaps.status, 'open')),
+      and(
+        eq(kbGaps.workspaceId, workspaceId),
+        inArray(kbGaps.factTopic, [...factTopics]),
+        eq(kbGaps.status, 'open'),
+      ),
     )
     .returning({ id: kbGaps.id });
   return updated.length;

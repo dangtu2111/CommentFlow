@@ -2,6 +2,8 @@
  * DRAFT-FACT-SLOTS (ADR 017): "fact plan" do CODE lập trước bước soạn — mỗi sự kiện cần nói có giá trị từ dữ liệu có cấu trúc hoặc `unknown`. LLM chỉ viết câu với chỗ giữ chỗ
  * `{fact:id}`; code điền giá trị. Không có số/khẳng định nào do model tự viết.
  */
+import { z } from 'zod';
+
 /** Chủ đề sự kiện do bước `extract` trả (enum, Zod) — KHÔNG đoán bằng từ khóa. Chỉ đánh dấu chủ đề câu hỏi THẬT SỰ hỏi. */
 export const FACT_TOPICS = [
   'price',
@@ -19,6 +21,8 @@ export const FACT_TOPICS = [
   'payment',
 ] as const;
 export type FactTopic = (typeof FACT_TOPICS)[number];
+/** Kiểm mã chủ đề ở ranh giới ghi DB (`kb_gaps.fact_topic` chỉ có CHECK độ dài; danh sách hợp lệ nằm ở đây). */
+export const factTopicSchema = z.enum(FACT_TOPICS);
 
 export type FactKind =
   | 'product_name'

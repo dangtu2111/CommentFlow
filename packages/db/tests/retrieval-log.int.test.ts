@@ -223,6 +223,21 @@ describe('FR-134 FR-141 kb_gaps — gộp theo (workspace, chủ đề, sản ph
     );
   });
 
+  it('M3-1 fact_topic: cùng chủ đề mịn giữ nguyên, khác chủ đề (hoặc thiếu) → NULL, không bao giờ quay lại', async () => {
+    const factTopicOf = async (id: string) =>
+      (await admin.query('SELECT fact_topic FROM cf.kb_gaps WHERE id = $1', [id])).rows[0]
+        .fact_topic as string | null;
+    const fresh = await seedWorkspace(admin);
+    const first = await writeGap(fresh, { topic: 'policy', factTopic: 'warranty' });
+    expect(await factTopicOf(first.id)).toBe('warranty');
+    await writeGap(fresh, { topic: 'policy', factTopic: 'warranty' });
+    expect(await factTopicOf(first.id)).toBe('warranty');
+    await writeGap(fresh, { topic: 'policy', factTopic: 'payment' });
+    expect(await factTopicOf(first.id)).toBeNull();
+    await writeGap(fresh, { topic: 'policy', factTopic: 'payment' });
+    expect(await factTopicOf(first.id)).toBeNull();
+  });
+
   it('FR-134 sản phẩm khác = dòng khác; sản phẩm null gộp chung một dòng', async () => {
     const a = await writeGap(wsA, { topic: 'discount', productId: productA });
     const none1 = await writeGap(wsA, { topic: 'discount' });
