@@ -20,6 +20,7 @@ import {
 } from '../budget';
 import { parseDataset } from '../dataset';
 import { EVAL_WORKSPACE } from '../eval-workspace';
+import { analyzeGuardRejections, renderGuardAnalysis } from '../guard-analysis';
 import { checkSample, computeMetrics } from '../metrics';
 import { findFlakySamples, renderMultiRun } from '../multi-run';
 import type { ProductionKnowledgeInfo } from '../production/prepare';
@@ -218,30 +219,29 @@ if (backend === 'litellm') {
   }
 }
 
-// Chính sách đã duyệt của shop → fact plan (mỗi dòng như một `cf.policy_facts` approved; nguồn `pf:eval-<n>`).
-const factSlots = values['fact-slots']
-  ? (() => {
-      const { policy, issues } = policyFactsFromRows(
-        shop.policyFacts.map((row, i) => ({
-          id: `eval-${i}`,
-          kind: row.kind,
-          data: row.data,
-          status: 'approved',
-        })),
-      );
-      if (issues.length > 0) {
-        console.error(issues.join(String.fromCharCode(10)));
-        process.exit(2);
-      }
-      return {
-        policy,
-        stock: {
-          disclose: shop.stockDisclosure === 'quantity' ? ('count' as const) : ('status' as const),
-          lowAt: null,
-        },
-      };
-    })()
-  : undefined;
+// Chính sách đã duyệt của shop → fact plan, LUÔN nạp như production (mỗi dòng như một `cf.policy_facts` approved; nguồn `pf:eval-<n>`); `--fact-slots` chỉ bật chế độ chỗ giữ chỗ (`factSlotsMode`).
+const factSlotsMode = Boolean(values['fact-slots']);
+const factSlots = (() => {
+  const { policy, issues } = policyFactsFromRows(
+    shop.policyFacts.map((row, i) => ({
+      id: `eval-${i}`,
+      kind: row.kind,
+      data: row.data,
+      status: 'approved',
+    })),
+  );
+  if (issues.length > 0) {
+    console.error(issues.join(String.fromCharCode(10)));
+    process.exit(2);
+  }
+  return {
+    policy,
+    stock: {
+      disclose: shop.stockDisclosure === 'quantity' ? ('count' as const) : ('status' as const),
+      lowAt: null,
+    },
+  };
+})();
 
 async function runOnce(variantCount: number, runIndex = 1) {
   const runner = createRunner({
@@ -261,7 +261,8 @@ async function runOnce(variantCount: number, runIndex = 1) {
         : { temperature: Number(values['draft-temperature']) }),
       ...(values['draft-seed'] === undefined ? {} : { seed: Number(values['draft-seed']) }),
     },
-    ...(factSlots ? { factSlots } : {}),
+    factSlots,
+    factSlotsMode,
     ...(productionKnowledge ? { knowledge: productionKnowledge } : {}),
     ...(scorer ? { scorer } : {}),
     ...(persistUsage ? { persistUsage } : {}),
@@ -311,8 +312,8 @@ async function runOnce(variantCount: number, runIndex = 1) {
     `eval-${backend}-v${variantCount}-${stamp}${runIndex > 1 ? `-r${runIndex}` : ''}`,
   );
   const slotSection = `${renderFactBreakdown(samples, outcomes, shop.stockDisclosure)}${
-    factSlots ? renderSlotReport(samples, outcomes, shop) : ''
-  }`;
+    factSlotsMode ? renderSlotReport(samples, outcomes, shop) : ''
+  }${renderGuardAnalysis(analyzeGuardRejections(outcomes.values()))}`;
   writeFileSync(`${base}.md`, report + slotSection);
   writeFileSync(
     `${base}.jsonl`,

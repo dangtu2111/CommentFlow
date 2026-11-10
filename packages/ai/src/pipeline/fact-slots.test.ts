@@ -104,7 +104,7 @@ const run = async (
       kbVersion: 'v1',
       voice,
       autoSendEnabled: true,
-      ...(factSlots ? { factSlots } : {}),
+      ...(factSlots ? { factSlots, factSlotsMode: true } : {}),
     },
     {
       extractor: createFixtureExtractor([{ match: /./, result: extractFor(asks) }]),
@@ -407,6 +407,7 @@ describe('chế độ chỗ giữ chỗ (cờ factSlots)', () => {
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: { policy: policy([]), stock: { disclose: 'count', lowAt: null } },
       },
       {
@@ -459,6 +460,7 @@ describe('số khách nêu (extract.qty) đi qua customer_measure — không whi
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: slots([]),
       },
       {
@@ -495,6 +497,7 @@ describe('ngôn ngữ câu ngắn: previousLang → replyLanguage → vi (nhóm 
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: slots([]),
         ...over,
       },
@@ -547,7 +550,7 @@ describe('mọi biến thể CÙNG giá → trả lời giá, không hỏi biế
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
-        ...(factSlots ? { factSlots } : {}),
+        ...(factSlots ? { factSlots, factSlotsMode: true } : {}),
       },
       {
         extractor: createFixtureExtractor([
@@ -607,6 +610,7 @@ describe('địa điểm chỉ lấy từ extract.destination hoặc khi có ch�
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: slots([ship()]),
       },
       {
@@ -653,6 +657,7 @@ describe('khuyến mãi không phải giá/tồn (mẫu *-28, en-32)', () => {
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: slots([ship()]),
       },
       {
@@ -708,7 +713,15 @@ describe('hàng lỗi trùng phạm vi bảo hành (vi-12): trả lời từ th�
   ) => {
     const { drafter } = fakeDrafter(draft);
     const result = await runPipeline(
-      { workspaceId: 'ws1', text, kbVersion: 'v1', voice, autoSendEnabled: true, factSlots },
+      {
+        workspaceId: 'ws1',
+        text,
+        kbVersion: 'v1',
+        voice,
+        autoSendEnabled: true,
+        factSlots,
+        factSlotsMode: true,
+      },
       {
         extractor: createFixtureExtractor([
           {
@@ -808,7 +821,7 @@ describe('FR-140: bản nháp không dùng được KHÔNG được mang nhãn t
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
-        ...(factSlots ? { factSlots } : {}),
+        ...(factSlots ? { factSlots, factSlotsMode: true } : {}),
       },
       {
         extractor: createFixtureExtractor([{ match: /./, result: extractFor(['giá']) }]),
@@ -864,6 +877,7 @@ describe('sản phẩm được nhắc nhưng không có trong danh mục → đ
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: slots([ship()]),
       },
       {
@@ -997,6 +1011,7 @@ describe('khách nhắc đúng tên sản phẩm (không dấu) mà extract khô
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: slots([ship()]),
       },
       {
@@ -1086,6 +1101,7 @@ describe('viplain-03: khách nêu đủ size + màu không dấu mà extract b�
         kbVersion: 'v1',
         voice,
         autoSendEnabled: true,
+        factSlotsMode: true,
         factSlots: { policy: policy([]), stock: { disclose: 'count', lowAt: null } },
       },
       {

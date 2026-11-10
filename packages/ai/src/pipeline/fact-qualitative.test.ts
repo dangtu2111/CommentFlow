@@ -95,6 +95,7 @@ const ask = async (
       kbVersion: 'v1',
       voice,
       autoSendEnabled: true,
+      factSlotsMode: true,
       factSlots: { policy: pol, stock: { disclose: 'status', lowAt: null } },
     },
     {

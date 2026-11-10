@@ -16,6 +16,7 @@ export {
   type ReplyGuardResult,
   type ReplyGuardViolation,
 } from './guard-reply';
+export { type ConceptId, checkConceptSupport } from './guard-support';
 export {
   buildChunkRows,
   type ChunkRow,

@@ -36,6 +36,8 @@ export type RunnerOptions = {
   knowledge?: TryKnowledge;
   /** Đường fact plan (ADR 017): chính sách đã duyệt + chế độ tồn; thiếu → đường cũ. */
   factSlots?: NonNullable<Parameters<typeof runSample>[1]['factSlots']>;
+  /** Bật chế độ chỗ giữ chỗ (cờ); tách khỏi `factSlots` (thẻ luôn nạp). */
+  factSlotsMode?: boolean;
   /** Hạt giống cố định cho bước extract (cùng nhiệt độ 0) để các lượt đo ít dao động. */
   seed?: number;
   /** Thử nghiệm bước soạn: nhiệt độ khác mặc định và/hoặc seed cố định (đo xen kẽ trước/sau); thiếu → như production. */
@@ -81,6 +83,7 @@ export function createRunner(options: RunnerOptions): Runner {
         voice,
         dict,
         ...(options.factSlots ? { factSlots: options.factSlots } : {}),
+        ...(options.factSlotsMode ? { factSlotsMode: true } : {}),
         replyLanguage: options.shop.replyLanguage,
         ...(options.persistUsage ? { workspaceId: options.persistUsage.workspaceId } : {}),
         ...(options.variantCount === undefined ? {} : { variantCount: options.variantCount }),

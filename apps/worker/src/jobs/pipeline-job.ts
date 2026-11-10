@@ -220,7 +220,7 @@ export async function runPipelineJob(
     max: context.settings.maxAiRepliesPerCustomerPost,
   };
 
-  const factSlots = await loadFactSlots(config, workspaceId);
+  const plan = await loadFactSlots(config, workspaceId);
 
   return runCommentPipeline({
     db,
@@ -239,7 +239,8 @@ export async function runPipelineJob(
       // Câu quá ngắn để nhận ngôn ngữ ("still available?"): kênh cố định → lượt khách trước → mặc định workspace; cùng đường với EVAL.
       replyLanguage: context.language.replyLanguage,
       previousLang: context.language.previousLang,
-      ...(factSlots ? { factSlots } : {}),
+      factSlots: plan.factSlots,
+      factSlotsMode: plan.mode,
       dict: createAbbreviationDict(abbreviations),
       thread: context.thread,
       convo,
@@ -273,18 +274,24 @@ export async function runPipelineJob(
 }
 
 /**
- * Đường fact plan (ADR 017): cờ DB `cf.ai.fact_slots` TẮT (hoặc không truyền) → `undefined` và KHÔNG đọc `policy_facts` (đường cũ không đổi). BẬT → chỉ nạp chính sách ĐÃ DUYỆT
- * (`listApprovedPolicyFacts`; `policyFactsFromRows` còn bỏ mọi dòng không phải approved) — bản nháp không bao giờ vào.
+ * Dữ liệu cho fact plan (ADR 017/018): LUÔN nạp chính sách ĐÃ DUYỆT (`listApprovedPolicyFacts`; `policyFactsFromRows` còn bỏ mọi dòng không phải approved — bản nháp không bao giờ vào) và chế độ tồn.
+ * Cờ DB `cf.ai.fact_slots` chỉ quyết định `mode` (LLM có viết bằng chỗ giữ chỗ không); cờ TẮT/không truyền → `mode: false`.
  */
 export async function loadFactSlots(
   config: Pick<PipelineJobConfig, 'db' | 'factSlotsEnabled'>,
   workspaceId: string,
-): Promise<{ policy: PolicyFacts; stock: StockMode } | undefined> {
-  if (!config.factSlotsEnabled || !(await config.factSlotsEnabled(workspaceId))) return undefined;
+): Promise<{ factSlots: { policy: PolicyFacts; stock: StockMode }; mode: boolean }> {
+  const mode = config.factSlotsEnabled ? await config.factSlotsEnabled(workspaceId) : false;
   const rows = await config.db.withJob(workspaceId, (tx) =>
     listApprovedPolicyFacts(tx, workspaceId),
   );
-  return { policy: policyFactsFromRows(rows).policy, stock: { disclose: 'status', lowAt: null } };
+  return {
+    factSlots: {
+      policy: policyFactsFromRows(rows).policy,
+      stock: { disclose: 'status', lowAt: null },
+    },
+    mode,
+  };
 }
 
 /** Handler pg-boss của hàng đợi `pipeline` (batchSize 1). Lỗi tạm → ném để pg-boss thử lại (tối đa 3). */

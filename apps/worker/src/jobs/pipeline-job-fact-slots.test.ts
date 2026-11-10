@@ -14,20 +14,25 @@ const rows = [
   { id: 'd1', kind: 'cod', data: { value: true }, status: 'draft' },
 ];
 
-describe('loadFactSlots — cờ cf.ai.fact_slots', () => {
-  it('không truyền cờ hoặc cờ TẮT → undefined và KHÔNG đọc policy_facts (đường cũ không đổi)', async () => {
-    listApproved.mockClear();
-    expect(await loadFactSlots({ db }, 'ws')).toBeUndefined();
-    expect(await loadFactSlots({ db, factSlotsEnabled: async () => false }, 'ws')).toBeUndefined();
-    expect(listApproved).not.toHaveBeenCalled();
+describe('loadFactSlots — thẻ luôn nạp, cờ cf.ai.fact_slots chỉ bật chế độ chỗ giữ chỗ', () => {
+  it('không truyền cờ hoặc cờ TẮT → mode=false nhưng VẪN nạp thẻ đã duyệt cho fact plan', async () => {
+    listApproved.mockReset();
+    listApproved.mockResolvedValue(rows);
+    for (const config of [{ db }, { db, factSlotsEnabled: async () => false }]) {
+      const result = await loadFactSlots(config, 'ws');
+      expect(result.mode).toBe(false);
+      expect(result.factSlots.policy.returns).toMatchObject({ days: 7, sourceId: 'pf:a1' });
+    }
+    expect(listApproved).toHaveBeenCalledTimes(2);
   });
 
-  it('cờ BẬT → chỉ chính sách ĐÃ DUYỆT vào fact plan; bản nháp (kể cả bị đưa nhầm vào danh sách) không bao giờ vào', async () => {
+  it('cờ BẬT → mode=true; chỉ chính sách ĐÃ DUYỆT vào fact plan; bản nháp (kể cả bị đưa nhầm vào danh sách) không bao giờ vào', async () => {
     listApproved.mockResolvedValue(rows);
-    const slots = await loadFactSlots({ db, factSlotsEnabled: async () => true }, 'ws');
+    const result = await loadFactSlots({ db, factSlotsEnabled: async () => true }, 'ws');
     expect(listApproved).toHaveBeenCalledWith(expect.anything(), 'ws');
-    expect(slots?.policy.returns).toMatchObject({ days: 7, sourceId: 'pf:a1' });
-    expect(slots?.policy.cod).toBeUndefined();
-    expect(slots?.stock).toEqual({ disclose: 'status', lowAt: null });
+    expect(result.mode).toBe(true);
+    expect(result.factSlots.policy.returns).toMatchObject({ days: 7, sourceId: 'pf:a1' });
+    expect(result.factSlots.policy.cod).toBeUndefined();
+    expect(result.factSlots.stock).toEqual({ disclose: 'status', lowAt: null });
   });
 });

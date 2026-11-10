@@ -34,6 +34,8 @@ export type RunContext = {
   variantCount?: number;
   /** Đường fact plan (ADR 017): chính sách đã duyệt + chế độ tồn kho; thiếu → đường cũ. */
   factSlots?: PipelineInput['factSlots'];
+  /** Chế độ chỗ giữ chỗ (cờ `fact_slots`); thiếu/false → chỉ dùng plan cho phần không phụ thuộc cờ. */
+  factSlotsMode?: boolean;
   /** Ngôn ngữ trả lời mặc định của shop (câu ngắn). */
   replyLanguage?: 'vi' | 'en';
   workspaceId?: string;
@@ -87,6 +89,10 @@ export type SampleOutcome =
         usedSources: Array<{ id: string; text: string }>;
         claims: Array<{ text: string; sourceIds: string[] }>;
         moneyViolations: unknown[];
+        /** TOÀN BỘ đoạn tìm được (`found`), kể cả đoạn không được dùng — để tách lỗi oan (nguồn có nêu ở đoạn khác) khỏi lỗi thật. */
+        found: Array<{ id: string; kind: string; topics: string[]; text: string; used: boolean }>;
+        /** Dấu vết guard khái niệm: khái niệm bị bắt, câu nháp gốc, nguồn đã dùng (chỉ quan sát). */
+        guardTrace?: { concept?: { concepts: string[]; draftReply: string; usedIds: string[] } };
       };
       /** Chẩn đoán đường fact plan (chỉ khi bật `--fact-slots`). */
       slot?: SlotOutcome;
@@ -158,6 +164,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       autoSendEnabled: true,
       ...(context.replyLanguage ? { replyLanguage: context.replyLanguage } : {}),
       ...(context.factSlots ? { factSlots: context.factSlots } : {}),
+      ...(context.factSlotsMode ? { factSlotsMode: true } : {}),
       ...(context.dict ? { dict: context.dict } : {}),
       ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
     };
@@ -222,6 +229,14 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
           .map((c) => ({ id: c.id, text: String(c.text) })),
         claims: result.draft.claims.map((c) => ({ text: c.text, sourceIds: c.source_ids })),
         moneyViolations: result.guard.violations,
+        found: result.candidates.map((c) => ({
+          id: c.id,
+          kind: c.kind,
+          topics: [...c.topics],
+          text: String(c.text),
+          used: c.used,
+        })),
+        ...(result.guardTrace ? { guardTrace: result.guardTrace } : {}),
       },
       ...(result.factPlan
         ? {
