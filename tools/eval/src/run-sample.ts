@@ -34,6 +34,8 @@ export type RunContext = {
   variantCount?: number;
   /** Đường fact plan (ADR 017): chính sách đã duyệt + chế độ tồn kho; thiếu → đường cũ. */
   factSlots?: PipelineInput['factSlots'];
+  /** Chế độ chỗ giữ chỗ (cờ `fact_slots`); thiếu/false → chỉ dùng plan cho phần không phụ thuộc cờ. */
+  factSlotsMode?: boolean;
   /** Ngôn ngữ trả lời mặc định của shop (câu ngắn). */
   replyLanguage?: 'vi' | 'en';
   workspaceId?: string;
@@ -162,6 +164,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       autoSendEnabled: true,
       ...(context.replyLanguage ? { replyLanguage: context.replyLanguage } : {}),
       ...(context.factSlots ? { factSlots: context.factSlots } : {}),
+      ...(context.factSlotsMode ? { factSlotsMode: true } : {}),
       ...(context.dict ? { dict: context.dict } : {}),
       ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
     };

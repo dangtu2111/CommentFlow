@@ -164,6 +164,11 @@ export type TryInput = {
    * (giá trị `draft` chưa duyệt không được đưa vào), `stock` = tùy chọn nêu tồn của Owner. Có → code lập fact plan, LLM chỉ viết lời với `{fact:id}`, code điền giá trị.
    */
   factSlots?: { policy: PolicyFacts; stock: StockMode };
+  /**
+   * BẬT chế độ chỗ giữ chỗ (cờ `cf.ai.fact_slots`, mặc định TẮT). `factSlots` (thẻ chính sách + tồn) luôn được nạp để code lập fact plan; plan phục vụ (a) nhận ra câu hỏi đổi trả thường không bị nhãn phụ
+   * complaint ép chuyển người và (b) câu dự phòng do code dựng khi bản nháp rỗng/không dùng được — cả khi cờ TẮT. Chỉ khi cờ BẬT, LLM mới viết với `{fact:id}` và các hành vi dựa trên plan khác (handoff/hỏi khu vực/guard chỗ giữ chỗ) mới chạy.
+   */
+  factSlotsMode?: boolean;
 };
 
 export type PipelineConvoInput = {
@@ -590,10 +595,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     repeatCount: input.thread?.repeatCount ?? 0,
     humanHolding: input.thread?.humanHolding ?? false,
   };
-  // DRAFT-FACT-SLOTS: fact plan do CODE lập (0 lần gọi LLM) khi workspace bật cờ.
-  const slotMode = input.factSlots !== undefined && !closing;
+  // DRAFT-FACT-SLOTS: fact plan do CODE lập (0 lần gọi LLM) khi có thẻ chính sách (luôn nạp); `slotMode` (cờ) chỉ quyết định LLM có viết bằng chỗ giữ chỗ không.
+  const planMode = input.factSlots !== undefined && !closing;
+  const slotMode = planMode && input.factSlotsMode === true;
   // Chủ đề do `extract` trả (enum, Zod) — không đoán bằng từ khóa; mỗi chủ đề chỉ một lần.
-  const extractedTopics: FactTopic[] = slotMode ? [...new Set(extract.topics)] : [];
+  const extractedTopics: FactTopic[] = planMode ? [...new Set(extract.topics)] : [];
   // Hỏi khuyến mãi/giảm giá KHÔNG phải hỏi giá/tồn: khi có ý hỏi được xếp 'discount' mà chưa nhận ra sản phẩm nào → bỏ price/stock (chủ đề vẫn do extract trả; code chỉ lọc theo ý hỏi đã có).
   const discountAsked = extract.asks.some((ask) => topicOf(ask) === 'discount');
   // Khách nhắc một sản phẩm mà danh mục KHÔNG có ("shop có bán giày k"): không thêm chủ đề giá/tồn từ fact plan → giữ đường cũ (chuyển hướng), không hỏi lại "sản phẩm nào".
@@ -604,18 +610,18 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       : extractedTopics;
   // Nơi khách hỏi giao tới → quốc gia (bảng quốc gia/tiểu bang Mỹ + tỉnh/thành VN); không nhận ra → null (không đoán).
   // Quét cả câu (masked) CHỈ khi extract báo chủ đề ship_destination; còn lại dùng đúng `extract.destination` — tránh nhầm tên hàng ("Georgia peach dress", "China blue vase") với địa điểm.
-  const destination = slotMode
+  const destination = planMode
     ? resolvePlace(extract.destination ?? (factTopics.includes('ship_destination') ? masked : ''))
     : null;
   const planProducts: PlanProduct[] =
-    slotMode && deps.knowledge.lookupPlanProducts
+    planMode && deps.knowledge.lookupPlanProducts
       ? await deps.knowledge.lookupPlanProducts(products.ids, {
           stockStale: turnRisks.risks.stockStale,
         })
       : [];
   const sizeText = extract.size ?? '';
-  const factPlan: FactPlan | null =
-    slotMode && input.factSlots
+  const planAll: FactPlan | null =
+    planMode && input.factSlots
       ? buildFactPlan({
           products: planProducts,
           topics: factTopics,
@@ -637,6 +643,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           stock: input.factSlots.stock,
         })
       : null;
+  // Các hành vi dựa trên plan CHỈ ở chế độ chỗ giữ chỗ; cờ TẮT chỉ dùng `planAll` cho hai việc nêu ở `factSlotsMode`.
+  const factPlan: FactPlan | null = slotMode ? planAll : null;
   // FR-160 ở chế độ chỗ giữ chỗ: nhóm pháp lý (hoàn tiền/bảo hành) ĐÃ có nguồn nếu fact plan có sự kiện ĐÃ BIẾT cùng nhóm (nguồn = dòng chính sách đã duyệt `pf:<id>`); chưa biết → vẫn chưa nguồn.
   const planLegalCovered = new Set<string>(
     (factPlan?.facts ?? []).flatMap((fact) =>
@@ -682,12 +690,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // đổi trả ĐÃ BIẾT — nhãn phụ complaint cũng không ép chuyển người (trả lời từ chính sách đã duyệt, không cần người duyệt thêm).
   const RETURN_KINDS = ['returns', 'refund_to', 'return_shipping', 'return_eligibility'];
   const ordinaryReturnQuestion =
-    factPlan !== null &&
-    factPlan.handoff !== true &&
+    planAll !== null &&
+    planAll.handoff !== true &&
     !factTopics.includes('defect') &&
-    factPlan.facts.some((fact) => fact.status === 'known' && RETURN_KINDS.includes(fact.kind));
+    planAll.facts.some((fact) => fact.status === 'known' && RETURN_KINDS.includes(fact.kind));
   const waiveSecondaryComplaint =
-    (factPlan?.requiresHumanReview === true || ordinaryReturnQuestion) &&
+    (planAll?.requiresHumanReview === true || ordinaryReturnQuestion) &&
     (label === 'advice' || label === 'price') &&
     extract.labels.some((item) => item.label === 'complaint');
   const decideExtract = waiveSecondaryComplaint
@@ -720,12 +728,13 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
   // Hàng lỗi trùng phạm vi bảo hành: có câu trả lời từ thẻ bảo hành nhưng BẮT BUỘC người duyệt, không bao giờ tự gửi (kể cả khi sau này bật auto-reply).
-  if (factPlan?.requiresHumanReview && decision.action !== 'handoff') {
+  if (planAll?.requiresHumanReview && decision.action !== 'handoff') {
     decision = { ...decision, needsHuman: true, autoSendPolicy: 'never' };
   }
   // Phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu → HỎI tỉnh/thành (FR-147), không chuyển hướng. Rủi ro/handoff vẫn thắng.
   // Chủ đề phải chuyển người (hàng lỗi/sai hàng: chưa có chính sách có cấu trúc) — không mượn số ngày/điều kiện của đổi trả.
-  if (factPlan?.handoff && decision.action !== 'handoff' && !closing) {
+  // Cả khi cờ TẮT: hàng lỗi/sai hàng chưa có chính sách có cấu trúc → chuyển người (không mượn số ngày/điều kiện của đổi trả để trả lời).
+  if (planAll?.handoff && decision.action !== 'handoff' && !closing) {
     decision = handoffDecision('claim_unsupported', decision.askedBefore);
   } else if (
     factPlan?.clarify &&
@@ -800,20 +809,28 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // thêm câu mời cho chủ đề chưa có thông tin. Không câu nào dùng được → chuyển người. Không gọi LLM thêm (≤ 2 lần/lượt, FR-162).
   let slotRendered: string[] | null = null;
   let slotDiagnostics: SlotDiagnostics | undefined;
+  // Cờ TẮT: bản nháp rỗng/không dùng được (cùng định nghĩa FR-140) mà plan có sự kiện bắt buộc → câu dự phòng do code dựng (chưa gọi lại LLM).
+  const offFallback =
+    !slotMode &&
+    planAll !== null &&
+    requiredFactIds(planAll).length > 0 &&
+    (decision.action === 'answer' || decision.action === 'redirect') &&
+    (draft.reply.trim() === '' || (decision.action === 'answer' && draft.needs_human));
+  const blockPlan = factPlan ?? (offFallback ? planAll : null);
   if (
-    factPlan !== null &&
-    slotFacts !== null &&
+    blockPlan !== null &&
+    (slotFacts !== null || offFallback) &&
     // `slotFacts !== null` = plan có sự kiện bắt buộc: bộ soạn đặt needs_human trần (không chỗ giữ chỗ, câu rỗng) coi như 0 câu đạt → câu dự phòng do code dựng (không bỏ qua khối này).
     // Plan không có sự kiện bắt buộc thì không vào đây, needs_human đi đường cũ.
     (decision.action === 'answer' || decision.action === 'redirect')
   ) {
     const replyLang = lang === 'en' ? 'en' : 'vi';
-    const required = requiredFactIds(factPlan);
+    const required = requiredFactIds(blockPlan);
     const passes = (text: string) =>
-      checkSlots(text, factPlan).ok && required.every((id) => slotIds(text).includes(id));
-    const candidates = [draft.reply, ...(draft.variants ?? [])].filter(passes);
+      checkSlots(text, blockPlan).ok && required.every((id) => slotIds(text).includes(id));
+    const candidates = offFallback ? [] : [draft.reply, ...(draft.variants ?? [])].filter(passes);
     const rawTexts = [draft.reply, ...(draft.variants ?? [])];
-    const base = candidates[0] ?? fallbackTemplate(factPlan, replyLang);
+    const base = candidates[0] ?? fallbackTemplate(blockPlan, replyLang);
     const chosenKind: SlotDiagnostics['chosen'] =
       candidates[0] === undefined
         ? 'fallback'
@@ -826,7 +843,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       chosen: chosenKind,
       // Lý do từ chối cứng từng câu (EVAL/chẩn đoán): mã vi phạm guard chỗ giữ chỗ + sự kiện bắt buộc còn thiếu.
       rejections: rawTexts.flatMap((text, index) => {
-        const codes = checkSlots(text, factPlan).violations.map((v) => v.code as string);
+        const codes = checkSlots(text, blockPlan).violations.map((v) => v.code as string);
         const used = slotIds(text);
         const missing = required.filter((id) => !used.includes(id));
         if (missing.length > 0) codes.push(`missing_required:${missing.join('+')}`);
@@ -835,7 +852,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           : [];
       }),
     };
-    const filled = base === '' ? null : fillSlots(base, factPlan, { lang: replyLang });
+    const filled = base === '' ? null : fillSlots(base, blockPlan, { lang: replyLang });
     if (filled === null || filled.missing.length > 0) {
       decision = handoffDecision('claim_unsupported', decision.askedBefore);
       slotDiagnostics = { ...(slotDiagnostics as SlotDiagnostics), chosen: 'handoff' };
@@ -844,7 +861,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       // Tiếng Anh: "we/us" (xưng hô tiếng Việt của voice không áp dụng); xưng hô tùy chỉnh để trống → "shop".
       const address = describeAddress(voice, replyLang);
       const invite = inviteUnknownText(
-        factPlan.unknownTopics,
+        blockPlan.unknownTopics,
         replyLang,
         replyLang === 'en'
           ? { shop: 'we', customer: 'you' }
@@ -855,7 +872,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       const others = candidates
         .slice(1)
         .filter((text) => slotIds(text).every((id) => baseIds.has(id)))
-        .map((text) => withInvite(fillSlots(text, factPlan, { lang: replyLang }).text));
+        .map((text) => withInvite(fillSlots(text, blockPlan, { lang: replyLang }).text));
       slotRendered = filled.rendered;
       draft = {
         ...draft,
@@ -871,7 +888,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         unanswered_topics: [
           ...new Set([
             ...draft.unanswered_topics,
-            ...factPlan.unknownTopics.map((topic) => GAP_TOPIC_OF_FACT[topic]),
+            ...blockPlan.unknownTopics.map((topic) => GAP_TOPIC_OF_FACT[topic]),
           ]),
         ],
       };
@@ -969,9 +986,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     sources: slotRendered ?? used.map((c) => c.text),
   });
   const planSourceIds =
-    slotRendered === null || factPlan === null
+    slotRendered === null || blockPlan === null
       ? []
-      : factPlan.facts.flatMap((fact) => (fact.status === 'known' ? [fact.sourceId] : []));
+      : blockPlan.facts.flatMap((fact) => (fact.status === 'known' ? [fact.sourceId] : []));
   const replyGuard = checkReplyGuard({
     reply: draft.reply,
     lang: lang === 'other' ? 'vi' : lang,
@@ -1023,10 +1040,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     riskReasons: {
       ...turnRisks.reasons,
       legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
-      ...(factPlan?.requiresHumanReview || draftUnusable
+      ...(planAll?.requiresHumanReview || draftUnusable
         ? {
             review: [
-              ...(factPlan?.requiresHumanReview ? ['defect_warranty_scope'] : []),
+              ...(planAll?.requiresHumanReview ? ['defect_warranty_scope'] : []),
               ...(draftUnusable ? ['fr140_draft_unusable'] : []),
             ],
           }

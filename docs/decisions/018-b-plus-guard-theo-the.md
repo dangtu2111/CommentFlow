@@ -1,6 +1,6 @@
 # ADR 018 — B+: tắt `fact_slots`, LLM diễn đạt từ đoạn tìm được, guard kiểm theo THẺ (fact plan làm đáp án kiểm)
 
-Trạng thái: **DRAFT — chờ chủ dự án duyệt.** Chưa code. Số đo cơ sở (cờ tắt) ghi ở `tools/eval/out/fs-b0` (không commit) và được tóm tắt vào mục § Số đo cơ sở sau khi chạy xong.
+Trạng thái: **ĐÃ DUYỆT có điều kiện (ủy quyền)** — chủ dự án, 10/11/2026; triển khai theo § Kế hoạch ba bước. Số đo cơ sở (cờ tắt) ghi ở `tools/eval/out/fs-b0` (không commit) và được tóm tắt vào mục § Số đo cơ sở sau khi chạy xong.
 
 ## Bối cảnh (dễ hiểu)
 
@@ -54,6 +54,16 @@ Cùng cổng fs-q15, cộng: **"sai giá do áp dụng sai khu vực = 0"**, đo
 ## Cách đảo ngược
 
 Cờ `cf.ai.guard_facts` (mặc định TẮT): tắt → guard cũ, không đổi hành vi. Không có migration nên không cần đường lùi dữ liệu.
+
+## Kế hoạch ba bước (đã ủy quyền 10/11/2026)
+
+Mỗi bước một nhánh, plan theo TEMPLATE, test viết trước, `pnpm push:safe`, đo cờ slot **TẮT** trên demo + sswiftly (1 lượt mỗi bộ). **Cổng chung:** không thấp hơn fs-q13 (demo 36/37, 31/32, 29/30, sự kiện 36/36; sswiftly 29/32, 10/12); sai giá, reply_empty, FR-142, sai khu vực = 0; 0 lần chạy lỗi. Không đạt → không merge, báo lại. Không làm: bật cờ cho shop thật, en-14/en-15/en-22, vi-30/viplain-30/mixed-30, sửa gold.
+
+1. **`feat/plan-khong-phu-thuoc-co`** (→ `out/fs-b1`): `pipeline-job.ts` luôn nạp thẻ chính sách + chế độ tồn; cờ `fact_slots` chỉ bật chế độ slot (input riêng `factSlotsMode`). `run-pipeline.ts` luôn lập fact plan khi không phải closing; `ordinaryReturnQuestion` (hỏi đổi trả thường/hàng lỗi trùng phạm vi bảo hành không bị nhãn phụ complaint ép chuyển người) và `fallbackTemplate` khi nháp rỗng/không dùng được mà plan có sự kiện bắt buộc chạy cả khi cờ tắt. T4 tạm thời = `fallbackTemplate` ngay, chưa gọi lại LLM. Test: cờ bật → hành vi y hệt; cờ tắt → viplain-08, viplain-09, vi-12, en-11 trả lời. Không đụng migration/RLS/trigger/auth → CI xanh + đạt cổng → tự merge.
+2. **`feat/guard-facts-t2-t4`** (→ `out/fs-b2`), sau bước 1: cờ `cf.ai.guard_facts` (mặc định tắt, bật cho [EVAL]). T2: guard tiền/khái niệm nhận nguồn = toàn bộ `found` có chủ đề trùng chủ đề câu hỏi (không chỉ `draft.sources`); số nằm ở đoạn khác chủ đề → vi phạm `number_not_in_topic`. T4: nháp rỗng/needs_human khi `answer` và (plan có sự kiện bắt buộc hoặc `found` có đoạn cùng chủ đề) → gọi LLM lần 2 kèm mã `draft_empty_with_sources` (trong FR-162 ≤ 2 lần); vẫn rỗng → `fallbackTemplate(plan)`; không plan → chuyển người. **DỪNG: chủ dự án kiểm chéo trước merge** (guard + cổng tự gửi); tự kiểm theo `verify.md`, nhãn "tự kiểm".
+3. **`feat/guard-facts-t1`** (→ `out/fs-b3`), sau bước 2: T1 như trên; plan `unknown` vì khu vực không khớp mà câu có số → vi phạm `region_mismatch` → gọi lại 1 lần kèm mã → vẫn hỏng → `clarify` hỏi tỉnh/thành (FR-147). Test hồi quy bằng fixture (khách ở tỉnh, thẻ chỉ có nội thành); thêm chỉ số "sai khu vực" vào metrics từ `diagnostics`. **DỪNG: chủ dự án kiểm chéo trước merge.**
+
+Chi phí: sổ `eval-spend-ledger.jsonl`, trần chuỗi 2 = 10 USD, ≤ 1 USD/lượt, dừng khi khóa ảo > 80%.
 
 ## Số đo cơ sở (fs-b0, cờ TẮT, 1 lượt mỗi bộ)
 
