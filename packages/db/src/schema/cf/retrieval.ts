@@ -25,22 +25,6 @@ export const KB_GAP_TOPIC_VALUES = [
   'size',
   'other',
 ] as const;
-/** Mã chủ đề mịn của sự kiện (khớp `FactTopic` ở `@flow/ai`). */
-export const KB_GAP_FACT_TOPIC_VALUES = [
-  'price',
-  'stock',
-  'ship_fee',
-  'ship_time',
-  'cod',
-  'returns',
-  'warranty',
-  'payment',
-  'ship_destination',
-  'refund_to',
-  'return_shipping',
-  'return_eligibility',
-  'defect',
-] as const;
 export const KB_GAP_STATUS_VALUES = ['open', 'resolved', 'ignored'] as const;
 export const RETRIEVAL_ROUTE_VALUES = ['sql', 'hybrid', 'both'] as const;
 
@@ -136,7 +120,7 @@ export const kbGaps = cf.table(
     check('kb_gaps_status_check', sql`${t.status} IN (${inList(KB_GAP_STATUS_VALUES)})`),
     check(
       'kb_gaps_fact_topic_check',
-      sql`${t.factTopic} IS NULL OR ${t.factTopic} IN (${inList(KB_GAP_FACT_TOPIC_VALUES)})`,
+      sql`${t.factTopic} IS NULL OR char_length(${t.factTopic}) BETWEEN 1 AND 40`,
     ),
     check('kb_gaps_count_check', sql`${t.count} >= 1`),
     check('kb_gaps_text_check', sql`char_length(${t.sampleQuestionMasked}) BETWEEN 1 AND 500`),

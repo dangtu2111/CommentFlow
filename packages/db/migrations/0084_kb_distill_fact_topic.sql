@@ -15,7 +15,7 @@ SET LOCAL lock_timeout = '5s';
 -- ===================================================================================================
 ALTER TABLE "cf"."kb_gaps" ADD COLUMN "fact_topic" text;
 --> statement-breakpoint
-ALTER TABLE "cf"."kb_gaps" ADD CONSTRAINT "kb_gaps_fact_topic_check" CHECK ("cf"."kb_gaps"."fact_topic" IS NULL OR "cf"."kb_gaps"."fact_topic" IN ('price', 'stock', 'ship_fee', 'ship_time', 'cod', 'returns', 'warranty', 'payment', 'ship_destination', 'refund_to', 'return_shipping', 'return_eligibility', 'defect'));
+ALTER TABLE "cf"."kb_gaps" ADD CONSTRAINT "kb_gaps_fact_topic_check" CHECK ("cf"."kb_gaps"."fact_topic" IS NULL OR char_length("cf"."kb_gaps"."fact_topic") BETWEEN 1 AND 40);
 --> statement-breakpoint
 ALTER TABLE "cf"."faq_items" ADD COLUMN "status" text DEFAULT 'published' NOT NULL;
 --> statement-breakpoint
@@ -53,3 +53,23 @@ BEGIN
   RETURN NEW;
 END
 $$;
+--> statement-breakpoint
+-- Nháp chắt lọc chỉ Owner duyệt: job hệ thống không đưa 'draft' → 'published', và dòng có evidence_quote (do chắt lọc) do hệ thống ghi phải là 'draft'.
+CREATE OR REPLACE FUNCTION cf.faq_items_guard_publish() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = pg_catalog, core, cf, pg_temp
+AS $$
+BEGIN
+  IF core.is_system_context() IS TRUE THEN
+    IF TG_OP = 'INSERT' AND NEW.evidence_quote IS NOT NULL AND NEW.status <> 'draft' THEN
+      RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
+    END IF;
+    IF TG_OP = 'UPDATE' AND OLD.status = 'draft' AND NEW.status = 'published' THEN
+      RAISE EXCEPTION 'not allowed' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END
+$$;
+--> statement-breakpoint
+CREATE TRIGGER faq_items_guard_publish BEFORE INSERT OR UPDATE ON cf.faq_items FOR EACH ROW EXECUTE FUNCTION cf.faq_items_guard_publish();

@@ -45,19 +45,21 @@ const gapWith = async (factTopic: string | null, topic = 'policy') =>
   ).rows[0].id as string;
 
 describe('kb_gaps.fact_topic', () => {
-  it('job hệ thống ghi được; mã lạ bị CHECK từ chối', async () => {
+  it('job hệ thống ghi được; chuỗi rỗng/quá dài bị CHECK từ chối (mã hợp lệ kiểm bằng Zod ở code)', async () => {
     await db.withJob(ws, (tx) =>
       tx.execute(
         sql`INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked, fact_topic) VALUES (${ws}::uuid, 'shipping', 'ship?', 'ship_fee')`,
       ),
     );
-    const bad = await admin
-      .query(
-        `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked, fact_topic) VALUES ($1, 'size', 'q', 'bogus')`,
-        [ws],
-      )
-      .catch((error: { code?: string }) => error.code);
-    expect(bad).toBe(CHECK);
+    for (const value of ['', 'x'.repeat(41)]) {
+      const bad = await admin
+        .query(
+          `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked, fact_topic) VALUES ($1, 'size', 'q', $2)`,
+          [ws, value],
+        )
+        .catch((error: { code?: string }) => error.code);
+      expect(bad).toBe(CHECK);
+    }
   });
 
   it('thành viên (Owner) KHÔNG đổi được fact_topic, nhưng vẫn đổi được status', async () => {
@@ -116,5 +118,38 @@ describe('faq_items nháp chắt lọc', () => {
       .query(`UPDATE cf.faq_items SET status = 'weird' WHERE id = $1`, [id])
       .catch((error: { code?: string }) => error.code);
     expect(bad).toBe(CHECK);
+  });
+});
+
+describe('faq_items: chỉ Owner đưa nháp lên published', () => {
+  const draftId = async () =>
+    (
+      await db.withJob(ws, (tx) =>
+        tx.execute<{ id: string }>(sql`
+          INSERT INTO cf.faq_items (workspace_id, question, answer, lang, status, kind, evidence_quote)
+          VALUES (${ws}::uuid, 'Q?', 'A', 'vi', 'draft', 'faq', 'trích dẫn')
+          RETURNING id`),
+      )
+    ).rows[0]?.id as string;
+
+  it('job hệ thống không đổi draft → published được', async () => {
+    const id = await draftId();
+    const code = await expectRejectCode(
+      db.withJob(ws, (tx) =>
+        tx.execute(sql`UPDATE cf.faq_items SET status = 'published' WHERE id = ${id}::uuid`),
+      ),
+    );
+    expect(code).toBe(RLS);
+  });
+
+  it('job hệ thống không chèn dòng có evidence_quote ở trạng thái published', async () => {
+    const code = await expectRejectCode(
+      db.withJob(ws, (tx) =>
+        tx.execute(sql`
+          INSERT INTO cf.faq_items (workspace_id, question, answer, lang, status, evidence_quote)
+          VALUES (${ws}::uuid, 'Q2?', 'A', 'vi', 'published', 'trích dẫn')`),
+      ),
+    );
+    expect(code).toBe(RLS);
   });
 });
