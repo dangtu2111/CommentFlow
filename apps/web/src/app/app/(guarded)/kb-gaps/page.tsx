@@ -2,11 +2,13 @@ import { KB_GAP_STATUSES, KB_GAP_TOPICS } from '@flow/shared';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { KbFrame } from '../../../../components/kb/kb-frame';
+import { DraftFaqRow } from '../../../../components/kb-gaps/draft-faq-row';
 import { KbGapRow } from '../../../../components/kb-gaps/kb-gap-row';
 import { PageHeader } from '../../../../components/ui/page-header';
 import { groupGapsByTopic, parseKbGapFilter, toKbGapViews } from '../../../../lib/kb-gaps-form';
 import { hasNewCard } from '../../../../lib/kb-gaps-links';
 import { getBrand } from '../../../../server/brand';
+import { distillDrafts } from '../../../../server/distill-drafts';
 import { kbGaps } from '../../../../server/kb-gaps';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -28,11 +30,24 @@ export default async function KbGapsPage({ searchParams }: { searchParams: Searc
     searchParams.then(parseKbGapFilter),
   ]);
 
+  const sp = await searchParams;
+  const pendingTab = sp.tab === 'pending';
   let gaps: Awaited<ReturnType<ReturnType<typeof kbGaps>['list']>> | null = null;
+  let drafts: Awaited<ReturnType<ReturnType<typeof distillDrafts>['list']>> = [];
+  let draftCount = 0;
   let cards: Awaited<ReturnType<ReturnType<typeof kbGaps>['approvedCards']>> = [];
   try {
     const ctx = { workspaceId: workspace.id, userId: user.id };
     gaps = await kbGaps().list(ctx, filter);
+    // Tab "Chờ duyệt" (M3): chỉ là gợi ý thêm — lỗi đọc không làm hỏng trang dữ liệu còn thiếu.
+    drafts = pendingTab
+      ? await distillDrafts()
+          .list(ctx)
+          .catch(() => [])
+      : [];
+    draftCount = await distillDrafts()
+      .count(ctx)
+      .catch(() => 0);
     cards = await kbGaps()
       .approvedCards(ctx)
       .catch(() => []); // huy hiệu chỉ là gợi ý: lỗi đọc thẻ không làm hỏng trang
@@ -64,6 +79,38 @@ export default async function KbGapsPage({ searchParams }: { searchParams: Searc
           <PageHeader title={t('title')} subtitle={t('subtitle')} />
         </header>
         <nav aria-label={t('filterLabel')} className="row">
+          <Link href="/app/kb-gaps" aria-current={pendingTab ? undefined : 'page'}>
+            {t('title')}
+          </Link>
+          <Link href="/app/kb-gaps?tab=pending" aria-current={pendingTab ? 'page' : undefined}>
+            {t('drafts.tab')} ({draftCount})
+          </Link>
+        </nav>
+        {pendingTab ? (
+          <section className="stack">
+            <h2>{t('drafts.title')}</h2>
+            <p className="muted">{t('drafts.subtitle')}</p>
+            {drafts.length === 0 ? (
+              <p className="muted">{t('drafts.empty')}</p>
+            ) : (
+              <ul className="stack">
+                {drafts.map((draft) => (
+                  <DraftFaqRow
+                    key={draft.id}
+                    draft={{
+                      id: draft.id,
+                      kind: draft.kind,
+                      question: draft.question,
+                      answer: draft.answer,
+                      evidenceQuote: draft.evidenceQuote ?? '',
+                    }}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : null}
+        <nav aria-label={t('filterLabel')} className="row" hidden={pendingTab}>
           {KB_GAP_STATUSES.map((s) => (
             <Link
               key={s}
@@ -87,7 +134,7 @@ export default async function KbGapsPage({ searchParams }: { searchParams: Searc
             </Link>
           ))}
         </nav>
-        {groups.length === 0 ? (
+        {pendingTab ? null : groups.length === 0 ? (
           <p className="muted">{t('empty')}</p>
         ) : (
           groups.map((group) => (

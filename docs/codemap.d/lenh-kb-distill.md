@@ -1,0 +1,1 @@
+| Chắt lọc kiến thức thô thành FAQ/thuộc tính NHÁP (dev) | `pnpm --filter @flow/worker kb:distill -- <workspace-uuid> [--approve]` — chạy `runKbDistill` (LLM thật, trần 0,20 USD, ghi `ai_usage` bước `distill`), in số liệu; `--approve` duyệt hàng loạt CHỈ cho workspace `[EVAL]` (từ chối staging/production) | Cần LiteLLM + `DISTILL_LLM_MODEL` (hoặc `DRAFT_LLM_MODEL`) |

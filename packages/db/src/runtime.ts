@@ -241,6 +241,19 @@ export {
   upsertShopProfile,
 } from './queries/kb-content';
 export {
+  approveDraftFaq,
+  countDraftFaqs,
+  type DistillChunkRow,
+  type DistilledFaqInsert,
+  type DraftFaqRow,
+  insertDistilledFaqDrafts,
+  listChunksToDistill,
+  listDraftFaqs,
+  loadWorkspaceNameAndOwner,
+  markChunksDistilled,
+  rejectDraftFaq,
+} from './queries/kb-distill';
+export {
   type ChunkScope,
   type CreateKbVersionInput,
   createKbVersionFromChunks,

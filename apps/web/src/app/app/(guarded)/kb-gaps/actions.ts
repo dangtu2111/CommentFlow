@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { notFound } from 'next/navigation';
 import { parseKbGapForm } from '../../../../lib/kb-gaps-form';
+import { distillDrafts } from '../../../../server/distill-drafts';
 import { createGapRetry, type GapRetryResult } from '../../../../server/gap-retry';
 import { kbGaps } from '../../../../server/kb-gaps';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -59,4 +60,35 @@ export async function retryKbGapAction(
   }
   if (!result.ok && result.reason === 'not_found') notFound();
   return { status: 'done', ...result };
+}
+
+/** Kết quả duyệt/từ chối một gợi ý chắt lọc (đọc bằng `useActionState`). */
+export type DraftFaqState = { status: 'idle' | 'approved' | 'rejected' | 'error' };
+
+/**
+ * Owner duyệt/từ chối một gợi ý chắt lọc (M3). Chỉ Owner (Staff nhận 404); workspace từ phiên, id gợi ý chỉ được tra TRONG workspace đó —
+ * id lạ hoặc đã xử lý → 404. Job hệ thống KHÔNG duyệt được (trigger DB), nên đây là đường DUY NHẤT đưa gợi ý vào kiến thức.
+ */
+export async function reviewDraftFaqAction(
+  _prev: DraftFaqState,
+  data: FormData,
+): Promise<DraftFaqState> {
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  const id = data.get('id');
+  const intent = data.get('intent');
+  if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  if (intent !== 'approve' && intent !== 'reject') notFound();
+  const ctx = { workspaceId: workspace.id, userId: user.id };
+  let result: 'ok' | 'not_found';
+  try {
+    result =
+      intent === 'approve'
+        ? await distillDrafts().approve(ctx, id)
+        : await distillDrafts().reject(ctx, id);
+  } catch {
+    return { status: 'error' };
+  }
+  if (result === 'not_found') notFound();
+  revalidatePath('/app/kb-gaps');
+  return { status: intent === 'approve' ? 'approved' : 'rejected' };
 }

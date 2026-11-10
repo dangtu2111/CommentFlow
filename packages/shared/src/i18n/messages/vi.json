@@ -1701,7 +1701,23 @@
       "ai_invalid_output": "AI trả kết quả không đọc được, thử lại sau.",
       "unavailable": "Chưa thử được, vui lòng thử lại."
     },
-    "newCard": "Có thẻ mới, bấm Thử lại"
+    "newCard": "Có thẻ mới, bấm Thử lại",
+    "drafts": {
+      "tab": "Chờ duyệt",
+      "title": "Gợi ý từ dữ liệu thô — chờ bạn duyệt",
+      "subtitle": "Máy đọc phần mô tả/chính sách bạn nhập và đề xuất câu hỏi–đáp. Mỗi gợi ý kèm câu trích nguyên văn làm bằng chứng. Chỉ khi bạn duyệt, gợi ý mới vào kiến thức của AI (sau khi đồng bộ và xuất bản).",
+      "empty": "Không có gợi ý nào đang chờ duyệt.",
+      "evidence": "Bằng chứng (trích nguyên văn)",
+      "kind": {
+        "faq": "Câu hỏi thường gặp",
+        "product_attr": "Thuộc tính sản phẩm"
+      },
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "approved": "Đã duyệt — gợi ý sẽ vào kiến thức sau lần đồng bộ kế tiếp.",
+      "rejected": "Đã từ chối gợi ý.",
+      "error": "Không thực hiện được, thử lại sau."
+    }
   },
   "kbPublish": {
     "sync": {
