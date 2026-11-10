@@ -498,7 +498,10 @@ const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
 
 /** Chủ đề kiến thức (shipping/policy) đã có đủ sự kiện trong fact plan chưa; `null` = fact plan không phụ trách chủ đề này (giữ cách cũ). */
 /** Chủ đề lỗ hổng của lượt chuyển người/dùng câu dự phòng: theo sự kiện plan hỏi → theo ý hỏi (`topicOf`) → 'other'. */
-function fallbackGapTopics(factTopics: readonly FactTopic[], asks: readonly string[]): KbGapTopic[] {
+function fallbackGapTopics(
+  factTopics: readonly FactTopic[],
+  asks: readonly string[],
+): KbGapTopic[] {
   const fromFacts = factTopics.map((t) => GAP_TOPIC_OF_FACT[t]);
   const topics = fromFacts.length > 0 ? fromFacts : asks.map((ask) => topicOf(ask));
   return topics.length > 0 ? [...new Set(topics)] : ['other'];

@@ -244,7 +244,11 @@ describe('toGapInputs — một lỗ hổng cho mỗi chủ đề chưa có ngu�
 
 describe('toGapInputs — KB-GAPS-FROM-HANDOFF', () => {
   const Q = 'Áo thun giá bao nhiêu, sđt [sđt]';
-  const handoff = { ...done().decision, action: 'handoff' as const, reason: 'claim_unsupported' as const };
+  const handoff = {
+    ...done().decision,
+    action: 'handoff' as const,
+    reason: 'claim_unsupported' as const,
+  };
 
   it('chuyển người vì claim_unsupported → một gap theo chủ đề của sự kiện/ý hỏi (cờ tắt cũng vậy)', () => {
     const gaps = toGapInputs(

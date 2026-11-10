@@ -6,6 +6,7 @@ import {
 } from '@flow/shared';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
+import { resolveOpenKbGapsByTopic } from '../retrieval-logs';
 
 /**
  * Chính sách CÓ CẤU TRÚC (DRAFT-FACT-SLOTS, ADR 017). Mọi truy vấn lọc `workspace_id` và chạy trong `withActor` (Owner ghi/duyệt), `withJob` (hệ thống chỉ ghi ĐỀ XUẤT nháp) hoặc
@@ -193,6 +194,7 @@ export async function approvePolicyFact(
     await tx.execute(
       sql`DELETE FROM cf.policy_facts WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'`,
     );
+    await resolveGapsAnsweredBy(tx, workspaceId, row.kind as PolicyFactKind);
     return 'approved';
   }
   const updated = await tx.execute(sql`
@@ -200,8 +202,18 @@ export async function approvePolicyFact(
        SET status = 'approved', data = CASE WHEN ${strip}::boolean THEN data - 'needsReview' ELSE data END
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft' AND rev = ${expectedRev}
     RETURNING id`);
-  return updated.rows.length > 0 ? 'approved' : 'stale';
+  if (updated.rows.length === 0) return 'stale';
+  await resolveGapsAnsweredBy(tx, workspaceId, row.kind as PolicyFactKind);
+  return 'approved';
 }
+
+/** Chủ đề gap mà thẻ chính sách loại này trả lời được (ship → shipping; còn lại → policy). */
+export const gapTopicOfPolicyKind = (kind: PolicyFactKind): 'shipping' | 'policy' =>
+  kind === 'ship_region' ? 'shipping' : 'policy';
+
+/** KB-GAPS-FROM-HANDOFF: thẻ vừa duyệt → đóng gap đang mở cùng chủ đề, CÙNG giao dịch với lần duyệt. */
+const resolveGapsAnsweredBy = (tx: Database, workspaceId: string, kind: PolicyFactKind) =>
+  resolveOpenKbGapsByTopic(tx, workspaceId, gapTopicOfPolicyKind(kind));
 
 export type DeleteApprovedPolicyResult = 'deleted' | 'not_found' | 'stale';
 

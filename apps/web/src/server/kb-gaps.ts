@@ -29,6 +29,13 @@ export function createKbGapService({ db, ops }: Deps) {
     list: (ctx: Ctx, filter: KbGapFilter) =>
       db.withActor(ctx.workspaceId, ctx.userId, (tx: Database) => ops.listKbGaps(tx, filter)),
 
+    /** Một gap theo id TRONG workspace (RLS); không thấy → null. */
+    find: (ctx: Ctx, gapId: string) =>
+      db.withActor(ctx.workspaceId, ctx.userId, async (tx: Database) => {
+        const rows = await ops.listKbGaps(tx, { limit: 500 });
+        return rows.find((row) => row.id === gapId) ?? null;
+      }),
+
     /** `not_found` khi gap không thấy được (id lạ/workspace khác): KHÔNG tạo FAQ. */
     apply: (ctx: Ctx, action: KbGapAction): Promise<'ok' | 'not_found'> =>
       db.withActor(ctx.workspaceId, ctx.userId, async (tx: Database) => {
