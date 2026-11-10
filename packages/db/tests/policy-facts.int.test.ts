@@ -322,6 +322,33 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
     expect(r.approved_by).toBe(owner);
   });
 
+  it('KB-GAPS-FROM-HANDOFF: duyệt thẻ → đóng gap ĐANG MỞ cùng chủ đề của workspace mình, không đụng chủ đề khác/workspace khác', async () => {
+    const gap = async (w: string, topic: string) =>
+      (
+        await admin.query(
+          `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked) VALUES ($1, $2, 'q') RETURNING id`,
+          [w, topic],
+        )
+      ).rows[0].id as string;
+    const status = async (id: string) =>
+      (await admin.query('SELECT status FROM cf.kb_gaps WHERE id = $1', [id])).rows[0].status;
+    const mine = await gap(ws, 'shipping');
+    const otherTopic = await gap(ws, 'policy');
+    const foreign = await gap(other, 'shipping');
+    const draft = await db.withJob(ws, (tx) =>
+      savePolicyFact(
+        tx,
+        base({ slot: 'gap-close', status: 'draft', origin: 'text_suggested', evidence: 'e' }),
+      ),
+    );
+    expect(await db.withActor(ws, owner, (tx) => approvePolicyFact(tx, ws, draft, 1))).toBe(
+      'approved',
+    );
+    expect(await status(mine)).toBe('resolved');
+    expect(await status(otherTopic)).toBe('open');
+    expect(await status(foreign)).toBe('open');
+  });
+
   it('duyệt kèm rev: worker làm mới nháp giữa lúc Owner xem → duyệt bị từ chối (stale), nháp giữ nguyên; xem lại rev mới thì duyệt được', async () => {
     const mk = (feeMinor: number) =>
       db.withJob(ws, (tx) =>

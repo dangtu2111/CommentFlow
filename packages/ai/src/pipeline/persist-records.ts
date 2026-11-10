@@ -110,15 +110,24 @@ export function toRetrievalInput(
   };
 }
 
-/** Mỗi chủ đề khách hỏi mà chưa có nguồn → một lỗ hổng; chỉ gắn sản phẩm khi nhận ra ĐÚNG MỘT sản phẩm. */
+/**
+ * Mỗi chủ đề khách hỏi mà chưa có nguồn → một lỗ hổng; chỉ gắn sản phẩm khi nhận ra ĐÚNG MỘT sản phẩm.
+ * KB-GAPS-FROM-HANDOFF: thêm chủ đề từ (a) plan có sự kiện chưa biết (cả cờ tắt), (b) lượt chuyển người `claim_unsupported`, (c) lượt dùng câu dự phòng do code dựng.
+ */
 export function toGapInputs(result: DonePipelineResult): KbGapInput[] {
   const products = result.candidates.filter((c) => c.kind === 'product' && isUuid(c.id));
   const productId = products.length === 1 ? (products[0]?.id ?? null) : null;
-  return result.decision.unansweredTopics.map((topic: KbGapTopic) => ({
-    topic,
-    sampleQuestion: result.maskedText,
-    productId,
-  }));
+  const chosen = result.slotDiagnostics?.chosen;
+  const fellBack =
+    (result.decision.action === 'handoff' && result.decision.reason === 'claim_unsupported') ||
+    chosen === 'fallback' ||
+    chosen === 'handoff';
+  const topics = new Set<KbGapTopic>([
+    ...result.decision.unansweredTopics,
+    ...(result.gapTopics?.plan ?? []),
+    ...(fellBack ? (result.gapTopics?.fallback ?? []) : []),
+  ]);
+  return [...topics].map((topic) => ({ topic, sampleQuestion: result.maskedText, productId }));
 }
 
 export type CommentUpdate = {
