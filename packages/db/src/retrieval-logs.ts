@@ -127,6 +127,25 @@ export async function setKbGapStatus(
 }
 
 /**
+ * Thẻ chính sách vừa được duyệt → đóng mọi gap ĐANG MỞ cùng chủ đề của workspace (cùng giao dịch với lần duyệt). Chỉ đổi `status`; trả số dòng đã đóng.
+ * Gắn sản phẩm không liên quan (thẻ chính sách không theo sản phẩm). Chạy trong `withActor` của Owner (trigger `kb_gaps_guard_update` cho phép đổi trạng thái).
+ */
+export async function resolveOpenKbGapsByTopic(
+  tx: Database,
+  workspaceId: string,
+  topic: KbGapTopic,
+): Promise<number> {
+  const updated = await tx
+    .update(kbGaps)
+    .set({ status: 'resolved', resolvedBySourceId: null, updatedAt: sql`now()` })
+    .where(
+      and(eq(kbGaps.workspaceId, workspaceId), eq(kbGaps.topic, topic), eq(kbGaps.status, 'open')),
+    )
+    .returning({ id: kbGaps.id });
+  return updated.length;
+}
+
+/**
  * Dọn nhật ký cũ hơn `days` ngày (mặc định 90, FR-134); trả số dòng đã xóa (tối đa 20000/lần). CHỈ gọi trong
  * `db.withSystem(...)` (ngữ cảnh trần): hàm DEFINER từ chối ngữ cảnh khác; `days` < 30 bị từ chối (CF422).
  */

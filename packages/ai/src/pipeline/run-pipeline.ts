@@ -293,6 +293,8 @@ export type TryResult =
       factPlan?: FactPlan | null;
       /** Chẩn đoán đường fact plan (EVAL): số câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG / tổng, và câu được chọn. */
       slotDiagnostics?: SlotDiagnostics;
+      /** KB-GAPS-FROM-HANDOFF: chủ đề lỗ hổng từ plan (`plan` = sự kiện chưa có, cả cờ tắt) và chủ đề của lượt phải dùng câu dự phòng/chuyển người (`fallback`). */
+      gapTopics?: { plan: KbGapTopic[]; fallback: KbGapTopic[] };
       /** Dấu vết guard CHỈ ĐỂ QUAN SÁT (EVAL/chẩn đoán lỗi oan vs thật): không ảnh hưởng quyết định. */
       guardTrace?: GuardTrace;
     };
@@ -495,6 +497,16 @@ const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
 };
 
 /** Chủ đề kiến thức (shipping/policy) đã có đủ sự kiện trong fact plan chưa; `null` = fact plan không phụ trách chủ đề này (giữ cách cũ). */
+/** Chủ đề lỗ hổng của lượt chuyển người/dùng câu dự phòng: theo sự kiện plan hỏi → theo ý hỏi (`topicOf`) → 'other'. */
+function fallbackGapTopics(
+  factTopics: readonly FactTopic[],
+  asks: readonly string[],
+): KbGapTopic[] {
+  const fromFacts = factTopics.map((t) => GAP_TOPIC_OF_FACT[t]);
+  const topics = fromFacts.length > 0 ? fromFacts : asks.map((ask) => topicOf(ask));
+  return topics.length > 0 ? [...new Set(topics)] : ['other'];
+}
+
 function planSourced(plan: FactPlan, factTopics: FactTopic[], topic: KbGapTopic): boolean | null {
   const wanted = factTopics.filter(
     (t) => GAP_TOPIC_OF_FACT[t] === topic && topic !== 'product_info',
@@ -1062,6 +1074,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     ...(factPlan === null ? {} : { factPlan }),
     ...(slotDiagnostics ? { slotDiagnostics } : {}),
     ...(guardTrace ? { guardTrace } : {}),
+    gapTopics: {
+      plan: [...new Set((planAll?.unknownTopics ?? []).map((t) => GAP_TOPIC_OF_FACT[t]))],
+      fallback: fallbackGapTopics(factTopics, extract.asks),
+    },
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,
       decision,
