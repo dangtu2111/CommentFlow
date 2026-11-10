@@ -36,3 +36,22 @@ export function createRetryThrottle(windowMs = 60_000) {
     },
   };
 }
+
+/** Loại thẻ liên quan tới từng chủ đề gap (để biết "có thẻ mới" sau lần gap xuất hiện cuối). */
+const KINDS_OF_TOPIC: Partial<Record<KbGapTopic, readonly string[]>> = {
+  shipping: ['ship_region'],
+  policy: ['returns', 'warranty', 'payment', 'cod'],
+};
+
+/**
+ * Huy hiệu "Có thẻ mới, bấm Thử lại" cho gap còn mở: có thẻ ĐÃ DUYỆT liên quan chủ đề được cập nhật SAU lần gap xuất hiện cuối (`lastSeenAt`). Không cần cột mới; so chuỗi thời gian ISO.
+ */
+export function hasNewCard(
+  topic: KbGapTopic,
+  lastSeenAt: string,
+  cards: ReadonlyArray<{ kind: string; updatedAt: string }>,
+): boolean {
+  const kinds = KINDS_OF_TOPIC[topic] ?? [];
+  const seen = Date.parse(lastSeenAt);
+  return cards.some((card) => kinds.includes(card.kind) && Date.parse(card.updatedAt) > seen);
+}

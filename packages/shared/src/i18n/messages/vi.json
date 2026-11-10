@@ -1700,7 +1700,8 @@
       "no_knowledge": "Chưa có kiến thức để thử.",
       "ai_invalid_output": "AI trả kết quả không đọc được, thử lại sau.",
       "unavailable": "Chưa thử được, vui lòng thử lại."
-    }
+    },
+    "newCard": "Có thẻ mới, bấm Thử lại"
   },
   "kbPublish": {
     "sync": {

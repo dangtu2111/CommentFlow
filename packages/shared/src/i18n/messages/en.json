@@ -1700,7 +1700,8 @@
       "no_knowledge": "No knowledge to try against yet.",
       "ai_invalid_output": "The AI output was unreadable, try again later.",
       "unavailable": "Could not retry, please try again."
-    }
+    },
+    "newCard": "New card available, press Retry"
   },
   "kbPublish": {
     "sync": {
