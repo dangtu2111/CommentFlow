@@ -9,7 +9,11 @@ import {
 import type { FlowDb } from '@flow/db';
 import type { ShopFixture } from '../shop';
 import { createProductionKnowledge } from './knowledge';
-import { type ProductionKnowledgeInfo, prepareProductionKnowledge } from './prepare';
+import {
+  type EvalDistillConfig,
+  type ProductionKnowledgeInfo,
+  prepareProductionKnowledge,
+} from './prepare';
 import { assertDevDatabase } from './seed';
 
 /**
@@ -31,6 +35,7 @@ export type ProductionHandle = {
 export async function openProduction(
   shop: ShopFixture,
   env: Record<string, string | undefined>,
+  distill?: EvalDistillConfig,
 ): Promise<ProductionHandle> {
   const adminUrl = env.DATABASE_ADMIN_URL ?? env.TEST_DATABASE_ADMIN_URL ?? '';
   const workerUrl = env.DATABASE_WORKER_URL ?? env.TEST_DATABASE_WORKER_URL ?? '';
@@ -45,6 +50,7 @@ export async function openProduction(
       workerUrl,
       embeddingService: loadEmbeddingService(env),
       shop,
+      ...(distill ? { distill } : {}),
     });
   } finally {
     await adminPool.end();
@@ -75,6 +81,9 @@ export function describeProduction(info: ProductionKnowledgeInfo): string {
   return (
     `Kiến thức production: [EVAL] kb_version ${info.kbVersion.number}, embedder ${info.embeddingModel}; ` +
     `sản phẩm ${info.seed.products}, chính sách ${info.seed.policies}, FAQ ${info.seed.faqs}; ` +
-    `đồng bộ ghi ${info.sync.chunksWritten} đoạn (giữ ${info.sync.chunksUnchanged}).`
+    `đồng bộ ghi ${info.sync.chunksWritten} đoạn (giữ ${info.sync.chunksUnchanged}).` +
+    (info.distill
+      ? ` Chắt lọc: xét ${info.distill.considered} đoạn, gọi LLM ${info.distill.called}, đạt kiểm cứng ${info.distill.accepted}, ghi nháp ${info.distill.inserted}, duyệt ${info.distill.approved}, loại ${JSON.stringify(info.distill.rejected)}, $${info.distill.costUsd.toFixed(4)}.`
+      : '')
   );
 }

@@ -9,7 +9,7 @@ import type { Database } from '../client';
 export type DistillChunkRow = { id: string; content: string; contentHash: string };
 
 /**
- * Đoạn nháp chưa chắt lọc ở bản nội dung HIỆN TẠI: không nghi cài lệnh, không phải đoạn FAQ (nguồn `sync:faq`), và `metadata.distill_hash` khác `content_hash`
+ * Đoạn nháp chưa chắt lọc ở bản nội dung HIỆN TẠI: không nghi cài lệnh, không phải đoạn FAQ (`sync:faq`) hay sản phẩm (`sync:product`: chắt lọc từ đây làm đoạn FAQ lấn đoạn sản phẩm khi tìm kiếm — EVAL fs-m3 lần 1 hạ nhóm mixed 29/30 → 21/30), và `metadata.distill_hash` khác `content_hash`
  * (đoạn đổi nội dung → hash mới → được chắt lọc lại; không đổi → bỏ qua, nên mỗi bản nội dung chỉ tốn một lần gọi LLM).
  */
 export async function listChunksToDistill(
@@ -23,6 +23,7 @@ export async function listChunksToDistill(
      WHERE c.workspace_id = ${workspaceId}::uuid AND c.version_id IS NULL AND c.is_draft
        AND NOT c.injection_suspected
        AND s.external_key IS DISTINCT FROM 'sync:faq'
+       AND s.external_key IS DISTINCT FROM 'sync:product'
        AND c.metadata ->> 'distill_hash' IS DISTINCT FROM c.content_hash
      ORDER BY c.chunk_key
      LIMIT ${limit}`);
