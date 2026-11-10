@@ -1,6 +1,6 @@
 import type { KbGapRecord, KbGapStatus, KbGapTopic, RetrievalLogRecord } from '@flow/shared';
 import { RETRIEVAL_LOG_RETENTION_DAYS } from '@flow/shared';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { Database } from './client';
 import { kbGaps, retrievalLogs } from './schema/cf/retrieval';
 
@@ -140,6 +140,33 @@ export async function resolveOpenKbGapsByTopic(
     .set({ status: 'resolved', resolvedBySourceId: null, updatedAt: sql`now()` })
     .where(
       and(eq(kbGaps.workspaceId, workspaceId), eq(kbGaps.topic, topic), eq(kbGaps.status, 'open')),
+    )
+    .returning({ id: kbGaps.id });
+  return updated.length;
+}
+
+/**
+ * Như `resolveOpenKbGapsByTopic` nhưng chỉ đóng gap mở cùng chủ đề mà `matches(câu hỏi mẫu đã che PII)` đúng (khớp CHÍNH XÁC, M2b). Không có gap khớp → 0.
+ */
+export async function resolveOpenKbGapsMatching(
+  tx: Database,
+  workspaceId: string,
+  topic: KbGapTopic,
+  matches: (sampleQuestionMasked: string) => boolean,
+): Promise<number> {
+  const open = await tx
+    .select({ id: kbGaps.id, sample: kbGaps.sampleQuestionMasked })
+    .from(kbGaps)
+    .where(
+      and(eq(kbGaps.workspaceId, workspaceId), eq(kbGaps.topic, topic), eq(kbGaps.status, 'open')),
+    );
+  const ids = open.filter((row) => matches(row.sample)).map((row) => row.id);
+  if (ids.length === 0) return 0;
+  const updated = await tx
+    .update(kbGaps)
+    .set({ status: 'resolved', resolvedBySourceId: null, updatedAt: sql`now()` })
+    .where(
+      and(eq(kbGaps.workspaceId, workspaceId), inArray(kbGaps.id, ids), eq(kbGaps.status, 'open')),
     )
     .returning({ id: kbGaps.id });
   return updated.length;

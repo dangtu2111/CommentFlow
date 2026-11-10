@@ -3,6 +3,7 @@ import {
   type Database,
   type FlowDb,
   type KbGapFilter,
+  listApprovedPolicyFacts,
   listKbGaps,
   setKbGapStatus,
 } from '@flow/db/runtime';
@@ -19,6 +20,7 @@ type Ops = {
   listKbGaps: typeof listKbGaps;
   setKbGapStatus: typeof setKbGapStatus;
   createFaqItem: typeof createFaqItem;
+  listApprovedPolicyFacts?: typeof listApprovedPolicyFacts;
 };
 type Deps = { db: Pick<FlowDb, 'withActor'>; ops: Ops };
 
@@ -28,6 +30,17 @@ export function createKbGapService({ db, ops }: Deps) {
   return {
     list: (ctx: Ctx, filter: KbGapFilter) =>
       db.withActor(ctx.workspaceId, ctx.userId, (tx: Database) => ops.listKbGaps(tx, filter)),
+
+    /** Thẻ chính sách ĐÃ DUYỆT (loại + lần cập nhật) để gắn huy hiệu "Có thẻ mới" cho gap. */
+    approvedCards: (ctx: Ctx) =>
+      db.withActor(ctx.workspaceId, ctx.userId, async (tx: Database) =>
+        ops.listApprovedPolicyFacts
+          ? (await ops.listApprovedPolicyFacts(tx, ctx.workspaceId)).map((fact) => ({
+              kind: fact.kind as string,
+              updatedAt: fact.updatedAt,
+            }))
+          : [],
+      ),
 
     /** Một gap theo id TRONG workspace (RLS); không thấy → null. */
     find: (ctx: Ctx, gapId: string) =>
@@ -48,4 +61,7 @@ export function createKbGapService({ db, ops }: Deps) {
 }
 
 export const kbGaps = () =>
-  createKbGapService({ db: getDb(), ops: { listKbGaps, setKbGapStatus, createFaqItem } });
+  createKbGapService({
+    db: getDb(),
+    ops: { listKbGaps, setKbGapStatus, createFaqItem, listApprovedPolicyFacts },
+  });

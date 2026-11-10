@@ -5,6 +5,7 @@ import { KbFrame } from '../../../../components/kb/kb-frame';
 import { KbGapRow } from '../../../../components/kb-gaps/kb-gap-row';
 import { PageHeader } from '../../../../components/ui/page-header';
 import { groupGapsByTopic, parseKbGapFilter, toKbGapViews } from '../../../../lib/kb-gaps-form';
+import { hasNewCard } from '../../../../lib/kb-gaps-links';
 import { getBrand } from '../../../../server/brand';
 import { kbGaps } from '../../../../server/kb-gaps';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -28,8 +29,13 @@ export default async function KbGapsPage({ searchParams }: { searchParams: Searc
   ]);
 
   let gaps: Awaited<ReturnType<ReturnType<typeof kbGaps>['list']>> | null = null;
+  let cards: Awaited<ReturnType<ReturnType<typeof kbGaps>['approvedCards']>> = [];
   try {
-    gaps = await kbGaps().list({ workspaceId: workspace.id, userId: user.id }, filter);
+    const ctx = { workspaceId: workspace.id, userId: user.id };
+    gaps = await kbGaps().list(ctx, filter);
+    cards = await kbGaps()
+      .approvedCards(ctx)
+      .catch(() => []); // huy hiệu chỉ là gợi ý: lỗi đọc thẻ không làm hỏng trang
   } catch {
     gaps = null; // không lộ chi tiết lỗi ra giao diện
   }
@@ -89,7 +95,11 @@ export default async function KbGapsPage({ searchParams }: { searchParams: Searc
               <h2>{t('groupTitle', { topic: t(`topic.${group.topic}`), total: group.total })}</h2>
               <ul className="stack">
                 {group.gaps.map((gap) => (
-                  <KbGapRow key={gap.id} gap={gap} />
+                  <KbGapRow
+                    key={gap.id}
+                    gap={gap}
+                    newCard={gap.status === 'open' && hasNewCard(gap.topic, gap.lastSeenAt, cards)}
+                  />
                 ))}
               </ul>
             </section>
