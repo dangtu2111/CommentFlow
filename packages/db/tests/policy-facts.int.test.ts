@@ -345,8 +345,55 @@ describe('Duyệt đề xuất và danh sách đã duyệt', () => {
       'approved',
     );
     expect(await status(mine)).toBe('resolved');
-    expect(await status(otherTopic)).toBe('open');
+    expect(await status(otherTopic)).toBe('open'); // policy không tự đóng khi duyệt thẻ ship
     expect(await status(foreign)).toBe('open');
+  });
+
+  it('M2b: duyệt thẻ payment KHÔNG đóng gap bảo hành; duyệt returns chỉ đóng gap policy hỏi đổi trả', async () => {
+    const gap = async (w: string, q: string) =>
+      (
+        await admin.query(
+          `INSERT INTO cf.kb_gaps (workspace_id, topic, sample_question_masked) VALUES ($1, 'policy', $2) RETURNING id`,
+          [w, q],
+        )
+      ).rows[0].id as string;
+    const status = async (id: string) =>
+      (await admin.query('SELECT status FROM cf.kb_gaps WHERE id = $1', [id])).rows[0].status;
+    const approve = async (w: string, kind: 'payment' | 'returns', slot: string, data: unknown) => {
+      const draft = await db.withJob(w, (tx) =>
+        savePolicyFact(
+          tx,
+          base({
+            workspaceId: w,
+            kind,
+            slot,
+            data,
+            status: 'draft',
+            origin: 'text_suggested',
+            evidence: 'e',
+          }),
+        ),
+      );
+      return db.withActor(w, owner, (tx) =>
+        approvePolicyFact(tx, w, draft, 1, { isReturnsQuestion: (q) => /đổi trả/.test(q) }),
+      );
+    };
+    // Gap bảo hành: duyệt payment và cả returns đều KHÔNG đóng.
+    const ws1 = await seedWorkspace(admin);
+    await seedMember(admin, ws1, owner, 'owner');
+    const warranty = await gap(ws1, 'bảo hành bao lâu vậy shop');
+    expect(await approve(ws1, 'payment', 'm2b-pay', { methods: ['cod'] })).toBe('approved');
+    expect(await status(warranty)).toBe('open');
+    expect(await approve(ws1, 'returns', 'm2b-ret', { days: 7 })).toBe('approved');
+    expect(await status(warranty)).toBe('open');
+    // Gap hỏi đổi trả (workspace riêng vì khóa duy nhất theo chủ đề): duyệt returns đóng, payment thì không.
+    const ws2 = await seedWorkspace(admin);
+    await seedMember(admin, ws2, owner, 'owner');
+    const returns = await gap(ws2, 'mặc không vừa có đổi trả được không');
+    expect(await approve(ws2, 'payment', 'm2b-pay', { methods: ['cod'] })).toBe('approved');
+    expect(await status(returns)).toBe('open');
+    expect(await approve(ws2, 'returns', 'm2b-ret', { days: 7 })).toBe('approved');
+    expect(await status(returns)).toBe('resolved');
   });
 
   it('duyệt kèm rev: worker làm mới nháp giữa lúc Owner xem → duyệt bị từ chối (stale), nháp giữ nguyên; xem lại rev mới thì duyệt được', async () => {

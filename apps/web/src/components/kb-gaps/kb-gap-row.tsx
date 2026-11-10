@@ -34,7 +34,7 @@ const RETRY_ERRORS: Record<string, true> = {
 const RETRY_IDLE: KbGapRetryState = { status: 'idle' };
 
 /** Một câu hỏi chưa trả lời được: số lần hỏi, câu ví dụ (đã che PII) và ô bổ sung nhanh (UF-11). */
-export function KbGapRow({ gap }: { gap: KbGapRowData }) {
+export function KbGapRow({ gap, newCard = false }: { gap: KbGapRowData; newCard?: boolean }) {
   const t = useTranslations('kbGaps');
   const locale = useLocale();
   const [state, action, pending] = useActionState(kbGapAction, IDLE);
@@ -53,6 +53,7 @@ export function KbGapRow({ gap }: { gap: KbGapRowData }) {
         <span className={gap.status === 'open' ? 'badge badge-off' : 'badge badge-on'}>
           {t(`status.${gap.status}`)}
         </span>
+        {newCard ? <span className="badge badge-on">{t('newCard')}</span> : null}
       </p>
       {state.status === 'error' ? <p role="alert">{t(`error.${state.code}`)}</p> : null}
       {cards.length > 0 ? (
