@@ -242,6 +242,47 @@ describe('toGapInputs — một lỗ hổng cho mỗi chủ đề chưa có ngu�
   });
 });
 
+describe('toGapInputs — KB-GAPS-FROM-HANDOFF', () => {
+  const Q = 'Áo thun giá bao nhiêu, sđt [sđt]';
+  const handoff = { ...done().decision, action: 'handoff' as const, reason: 'claim_unsupported' as const };
+
+  it('chuyển người vì claim_unsupported → một gap theo chủ đề của sự kiện/ý hỏi (cờ tắt cũng vậy)', () => {
+    const gaps = toGapInputs(
+      done({ decision: handoff, gapTopics: { plan: [], fallback: ['policy'] } }),
+    );
+    expect(gaps).toEqual([{ topic: 'policy', sampleQuestion: Q, productId: PRODUCT }]);
+  });
+
+  it('câu dự phòng do code dựng (slotDiagnostics.chosen = fallback) → gap; chọn reply thì không', () => {
+    const base = { rawTexts: 1, rejected: 1 };
+    const gaps = toGapInputs(
+      done({
+        slotDiagnostics: { ...base, chosen: 'fallback' },
+        gapTopics: { plan: [], fallback: ['shipping'] },
+      }),
+    );
+    expect(gaps.map((g) => g.topic)).toEqual(['shipping']);
+    expect(
+      toGapInputs(
+        done({
+          slotDiagnostics: { ...base, chosen: 'reply' },
+          gapTopics: { plan: [], fallback: ['shipping'] },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('plan.unknownTopics → gap kể cả khi trả lời bình thường; trùng chủ đề với unansweredTopics chỉ một gap', () => {
+    const gaps = toGapInputs(
+      done({
+        decision: { ...done().decision, unansweredTopics: ['policy'] },
+        gapTopics: { plan: ['policy', 'shipping'], fallback: [] },
+      }),
+    );
+    expect(gaps.map((g) => g.topic)).toEqual(['policy', 'shipping']);
+  });
+});
+
 describe('commentUpdateOf — cập nhật bình luận sau khi soạn', () => {
   it('trả lời/hỏi lại/chuyển hướng → pending_review; chuyển người hoặc cần người → needs_human; nhãn, ngôn ngữ, chuẩn hóa, theo dõi', () => {
     expect(commentUpdateOf(done())).toMatchObject({
