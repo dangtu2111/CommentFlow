@@ -62,12 +62,13 @@ describe('kb_gaps.fact_topic', () => {
 
   it('thành viên (Owner) KHÔNG đổi được fact_topic, nhưng vẫn đổi được status', async () => {
     const id = await gapWith('returns', 'other');
-    await expectRejectCode(
-      db.withActor(ws, owner, (tx) =>
-        tx.execute(sql`UPDATE cf.kb_gaps SET fact_topic = 'warranty' WHERE id = ${id}::uuid`),
+    expect(
+      await expectRejectCode(
+        db.withActor(ws, owner, (tx) =>
+          tx.execute(sql`UPDATE cf.kb_gaps SET fact_topic = 'warranty' WHERE id = ${id}::uuid`),
+        ),
       ),
-      RLS,
-    );
+    ).toBe(RLS);
     await db.withActor(ws, owner, (tx) =>
       tx.execute(sql`UPDATE cf.kb_gaps SET status = 'ignored' WHERE id = ${id}::uuid`),
     );
