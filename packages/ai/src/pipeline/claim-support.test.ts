@@ -105,6 +105,20 @@ describe('câu bịa chính sách bị loại, KHÔNG gọi LLM soạn lại', (
     },
   );
 
+  it('dấu vết guard (chỉ quan sát): ghi khái niệm bị bắt, câu nháp gốc và nguồn đã dùng; không có khi nháp sạch', async () => {
+    const { r } = await run('Shop có COD không ạ', reply('Dạ có COD ạ, toàn quốc.'));
+    expect(r.guardTrace?.concept).toEqual({
+      concepts: ['cod'],
+      draftReply: 'Dạ có COD ạ, toàn quốc.',
+      usedIds: ['kb:ship'],
+    });
+    const honest = reply('Bạn ơi, shop chưa có thông tin về COD, bạn ib shop nhé.', {
+      sources: [],
+      claims: [],
+    });
+    expect((await run('Shop có COD không ạ', honest)).r.guardTrace).toBeUndefined();
+  });
+
   it('có BIẾN THỂ sạch (FR-161) → dùng biến thể đó, không gọi LLM thêm; ý bị loại khỏi claims', async () => {
     const draft = reply('Shop có COD bạn nhé. Phí ship toàn quốc 30.000đ.', {
       claims: [
