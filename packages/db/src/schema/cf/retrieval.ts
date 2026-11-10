@@ -25,6 +25,22 @@ export const KB_GAP_TOPIC_VALUES = [
   'size',
   'other',
 ] as const;
+/** Mã chủ đề mịn của sự kiện (khớp `FactTopic` ở `@flow/ai`). */
+export const KB_GAP_FACT_TOPIC_VALUES = [
+  'price',
+  'stock',
+  'ship_fee',
+  'ship_time',
+  'cod',
+  'returns',
+  'warranty',
+  'payment',
+  'ship_destination',
+  'refund_to',
+  'return_shipping',
+  'return_eligibility',
+  'defect',
+] as const;
 export const KB_GAP_STATUS_VALUES = ['open', 'resolved', 'ignored'] as const;
 export const RETRIEVAL_ROUTE_VALUES = ['sql', 'hybrid', 'both'] as const;
 
@@ -89,6 +105,8 @@ export const kbGaps = cf.table(
     topic: text('topic').notNull(),
     sampleQuestionMasked: text('sample_question_masked').notNull(),
     productId: uuid('product_id'),
+    /** KB-DISTILL (0084): chủ đề MỊN của sự kiện (mã `FactTopic`); null = chưa rõ hoặc gap gộp nhiều chủ đề → không tự đóng khi duyệt thẻ. */
+    factTopic: text('fact_topic'),
     count: integer('count').notNull().default(1),
     firstSeenAt: timestamptz('first_seen_at').notNull().defaultNow(),
     lastSeenAt: timestamptz('last_seen_at').notNull().defaultNow(),
@@ -116,6 +134,10 @@ export const kbGaps = cf.table(
     index('kb_gaps_workspace_status_idx').on(t.workspaceId, t.status, t.lastSeenAt),
     check('kb_gaps_topic_check', sql`${t.topic} IN (${inList(KB_GAP_TOPIC_VALUES)})`),
     check('kb_gaps_status_check', sql`${t.status} IN (${inList(KB_GAP_STATUS_VALUES)})`),
+    check(
+      'kb_gaps_fact_topic_check',
+      sql`${t.factTopic} IS NULL OR ${t.factTopic} IN (${inList(KB_GAP_FACT_TOPIC_VALUES)})`,
+    ),
     check('kb_gaps_count_check', sql`${t.count} >= 1`),
     check('kb_gaps_text_check', sql`char_length(${t.sampleQuestionMasked}) BETWEEN 1 AND 500`),
     check(
