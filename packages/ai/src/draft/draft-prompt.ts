@@ -77,7 +77,7 @@ export type DraftInput = {
    * GUARD-FACTS (ADR 018 T4): đây là lần soạn LẠI sau khi bản đầu bị loại với mã lỗi này. Hiện chỉ có `draft_empty_with_sources`: bản trước rỗng/xin người
    * dù các nguồn ở trên CÓ thông tin liên quan → bắt buộc trả lời từ nguồn đó.
    */
-  retryCode?: 'draft_empty_with_sources';
+  retryCode?: 'draft_empty_with_sources' | 'region_mismatch';
   draftId?: string;
 };
 
@@ -283,6 +283,8 @@ function historyLines(history: PromptHistory | undefined): string[] {
 const RETRY_LINES: Record<NonNullable<DraftInput['retryCode']>, string> = {
   draft_empty_with_sources:
     'Lưu ý: bản soạn trước bị loại vì để trống/xin người duyệt dù các <source> ở trên CÓ thông tin liên quan. Hãy trả lời ngắn gọn CHỈ từ các <source> đó (needs_human=false); phần nào nguồn không nêu thì không đoán.',
+  region_mismatch:
+    'Lưu ý: bản soạn trước bị loại vì nêu phí/thời gian giao cho khu vực khách hỏi, trong khi shop CHƯA có thông tin ship áp dụng cho khu vực đó. Đừng nêu bất kỳ số phí, số ngày giao hay COD nào; chỉ nói shop cần xác nhận khu vực/địa chỉ nhận hàng rồi mời khách nhắn shop.',
 };
 
 export function buildDraftMessages(input: DraftInput): LlmMessage[] {

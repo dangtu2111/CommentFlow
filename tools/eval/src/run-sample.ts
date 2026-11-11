@@ -80,6 +80,8 @@ export type SampleOutcome =
       confidence: number;
       /** Số vi phạm số tiền/%/ngày/SĐT/link lạ (guard-money): ≥ 1 = câu có số không có trong nguồn. */
       moneyViolations: number;
+      /** Khu vực không khớp thẻ ship (ADR 018 T1): chủ đề `unknown` vì nơi khách nêu không có dòng ship; `numberInReply` = câu CUỐI vẫn nêu phí/thời gian (= sai khu vực). */
+      regionMismatch?: { topics: string[]; numberInReply: boolean };
       /** Mã vi phạm của guard §4 (nguồn từng ý, ngôn ngữ, độ dài, xưng hô). */
       replyViolations: string[];
       extract: ExtractSnapshot | null;
@@ -224,6 +226,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       variants: result.variants,
       confidence: result.confidence.confidence,
       moneyViolations: result.guard.violations.length,
+      ...(result.regionMismatch ? { regionMismatch: result.regionMismatch } : {}),
       replyViolations: result.guard.replyViolations.map((violation) => violation.code),
       extract: snapshot,
       searchQuery: result.searchQuery ?? '',

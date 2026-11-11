@@ -83,3 +83,11 @@ Chi phí: sổ `eval-spend-ledger.jsonl`, trần chuỗi 2 = 10 USD, ≤ 1 USD/l
 Tách lỗi oan khỏi lỗi thật (đối chiếu số/khái niệm bị bắt với **toàn bộ** đoạn `found`): **oan 0, thật 1.** `syn2-viplain-29` — "COD" không có ở đoạn nào trong `found`, guard chặn đúng và trả câu chuyển hướng. Ba mẫu handoff `claim_unsupported` đều có câu rỗng và KHÔNG do guard tiền/khái niệm bắt (không có dấu vết guard) — nhiều khả năng đi theo đường FR-140 (nháp không dùng được); cần đọc riêng trước khi quy lỗi cho guard.
 
 Lưu ý cho cổng của ADR này: `syn2-mixed-11` (Hà Nội, "nội thành 20.000đ") **trả lời đúng ở lượt này** (khách hỏi ship Hà Nội nên "nội thành Hà Nội 20.000đ" hợp lệ); lỗi áp dụng sai khu vực chưa tái hiện ở lượt cơ sở, nên test hồi quy T1 phải dựng bằng fixture (khách ở tỉnh, thẻ chỉ có nội thành), không dựa vào EVAL tự nhiên. Một lượt mỗi bộ có phương sai: số oan/thật nhỏ này chưa đủ để kết luận tỷ lệ.
+
+## Bổ sung sau triển khai (11/11/2026)
+
+- **M2/M3 (kiến thức):** FAQ chỉ đọc bản `published`; `kb_gaps.fact_topic` ghi chủ đề mịn và duyệt thẻ đóng gap theo chủ đề (#317); chắt lọc kiến thức thô thành FAQ NHÁP chờ Owner duyệt, job hệ thống không tự duyệt (trigger `faq_items_guard_publish`, #316/#318); đoạn FAQ chắt lọc xếp sau đoạn thô (bỏ trùng nguồn theo `chunk_key`, tối đa 3/10 chỗ).
+- **T3 mở rộng:** thêm thẻ chính sách mới ("có thẻ") không còn tự đóng gap cũ không rõ chủ đề; hàng lỗi/sai hàng chưa có chính sách có cấu trúc → chuyển người (#312).
+- **T2 thực tế:** chỉ THÊM nguồn (đoạn cùng chủ đề), không loại đoạn đã dùng — bản có loại đã bị đo bắt oan `viplain-29` (hỏi COD, đáp phí ship đúng nguồn). `number_not_in_topic` chỉ để chẩn đoán.
+- **Guard tiền:** số trong nhãn biến thể của sản phẩm đã nhận diện không tính là sai giá (#319).
+- **Kết quả đo:** `out/fs-b2`, `out/fs-b3` (xem `q-guard-facts-t2-t4.md`, `q-guard-facts-t1.md`); T1 chưa kích hoạt ở mẫu thật nào, chỉ có fixture.
