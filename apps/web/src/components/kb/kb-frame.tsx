@@ -30,13 +30,13 @@ export const KB_RAIL_ICONS: Partial<Record<NavItemKey, IconName>> = {
   kbPolicies: 'policy',
   kbFaq: 'quiz',
   kbVoice: 'record_voice_over',
+  kbDictionary: 'spellcheck',
 };
 
 /** Biểu tượng của mục "Sắp có" ở rail. */
 const KB_SOON_ICONS = {
   kbDocs: 'description',
   kbRules: 'rule',
-  kbDictionary: 'spellcheck',
 } as const satisfies Record<string, IconName>;
 
 /**
