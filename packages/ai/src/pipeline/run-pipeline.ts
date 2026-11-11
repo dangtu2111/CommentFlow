@@ -294,7 +294,13 @@ export type TryResult =
       /** Chẩn đoán đường fact plan (EVAL): số câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG / tổng, và câu được chọn. */
       slotDiagnostics?: SlotDiagnostics;
       /** KB-GAPS-FROM-HANDOFF: chủ đề lỗ hổng từ plan (`plan` = sự kiện chưa có, cả cờ tắt) và chủ đề của lượt phải dùng câu dự phòng/chuyển người (`fallback`). */
-      gapTopics?: { plan: KbGapTopic[]; fallback: KbGapTopic[] };
+      gapTopics?: {
+        plan: KbGapTopic[];
+        fallback: KbGapTopic[];
+        /** Mã sự kiện mịn tương ứng (để ghi `kb_gaps.fact_topic`): `planFacts` = sự kiện plan chưa biết, `fallbackFacts` = sự kiện khách hỏi. */
+        planFacts?: FactTopic[];
+        fallbackFacts?: FactTopic[];
+      };
       /** Dấu vết guard CHỈ ĐỂ QUAN SÁT (EVAL/chẩn đoán lỗi oan vs thật): không ảnh hưởng quyết định. */
       guardTrace?: GuardTrace;
     };
@@ -480,7 +486,7 @@ function hasUniformVariantPrice(product: PlanProduct): boolean {
   return prices.size === 1 && !prices.has(null);
 }
 
-const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
+export const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
   price: 'product_info',
   stock: 'product_info',
   ship_fee: 'shipping',
@@ -710,6 +716,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     (planAll?.requiresHumanReview === true || ordinaryReturnQuestion) &&
     (label === 'advice' || label === 'price') &&
     extract.labels.some((item) => item.label === 'complaint');
+  // Bỏ nhãn phụ complaint CHỈ vì câu đổi trả thường (không phải ca bảo hành đã có `defect_warranty_scope`) → câu trả lời bắt buộc người duyệt, không tự gửi.
+  const waivedForOrdinaryReturn =
+    waiveSecondaryComplaint && ordinaryReturnQuestion && planAll?.requiresHumanReview !== true;
   const decideExtract = waiveSecondaryComplaint
     ? { ...extract, labels: extract.labels.filter((item) => item.label !== 'complaint') }
     : extract;
@@ -740,7 +749,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
   // Hàng lỗi trùng phạm vi bảo hành: có câu trả lời từ thẻ bảo hành nhưng BẮT BUỘC người duyệt, không bao giờ tự gửi (kể cả khi sau này bật auto-reply).
-  if (planAll?.requiresHumanReview && decision.action !== 'handoff') {
+  if ((planAll?.requiresHumanReview || waivedForOrdinaryReturn) && decision.action !== 'handoff') {
     decision = { ...decision, needsHuman: true, autoSendPolicy: 'never' };
   }
   // Phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu → HỎI tỉnh/thành (FR-147), không chuyển hướng. Rủi ro/handoff vẫn thắng.
@@ -1067,10 +1076,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     riskReasons: {
       ...turnRisks.reasons,
       legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
-      ...(planAll?.requiresHumanReview || draftUnusable
+      ...(planAll?.requiresHumanReview || waivedForOrdinaryReturn || draftUnusable
         ? {
             review: [
               ...(planAll?.requiresHumanReview ? ['defect_warranty_scope'] : []),
+              ...(waivedForOrdinaryReturn ? ['secondary_complaint_waived'] : []),
               ...(draftUnusable ? ['fr140_draft_unusable'] : []),
             ],
           }
@@ -1092,6 +1102,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     gapTopics: {
       plan: [...new Set((planAll?.unknownTopics ?? []).map((t) => GAP_TOPIC_OF_FACT[t]))],
       fallback: fallbackGapTopics(factTopics, extract.asks),
+      planFacts: [...new Set(planAll?.unknownTopics ?? [])],
+      fallbackFacts: [...new Set(factTopics)],
     },
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,

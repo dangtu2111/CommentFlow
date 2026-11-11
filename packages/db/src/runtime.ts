@@ -467,8 +467,7 @@ export {
   purgeExpiredRetrievalLogs,
   type RecordedKbGap,
   recordKbGap,
-  resolveOpenKbGapsByTopic,
-  resolveOpenKbGapsMatching,
+  resolveOpenKbGapsByFactTopics,
   setKbGapStatus,
 } from './retrieval-logs';
 export { type RawTimestamp, timestampFromRow } from './row-timestamp';

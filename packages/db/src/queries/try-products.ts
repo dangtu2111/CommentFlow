@@ -157,7 +157,7 @@ export async function loadTryShopTexts(
      ORDER BY updated_at DESC, id LIMIT 200`);
   const faqs = await tx.execute<{ id: string; lang: string; question: string; answer: string }>(sql`
     SELECT id, lang, question, answer FROM cf.faq_items
-     WHERE workspace_id = ${workspaceId}::uuid AND NOT starts_with(question, ${sampleLabel})
+     WHERE workspace_id = ${workspaceId}::uuid AND status = 'published' AND NOT starts_with(question, ${sampleLabel})
      ORDER BY updated_at DESC, id LIMIT 200`);
   return [
     ...policies.rows.map((row) => ({
