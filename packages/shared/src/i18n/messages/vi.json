@@ -1633,18 +1633,18 @@
     }
   },
   "kbGaps": {
-    "pageTitle": "Câu hỏi AI chưa trả lời được",
-    "title": "Câu hỏi AI chưa trả lời được",
-    "subtitle": "Những câu khách hỏi mà AI chưa có kiến thức để trả lời, gom theo chủ đề. Viết câu trả lời để bổ sung vào FAQ, hoặc bỏ qua nếu bạn muốn nhân viên tự xử lý chủ đề đó. Câu ví dụ đã được che thông tin cá nhân.",
+    "pageTitle": "Dữ liệu còn thiếu",
+    "title": "Dữ liệu còn thiếu (đã che PII)",
+    "subtitle": "Những câu khách hỏi mà AI phải chuyển người, dùng câu dự phòng hoặc chưa có thông tin để trả lời, gom theo chủ đề. Điền thẻ chính sách hoặc viết câu trả lời (FAQ) rồi bấm \"Thử lại câu này\" để xem AI trả lời ra sao. Câu ví dụ đã được che thông tin cá nhân.",
     "filterLabel": "Lọc câu hỏi",
     "allTopics": "Mọi chủ đề",
     "empty": "Chưa có câu hỏi nào trong mục này.",
     "groupTitle": "{topic} · {total} lượt hỏi",
     "seen": "Hỏi {count} lần · gần nhất {date}",
     "questionLabel": "Câu hỏi (FAQ)",
-    "answerLabel": "Câu trả lời",
+    "answerLabel": "Viết câu trả lời",
     "langLabel": "Áp dụng cho ngôn ngữ",
-    "add": "Bổ sung",
+    "add": "Lưu câu trả lời",
     "ignore": "Bỏ qua",
     "reopen": "Mở lại",
     "lang": {
@@ -1673,7 +1673,35 @@
     "loadError": {
       "title": "Chưa tải được danh sách",
       "body": "Vui lòng tải lại trang sau ít phút."
-    }
+    },
+    "fillCard": "Điền thẻ {card}",
+    "retry": "Thử lại câu này",
+    "retryResult": "AI sẽ {action}:",
+    "retryNoReply": "(không có câu trả lời)",
+    "retryNeedsHuman": "(cần người duyệt)",
+    "retryThrottled": "Mỗi câu chỉ thử lại 1 lần mỗi phút, thử lại sau {seconds} giây.",
+    "card": {
+      "ship": "Vận chuyển",
+      "returns": "Đổi trả",
+      "warranty": "Bảo hành",
+      "payment": "Thanh toán"
+    },
+    "retryAction": {
+      "answer": "trả lời",
+      "clarify": "hỏi lại khách",
+      "redirect": "chuyển hướng",
+      "handoff": "chuyển người"
+    },
+    "retryError": {
+      "limit_reached": "Đã hết lượt thử hôm nay.",
+      "llm_missing_service": "Chưa kết nối dịch vụ AI.",
+      "llm_missing_model": "Chưa cấu hình model AI.",
+      "llm_flag_off": "Tính năng AI đang tắt cho workspace này.",
+      "no_knowledge": "Chưa có kiến thức để thử.",
+      "ai_invalid_output": "AI trả kết quả không đọc được, thử lại sau.",
+      "unavailable": "Chưa thử được, vui lòng thử lại."
+    },
+    "newCard": "Có thẻ mới, bấm Thử lại"
   },
   "kbPublish": {
     "sync": {

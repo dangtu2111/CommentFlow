@@ -6,6 +6,7 @@ import {
 } from '@flow/shared';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
+import { resolveOpenKbGapsByTopic, resolveOpenKbGapsMatching } from '../retrieval-logs';
 
 /**
  * Chính sách CÓ CẤU TRÚC (DRAFT-FACT-SLOTS, ADR 017). Mọi truy vấn lọc `workspace_id` và chạy trong `withActor` (Owner ghi/duyệt), `withJob` (hệ thống chỉ ghi ĐỀ XUẤT nháp) hoặc
@@ -161,7 +162,11 @@ export async function approvePolicyFact(
   workspaceId: string,
   id: string,
   expectedRev: number,
-  options: { confirmReview?: boolean } = {},
+  options: {
+    confirmReview?: boolean;
+    /** Câu hỏi mẫu (đã che PII) có phải hỏi ĐỔI TRẢ không — do nơi gọi truyền (phân loại chủ đề nằm ở `@flow/ai`). Thiếu → thẻ `returns` không tự đóng gap nào. */
+    isReturnsQuestion?: (sampleQuestionMasked: string) => boolean;
+  } = {},
 ): Promise<ApprovePolicyFactResult> {
   const draft = await tx.execute<{
     kind: string;
@@ -193,6 +198,12 @@ export async function approvePolicyFact(
     await tx.execute(
       sql`DELETE FROM cf.policy_facts WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft'`,
     );
+    await resolveGapsAnsweredBy(
+      tx,
+      workspaceId,
+      row.kind as PolicyFactKind,
+      options.isReturnsQuestion,
+    );
     return 'approved';
   }
   const updated = await tx.execute(sql`
@@ -200,7 +211,30 @@ export async function approvePolicyFact(
        SET status = 'approved', data = CASE WHEN ${strip}::boolean THEN data - 'needsReview' ELSE data END
      WHERE workspace_id = ${workspaceId}::uuid AND id = ${id}::uuid AND status = 'draft' AND rev = ${expectedRev}
     RETURNING id`);
-  return updated.rows.length > 0 ? 'approved' : 'stale';
+  if (updated.rows.length === 0) return 'stale';
+  await resolveGapsAnsweredBy(
+    tx,
+    workspaceId,
+    row.kind as PolicyFactKind,
+    options.isReturnsQuestion,
+  );
+  return 'approved';
+}
+
+/**
+ * KB-GAPS-FROM-HANDOFF (M2b): thẻ vừa duyệt → đóng gap mở CHỈ khi khớp chính xác, CÙNG giao dịch. `ship_region` → gap shipping; `returns` → gap policy có câu mẫu hỏi đổi trả.
+ * `warranty`/`payment`/`cod` không tự đóng (chưa có chủ đề mịn trên gap; đóng chính xác theo `fact_topic` ở M3 giai đoạn 2) — gap hiện huy hiệu "Có thẻ mới, bấm Thử lại".
+ */
+async function resolveGapsAnsweredBy(
+  tx: Database,
+  workspaceId: string,
+  kind: PolicyFactKind,
+  isReturnsQuestion?: (sampleQuestionMasked: string) => boolean,
+): Promise<void> {
+  if (kind === 'ship_region') await resolveOpenKbGapsByTopic(tx, workspaceId, 'shipping');
+  else if (kind === 'returns' && isReturnsQuestion) {
+    await resolveOpenKbGapsMatching(tx, workspaceId, 'policy', isReturnsQuestion);
+  }
 }
 
 export type DeleteApprovedPolicyResult = 'deleted' | 'not_found' | 'stale';

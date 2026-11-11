@@ -1633,18 +1633,18 @@
     }
   },
   "kbGaps": {
-    "pageTitle": "Unanswered AI questions",
-    "title": "Questions the AI could not answer",
-    "subtitle": "Customer questions the AI had no knowledge for, grouped by topic. Write an answer to add it to your FAQ, or ignore it if staff should handle that topic. Sample questions have personal data masked.",
+    "pageTitle": "Missing data",
+    "title": "Missing data (PII masked)",
+    "subtitle": "Customer questions the AI had to hand off, answer with a fallback or had no information for, grouped by topic. Fill the policy card or write an answer (FAQ), then press \"Retry this question\" to see what the AI says. Sample questions have personal data masked.",
     "filterLabel": "Filter questions",
     "allTopics": "All topics",
     "empty": "No questions in this view yet.",
     "groupTitle": "{topic} · asked {total} times",
     "seen": "Asked {count} times · last {date}",
     "questionLabel": "Question (FAQ)",
-    "answerLabel": "Answer",
+    "answerLabel": "Write an answer",
     "langLabel": "Applies to language",
-    "add": "Add knowledge",
+    "add": "Save answer",
     "ignore": "Ignore",
     "reopen": "Reopen",
     "lang": {
@@ -1673,7 +1673,35 @@
     "loadError": {
       "title": "Could not load the list",
       "body": "Please reload the page in a few minutes."
-    }
+    },
+    "fillCard": "Fill {card} card",
+    "retry": "Retry this question",
+    "retryResult": "The AI would {action}:",
+    "retryNoReply": "(no reply)",
+    "retryNeedsHuman": "(needs human review)",
+    "retryThrottled": "Each question can be retried once a minute; try again in {seconds}s.",
+    "card": {
+      "ship": "Shipping",
+      "returns": "Returns",
+      "warranty": "Warranty",
+      "payment": "Payment"
+    },
+    "retryAction": {
+      "answer": "answer",
+      "clarify": "ask the customer",
+      "redirect": "redirect",
+      "handoff": "hand off to a person"
+    },
+    "retryError": {
+      "limit_reached": "Today's retry limit is reached.",
+      "llm_missing_service": "AI service is not connected.",
+      "llm_missing_model": "AI model is not configured.",
+      "llm_flag_off": "AI is turned off for this workspace.",
+      "no_knowledge": "No knowledge to try against yet.",
+      "ai_invalid_output": "The AI output was unreadable, try again later.",
+      "unavailable": "Could not retry, please try again."
+    },
+    "newCard": "New card available, press Retry"
   },
   "kbPublish": {
     "sync": {
