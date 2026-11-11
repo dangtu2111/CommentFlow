@@ -2,8 +2,6 @@ import { listShopProfiles } from '@flow/db/runtime';
 import { CONTENT_LANGS } from '@flow/shared';
 import { getTranslations } from 'next-intl/server';
 import {
-  Field,
-  KbCard,
   KbNoticeBanner,
   KbPageHead,
   kbNoticeOf,
@@ -11,6 +9,7 @@ import {
   SaveButton,
 } from '../../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
+import { ShopSections } from '../../../../../components/kb/shop-sections';
 import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
@@ -20,6 +19,8 @@ export async function generateMetadata() {
   const t = await getTranslations('kbContent');
   return { title: `${t('shop.title')} · ${getBrand().name}` };
 }
+
+const NEW_FORM_ID = 'shop-new';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -39,88 +40,32 @@ export default async function KbShopPage({ searchParams }: { searchParams: Searc
           <KbPageHead title={t('shop.title')} subtitle={t('shop.subtitle')} />
           <KbNoticeBanner notice={kbNoticeOf(query.n)} />
           {profiles.map((profile) => (
-            <KbCard
+            <form
               key={profile.lang}
               id={`shop-${profile.lang}`}
-              title={`${t('shop.cardTitle')} — ${t(`lang.${profile.lang}`)}`}
+              action={saveShopProfileAction}
+              className="space-y-space-md"
             >
-              <form action={saveShopProfileAction} className="space-y-space-md">
-                <input type="hidden" name="lang" value={profile.lang} />
-                <ShopFields profile={profile} t={t} />
-                <div className="flex justify-end">
-                  <SaveButton>{t('save')}</SaveButton>
-                </div>
-              </form>
-            </KbCard>
-          ))}
-          <KbCard id="shop-new" title={t('shop.newTitle')}>
-            <form action={saveShopProfileAction} className="space-y-space-md">
-              <LangSelect defaultValue={missing} />
-              <ShopFields profile={null} t={t} />
+              <input type="hidden" name="lang" value={profile.lang} />
+              <h2 className="font-title-md text-title-md text-on-surface">
+                {t('shop.cardTitle')} — {t(`lang.${profile.lang}`)}
+              </h2>
+              <ShopSections profile={profile} t={t} idPrefix={`shop-${profile.lang}`} />
               <div className="flex justify-end">
-                <SaveButton>{t('add')}</SaveButton>
+                <SaveButton>{t('save')}</SaveButton>
               </div>
             </form>
-          </KbCard>
+          ))}
+          <form id={NEW_FORM_ID} action={saveShopProfileAction} className="space-y-space-md">
+            <h2 className="font-title-md text-title-md text-on-surface">{t('shop.newTitle')}</h2>
+            <LangSelect defaultValue={missing} />
+            <ShopSections profile={null} t={t} idPrefix={NEW_FORM_ID} />
+            <div className="flex justify-end">
+              <SaveButton>{t('add')}</SaveButton>
+            </div>
+          </form>
         </div>
       </KbFrame>
     </main>
-  );
-}
-
-type Profile = Awaited<ReturnType<typeof listShopProfiles>>[number];
-
-function ShopFields({
-  profile,
-  t,
-}: {
-  profile: Profile | null;
-  t: Awaited<ReturnType<typeof getTranslations>>;
-}) {
-  return (
-    <div className="grid gap-space-md md:grid-cols-2">
-      <Field
-        label={t('shop.name')}
-        name="name"
-        defaultValue={profile?.name}
-        required
-        maxLength={200}
-      />
-      <Field
-        label={t('shop.website')}
-        name="website"
-        type="url"
-        defaultValue={profile?.website}
-        maxLength={500}
-      />
-      <div className="md:col-span-2">
-        <Field
-          label={t('shop.description')}
-          name="description"
-          rows={3}
-          defaultValue={profile?.description}
-          maxLength={2000}
-        />
-      </div>
-      <Field
-        label={t('shop.address')}
-        name="address"
-        defaultValue={profile?.address}
-        maxLength={500}
-      />
-      <Field
-        label={t('shop.openingHours')}
-        name="openingHours"
-        defaultValue={profile?.openingHours}
-        maxLength={500}
-      />
-      <Field
-        label={t('shop.contact')}
-        name="contact"
-        defaultValue={profile?.contact}
-        hint={t('shop.contactHint')}
-        maxLength={200}
-      />
-    </div>
   );
 }

@@ -3169,7 +3169,50 @@
       "contact": "Public contact",
       "contactHint": "Only enter contact details the shop wants customers to see.",
       "website": "Website",
-      "newTitle": "Add information for another language"
+      "newTitle": "Add information for another language",
+      "soon": "Coming soon",
+      "soonHint": "Not available yet: needs new data storage (in progress).",
+      "slogan": "Slogan / brand positioning",
+      "industries": "Main industries",
+      "logo": "Brand logo",
+      "logoNote": "Logo upload is not supported yet.",
+      "descriptionHint": "The AI uses this text to answer general questions about the shop. Do not enter prices or stock.",
+      "identity": {
+        "title": "Identity & general introduction",
+        "subtitle": "Display name, positioning and shop description"
+      },
+      "locations": {
+        "title": "Store address & showrooms",
+        "subtitle": "Main address and branches so the AI can answer \"where is the shop\""
+      },
+      "branches": {
+        "title": "Branches",
+        "empty": "No branches yet.",
+        "add": "+ Add a branch"
+      },
+      "maps": "Sync Google Maps",
+      "hours": {
+        "title": "Working hours & on-duty",
+        "subtitle": "Opening hours and customer support schedule",
+        "support": "Online reply hours",
+        "night": "AI night shift",
+        "nightNote": "Not supported yet: the AI does not answer by itself after hours."
+      },
+      "channels": {
+        "title": "Contact & sales channels",
+        "subtitle": "Hotline, website and marketplace storefronts",
+        "zalo": "Zalo OA",
+        "shopee": "Shopee",
+        "tiktok": "TikTok Shop"
+      },
+      "legal": {
+        "title": "Legal & payment information",
+        "subtitle": "Legal name and tax ID",
+        "name": "Company / business name",
+        "taxId": "Tax ID",
+        "bank": "Bank account / VietQR",
+        "bankNote": "Not supported yet: the AI does not state account numbers."
+      }
     },
     "policies": {
       "title": "Policies",

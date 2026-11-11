@@ -3169,7 +3169,50 @@
       "contact": "Liên hệ công khai",
       "contactHint": "Chỉ nhập liên hệ shop muốn công khai cho khách.",
       "website": "Website",
-      "newTitle": "Thêm thông tin cho ngôn ngữ khác"
+      "newTitle": "Thêm thông tin cho ngôn ngữ khác",
+      "soon": "Sắp có",
+      "soonHint": "Chưa dùng được: cần lưu trữ dữ liệu mới (đang làm).",
+      "slogan": "Khẩu hiệu / Định vị thương hiệu",
+      "industries": "Ngành hàng kinh doanh chính",
+      "logo": "Logo thương hiệu",
+      "logoNote": "Tải logo chưa hỗ trợ.",
+      "descriptionHint": "AI dùng đoạn này để trả lời câu hỏi chung về shop. Không nhập giá hay tồn kho.",
+      "identity": {
+        "title": "Nhận diện & giới thiệu chung",
+        "subtitle": "Tên hiển thị, định vị và mô tả shop"
+      },
+      "locations": {
+        "title": "Địa chỉ cửa hàng & showroom",
+        "subtitle": "Địa chỉ chính và các chi nhánh để AI trả lời \"shop ở đâu\""
+      },
+      "branches": {
+        "title": "Chi nhánh",
+        "empty": "Chưa có chi nhánh nào.",
+        "add": "+ Thêm chi nhánh mới"
+      },
+      "maps": "Đồng bộ Google Maps",
+      "hours": {
+        "title": "Giờ làm việc & trực ca",
+        "subtitle": "Giờ mở cửa và lịch hỗ trợ khách",
+        "support": "Giờ trực phản hồi online",
+        "night": "AI trực ca đêm",
+        "nightNote": "Chưa hỗ trợ: AI không tự trả lời ngoài giờ."
+      },
+      "channels": {
+        "title": "Kênh liên hệ & bán hàng",
+        "subtitle": "Hotline, website và gian hàng sàn thương mại điện tử",
+        "zalo": "Zalo OA",
+        "shopee": "Shopee",
+        "tiktok": "TikTok Shop"
+      },
+      "legal": {
+        "title": "Thông tin pháp lý & thanh toán",
+        "subtitle": "Tên pháp lý và mã số thuế",
+        "name": "Tên công ty / hộ kinh doanh",
+        "taxId": "Mã số thuế",
+        "bank": "Tài khoản ngân hàng / VietQR",
+        "bankNote": "Chưa hỗ trợ: AI không nêu số tài khoản."
+      }
     },
     "policies": {
       "title": "Chính sách",
