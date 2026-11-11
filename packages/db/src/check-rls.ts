@@ -706,6 +706,12 @@ const ACTOR_POLICIES: Array<[table: string, command: 'a' | 'w' | 'r', marker: st
   ['cf.product_variants', 'w', 'is_system_context'],
   ['cf.product_variants', 'r', 'is_workspace_member'],
   // KB-SHOP-POLICY-FAQ (0036): Owner hoặc hệ thống ghi; đọc: thành viên hoặc không người dùng
+  // KB-SHOP-V2 (0085): đề xuất trường cửa hàng — Owner hoặc hệ thống (chỉ NHÁP) ghi; thành viên đọc
+  ['cf.shop_profile_suggestions', 'a', 'is_workspace_owner'],
+  ['cf.shop_profile_suggestions', 'a', 'is_system_context'],
+  ['cf.shop_profile_suggestions', 'w', 'is_workspace_owner'],
+  ['cf.shop_profile_suggestions', 'w', 'is_system_context'],
+  ['cf.shop_profile_suggestions', 'r', 'is_workspace_member'],
   ['cf.shop_profiles', 'a', 'is_workspace_owner'],
   ['cf.shop_profiles', 'a', 'is_system_context'],
   ['cf.shop_profiles', 'w', 'is_workspace_owner'],
@@ -858,6 +864,10 @@ const FORBIDDEN_IN_POLICY: Array<[table: string, command: 'a' | 'w' | 'r', marke
   ['cf.products', 'a', 'IS NULL'],
   ['cf.products', 'w', 'IS NULL'],
   ['cf.product_aliases', 'a', 'IS NULL'],
+  ['cf.shop_profile_suggestions', 'a', 'is_workspace_member'],
+  ['cf.shop_profile_suggestions', 'w', 'is_workspace_member'],
+  ['cf.shop_profile_suggestions', 'a', 'IS NULL'],
+  ['cf.shop_profile_suggestions', 'w', 'IS NULL'],
   // chính sách có cấu trúc: Staff không ghi; withWorkspace trần (không người dùng) không được ghi
   ['cf.policy_facts', 'a', 'is_workspace_member'],
   ['cf.policy_facts', 'w', 'is_workspace_member'],
