@@ -1002,10 +1002,25 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   // Chế độ chỗ giữ chỗ: mọi số trong câu do code điền → kiểm số tiền với CHÍNH các giá trị vừa điền (không phải đoạn văn).
-  const guardResult = checkGuardMoney({
-    reply: draft.reply,
-    sources: slotRendered ?? used.map((c) => c.text),
-  });
+  const guardSources = slotRendered ?? used.map((c) => c.text);
+  let guardResult = checkGuardMoney({ reply: draft.reply, sources: guardSources });
+  // Nhãn biến thể của sản phẩm ĐÃ nhận diện (đọc từ products/product_variants, không phải đoạn văn) là nguồn hợp lệ: số trong mã biến thể
+  // ("WMT8050PAPER") không phải số tiền do AI bịa. Chỉ tra khi guard báo vi phạm (không thêm truy vấn ở đường thường).
+  if (!guardResult.ok && products.ids.length > 0 && deps.knowledge.lookupPlanProducts) {
+    const owned =
+      planProducts.length > 0
+        ? planProducts
+        : await deps.knowledge.lookupPlanProducts(products.ids);
+    const labelSources = owned.flatMap((product) =>
+      product.variants.map((variant) => variant.label),
+    );
+    if (labelSources.length > 0) {
+      guardResult = checkGuardMoney({
+        reply: draft.reply,
+        sources: [...guardSources, ...labelSources],
+      });
+    }
+  }
   const planSourceIds =
     slotRendered === null || blockPlan === null
       ? []
