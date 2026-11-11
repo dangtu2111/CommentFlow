@@ -1,5 +1,12 @@
+import { unsafeMarkMasked } from '@flow/shared';
 import { describe, expect, it } from 'vitest';
-import type { Distiller } from './distiller';
+import type { LlmCallInput, LlmCallResult, LlmClient } from '../llm-client';
+import {
+  createLlmDistiller,
+  DISTILL_PROMPT_VERSION,
+  DISTILL_STEP,
+  type Distiller,
+} from './distiller';
 import { type DistillChunk, type DistillOps, runKbDistill } from './run-distill';
 import { parseDistillItems } from './schema';
 import { digitGroups, verifyDistillItem } from './verify';
@@ -172,5 +179,49 @@ describe('runKbDistill', () => {
     );
     expect(state.drafts).toEqual([]);
     expect(state.marked).toEqual([]);
+  });
+});
+
+describe('createLlmDistiller — gọi LLM qua LlmClient', () => {
+  const fakeLlm = (text: string, costUsd = 0.001) => {
+    const calls: LlmCallInput[] = [];
+    const llm = {
+      call: async (input: LlmCallInput) => {
+        calls.push(input);
+        return { text, costUsd } as LlmCallResult;
+      },
+    } as LlmClient;
+    return { llm, calls };
+  };
+  const text = unsafeMarkMasked(SOURCE);
+
+  it('một lần gọi, đúng bước/prompt_version, nhiệt độ 0; trả mục đã phân tích và chi phí', async () => {
+    const out = JSON.stringify({ items: [item()] });
+    const { llm, calls } = fakeLlm(out);
+    const result = await createLlmDistiller({ llm, model: 'm', seed: 7 }).distill({
+      workspaceId: 'ws1',
+      text,
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
+      step: DISTILL_STEP,
+      promptVersion: DISTILL_PROMPT_VERSION,
+      temperature: 0,
+      seed: 7,
+      model: 'm',
+    });
+    expect(result.items).toHaveLength(1);
+    expect(result.costUsd).toBe(0.001);
+  });
+
+  it('không truyền seed khi không đặt; đầu ra không đọc được → items null', async () => {
+    const { llm, calls } = fakeLlm('không phải JSON');
+    const result = await createLlmDistiller({ llm, model: 'm' }).distill({
+      workspaceId: 'ws1',
+      text,
+    });
+    expect(calls[0]).not.toHaveProperty('seed');
+    expect(result.items).toBeNull();
+    expect(result.malformed).toBe(0);
   });
 });
