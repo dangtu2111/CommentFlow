@@ -54,7 +54,7 @@ export type RecordedKbGap = { id: string; count: number; status: KbGapStatus };
 
 /**
  * Ghi một lần AI không trả lời được: gộp theo (workspace, chủ đề, sản phẩm) — lần đầu tạo `count = 1`, lần sau `count + 1`
- * (nguyên tử, an toàn khi nhiều worker đua nhau). Gap đã `resolved` mà khách lại hỏi → mở lại (`open`, bỏ nguồn đã gắn);
+ * (nguyên tử, an toàn khi nhiều worker đua nhau). Gap đã `resolved` mà khách lại hỏi → mở lại (`open`, bỏ nguồn đã gắn, lấy `fact_topic` của lần hỏi mới);
  * `ignored` giữ nguyên nhưng vẫn đếm. Chỉ trong `withJob` của đúng workspace.
  */
 export async function recordKbGap(
@@ -71,7 +71,10 @@ export async function recordKbGap(
       last_seen_at = now(),
       updated_at = now(),
       sample_question_masked = EXCLUDED.sample_question_masked,
-      fact_topic = CASE WHEN g.fact_topic IS NOT DISTINCT FROM EXCLUDED.fact_topic THEN g.fact_topic ELSE NULL END,
+      fact_topic = CASE
+        WHEN g.status = 'resolved' THEN EXCLUDED.fact_topic
+        WHEN g.fact_topic IS NOT DISTINCT FROM EXCLUDED.fact_topic THEN g.fact_topic
+        ELSE NULL END,
       status = CASE WHEN g.status = 'resolved' THEN 'open' ELSE g.status END,
       resolved_by_source_id = CASE WHEN g.status = 'resolved' THEN NULL ELSE g.resolved_by_source_id END
     RETURNING g.id, g.count, g.status`);
