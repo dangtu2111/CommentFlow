@@ -171,7 +171,7 @@ export type TryInput = {
   factSlotsMode?: boolean;
   /**
    * BẬT guard theo chủ đề (ADR 018 T2/T4, cờ `cf.ai.guard_facts`, mặc định TẮT = không truyền → hành vi y hệt cũ). T2: guard tiền/khái niệm kiểm trên MỌI đoạn tìm được cùng chủ đề
-   * câu hỏi (không chỉ đoạn bộ soạn khai) và loại đoạn `kb` thuộc chủ đề KHÁC khỏi nguồn số; T4: nháp rỗng/xin người dù có nguồn → gọi lại 1 lần kèm mã `draft_empty_with_sources`.
+   * câu hỏi (không chỉ đoạn bộ soạn khai); T4: nháp rỗng/xin người dù có nguồn → gọi lại 1 lần kèm mã `draft_empty_with_sources`.
    */
   guardFacts?: boolean;
 };
@@ -320,8 +320,8 @@ export type TryResult =
 export type GuardFactsTrace = {
   /** T4: đã gọi LẠI bộ soạn kèm mã lỗi; `recovered` = lần 2 có câu dùng được. */
   retry?: { code: 'draft_empty_with_sources'; recovered: boolean };
-  /** T2: số đoạn thêm vào / loại khỏi nguồn số của guard tiền (theo chủ đề). */
-  moneySources?: { added: number; excluded: number };
+  /** T2: số đoạn cùng chủ đề được THÊM vào nguồn số của guard tiền. */
+  moneySources?: { added: number };
   /** T2: số/ý bị guard tiền bắt mà CÓ trong đoạn tìm được khác chủ đề (mã `number_not_in_topic`). */
   numberNotInTopic?: string[];
 };
@@ -1052,19 +1052,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   let guardSources = slotRendered ?? used.map((c) => c.text);
   let notInTopic: string[] | undefined;
   if (input.guardFacts === true && slotRendered === null) {
-    // T2: nguồn số = đoạn đã dùng (trừ đoạn `kb` có chủ đề KHÁC hẳn chủ đề câu hỏi) + mọi đoạn đủ ngưỡng cùng chủ đề. Không có chủ đề hỏi → không loại gì.
-    const wrongTopic = (c: TryCandidate) =>
-      askedTopics.size > 0 &&
-      c.kind === 'kb' &&
-      c.topics.length > 0 &&
-      !c.topics.some((t) => askedTopics.has(t));
-    const kept = used.filter((c) => !wrongTopic(c));
+    // T2: nguồn số = đoạn đã dùng + mọi đoạn đủ ngưỡng cùng chủ đề (chỉ THÊM; không loại đoạn đã dùng: EVAL fs-b2 lần 1 cho thấy loại theo chủ đề
+    // bắt oan câu đúng nguồn, vd. hỏi COD → đoạn phí ship bị coi là khác chủ đề).
     const added = topicFound.filter((c) => !usedIds.has(c.id));
-    guardSources = [...kept, ...added].map((c) => c.text);
-    guardFactsTrace = {
-      ...guardFactsTrace,
-      moneySources: { added: added.length, excluded: used.length - kept.length },
-    };
+    guardSources = [...used, ...added].map((c) => c.text);
+    guardFactsTrace = { ...guardFactsTrace, moneySources: { added: added.length } };
   }
   let guardResult = checkGuardMoney({ reply: draft.reply, sources: guardSources });
   // Nhãn biến thể của sản phẩm ĐÃ nhận diện (đọc từ products/product_variants, không phải đoạn văn) là nguồn hợp lệ: số trong mã biến thể

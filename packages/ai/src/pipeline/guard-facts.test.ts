@@ -190,17 +190,23 @@ describe('T2: nguồn số của guard tiền = đoạn cùng chủ đề', () =
     const on = await run({ flag: true, chunks, drafts: [reply(['kb:other'])] });
     expect(off.result.guard.violations.length).toBeGreaterThan(0);
     expect(on.result.guard.violations).toEqual([]);
-    expect(on.result.guardFacts?.moneySources).toEqual({ added: 1, excluded: 1 });
+    expect(on.result.guardFacts?.moneySources).toEqual({ added: 1 });
   });
 
-  it('số chỉ nằm ở đoạn KHÁC chủ đề → vẫn vi phạm, kèm mã number_not_in_topic', async () => {
+  it('số chỉ nằm ở đoạn KHÁC chủ đề mà bộ soạn không dùng → vẫn vi phạm, kèm mã number_not_in_topic', async () => {
     const chunks = [
       chunk({ id: 'kb:ship', text: unsafeMarkMasked('Giao toàn quốc 2-4 ngày.') }),
       otherTopic('kb:other', 'Phí gói quà 30.000đ.'),
     ];
-    const { result } = await run({ flag: true, chunks, drafts: [reply(['kb:other'])] });
+    const { result } = await run({ flag: true, chunks, drafts: [reply(['kb:ship'])] });
     expect(result.guard.violations.length).toBeGreaterThan(0);
     expect(result.guardFacts?.numberNotInTopic?.length).toBeGreaterThan(0);
+  });
+
+  it('đoạn đã dùng thuộc chủ đề khác vẫn là nguồn hợp lệ (không bắt oan câu đúng nguồn: hỏi COD, trả phí ship từ đoạn ship)', async () => {
+    const chunks = [otherTopic('kb:other', 'Phí ship 30.000đ toàn quốc.')];
+    const { result } = await run({ flag: true, chunks, drafts: [reply(['kb:other'])] });
+    expect(result.guard.violations).toEqual([]);
   });
 
   it('cờ TẮT: không có dấu vết guardFacts', async () => {
