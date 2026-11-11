@@ -2081,6 +2081,12 @@
         "label": "Câu hỏi của khách để thử",
         "placeholder": "Nhập một câu khách hay hỏi, ví dụ về giá, tồn kho, giao hàng…"
       }
+    },
+    "publishState": {
+      "none": "Chưa xuất bản",
+      "version": "Đã xuất bản v{n}",
+      "draft": "Bản nháp — {count} thay đổi chưa xuất bản",
+      "clean": "Bản nháp trùng bản đã xuất bản"
     }
   },
   "tryAi": {

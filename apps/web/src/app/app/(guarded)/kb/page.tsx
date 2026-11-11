@@ -8,6 +8,7 @@ import { Icon, type IconName } from '../../../../components/ui/icon';
 import { cn } from '../../../../lib/cn';
 import { getBrand } from '../../../../server/brand';
 import { getDb } from '../../../../server/db';
+import { kbPublish } from '../../../../server/kb-publish';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -42,6 +43,14 @@ export default async function KbHubPage({ searchParams }: { searchParams: Search
   let readiness: Awaited<ReturnType<typeof loadReadiness>> | null = null;
   let overview: Awaited<ReturnType<typeof loadKbOverview>> | null = null;
   let shopify: Awaited<ReturnType<typeof getShopifyStore>> = null;
+  // Trạng thái xuất bản thật cho thanh lệnh; lỗi/không đọc được thì bỏ huy hiệu (không làm hỏng trang).
+  const publishState = await kbPublish()
+    .overview({ workspaceId: workspace.id, userId: user.id })
+    .then((o) => ({
+      currentNumber: o.currentNumber,
+      changes: o.preview.ok ? o.preview.publishKeys.length : 0,
+    }))
+    .catch(() => undefined);
   try {
     [readiness, [overview, shopify]] = await Promise.all([
       loadReadiness(workspace.id, user.id, readinessLangOf(locale)),
@@ -73,6 +82,7 @@ export default async function KbHubPage({ searchParams }: { searchParams: Search
     <main className="app-page app-page-wide">
       <KbFrame
         active="kb"
+        {...(publishState ? { publishState } : {})}
         completeness={{
           score: readiness.score,
           ready: readiness.ready,

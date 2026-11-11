@@ -14,6 +14,9 @@ const READINESS_HREF = '/app/readiness';
 /** Độ đầy đủ kiến thức THẬT (từ `loadReadiness`); không truyền thì thanh lệnh chỉ có tiêu đề + lối tắt. */
 export type KbCompleteness = { score: number; ready: boolean; minPercent: number };
 
+/** Trạng thái xuất bản THẬT (từ `kbPublish().overview`): số phiên bản đang chạy (null = chưa xuất bản) và số đoạn nháp khác phiên bản đó. */
+export type KbPublishState = { currentNumber: number | null; changes: number };
+
 /** Biểu tượng của từng mục rail (Material Symbols, lấy theo design/stitch/knowledge-base.html). */
 export const KB_RAIL_ICONS: Partial<Record<NavItemKey, IconName>> = {
   kb: 'menu_book',
@@ -44,16 +47,30 @@ const KB_SOON_ICONS = {
 export async function KbFrame({
   active,
   completeness,
+  publishState,
   children,
 }: {
   active: KbActive;
   completeness?: KbCompleteness;
+  publishState?: KbPublishState;
   children: ReactNode;
 }) {
   const [t, tn] = await Promise.all([getTranslations('kb'), getTranslations('shell.nav')]);
   return (
     <KbFrameView
       title={t('title')}
+      {...(publishState
+        ? {
+            versionBadge:
+              publishState.currentNumber === null
+                ? t('publishState.none')
+                : t('publishState.version', { n: publishState.currentNumber }),
+            draftNote:
+              publishState.changes > 0
+                ? t('publishState.draft', { count: publishState.changes })
+                : t('publishState.clean'),
+          }
+        : {})}
       scope={{ label: t('scope.label'), value: t('scope.value') }}
       diff={{ label: t('actions.diff') }}
       test={{ label: t('actions.test'), href: TEST_HREF }}
