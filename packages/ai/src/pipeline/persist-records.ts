@@ -6,7 +6,8 @@ import {
   type PriceSource,
   type RetrievalLogInput,
 } from '@flow/shared';
-import type { PipelineResult } from './run-pipeline';
+import { type FactTopic, factTopicSchema } from '../fact-plan/types';
+import { GAP_TOPIC_OF_FACT, type PipelineResult } from './run-pipeline';
 
 /**
  * Dựng các bản ghi sẽ ghi vào DB từ kết quả `runPipeline` (PIPE-ORCHESTRATOR lát D). HÀM THUẦN, không chạm DB. Văn bản đưa vào đây đã
@@ -114,6 +115,16 @@ export function toRetrievalInput(
  * Mỗi chủ đề khách hỏi mà chưa có nguồn → một lỗ hổng; chỉ gắn sản phẩm khi nhận ra ĐÚNG MỘT sản phẩm.
  * KB-GAPS-FROM-HANDOFF: thêm chủ đề từ (a) plan có sự kiện chưa biết (cả cờ tắt), (b) lượt chuyển người `claim_unsupported`, (c) lượt dùng câu dự phòng do code dựng.
  */
+/**
+ * Chủ đề mịn của một gap: đúng MỘT mã sự kiện thuộc chủ đề này → mã đó; nhiều mã (gộp) hoặc không có mã nào (chủ đề đến từ câu nháp
+ * tự khai) → null, gap không tự đóng khi duyệt thẻ.
+ */
+function factTopicOfGap(topic: KbGapTopic, facts: readonly FactTopic[]): string | null {
+  const fine = [...new Set(facts.filter((fact) => GAP_TOPIC_OF_FACT[fact] === topic))];
+  const only = fine.length === 1 ? fine[0] : undefined;
+  return only === undefined ? null : factTopicSchema.parse(only);
+}
+
 export function toGapInputs(result: DonePipelineResult): KbGapInput[] {
   const products = result.candidates.filter((c) => c.kind === 'product' && isUuid(c.id));
   const productId = products.length === 1 ? (products[0]?.id ?? null) : null;
@@ -127,7 +138,16 @@ export function toGapInputs(result: DonePipelineResult): KbGapInput[] {
     ...(result.gapTopics?.plan ?? []),
     ...(fellBack ? (result.gapTopics?.fallback ?? []) : []),
   ]);
-  return [...topics].map((topic) => ({ topic, sampleQuestion: result.maskedText, productId }));
+  const facts = [
+    ...(result.gapTopics?.planFacts ?? []),
+    ...(fellBack ? (result.gapTopics?.fallbackFacts ?? []) : []),
+  ];
+  return [...topics].map((topic) => ({
+    topic,
+    sampleQuestion: result.maskedText,
+    productId,
+    factTopic: factTopicOfGap(topic, facts),
+  }));
 }
 
 export type CommentUpdate = {

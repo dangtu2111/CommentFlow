@@ -79,7 +79,7 @@ export async function loadReadinessSource(
             FROM cf.policy_items WHERE workspace_id = ${ws}`,
     ),
     tx.execute<{ lang: Lang; question: string; tags: string[] }>(
-      sql`SELECT lang, question, tags FROM cf.faq_items WHERE workspace_id = ${ws}`,
+      sql`SELECT lang, question, tags FROM cf.faq_items WHERE workspace_id = ${ws} AND status = 'published'`,
     ),
   ]);
 

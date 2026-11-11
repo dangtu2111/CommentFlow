@@ -294,7 +294,13 @@ export type TryResult =
       /** Chẩn đoán đường fact plan (EVAL): số câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG / tổng, và câu được chọn. */
       slotDiagnostics?: SlotDiagnostics;
       /** KB-GAPS-FROM-HANDOFF: chủ đề lỗ hổng từ plan (`plan` = sự kiện chưa có, cả cờ tắt) và chủ đề của lượt phải dùng câu dự phòng/chuyển người (`fallback`). */
-      gapTopics?: { plan: KbGapTopic[]; fallback: KbGapTopic[] };
+      gapTopics?: {
+        plan: KbGapTopic[];
+        fallback: KbGapTopic[];
+        /** Mã sự kiện mịn tương ứng (để ghi `kb_gaps.fact_topic`): `planFacts` = sự kiện plan chưa biết, `fallbackFacts` = sự kiện khách hỏi. */
+        planFacts?: FactTopic[];
+        fallbackFacts?: FactTopic[];
+      };
       /** Dấu vết guard CHỈ ĐỂ QUAN SÁT (EVAL/chẩn đoán lỗi oan vs thật): không ảnh hưởng quyết định. */
       guardTrace?: GuardTrace;
     };
@@ -480,7 +486,7 @@ function hasUniformVariantPrice(product: PlanProduct): boolean {
   return prices.size === 1 && !prices.has(null);
 }
 
-const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
+export const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
   price: 'product_info',
   stock: 'product_info',
   ship_fee: 'shipping',
@@ -1081,6 +1087,8 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     gapTopics: {
       plan: [...new Set((planAll?.unknownTopics ?? []).map((t) => GAP_TOPIC_OF_FACT[t]))],
       fallback: fallbackGapTopics(factTopics, extract.asks),
+      planFacts: [...new Set(planAll?.unknownTopics ?? [])],
+      fallbackFacts: [...new Set(factTopics)],
     },
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,

@@ -125,6 +125,8 @@ const gapInputSchema = z.object({
   topic: z.enum(KB_GAP_TOPICS),
   sampleQuestion: z.string().trim().min(1),
   productId: uuid.nullish(),
+  /** Chủ đề MỊN của sự kiện (mã `FactTopic`, `@flow/ai` kiểm bằng Zod enum); null = chưa rõ/gộp nhiều chủ đề → gap không tự đóng. */
+  factTopic: z.string().min(1).max(40).nullish(),
 });
 
 export type KbGapInput = z.input<typeof gapInputSchema>;
@@ -133,6 +135,7 @@ export type KbGapRecord = {
   topic: KbGapTopic;
   sampleQuestionMasked: string;
   productId: string | null;
+  factTopic: string | null;
 };
 
 /** Dựng bản ghi `kb_gaps` (đã che PII). Đầu vào sai → `AppError('VALIDATION_FAILED')`. */
@@ -142,5 +145,6 @@ export function buildKbGapRecord(input: KbGapInput): KbGapRecord {
     topic: v.topic,
     sampleQuestionMasked: maskAndCut(v.sampleQuestion),
     productId: v.productId ?? null,
+    factTopic: v.factTopic ?? null,
   };
 }

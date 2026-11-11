@@ -81,14 +81,7 @@ describe('approvePolicyAction', () => {
       expect(mocks.requireAppUser).toHaveBeenCalledWith({ role: 'owner' });
       expect(mocks.approve).toHaveBeenCalledWith({}, 'w1', ID, 2, {
         confirmReview: true,
-        isReturnsQuestion: expect.any(Function),
       });
-      // Bộ so khớp gap: chỉ câu hỏi ĐỔI TRẢ mới được tự đóng khi duyệt thẻ returns.
-      const options = mocks.approve.mock.calls[0]?.[4] as {
-        isReturnsQuestion: (q: string) => boolean;
-      };
-      expect(options.isReturnsQuestion('mặc không vừa có đổi trả được không')).toBe(true);
-      expect(options.isReturnsQuestion('bảo hành bao lâu vậy shop')).toBe(false);
     },
   );
 
