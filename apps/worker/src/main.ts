@@ -20,8 +20,8 @@ import {
   AI_STEP_FLAGS,
   DISTILL_FLAG,
   FACT_SLOTS_FLAG,
-  GUARD_FACTS_FLAG,
   FLAG_DEFAULTS,
+  GUARD_FACTS_FLAG,
   kbSyncEnqueueOptions,
   PIPELINE_FLAG,
 } from '@flow/shared';
