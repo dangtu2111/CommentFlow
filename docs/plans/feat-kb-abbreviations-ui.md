@@ -26,7 +26,7 @@ Không.
 
 ## Test viết trước
 
-Không có test mới: action mỏng, dùng lại `parseAbbreviation` (đã có test) và truy vấn `abbreviations` (test tích hợp sẵn); nên bổ sung E2E thêm/xóa từ ở lượt sau.
+`kb/abbreviation-actions.test.ts` (11 ca): Staff bị chặn không ghi gì, Owner thêm/sửa/xóa, workspace lấy từ phiên không từ form, dữ liệu sai/trùng từ/giới hạn tốc độ, mục workspace khác (RLS giấu) → not_found. RLS thật đã có ở `packages/db/tests/abbreviations.int.test.ts`.
 
 ## Lệnh test phạm vi hẹp
 
