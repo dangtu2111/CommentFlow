@@ -3249,7 +3249,28 @@
       "answer": "Answer",
       "tags": "Tags",
       "tagsHint": "Separated by commas, for example: shipping, returns.",
-      "newTitle": "Add a question and answer"
+      "newTitle": "Add a question and answer",
+      "stats": {
+        "questions": "questions",
+        "active": "Active (approved)",
+        "drafts": "suggestions to review",
+        "draftsCaption": "Distilled by AI from raw knowledge — click to review"
+      },
+      "toolbar": {
+        "search": "Search questions or answers…",
+        "searchSubmit": "Search",
+        "all": "All",
+        "soon": "Coming soon",
+        "syncWeb": "Sync web",
+        "importFile": "Import Excel/CSV",
+        "aiVariants": "AI-generate variants",
+        "add": "+ Add a new FAQ"
+      },
+      "variants": {
+        "title": "Question variants & slang",
+        "note": "Coming soon"
+      },
+      "noMatch": "No questions match the filter."
     },
     "voice": {
       "title": "Brand voice",

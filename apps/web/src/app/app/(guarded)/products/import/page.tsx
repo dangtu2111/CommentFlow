@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { KbPageHead } from '../../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
 import { ImportWizard } from '../../../../../components/products/import-wizard';
 import { getBrand } from '../../../../../server/brand';
@@ -16,9 +17,10 @@ export default async function ProductImportPage() {
   return (
     <main className="app-page app-page-wide">
       <KbFrame active="productImport">
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">{t('subtitle')}</p>
-        <ImportWizard />
+        <div className="tw space-y-space-lg">
+          <KbPageHead title={t('title')} subtitle={t('subtitle')} />
+          <ImportWizard />
+        </div>
       </KbFrame>
     </main>
   );

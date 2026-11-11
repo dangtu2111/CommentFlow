@@ -44,36 +44,48 @@ export function KbGapRow({ gap, newCard = false }: { gap: KbGapRowData; newCard?
   const id = `gap-${gap.id}`;
 
   return (
-    <li className="card stack">
+    <li className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
       <p>
         <strong>{gap.sampleQuestionMasked}</strong>
       </p>
-      <p className="muted">
+      <p className="font-body-sm text-body-sm text-on-surface-variant">
         {t('seen', { count: gap.count, date: new Date(gap.lastSeenAt).toLocaleDateString(locale) })}{' '}
         <span className={gap.status === 'open' ? 'badge badge-off' : 'badge badge-on'}>
           {t(`status.${gap.status}`)}
         </span>
-        {newCard ? <span className="badge badge-on">{t('newCard')}</span> : null}
+        {newCard ? (
+          <span className="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+            {t('newCard')}
+          </span>
+        ) : null}
       </p>
       {state.status === 'error' ? <p role="alert">{t(`error.${state.code}`)}</p> : null}
       {cards.length > 0 ? (
-        <div className="row">
+        <div className="flex flex-wrap items-center gap-2">
           {cards.map((link) => (
-            <Link key={link.card} href={link.href} className="btn">
+            <Link
+              key={link.card}
+              href={link.href}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm shadow-sm transition-colors"
+            >
               {t('fillCard', { card: t(`card.${link.card}`) })}
             </Link>
           ))}
         </div>
       ) : null}
-      <form action={retryAction} className="stack">
+      <form action={retryAction} className="space-y-space-md">
         <input type="hidden" name="gapId" value={gap.id} />
-        <div className="row">
-          <button type="submit" className="btn" disabled={retrying}>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="submit"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm shadow-sm transition-colors"
+            disabled={retrying}
+          >
             {t('retry')}
           </button>
         </div>
         {retry.status === 'done' && retry.ok ? (
-          <p role="status" className="muted">
+          <p role="status" className="font-body-sm text-body-sm text-on-surface-variant">
             {t('retryResult', { action: t(`retryAction.${retry.action}`) })}{' '}
             {retry.reply === '' ? t('retryNoReply') : <q>{retry.reply}</q>}
             {retry.needsHuman ? ` ${t('retryNeedsHuman')}` : ''}
@@ -88,30 +100,41 @@ export function KbGapRow({ gap, newCard = false }: { gap: KbGapRowData; newCard?
         ) : null}
       </form>
       {gap.status === 'open' ? (
-        <form action={action} className="stack">
+        <form action={action} className="space-y-space-md">
           <input type="hidden" name="gapId" value={gap.id} />
           <label htmlFor={`${id}-q`}>{t('questionLabel')}</label>
           <input
             id={`${id}-q`}
             name="question"
-            className="input"
+            className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all"
             maxLength={1000}
             defaultValue={gap.sampleQuestionMasked}
           />
           <label htmlFor={`${id}-a`}>{t('answerLabel')}</label>
-          <textarea id={`${id}-a`} name="answer" className="input" rows={3} maxLength={8000} />
+          <textarea
+            id={`${id}-a`}
+            name="answer"
+            className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all"
+            rows={3}
+            maxLength={8000}
+          />
           <label htmlFor={`${id}-l`}>{t('langLabel')}</label>
-          <select id={`${id}-l`} name="lang" className="input" defaultValue={defaultLang}>
+          <select
+            id={`${id}-l`}
+            name="lang"
+            className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all"
+            defaultValue={defaultLang}
+          >
             <option value="vi">{t('lang.vi')}</option>
             <option value="en">{t('lang.en')}</option>
             <option value="all">{t('lang.all')}</option>
           </select>
-          <div className="row">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
               name="intent"
               value="resolve"
-              className="btn btn-primary"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm shadow-md transition-all disabled:opacity-60"
               disabled={pending}
             >
               {t('add')}
@@ -120,7 +143,7 @@ export function KbGapRow({ gap, newCard = false }: { gap: KbGapRowData; newCard?
               type="submit"
               name="intent"
               value="ignore"
-              className="btn"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm shadow-sm transition-colors"
               disabled={pending}
               formNoValidate
             >
@@ -129,9 +152,15 @@ export function KbGapRow({ gap, newCard = false }: { gap: KbGapRowData; newCard?
           </div>
         </form>
       ) : (
-        <form action={action} className="row">
+        <form action={action} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="gapId" value={gap.id} />
-          <button type="submit" name="intent" value="reopen" className="btn" disabled={pending}>
+          <button
+            type="submit"
+            name="intent"
+            value="reopen"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm shadow-sm transition-colors"
+            disabled={pending}
+          >
             {t('reopen')}
           </button>
         </form>

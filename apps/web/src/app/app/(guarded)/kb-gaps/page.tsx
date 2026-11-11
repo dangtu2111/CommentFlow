@@ -1,10 +1,10 @@
 import { KB_GAP_STATUSES, KB_GAP_TOPICS } from '@flow/shared';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { KbPageHead } from '../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../components/kb/kb-frame';
 import { DraftFaqRow } from '../../../../components/kb-gaps/draft-faq-row';
 import { KbGapRow } from '../../../../components/kb-gaps/kb-gap-row';
-import { PageHeader } from '../../../../components/ui/page-header';
 import { groupGapsByTopic, parseKbGapFilter, toKbGapViews } from '../../../../lib/kb-gaps-form';
 import { hasNewCard } from '../../../../lib/kb-gaps-links';
 import { getBrand } from '../../../../server/brand';
@@ -16,6 +16,14 @@ export async function generateMetadata() {
   const t = await getTranslations('kbGaps');
   return { title: `${t('pageTitle')} · ${getBrand().name}` };
 }
+
+const CHIP_ON =
+  'px-3 py-1.5 rounded-full bg-primary-container text-on-primary font-title-sm text-title-sm';
+const CHIP_OFF =
+  'px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-body-md text-body-md';
+const SECTION = 'bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md';
+const H2 = 'font-title-md text-title-md text-on-surface';
+const MUTED = 'font-body-sm text-body-sm text-on-surface-variant';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -75,83 +83,108 @@ export default async function KbGapsPage({ searchParams }: { searchParams: Searc
   return (
     <main className="app-page app-page-wide">
       <KbFrame active="kbGaps">
-        <header className="kb-head">
-          <PageHeader title={t('title')} subtitle={t('subtitle')} />
-        </header>
-        <nav aria-label={t('filterLabel')} className="row">
-          <Link href="/app/kb-gaps" aria-current={pendingTab ? undefined : 'page'}>
-            {t('title')}
-          </Link>
-          <Link href="/app/kb-gaps?tab=pending" aria-current={pendingTab ? 'page' : undefined}>
-            {t('drafts.tab')} ({draftCount})
-          </Link>
-        </nav>
-        {pendingTab ? (
-          <section className="stack">
-            <h2>{t('drafts.title')}</h2>
-            <p className="muted">{t('drafts.subtitle')}</p>
-            {drafts.length === 0 ? (
-              <p className="muted">{t('drafts.empty')}</p>
-            ) : (
-              <ul className="stack">
-                {drafts.map((draft) => (
-                  <DraftFaqRow
-                    key={draft.id}
-                    draft={{
-                      id: draft.id,
-                      kind: draft.kind,
-                      question: draft.question,
-                      answer: draft.answer,
-                      evidenceQuote: draft.evidenceQuote ?? '',
-                    }}
-                  />
-                ))}
-              </ul>
-            )}
-          </section>
-        ) : null}
-        <nav aria-label={t('filterLabel')} className="row" hidden={pendingTab}>
-          {KB_GAP_STATUSES.map((s) => (
+        <div className="tw space-y-space-lg">
+          <KbPageHead title={t('title')} subtitle={t('subtitle')} />
+          <nav
+            aria-label={t('filterLabel')}
+            className="flex flex-wrap items-center gap-2 bg-surface-container-low p-1.5 rounded-xl"
+          >
             <Link
-              key={s}
-              href={href({ status: s })}
-              aria-current={filter.status === s ? 'page' : undefined}
+              href="/app/kb-gaps"
+              aria-current={pendingTab ? undefined : 'page'}
+              className={pendingTab ? CHIP_OFF : CHIP_ON}
             >
-              {t(`status.${s}`)}
+              {t('title')}
             </Link>
-          ))}
-          <span className="muted">·</span>
-          <Link href={href({ topic: '' })} aria-current={filter.topic ? undefined : 'page'}>
-            {t('allTopics')}
-          </Link>
-          {KB_GAP_TOPICS.map((topic) => (
             <Link
-              key={topic}
-              href={href({ topic })}
-              aria-current={filter.topic === topic ? 'page' : undefined}
+              href="/app/kb-gaps?tab=pending"
+              aria-current={pendingTab ? 'page' : undefined}
+              className={pendingTab ? CHIP_ON : CHIP_OFF}
             >
-              {t(`topic.${topic}`)}
+              {t('drafts.tab')} ({draftCount})
             </Link>
-          ))}
-        </nav>
-        {pendingTab ? null : groups.length === 0 ? (
-          <p className="muted">{t('empty')}</p>
-        ) : (
-          groups.map((group) => (
-            <section key={group.topic} className="stack">
-              <h2>{t('groupTitle', { topic: t(`topic.${group.topic}`), total: group.total })}</h2>
-              <ul className="stack">
-                {group.gaps.map((gap) => (
-                  <KbGapRow
-                    key={gap.id}
-                    gap={gap}
-                    newCard={gap.status === 'open' && hasNewCard(gap.topic, gap.lastSeenAt, cards)}
-                  />
-                ))}
-              </ul>
+          </nav>
+          {pendingTab ? (
+            <section className={SECTION}>
+              <h2 className={H2}>{t('drafts.title')}</h2>
+              <p className={MUTED}>{t('drafts.subtitle')}</p>
+              {drafts.length === 0 ? (
+                <p className={MUTED}>{t('drafts.empty')}</p>
+              ) : (
+                <ul className="space-y-space-md">
+                  {drafts.map((draft) => (
+                    <DraftFaqRow
+                      key={draft.id}
+                      draft={{
+                        id: draft.id,
+                        kind: draft.kind,
+                        question: draft.question,
+                        answer: draft.answer,
+                        evidenceQuote: draft.evidenceQuote ?? '',
+                      }}
+                    />
+                  ))}
+                </ul>
+              )}
             </section>
-          ))
-        )}
+          ) : null}
+          <nav
+            aria-label={t('filterLabel')}
+            className="flex flex-wrap items-center gap-2 bg-surface-container-low p-1.5 rounded-xl"
+            hidden={pendingTab}
+          >
+            {KB_GAP_STATUSES.map((s) => (
+              <Link
+                key={s}
+                href={href({ status: s })}
+                aria-current={filter.status === s ? 'page' : undefined}
+                className={filter.status === s ? CHIP_ON : CHIP_OFF}
+              >
+                {t(`status.${s}`)}
+              </Link>
+            ))}
+            <span className={MUTED}>·</span>
+            <Link
+              href={href({ topic: '' })}
+              aria-current={filter.topic ? undefined : 'page'}
+              className={filter.topic ? CHIP_OFF : CHIP_ON}
+            >
+              {t('allTopics')}
+            </Link>
+            {KB_GAP_TOPICS.map((topic) => (
+              <Link
+                key={topic}
+                href={href({ topic })}
+                aria-current={filter.topic === topic ? 'page' : undefined}
+                className={filter.topic === topic ? CHIP_ON : CHIP_OFF}
+              >
+                {t(`topic.${topic}`)}
+              </Link>
+            ))}
+          </nav>
+          {pendingTab ? null : groups.length === 0 ? (
+            <p className={MUTED}>{t('empty')}</p>
+          ) : (
+            groups.map((group) => (
+              <section key={group.topic} className={SECTION}>
+                <h2 className={H2}>
+                  {t('groupTitle', { topic: t(`topic.${group.topic}`), total: group.total })}
+                </h2>
+                <ul className="space-y-space-md">
+                  {group.gaps.map((gap) => (
+                    <KbGapRow
+                      key={gap.id}
+                      gap={gap}
+                      newCard={
+                        gap.status === 'open' && hasNewCard(gap.topic, gap.lastSeenAt, cards)
+                      }
+                    />
+                  ))}
+                </ul>
+              </section>
+            ))
+          )}
+        </div>
       </KbFrame>
     </main>
   );
