@@ -1,6 +1,6 @@
 {
   "project_id": "15298527895734533184",
-  "synced_at": "2026-11-09T12:00:00.000Z",
+  "synced_at": "2026-11-11T11:24:23.000Z",
   "screens": [
     {
       "stitch_id": "f96e516f1a6d41fb943b3b4c4fc065e2",
@@ -336,6 +336,106 @@
       "updated": null,
       "files": [
         "kb-policies-structured-mobile.png"
+      ]
+    },
+    {
+      "stitch_id": "6f488e7e8c6d4d8ba5f5a4f57cbaf384",
+      "name": "Cơ sở kiến thức – Tổng quan",
+      "slug": "kb-overview",
+      "updated": null,
+      "files": [
+        "kb-overview.html",
+        "kb-overview.png"
+      ]
+    },
+    {
+      "stitch_id": "5c5422e4091846608f7bb58ba752724d",
+      "name": "Cơ sở kiến thức – Thông tin cửa hàng",
+      "slug": "kb-shop",
+      "updated": null,
+      "files": [
+        "kb-shop.html",
+        "kb-shop.png"
+      ]
+    },
+    {
+      "stitch_id": "1903392af3374335ad0c640c5e1585e7",
+      "name": "Cơ sở kiến thức – Chính sách (bản thường)",
+      "slug": "kb-policies",
+      "updated": null,
+      "files": [
+        "kb-policies.html",
+        "kb-policies.png"
+      ]
+    },
+    {
+      "stitch_id": "118fe84a0f2f4e70a714903338fadd0b",
+      "name": "Cơ sở kiến thức – Câu hỏi thường gặp",
+      "slug": "kb-faq",
+      "updated": null,
+      "files": [
+        "kb-faq.html",
+        "kb-faq.png"
+      ]
+    },
+    {
+      "stitch_id": "5a26b380533d44ceabbd3326528212bb",
+      "name": "Cơ sở kiến thức – Giọng điệu thương hiệu",
+      "slug": "kb-voice",
+      "updated": null,
+      "files": [
+        "kb-voice.html",
+        "kb-voice.png"
+      ]
+    },
+    {
+      "stitch_id": "512ff49d7b4f4b5fb79ae6ec5b00b393",
+      "name": "Cơ sở kiến thức – Quy tắc",
+      "slug": "kb-rules",
+      "updated": null,
+      "files": [
+        "kb-rules.html",
+        "kb-rules.png"
+      ]
+    },
+    {
+      "stitch_id": "eb39fa1659c24cf882c0feb3bc99fe76",
+      "name": "Cơ sở kiến thức – Từ điển viết tắt",
+      "slug": "kb-abbreviations",
+      "updated": null,
+      "files": [
+        "kb-abbreviations.html",
+        "kb-abbreviations.png"
+      ]
+    },
+    {
+      "stitch_id": "5a269c339ca4479f825b8002398b0c59",
+      "name": "Cơ sở kiến thức – Danh mục sản phẩm",
+      "slug": "kb-catalog",
+      "updated": null,
+      "files": [
+        "kb-catalog.html",
+        "kb-catalog.png"
+      ]
+    },
+    {
+      "stitch_id": "dc19bc93260549fbaa13a1217eaac473",
+      "name": "Cơ sở kiến thức – Thử AI (sandbox)",
+      "slug": "kb-sandbox",
+      "updated": null,
+      "files": [
+        "kb-sandbox.html",
+        "kb-sandbox.png"
+      ]
+    },
+    {
+      "stitch_id": "09ec1f4ba5414aa2a8636a5d80684f6b",
+      "name": "Cơ sở kiến thức – Bộ thử (test lab)",
+      "slug": "kb-testlab",
+      "updated": null,
+      "files": [
+        "kb-testlab.html",
+        "kb-testlab.png"
       ]
     }
   ]
