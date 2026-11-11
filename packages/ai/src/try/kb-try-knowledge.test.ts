@@ -220,9 +220,16 @@ describe('rerank (bge-reranker-v2-m3): quyết định "đủ liên quan" bằng
 });
 
 describe('M3-2 đoạn FAQ chắt lọc không lấn đoạn thô', () => {
+  // `from` = chunk_key đoạn thô nguồn (bền qua xuất bản); mã đoạn nguồn nháp (`source_chunk_id`) cố tình KHÁC mã đã xuất bản.
   const d = (id: string, from: string, over: Partial<KbHit> = {}) =>
-    hit({ id, cosine: 0.8, metadata: { source_chunk_id: from, distill_kind: 'faq' }, ...over });
-  const r = (id: string) => hit({ id, cosine: 0.7 });
+    hit({
+      id,
+      chunkKey: `faq:${id}#0`,
+      cosine: 0.8,
+      metadata: { source_chunk_id: `draft-${from}`, source_chunk_key: from, distill_kind: 'faq' },
+      ...over,
+    });
+  const r = (id: string) => hit({ id, chunkKey: id, cosine: 0.7 });
 
   it('bỏ đoạn chắt lọc khi đoạn thô nguồn có trong kết quả; giữ khi nguồn vắng', async () => {
     const { knowledge } = build([d('d1', 'r1'), r('r1'), d('d2', 'vang')]);

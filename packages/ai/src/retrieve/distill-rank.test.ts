@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { applyDistillRank } from './distill-rank';
 
-const raw = (id: string) => ({ id, distilledFrom: null });
-const dis = (id: string, from: string) => ({ id, distilledFrom: from });
-const ids = (items: Array<{ id: string }>) => items.map((i) => i.id);
+const raw = (id: string) => ({ chunkKey: id, distilled: false, sourceKey: null });
+const dis = (id: string, from: string | null) => ({
+  chunkKey: id,
+  distilled: true,
+  sourceKey: from,
+});
+const ids = (items: Array<{ chunkKey: string }>) => items.map((i) => i.chunkKey);
 
 describe('applyDistillRank', () => {
   it('quy tắc 1: bỏ đoạn chắt lọc khi đoạn thô nguồn đã có trong kết quả; nguồn không có mặt thì giữ', () => {
@@ -18,7 +22,7 @@ describe('applyDistillRank', () => {
     ];
     const out = applyDistillRank(items, 10);
     expect(out).toHaveLength(10);
-    expect(out.filter((i) => i.distilledFrom !== null)).toHaveLength(3);
+    expect(out.filter((i) => i.distilled)).toHaveLength(3);
     expect(ids(out).slice(0, 3)).toEqual(['d0', 'd1', 'd2']);
     expect(ids(out)).toContain('r6');
   });
@@ -31,6 +35,11 @@ describe('applyDistillRank', () => {
     ];
     const out = applyDistillRank(items, 10);
     expect(ids(out)).toEqual(Array.from({ length: 10 }, (_, i) => `r${i}`));
+  });
+
+  it('đoạn chắt lọc không tra được nguồn (sourceKey null) → không dò trùng nhưng vẫn tính vào trần', () => {
+    const out = applyDistillRank([dis('d1', null), raw('r1')]);
+    expect(ids(out)).toEqual(['d1', 'r1']);
   });
 
   it('không có cửa sổ: không giới hạn độ dài nhưng vẫn áp trần 3', () => {
