@@ -349,3 +349,26 @@ describe('Tách đúng: bản cuối (cổng) và bản thô của LLM (theo dõ
     ]);
   });
 });
+
+describe('ADR 018 T1: chỉ số "sai khu vực"', () => {
+  const region = (numberInReply: boolean) => ({
+    regionMismatch: { topics: ['ship_fee'], numberInReply },
+  });
+
+  it('khu vực không khớp mà câu cuối vẫn nêu phí/thời gian → regionWrong; không nêu → đạt; không có chẩn đoán → đạt', () => {
+    expect(checkSample(sample(), outcome(region(true))).regionWrong).toBe(true);
+    expect(checkSample(sample(), outcome(region(false))).regionWrong).toBe(false);
+    expect(checkSample(sample(), outcome()).regionWrong).toBe(false);
+  });
+
+  it('judge: "Sai khu vực" là cổng zero; lượt chạy lỗi không tính', () => {
+    const pairs = [
+      { sample: sample(), checks: checkSample(sample(), outcome(region(true))) },
+      { sample: sample(), checks: checkSample(sample(), { ok: false } as never) },
+    ];
+    const group = aggregate(pairs);
+    expect(group.regionWrong).toBe(1);
+    const verdict = judge(group).find((v) => v.name.startsWith('Sai khu vực'));
+    expect(verdict).toMatchObject({ value: '1', pass: false });
+  });
+});

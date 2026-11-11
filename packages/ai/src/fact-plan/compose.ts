@@ -113,3 +113,23 @@ export function inviteUnknownText(
     return `Phần ${labels}, ${address.customer} nhắn ${address.shop} để được hỗ trợ nhé.`;
   return `For ${labels}, please message ${address.shop === 'we' ? 'us and we will help' : `${address.shop} for help`}.`;
 }
+
+/**
+ * Câu HỎI khu vực do CODE viết (không gọi LLM): dùng khi khách nêu nơi nhận mà thẻ ship của shop không có dòng áp dụng cho nơi đó (ADR 018 T1),
+ * không nêu phí/thời gian/COD nào. Xưng hô theo voice.
+ */
+export function regionClarifyText(
+  lang: 'vi' | 'en',
+  address: { shop: string; customer: string },
+): string {
+  if (lang === 'vi')
+    return `${address.customer} cho ${address.shop} xin địa chỉ nhận hàng (tỉnh/thành, quận/huyện) cụ thể để ${address.shop} báo đúng phí và thời gian giao nhé?`;
+  return `Could you share your exact delivery address (city/state) so ${address.shop === 'we' ? 'we' : address.shop} can confirm the shipping fee and delivery time?`;
+}
+
+// Số tiền/thời gian giao trong câu: số kèm đơn vị tiền hoặc ngày ("20.000đ", "30k", "2-4 ngày", "$5", "3 days"). Chỉ để nhận câu NÊU phí/thời gian giao.
+const SHIP_NUMBER =
+  /(?:\d[\d.,]*\s*(?:đ|₫|k(?![\p{L}\p{N}])|vnd|vnđ|ngày|days?|usd|dollars?)|[$€£]\s*\d)/iu;
+export function mentionsShipNumbers(text: string): boolean {
+  return SHIP_NUMBER.test(text);
+}

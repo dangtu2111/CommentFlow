@@ -11,6 +11,7 @@ const checks = (over: Partial<SampleChecks> = {}): SampleChecks => ({
   claimSourced: true,
   priceWrong: false,
   forbiddenHit: false,
+  regionWrong: false,
   addressWrong: false,
   replyEmpty: false,
   variantsWrong: 0,
