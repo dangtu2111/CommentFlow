@@ -17,6 +17,7 @@ const SYSTEM_PROMPT = unsafeMarkMasked(
   [
     'Bạn viết lại MỘT câu hỏi ngắn/mơ hồ của khách thành MỘT câu tìm kiếm đầy đủ, tự đứng được, bằng tiếng của khách.',
     'Dùng bình luận cha, caption bài và các lượt trước để thay đại từ ("nó", "cái này", "còn không") bằng đối tượng cụ thể.',
+    'KHÔNG thêm "bài này", "bài đăng", "in this post" hay ngữ cảnh bài viết nếu dưới đây không có dòng "Caption bài" hoặc "Sản phẩm gắn bài" — khách chưa nhắc tới bài viết nào.',
     'Chỉ trả về đúng câu tìm kiếm, một dòng, không giải thích. Không bịa giá, size, màu hay sản phẩm không có trong ngữ cảnh.',
   ].join('\n'),
 );
