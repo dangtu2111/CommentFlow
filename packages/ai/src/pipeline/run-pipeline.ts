@@ -169,6 +169,11 @@ export type TryInput = {
    * complaint ép chuyển người và (b) câu dự phòng do code dựng khi bản nháp rỗng/không dùng được — cả khi cờ TẮT. Chỉ khi cờ BẬT, LLM mới viết với `{fact:id}` và các hành vi dựa trên plan khác (handoff/hỏi khu vực/guard chỗ giữ chỗ) mới chạy.
    */
   factSlotsMode?: boolean;
+  /**
+   * BẬT guard theo chủ đề (ADR 018 T2/T4, cờ `cf.ai.guard_facts`, mặc định TẮT = không truyền → hành vi y hệt cũ). T2: guard tiền/khái niệm kiểm trên MỌI đoạn tìm được cùng chủ đề
+   * câu hỏi (không chỉ đoạn bộ soạn khai) và loại đoạn `kb` thuộc chủ đề KHÁC khỏi nguồn số; T4: nháp rỗng/xin người dù có nguồn → gọi lại 1 lần kèm mã `draft_empty_with_sources`.
+   */
+  guardFacts?: boolean;
 };
 
 export type PipelineConvoInput = {
@@ -303,12 +308,24 @@ export type TryResult =
       };
       /** Dấu vết guard CHỈ ĐỂ QUAN SÁT (EVAL/chẩn đoán lỗi oan vs thật): không ảnh hưởng quyết định. */
       guardTrace?: GuardTrace;
+      /** Chẩn đoán guard theo chủ đề (chỉ khi bật `guardFacts`): lần gọi lại T4 và nguồn số T2. */
+      guardFacts?: GuardFactsTrace;
     };
 
 /**
  * Dấu vết bước guard khái niệm (GUARD-SEMANTIC-SUPPORT): bản nháp gốc bị loại vì khẳng định khái niệm mà nguồn ĐÃ DÙNG không nêu — ghi khái niệm bị bắt, câu gốc và các nguồn đã dùng để sau này
  * kiểm khái niệm đó có nằm ở đoạn nào khác trong `candidates` không (lỗi oan do nguồn khai thiếu). Chỉ quan sát, không đổi hành vi.
  */
+/** Dấu vết guard theo chủ đề (ADR 018), chỉ để quan sát/EVAL. */
+export type GuardFactsTrace = {
+  /** T4: đã gọi LẠI bộ soạn kèm mã lỗi; `recovered` = lần 2 có câu dùng được. */
+  retry?: { code: 'draft_empty_with_sources'; recovered: boolean };
+  /** T2: số đoạn thêm vào / loại khỏi nguồn số của guard tiền (theo chủ đề). */
+  moneySources?: { added: number; excluded: number };
+  /** T2: số/ý bị guard tiền bắt mà CÓ trong đoạn tìm được khác chủ đề (mã `number_not_in_topic`). */
+  numberNotInTopic?: string[];
+};
+
 export type GuardTrace = {
   concept?: { concepts: string[]; draftReply: string; usedIds: string[] };
 };
@@ -823,6 +840,34 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     ...(history ? { history } : {}),
   });
   let draft = await deps.drafter.draft(draftInput(decision));
+  // GUARD-FACTS (ADR 018): chủ đề câu khách hỏi (từ ý hỏi + chủ đề fact plan) và đoạn tìm được ĐỦ ngưỡng cùng chủ đề.
+  const askedTopics = new Set<KbGapTopic>([
+    ...askTopicsOf(extract.asks, label).map(({ topic }) => topic),
+    ...factTopics.map((t) => GAP_TOPIC_OF_FACT[t]),
+  ]);
+  const topicFound = usable.filter((c) => c.topics.some((t) => askedTopics.has(t)));
+  let guardFactsTrace: GuardFactsTrace | undefined;
+  // T4: nháp rỗng/xin người ở hành động `answer` mà có nguồn (sự kiện bắt buộc của plan hoặc đoạn cùng chủ đề) → gọi LẠI bộ soạn đúng 1 lần kèm mã lỗi (≤ 2 lần/lượt, FR-162).
+  // Vẫn rỗng → luồng cũ: câu dự phòng do code dựng từ plan, không có plan → chuyển người (FR-140). Chế độ chỗ giữ chỗ có luồng riêng nên không áp dụng.
+  if (
+    input.guardFacts === true &&
+    !closing &&
+    !slotMode &&
+    decision.action === 'answer' &&
+    (draft.reply.trim() === '' || draft.needs_human) &&
+    ((planAll !== null && requiredFactIds(planAll).length > 0) || topicFound.length > 0)
+  ) {
+    draft = await deps.drafter.draft({
+      ...draftInput(decision),
+      retryCode: 'draft_empty_with_sources',
+    });
+    guardFactsTrace = {
+      retry: {
+        code: 'draft_empty_with_sources',
+        recovered: draft.reply.trim() !== '' && !draft.needs_human,
+      },
+    };
+  }
   // DRAFT-FACT-SLOTS: chọn câu ĐẠT guard chỗ giữ chỗ và dùng đủ sự kiện bắt buộc (reply hoặc biến thể), không có thì câu dự phòng do CODE dựng; code điền giá trị, sinh claims/nguồn,
   // thêm câu mời cho chủ đề chưa có thông tin. Không câu nào dùng được → chuyển người. Không gọi LLM thêm (≤ 2 lần/lượt, FR-162).
   let slotRendered: string[] | null = null;
@@ -918,7 +963,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   // (giữ ≤ 2 lần gọi LLM/lượt, FR-162): (1) chọn biến thể khác đã có (FR-161) không chứa ý bị loại; (2) không có → câu chuyển hướng THEO MẪU; (3) không còn ý nào để
   // chuyển hướng → chuyển người (`claim_unsupported`). Không bao giờ để câu bịa đi tiếp (nghiêm trọng như sai giá).
   if (!closing && decision.action !== 'handoff' && slotRendered === null) {
-    const sourceTexts = usedBy(draft).map((c) => c.text);
+    // T2: thêm mọi đoạn đủ ngưỡng cùng chủ đề (bộ soạn khai thiếu nguồn không bị từ chối oan).
+    const conceptSources =
+      input.guardFacts === true
+        ? [...new Map([...usedBy(draft), ...topicFound].map((c) => [c.id, c])).values()]
+        : usedBy(draft);
+    const sourceTexts = conceptSources.map((c) => c.text);
     const supported = (text: string) =>
       checkConceptSupport({ reply: text, sources: sourceTexts }).ok;
     const check = checkConceptSupport({ reply: draft.reply, sources: sourceTexts });
@@ -999,7 +1049,23 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   // Chế độ chỗ giữ chỗ: mọi số trong câu do code điền → kiểm số tiền với CHÍNH các giá trị vừa điền (không phải đoạn văn).
-  const guardSources = slotRendered ?? used.map((c) => c.text);
+  let guardSources = slotRendered ?? used.map((c) => c.text);
+  let notInTopic: string[] | undefined;
+  if (input.guardFacts === true && slotRendered === null) {
+    // T2: nguồn số = đoạn đã dùng (trừ đoạn `kb` có chủ đề KHÁC hẳn chủ đề câu hỏi) + mọi đoạn đủ ngưỡng cùng chủ đề. Không có chủ đề hỏi → không loại gì.
+    const wrongTopic = (c: TryCandidate) =>
+      askedTopics.size > 0 &&
+      c.kind === 'kb' &&
+      c.topics.length > 0 &&
+      !c.topics.some((t) => askedTopics.has(t));
+    const kept = used.filter((c) => !wrongTopic(c));
+    const added = topicFound.filter((c) => !usedIds.has(c.id));
+    guardSources = [...kept, ...added].map((c) => c.text);
+    guardFactsTrace = {
+      ...guardFactsTrace,
+      moneySources: { added: added.length, excluded: used.length - kept.length },
+    };
+  }
   let guardResult = checkGuardMoney({ reply: draft.reply, sources: guardSources });
   // Nhãn biến thể của sản phẩm ĐÃ nhận diện (đọc từ products/product_variants, không phải đoạn văn) là nguồn hợp lệ: số trong mã biến thể
   // ("WMT8050PAPER") không phải số tiền do AI bịa. Chỉ tra khi guard báo vi phạm (không thêm truy vấn ở đường thường).
@@ -1017,6 +1083,21 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         sources: [...guardSources, ...labelSources],
       });
     }
+  }
+  if (input.guardFacts === true && !guardResult.ok) {
+    // Mã `number_not_in_topic`: số bị bắt có nguyên văn ở đoạn tìm được KHÁC chủ đề (không phải bịa hoàn toàn).
+    const digitsOf = (text: string) => text.replace(/\D/g, '');
+    const elsewhere = found
+      .filter((c) => !guardSources.includes(c.text))
+      .map((c) => digitsOf(c.text));
+    notInTopic = guardResult.violations
+      .map((v) => v.display)
+      .filter((display) => {
+        const digits = digitsOf(display);
+        return digits !== '' && elsewhere.some((text) => text.includes(digits));
+      });
+    if (notInTopic.length > 0)
+      guardFactsTrace = { ...guardFactsTrace, numberNotInTopic: notInTopic };
   }
   const planSourceIds =
     slotRendered === null || blockPlan === null
@@ -1095,6 +1176,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     ...(factPlan === null ? {} : { factPlan }),
     ...(slotDiagnostics ? { slotDiagnostics } : {}),
     ...(guardTrace ? { guardTrace } : {}),
+    ...(guardFactsTrace ? { guardFacts: guardFactsTrace } : {}),
     gapTopics: {
       plan: [...new Set((planAll?.unknownTopics ?? []).map((t) => GAP_TOPIC_OF_FACT[t]))],
       fallback: fallbackGapTopics(factTopics, extract.asks),

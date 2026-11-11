@@ -73,6 +73,11 @@ export type DraftInput = {
     /** Mã sự kiện BẮT BUỘC phải dùng trong reply (do code tính: sự kiện đã biết, không gồm tên/biến thể/số khách). */
     required?: string[];
   };
+  /**
+   * GUARD-FACTS (ADR 018 T4): đây là lần soạn LẠI sau khi bản đầu bị loại với mã lỗi này. Hiện chỉ có `draft_empty_with_sources`: bản trước rỗng/xin người
+   * dù các nguồn ở trên CÓ thông tin liên quan → bắt buộc trả lời từ nguồn đó.
+   */
+  retryCode?: 'draft_empty_with_sources';
   draftId?: string;
 };
 
@@ -275,6 +280,11 @@ function historyLines(history: PromptHistory | undefined): string[] {
   return block === null ? [] : [HISTORY_GUIDANCE, block];
 }
 
+const RETRY_LINES: Record<NonNullable<DraftInput['retryCode']>, string> = {
+  draft_empty_with_sources:
+    'Lưu ý: bản soạn trước bị loại vì để trống/xin người duyệt dù các <source> ở trên CÓ thông tin liên quan. Hãy trả lời ngắn gọn CHỈ từ các <source> đó (needs_human=false); phần nào nguồn không nêu thì không đoán.',
+};
+
 export function buildDraftMessages(input: DraftInput): LlmMessage[] {
   // Câu hỏi của khách cũng không được giả thẻ nguồn (chèn lệnh/dữ liệu giả).
   const question = escapeSource(input.question.slice(0, MAX_QUESTION_CHARS));
@@ -286,6 +296,7 @@ export function buildDraftMessages(input: DraftInput): LlmMessage[] {
       : [`Số biến thể: ${clampVariantCount(input.variantCount)}`]),
     ...(input.decision ? renderDecision(input.decision) : []),
     ...(input.factSlots ? factSlotLines(input.factSlots, input.decision?.clarify != null) : []),
+    ...(input.retryCode ? [RETRY_LINES[input.retryCode]] : []),
     ...historyLines(input.history),
     `Câu hỏi của khách:\n${question}`,
   ].join('\n');

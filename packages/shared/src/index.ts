@@ -89,6 +89,7 @@ export {
   type AiStep,
   DISTILL_FLAG,
   FACT_SLOTS_FLAG,
+  GUARD_FACTS_FLAG,
   FLAG_DEFAULTS,
   PIPELINE_FLAG,
 } from './flag-keys';

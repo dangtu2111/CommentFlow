@@ -51,6 +51,8 @@ const { values } = parseArgs({
     // Đường fact plan (ADR 017): dùng `policyFacts` (đã duyệt) trong shop file; code điền số/chính sách. Mặc định tắt = đường cũ.
     'fact-slots': { type: 'boolean', default: false },
     // M3 (KB-DISTILL): sau đồng bộ, chắt lọc đoạn thô thành FAQ/thuộc tính nháp bằng LLM thật, duyệt hàng loạt thay Owner (chỉ [EVAL]), đồng bộ lại rồi mới xuất bản. Chỉ với --knowledge production.
+    // ADR 018 T2/T4: bật guard theo chủ đề (cờ `cf.ai.guard_facts` của production; [EVAL] bật bằng tham số này).
+    'guard-facts': { type: 'boolean', default: false },
     distill: { type: 'boolean', default: false },
     'distill-model': { type: 'string' },
     // Khớp sản phẩm: `trigram` (mặc định khi có DB dev/test) = ĐÚNG như production qua pg_trgm; `substring` = cũ (offline, quá chặt với tên dài).
@@ -276,6 +278,7 @@ async function runOnce(variantCount: number, runIndex = 1) {
     },
     factSlots,
     factSlotsMode,
+    guardFacts: Boolean(values['guard-facts']),
     ...(productionKnowledge ? { knowledge: productionKnowledge } : {}),
     ...(scorer ? { scorer } : {}),
     ...(persistUsage ? { persistUsage } : {}),
