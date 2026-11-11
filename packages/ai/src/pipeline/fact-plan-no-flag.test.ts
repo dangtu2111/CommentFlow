@@ -134,18 +134,43 @@ describe('fact plan không phụ thuộc cờ: cờ TẮT', () => {
     expect(r.slotDiagnostics?.chosen).toBe('fallback');
   });
 
-  it('viplain-09: đổi trả thường + nhãn phụ complaint → answer (không ép chuyển người)', async () => {
-    const r = await ask(
-      'mac k vua dc doi k shop',
-      ['returns'],
-      [{ label: 'advice' }, { label: 'complaint' }],
-      draftOf('Dạ shop cho đổi trong 7 ngày nếu còn nguyên tem mác ạ.'),
-      false,
-      [returnsChunk],
-    );
-    expect(r.decision.action).toBe('answer');
-    expect(r.reply).toContain('7 ngày');
-  });
+  it.each([false, true])(
+    'viplain-09 (cờ=%s): đổi trả thường + nhãn phụ complaint → answer nhưng bắt buộc người duyệt, không tự gửi, ghi secondary_complaint_waived',
+    async (mode) => {
+      const r = await ask(
+        'mac k vua dc doi k shop',
+        ['returns'],
+        [{ label: 'advice' }, { label: 'complaint' }],
+        draftOf('Dạ shop cho đổi trong 7 ngày nếu còn nguyên tem mác ạ.'),
+        mode,
+        [returnsChunk],
+      );
+      expect(r.decision).toMatchObject({
+        action: 'answer',
+        needsHuman: true,
+        autoSendPolicy: 'never',
+      });
+      expect(r.reply).toContain('7 ngày');
+      expect(r.riskReasons.review).toEqual(['secondary_complaint_waived']);
+    },
+  );
+
+  it.each([false, true])(
+    'đổi trả thường KHÔNG có nhãn phụ complaint (cờ=%s) → không ép người duyệt, không có lý do review',
+    async (mode) => {
+      const r = await ask(
+        'mac k vua dc doi k shop',
+        ['returns'],
+        [{ label: 'advice' }],
+        draftOf('Dạ shop cho đổi trong 7 ngày nếu còn nguyên tem mác ạ.'),
+        mode,
+        [returnsChunk],
+      );
+      expect(r.decision.action).toBe('answer');
+      expect(r.decision.needsHuman).toBe(false);
+      expect(r.riskReasons.review).toBeUndefined();
+    },
+  );
 
   it('vi-12: hàng lỗi trùng phạm vi bảo hành → answer, bắt buộc người duyệt, không tự gửi; nháp rỗng → dự phòng từ thẻ bảo hành', async () => {
     const r = await ask(

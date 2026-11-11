@@ -733,6 +733,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     (planAll?.requiresHumanReview === true || ordinaryReturnQuestion) &&
     (label === 'advice' || label === 'price') &&
     extract.labels.some((item) => item.label === 'complaint');
+  // Bỏ nhãn phụ complaint CHỈ vì câu đổi trả thường (không phải ca bảo hành đã có `defect_warranty_scope`) → câu trả lời bắt buộc người duyệt, không tự gửi.
+  const waivedForOrdinaryReturn =
+    waiveSecondaryComplaint && ordinaryReturnQuestion && planAll?.requiresHumanReview !== true;
   const decideExtract = waiveSecondaryComplaint
     ? { ...extract, labels: extract.labels.filter((item) => item.label !== 'complaint') }
     : extract;
@@ -763,7 +766,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
   // Hàng lỗi trùng phạm vi bảo hành: có câu trả lời từ thẻ bảo hành nhưng BẮT BUỘC người duyệt, không bao giờ tự gửi (kể cả khi sau này bật auto-reply).
-  if (planAll?.requiresHumanReview && decision.action !== 'handoff') {
+  if ((planAll?.requiresHumanReview || waivedForOrdinaryReturn) && decision.action !== 'handoff') {
     decision = { ...decision, needsHuman: true, autoSendPolicy: 'never' };
   }
   // Phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu → HỎI tỉnh/thành (FR-147), không chuyển hướng. Rủi ro/handoff vẫn thắng.
@@ -1146,10 +1149,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     riskReasons: {
       ...turnRisks.reasons,
       legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
-      ...(planAll?.requiresHumanReview || draftUnusable
+      ...(planAll?.requiresHumanReview || waivedForOrdinaryReturn || draftUnusable
         ? {
             review: [
               ...(planAll?.requiresHumanReview ? ['defect_warranty_scope'] : []),
+              ...(waivedForOrdinaryReturn ? ['secondary_complaint_waived'] : []),
               ...(draftUnusable ? ['fr140_draft_unusable'] : []),
             ],
           }
