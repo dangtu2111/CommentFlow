@@ -294,6 +294,7 @@ export {
   listProductNamesToEmbed,
   listProductsForSync,
   type SyncSourceKind,
+  setDraftChunkDistillMeta,
   setDraftChunkTopics,
   setDraftConflictMarks,
   summarizeDraftChunks,

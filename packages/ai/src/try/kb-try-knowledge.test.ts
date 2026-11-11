@@ -218,3 +218,40 @@ describe('rerank (bge-reranker-v2-m3): quyết định "đủ liên quan" bằng
     expect(rr.calls).toHaveLength(2);
   });
 });
+
+describe('M3-2 đoạn FAQ chắt lọc không lấn đoạn thô', () => {
+  const d = (id: string, from: string, over: Partial<KbHit> = {}) =>
+    hit({ id, cosine: 0.8, metadata: { source_chunk_id: from, distill_kind: 'faq' }, ...over });
+  const r = (id: string) => hit({ id, cosine: 0.7 });
+
+  it('bỏ đoạn chắt lọc khi đoạn thô nguồn có trong kết quả; giữ khi nguồn vắng', async () => {
+    const { knowledge } = build([d('d1', 'r1'), r('r1'), d('d2', 'vang')]);
+    const out = await knowledge.searchKb('ship', { lang: 'vi', productIds: [] });
+    expect(out.map((c) => c.id).sort()).toEqual(['kb:d2', 'kb:r1']);
+  });
+
+  it('có rerank: chỉ đem chấm 10 đoạn đầu sau khi áp trần 3 đoạn chắt lọc', async () => {
+    const seen: string[][] = [];
+    const rr: Reranker = {
+      model: 'm',
+      async rerank(_q, docs) {
+        seen.push([...docs]);
+        return docs.map(() => 0.9);
+      },
+    };
+    const hits = [
+      ...[1, 2, 3, 4, 5].map((i) => d(`d${i}`, `x${i}`, { content: `chat loc ${i}` })),
+      ...Array.from({ length: 10 }, (_, i) => r(`r${i}`)),
+    ];
+    const knowledge = createKbTryKnowledge({
+      searcher: async () => hits,
+      embedder: createFixtureEmbedder(),
+      reranker: rr,
+      base: createDemoKnowledge(),
+    });
+    const out = await knowledge.searchKb('how long', { lang: 'en', productIds: [] });
+    expect(seen[0]).toHaveLength(10);
+    expect(seen[0]?.filter((t) => t.includes('chat loc'))).toHaveLength(3);
+    expect(out.filter((c) => c.id.startsWith('kb:d'))).toHaveLength(3);
+  });
+});

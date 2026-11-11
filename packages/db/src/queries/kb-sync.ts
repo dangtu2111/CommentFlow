@@ -115,6 +115,27 @@ export async function setDraftChunkTopics(
   }
 }
 
+/**
+ * Ghi nguồn gốc của đoạn FAQ chắt lọc (`metadata.source_chunk_id`, `metadata.distill_kind`) lên đoạn nháp — để tìm kiếm biết đoạn nào là bản
+ * chắt lọc (xếp sau đoạn thô, trần 3/10 chỗ, bỏ khi đoạn thô nguồn đã có trong kết quả). Mọi lần đồng bộ; chỉ gộp khóa của mình.
+ */
+export async function setDraftChunkDistillMeta(
+  tx: Database,
+  workspaceId: string,
+  sourceId: string,
+  marks: ReadonlyArray<{ chunkKey: string; sourceChunkId: string; kind: string }>,
+): Promise<void> {
+  for (const { chunkKey, sourceChunkId, kind } of marks) {
+    await tx.execute(sql`
+      UPDATE cf.kb_chunks
+         SET metadata = metadata || jsonb_build_object('source_chunk_id', ${sourceChunkId}::text, 'distill_kind', ${kind}::text)
+       WHERE workspace_id = ${workspaceId}::uuid AND source_id = ${sourceId}::uuid
+         AND version_id IS NULL AND is_draft AND chunk_key = ${chunkKey}
+         AND (metadata ->> 'source_chunk_id' IS DISTINCT FROM ${sourceChunkId}::text
+              OR metadata ->> 'distill_kind' IS DISTINCT FROM ${kind}::text)`);
+  }
+}
+
 export type DraftChunkText = {
   chunkKey: string;
   content: string;

@@ -3,6 +3,7 @@ import type { KbGapTopic } from '../decide/decide-action';
 import type { Embedder } from '../embedding/embedder';
 import type { Reranker } from '../embedding/ml-reranker';
 import { scanInjection } from '../injection/injection-scan';
+import { applyDistillRank } from '../retrieve/distill-rank';
 import type { KbSearcher } from '../retrieve/kb-searcher';
 import { shouldRerank } from '../retrieve/rerank-policy';
 import {
@@ -43,6 +44,12 @@ function conflictTopicOf(hit: KbHit): KbTopic | undefined {
   return isKbTopic(meta.topic) ? meta.topic : undefined;
 }
 
+/** Đoạn FAQ chắt lọc (M3-2) mang `metadata.source_chunk_id` (ghi lúc đồng bộ): trả mã đoạn thô nguồn, đoạn thường trả null. */
+function distilledFrom(hit: KbHit): string | null {
+  const id = hit.metadata?.source_chunk_id;
+  return typeof id === 'string' && id !== '' ? id : null;
+}
+
 /** Số đoạn đầu (theo RRF) đem rerank: đủ rộng để không bỏ sót đoạn đúng, đủ hẹp để độ trễ/CPU của ml chấp nhận được. */
 const RERANK_TOP = 10;
 
@@ -72,8 +79,9 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
           : {}),
         productIds: context.productIds,
       });
-      const candidates: TryCandidate[] = [];
-      const rerankTexts: string[] = []; // song song với `candidates`: "header + nội dung" đem chấm rerank
+      let candidates: TryCandidate[] = [];
+      let rerankTexts: string[] = []; // song song với `candidates`: "header + nội dung" đem chấm rerank
+      const distilledOf = new Map<string, string | null>(); // mã đoạn → đoạn thô nguồn (chỉ đoạn chắt lọc)
       // Chưa nhận ra sản phẩm nào: đoạn của MỘT sản phẩm bất kỳ không phải nguồn cho câu hỏi chung ("how much?", "còn hàng không?") — nếu không, mọi câu
       // thiếu sản phẩm đều bị coi là "có nguồn" và trả lời thay vì hỏi lại. Chỉ giữ đoạn dùng chung (chính sách, FAQ, thông tin shop).
       const usableHits =
@@ -83,6 +91,7 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
         // Cùng lớp phòng thủ như `kbHitsToSources` (FR-164): đoạn nghi cài lệnh không được hiện/đưa vào soạn.
         if (scanInjection(text, { allowedDomains: [] }).suspected) continue;
         rerankTexts.push(text);
+        distilledOf.set(hit.id, distilledFrom(hit));
         candidates.push({
           id: `kb:${hit.id}`,
           kind: 'kb',
@@ -97,7 +106,23 @@ export function createKbTryKnowledge(deps: KbTryKnowledgeDeps): TryKnowledge {
           ...(conflictTopicOf(hit) ? { conflictTopic: conflictTopicOf(hit) } : {}),
         });
       }
-      if (deps.reranker && candidates.length > 0 && shouldRerank(query, context.lang)) {
+      // Sau khi xếp hạng: đoạn chắt lọc không lấn đoạn thô (bỏ trùng nguồn, trần 3/10 chỗ). Chỉ ảnh hưởng khi có đoạn chắt lọc.
+      const willRerank =
+        deps.reranker && candidates.length > 0 && shouldRerank(query, context.lang);
+      if ([...distilledOf.values()].some((from) => from !== null)) {
+        const textOf = new Map(candidates.map((c, i) => [c.id, rerankTexts[i] as string]));
+        const kept = applyDistillRank(
+          candidates.map((c) => ({
+            c,
+            id: c.id.slice(3),
+            distilledFrom: distilledOf.get(c.id.slice(3)) ?? null,
+          })),
+          willRerank ? RERANK_TOP : undefined,
+        );
+        candidates = kept.map((k) => k.c);
+        rerankTexts = candidates.map((c) => textOf.get(c.id) as string);
+      }
+      if (willRerank && deps.reranker) {
         // Chỉ rerank RERANK_TOP đoạn đầu (kết quả tìm đã xếp theo RRF + ưu tiên nhẹ ngôn ngữ).
         const top = candidates.slice(0, RERANK_TOP);
         try {
