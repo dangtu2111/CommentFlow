@@ -9,7 +9,7 @@ import {
   SaveButton,
 } from '../../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
-import { ShopSections } from '../../../../../components/kb/shop-sections';
+import { ShopGroundTruthBanner, ShopSections } from '../../../../../components/kb/shop-sections';
 import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
@@ -39,6 +39,7 @@ export default async function KbShopPage({ searchParams }: { searchParams: Searc
         <div className="tw space-y-space-lg">
           <KbPageHead title={t('shop.title')} subtitle={t('shop.subtitle')} />
           <KbNoticeBanner notice={kbNoticeOf(query.n)} />
+          <ShopGroundTruthBanner t={t} />
           {profiles.map((profile) => (
             <form
               key={profile.lang}

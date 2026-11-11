@@ -55,8 +55,21 @@ if (jobs.some((j) => !j.slug || !j.routes?.length)) {
   process.exit(2);
 }
 
-async function pageTexts(page, url) {
+/** Trang thật của app (`/app/...`) cần phiên: dùng `/dev/login?next=` (CHỈ DEV, Owner mẫu `[MẪU]`, xem `server/dev-auto-login.ts`); trang `/dev/ui/...` mở thẳng. */
+async function openReal(page, url) {
+  const { pathname } = new URL(url);
+  if (pathname.startsWith('/app/')) {
+    const origin = new URL(url).origin;
+    await page.goto(`${origin}/dev/login?next=${encodeURIComponent(pathname)}`, {
+      waitUntil: 'networkidle',
+    });
+    return;
+  }
   await page.goto(url, { waitUntil: 'networkidle' });
+}
+
+async function pageTexts(page, url) {
+  await openReal(page, url);
   return page.evaluate(collectVisibleTextsInBrowser, scope);
 }
 
@@ -77,7 +90,7 @@ async function geometryReport(page, { slug, routes }) {
   const htmlUrl = pathToFileURL(resolve('design/stitch', `${slug}.html`)).href;
   await page.goto(htmlUrl, { waitUntil: 'networkidle' }).catch(() => {});
   const stitch = await page.evaluate(measureLandmarksInBrowser, measureArg);
-  await page.goto(`${base}${routes[0]}`, { waitUntil: 'networkidle' });
+  await openReal(page, `${base}${routes[0]}`);
   const real = await page.evaluate(measureLandmarksInBrowser, measureArg);
   const rows = compareGeometry(stitch, real, tolerance);
   if (rows.some((r) => !r.ok)) process.exitCode = 1;

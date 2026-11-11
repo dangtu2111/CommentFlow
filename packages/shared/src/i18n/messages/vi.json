@@ -3212,6 +3212,13 @@
         "taxId": "Mã số thuế",
         "bank": "Tài khoản ngân hàng / VietQR",
         "bankNote": "Chưa hỗ trợ: AI không nêu số tài khoản."
+      },
+      "groundTruth": "Dữ liệu trong tab này là hồ sơ gốc của shop: AI dùng để trả lời câu hỏi về giới thiệu, địa chỉ, giờ mở cửa và liên hệ.",
+      "industriesAdd": "+ Thêm nhãn ngành",
+      "descriptionTitle": "Giới thiệu tóm tắt cho AI",
+      "aiMechanism": {
+        "title": "Cách AI dùng đoạn này:",
+        "body": "Khi khách hỏi chung về shop (\"shop bán gì?\", \"shop ở đâu?\"), AI trả lời dựa trên đoạn giới thiệu này. Không nhập giá hay tồn kho."
       }
     },
     "policies": {

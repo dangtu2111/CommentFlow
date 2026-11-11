@@ -3212,6 +3212,13 @@
         "taxId": "Tax ID",
         "bank": "Bank account / VietQR",
         "bankNote": "Not supported yet: the AI does not state account numbers."
+      },
+      "groundTruth": "The data in this tab is the shop’s source of truth: the AI uses it to answer questions about the shop’s introduction, address, opening hours and contact.",
+      "industriesAdd": "+ Add industry tag",
+      "descriptionTitle": "Short introduction for the AI",
+      "aiMechanism": {
+        "title": "How the AI uses this text:",
+        "body": "When a customer asks about the shop in general (\"what do you sell?\", \"where are you?\"), the AI answers from this introduction. Do not enter prices or stock."
       }
     },
     "policies": {
