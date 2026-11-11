@@ -12,6 +12,7 @@ SET LOCAL lock_timeout = '5s';
 -- TRIỂN KHAI: migrate trước; code đọc/ghi cột mới ở PR sau.
 -- Đường lùi: ALTER TABLE cf.faq_items DROP COLUMN status, DROP COLUMN kind, DROP COLUMN evidence_quote, DROP COLUMN source_chunk_id;
 --   ALTER TABLE cf.kb_gaps DROP COLUMN fact_topic; khôi phục cf.kb_gaps_guard_update() bản 0040; thu hồi GRANT cột mới.
+--   DROP TRIGGER faq_items_guard_publish ON cf.faq_items; DROP FUNCTION cf.faq_items_guard_publish();
 -- ===================================================================================================
 ALTER TABLE "cf"."kb_gaps" ADD COLUMN "fact_topic" text;
 --> statement-breakpoint
