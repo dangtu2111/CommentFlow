@@ -2081,6 +2081,12 @@
         "label": "A customer question to try",
         "placeholder": "Type a question customers often ask, for example about price, stock or delivery…"
       }
+    },
+    "publishState": {
+      "none": "Not published yet",
+      "version": "Published v{n}",
+      "draft": "Draft — {count} unpublished changes",
+      "clean": "Draft matches the published version"
     }
   },
   "tryAi": {

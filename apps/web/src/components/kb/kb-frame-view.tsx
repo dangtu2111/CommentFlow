@@ -99,6 +99,7 @@ function CommandBar({
         </Link>
         <Link
           href={publish.href}
+          data-landmark="primary-button"
           className="flex h-10 items-center gap-1.5 rounded-lg bg-primary-container px-4 py-2 font-title-sm text-title-sm text-on-primary shadow-md transition-all hover:bg-primary"
         >
           <Icon name="rocket_launch" size={16} />
