@@ -2187,6 +2187,15 @@
       "guard_money": "Có số tiền/ngày/link/SĐT không có trong nguồn",
       "foreign_price": "Câu có báo giá ngoại tệ — chờ nhân viên duyệt (kiểm giá lúc gửi chưa hỗ trợ)",
       "empty_reply": "Không có câu trả lời"
+    },
+    "ui": {
+      "setup": "Khung thiết lập ngữ cảnh",
+      "platform": "Nền tảng mục tiêu",
+      "platformValue": "Facebook Comment (bình luận công khai)",
+      "post": "Bài viết đính kèm",
+      "postValue": "Toàn cửa hàng (không gắn bài cụ thể)",
+      "soon": "Chọn nền tảng/bài viết, người hỏi, ngưỡng tin cậy: sắp có",
+      "idle": "Gõ bình luận mẫu rồi bấm Thử để xem kết quả ở đây."
     }
   },
   "shell": {

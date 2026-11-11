@@ -2187,6 +2187,15 @@
       "guard_money": "Contains a price/date/link/phone not in the sources",
       "foreign_price": "Quotes a foreign-currency price — needs staff approval (send-time price check not supported yet)",
       "empty_reply": "No reply drafted"
+    },
+    "ui": {
+      "setup": "Context setup",
+      "platform": "Target platform",
+      "platformValue": "Facebook Comment (public)",
+      "post": "Attached post",
+      "postValue": "Whole shop (no specific post)",
+      "soon": "Platform/post, asker and confidence threshold selection: coming soon",
+      "idle": "Type a sample comment and press Try to see the result here."
     }
   },
   "shell": {
