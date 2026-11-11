@@ -50,6 +50,8 @@ export type PipelineJobConfig = {
   pipelineEnabled: (workspaceId: string) => Promise<boolean>;
   /** Cờ DB `cf.ai.fact_slots` theo workspace (ADR 017): BẬT → câu trả lời đi đường fact plan (số/chính sách do code điền). Thiếu/lỗi đọc cờ → TẮT. */
   factSlotsEnabled?: (workspaceId: string) => Promise<boolean>;
+  /** Cờ DB `cf.ai.guard_facts` theo workspace (ADR 018 T2/T4): BẬT → guard kiểm theo chủ đề + gọi lại bộ soạn khi nháp rỗng có nguồn. Thiếu/lỗi đọc cờ → TẮT. */
+  guardFactsEnabled?: (workspaceId: string) => Promise<boolean>;
   /** Hạn mức lượt/tháng (`resolveAiTurnLimit`). */
   turnLimit: number;
   /**
@@ -221,6 +223,7 @@ export async function runPipelineJob(
   };
 
   const plan = await loadFactSlots(config, workspaceId);
+  const guardFacts = config.guardFactsEnabled ? await config.guardFactsEnabled(workspaceId) : false;
 
   return runCommentPipeline({
     db,
@@ -241,6 +244,7 @@ export async function runPipelineJob(
       previousLang: context.language.previousLang,
       factSlots: plan.factSlots,
       factSlotsMode: plan.mode,
+      ...(guardFacts ? { guardFacts: true } : {}),
       dict: createAbbreviationDict(abbreviations),
       thread: context.thread,
       convo,

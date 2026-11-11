@@ -63,7 +63,7 @@ export function createLlmDrafter(options: {
         workspaceId: input.workspaceId,
         step: DRAFT_STEP,
         model: options.model,
-        promptVersion: input.factSlots ? `${DRAFT_PROMPT_VERSION}+slots@2` : DRAFT_PROMPT_VERSION,
+        promptVersion: `${input.factSlots ? `${DRAFT_PROMPT_VERSION}+slots@2` : DRAFT_PROMPT_VERSION}${input.retryCode ? '+retry@1' : ''}`,
         messages: buildDraftMessages({ ...input, sources }),
         temperature: options.temperature ?? DRAFT_TEMPERATURE,
         ...(options.seed === undefined ? {} : { seed: options.seed }),

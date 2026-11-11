@@ -90,6 +90,7 @@ export {
   DISTILL_FLAG,
   FACT_SLOTS_FLAG,
   FLAG_DEFAULTS,
+  GUARD_FACTS_FLAG,
   PIPELINE_FLAG,
 } from './flag-keys';
 export { currencyExponent, formatMinorAmount, parseDecimalMinor } from './foreign-money';

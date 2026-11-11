@@ -21,6 +21,7 @@ import {
   DISTILL_FLAG,
   FACT_SLOTS_FLAG,
   FLAG_DEFAULTS,
+  GUARD_FACTS_FLAG,
   kbSyncEnqueueOptions,
   PIPELINE_FLAG,
 } from '@flow/shared';
@@ -157,6 +158,8 @@ async function main(): Promise<void> {
         pipelineEnabled: pipelineEnabledFor,
         factSlotsEnabled: (workspaceId: string) =>
           flags.isEnabled(FACT_SLOTS_FLAG, { workspaceId }),
+        guardFactsEnabled: (workspaceId: string) =>
+          flags.isEnabled(GUARD_FACTS_FLAG, { workspaceId }),
         turnLimit: config.pipeline.turnLimit,
         // Cờ DB cf.ai.* theo workspace + cấu hình đủ; tắt → lượt bị bỏ qua (`ai_disabled`).
         llmReady: (workspaceId) => (llm?.ready ? llm.ready(workspaceId) : Promise.resolve(false)),
