@@ -139,6 +139,9 @@ export type KbFaqRow = {
   lang: KbContentLang;
   tags: string[];
   updatedAt: Date;
+  /** Chỉ FAQ chắt lọc (M3-2): đoạn nguồn thô và loại (`faq` | `product_attr`). FAQ nhập tay: null / `faq`. */
+  sourceChunkId: string | null;
+  kind: string;
 };
 
 export type KbPolicyRow = {
@@ -187,8 +190,10 @@ export async function listFaqItems(tx: Database, workspaceId: string): Promise<K
     lang: KbContentLang;
     tags: string[];
     updated_at: string | Date;
+    source_chunk_id: string | null;
+    kind: string;
   }>(sql`
-    SELECT id, question, answer, lang, tags, updated_at FROM cf.faq_items
+    SELECT id, question, answer, lang, tags, updated_at, source_chunk_id, kind FROM cf.faq_items
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'published' ORDER BY updated_at DESC, id`);
   return r.rows.map((row) => ({
     id: row.id,
@@ -197,6 +202,8 @@ export async function listFaqItems(tx: Database, workspaceId: string): Promise<K
     lang: row.lang,
     tags: row.tags,
     updatedAt: asDate(row.updated_at),
+    sourceChunkId: row.source_chunk_id,
+    kind: row.kind,
   }));
 }
 

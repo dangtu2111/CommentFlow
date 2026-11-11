@@ -14,6 +14,9 @@ export const PIPELINE_FLAG = 'cf.pipeline.v2';
 /** Cờ theo workspace: câu trả lời đi đường fact plan (số/chính sách do code điền, ADR 017). Mặc định TẮT; bật bằng `pnpm flags:set`. */
 export const FACT_SLOTS_FLAG = 'cf.ai.fact_slots';
 
+/** Cờ theo workspace: chắt lọc kiến thức thô thành FAQ/thuộc tính NHÁP sau mỗi lần đồng bộ (M3, KB-DISTILL; tốn tiền LLM, có trần chi phí). Mặc định TẮT. */
+export const DISTILL_FLAG = 'cf.ai.distill';
+
 export type AiStep = keyof typeof AI_STEP_FLAGS;
 
 export const FLAG_DEFAULTS: Readonly<Record<string, boolean>> = {
@@ -22,4 +25,5 @@ export const FLAG_DEFAULTS: Readonly<Record<string, boolean>> = {
   [AI_STEP_FLAGS.rewrite]: false,
   [PIPELINE_FLAG]: false,
   [FACT_SLOTS_FLAG]: false,
+  [DISTILL_FLAG]: false,
 };

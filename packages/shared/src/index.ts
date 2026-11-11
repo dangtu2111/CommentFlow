@@ -87,6 +87,7 @@ export { AppError, type ErrorCode, isAppError } from './errors';
 export {
   AI_STEP_FLAGS,
   type AiStep,
+  DISTILL_FLAG,
   FACT_SLOTS_FLAG,
   FLAG_DEFAULTS,
   PIPELINE_FLAG,

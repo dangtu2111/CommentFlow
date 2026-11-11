@@ -12,6 +12,7 @@ import {
   lockKbPublish,
   refreshDraftChunkMeta,
   type SyncSourceKind,
+  setDraftChunkDistillMeta,
   setDraftChunkTopics,
   upsertDraftChunks,
   writeProductNameVectors,
@@ -60,6 +61,7 @@ export type KbSyncOps = {
   refreshMeta: typeof refreshDraftChunkMeta;
   remove: typeof deleteDraftChunks;
   setTopics: typeof setDraftChunkTopics;
+  setDistillMeta: typeof setDraftChunkDistillMeta;
   listProductNamesToEmbed: typeof listProductNamesToEmbed;
   writeProductNameVectors: typeof writeProductNameVectors;
 };
@@ -77,6 +79,7 @@ export const defaultKbSyncOps: KbSyncOps = {
   refreshMeta: refreshDraftChunkMeta,
   remove: deleteDraftChunks,
   setTopics: setDraftChunkTopics,
+  setDistillMeta: setDraftChunkDistillMeta,
   listProductNamesToEmbed,
   writeProductNameVectors,
 };
@@ -93,6 +96,8 @@ type SourcePlan = {
   title: string;
   documents: ChunkDocument[];
   topicOf: (doc: ChunkDocument) => KbTopic;
+  /** FAQ chắt lọc: nguồn gốc ghi vào metadata đoạn (tìm kiếm dùng để xếp hạng). */
+  distillOf?: (doc: ChunkDocument) => { sourceChunkId: string; kind: string } | null;
 };
 
 const TITLES: Record<SyncSourceKind, string> = {
@@ -126,6 +131,7 @@ async function loadPlans(
     TITLES.policy,
   );
   const topicByKey = new Map(policyDocs.map((d) => [d.doc.key, d.topic]));
+  const faqById = new Map(faqs.map((faq) => [`faq:${faq.id}`, faq]));
   const plans: SourcePlan[] = [
     {
       kind: 'policy',
@@ -138,6 +144,12 @@ async function loadPlans(
       title: TITLES.faq,
       documents: buildFaqDocuments(faqs, TITLES.faq),
       topicOf: (doc) => classifyTopic(doc.text, 'other'),
+      distillOf: (doc) => {
+        const faq = faqById.get(doc.key);
+        return faq?.sourceChunkId
+          ? { sourceChunkId: faq.sourceChunkId, kind: faq.kind ?? 'faq' }
+          : null;
+      },
     },
     {
       kind: 'shop',
@@ -186,11 +198,14 @@ export async function runKbSync(
     if (sourceId === null) continue;
     const drafts = plan.documents.flatMap((doc) => chunkDocument(doc));
     const topics: Array<{ chunkKey: string; topic: KbTopic }> = [];
+    const distillMarks: Array<{ chunkKey: string; sourceChunkId: string; kind: string }> = [];
     for (const doc of plan.documents) {
       const topic = plan.topicOf(doc);
+      const distill = plan.distillOf?.(doc) ?? null;
       for (const draft of drafts) {
-        if (draft.chunkKey.startsWith(`${doc.key}#`))
-          topics.push({ chunkKey: draft.chunkKey, topic });
+        if (!draft.chunkKey.startsWith(`${doc.key}#`)) continue;
+        topics.push({ chunkKey: draft.chunkKey, topic });
+        if (distill) distillMarks.push({ chunkKey: draft.chunkKey, ...distill });
       }
     }
     // Lỗi giữa chừng ném lên → giao dịch `withJob` rollback toàn bộ (không để lại đoạn nửa vời).
@@ -200,6 +215,7 @@ export async function runKbSync(
     await ops.refreshMeta(tx, workspaceId, sourceId, built.unchanged);
     stats.chunksRemoved += await ops.remove(tx, workspaceId, sourceId, built.removedKeys);
     await ops.setTopics(tx, workspaceId, sourceId, topics);
+    if (distillMarks.length > 0) await ops.setDistillMeta(tx, workspaceId, sourceId, distillMarks);
     stats.sources += 1;
     stats.chunksWritten += built.rows.length;
     stats.chunksUnchanged += built.unchangedKeys.length;

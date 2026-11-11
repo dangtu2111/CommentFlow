@@ -1701,7 +1701,23 @@
       "ai_invalid_output": "The AI output was unreadable, try again later.",
       "unavailable": "Could not retry, please try again."
     },
-    "newCard": "New card available, press Retry"
+    "newCard": "New card available, press Retry",
+    "drafts": {
+      "tab": "Pending review",
+      "title": "Suggestions from your raw data — awaiting your review",
+      "subtitle": "We read the descriptions/policies you entered and suggest Q&A. Each suggestion carries a verbatim quote as evidence. A suggestion only reaches the AI's knowledge after you approve it (then sync and publish).",
+      "empty": "No suggestions are waiting for review.",
+      "evidence": "Evidence (verbatim quote)",
+      "kind": {
+        "faq": "FAQ",
+        "product_attr": "Product attribute"
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Approved — it will enter the knowledge after the next sync.",
+      "rejected": "Suggestion rejected.",
+      "error": "Could not complete, try again later."
+    }
   },
   "kbPublish": {
     "sync": {
