@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "background": "#f5faff", "on-error-container": "#93000a", "on-tertiary-fixed": "#2e1500", "surface-dim": "#cedce7", "surface-container-lowest": "#ffffff", "tertiary-container": "#945b23", "primary-container": "#0b7285", "error-container": "#ffdad6", "on-secondary-container": "#fffbff", "inverse-surface": "#25323b", "tertiary": "#77440b", "secondary": "#633cd5", "surface-container-low": "#eaf5ff", "surface": "#f5faff", "on-secondary-fixed": "#1f0060", "on-primary": "#ffffff", "surface-tint": "#00687a", "on-tertiary-container": "#ffe3cf", "inverse-on-surface": "#e5f3fe", "surface-container-high": "#dceaf5", "error": "#ba1a1a", "surface-container": "#e2f0fb", "on-primary-container": "#bdf0ff", "on-error": "#ffffff", "on-tertiary": "#ffffff", "on-tertiary-fixed-variant": "#6c3a02", "secondary-container": "#7c59ef", "primary-fixed": "#abedff", "surface-container-highest": "#d7e4f0", "on-surface-variant": "#3f484b", "surface-variant": "#d7e4f0", "primary-fixed-dim": "#82d2e7", "on-background": "#101d25", "on-secondary-fixed-variant": "#4d1ebf", "secondary-fixed-dim": "#ccbdff", "tertiary-fixed-dim": "#ffb779", "outline-variant": "#bec8cc", "tertiary-fixed": "#ffdcc1", "on-primary-fixed-variant": "#004e5c", "on-secondary": "#ffffff", "secondary-fixed": "#e7deff", "on-primary-fixed": "#001f26", "outline": "#6f797c", "surface-bright": "#f5faff", "inverse-primary": "#82d2e7", "primary": "#005868", "on-surface": "#101d25" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin": "1.5rem", "space-xs": "0.25rem", "space-md": "0.75rem", "gutter-mobile": "0.75rem", "space-sm": "0.5rem", "gutter": "1rem", "space-xl": "1.5rem", "space-lg": "1rem", "margin-mobile": "1rem" }, "fontFamily": { "headline-sm": ["Be Vietnam Pro"], "title-sm": ["Be Vietnam Pro"], "body-lg": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "headline-md": ["Be Vietnam Pro"], "headline-lg-mobile": ["Be Vietnam Pro"], "code-sm": ["Be Vietnam Pro"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "title-sm": ["13px", { "lineHeight": "18px", "fontWeight": "600" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-md": ["15px", { "lineHeight": "20px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "body-md": ["13px", { "lineHeight": "19px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "code-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }] } } } }</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-16"><div class="flex-1 overflow-y-auto px-space-sm py-space-md"><div class="px-space-sm mb-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Điều hướng vận hành</div><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary font-title-sm shadow-sm"><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="binh-luan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">chat</span><span class="font-title-sm text-title-sm">Bình luận</span></div><span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm">24</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tin-nhan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">send</span><span class="font-title-sm text-title-sm">Tin nhắn</span></div><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-error animate-pulse"></span><span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">8</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="khach-tiem-nang" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">person_search</span><span class="font-title-sm text-title-sm">Khách tiềm năng</span></div><span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">+5</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bai-viet" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">feed</span><span class="font-title-sm text-title-sm">Bài viết</span></div><span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">3</span></a><div class="my-space-md border-t border-surface-container"></div><div class="px-space-sm mb-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Hệ thống &amp; Trí tuệ</div><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="co-so-kien-thuc" href="#"><span class="material-symbols-outlined text-lg">menu_book</span><span class="font-title-sm text-title-sm">Cơ sở kiến thức</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tu-dong-hoa" href="#"><span class="material-symbols-outlined text-lg">smart_toy</span><span class="font-title-sm text-title-sm">Tự động hóa</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bao-cao" href="#"><span class="material-symbols-outlined text-lg">bar_chart</span><span class="font-title-sm text-title-sm">Báo cáo</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="quy-tac-spam" href="#"><span class="material-symbols-outlined text-lg">gshield</span><span class="font-title-sm text-title-sm">Quy tắc spam</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="nhat-ky-hoat-dong" href="#"><span class="material-symbols-outlined text-lg">history</span><span class="font-title-sm text-title-sm">Nhật ký hoạt động</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="cai-dat" href="#"><span class="material-symbols-outlined text-lg">settings</span><span class="font-title-sm text-title-sm">Cài đặt</span></a></nav></div><div class="p-space-sm space-y-space-sm bg-surface-container-lowest"><div class="bg-surface-container-low rounded-lg p-space-sm space-y-space-xs"><div class="flex items-center justify-between text-on-surface"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm text-secondary">bolt</span><span class="font-title-sm text-title-sm">Hạn mức AI</span></div><span class="font-label-sm text-label-sm text-primary">71%</span></div><div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden"><div class="bg-primary-container h-full rounded-full" style="width: 71%"></div></div><div class="flex items-center justify-between pt-0.5"><span class="text-on-surface-variant font-label-sm text-label-sm">2.140 / 3.000 lượt</span><button class="text-primary hover:text-on-primary-fixed-variant font-label-sm text-label-sm" type="button">Nâng gói</button></div></div><div class="flex items-center justify-between p-1.5 rounded-lg bg-surface-container-low"><div class="flex items-center gap-2 overflow-hidden"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwcZm3TMSiHkNQ4B250GrpqU8pEMkD38dPVp_ia3bg6FubRiQrgxOsTzAJOFdK7zIybRwltPDjurEazKTciRbEjnOrhTrB0p6XM_Ins-mAV8Ask9nhwjwvafun5f33_IKTDZlsozTIVyasgH5_XxVS5ogOcaTtonJ_lyLTQGHzTotLv2BdwwmoNPf52faRZLJRcTm15y4SWuehdxkWdukk1j3vucIC2qqKsRxc9iCZ"/><div class="min-w-0"><div class="font-title-sm text-title-sm text-on-surface truncate">Nguyễn Mai Linh</div><div class="font-label-sm text-label-sm text-on-surface-variant truncate">CSKH • Trực tuyến</div></div></div><button class="p-1 text-on-surface-variant hover:text-on-surface" type="button"><span class="material-symbols-outlined text-base">expand_more</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-0 right-0 h-16 bg-surface-container-lowest z-50 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-space-md flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-2 pr-space-md"><img alt="CommentFlow AI Logo Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VC7X4t51CinIpB3O45rpY-WErdfe1lXwcDO9-tJeUTAyi404rV2qeGWEexZXXSptgB-nhH8GEtH7IoDdbkEEjfY0_mueCjR1BUcFJk7Sk_XlYNN3_naqsZflesw6BioCzeVyuKVJePv6tEZwY_2koLbrIynVMNm_J5bZjD8RAi2ws3Sm9SdQ7zun4kHQ5ALEoiR0BeTZjqAz47KbvIJ0NzXAjd9o_nngVVAtfR38Wf5w"/><div class="flex items-center gap-1.5"><span class="font-headline-sm text-headline-sm text-on-surface">Comment</span><span class="font-headline-sm text-headline-sm text-primary-container">Flow</span><span class="px-1.5 py-0.5 rounded bg-secondary text-on-secondary font-label-sm text-label-sm uppercase tracking-wider">AI</span></div></div><div class="h-6 w-px bg-surface-container-high"></div><button class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors text-left" type="button"><div class="flex flex-col"><div class="flex items-center gap-1"><span class="font-title-sm text-title-sm text-on-surface">Thời Trang Mẫu An Nhiên</span><span class="material-symbols-outlined text-sm text-on-surface-variant">unfold_more</span></div><span class="font-label-sm text-label-sm text-primary font-medium">18 chờ duyệt</span></div></button><div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg"><button class="px-2 py-1 rounded bg-surface-container-lowest shadow-sm text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-primary-container"></span><span>FB: An Nhiên Store</span></button><button class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>IG: @annhien.official</span></button><button class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1" type="button"><span class="w-2 h-2 rounded-full bg-outline"></span><span>TikTok: An Nhiên</span></button></div></div><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low"><div class="flex items-center gap-1.5"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span></span><span class="font-label-md text-label-md text-on-surface">AI tự động: <span class="font-semibold text-primary">Bật (2 kênh)</span></span></div><button class="flex items-center gap-1 px-2 py-1 rounded bg-error text-on-error hover:bg-on-error-container font-label-sm text-label-sm transition-colors" type="button"><span class="material-symbols-outlined text-sm">gpp_maybe</span><span>Dừng khẩn cấp</span></button></div><div class="h-6 w-px bg-surface-container-high"></div><div class="flex items-center gap-1"><button class="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Trợ giúp (Phím tắt ?)" type="button"><span class="font-title-sm text-title-sm font-semibold">?</span></button><button class="relative flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-lg">notifications</span><span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span></button></div><div class="flex items-center gap-2 pl-1"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwcZm3TMSiHkNQ4B250GrpqU8pEMkD38dPVp_ia3bg6FubRiQrgxOsTzAJOFdK7zIybRwltPDjurEazKTciRbEjnOrhTrB0p6XM_Ins-mAV8Ask9nhwjwvafun5f33_IKTDZlsozTIVyasgH5_XxVS5ogOcaTtonJ_lyLTQGHzTotLv2BdwwmoNPf52faRZLJRcTm15y4SWuehdxkWdukk1j3vucIC2qqKsRxc9iCZ"/><div class="hidden xl:block text-left"><div class="font-title-sm text-title-sm text-on-surface leading-none">Nguyễn Mai Linh</div><div class="font-label-sm text-label-sm text-on-surface-variant mt-1 leading-none">Nhân viên CSKH</div></div></div></div></div></header><main class="w-full pt-16 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Knowledge Base Sub-navigation Bar -->
+<div class="w-full bg-surface-container-lowest px-space-xl py-space-sm shadow-sm flex flex-col gap-space-sm">
+<!-- Breadcrumb & Top Utility Info -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">menu_book</span> Cơ sở kiến thức
+        </span>
+<span class="text-outline-variant font-label-sm text-label-sm">/</span>
+<span class="font-title-sm text-title-sm text-on-surface">Quy tắc trả lời &amp; Giới hạn bảo vệ</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Bản nháp — 2 thay đổi chưa xuất bản
+        </span>
+<span class="text-on-surface-variant font-body-sm text-body-sm hidden md:inline">• Đã xuất bản v14 lúc 15:30 (bởi Nguyễn Mai Linh)</span>
+</div>
+<div class="flex items-center gap-space-md">
+<!-- Safety Shield Metrics -->
+<div class="hidden lg:flex items-center gap-space-md bg-surface-container-low px-3 py-1.5 rounded-lg">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-primary-container" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Guardrails: <strong class="text-on-surface font-title-sm text-title-sm">99.8% Chuẩn mực</strong></span>
+</div>
+<span class="w-px h-3.5 bg-outline-variant"></span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-secondary" style="font-variation-settings: 'FILL' 1;">rule_settings</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Bộ lọc: <strong class="text-on-surface font-title-sm text-title-sm">18 quy tắc</strong></span>
+</div>
+</div>
+<!-- Scope Selector -->
+<div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1 rounded-lg">
+<span class="material-symbols-outlined text-sm text-outline">tune</span>
+<select aria-label="Phạm vi áp dụng quy tắc" class="bg-transparent text-on-surface font-title-sm text-title-sm py-0.5 pr-2 focus:outline-none cursor-pointer">
+<option>Áp dụng: Tất cả kênh (2 FB, 1 IG, 1 TikTok)</option>
+<option>Chỉ kênh Facebook: An Nhiên Store</option>
+<option>Chỉ Instagram: @annhien.official</option>
+<option>Chỉ TikTok: An Nhiên</option>
+</select>
+</div>
+<!-- Diff & Publish Actions -->
+<div class="flex items-center gap-1.5">
+<button class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" title="Xem 2 thay đổi chưa xuất bản" type="button">
+<span class="material-symbols-outlined text-sm">difference</span>
+<span>So sánh diff (2)</span>
+</button>
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container font-title-sm text-title-sm shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span>Thử nghiệm AI Lab</span>
+</button>
+<button class="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">rocket_launch</span>
+<span>Xuất bản thay đổi</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Sub-navigation Tabs Strip -->
+<div class="flex items-center gap-1 overflow-x-auto pt-1 no-scrollbar">
+<a class="px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">Nguồn dữ liệu</a>
+<a class="px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">Thông tin cửa hàng</a>
+<a class="flex items-center gap-1 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">
+<span>Sản phẩm</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high rounded-full font-label-sm text-label-sm">480</span>
+</a>
+<a class="flex items-center gap-1 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">
+<span>Chính sách</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high rounded-full font-label-sm text-label-sm">4</span>
+</a>
+<a class="flex items-center gap-1 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">
+<span>Hỏi - đáp (FAQ)</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high rounded-full font-label-sm text-label-sm">45</span>
+</a>
+<a class="px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">Tài liệu (PDF/DOC)</a>
+<a class="px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">Giọng văn</a>
+<!-- Active Tab -->
+<a class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-container text-on-primary font-title-sm text-title-sm whitespace-nowrap shadow-sm" href="#">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">shield</span>
+<span>Quy tắc trả lời &amp; Giới hạn</span>
+<span class="w-2 h-2 rounded-full bg-on-primary-container animate-ping"></span>
+</a>
+<a class="px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">Từ điển viết tắt</a>
+<a class="px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-title-sm text-title-sm whitespace-nowrap transition-colors" href="#">Kiểm thử &amp; Phiên bản</a>
+</div>
+</div>
+<!-- Main 2-Column Responsive Workspace -->
+<div class="px-space-xl py-space-lg w-full max-w-[1600px] mx-auto pb-28">
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT COLUMN: Rules & Safety Configuration Panels (7 cols on XL) -->
+<div class="xl:col-span-7 flex flex-col gap-space-lg">
+<!-- BLOCK 1: Channel Response Strategy & Pricing Privacy -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">sell</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">1. Quy tắc công khai giá &amp; Điều hướng theo kênh</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tối ưu tỷ lệ chuyển đổi, bảo mật giá trước đối thủ cạnh tranh và cá nhân hoá kịch bản chốt đơn.</p>
+</div>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-low font-label-sm text-label-sm text-primary font-semibold uppercase">3 Kênh kích hoạt</span>
+</div>
+<!-- Public Comment Strategy Section -->
+<div class="bg-surface-container-low rounded-lg p-space-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-primary">public</span>
+                Bình luận công khai (Facebook/Instagram/TikTok Comments)
+              </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Khuyến nghị: Linh hoạt theo từng bài</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm pt-1">
+<!-- Option 1 -->
+<label class="cursor-pointer flex flex-col gap-1 p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container transition-colors">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface">Nói giá trực tiếp</span>
+<input class="text-primary-container focus:ring-0" name="comment_price_policy" type="radio"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-snug">Báo giá rõ ràng, minh bạch ngay dưới comment. Phù hợp xả hàng nhanh.</p>
+</label>
+<!-- Option 2 -->
+<label class="cursor-pointer flex flex-col gap-1 p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container transition-colors">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface">Mời nhắn riêng</span>
+<input class="text-primary-container focus:ring-0" name="comment_price_policy" type="radio"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-snug">Private Reply để tư vấn sâu, tránh đối thủ cướp khách hoặc soi giá.</p>
+</label>
+<!-- Option 3 (Selected) -->
+<label class="cursor-pointer flex flex-col gap-1 p-space-sm rounded-lg bg-primary-container text-on-primary shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-primary">Linh hoạt theo bài</span>
+<input checked="" class="text-on-primary-container focus:ring-0" name="comment_price_policy" type="radio"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-primary opacity-90 leading-snug">Mặc định lấy theo cấu hình từng bài viết quảng cáo. Đạt hiệu quả cao nhất.</p>
+</label>
+</div>
+<!-- Transition template box -->
+<div class="mt-2 flex flex-col gap-1 bg-surface-container-lowest p-space-sm rounded-lg">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1" for="hidden-price-msg">
+<span class="material-symbols-outlined text-sm text-primary">chat_bubble</span> Mẫu câu phản hồi bình luận công khai khi ẩn giá (kèm hành động gửi tin nhắn riêng tự động):
+                </label>
+<button class="text-primary font-label-sm text-label-sm hover:underline" type="button">Chèn biến số {tên_khách}</button>
+</div>
+<textarea class="w-full bg-surface-container-low text-on-surface rounded p-2 font-body-sm text-body-sm focus:outline-none resize-none" id="hidden-price-msg" rows="2">Dạ An Nhiên đã nhắn tin riêng báo giá ưu đãi và gửi kèm bảng size chi tiết cho bạn rồi ạ, bạn kiểm tra mục tin nhắn chờ giúp shop nhé ✨</textarea>
+</div>
+</div>
+<!-- Direct Message Strategy Section -->
+<div class="bg-surface-container-low rounded-lg p-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-secondary">mark_chat_unread</span>
+                Tin nhắn hội thoại riêng (Facebook Messenger / Instagram DM)
+              </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-on-surface-variant">Bắt buộc</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Quy tắc chuẩn: <strong class="text-on-surface">Luôn luôn báo giá công khai đầy đủ</strong> kèm quà tặng, mã miễn phí vận chuyển và chương trình flash-sale hiện hành. Không vòng vo mời gọi qua nền tảng khác.</p>
+<div class="flex items-center gap-2 pt-1">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-sm text-label-sm text-on-surface">Tự động đính kèm liên kết thanh toán an toàn trực tiếp từ website khi khách sẵn sàng chốt đơn.</span>
+</div>
+</div>
+</div>
+<!-- BLOCK 2: Prohibited Topics & Blacklist Safety -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">block</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">2. Danh sách chủ đề cấm kỵ (Prohibited Topics)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Rào chắn tuyệt đối ngăn ngừa AI phát ngôn sai lệch hoặc vi phạm pháp luật và tiêu chuẩn cộng đồng.</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">6 Thẻ kích hoạt</span>
+</div>
+<!-- Tag Cloud of Banned Topics -->
+<div class="flex flex-wrap gap-2 pt-1">
+<div class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-title-sm text-title-sm shadow-xs">
+<span class="material-symbols-outlined text-sm text-error">gavel</span>
+<span>Chính trị &amp; Tôn giáo</span>
+<button aria-label="Xóa thẻ Chính trị &amp; Tôn giáo" class="text-on-surface-variant hover:text-error ml-1" type="button"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-title-sm text-title-sm shadow-xs">
+<span class="material-symbols-outlined text-sm text-error">trending_down</span>
+<span>Phát ngôn so sánh dìm hàng đối thủ</span>
+<button aria-label="Xóa thẻ Phát ngôn so sánh dìm hàng đối thủ" class="text-on-surface-variant hover:text-error ml-1" type="button"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-title-sm text-title-sm shadow-xs">
+<span class="material-symbols-outlined text-sm text-error">healing</span>
+<span>Hứa hẹn trị dứt điểm 100% bệnh / cam kết phi lý</span>
+<button aria-label="Xóa thẻ Hứa hẹn trị dứt điểm 100% bệnh" class="text-on-surface-variant hover:text-error ml-1" type="button"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-title-sm text-title-sm shadow-xs">
+<span class="material-symbols-outlined text-sm text-error">lock</span>
+<span>Tiết lộ giá nhập / Nhà cung cấp xưởng</span>
+<button aria-label="Xóa thẻ Tiết lộ giá nhập" class="text-on-surface-variant hover:text-error ml-1" type="button"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-title-sm text-title-sm shadow-xs">
+<span class="material-symbols-outlined text-sm text-error">account_balance</span>
+<span>Cung cấp số tài khoản cá nhân khác tài khoản shop</span>
+<button aria-label="Xóa thẻ Cung cấp số tài khoản cá nhân khác" class="text-on-surface-variant hover:text-error ml-1" type="button"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-title-sm text-title-sm shadow-xs">
+<span class="material-symbols-outlined text-sm text-error">shopping_cart_off</span>
+<span>Nhận đơn cọc ngoài website / app chính thức</span>
+<button aria-label="Xóa thẻ Nhận đơn cọc ngoài" class="text-on-surface-variant hover:text-error ml-1" type="button"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<!-- Add Tag button -->
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-highest text-primary font-title-sm text-title-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-base">add</span>
+<span>Thêm chủ đề cấm</span>
+</button>
+</div>
+<!-- Penalty Action selection -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex flex-col gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">Hành động khi khách hàng cố tình gài bẫy hỏi chủ đề cấm:</span>
+<div class="flex flex-col sm:flex-row gap-space-sm pt-1">
+<label class="flex items-center gap-2 bg-surface-container-lowest p-2.5 rounded-lg flex-1 cursor-pointer">
+<input checked="" class="text-primary-container focus:ring-0" name="banned_action" type="radio"/>
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Từ chối lịch sự &amp; định hướng lại</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lịch thiệp xin lỗi và chủ động hướng khách quay lại sản phẩm.</span>
+</div>
+</label>
+<label class="flex items-center gap-2 bg-surface-container-lowest p-2.5 rounded-lg flex-1 cursor-pointer">
+<input class="text-primary-container focus:ring-0" name="banned_action" type="radio"/>
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Ngừng tự động &amp; Chuyển người thật</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Ngay lập tức im lặng và kích hoạt thông báo cho quản trị viên.</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+<!-- BLOCK 3: Human Handover Triggers -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">support_agent</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">3. Từ khóa bắt buộc chuyển nhân viên (Human Handover)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Khi phát hiện từ khóa rủi ro hoặc bức xúc, AI lập tức nhường quyền kiểm soát cho nhân viên ca trực.</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">10 Từ khóa vàng</span>
+</div>
+<!-- Keywords List -->
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded bg-error-container text-on-error-container font-code-sm text-code-sm font-semibold flex items-center gap-1">
+              "lừa đảo" <button aria-label="Xóa từ khóa lừa đảo" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-error-container text-on-error-container font-code-sm text-code-sm font-semibold flex items-center gap-1">
+              "báo công an" <button aria-label="Xóa từ khóa báo công an" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "gặp chủ shop" <button aria-label="Xóa từ khóa gặp chủ shop" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "người thật" <button aria-label="Xóa từ khóa người thật" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "nhân viên cskh" <button aria-label="Xóa từ khóa nhân viên cskh" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "hàng giả" <button aria-label="Xóa từ khóa hàng giả" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "chửi bới" <button aria-label="Xóa từ khóa chửi bới" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "rách toạc" <button aria-label="Xóa từ khóa rách toạc" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "sai mẫu" <button aria-label="Xóa từ khóa sai mẫu" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+<span class="px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm flex items-center gap-1">
+              "trả hàng gấp" <button aria-label="Xóa từ khóa trả hàng gấp" class="hover:opacity-75" type="button"><span class="material-symbols-outlined text-xs">close</span></button>
+</span>
+</div>
+<!-- Add Trigger keyword bar -->
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">keyboard</span>
+<input class="w-full bg-surface-container-low pl-8 pr-3 py-1.5 rounded-lg text-on-surface font-body-sm text-body-sm focus:outline-none" placeholder="Nhập thêm từ khóa mới rồi nhấn Enter (ví dụ: đòi bồi thường, kiện tụng...)" type="text"/>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm" type="button">Thêm</button>
+</div>
+<!-- Message handover template -->
+<div class="flex flex-col gap-1 bg-surface-container-low p-space-sm rounded-lg">
+<label class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1" for="handover-msg">
+<span class="material-symbols-outlined text-sm text-secondary">forum</span> Tin nhắn tự động xoa dịu khách hàng trước khi bàn giao cho nhân viên:
+            </label>
+<textarea class="w-full bg-surface-container-lowest text-on-surface rounded p-2 font-body-sm text-body-sm focus:outline-none resize-none" id="handover-msg" rows="2">Dạ An Nhiên đã ghi nhận phản hồi của bạn và đang chuyển ngay cho chuyên viên quản lý hỗ trợ bạn trong vòng 5 phút ạ. Bạn yên tâm nhé! 🌿</textarea>
+</div>
+</div>
+<!-- BLOCK 4: Zero-Hallucination & Fallback Handling -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">psychology_alt</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">4. Kịch bản ứng xử khi dữ liệu khuyết thiếu (Zero-Hallucination)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Không bao giờ để AI tự bịa đặt thông tin khi không có trong Cơ sở kiến thức.</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant">Bảo vệ danh tiếng</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between p-space-sm bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">check_circle</span>
+<span class="font-title-sm text-title-sm text-on-surface">Thành thật xin lỗi và chuyển nhân viên hỗ trợ</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-primary-container text-on-primary font-label-sm text-label-sm">Đang chọn (Chuẩn PRD)</span>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="fallback-msg">Mẫu câu ứng xử khi không biết (Fallback Phrase):</label>
+<textarea class="w-full bg-surface-container-low text-on-surface rounded p-2 font-body-sm text-body-sm focus:outline-none resize-none" id="fallback-msg" rows="2">Dạ với câu hỏi này về chi tiết mẫu sản phẩm, shop xin phép chuyển sang bạn nhân viên tư vấn kiểm tra kho trực tiếp và giải đáp cho bạn ngay nhé ạ! ✨</textarea>
+</div>
+<!-- Auto-log checkbox -->
+<label class="flex items-start gap-2.5 pt-1 cursor-pointer">
+<input checked="" class="mt-0.5 rounded text-primary-container focus:ring-0" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Tự động lưu câu hỏi chưa có lời giải vào mục [Cần bổ sung kiến thức] trong Báo cáo</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Hệ thống gom nhóm câu hỏi lặp lại theo tuần để người quản lý bổ sung FAQ nhanh chóng.</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Live Guardrail Sandbox & Real-time Test Simulator (5 cols on XL) -->
+<div class="xl:col-span-5 sticky top-20 flex flex-col gap-space-md">
+<!-- Live Sandbox Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-secondary text-on-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">science</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Kiểm thử rào cản an toàn thời gian thực</h3>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Live Guardrail Sandbox v2.4</span>
+</div>
+</div>
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
+</span>
+</div>
+<!-- Scenario Selection Dropdown -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="test-scenario">Chọn mẫu tình huống thử nghiệm (Mock Cases):</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low px-3 py-2 rounded-lg text-on-surface font-title-sm text-title-sm appearance-none focus:outline-none cursor-pointer" id="test-scenario">
+<option selected="">Mẫu 2: Khách khiếu nại gay gắt đòi báo công an lừa đảo (Đang chọn)</option>
+<option>Mẫu 1: Khách hỏi so sánh dìm hàng đối thủ</option>
+<option>Mẫu 3: Khách hỏi số tài khoản chuyển khoản riêng</option>
+<option>Mẫu 4: Khách hỏi chính sách chữa bệnh ngoài da cấp tốc</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-base">expand_more</span>
+</div>
+</div>
+<!-- User Prompt Simulation Box -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-outline">chat</span> Câu hỏi giả lập của khách hàng:
+              </span>
+<span class="font-label-sm text-label-sm text-error font-medium">Độ rủi ro: Cao</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm leading-relaxed">
+              "Shop làm ăn lừa đảo à, gửi váy rách toạc đòi tiền cọc, cho gặp chủ shop gấp không tôi báo công an!"
+            </div>
+</div>
+<!-- Test Button -->
+<button class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-secondary hover:bg-secondary-container text-on-secondary font-title-sm text-title-sm shadow-sm transition-all transform active:scale-[0.99]" type="button">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span>Chạy kiểm thử quy tắc an toàn</span>
+</button>
+<!-- Guardrail Trigger Response Block -->
+<div class="bg-surface-container-low rounded-lg p-space-md flex flex-col gap-space-sm">
+<!-- Guardrail Result Badge -->
+<div class="flex items-center justify-between">
+<span class="px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">report</span>
+                KÍCH HOẠT QUY TẮC AN TOÀN — CHUYỂN GIAO NHÂN VIÊN
+              </span>
+<span class="font-code-sm text-code-sm text-primary font-semibold">0.18s</span>
+</div>
+<!-- Action Summary -->
+<div class="flex flex-col gap-1 bg-surface-container-lowest p-2.5 rounded text-on-surface font-body-sm text-body-sm">
+<span class="font-title-sm text-title-sm text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-base">pan_tool</span> Hành vi hệ thống AI:
+              </span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Dừng tự động hoàn toàn • Gắn nhãn khẩn cấp <strong class="text-on-surface">[Khiếu nại cấp 1]</strong> • Ping thông báo Telegram/Mobile App cho nhân viên trực <strong class="text-on-surface">Nguyễn Mai Linh</strong>.</p>
+</div>
+<!-- AI Generated Reply -->
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Câu AI phản hồi khách hàng (Đã chuẩn hoá):</span>
+<div class="bg-surface-container-lowest p-3 rounded text-on-surface font-body-sm text-body-sm shadow-xs flex items-start gap-2">
+<span class="material-symbols-outlined text-primary-container text-base shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<span>"Dạ An Nhiên chân thành xin lỗi bạn về sự cố không mong muốn này ạ! Shop đã tiếp nhận khiếu nại khẩn cấp và chuyển trực tiếp tới Quản lý cửa hàng. Quản lý sẽ liên hệ kiểm tra đơn hàng và đổi mới ngay cho bạn trong ít phút ạ! 🌿"</span>
+</div>
+</div>
+<!-- Safety Audit Breakdown Metrics -->
+<div class="pt-2 flex flex-col gap-1.5">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Bảng phân tích kiểm định an toàn (Safety Audit):</span>
+<div class="grid grid-cols-2 gap-2">
+<div class="bg-surface-container-lowest p-2 rounded flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Từ khóa vi phạm:</span>
+<div class="flex items-center gap-1 pt-0.5">
+<span class="px-1.5 py-0.2 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">"lừa đảo"</span>
+<span class="px-1.5 py-0.2 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">"gặp chủ shop"</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Độ chính xác Zero-Hallucination:</span>
+<div class="flex items-center gap-1 pt-0.5 text-primary-container font-title-sm text-title-sm">
+<span class="material-symbols-outlined text-sm">verified</span>
+<span>100% An toàn</span>
+</div>
+</div>
+</div>
+<!-- Progress bar visualization -->
+<div class="flex flex-col gap-1 pt-1">
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Tuân thủ ranh giới an toàn</span>
+<span class="font-semibold text-primary">100%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Expert Tip Callout -->
+<div class="p-3 rounded-lg bg-surface-container-low flex items-start gap-2.5">
+<span class="material-symbols-outlined text-secondary shrink-0 text-lg">lightbulb</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-snug">
+<strong class="text-on-surface">Mẹo chuyên gia:</strong> Thiết lập rào cản an toàn chặt chẽ giúp shop triệt tiêu hoàn toàn nguy cơ khủng hoảng truyền thông từ AI tự động, đặc biệt trong các khung giờ cao điểm chạy chiến dịch quảng cáo.
+            </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Bottom Action Bar -->
+<div class="fixed bottom-0 right-0 left-64 bg-surface-container-lowest p-space-md shadow-lg z-30 flex items-center justify-between px-space-xl">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary animate-pulse"></span>
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Bản nháp cục bộ đang chờ lưu</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cập nhật lần cuối: 1 phút trước • 2 quy tắc đã chỉnh sửa</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm transition-colors" type="button">
+        Hủy thay đổi
+      </button>
+<button class="px-3.5 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-title-sm text-title-sm transition-colors" type="button">
+        Lưu bản nháp (Draft)
+      </button>
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container font-title-sm text-title-sm shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">neurology</span>
+<span>Thử hỏi câu mẫu (AI Lab)</span>
+</button>
+<button class="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-base">check</span>
+<span>Lưu &amp; Cập nhật Quy tắc an toàn</span>
+</button>
+</div>
+</div>
+</div></main></div></body></html>
