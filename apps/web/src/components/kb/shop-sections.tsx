@@ -88,10 +88,16 @@ function RealField({
   const control = rows ? <textarea rows={rows} {...common} /> : <input type={type} {...common} />;
   return (
     <div>
-      <label htmlFor={id} className={LABEL}>
-        {label}
-        {required ? <span className="text-error"> *</span> : null}
-      </label>
+      <div className="flex items-baseline gap-1">
+        <label htmlFor={id} className={LABEL}>
+          {label}
+        </label>
+        {required ? (
+          <span aria-hidden="true" className="text-error mb-1">
+            *
+          </span>
+        ) : null}
+      </div>
       {icon ? (
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-primary shrink-0">
