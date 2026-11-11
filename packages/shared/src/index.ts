@@ -87,8 +87,10 @@ export { AppError, type ErrorCode, isAppError } from './errors';
 export {
   AI_STEP_FLAGS,
   type AiStep,
+  DISTILL_FLAG,
   FACT_SLOTS_FLAG,
   FLAG_DEFAULTS,
+  GUARD_FACTS_FLAG,
   PIPELINE_FLAG,
 } from './flag-keys';
 export { currencyExponent, formatMinorAmount, parseDecimalMinor } from './foreign-money';

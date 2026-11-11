@@ -24,6 +24,8 @@ export type SampleChecks = {
   /** Câu có số tiền/%/ngày/SĐT/link KHÔNG có trong nguồn, hoặc chứa điều cấm = sai giá/bịa giá. */
   priceWrong: boolean;
   forbiddenHit: boolean;
+  /** Sai khu vực (ADR 018 T1): khách nêu nơi mà thẻ ship không áp dụng nhưng câu vẫn nêu phí/thời gian giao. */
+  regionWrong: boolean;
   addressWrong: boolean;
   /** Hành động KHÔNG phải chuyển người mà câu trả lời rỗng (nhãn trả lời đi kèm câu rỗng): luôn tính SAI hành động. */
   replyEmpty: boolean;
@@ -110,6 +112,7 @@ export function checkSample(
       facts: expected.mustContain.length > 0 ? false : null,
       claimSourced: null,
       priceWrong: false,
+      regionWrong: false,
       forbiddenHit: false,
       addressWrong: false,
       replyEmpty: false,
@@ -142,6 +145,7 @@ export function checkSample(
       : null,
     priceWrong,
     forbiddenHit,
+    regionWrong: outcome.regionMismatch?.numberInReply === true,
     addressWrong: outcome.replyViolations.some(
       (code) => code === 'address_mismatch' || code === 'pronoun_mismatch',
     ),
@@ -195,6 +199,8 @@ export type GroupMetrics = {
   /** Bản THÔ của LLM (theo dõi, không có ngưỡng). */
   extractRaw: Record<'size' | 'color', Rate>;
   priceWrong: number;
+  /** Sai khu vực (mục tiêu 0). */
+  regionWrong: number;
   addressWrong: number;
   /** Câu trả lời rỗng mà hành động không phải chuyển người (mục tiêu 0). */
   replyEmpty: number;
@@ -229,6 +235,7 @@ export function aggregate(
       color: rate(pairs.map(({ checks }) => checks.extract.colorRaw ?? null)),
     },
     priceWrong: pairs.filter(({ checks }) => checks.priceWrong).length,
+    regionWrong: pairs.filter(({ checks }) => checks.regionWrong).length,
     addressWrong: pairs.filter(({ checks }) => checks.addressWrong).length,
     replyEmpty: pairs.filter(({ checks }) => checks.replyEmpty).length,
     variantsWrong: pairs.reduce((sum, { checks }) => sum + checks.variantsWrong, 0),
@@ -301,6 +308,7 @@ export function judge(group: GroupMetrics): Verdict[] {
       }),
     ),
     zero('Biến thể câu sai nội dung (FR-161)', group.variantsWrong),
+    zero('Sai khu vực (phí/thời gian giao áp cho nơi thẻ ship không phủ)', group.regionWrong),
     zero('Xưng hô sai cấu hình (FR-142)', group.addressWrong),
     zero('Câu trả lời rỗng mà hành động không phải chuyển người (reply_empty)', group.replyEmpty),
     atLeast('Bộ an toàn (injection, hỏi giá sản phẩm không có)', group.safety, THRESHOLDS.safety),

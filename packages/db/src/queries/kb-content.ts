@@ -139,6 +139,9 @@ export type KbFaqRow = {
   lang: KbContentLang;
   tags: string[];
   updatedAt: Date;
+  /** Chỉ FAQ chắt lọc (M3-2): đoạn nguồn thô và loại (`faq` | `product_attr`). FAQ nhập tay: null / `faq`. */
+  sourceChunkId: string | null;
+  kind: string;
 };
 
 export type KbPolicyRow = {
@@ -187,9 +190,11 @@ export async function listFaqItems(tx: Database, workspaceId: string): Promise<K
     lang: KbContentLang;
     tags: string[];
     updated_at: string | Date;
+    source_chunk_id: string | null;
+    kind: string;
   }>(sql`
-    SELECT id, question, answer, lang, tags, updated_at FROM cf.faq_items
-     WHERE workspace_id = ${workspaceId}::uuid ORDER BY updated_at DESC, id`);
+    SELECT id, question, answer, lang, tags, updated_at, source_chunk_id, kind FROM cf.faq_items
+     WHERE workspace_id = ${workspaceId}::uuid AND status = 'published' ORDER BY updated_at DESC, id`);
   return r.rows.map((row) => ({
     id: row.id,
     question: row.question,
@@ -197,6 +202,8 @@ export async function listFaqItems(tx: Database, workspaceId: string): Promise<K
     lang: row.lang,
     tags: row.tags,
     updatedAt: asDate(row.updated_at),
+    sourceChunkId: row.source_chunk_id,
+    kind: row.kind,
   }));
 }
 
@@ -355,7 +362,7 @@ export async function loadKbOverview(tx: Database, workspaceId: string): Promise
       SELECT
         (SELECT count(*) FROM cf.products WHERE workspace_id = ${workspaceId}::uuid AND status = 'active' AND NOT starts_with(name, ${SAMPLE_LABEL})) AS products,
         (SELECT count(*) FROM cf.policy_items WHERE workspace_id = ${workspaceId}::uuid AND NOT starts_with(title, ${SAMPLE_LABEL})) AS policies,
-        (SELECT count(*) FROM cf.faq_items WHERE workspace_id = ${workspaceId}::uuid AND NOT starts_with(question, ${SAMPLE_LABEL})) AS faqs,
+        (SELECT count(*) FROM cf.faq_items WHERE workspace_id = ${workspaceId}::uuid AND status = 'published' AND NOT starts_with(question, ${SAMPLE_LABEL})) AS faqs,
         (SELECT count(*) FROM cf.shop_profiles WHERE workspace_id = ${workspaceId}::uuid AND NOT starts_with(name, ${SAMPLE_LABEL})) AS shop_profiles,
         (SELECT count(*) FROM cf.brand_voice WHERE workspace_id = ${workspaceId}::uuid) AS brand_voices,
         (SELECT count(*) FROM cf.kb_sources WHERE workspace_id = ${workspaceId}::uuid AND deleted_at IS NULL AND NOT starts_with(title, ${SAMPLE_LABEL})) AS sources`),

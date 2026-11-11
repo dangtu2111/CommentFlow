@@ -4,6 +4,7 @@ import {
   type ConversationState,
   type Drafter,
   type Extractor,
+  type GuardFactsTrace,
   isUnreadableAiOutput,
   type PipelineInput,
   type Rewriter,
@@ -36,6 +37,7 @@ export type RunContext = {
   factSlots?: PipelineInput['factSlots'];
   /** Chế độ chỗ giữ chỗ (cờ `fact_slots`); thiếu/false → chỉ dùng plan cho phần không phụ thuộc cờ. */
   factSlotsMode?: boolean;
+  guardFacts?: boolean;
   /** Ngôn ngữ trả lời mặc định của shop (câu ngắn). */
   replyLanguage?: 'vi' | 'en';
   workspaceId?: string;
@@ -78,6 +80,8 @@ export type SampleOutcome =
       confidence: number;
       /** Số vi phạm số tiền/%/ngày/SĐT/link lạ (guard-money): ≥ 1 = câu có số không có trong nguồn. */
       moneyViolations: number;
+      /** Khu vực không khớp thẻ ship (ADR 018 T1): chủ đề `unknown` vì nơi khách nêu không có dòng ship; `numberInReply` = câu CUỐI vẫn nêu phí/thời gian (= sai khu vực). */
+      regionMismatch?: { topics: string[]; numberInReply: boolean };
       /** Mã vi phạm của guard §4 (nguồn từng ý, ngôn ngữ, độ dài, xưng hô). */
       replyViolations: string[];
       extract: ExtractSnapshot | null;
@@ -93,6 +97,8 @@ export type SampleOutcome =
         found: Array<{ id: string; kind: string; topics: string[]; text: string; used: boolean }>;
         /** Dấu vết guard khái niệm: khái niệm bị bắt, câu nháp gốc, nguồn đã dùng (chỉ quan sát). */
         guardTrace?: { concept?: { concepts: string[]; draftReply: string; usedIds: string[] } };
+        /** Dấu vết guard theo chủ đề (ADR 018, chỉ khi bật `--guard-facts`). */
+        guardFacts?: GuardFactsTrace;
       };
       /** Chẩn đoán đường fact plan (chỉ khi bật `--fact-slots`). */
       slot?: SlotOutcome;
@@ -165,6 +171,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       ...(context.replyLanguage ? { replyLanguage: context.replyLanguage } : {}),
       ...(context.factSlots ? { factSlots: context.factSlots } : {}),
       ...(context.factSlotsMode ? { factSlotsMode: true } : {}),
+      ...(context.guardFacts ? { guardFacts: true } : {}),
       ...(context.dict ? { dict: context.dict } : {}),
       ...(context.variantCount === undefined ? {} : { variantCount: context.variantCount }),
     };
@@ -219,6 +226,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
       variants: result.variants,
       confidence: result.confidence.confidence,
       moneyViolations: result.guard.violations.length,
+      ...(result.regionMismatch ? { regionMismatch: result.regionMismatch } : {}),
       replyViolations: result.guard.replyViolations.map((violation) => violation.code),
       extract: snapshot,
       searchQuery: result.searchQuery ?? '',
@@ -237,6 +245,7 @@ export async function runSample(sample: EvalSample, context: RunContext): Promis
           used: c.used,
         })),
         ...(result.guardTrace ? { guardTrace: result.guardTrace } : {}),
+        ...(result.guardFacts ? { guardFacts: result.guardFacts } : {}),
       },
       ...(result.factPlan
         ? {

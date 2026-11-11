@@ -4,7 +4,15 @@ import { detectChunkLang } from './lang';
 
 /** Nguồn nhập tay → tài liệu cần cắt đoạn (FAQ, thông tin shop, sản phẩm). Hàm thuần, không I/O. */
 
-export type FaqInput = { id: string; lang: 'vi' | 'en' | 'all'; question: string; answer: string };
+export type FaqInput = {
+  id: string;
+  lang: 'vi' | 'en' | 'all';
+  question: string;
+  answer: string;
+  /** FAQ chắt lọc (M3-2): đoạn thô nguồn + loại; FAQ nhập tay thì thiếu/null. */
+  sourceChunkId?: string | null;
+  kind?: string;
+};
 
 export type ShopProfileInput = {
   lang: 'vi' | 'en' | 'all';

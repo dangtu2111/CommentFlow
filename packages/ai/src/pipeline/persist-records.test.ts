@@ -226,8 +226,18 @@ describe('toGapInputs — một lỗ hổng cho mỗi chủ đề chưa có ngu�
       done({ decision: { ...done().decision, unansweredTopics: ['shipping', 'policy'] } }),
     );
     expect(gaps).toEqual([
-      { topic: 'shipping', sampleQuestion: 'Áo thun giá bao nhiêu, sđt [sđt]', productId: PRODUCT },
-      { topic: 'policy', sampleQuestion: 'Áo thun giá bao nhiêu, sđt [sđt]', productId: PRODUCT },
+      {
+        topic: 'shipping',
+        sampleQuestion: 'Áo thun giá bao nhiêu, sđt [sđt]',
+        productId: PRODUCT,
+        factTopic: null,
+      },
+      {
+        topic: 'policy',
+        sampleQuestion: 'Áo thun giá bao nhiêu, sđt [sđt]',
+        productId: PRODUCT,
+        factTopic: null,
+      },
     ]);
     expect(toGapInputs(done())).toEqual([]);
   });
@@ -237,7 +247,12 @@ describe('toGapInputs — một lỗ hổng cho mỗi chủ đề chưa có ngu�
       done({ candidates: [], decision: { ...done().decision, unansweredTopics: ['other'] } }),
     );
     expect(none).toEqual([
-      { topic: 'other', sampleQuestion: 'Áo thun giá bao nhiêu, sđt [sđt]', productId: null },
+      {
+        topic: 'other',
+        sampleQuestion: 'Áo thun giá bao nhiêu, sđt [sđt]',
+        productId: null,
+        factTopic: null,
+      },
     ]);
   });
 });
@@ -254,7 +269,9 @@ describe('toGapInputs — KB-GAPS-FROM-HANDOFF', () => {
     const gaps = toGapInputs(
       done({ decision: handoff, gapTopics: { plan: [], fallback: ['policy'] } }),
     );
-    expect(gaps).toEqual([{ topic: 'policy', sampleQuestion: Q, productId: PRODUCT }]);
+    expect(gaps).toEqual([
+      { topic: 'policy', sampleQuestion: Q, productId: PRODUCT, factTopic: null },
+    ]);
   });
 
   it('câu dự phòng do code dựng (slotDiagnostics.chosen = fallback) → gap; chọn reply thì không', () => {
@@ -284,6 +301,47 @@ describe('toGapInputs — KB-GAPS-FROM-HANDOFF', () => {
       }),
     );
     expect(gaps.map((g) => g.topic)).toEqual(['policy', 'shipping']);
+  });
+});
+
+describe('toGapInputs — fact_topic (M3-1b)', () => {
+  it('đúng một sự kiện plan chưa biết → ghi mã mịn (warranty), không gộp với chủ đề khác', () => {
+    const gaps = toGapInputs(
+      done({ gapTopics: { plan: ['policy'], fallback: [], planFacts: ['warranty'] } }),
+    );
+    expect(gaps.map((g) => [g.topic, g.factTopic])).toEqual([['policy', 'warranty']]);
+  });
+
+  it('nhiều sự kiện cùng chủ đề (gộp) → null; hai chủ đề khác nhau mỗi gap một mã', () => {
+    const merged = toGapInputs(
+      done({
+        gapTopics: { plan: ['policy'], fallback: [], planFacts: ['warranty', 'payment'] },
+      }),
+    );
+    expect(merged.map((g) => g.factTopic)).toEqual([null]);
+    const split = toGapInputs(
+      done({
+        gapTopics: { plan: ['policy', 'shipping'], fallback: [], planFacts: ['cod', 'ship_fee'] },
+      }),
+    );
+    expect(split.map((g) => [g.topic, g.factTopic])).toEqual([
+      ['policy', 'cod'],
+      ['shipping', 'ship_fee'],
+    ]);
+  });
+
+  it('chủ đề chỉ đến từ câu nháp tự khai (không có mã mịn) → null; câu dự phòng dùng mã sự kiện khách hỏi', () => {
+    const own = toGapInputs(
+      done({ decision: { ...done().decision, unansweredTopics: ['policy'] } }),
+    );
+    expect(own.map((g) => g.factTopic)).toEqual([null]);
+    const fb = toGapInputs(
+      done({
+        slotDiagnostics: { rawTexts: 1, rejected: 1, chosen: 'fallback' },
+        gapTopics: { plan: [], fallback: ['shipping'], fallbackFacts: ['ship_time'] },
+      }),
+    );
+    expect(fb.map((g) => g.factTopic)).toEqual(['ship_time']);
   });
 });
 

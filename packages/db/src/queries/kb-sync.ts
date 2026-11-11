@@ -115,6 +115,35 @@ export async function setDraftChunkTopics(
   }
 }
 
+/**
+ * Ghi nguồn gốc của đoạn FAQ chắt lọc lên đoạn nháp: `metadata.source_chunk_id` (mã đoạn thô NHÁP), `metadata.source_chunk_key` (`chunk_key` của đoạn đó,
+ * tra trong cùng câu UPDATE) và `metadata.distill_kind`. Khi xuất bản, đoạn được chép sang mã MỚI nên tìm kiếm so theo `chunk_key` (bền qua xuất bản), không theo mã.
+ * Mọi lần đồng bộ; chỉ gộp khóa của mình. Không tra được đoạn nguồn (đã xóa) → `source_chunk_key` rỗng (đoạn vẫn được tính là chắt lọc, chỉ không dò trùng).
+ */
+export async function setDraftChunkDistillMeta(
+  tx: Database,
+  workspaceId: string,
+  sourceId: string,
+  marks: ReadonlyArray<{ chunkKey: string; sourceChunkId: string; kind: string }>,
+): Promise<void> {
+  for (const { chunkKey, sourceChunkId, kind } of marks) {
+    await tx.execute(sql`
+      WITH src AS (
+        SELECT chunk_key FROM cf.kb_chunks
+         WHERE workspace_id = ${workspaceId}::uuid AND id = ${sourceChunkId}::uuid)
+      UPDATE cf.kb_chunks AS c
+         SET metadata = c.metadata || jsonb_build_object(
+               'source_chunk_id', ${sourceChunkId}::text,
+               'source_chunk_key', (SELECT chunk_key FROM src),
+               'distill_kind', ${kind}::text)
+       WHERE c.workspace_id = ${workspaceId}::uuid AND c.source_id = ${sourceId}::uuid
+         AND c.version_id IS NULL AND c.is_draft AND c.chunk_key = ${chunkKey}
+         AND (c.metadata ->> 'source_chunk_id' IS DISTINCT FROM ${sourceChunkId}::text
+              OR c.metadata ->> 'source_chunk_key' IS DISTINCT FROM (SELECT chunk_key FROM src)
+              OR c.metadata ->> 'distill_kind' IS DISTINCT FROM ${kind}::text)`);
+  }
+}
+
 export type DraftChunkText = {
   chunkKey: string;
   content: string;

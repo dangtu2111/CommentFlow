@@ -43,8 +43,10 @@ import {
   fillSlots,
   findProvinces,
   inviteUnknownText,
+  mentionsShipNumbers,
   type PlanProduct,
   type PolicyFacts,
+  regionClarifyText,
   requiredFactIds,
   resolvePlace,
   type StockMode,
@@ -169,6 +171,11 @@ export type TryInput = {
    * complaint ép chuyển người và (b) câu dự phòng do code dựng khi bản nháp rỗng/không dùng được — cả khi cờ TẮT. Chỉ khi cờ BẬT, LLM mới viết với `{fact:id}` và các hành vi dựa trên plan khác (handoff/hỏi khu vực/guard chỗ giữ chỗ) mới chạy.
    */
   factSlotsMode?: boolean;
+  /**
+   * BẬT guard theo chủ đề (ADR 018 T2/T4, cờ `cf.ai.guard_facts`, mặc định TẮT = không truyền → hành vi y hệt cũ). T2: guard tiền/khái niệm kiểm trên MỌI đoạn tìm được cùng chủ đề
+   * câu hỏi (không chỉ đoạn bộ soạn khai); T4: nháp rỗng/xin người dù có nguồn → gọi lại 1 lần kèm mã `draft_empty_with_sources`.
+   */
+  guardFacts?: boolean;
 };
 
 export type PipelineConvoInput = {
@@ -294,15 +301,37 @@ export type TryResult =
       /** Chẩn đoán đường fact plan (EVAL): số câu LLM bị guard chỗ giữ chỗ TỪ CHỐI CỨNG / tổng, và câu được chọn. */
       slotDiagnostics?: SlotDiagnostics;
       /** KB-GAPS-FROM-HANDOFF: chủ đề lỗ hổng từ plan (`plan` = sự kiện chưa có, cả cờ tắt) và chủ đề của lượt phải dùng câu dự phòng/chuyển người (`fallback`). */
-      gapTopics?: { plan: KbGapTopic[]; fallback: KbGapTopic[] };
+      gapTopics?: {
+        plan: KbGapTopic[];
+        fallback: KbGapTopic[];
+        /** Mã sự kiện mịn tương ứng (để ghi `kb_gaps.fact_topic`): `planFacts` = sự kiện plan chưa biết, `fallbackFacts` = sự kiện khách hỏi. */
+        planFacts?: FactTopic[];
+        fallbackFacts?: FactTopic[];
+      };
       /** Dấu vết guard CHỈ ĐỂ QUAN SÁT (EVAL/chẩn đoán lỗi oan vs thật): không ảnh hưởng quyết định. */
       guardTrace?: GuardTrace;
+      /** Chẩn đoán guard theo chủ đề (chỉ khi bật `guardFacts`): lần gọi lại T4 và nguồn số T2. */
+      guardFacts?: GuardFactsTrace;
+      /** Khu vực không khớp (luôn tính khi có fact plan, cả cờ TẮT — để EVAL đo "sai khu vực"): chủ đề ship/COD `unknown` vì nơi khách nêu không có dòng ship áp dụng; `numberInReply` = câu cuối vẫn nêu phí/thời gian. */
+      regionMismatch?: { topics: FactTopic[]; numberInReply: boolean };
     };
 
 /**
  * Dấu vết bước guard khái niệm (GUARD-SEMANTIC-SUPPORT): bản nháp gốc bị loại vì khẳng định khái niệm mà nguồn ĐÃ DÙNG không nêu — ghi khái niệm bị bắt, câu gốc và các nguồn đã dùng để sau này
  * kiểm khái niệm đó có nằm ở đoạn nào khác trong `candidates` không (lỗi oan do nguồn khai thiếu). Chỉ quan sát, không đổi hành vi.
  */
+/** Dấu vết guard theo chủ đề (ADR 018), chỉ để quan sát/EVAL. */
+export type GuardFactsTrace = {
+  /** T4: đã gọi LẠI bộ soạn kèm mã lỗi; `recovered` = lần 2 có câu dùng được. */
+  retry?: { code: 'draft_empty_with_sources'; recovered: boolean };
+  /** T1: plan `unknown` vì khu vực không khớp mà nháp nêu phí/thời gian → gọi lại 1 lần kèm `region_mismatch`; vẫn nêu → câu hỏi khu vực do code viết (`clarify`). */
+  region?: { retried: boolean; outcome: 'recovered' | 'clarify' };
+  /** T2: số đoạn cùng chủ đề được THÊM vào nguồn số của guard tiền. */
+  moneySources?: { added: number };
+  /** T2: số/ý bị guard tiền bắt mà CÓ trong đoạn tìm được khác chủ đề (mã `number_not_in_topic`). */
+  numberNotInTopic?: string[];
+};
+
 export type GuardTrace = {
   concept?: { concepts: string[]; draftReply: string; usedIds: string[] };
 };
@@ -480,7 +509,7 @@ function hasUniformVariantPrice(product: PlanProduct): boolean {
   return prices.size === 1 && !prices.has(null);
 }
 
-const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
+export const GAP_TOPIC_OF_FACT: Record<FactTopic, KbGapTopic> = {
   price: 'product_info',
   stock: 'product_info',
   ship_fee: 'shipping',
@@ -710,6 +739,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     (planAll?.requiresHumanReview === true || ordinaryReturnQuestion) &&
     (label === 'advice' || label === 'price') &&
     extract.labels.some((item) => item.label === 'complaint');
+  // Bỏ nhãn phụ complaint CHỈ vì câu đổi trả thường (không phải ca bảo hành đã có `defect_warranty_scope`) → câu trả lời bắt buộc người duyệt, không tự gửi.
+  const waivedForOrdinaryReturn =
+    waiveSecondaryComplaint && ordinaryReturnQuestion && planAll?.requiresHumanReview !== true;
   const decideExtract = waiveSecondaryComplaint
     ? { ...extract, labels: extract.labels.filter((item) => item.label !== 'complaint') }
     : extract;
@@ -740,7 +772,7 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
   // Hàng lỗi trùng phạm vi bảo hành: có câu trả lời từ thẻ bảo hành nhưng BẮT BUỘC người duyệt, không bao giờ tự gửi (kể cả khi sau này bật auto-reply).
-  if (planAll?.requiresHumanReview && decision.action !== 'handoff') {
+  if ((planAll?.requiresHumanReview || waivedForOrdinaryReturn) && decision.action !== 'handoff') {
     decision = { ...decision, needsHuman: true, autoSendPolicy: 'never' };
   }
   // Phí/thời gian/COD phụ thuộc khu vực mà khách chưa nêu → HỎI tỉnh/thành (FR-147), không chuyển hướng. Rủi ro/handoff vẫn thắng.
@@ -817,6 +849,34 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     ...(history ? { history } : {}),
   });
   let draft = await deps.drafter.draft(draftInput(decision));
+  // GUARD-FACTS (ADR 018): chủ đề câu khách hỏi (từ ý hỏi + chủ đề fact plan) và đoạn tìm được ĐỦ ngưỡng cùng chủ đề.
+  const askedTopics = new Set<KbGapTopic>([
+    ...askTopicsOf(extract.asks, label).map(({ topic }) => topic),
+    ...factTopics.map((t) => GAP_TOPIC_OF_FACT[t]),
+  ]);
+  const topicFound = usable.filter((c) => c.topics.some((t) => askedTopics.has(t)));
+  let guardFactsTrace: GuardFactsTrace | undefined;
+  // T4: nháp rỗng/xin người ở hành động `answer` mà có nguồn (sự kiện bắt buộc của plan hoặc đoạn cùng chủ đề) → gọi LẠI bộ soạn đúng 1 lần kèm mã lỗi (≤ 2 lần/lượt, FR-162).
+  // Vẫn rỗng → luồng cũ: câu dự phòng do code dựng từ plan, không có plan → chuyển người (FR-140). Chế độ chỗ giữ chỗ có luồng riêng nên không áp dụng.
+  if (
+    input.guardFacts === true &&
+    !closing &&
+    !slotMode &&
+    decision.action === 'answer' &&
+    (draft.reply.trim() === '' || draft.needs_human) &&
+    ((planAll !== null && requiredFactIds(planAll).length > 0) || topicFound.length > 0)
+  ) {
+    draft = await deps.drafter.draft({
+      ...draftInput(decision),
+      retryCode: 'draft_empty_with_sources',
+    });
+    guardFactsTrace = {
+      retry: {
+        code: 'draft_empty_with_sources',
+        recovered: draft.reply.trim() !== '' && !draft.needs_human,
+      },
+    };
+  }
   // DRAFT-FACT-SLOTS: chọn câu ĐẠT guard chỗ giữ chỗ và dùng đủ sự kiện bắt buộc (reply hoặc biến thể), không có thì câu dự phòng do CODE dựng; code điền giá trị, sinh claims/nguồn,
   // thêm câu mời cho chủ đề chưa có thông tin. Không câu nào dùng được → chuyển người. Không gọi LLM thêm (≤ 2 lần/lượt, FR-162).
   let slotRendered: string[] | null = null;
@@ -906,13 +966,73 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
       };
     }
   }
+  // Khu vực không khớp (ADR 018 T1): khách nêu MỘT tỉnh/thành, shop CÓ dòng ship nhưng không dòng nào áp dụng (và không có dòng toàn quốc) → phí/thời gian/COD `unknown`.
+  const regionMismatchTopics: FactTopic[] =
+    planAll !== null &&
+    planAll.clarify === null &&
+    (input.factSlots?.policy.shipping.length ?? 0) > 0 &&
+    findProvinces(masked).length === 1
+      ? planAll.facts.flatMap((fact) =>
+          fact.status === 'unknown' && ['ship_fee', 'ship_time', 'cod'].includes(fact.kind)
+            ? [fact.kind as FactTopic]
+            : [],
+        )
+      : [];
+  // Câu nêu phí/thời gian cho khu vực không có thẻ → gọi LẠI bộ soạn đúng 1 lần kèm `region_mismatch` (bỏ qua nếu T4 đã dùng lần gọi thứ 2: ≤ 2 lần/lượt, FR-162);
+  // vẫn nêu → câu HỎI khu vực do code viết (không gọi LLM thêm), hành động `clarify` (FR-147).
+  if (
+    input.guardFacts === true &&
+    !closing &&
+    !slotMode &&
+    slotRendered === null &&
+    regionMismatchTopics.length > 0 &&
+    (decision.action === 'answer' || decision.action === 'redirect') &&
+    mentionsShipNumbers(draft.reply)
+  ) {
+    const retried = guardFactsTrace?.retry === undefined;
+    if (retried) {
+      draft = await deps.drafter.draft({
+        ...draftInput(decision),
+        retryCode: 'region_mismatch',
+      });
+    }
+    if (mentionsShipNumbers(draft.reply) || draft.reply.trim() === '') {
+      decision = regionClarifyDecision(decision.askedBefore);
+      const replyLang = lang === 'en' ? 'en' : 'vi';
+      const address = describeAddress(voice, replyLang);
+      const ask = regionClarifyText(
+        replyLang,
+        replyLang === 'en'
+          ? { shop: 'we', customer: 'you' }
+          : { shop: address.shop || 'shop', customer: address.customer },
+      );
+      draft = {
+        reply: ask,
+        lang: replyLang,
+        sources: [],
+        claims: [{ text: ask, source_ids: [], kind: 'question_back' as const }],
+        unanswered_topics: [],
+        needs_human: false,
+        reason: '',
+        variants: [],
+      };
+      guardFactsTrace = { ...guardFactsTrace, region: { retried, outcome: 'clarify' } };
+    } else {
+      guardFactsTrace = { ...guardFactsTrace, region: { retried, outcome: 'recovered' } };
+    }
+  }
   let guardTrace: GuardTrace | undefined;
   const usedBy = (d: DraftResult) => found.filter((c) => new Set(d.sources).has(c.id));
   // GUARD-SEMANTIC-SUPPORT: câu khẳng định COD/ship quốc tế/trả góp/… mà nguồn đã dùng KHÔNG nêu (hoặc nguồn nói ngược lại) → KHÔNG gọi LLM soạn lại
   // (giữ ≤ 2 lần gọi LLM/lượt, FR-162): (1) chọn biến thể khác đã có (FR-161) không chứa ý bị loại; (2) không có → câu chuyển hướng THEO MẪU; (3) không còn ý nào để
   // chuyển hướng → chuyển người (`claim_unsupported`). Không bao giờ để câu bịa đi tiếp (nghiêm trọng như sai giá).
   if (!closing && decision.action !== 'handoff' && slotRendered === null) {
-    const sourceTexts = usedBy(draft).map((c) => c.text);
+    // T2: thêm mọi đoạn đủ ngưỡng cùng chủ đề (bộ soạn khai thiếu nguồn không bị từ chối oan).
+    const conceptSources =
+      input.guardFacts === true
+        ? [...new Map([...usedBy(draft), ...topicFound].map((c) => [c.id, c])).values()]
+        : usedBy(draft);
+    const sourceTexts = conceptSources.map((c) => c.text);
     const supported = (text: string) =>
       checkConceptSupport({ reply: text, sources: sourceTexts }).ok;
     const check = checkConceptSupport({ reply: draft.reply, sources: sourceTexts });
@@ -993,10 +1113,48 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   // Chế độ chỗ giữ chỗ: mọi số trong câu do code điền → kiểm số tiền với CHÍNH các giá trị vừa điền (không phải đoạn văn).
-  const guardResult = checkGuardMoney({
-    reply: draft.reply,
-    sources: slotRendered ?? used.map((c) => c.text),
-  });
+  let guardSources = slotRendered ?? used.map((c) => c.text);
+  let notInTopic: string[] | undefined;
+  if (input.guardFacts === true && slotRendered === null) {
+    // T2: nguồn số = đoạn đã dùng + mọi đoạn đủ ngưỡng cùng chủ đề (chỉ THÊM; không loại đoạn đã dùng: EVAL fs-b2 lần 1 cho thấy loại theo chủ đề
+    // bắt oan câu đúng nguồn, vd. hỏi COD → đoạn phí ship bị coi là khác chủ đề).
+    const added = topicFound.filter((c) => !usedIds.has(c.id));
+    guardSources = [...used, ...added].map((c) => c.text);
+    guardFactsTrace = { ...guardFactsTrace, moneySources: { added: added.length } };
+  }
+  let guardResult = checkGuardMoney({ reply: draft.reply, sources: guardSources });
+  // Nhãn biến thể của sản phẩm ĐÃ nhận diện (đọc từ products/product_variants, không phải đoạn văn) là nguồn hợp lệ: số trong mã biến thể
+  // ("WMT8050PAPER") không phải số tiền do AI bịa. Chỉ tra khi guard báo vi phạm (không thêm truy vấn ở đường thường).
+  if (!guardResult.ok && products.ids.length > 0 && deps.knowledge.lookupPlanProducts) {
+    const owned =
+      planProducts.length > 0
+        ? planProducts
+        : await deps.knowledge.lookupPlanProducts(products.ids);
+    const labelSources = owned.flatMap((product) =>
+      product.variants.map((variant) => variant.label),
+    );
+    if (labelSources.length > 0) {
+      guardResult = checkGuardMoney({
+        reply: draft.reply,
+        sources: [...guardSources, ...labelSources],
+      });
+    }
+  }
+  if (input.guardFacts === true && !guardResult.ok) {
+    // Mã `number_not_in_topic`: số bị bắt có nguyên văn ở đoạn tìm được KHÁC chủ đề (không phải bịa hoàn toàn).
+    const digitsOf = (text: string) => text.replace(/\D/g, '');
+    const elsewhere = found
+      .filter((c) => !guardSources.includes(c.text))
+      .map((c) => digitsOf(c.text));
+    notInTopic = guardResult.violations
+      .map((v) => v.display)
+      .filter((display) => {
+        const digits = digitsOf(display);
+        return digits !== '' && elsewhere.some((text) => text.includes(digits));
+      });
+    if (notInTopic.length > 0)
+      guardFactsTrace = { ...guardFactsTrace, numberNotInTopic: notInTopic };
+  }
   const planSourceIds =
     slotRendered === null || blockPlan === null
       ? []
@@ -1052,10 +1210,11 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     riskReasons: {
       ...turnRisks.reasons,
       legal: factPlan === null ? turnRisks.reasons.legal : legalReasons,
-      ...(planAll?.requiresHumanReview || draftUnusable
+      ...(planAll?.requiresHumanReview || waivedForOrdinaryReturn || draftUnusable
         ? {
             review: [
               ...(planAll?.requiresHumanReview ? ['defect_warranty_scope'] : []),
+              ...(waivedForOrdinaryReturn ? ['secondary_complaint_waived'] : []),
               ...(draftUnusable ? ['fr140_draft_unusable'] : []),
             ],
           }
@@ -1074,9 +1233,20 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     ...(factPlan === null ? {} : { factPlan }),
     ...(slotDiagnostics ? { slotDiagnostics } : {}),
     ...(guardTrace ? { guardTrace } : {}),
+    ...(guardFactsTrace ? { guardFacts: guardFactsTrace } : {}),
+    ...(regionMismatchTopics.length > 0
+      ? {
+          regionMismatch: {
+            topics: regionMismatchTopics,
+            numberInReply: mentionsShipNumbers(draft.reply),
+          },
+        }
+      : {}),
     gapTopics: {
       plan: [...new Set((planAll?.unknownTopics ?? []).map((t) => GAP_TOPIC_OF_FACT[t]))],
       fallback: fallbackGapTopics(factTopics, extract.asks),
+      planFacts: [...new Set(planAll?.unknownTopics ?? [])],
+      fallbackFacts: [...new Set(factTopics)],
     },
     autoSend: decideAutoSendPreview({
       autoSendEnabled: input.autoSendEnabled,

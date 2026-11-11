@@ -1,0 +1,1 @@
+| Q-MONEY-VARIANT-LABELS | Nhãn biến thể (không gồm tên sản phẩm) của sản phẩm đã nhận diện là nguồn hợp lệ cho guard tiền, chỉ tra khi guard báo vi phạm | Mã như WMT8050PAPER chứa số nhưng đọc từ product_variants; tên sản phẩm có thể chứa số khuyến mãi nên không nới | Xóa khối "labelSources" trong run-pipeline.ts |

@@ -35,6 +35,7 @@ function fakeOps(over: Partial<KbSyncOps> = {}) {
     refreshMeta: vi.fn(async () => undefined),
     remove: vi.fn(async () => 0),
     setTopics: vi.fn(async () => undefined),
+    setDistillMeta: vi.fn(async () => undefined),
     listProductNamesToEmbed: vi.fn(async () => []),
     writeProductNameVectors: vi.fn(async () => 0),
     ...over,
@@ -145,6 +146,29 @@ describe('runKbSync — lõi dùng chung worker + EVAL', () => {
     expect(byKind.get('src-faq')).toEqual(['warranty']);
     expect(byKind.get('src-shop')).toEqual(['other']);
     expect(byKind.get('src-product')).toEqual(['product_info']);
+  });
+
+  it('FAQ chắt lọc: ghi source_chunk_id + kind lên đoạn; FAQ nhập tay không ghi', async () => {
+    const base = { lang: 'vi', answer: 'Bảo hành 12 tháng.', tags: [], updatedAt: new Date() };
+    const { ops } = fakeOps({
+      listFaqs: vi.fn(async () => [
+        { ...base, id: 'f1', question: 'Bảo hành bao lâu?', sourceChunkId: 'c1', kind: 'faq' },
+        { ...base, id: 'f2', question: 'Giặt thế nào?', sourceChunkId: 'c2' },
+        { ...base, id: 'f3', question: 'Nhập tay?', sourceChunkId: null, kind: 'faq' },
+      ]) as never,
+    });
+    await runKbSync(tx, { workspaceId: WS }, { ops, resolveEmbedding: async () => mlConfig });
+    const marks = (ops.setDistillMeta as ReturnType<typeof vi.fn>).mock.calls[0]?.[3];
+    expect(marks).toEqual([
+      { chunkKey: 'faq:f1#0', sourceChunkId: 'c1', kind: 'faq' },
+      { chunkKey: 'faq:f2#0', sourceChunkId: 'c2', kind: 'faq' },
+    ]);
+  });
+
+  it('không có FAQ chắt lọc → không gọi setDistillMeta', async () => {
+    const { ops } = fakeOps();
+    await runKbSync(tx, { workspaceId: WS }, { ops, resolveEmbedding: async () => mlConfig });
+    expect(ops.setDistillMeta).not.toHaveBeenCalled();
   });
 
   it('có bộ hàm mặc định đầy đủ (hàm thật của @flow/db)', () => {

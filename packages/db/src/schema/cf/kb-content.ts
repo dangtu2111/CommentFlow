@@ -70,6 +70,14 @@ export const faqItems = cf.table(
     answer: text('answer').notNull(),
     lang: text('lang').notNull(),
     tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+    /** KB-DISTILL (0084): `published` = vào kiến thức khi đồng bộ; `draft` = máy chắt lọc, chờ Owner duyệt (chưa vào tìm kiếm). Mục nhập tay luôn `published`. */
+    status: text('status').notNull().default('published'),
+    /** `faq` (câu hỏi/đáp) hoặc `product_attr` (thuộc tính sản phẩm do máy chắt lọc). */
+    kind: text('kind').notNull().default('faq'),
+    /** Câu trích NGUYÊN VĂN từ đoạn nguồn làm bằng chứng (chỉ mục máy chắt lọc). */
+    evidenceQuote: text('evidence_quote'),
+    /** Đoạn nguồn (kb_chunks.id) lúc chắt lọc; không có khóa ngoại vì đoạn bản nháp bị ghi lại khi đồng bộ. */
+    sourceChunkId: uuid('source_chunk_id'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -77,6 +85,12 @@ export const faqItems = cf.table(
     index('faq_items_workspace_idx').on(t.workspaceId, t.lang),
     check('faq_items_lang_check', sql`${t.lang} in (${inList(KB_CONTENT_LANGS)})`),
     check('faq_items_answer_check', sql`char_length(${t.answer}) between 1 and 8000`),
+    check('faq_items_status_check', sql`${t.status} in ('published', 'draft')`),
+    check('faq_items_kind_check', sql`${t.kind} in ('faq', 'product_attr')`),
+    check(
+      'faq_items_evidence_check',
+      sql`${t.evidenceQuote} is null or char_length(${t.evidenceQuote}) between 1 and 2000`,
+    ),
   ],
 );
 

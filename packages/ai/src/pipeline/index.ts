@@ -27,6 +27,7 @@ export {
 } from './reply-cap';
 export type { PipelineConvoInput } from './run-pipeline';
 export {
+  type GuardFactsTrace,
   type PipelineDeps,
   type PipelineGate,
   type PipelineInput,

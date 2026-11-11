@@ -1,6 +1,8 @@
 import {
   createEmbeddingResolver,
+  createLlmClient,
   createLlmDepsFromEnv,
+  createLlmDistiller,
   createMlReranker,
   resolveEmbeddingConfig,
 } from '@flow/ai';
@@ -16,8 +18,10 @@ import {
 import { createFlags } from '@flow/saas-core';
 import {
   AI_STEP_FLAGS,
+  DISTILL_FLAG,
   FACT_SLOTS_FLAG,
   FLAG_DEFAULTS,
+  GUARD_FACTS_FLAG,
   kbSyncEnqueueOptions,
   PIPELINE_FLAG,
 } from '@flow/shared';
@@ -154,6 +158,8 @@ async function main(): Promise<void> {
         pipelineEnabled: pipelineEnabledFor,
         factSlotsEnabled: (workspaceId: string) =>
           flags.isEnabled(FACT_SLOTS_FLAG, { workspaceId }),
+        guardFactsEnabled: (workspaceId: string) =>
+          flags.isEnabled(GUARD_FACTS_FLAG, { workspaceId }),
         turnLimit: config.pipeline.turnLimit,
         // Cờ DB cf.ai.* theo workspace + cấu hình đủ; tắt → lượt bị bỏ qua (`ai_disabled`).
         llmReady: (workspaceId) => (llm?.ready ? llm.ready(workspaceId) : Promise.resolve(false)),
@@ -235,6 +241,35 @@ async function main(): Promise<void> {
     { batchSize: 1, localConcurrency: 1 },
     createKbPublishHandler({ db, logger }),
   );
+  // KB-DISTILL (M3): chắt lọc sau đồng bộ chỉ chạy khi LLM đã cấu hình (URL + khóa + tên model) VÀ cờ `cf.ai.distill` của workspace bật. Model: `DISTILL_LLM_MODEL`,
+  // chưa đặt thì dùng model bước soạn (`DRAFT_LLM_MODEL`, model thật đã cấu hình — không phải model mặc định/giả). Thiếu cấu hình → bước TẮT, log rõ.
+  const distillModel = (process.env.DISTILL_LLM_MODEL ?? process.env.DRAFT_LLM_MODEL)?.trim();
+  const litellmUrl = process.env.LITELLM_BASE_URL?.trim();
+  const litellmKey = process.env.LITELLM_API_KEY?.trim();
+  const distill =
+    distillModel && litellmUrl && litellmKey
+      ? {
+          enabled: (workspaceId: string) => flags.isEnabled(DISTILL_FLAG, { workspaceId }),
+          distiller: createLlmDistiller({
+            model: distillModel,
+            llm: createLlmClient({
+              db: {
+                withWorkspace: (id: string, fn: Parameters<typeof db.withJob>[1]) =>
+                  db.withJob(id, fn),
+              } as unknown as Parameters<typeof createLlmClient>[0]['db'],
+              baseUrl: litellmUrl,
+              apiKey: litellmKey,
+              logger: { warn: (fields, message) => logger.warn(fields, message) },
+            }),
+          }),
+        }
+      : undefined;
+  if (!distill) {
+    logger.info(
+      {},
+      'kb-distill TẮT: thiếu LITELLM_BASE_URL/LITELLM_API_KEY hoặc DISTILL_LLM_MODEL/DRAFT_LLM_MODEL',
+    );
+  }
   // KB-SYNC-DRAFT: kb-sync — nguồn nhập tay → bản nháp (embedding thật theo model hoạt động ở DB; thiếu → lỗi rõ). Một job một lúc.
   await boss.work(
     KB_SYNC_QUEUE,
@@ -242,6 +277,7 @@ async function main(): Promise<void> {
     createKbSyncHandler({
       db,
       logger,
+      ...(distill ? { distill } : {}),
       resolveEmbedding: async (tx) =>
         (await embeddingResolver.resolve(() => getEmbeddingState(tx))).config,
     }),
