@@ -3287,7 +3287,33 @@
       },
       "inHours": "During working hours",
       "outHours": "Outside working hours",
-      "saveFor": "Save {lang} voice"
+      "saveFor": "Save {lang} voice",
+      "blocks": {
+        "soon": "Coming soon",
+        "persona": {
+          "index": "Block 01",
+          "title": "Persona & address pair",
+          "subtitle": "How the shop refers to itself and addresses customers."
+        },
+        "tone": {
+          "index": "Block 02",
+          "title": "Tone",
+          "subtitle": "Describe the tone; length and emoji will get their own controls.",
+          "length": "Reply length",
+          "short": "Short",
+          "balanced": "Balanced",
+          "detailed": "Detailed",
+          "emoji": "Emoji level",
+          "emojiNone": "None",
+          "emojiSome": "Moderate",
+          "emojiMany": "Many"
+        },
+        "opening": {
+          "index": "Block 03",
+          "title": "Opening & closing lines",
+          "subtitle": "How replies start and end."
+        }
+      }
     }
   },
   "kbPolicyFacts": {
