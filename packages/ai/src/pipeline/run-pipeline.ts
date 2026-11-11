@@ -97,7 +97,11 @@ export type TryCandidate = {
 export type TrySearchContext = { lang: 'vi' | 'en'; productIds: string[] };
 
 /** Cổng kiến thức của ô Thử AI: bản mock (`createDemoKnowledge`) hoặc, sau này, bản nối KB/DB thật. */
-export type TryProductMatch = { ids: string[]; names: string[]; missingAxes: VariantAxis[] };
+export type TryProductMatch = {
+  ids: string[];
+  names: string[];
+  missingAxes: VariantAxis[];
+};
 
 export interface TryKnowledge {
   matchProducts(mentions: readonly string[]): Promise<TryProductMatch>;
@@ -212,7 +216,11 @@ const EMPTY_EXTRACT: ExtractOutcome = extractResultSchema.parse({
 });
 
 /** Ngữ cảnh chuỗi (xem `TryInput.thread`). */
-export type PipelineThread = { clarifyCount: number; repeatCount: number; humanHolding?: boolean };
+export type PipelineThread = {
+  clarifyCount: number;
+  repeatCount: number;
+  humanHolding?: boolean;
+};
 
 /** Phần của `evaluateTurnRisks` mà nơi gọi phải cấp (bình luận + nguồn do pipeline tự có). */
 export type PipelineRiskInputs = Pick<
@@ -357,7 +365,10 @@ function askTopicsOf(
   asks: readonly string[],
   label: CommentLabel,
 ): Array<{ topic: KbGapTopic; isPrice: boolean }> {
-  const found = asks.map((ask) => ({ topic: topicOf(ask), isPrice: classifyAsk(ask) === 'price' }));
+  const found = asks.map((ask) => ({
+    topic: topicOf(ask),
+    isPrice: classifyAsk(ask) === 'price',
+  }));
   if (found.length === 0 && label === 'price') return [{ topic: 'product_info', isPrice: true }];
   return found;
 }
@@ -376,7 +387,10 @@ function slotAskTopics(
     ({ topic }) =>
       topic !== 'shipping' && topic !== 'policy' && !(topic === 'product_info' && productFactAsked),
   );
-  const fromPlan = factTopics.map((t) => ({ topic: GAP_TOPIC_OF_FACT[t], isPrice: t === 'price' }));
+  const fromPlan = factTopics.map((t) => ({
+    topic: GAP_TOPIC_OF_FACT[t],
+    isPrice: t === 'price',
+  }));
   const seen = new Set<string>();
   return [...kept, ...fromPlan].filter(({ topic, isPrice }) => {
     const key = `${topic}|${isPrice}`;
@@ -542,7 +556,13 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   if (deps.gate) {
     const verdict = await deps.gate({ maskedText: masked, lang });
     if (!verdict.allow) {
-      return { status: 'blocked', billed: false, reason: verdict.reason, maskedText: masked, lang };
+      return {
+        status: 'blocked',
+        billed: false,
+        reason: verdict.reason,
+        maskedText: masked,
+        lang,
+      };
     }
   }
   // FR-167: câu CHỐT (chạm trần) → không extract/tìm kiếm (không tốn token, không sự kiện): chỉ soạn câu mời nhắn tin theo mẫu shop.
@@ -577,7 +597,9 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
                 ...(input.convo.parentComment ? { parentComment: input.convo.parentComment } : {}),
                 ...(input.convo.postCaption ? { postCaption: input.convo.postCaption } : {}),
                 ...(input.convo.postProductNames[0]
-                  ? { productName: unsafeMarkMasked(input.convo.postProductNames[0]) }
+                  ? {
+                      productName: unsafeMarkMasked(input.convo.postProductNames[0]),
+                    }
                   : {}),
               }
             : {}),
@@ -717,7 +739,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     (label === 'advice' || label === 'price') &&
     extract.labels.some((item) => item.label === 'complaint');
   const decideExtract = waiveSecondaryComplaint
-    ? { ...extract, labels: extract.labels.filter((item) => item.label !== 'complaint') }
+    ? {
+        ...extract,
+        labels: extract.labels.filter((item) => item.label !== 'complaint'),
+      }
     : extract;
   const decideFor = (strict: boolean): ActionDecision =>
     decideAction({
@@ -739,9 +764,15 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
           ((factPlan === null ? null : planSourced(factPlan, factTopics, topic)) ??
             usable.some((c) => c.topics.includes(topic) && !(isPrice && c.priceUnknown))),
       })),
-      thread: { clarifyCount: thread.clarifyCount, repeatCount: thread.repeatCount },
+      thread: {
+        clarifyCount: thread.clarifyCount,
+        repeatCount: thread.repeatCount,
+      },
       // Văn bản ĐÃ che PII + loại tệp đính kèm cho luật ảnh/video (FR-143).
-      comment: { text: masked, attachmentTypes: [...(input.attachmentTypes ?? [])] },
+      comment: {
+        text: masked,
+        attachmentTypes: [...(input.attachmentTypes ?? [])],
+      },
       risks: { ...turnRisks.risks, legalUnsourced, policyConflict },
     });
   let decision = closing ? replyCapClosingDecision() : decideFor(false);
@@ -810,7 +841,12 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     // Có sự kiện trong fact plan thì bộ soạn viết như `answer` (câu mời cho phần chưa rõ do CODE thêm), tránh lời nhắc "mẫu câu mời" trùng với câu mời của code.
     decision:
       slotFacts !== null && d.action === 'redirect'
-        ? { ...d, action: 'answer' as const, unansweredTopics: [], redirectTemplates: [] }
+        ? {
+            ...d,
+            action: 'answer' as const,
+            unansweredTopics: [],
+            redirectTemplates: [],
+          }
         : d,
     ...(slotFacts !== null && (d.action === 'answer' || d.action === 'redirect')
       ? {
@@ -866,14 +902,23 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
         const missing = required.filter((id) => !used.includes(id));
         if (missing.length > 0) codes.push(`missing_required:${missing.join('+')}`);
         return codes.length > 0
-          ? [{ text, which: index === 0 ? ('reply' as const) : ('variant' as const), codes }]
+          ? [
+              {
+                text,
+                which: index === 0 ? ('reply' as const) : ('variant' as const),
+                codes,
+              },
+            ]
           : [];
       }),
     };
     const filled = base === '' ? null : fillSlots(base, blockPlan, { lang: replyLang });
     if (filled === null || filled.missing.length > 0) {
       decision = handoffDecision('claim_unsupported', decision.askedBefore);
-      slotDiagnostics = { ...(slotDiagnostics as SlotDiagnostics), chosen: 'handoff' };
+      slotDiagnostics = {
+        ...(slotDiagnostics as SlotDiagnostics),
+        chosen: 'handoff',
+      };
       draft = await deps.drafter.draft(draftInput(decision)); // handoff: bộ soạn không gọi LLM
     } else {
       // Tiếng Anh: "we/us" (xưng hô tiếng Việt của voice không áp dụng); xưng hô tùy chỉnh để trống → "shop".
@@ -921,7 +966,10 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
     const sourceTexts = usedBy(draft).map((c) => c.text);
     const supported = (text: string) =>
       checkConceptSupport({ reply: text, sources: sourceTexts }).ok;
-    const check = checkConceptSupport({ reply: draft.reply, sources: sourceTexts });
+    const check = checkConceptSupport({
+      reply: draft.reply,
+      sources: sourceTexts,
+    });
     if (!check.ok) {
       guardTrace = {
         concept: {
@@ -999,10 +1047,28 @@ export async function runPipeline(input: TryInput, deps: TryDeps): Promise<TryRe
   const usedIds = new Set(draft.sources);
   const used = found.filter((c) => usedIds.has(c.id));
   // Chế độ chỗ giữ chỗ: mọi số trong câu do code điền → kiểm số tiền với CHÍNH các giá trị vừa điền (không phải đoạn văn).
-  const guardResult = checkGuardMoney({
+  const guardSources = slotRendered ?? used.map((c) => c.text);
+  let guardResult = checkGuardMoney({
     reply: draft.reply,
-    sources: slotRendered ?? used.map((c) => c.text),
+    sources: guardSources,
   });
+  // Nhãn biến thể/tên của sản phẩm ĐÃ nhận diện (đọc từ products/product_variants, không phải đoạn văn) là nguồn hợp lệ: số trong mã biến thể
+  // ("WMT8050PAPER") không phải số tiền do AI bịa. Chỉ tra khi guard báo vi phạm (không thêm truy vấn ở đường thường).
+  if (!guardResult.ok && products.ids.length > 0 && deps.knowledge.lookupPlanProducts) {
+    const owned =
+      planProducts.length > 0
+        ? planProducts
+        : await deps.knowledge.lookupPlanProducts(products.ids);
+    const labelSources = owned.flatMap((product) =>
+      product.variants.map((variant) => variant.label),
+    );
+    if (labelSources.length > 0) {
+      guardResult = checkGuardMoney({
+        reply: draft.reply,
+        sources: [...guardSources, ...labelSources],
+      });
+    }
+  }
   const planSourceIds =
     slotRendered === null || blockPlan === null
       ? []
@@ -1107,7 +1173,11 @@ export type SlotDiagnostics = {
   chosen: 'reply' | 'variant' | 'fallback' | 'handoff';
   /** Lưới chặn CUỐI (mã {fact:…} còn sót sau bước kiểm/điền) đã kích hoạt — mục tiêu 0. */
   finalNetTriggered?: boolean;
-  rejections?: Array<{ text: string; which: 'reply' | 'variant'; codes: string[] }>;
+  rejections?: Array<{
+    text: string;
+    which: 'reply' | 'variant';
+    codes: string[];
+  }>;
 };
 
 export const runTryPipeline = runPipeline;
