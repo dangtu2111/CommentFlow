@@ -11,6 +11,7 @@ import {
   SelectField,
 } from '../../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../../components/kb/kb-frame';
+import { VoiceBlock, VoiceOffControls } from '../../../../../components/kb/voice-ui';
 import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
@@ -54,26 +55,93 @@ export default async function KbVoicePage({ searchParams }: { searchParams: Sear
               <KbCard key={lang} id={`voice-${lang}`} title={t(`lang.${lang}`)}>
                 <form action={saveBrandVoiceAction} className="space-y-space-md">
                   <input type="hidden" name="lang" value={lang} />
-                  <div className="grid gap-space-md md:grid-cols-3">
+                  <VoiceBlock
+                    index={t('voice.blocks.persona.index')}
+                    title={t('voice.blocks.persona.title')}
+                    subtitle={t('voice.blocks.persona.subtitle')}
+                    icon="badge"
+                  >
+                    <div className="grid gap-space-md md:grid-cols-3">
+                      <SelectField
+                        label={t('voice.shopPronoun')}
+                        name="shopPronoun"
+                        defaultValue={voice?.shopPronoun ?? DEFAULT_PRONOUN[lang]}
+                        options={pronounOptions}
+                      />
+                      <Field
+                        label={t('voice.shopPronounCustom')}
+                        name="shopPronounCustom"
+                        defaultValue={voice?.shopPronounCustom}
+                        maxLength={60}
+                      />
+                      <SelectField
+                        label={t('voice.customerAddress')}
+                        name="customerAddress"
+                        defaultValue={voice?.customerAddress ?? CUSTOMER_ADDRESSES[lang][0]}
+                        options={addressOptions}
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 font-body-md text-body-md text-on-surface">
+                      <input
+                        type="checkbox"
+                        name="addressByName"
+                        defaultChecked={voice?.addressByName ?? false}
+                      />
+                      {t('voice.addressByName')}
+                    </label>
+                  </VoiceBlock>
+                  <VoiceBlock
+                    index={t('voice.blocks.tone.index')}
+                    title={t('voice.blocks.tone.title')}
+                    subtitle={t('voice.blocks.tone.subtitle')}
+                    icon="tune"
+                  >
                     <Field
                       label={t('voice.tone')}
                       name="tone"
                       defaultValue={voice?.tone}
                       maxLength={500}
                     />
-                    <Field
-                      label={t('voice.greeting')}
-                      name="greeting"
-                      defaultValue={voice?.greeting}
-                      maxLength={500}
+                    <VoiceOffControls
+                      title={t('voice.blocks.tone.length')}
+                      options={[
+                        t('voice.blocks.tone.short'),
+                        t('voice.blocks.tone.balanced'),
+                        t('voice.blocks.tone.detailed'),
+                      ]}
+                      note={t('voice.blocks.soon')}
                     />
-                    <Field
-                      label={t('voice.signOff')}
-                      name="signOff"
-                      defaultValue={voice?.signOff}
-                      maxLength={500}
+                    <VoiceOffControls
+                      title={t('voice.blocks.tone.emoji')}
+                      options={[
+                        t('voice.blocks.tone.emojiNone'),
+                        t('voice.blocks.tone.emojiSome'),
+                        t('voice.blocks.tone.emojiMany'),
+                      ]}
+                      note={t('voice.blocks.soon')}
                     />
-                  </div>
+                  </VoiceBlock>
+                  <VoiceBlock
+                    index={t('voice.blocks.opening.index')}
+                    title={t('voice.blocks.opening.title')}
+                    subtitle={t('voice.blocks.opening.subtitle')}
+                    icon="chat_bubble"
+                  >
+                    <div className="grid gap-space-md md:grid-cols-2">
+                      <Field
+                        label={t('voice.greeting')}
+                        name="greeting"
+                        defaultValue={voice?.greeting}
+                        maxLength={500}
+                      />
+                      <Field
+                        label={t('voice.signOff')}
+                        name="signOff"
+                        defaultValue={voice?.signOff}
+                        maxLength={500}
+                      />
+                    </div>
+                  </VoiceBlock>
                   <div className="grid gap-space-md md:grid-cols-2">
                     <Field
                       label={t('voice.doRules')}
@@ -90,34 +158,6 @@ export default async function KbVoicePage({ searchParams }: { searchParams: Sear
                       hint={t('voice.rulesHint')}
                     />
                   </div>
-                  <div className="grid gap-space-md md:grid-cols-3">
-                    <SelectField
-                      label={t('voice.shopPronoun')}
-                      name="shopPronoun"
-                      defaultValue={voice?.shopPronoun ?? DEFAULT_PRONOUN[lang]}
-                      options={pronounOptions}
-                    />
-                    <Field
-                      label={t('voice.shopPronounCustom')}
-                      name="shopPronounCustom"
-                      defaultValue={voice?.shopPronounCustom}
-                      maxLength={60}
-                    />
-                    <SelectField
-                      label={t('voice.customerAddress')}
-                      name="customerAddress"
-                      defaultValue={voice?.customerAddress ?? CUSTOMER_ADDRESSES[lang][0]}
-                      options={addressOptions}
-                    />
-                  </div>
-                  <label className="flex items-center gap-2 font-body-md text-body-md text-on-surface">
-                    <input
-                      type="checkbox"
-                      name="addressByName"
-                      defaultChecked={voice?.addressByName ?? false}
-                    />
-                    {t('voice.addressByName')}
-                  </label>
                   <fieldset className="space-y-space-sm rounded-lg bg-surface-container-low p-space-md">
                     <legend className="px-1 font-title-sm text-title-sm text-on-surface">
                       {t('voice.handoffTitle')}

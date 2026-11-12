@@ -2186,6 +2186,15 @@
       "guard_money": "Contains a price/date/link/phone not in the sources",
       "foreign_price": "Quotes a foreign-currency price — needs staff approval (send-time price check not supported yet)",
       "empty_reply": "No reply drafted"
+    },
+    "ui": {
+      "setup": "Context setup",
+      "platform": "Target platform",
+      "platformValue": "Facebook Comment (public)",
+      "post": "Attached post",
+      "postValue": "Whole shop (no specific post)",
+      "soon": "Platform/post, asker and confidence threshold selection: coming soon",
+      "idle": "Type a sample comment and press Try to see the result here."
     }
   },
   "shell": {
@@ -3249,7 +3258,28 @@
       "answer": "Answer",
       "tags": "Tags",
       "tagsHint": "Separated by commas, for example: shipping, returns.",
-      "newTitle": "Add a question and answer"
+      "newTitle": "Add a question and answer",
+      "stats": {
+        "questions": "questions",
+        "active": "Active (approved)",
+        "drafts": "suggestions to review",
+        "draftsCaption": "Distilled by AI from raw knowledge — click to review"
+      },
+      "toolbar": {
+        "search": "Search questions or answers…",
+        "searchSubmit": "Search",
+        "all": "All",
+        "soon": "Coming soon",
+        "syncWeb": "Sync web",
+        "importFile": "Import Excel/CSV",
+        "aiVariants": "AI-generate variants",
+        "add": "+ Add a new FAQ"
+      },
+      "variants": {
+        "title": "Question variants & slang",
+        "note": "Coming soon"
+      },
+      "noMatch": "No questions match the filter."
     },
     "voice": {
       "title": "Brand voice",
@@ -3287,7 +3317,33 @@
       },
       "inHours": "During working hours",
       "outHours": "Outside working hours",
-      "saveFor": "Save {lang} voice"
+      "saveFor": "Save {lang} voice",
+      "blocks": {
+        "soon": "Coming soon",
+        "persona": {
+          "index": "Block 01",
+          "title": "Persona & address pair",
+          "subtitle": "How the shop refers to itself and addresses customers."
+        },
+        "tone": {
+          "index": "Block 02",
+          "title": "Tone",
+          "subtitle": "Describe the tone; length and emoji will get their own controls.",
+          "length": "Reply length",
+          "short": "Short",
+          "balanced": "Balanced",
+          "detailed": "Detailed",
+          "emoji": "Emoji level",
+          "emojiNone": "None",
+          "emojiSome": "Moderate",
+          "emojiMany": "Many"
+        },
+        "opening": {
+          "index": "Block 03",
+          "title": "Opening & closing lines",
+          "subtitle": "How replies start and end."
+        }
+      }
     },
     "abbreviations": {
       "title": "Abbreviation dictionary",

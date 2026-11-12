@@ -47,18 +47,18 @@ export function ImportWizard() {
   };
 
   return (
-    <div className="stack">
-      <section className="card stack">
-        <p className="muted">
+    <div className="space-y-space-md">
+      <section className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+        <p className="font-body-sm text-body-sm text-on-surface-variant">
           {t('limits', { mb: IMPORT_MAX_BYTES / (1024 * 1024), rows: IMPORT_MAX_ROWS })}
         </p>
-        <label htmlFor="import-file" className="section-title">
+        <label htmlFor="import-file" className="font-title-md text-title-md text-on-surface">
           {t('fileLabel')}
         </label>
         <input
           id="import-file"
           type="file"
-          className="input"
+          className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all"
           accept=".xlsx,.csv"
           disabled={pending}
           onChange={(event) => {
@@ -66,10 +66,10 @@ export function ImportWizard() {
             setResult(null);
           }}
         />
-        <div className="row">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="btn btn-primary"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm shadow-md transition-all disabled:opacity-60"
             disabled={pending || !file}
             onClick={() => run('preview', null)}
           >
@@ -99,8 +99,11 @@ export function ImportWizard() {
       ) : null}
 
       {result?.status === 'committed' ? (
-        <section className="card stack" role="status">
-          <h2 className="section-title">{t('doneTitle')}</h2>
+        <section
+          className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md"
+          role="status"
+        >
+          <h2 className="font-title-md text-title-md text-on-surface">{t('doneTitle')}</h2>
           <p>
             {t('done', {
               created: result.productsCreated,
@@ -110,10 +113,16 @@ export function ImportWizard() {
             })}
           </p>
           {result.skippedRows > 0 ? (
-            <p className="muted">{t('skipped', { count: result.skippedRows })}</p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {t('skipped', { count: result.skippedRows })}
+            </p>
           ) : null}
-          <div className="row">
-            <button type="button" className="btn btn-secondary" onClick={reset}>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm shadow-sm transition-colors"
+              onClick={reset}
+            >
               {t('reset')}
             </button>
           </div>
@@ -137,10 +146,10 @@ function PreviewSection(props: {
 
   return (
     <>
-      <section className="card stack">
-        <h2 className="section-title">{t('mappingTitle')}</h2>
-        <p className="muted">{t('mappingHelp')}</p>
-        <table className="table">
+      <section className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+        <h2 className="font-title-md text-title-md text-on-surface">{t('mappingTitle')}</h2>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">{t('mappingHelp')}</p>
+        <table className="w-full text-left font-body-md text-body-md text-on-surface">
           <thead>
             <tr>
               <th scope="col">{t('columnHeader')}</th>
@@ -154,7 +163,7 @@ function PreviewSection(props: {
                 <td>{headerOf(index)}</td>
                 <td>
                   <select
-                    className="input"
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all"
                     aria-label={headerOf(index)}
                     value={mapping[index] ?? 'ignore'}
                     disabled={pending}
@@ -178,7 +187,7 @@ function PreviewSection(props: {
         {result.sample.length > 0 ? (
           <details>
             <summary>{t('sampleTitle')}</summary>
-            <table className="table">
+            <table className="w-full text-left font-body-md text-body-md text-on-surface">
               <tbody>
                 {result.sample.map((row, rowIndex) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: dòng mẫu chỉ để xem, không đổi thứ tự
@@ -193,10 +202,10 @@ function PreviewSection(props: {
             </table>
           </details>
         ) : null}
-        <div className="row">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm text-title-sm shadow-sm transition-colors"
             disabled={pending}
             onClick={props.onRecheck}
           >
@@ -205,8 +214,8 @@ function PreviewSection(props: {
         </div>
       </section>
 
-      <section className="card stack">
-        <h2 className="section-title">{t('reviewTitle')}</h2>
+      <section className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+        <h2 className="font-title-md text-title-md text-on-surface">{t('reviewTitle')}</h2>
         <p>
           {t('summary', {
             valid: result.validRows,
@@ -216,11 +225,11 @@ function PreviewSection(props: {
           })}
         </p>
         {result.errorCount === 0 ? (
-          <p className="muted">{t('noErrors')}</p>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">{t('noErrors')}</p>
         ) : (
           <div role="alert">
             <p>{t('errorsTitle', { count: result.errorCount, shown: result.errors.length })}</p>
-            <ul className="stack">
+            <ul className="space-y-space-md">
               {result.errors.map((error) => (
                 <li key={`${error.row}-${error.column}-${error.code}`}>
                   <RowErrorText error={error} headerOf={headerOf} />
@@ -231,13 +240,13 @@ function PreviewSection(props: {
         )}
       </section>
 
-      <section className="card stack">
-        <h2 className="section-title">{t('confirmTitle')}</h2>
-        <p className="muted">{t('confirmHelp')}</p>
-        <div className="row">
+      <section className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+        <h2 className="font-title-md text-title-md text-on-surface">{t('confirmTitle')}</h2>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">{t('confirmHelp')}</p>
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="btn btn-primary"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm shadow-md transition-all disabled:opacity-60"
             disabled={pending || result.validRows === 0}
             onClick={props.onConfirm}
           >

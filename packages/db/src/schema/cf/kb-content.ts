@@ -1,5 +1,16 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, jsonb, text, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  index,
+  jsonb,
+  text,
+  timestamp,
+  unique,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { users } from '../core/auth';
 import { createdAt, updatedAt } from '../core/common';
 import { workspaces } from '../core/tenancy';
 import { cf } from './ai-usage';
@@ -30,12 +41,115 @@ export const shopProfiles = cf.table(
     openingHours: text('opening_hours'),
     contact: text('contact'),
     website: text('website'),
+    /** KB-SHOP-V2 (0085): khẩu hiệu, ngành, pháp lý, giờ, kênh liên hệ, chi nhánh (≤ 10). Zod ở `@flow/shared` kiểm từng giá trị (≤ 500 ký tự, không số tiền). */
+    slogan: text('slogan'),
+    industries: text('industries').array().notNull().default(sql`'{}'`),
+    legalName: text('legal_name'),
+    taxId: text('tax_id'),
+    hours: jsonb('hours'),
+    contacts: jsonb('contacts'),
+    branches: jsonb('branches').notNull().default(sql`'[]'::jsonb`),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     unique('shop_profiles_workspace_lang_unique').on(t.workspaceId, t.lang),
     check('shop_profiles_lang_check', sql`${t.lang} in (${inList(KB_CONTENT_LANGS)})`),
+    check(
+      'shop_profiles_slogan_check',
+      sql`${t.slogan} IS NULL OR char_length(${t.slogan}) <= 500`,
+    ),
+    check(
+      'shop_profiles_legal_name_check',
+      sql`${t.legalName} IS NULL OR char_length(${t.legalName}) <= 500`,
+    ),
+    check('shop_profiles_tax_id_check', sql`${t.taxId} IS NULL OR char_length(${t.taxId}) <= 500`),
+    check(
+      'shop_profiles_industries_check',
+      sql`cardinality(${t.industries}) <= 10 AND char_length(array_to_string(${t.industries}, '|')) <= 500`,
+    ),
+    check(
+      'shop_profiles_hours_check',
+      sql`${t.hours} IS NULL OR (jsonb_typeof(${t.hours}) = 'object' AND char_length(${t.hours}::text) <= 2000)`,
+    ),
+    check(
+      'shop_profiles_contacts_check',
+      sql`${t.contacts} IS NULL OR (jsonb_typeof(${t.contacts}) = 'object' AND char_length(${t.contacts}::text) <= 2500)`,
+    ),
+    check(
+      'shop_profiles_branches_check',
+      sql`jsonb_typeof(${t.branches}) = 'array' AND jsonb_array_length(${t.branches}) <= 10 AND char_length(${t.branches}::text) <= 20000`,
+    ),
+  ],
+);
+
+/** Khớp `SHOP_SUGGESTION_FIELDS/SOURCES/STATUSES` ở `@flow/shared`. */
+export const SHOP_SUGGESTION_FIELD_VALUES = [
+  'name',
+  'slogan',
+  'description',
+  'address',
+  'opening_hours',
+  'legal_name',
+  'tax_id',
+  'hotline',
+  'email',
+  'website',
+  'zalo',
+  'shopee',
+  'tiktok',
+] as const;
+export const SHOP_SUGGESTION_SOURCE_VALUES = ['shopify', 'kb_text'] as const;
+export const SHOP_SUGGESTION_STATUS_VALUES = ['draft', 'applied', 'rejected'] as const;
+
+/**
+ * Đề xuất giá trị trường "Thông tin cửa hàng" (KB-SHOP-V2) từ Shopify hoặc đoạn văn thô, chờ Owner Áp dụng/Bỏ. Hệ thống chỉ chèn `draft` (RLS + trigger `shop_profile_suggestions_guard`);
+ * chỉ Owner đặt `applied`/`rejected`. Nguồn `kb_text` bắt buộc có `evidence_quote` nguyên văn. Không số tiền (giá chỉ từ products).
+ */
+export const shopProfileSuggestions = cf.table(
+  'shop_profile_suggestions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: workspaceCol(),
+    lang: text('lang').notNull(),
+    field: text('field').notNull(),
+    value: text('value').notNull(),
+    evidenceQuote: text('evidence_quote'),
+    source: text('source').notNull(),
+    sourceRef: text('source_ref'),
+    status: text('status').notNull().default('draft'),
+    decidedBy: uuid('decided_by').references(() => users.id, { onDelete: 'set null' }),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    check('shop_profile_suggestions_lang_check', sql`${t.lang} in (${inList(KB_CONTENT_LANGS)})`),
+    check(
+      'shop_profile_suggestions_field_check',
+      sql`${t.field} in (${inList(SHOP_SUGGESTION_FIELD_VALUES)})`,
+    ),
+    check('shop_profile_suggestions_value_check', sql`char_length(${t.value}) between 1 and 500`),
+    check(
+      'shop_profile_suggestions_evidence_check',
+      sql`(${t.evidenceQuote} IS NULL OR char_length(${t.evidenceQuote}) between 1 and 500) AND (${t.source} <> 'kb_text' OR ${t.evidenceQuote} IS NOT NULL)`,
+    ),
+    check(
+      'shop_profile_suggestions_source_check',
+      sql`${t.source} in (${inList(SHOP_SUGGESTION_SOURCE_VALUES)})`,
+    ),
+    check(
+      'shop_profile_suggestions_source_ref_check',
+      sql`${t.sourceRef} IS NULL OR char_length(${t.sourceRef}) <= 500`,
+    ),
+    check(
+      'shop_profile_suggestions_status_check',
+      sql`${t.status} in (${inList(SHOP_SUGGESTION_STATUS_VALUES)})`,
+    ),
+    uniqueIndex('shop_profile_suggestions_draft_unique')
+      .on(t.workspaceId, t.lang, t.field, t.source)
+      .where(sql`${t.status} = 'draft'`),
+    index('shop_profile_suggestions_workspace_status_idx').on(t.workspaceId, t.status, t.lang),
   ],
 );
 

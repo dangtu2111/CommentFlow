@@ -2186,6 +2186,15 @@
       "guard_money": "Có số tiền/ngày/link/SĐT không có trong nguồn",
       "foreign_price": "Câu có báo giá ngoại tệ — chờ nhân viên duyệt (kiểm giá lúc gửi chưa hỗ trợ)",
       "empty_reply": "Không có câu trả lời"
+    },
+    "ui": {
+      "setup": "Khung thiết lập ngữ cảnh",
+      "platform": "Nền tảng mục tiêu",
+      "platformValue": "Facebook Comment (bình luận công khai)",
+      "post": "Bài viết đính kèm",
+      "postValue": "Toàn cửa hàng (không gắn bài cụ thể)",
+      "soon": "Chọn nền tảng/bài viết, người hỏi, ngưỡng tin cậy: sắp có",
+      "idle": "Gõ bình luận mẫu rồi bấm Thử để xem kết quả ở đây."
     }
   },
   "shell": {
@@ -3249,7 +3258,28 @@
       "answer": "Câu trả lời",
       "tags": "Thẻ",
       "tagsHint": "Cách nhau bằng dấu phẩy, ví dụ: vận chuyển, đổi trả.",
-      "newTitle": "Thêm câu hỏi – đáp"
+      "newTitle": "Thêm câu hỏi – đáp",
+      "stats": {
+        "questions": "câu hỏi",
+        "active": "Đang kích hoạt (đã duyệt)",
+        "drafts": "gợi ý chờ duyệt",
+        "draftsCaption": "Do AI chắt lọc từ kiến thức thô — bấm để duyệt"
+      },
+      "toolbar": {
+        "search": "Tìm câu hỏi hoặc câu trả lời…",
+        "searchSubmit": "Tìm",
+        "all": "Tất cả",
+        "soon": "Sắp có",
+        "syncWeb": "Đồng bộ Web",
+        "importFile": "Nhập Excel/CSV",
+        "aiVariants": "AI sinh biến thể",
+        "add": "+ Thêm câu hỏi FAQ mới"
+      },
+      "variants": {
+        "title": "Biến thể câu hỏi & teencode",
+        "note": "Sắp có"
+      },
+      "noMatch": "Không có câu hỏi nào khớp bộ lọc."
     },
     "voice": {
       "title": "Giọng văn thương hiệu",
@@ -3287,7 +3317,33 @@
       },
       "inHours": "Trong giờ làm việc",
       "outHours": "Ngoài giờ làm việc",
-      "saveFor": "Lưu giọng văn {lang}"
+      "saveFor": "Lưu giọng văn {lang}",
+      "blocks": {
+        "soon": "Sắp có",
+        "persona": {
+          "index": "Khối 01",
+          "title": "Persona & cặp đại từ xưng hô",
+          "subtitle": "Cách shop tự xưng và gọi khách khi AI trả lời."
+        },
+        "tone": {
+          "index": "Khối 02",
+          "title": "Sắc thái giọng văn",
+          "subtitle": "Mô tả giọng điệu; độ dài và emoji sẽ có điều khiển riêng.",
+          "length": "Độ dài phản hồi",
+          "short": "Ngắn gọn",
+          "balanced": "Cân bằng",
+          "detailed": "Chi tiết",
+          "emoji": "Mức dùng emoji",
+          "emojiNone": "Không dùng",
+          "emojiSome": "Vừa phải",
+          "emojiMany": "Nhiều"
+        },
+        "opening": {
+          "index": "Khối 03",
+          "title": "Lời chào mở đầu & kết thúc",
+          "subtitle": "Cách mở lời và chốt câu trả lời."
+        }
+      }
     },
     "abbreviations": {
       "title": "Từ điển viết tắt",

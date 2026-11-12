@@ -480,6 +480,28 @@ export {
   reciprocalRankFusion,
 } from './search';
 export {
+  SHOP_BRANCHES_MAX,
+  SHOP_CONTACT_KEYS,
+  SHOP_INDUSTRIES_MAX,
+  SHOP_SUGGESTION_FIELDS,
+  SHOP_SUGGESTION_SOURCES,
+  SHOP_SUGGESTION_STATUSES,
+  SHOP_VALUE_MAX,
+  type ShopBranch,
+  type ShopContacts,
+  type ShopHours,
+  type ShopProfileV2,
+  type ShopSuggestionField,
+  type ShopSuggestionInsert,
+  shopBranchesSchema,
+  shopBranchSchema,
+  shopContactsSchema,
+  shopHoursSchema,
+  shopIndustriesSchema,
+  shopProfileV2Schema,
+  shopSuggestionInsertSchema,
+} from './shop-profile';
+export {
   DEFAULT_SHOPIFY_API_VERSION,
   isShopifyApiVersion,
   readShopifyConfig,
