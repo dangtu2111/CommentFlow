@@ -67,6 +67,13 @@ export type FacebookConnectorOptions = {
 
 export type PageSubscription = { subscribed: boolean; fields: string[] };
 
+export type FacebookPostInfo = {
+  message: string | null;
+  permalink: string | null;
+  mediaUrl: string | null;
+  createdTime: Date | null;
+};
+
 export interface FacebookConnector extends PlatformConnector {
   setHidden(channel: ChannelRef, commentId: string, hidden: boolean): Promise<void>;
   fetchReplies(
@@ -80,6 +87,11 @@ export interface FacebookConnector extends PlatformConnector {
     postExternalId: string,
     options?: { since?: Date; totalTimeoutMs?: number },
   ): Promise<NormalizedComment[]>;
+  /**
+   * Nội dung MỘT bài (POST-HYDRATE): `message`, `permalink_url`, `full_picture`, `created_time`. Trường vắng/không hợp lệ → `null`
+   * (bài chỉ có ảnh không có chữ…); liên kết/ảnh chỉ nhận `http(s)`. Chỉ GET.
+   */
+  fetchPost(channel: ChannelRef, postExternalId: string): Promise<FacebookPostInfo>;
   getPageSubscription(channel: ChannelRef): Promise<PageSubscription>;
   subscribePage(channel: ChannelRef, fields?: string[]): Promise<void>;
 }
@@ -214,6 +226,24 @@ const pageSchema = z.object({
 });
 
 const postNodeSchema = z.object({ id: z.string().min(1), updated_time: z.string() });
+
+const postDetailSchema = z.object({
+  message: z.string().optional(),
+  permalink_url: z.string().optional(),
+  full_picture: z.string().optional(),
+  created_time: z.string().optional(),
+});
+
+/** Chỉ nhận địa chỉ http(s) (không `javascript:`/`data:`…); sai → null. */
+function httpUrlOrNull(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'https:' || protocol === 'http:' ? value : null;
+  } catch {
+    return null;
+  }
+}
 
 const successSchema = z.object({ success: z.literal(true) });
 const createdSchema = z.object({ id: z.string().min(1) });
@@ -431,6 +461,23 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
         result.push(...(await this.fetchPostComments(channel, postId, { since })));
       }
       return result;
+    },
+
+    async fetchPost(channel, postExternalId) {
+      const parsed = postDetailSchema.safeParse(
+        await call(channel, 'GET', graphId(postExternalId), {
+          fields: 'message,permalink_url,full_picture,created_time',
+        }),
+      );
+      if (!parsed.success) throw badResponse();
+      const node = parsed.data;
+      const message = node.message === undefined ? '' : cleanText(node.message).trim();
+      return {
+        message: message === '' ? null : message,
+        permalink: httpUrlOrNull(node.permalink_url),
+        mediaUrl: httpUrlOrNull(node.full_picture),
+        createdTime: node.created_time ? parseGraphTime(node.created_time) : null,
+      };
     },
 
     async fetchReplies(channel, parentCommentId, opts = {}) {

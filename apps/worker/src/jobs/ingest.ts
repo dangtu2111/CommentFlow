@@ -37,7 +37,20 @@ const { webhookEvents, channels, posts, comments } = schema;
 /** Bình luận MỚI vừa được chèn (để nơi gọi quyết định xếp job `pipeline` SAU khi giao dịch commit). */
 export type IngestedComment = { id: string; ingestSource: IngestSource };
 
-export async function processIngestEvent(tx: Database, job: IngestJob): Promise<IngestedComment[]> {
+/** Bài vừa được TẠO bởi sự kiện này (chưa có nội dung — để nơi gọi điền sau khi giao dịch commit, xem `post-hydrate.ts`). */
+export type CreatedPost = {
+  workspaceId: string;
+  channelId: string;
+  channelExternalId: string;
+  postId: string;
+  postExternalId: string;
+};
+
+export async function processIngestEvent(
+  tx: Database,
+  job: IngestJob,
+  onNewPost?: (post: CreatedPost) => void,
+): Promise<IngestedComment[]> {
   const newComments: IngestedComment[] = [];
   const [event] = await tx
     .select({ id: webhookEvents.id, status: webhookEvents.status, payload: webhookEvents.payload })
@@ -81,6 +94,15 @@ export async function processIngestEvent(tx: Database, job: IngestJob): Promise<
         })
         .onConflictDoNothing()
         .returning({ id: posts.id });
+      if (created) {
+        onNewPost?.({
+          workspaceId: job.workspaceId,
+          channelId: channel.id,
+          channelExternalId: parsed.channelExternalId,
+          postId: created.id,
+          postExternalId: c.postExternalId,
+        });
+      }
       const postId =
         created?.id ??
         (
@@ -258,19 +280,23 @@ export function createIngestHandler(options: {
   db: FlowDb;
   logger: Pick<Logger, 'error'>;
   pipeline?: IngestPipelineHook;
+  /** Điền nội dung bài mới từ nền tảng (POST-HYDRATE): gọi SAU khi giao dịch commit; hook phải tự bắt lỗi, lỗi nếu có cũng bị bỏ qua ở đây. */
+  hydrate?: (post: CreatedPost) => Promise<void>;
 }): BatchHandler {
-  const { db, logger, pipeline } = options;
+  const { db, logger, pipeline, hydrate } = options;
   let created: IngestedComment[] = [];
+  let newPosts: CreatedPost[] = [];
   const inner = workspaceJob({
     db,
     schema: ingestJobSchema,
     handler: async ({ tx, payload }) => {
-      created = await processIngestEvent(tx, payload);
+      created = await processIngestEvent(tx, payload, (post) => newPosts.push(post));
     },
   });
   return async (jobs) => {
     for (const job of jobs) {
       created = [];
+      newPosts = [];
       try {
         await inner([job]);
       } catch (error) {
@@ -280,6 +306,10 @@ export function createIngestHandler(options: {
           await markFailed(db, parsed.data, error);
         }
         throw error;
+      }
+      // Điền nội dung bài mới (best-effort, sau commit): lỗi không làm hỏng ingest — bài vẫn hiện với mã ngoài như trước.
+      if (hydrate) {
+        for (const post of newPosts) await hydrate(post).catch(() => undefined);
       }
       // MỘT nơi quyết định xếp job: ở đây (và job quét, cùng `shouldAutoRunPipeline`). Xếp lỗi KHÔNG làm hỏng ingest: bình luận đã
       // lưu ở `new` và job quét sẽ nhặt lại.

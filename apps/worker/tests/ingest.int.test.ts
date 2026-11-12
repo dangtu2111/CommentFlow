@@ -111,6 +111,44 @@ const postOf = async (channelId: string) =>
     )
   ).rows;
 
+describe('POST-HYDRATE — gọi hook điền nội dung bài', () => {
+  it('chỉ cho bài MỚI tạo (một lần), sau khi lưu xong; bình luận thứ hai cùng bài và lỗi của hook không làm hỏng ingest', async () => {
+    const { pageId, channelId } = await seedPage();
+    const targets: Array<Record<string, unknown>> = [];
+    const hydrate = async (target: Record<string, unknown>) => {
+      targets.push(target);
+      throw new Error('hook hỏng không được làm hỏng ingest');
+    };
+    const run = createIngestHandler({ db, logger: quiet, hydrate: hydrate as never });
+
+    const first = await record(pageId, change(pageId));
+    await run(job(ws, first));
+    expect(targets).toHaveLength(1);
+    const post = (await postOf(channelId))[0];
+    expect(targets[0]).toMatchObject({
+      workspaceId: ws,
+      channelId,
+      channelExternalId: pageId,
+      postExternalId: post?.external_id,
+    });
+    expect(typeof targets[0]?.postId).toBe('string');
+    expect(await commentsOf(channelId)).toHaveLength(1); // bình luận đã lưu dù hook ném
+
+    // Bình luận thứ hai cùng bài → bài đã có → KHÔNG gọi hook nữa.
+    const second = await record(pageId, change(pageId));
+    await run(job(ws, second));
+    expect(targets).toHaveLength(1);
+    expect(await commentsOf(channelId)).toHaveLength(2);
+    expect((await eventRow(second))?.status).toBe('done');
+  });
+
+  it('không có hook → ingest như cũ', async () => {
+    const { pageId, channelId } = await seedPage();
+    await handler()(job(ws, await record(pageId, change(pageId))));
+    expect(await commentsOf(channelId)).toHaveLength(1);
+  });
+});
+
 describe('FR-021 job ingest — bình luận mới', () => {
   it('tạo bài (nếu chưa có) + bình luận trạng thái new, tăng đếm đúng một lần, sự kiện done', async () => {
     const { pageId, channelId } = await seedPage();
