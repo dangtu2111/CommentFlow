@@ -3203,7 +3203,13 @@
       "branches": {
         "title": "Chi nhánh",
         "empty": "Chưa có chi nhánh nào.",
-        "add": "+ Thêm chi nhánh mới"
+        "add": "+ Thêm chi nhánh mới",
+        "name": "Tên chi nhánh",
+        "address": "Địa chỉ",
+        "hours": "Giờ mở cửa (tùy chọn)",
+        "note": "Ghi chú (tùy chọn)",
+        "main": "Chi nhánh chính",
+        "limit": "Tối đa 10 chi nhánh; để trống cả tên và địa chỉ thì dòng đó bị bỏ qua. Không nhập giá tiền."
       },
       "maps": "Đồng bộ Google Maps",
       "hours": {
@@ -3211,7 +3217,18 @@
         "subtitle": "Giờ mở cửa và lịch hỗ trợ khách",
         "support": "Giờ trực phản hồi online",
         "night": "AI trực ca đêm",
-        "nightNote": "Chưa hỗ trợ: AI không tự trả lời ngoài giờ."
+        "nightNote": "Chưa hỗ trợ: AI không tự trả lời ngoài giờ.",
+        "days": "Ngày mở cửa",
+        "from": "Từ",
+        "to": "Đến",
+        "openHint": "Chọn ngày và giờ mở – đóng; để trống nếu chỉ dùng ô \"Giờ mở cửa\" dạng chữ ở trên.",
+        "day1": "T2",
+        "day2": "T3",
+        "day3": "T4",
+        "day4": "T5",
+        "day5": "T6",
+        "day6": "T7",
+        "day7": "CN"
       },
       "channels": {
         "title": "Kênh liên hệ & bán hàng",
@@ -3234,7 +3251,8 @@
       "aiMechanism": {
         "title": "Cách AI dùng đoạn này:",
         "body": "Khi khách hỏi chung về shop (\"shop bán gì?\", \"shop ở đâu?\"), AI trả lời dựa trên đoạn giới thiệu này. Không nhập giá hay tồn kho."
-      }
+      },
+      "industriesHint": "Các ngành cách nhau bằng dấu phẩy (tối đa 10)."
     },
     "policies": {
       "title": "Chính sách",

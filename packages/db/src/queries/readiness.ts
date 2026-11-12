@@ -18,6 +18,10 @@ export type ReadinessSourceData = {
     contact: string | null;
     openingHours: string | null;
     address: string | null;
+    /** KB-SHOP-V2: chỉ cờ có/không (không trả giá trị). */
+    hasStructuredHours: boolean;
+    hasContactChannel: boolean;
+    hasBranchAddress: boolean;
   }>;
   policies: Array<{
     kind: 'shipping' | 'return' | 'warranty' | 'payment' | 'other';
@@ -67,8 +71,14 @@ export async function loadReadinessSource(
       contact: string | null;
       opening_hours: string | null;
       address: string | null;
+      has_structured_hours: boolean;
+      has_contact_channel: boolean;
+      has_branch_address: boolean;
     }>(sql`
-      SELECT lang, contact, opening_hours, address
+      SELECT lang, contact, opening_hours, address,
+             (hours -> 'open') IS NOT NULL AS has_structured_hours,
+             EXISTS (SELECT 1 FROM jsonb_each_text(coalesce(contacts, '{}'::jsonb)) c WHERE btrim(c.value) <> '') AS has_contact_channel,
+             EXISTS (SELECT 1 FROM jsonb_array_elements(branches) b WHERE btrim(coalesce(b ->> 'address', '')) <> '') AS has_branch_address
         FROM cf.shop_profiles WHERE workspace_id = ${ws}`),
     tx.execute<{
       kind: ReadinessSourceData['policies'][number]['kind'];
@@ -96,6 +106,9 @@ export async function loadReadinessSource(
       contact: r.contact,
       openingHours: r.opening_hours,
       address: r.address,
+      hasStructuredHours: r.has_structured_hours,
+      hasContactChannel: r.has_contact_channel,
+      hasBranchAddress: r.has_branch_address,
     })),
     policies: policies.rows,
     faqs: faqs.rows,

@@ -1,10 +1,11 @@
+import type { ShopBranch, ShopContacts, ShopHours } from '@flow/shared';
 import { type ReactNode, useId } from 'react';
 import { Icon, type IconName } from '../ui/icon';
 
 /**
  * Trang "Thông tin cửa hàng" (KB-SHOP-V2): các khối dựng bằng Tailwind, class chép từ `design/stitch/kb-shop.html` (ADR 013), tự co ở 390 px.
- * Chỉ dữ liệu 6 cột hiện có (tên, mô tả, địa chỉ, giờ mở cửa, liên hệ, website) là ô nhập thật. Khối chưa có nền tảng (khẩu hiệu, ngành, chi nhánh, giờ trực,
- * Zalo/Shopee/TikTok, pháp lý, ngân hàng/VietQR, AI trực ca đêm, Google Maps, logo) là ô/nút TẮT kèm chú thích — không số mẫu, không logic mới.
+ * Ô nhập thật: tên, mô tả, địa chỉ, giờ mở cửa, liên hệ, website (6 cột cũ) và các trường KB-SHOP-V2 (khẩu hiệu, ngành, chi nhánh, giờ mở cửa/trực có cấu trúc,
+ * Zalo/Shopee/TikTok, pháp lý). Khối chưa có nền tảng (ngân hàng/VietQR, AI trực ca đêm, Google Maps, logo) là ô/nút TẮT kèm chú thích — không số mẫu.
  */
 type Translate = (key: string) => string;
 
@@ -152,6 +153,124 @@ function OffField({ label, hint, icon }: { label: string; hint?: string; icon?: 
   );
 }
 
+const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+const BRANCH_ROWS_MAX = 10;
+const BRANCH_BLANK_ROWS = 2;
+
+/** Ô giờ HH:MM (`<input type="time">` gửi đúng định dạng "HH:MM"). */
+function TimeField({
+  label,
+  name,
+  defaultValue,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+}) {
+  const id = useId();
+  return (
+    <div>
+      <label htmlFor={id} className={LABEL}>
+        {label}
+      </label>
+      <input id={id} type="time" name={name} defaultValue={defaultValue ?? ''} className={INPUT} />
+    </div>
+  );
+}
+
+/** Ngày trong tuần T2–CN: danh sách chọn, lưu thành mảng số 1–7 (q-kb-shop-v2). */
+function DaysField({
+  label,
+  selected,
+  t,
+}: {
+  label: string;
+  selected: readonly number[];
+  t: Translate;
+}) {
+  return (
+    <fieldset>
+      <legend className={LABEL}>{label}</legend>
+      <div className="flex flex-wrap gap-2">
+        {WEEKDAYS.map((day) => (
+          <label
+            key={day}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest font-title-sm text-title-sm text-on-surface"
+          >
+            <input
+              type="checkbox"
+              name="openDays"
+              value={day}
+              defaultChecked={selected.includes(day)}
+            />
+            {t(`shop.hours.day${day}`)}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+/** Chi nhánh đã lưu + vài dòng trống (tối đa 10); dòng trống cả tên lẫn địa chỉ bị bỏ khi lưu. */
+function BranchRows({
+  branches,
+  t,
+  idPrefix,
+}: {
+  branches: readonly ShopBranch[];
+  t: Translate;
+  idPrefix: string;
+}) {
+  const rows = Math.min(BRANCH_ROWS_MAX, branches.length + BRANCH_BLANK_ROWS);
+  const mainIndex = branches.findIndex((branch) => branch.is_main);
+  return (
+    <div className="space-y-space-md">
+      {Array.from({ length: rows }, (_, i) => {
+        const branch = branches[i];
+        return (
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: ô cố định theo vị trí, tên trường là `branchName.N`
+            key={`${idPrefix}-branch-${i}`}
+            className="p-space-lg rounded-xl bg-surface-container-low space-y-space-sm"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
+              <RealField
+                label={t('shop.branches.name')}
+                name={`branchName.${i}`}
+                defaultValue={branch?.name}
+                maxLength={200}
+              />
+              <RealField
+                label={t('shop.branches.address')}
+                name={`branchAddress.${i}`}
+                defaultValue={branch?.address}
+                maxLength={500}
+              />
+              <RealField
+                label={t('shop.branches.hours')}
+                name={`branchHours.${i}`}
+                defaultValue={branch?.hours}
+                maxLength={500}
+              />
+              <RealField
+                label={t('shop.branches.note')}
+                name={`branchNote.${i}`}
+                defaultValue={branch?.note}
+                maxLength={500}
+              />
+            </div>
+            <label className="inline-flex items-center gap-2 font-body-md text-body-md text-on-surface">
+              <input type="radio" name="branchMain" value={i} defaultChecked={mainIndex === i} />
+              {t('shop.branches.main')}
+            </label>
+          </div>
+        );
+      })}
+      <p className={HINT}>{t('shop.branches.limit')}</p>
+    </div>
+  );
+}
+
 function OffButton({ children, note }: { children: ReactNode; note: string }) {
   return (
     <div>
@@ -206,6 +325,13 @@ export function ShopSections({
     address: string | null;
     openingHours: string | null;
     contact: string | null;
+    slogan: string | null;
+    industries: readonly string[];
+    legalName: string | null;
+    taxId: string | null;
+    hours: ShopHours | null;
+    contacts: ShopContacts | null;
+    branches: readonly ShopBranch[];
   } | null;
   t: Translate;
   idPrefix: string;
@@ -230,13 +356,19 @@ export function ShopSections({
               required
               maxLength={200}
             />
-            <OffField label={t('shop.slogan')} hint={t('shop.soonHint')} />
-            <div>
-              <span className={LABEL}>{t('shop.industries')}</span>
-              <div className="flex flex-wrap items-center gap-2">
-                <OffButton note={t('shop.soonHint')}>{t('shop.industriesAdd')}</OffButton>
-              </div>
-            </div>
+            <RealField
+              label={t('shop.slogan')}
+              name="slogan"
+              defaultValue={profile?.slogan}
+              maxLength={500}
+            />
+            <RealField
+              label={t('shop.industries')}
+              name="industries"
+              defaultValue={profile?.industries.join(', ')}
+              hint={t('shop.industriesHint')}
+              maxLength={500}
+            />
             <div className="p-space-md bg-surface-container-low rounded-xl flex items-center gap-space-md">
               <div className="min-w-0">
                 <div className="font-title-sm text-title-sm text-on-surface">{t('shop.logo')}</div>
@@ -287,16 +419,16 @@ export function ShopSections({
               maxLength={500}
             />
           </div>
-          <div className="p-space-lg rounded-xl bg-surface-container-low">
-            <h3 className="font-title-md text-title-md text-on-surface">
-              {t('shop.branches.title')}
-            </h3>
+          <h3 className="font-title-md text-title-md text-on-surface">
+            {t('shop.branches.title')}
+          </h3>
+          {profile && profile.branches.length > 0 ? null : (
             <p className="font-body-sm text-body-sm text-on-surface-variant">
               {t('shop.branches.empty')}
             </p>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-space-md pt-2">
-            <OffButton note={t('shop.soonHint')}>{t('shop.branches.add')}</OffButton>
+          )}
+          <BranchRows branches={profile?.branches ?? []} t={t} idPrefix={idPrefix} />
+          <div className="pt-2">
             <OffButton note={t('shop.soonHint')}>{t('shop.maps')}</OffButton>
           </div>
         </div>
@@ -323,8 +455,40 @@ export function ShopSections({
                   maxLength={500}
                 />
               </div>
-              <div className="p-space-md bg-surface-container-low rounded-xl">
-                <OffField label={t('shop.hours.support')} hint={t('shop.soonHint')} />
+              <div className="p-space-md bg-surface-container-low rounded-xl space-y-space-sm">
+                <DaysField
+                  label={t('shop.hours.days')}
+                  selected={profile?.hours?.open?.days ?? []}
+                  t={t}
+                />
+                <div className="grid grid-cols-2 gap-space-sm">
+                  <TimeField
+                    label={t('shop.hours.from')}
+                    name="openFrom"
+                    defaultValue={profile?.hours?.open?.from}
+                  />
+                  <TimeField
+                    label={t('shop.hours.to')}
+                    name="openTo"
+                    defaultValue={profile?.hours?.open?.to}
+                  />
+                </div>
+                <p className={HINT}>{t('shop.hours.openHint')}</p>
+              </div>
+              <div className="p-space-md bg-surface-container-low rounded-xl space-y-space-sm">
+                <span className={LABEL}>{t('shop.hours.support')}</span>
+                <div className="grid grid-cols-2 gap-space-sm">
+                  <TimeField
+                    label={t('shop.hours.from')}
+                    name="supportFrom"
+                    defaultValue={profile?.hours?.support?.from}
+                  />
+                  <TimeField
+                    label={t('shop.hours.to')}
+                    name="supportTo"
+                    defaultValue={profile?.hours?.support?.to}
+                  />
+                </div>
               </div>
               <div className="p-space-md bg-secondary-fixed text-on-secondary-fixed rounded-xl space-y-space-sm">
                 <OffButton note={t('shop.hours.nightNote')}>{t('shop.hours.night')}</OffButton>
@@ -353,7 +517,13 @@ export function ShopSections({
                 maxLength={200}
                 icon="call"
               />
-              <OffField label={t('shop.channels.zalo')} hint={t('shop.soonHint')} icon="chat" />
+              <RealField
+                label={t('shop.channels.zalo')}
+                name="zalo"
+                defaultValue={profile?.contacts?.zalo}
+                maxLength={500}
+                icon="chat"
+              />
               <RealField
                 label={t('shop.website')}
                 name="website"
@@ -363,8 +533,18 @@ export function ShopSections({
                 icon="language"
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm pt-1">
-                <OffField label={t('shop.channels.shopee')} />
-                <OffField label={t('shop.channels.tiktok')} />
+                <RealField
+                  label={t('shop.channels.shopee')}
+                  name="shopee"
+                  defaultValue={profile?.contacts?.shopee}
+                  maxLength={500}
+                />
+                <RealField
+                  label={t('shop.channels.tiktok')}
+                  name="tiktok"
+                  defaultValue={profile?.contacts?.tiktok}
+                  maxLength={500}
+                />
               </div>
             </div>
           </div>
@@ -377,16 +557,21 @@ export function ShopSections({
           icon="corporate_fare"
           title={t('shop.legal.title')}
           subtitle={t('shop.legal.subtitle')}
-          right={
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
-              {t('shop.soon')}
-            </span>
-          }
         />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
           <div className="lg:col-span-5 space-y-space-md">
-            <OffField label={t('shop.legal.name')} hint={t('shop.soonHint')} />
-            <OffField label={t('shop.legal.taxId')} hint={t('shop.soonHint')} />
+            <RealField
+              label={t('shop.legal.name')}
+              name="legalName"
+              defaultValue={profile?.legalName}
+              maxLength={500}
+            />
+            <RealField
+              label={t('shop.legal.taxId')}
+              name="taxId"
+              defaultValue={profile?.taxId}
+              maxLength={500}
+            />
           </div>
           <div className="lg:col-span-7 bg-surface-container-low p-space-lg rounded-xl space-y-space-md">
             <span className="font-title-sm text-title-sm text-on-surface flex items-center gap-1.5">

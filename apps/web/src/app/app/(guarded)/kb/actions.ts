@@ -9,7 +9,12 @@ import {
 } from '@flow/db/runtime';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { formToBrandVoice, formToFaq, formToShopProfile } from '../../../../lib/kb-content-form';
+import {
+  formToBrandVoice,
+  formToFaq,
+  formToShopProfile,
+  formToShopProfileV2,
+} from '../../../../lib/kb-content-form';
 import { actionAllowed } from '../../../../server/action-guard';
 import { getDb } from '../../../../server/db';
 import { requestKbSync } from '../../../../server/kb-sync-request';
@@ -66,10 +71,11 @@ async function write(
 export async function saveShopProfileAction(data: FormData): Promise<never> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
   const parsed = formToShopProfile(data);
-  if (!parsed.ok) redirect(`${SHOP}?n=invalid`);
+  const parsedV2 = formToShopProfileV2(data);
+  if (!parsed.ok || !parsedV2.ok) redirect(`${SHOP}?n=invalid`);
   const session = { workspaceId: workspace.id, userId: user.id };
   return write(SHOP, session, async (tx) => {
-    await upsertShopProfile(tx, session.workspaceId, parsed.input);
+    await upsertShopProfile(tx, session.workspaceId, parsed.input, parsedV2.input);
     return true;
   });
 }

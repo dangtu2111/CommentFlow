@@ -1,8 +1,15 @@
-import type {
-  BrandVoiceInput,
-  FaqItemInput,
-  PolicyItemInput,
-  ShopProfileInput,
+import {
+  type BrandVoiceInput,
+  type FaqItemInput,
+  type PolicyItemInput,
+  type ShopBranch,
+  type ShopContacts,
+  type ShopHours,
+  type ShopProfileInput,
+  type ShopProfileV2,
+  shopBranchesSchema,
+  shopContactsSchema,
+  shopHoursSchema,
 } from '@flow/shared';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../client';
@@ -16,6 +23,7 @@ export async function upsertShopProfile(
   tx: Database,
   workspaceId: string,
   input: ShopProfileInput,
+  v2?: ShopProfileV2,
 ): Promise<void> {
   await tx.execute(sql`
     INSERT INTO cf.shop_profiles (workspace_id, lang, name, description, address, opening_hours, contact, website)
@@ -25,6 +33,16 @@ export async function upsertShopProfile(
       name = EXCLUDED.name, description = EXCLUDED.description, address = EXCLUDED.address,
       opening_hours = EXCLUDED.opening_hours, contact = EXCLUDED.contact, website = EXCLUDED.website,
       updated_at = now()`);
+  // Trường mới (KB-SHOP-V2): chỉ ghi khi form gửi kèm; đường cũ (không `v2`) giữ nguyên giá trị đang có.
+  if (!v2) return;
+  await tx.execute(sql`
+    UPDATE cf.shop_profiles SET
+      slogan = ${v2.slogan}, industries = ${textArray(v2.industries)},
+      legal_name = ${v2.legalName}, tax_id = ${v2.taxId},
+      hours = ${v2.hours ? JSON.stringify(v2.hours) : null}::jsonb,
+      contacts = ${v2.contacts ? JSON.stringify(v2.contacts) : null}::jsonb,
+      branches = ${JSON.stringify(v2.branches)}::jsonb
+    WHERE workspace_id = ${workspaceId}::uuid AND lang = ${input.lang}`);
 }
 
 export async function upsertBrandVoice(
@@ -161,6 +179,13 @@ export type KbShopProfileRow = {
   openingHours: string | null;
   contact: string | null;
   website: string | null;
+  slogan: string | null;
+  industries: string[];
+  legalName: string | null;
+  taxId: string | null;
+  hours: ShopHours | null;
+  contacts: ShopContacts | null;
+  branches: ShopBranch[];
 };
 
 export type KbBrandVoiceRow = {
@@ -228,6 +253,17 @@ export async function listPolicyItems(tx: Database, workspaceId: string): Promis
   }));
 }
 
+/** JSON trong DB đã được CHECK hình dạng; vẫn qua Zod khi đọc — hỏng thì bỏ qua trường đó (không làm sập trang). */
+function readJson<T>(
+  schema: { safeParse: (v: unknown) => { success: boolean; data?: T } },
+  value: unknown,
+  fallback: T,
+): T {
+  if (value === null || value === undefined) return fallback;
+  const r = schema.safeParse(value);
+  return r.success ? (r.data as T) : fallback;
+}
+
 export async function listShopProfiles(
   tx: Database,
   workspaceId: string,
@@ -240,8 +276,17 @@ export async function listShopProfiles(
     opening_hours: string | null;
     contact: string | null;
     website: string | null;
+    slogan: string | null;
+    industries: string[];
+    legal_name: string | null;
+    tax_id: string | null;
+    hours: unknown;
+    contacts: unknown;
+    branches: unknown;
   }>(sql`
-    SELECT lang, name, description, address, opening_hours, contact, website FROM cf.shop_profiles
+    SELECT lang, name, description, address, opening_hours, contact, website,
+           slogan, industries, legal_name, tax_id, hours, contacts, branches
+      FROM cf.shop_profiles
      WHERE workspace_id = ${workspaceId}::uuid ORDER BY lang`);
   return r.rows.map((row) => ({
     lang: row.lang,
@@ -251,6 +296,13 @@ export async function listShopProfiles(
     openingHours: row.opening_hours,
     contact: row.contact,
     website: row.website,
+    slogan: row.slogan,
+    industries: row.industries ?? [],
+    legalName: row.legal_name,
+    taxId: row.tax_id,
+    hours: readJson<ShopHours | null>(shopHoursSchema, row.hours, null),
+    contacts: readJson<ShopContacts | null>(shopContactsSchema, row.contacts, null),
+    branches: readJson<ShopBranch[]>(shopBranchesSchema, row.branches, []),
   }));
 }
 

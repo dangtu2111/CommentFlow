@@ -81,6 +81,19 @@ describe('FR-146 độ sẵn sàng của AI', () => {
     expect(only({ address: 'HN' })).toEqual(['contact_hours']);
   });
 
+  it('trường mới của thông tin shop (giờ có cấu trúc, kênh Zalo/Shopee/TikTok, địa chỉ chi nhánh) cũng tính', () => {
+    const only = (patch: object) =>
+      computeReadiness({ ...FULL, shopProfiles: [{ lang: 'vi', ...patch }] });
+    expect(only({ hasStructuredHours: true }).missingRequired).toEqual([]);
+    expect(only({ hasContactChannel: true }).missingRequired).toEqual([]);
+    expect(only({ hasBranchAddress: true }).missingRequired).toEqual(['contact_hours']);
+    const topics = (patch: object) => only(patch).missingTopics;
+    expect(topics({ hasStructuredHours: true })).not.toContain('hours');
+    expect(topics({ hasContactChannel: true })).not.toContain('contact');
+    expect(topics({ hasBranchAddress: true })).not.toContain('address');
+    expect(topics({})).toEqual(expect.arrayContaining(['hours', 'contact', 'address']));
+  });
+
   it('sản phẩm chưa có giá → thiếu mục sản phẩm có giá và câu hỏi giá không trả lời được', () => {
     const r = computeReadiness({ ...FULL, products: { ...FULL.products, withPrice: 0 } });
     expect(r.missingRequired).toEqual(['product_price']);
