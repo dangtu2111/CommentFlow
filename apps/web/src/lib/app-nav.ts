@@ -29,6 +29,7 @@ export type NavItemKey =
   | 'kbVoice'
   | 'kbDictionary'
   | 'kbCatalog'
+  | 'kbRules'
   | 'spamRules'
   | 'channels'
   | 'members'
@@ -60,6 +61,7 @@ const ENTRIES: readonly Entry[] = [
   { key: 'tryAi', href: '/app/try-ai', group: 'system', roles: OWNER, parent: 'kb' },
   { key: 'readiness', href: '/app/readiness', group: 'system', roles: OWNER, parent: 'kb' },
   { key: 'kbCatalog', href: '/app/kb/catalog', group: 'system', roles: OWNER, parent: 'kb' },
+  { key: 'kbRules', href: '/app/kb/rules', group: 'system', roles: OWNER, parent: 'kb' },
   {
     key: 'productImport',
     href: '/app/products/import',

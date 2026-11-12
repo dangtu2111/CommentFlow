@@ -12,7 +12,7 @@ export type KbSubnavGroupKey = 'structure' | 'tuning';
 export type KbSubnavItem = { key: NavItemKey; href: string; group: KbSubnavGroupKey };
 
 /** Mục có trong thiết kế nhưng chưa có trang/chức năng: hiện ở rail dạng vô hiệu ("Sắp có"), không phải liên kết. */
-export type KbSoonItem = { key: 'kbDocs' | 'kbRules'; group: KbSubnavGroupKey };
+export type KbSoonItem = { key: 'kbDocs'; group: KbSubnavGroupKey };
 
 export const KB_SUBNAV_GROUPS: ReadonlyArray<{ key: KbSubnavGroupKey; items: KbSubnavItem[] }> = [
   {
@@ -30,6 +30,7 @@ export const KB_SUBNAV_GROUPS: ReadonlyArray<{ key: KbSubnavGroupKey; items: KbS
     key: 'tuning',
     items: [
       { key: 'kbVoice', href: '/app/kb/voice', group: 'tuning' },
+      { key: 'kbRules', href: '/app/kb/rules', group: 'tuning' },
       { key: 'kbDictionary', href: '/app/kb/abbreviations', group: 'tuning' },
       { key: 'readiness', href: '/app/readiness', group: 'tuning' },
       { key: 'tryAi', href: '/app/try-ai', group: 'tuning' },
@@ -39,11 +40,8 @@ export const KB_SUBNAV_GROUPS: ReadonlyArray<{ key: KbSubnavGroupKey; items: KbS
   },
 ];
 
-/** Mục "Sắp có" của thiết kế, chèn vào rail đúng nhóm (Tài liệu; Quy tắc & Giới hạn). */
-export const KB_SOON_ITEMS: readonly KbSoonItem[] = [
-  { key: 'kbDocs', group: 'structure' },
-  { key: 'kbRules', group: 'tuning' },
-];
+/** Mục "Sắp có" của thiết kế, chèn vào rail đúng nhóm (Tài liệu). */
+export const KB_SOON_ITEMS: readonly KbSoonItem[] = [{ key: 'kbDocs', group: 'structure' }];
 
 export function kbSubnavFor(): KbSubnavItem[] {
   return KB_SUBNAV_GROUPS.flatMap((group) => group.items);
