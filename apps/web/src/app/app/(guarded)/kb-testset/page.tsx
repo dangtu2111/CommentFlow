@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
+import { KbPageHead } from '../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../components/kb/kb-frame';
 import { KbTestSetForm } from '../../../../components/kb-testset/kb-testset-form';
-import { PageHeader } from '../../../../components/ui/page-header';
 import { getBrand } from '../../../../server/brand';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -20,11 +20,11 @@ export default async function KbTestSetPage() {
   return (
     <main className="app-page app-page-wide">
       <KbFrame active="kbTestset">
-        <header className="kb-head">
-          <PageHeader title={t('title')} subtitle={t('subtitle')} />
-        </header>
-        <p className="muted">{t('mockNote')}</p>
-        <KbTestSetForm />
+        <div className="tw space-y-space-lg">
+          <KbPageHead title={t('title')} subtitle={t('subtitle')} />
+          <p className="font-body-sm text-body-sm text-on-surface-variant">{t('mockNote')}</p>
+          <KbTestSetForm />
+        </div>
       </KbFrame>
     </main>
   );
