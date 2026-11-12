@@ -1971,8 +1971,7 @@
     },
     "soonItems": {
       "kbDocs": "Documents",
-      "kbRules": "Rules & limits",
-      "kbDictionary": "Abbreviation dictionary"
+      "kbRules": "Rules & limits"
     },
     "hub": {
       "shopify": {
@@ -2233,7 +2232,8 @@
       "kbShop": "Shop information",
       "kbPolicies": "Policies",
       "kbFaq": "FAQ",
-      "kbVoice": "Brand voice"
+      "kbVoice": "Brand voice",
+      "kbDictionary": "Abbreviation dictionary"
     },
     "logout": "Sign out",
     "navLabel": "Main navigation",
@@ -3344,6 +3344,23 @@
           "subtitle": "How replies start and end."
         }
       }
+    },
+    "abbreviations": {
+      "title": "Abbreviation dictionary",
+      "subtitle": "Your shop's own abbreviations/slang so the AI understands customer messages (e.g. \"sz\" = size). Shop entries override the system dictionary.",
+      "search": "Search abbreviation or meaning…",
+      "searchSubmit": "Search",
+      "importFile": "Import Excel",
+      "soon": "Coming soon",
+      "newTitle": "Add a word",
+      "short": "Abbreviation",
+      "shortHint": "One word, no spaces; lowercased automatically.",
+      "full": "Full meaning",
+      "ownTitle": "Shop dictionary ({count})",
+      "ownEmpty": "No words added yet. The system dictionary below is still used.",
+      "noMatch": "No words match.",
+      "systemTitle": "Standard system dictionary ({count})",
+      "systemHint": "Read-only. To change a meaning, add the same word to the shop dictionary."
     }
   },
   "kbPolicyFacts": {

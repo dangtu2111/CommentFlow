@@ -1971,8 +1971,7 @@
     },
     "soonItems": {
       "kbDocs": "Tài liệu",
-      "kbRules": "Quy tắc & Giới hạn",
-      "kbDictionary": "Từ điển viết tắt"
+      "kbRules": "Quy tắc & Giới hạn"
     },
     "hub": {
       "shopify": {
@@ -2233,7 +2232,8 @@
       "kbShop": "Thông tin cửa hàng",
       "kbPolicies": "Chính sách",
       "kbFaq": "Hỏi – đáp FAQ",
-      "kbVoice": "Giọng văn thương hiệu"
+      "kbVoice": "Giọng văn thương hiệu",
+      "kbDictionary": "Từ điển viết tắt"
     },
     "logout": "Đăng xuất",
     "navLabel": "Điều hướng chính",
@@ -3344,6 +3344,23 @@
           "subtitle": "Cách mở lời và chốt câu trả lời."
         }
       }
+    },
+    "abbreviations": {
+      "title": "Từ điển viết tắt",
+      "subtitle": "Từ viết tắt/teencode riêng của shop để AI hiểu đúng câu khách gõ (ví dụ \"sz\" = size). Từ của shop đè từ điển hệ thống.",
+      "search": "Tìm từ viết tắt hoặc nghĩa…",
+      "searchSubmit": "Tìm",
+      "importFile": "Nhập Excel",
+      "soon": "Sắp có",
+      "newTitle": "Thêm từ mới",
+      "short": "Từ viết tắt",
+      "shortHint": "Một từ, không có khoảng trắng; tự chuyển chữ thường.",
+      "full": "Nghĩa đầy đủ",
+      "ownTitle": "Từ điển riêng của shop ({count})",
+      "ownEmpty": "Shop chưa thêm từ nào. Từ điển hệ thống bên dưới vẫn được dùng.",
+      "noMatch": "Không có từ nào khớp.",
+      "systemTitle": "Từ điển hệ thống chuẩn ({count})",
+      "systemHint": "Chỉ đọc. Muốn đổi nghĩa, thêm từ cùng tên vào từ điển riêng của shop."
     }
   },
   "kbPolicyFacts": {
