@@ -2,8 +2,11 @@
 export {
   createLlmDistiller,
   DISTILL_PROMPT_VERSION,
+  DISTILL_PROMPT_VERSIONS,
   DISTILL_STEP,
   type Distiller,
+  type DistillPromptVersion,
+  parseDistillPromptVersion,
 } from './distiller';
 export {
   DISTILL_COST_CAP_USD,

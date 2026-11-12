@@ -1,11 +1,12 @@
 // Lệnh DEV: chắt lọc kiến thức thô của MỘT workspace thành FAQ/thuộc tính NHÁP (M3, KB-DISTILL), in báo cáo số liệu (không in nội dung).
-//   pnpm --filter @flow/worker kb:distill -- <workspace-uuid> [--approve] [--force-first N]
+//   pnpm --filter @flow/worker kb:distill -- <workspace-uuid> [--approve] [--force-first N] [--prompt distill@1|distill@2]
 // Dùng role `cf_worker` (DATABASE_WORKER_URL) và LLM THẬT qua LiteLLM (LITELLM_BASE_URL/LITELLM_API_KEY + DISTILL_LLM_MODEL, chưa đặt thì DRAFT_LLM_MODEL); thiếu → lỗi rõ.
 // KHÔNG kiểm cờ `cf.ai.distill` (lệnh chạy tay có chủ đích) nhưng vẫn có trần chi phí 0,20 USD và ghi `ai_usage` (bước `distill`).
 // `--approve`: duyệt TOÀN BỘ nháp bằng quyền Owner — CHỈ cho workspace có tên bắt đầu bằng "[EVAL]" (bộ đo), để đo fs-m3. Shop thật: Owner duyệt ở tab "Chờ duyệt".
 // `--force-first N` (1–100): chỉ xét N đoạn đầu (theo chunk_key) và BỎ QUA `distill_hash` để đo lại prompt mới trên đoạn đã chắt lọc; đoạn được đánh dấu lại như thường.
+// `--prompt distill@1|distill@2`: chọn bản prompt để A/B cùng điều kiện (mặc định bản mới nhất); ghi `ai_usage.prompt_version` đúng bản.
 // Staging/production: không chạy lệnh này.
-import { createLlmClient, createLlmDistiller } from '@flow/ai';
+import { createLlmClient, createLlmDistiller, parseDistillPromptVersion } from '@flow/ai';
 import { approveDraftFaq, createDb, listDraftFaqs, loadWorkspaceNameAndOwner } from '@flow/db';
 import { isAppError } from '@flow/shared';
 import { loadConfig } from '../config';
@@ -27,6 +28,12 @@ try {
       throw new Error('--force-first cần một số nguyên từ 1 đến 100.');
     }
     forceFirst = Number(raw);
+  }
+  const promptIndex = args.indexOf('--prompt');
+  const promptVersion =
+    promptIndex === -1 ? undefined : parseDistillPromptVersion(args[promptIndex + 1] ?? '');
+  if (promptIndex !== -1 && !promptVersion) {
+    throw new Error('--prompt chỉ nhận distill@1 hoặc distill@2.');
   }
   const appEnv = (process.env.APP_ENV ?? '').trim();
   if (appEnv === 'staging' || appEnv === 'production') {
@@ -53,11 +60,14 @@ try {
     const stats = await runDistillForWorkspace({
       db,
       workspaceId,
-      distiller: createLlmDistiller({ llm, model }),
+      distiller: createLlmDistiller({ llm, model, ...(promptVersion ? { promptVersion } : {}) }),
       ...(forceFirst === undefined ? {} : { forceFirst }),
     });
     console.log(
       `Chắt lọc xong: xét ${stats.considered} đoạn, gọi LLM ${stats.called}, đạt kiểm cứng ${stats.accepted}, ghi nháp ${stats.inserted}, đầu ra hỏng ${stats.invalidOutput}, mục sai cấu trúc ${stats.malformed}.`,
+    );
+    console.log(
+      `Prompt ${promptVersion ?? 'mặc định'}: đạt theo loại ${JSON.stringify(stats.acceptedByKind)}.`,
     );
     console.log(
       `Đề xuất thông tin shop: mục shop_field đạt ${stats.shopFieldsAccepted}, ghi ${stats.shopSuggested}.`,
