@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { KbPageHead } from '../../../../components/kb/kb-content-ui';
 import { KbFrame } from '../../../../components/kb/kb-frame';
 import { TryAiForm } from '../../../../components/try-ai/try-ai-form';
 import { initialTryAiText } from '../../../../lib/try-ai-prefill';
@@ -22,10 +23,11 @@ export default async function TryAiPage({ searchParams }: { searchParams: Search
   return (
     <main className="app-page app-page-wide">
       <KbFrame active="tryAi">
-        <h1 className="auth-title">{t('title')}</h1>
-        <p className="auth-subtitle">{t('subtitle')}</p>
-        <p className="muted">{t('mockNote')}</p>
-        <TryAiForm initialText={initialTryAiText(query.q)} />
+        <div className="tw space-y-space-lg">
+          <KbPageHead title={t('title')} subtitle={t('subtitle')} />
+          <p className="font-body-sm text-body-sm text-on-surface-variant">{t('mockNote')}</p>
+          <TryAiForm initialText={initialTryAiText(query.q)} />
+        </div>
       </KbFrame>
     </main>
   );
