@@ -15,6 +15,7 @@ import {
   getEmbeddingState,
   getMergeWindowSeconds,
   hydratePostFields,
+  setCommentAuthorAvatar,
 } from '@flow/db';
 import { createFlags } from '@flow/saas-core';
 import {
@@ -33,6 +34,7 @@ import { checkEmbeddingAtStartup } from './embedding-startup-check';
 import { createLocalExportStore } from './export-store';
 import { startHealthServer } from './health';
 import { createChannelCheckHandler } from './jobs/channel-check';
+import { createCommentAvatarHydrator } from './jobs/comment-avatar';
 import { createDataExportHandler } from './jobs/data-export';
 import { createHideHandler } from './jobs/hide';
 import {
@@ -162,6 +164,20 @@ async function main(): Promise<void> {
         logger,
       })
     : undefined;
+  // COMMENT-AUTHOR-AVATAR: ảnh đại diện người bình luận mới (cùng connector Facebook; tắt → bỏ qua, giao diện hiện chữ cái đầu).
+  const fetchCommentAuthorPicture = (
+    facebookConnector as
+      | { fetchCommentAuthorPicture?: FacebookConnector['fetchCommentAuthorPicture'] }
+      | undefined
+  )?.fetchCommentAuthorPicture?.bind(facebookConnector);
+  const hydrateAvatar = fetchCommentAuthorPicture
+    ? createCommentAvatarHydrator({
+        fetchPicture: fetchCommentAuthorPicture,
+        save: (target, url) =>
+          db.withJob(target.workspaceId, (tx) => setCommentAuthorAvatar(tx, target.commentId, url)),
+        logger,
+      })
+    : undefined;
   await boss.work(
     INGEST_QUEUE,
     { batchSize: 1, localConcurrency: 10 },
@@ -170,6 +186,7 @@ async function main(): Promise<void> {
       logger,
       ...(pipelineHook ? { pipeline: pipelineHook } : {}),
       ...(hydrate ? { hydrate } : {}),
+      ...(hydrateAvatar ? { hydrateAvatar } : {}),
     }),
   );
   let stopPipelineSweep: (() => void) | undefined;

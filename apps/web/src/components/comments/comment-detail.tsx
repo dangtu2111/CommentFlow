@@ -35,6 +35,7 @@ export type CommentDetailView = {
   status: string;
   text: string;
   authorName: string | null;
+  authorAvatarUrl?: string | null;
   authorExternalId: string;
   createdTime: Date | null;
   label: string | null;
@@ -341,7 +342,7 @@ export async function CommentDetailPanel({
         <div className={CARD}>
           <header className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <Avatar badge={platformBadgeText(comment.platform)}>
+              <Avatar badge={platformBadgeText(comment.platform)} src={comment.authorAvatarUrl}>
                 {userInitials(comment.authorName ?? t('list.anonymous'))}
               </Avatar>
               <div className="min-w-0">

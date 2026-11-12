@@ -551,6 +551,55 @@ describe('getTokenPermissions / checkConnection — quyền ĐÃ CẤP của tok
   });
 });
 
+describe('COMMENT-AUTHOR-AVATAR fetchCommentAuthorPicture — GET /{comment-id}?fields=from{picture}', () => {
+  const COMMENT = `${PAGE_ID}_3000000000003_4000000000004`;
+  const picture = (url: string, silhouette: boolean) => ({
+    id: COMMENT,
+    from: { id: '5000000000005', picture: { data: { url, is_silhouette: silhouette } } },
+  });
+
+  it('ảnh thật → trả URL https; chỉ GET, đúng trường, đúng đường dẫn', async () => {
+    const url = 'https://scontent.xx.fbcdn.net/v/t1/avatar.jpg?oh=1&oe=2';
+    const { connector, calls } = harness([json(picture(url, false))]);
+    expect(await connector.fetchCommentAuthorPicture(channel, COMMENT)).toBe(url);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('GET');
+    expect(call.url.pathname).toBe(`/v27.0/${COMMENT}`);
+    expect(call.url.searchParams.get('fields')).toBe(
+      'from{id,picture.type(large){url,is_silhouette}}',
+    );
+  });
+
+  it('ảnh mặc định (is_silhouette), thiếu from/picture, URL không phải https → null (không bịa ảnh)', async () => {
+    const cases = [
+      picture('https://scontent.xx.fbcdn.net/v/silhouette.jpg', true),
+      { id: COMMENT },
+      { id: COMMENT, from: { id: '5000000000005' } },
+      picture('http://scontent.xx.fbcdn.net/v/a.jpg', false),
+      picture('javascript:alert(1)', false),
+    ];
+    for (const body of cases) {
+      const { connector } = harness([json(body)]);
+      expect(await connector.fetchCommentAuthorPicture(channel, COMMENT)).toBeNull();
+    }
+  });
+
+  it('thân sai hình dạng → UNKNOWN; id sai → không gọi mạng; lỗi quyền (#10/#200) → lỗi dùng chung', async () => {
+    const bad = harness([json({ from: 5 })]);
+    expect((await failureOf(bad.connector.fetchCommentAuthorPicture(channel, COMMENT))).code).toBe(
+      'UNKNOWN',
+    );
+    const badId = harness([]);
+    expect(
+      (await failureOf(badId.connector.fetchCommentAuthorPicture(channel, '../x'))).message,
+    ).toBe('facebook_invalid_id');
+    const denied = harness([json(graphError(10), 400)]);
+    expect(
+      (await failureOf(denied.connector.fetchCommentAuthorPicture(channel, COMMENT))).code,
+    ).toBe('PERMISSION');
+  });
+});
+
 describe('POST-HYDRATE fetchPost — GET /{post-id}?fields=message,permalink_url,full_picture,created_time', () => {
   const POST = `${PAGE_ID}_3000000000003`;
 

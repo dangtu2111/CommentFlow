@@ -94,6 +94,11 @@ export interface FacebookConnector extends PlatformConnector {
    */
   fetchPost(channel: ChannelRef, postExternalId: string): Promise<FacebookPostInfo>;
   /**
+   * Ảnh đại diện của NGƯỜI VIẾT một bình luận (COMMENT-AUTHOR-AVATAR): `GET /{comment-id}?fields=from{id,picture...}`. Chỉ trả URL `https` của ảnh THẬT;
+   * ảnh mặc định (`is_silhouette`), thiếu `from`/`picture` (quyền riêng tư của người dùng) hoặc URL lạ → `null` — không bịa ảnh. Chỉ GET.
+   */
+  fetchCommentAuthorPicture(channel: ChannelRef, commentExternalId: string): Promise<string | null>;
+  /**
    * Quyền ĐÃ CẤP và hiệu lực của token Page đã lưu (`GET /debug_token`, xác thực bằng token ứng dụng): `scopes` chỉ gồm quyền áp cho Page này
    * (xét `granular_scopes`). Chỉ GET; token Page nằm trong query như mọi lệnh đọc Graph (không log).
    */
@@ -239,6 +244,28 @@ const postDetailSchema = z.object({
   full_picture: z.string().optional(),
   created_time: z.string().optional(),
 });
+
+const commentAuthorPictureSchema = z.object({
+  from: z
+    .object({
+      picture: z
+        .object({
+          data: z.object({ url: z.string().optional(), is_silhouette: z.boolean().optional() }),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
+/** Chỉ nhận địa chỉ https (ảnh hiển thị trong trang; CSP `img-src` chỉ cho https); sai → null. */
+function httpsUrlOrNull(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    return new URL(value).protocol === 'https:' ? value : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Chỉ nhận địa chỉ http(s) (không `javascript:`/`data:`…); sai → null. */
 function httpUrlOrNull(value: string | undefined): string | null {
@@ -488,6 +515,18 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
         mediaUrl: httpUrlOrNull(node.full_picture),
         createdTime: node.created_time ? parseGraphTime(node.created_time) : null,
       };
+    },
+
+    async fetchCommentAuthorPicture(channel, commentExternalId) {
+      const parsed = commentAuthorPictureSchema.safeParse(
+        await call(channel, 'GET', graphId(commentExternalId), {
+          fields: 'from{id,picture.type(large){url,is_silhouette}}',
+        }),
+      );
+      if (!parsed.success) throw badResponse();
+      const data = parsed.data.from?.picture?.data;
+      if (!data || data.is_silhouette === true) return null;
+      return httpsUrlOrNull(data.url);
     },
 
     async fetchReplies(channel, parentCommentId, opts = {}) {

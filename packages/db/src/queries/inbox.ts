@@ -56,6 +56,8 @@ export type InboxItem = {
   status: string;
   text: string;
   authorName: string | null;
+  /** URL ảnh đại diện người bình luận (https, từ nền tảng); `null` = chưa có/nền tảng không trả. */
+  authorAvatarUrl: string | null;
   authorExternalId: string;
   createdTime: Date | null;
   label: string | null;
@@ -170,6 +172,7 @@ type Row = {
   status: string;
   text: string;
   author_name: string | null;
+  author_avatar_url: string | null;
   author_external_id: string;
   created_time: Date | null;
   label: string | null;
@@ -213,7 +216,7 @@ export async function listComments(
     ? sql`${PRIORITY} DESC, ${SORT_KEY} ${direction}, c.id ${direction}`
     : sql`${SORT_KEY} ${direction}, c.id ${direction}`;
   const result = await tx.execute<Row>(sql`
-    SELECT c.id, c.status, c.text, c.author_name, c.author_external_id, c.created_time, c.label,
+    SELECT c.id, c.status, c.text, c.author_name, c.author_avatar_url, c.author_external_id, c.created_time, c.label,
            c.needs_followup, c.channel_id, ch.name AS channel_name, ch.platform, p.is_ad,
            CASE WHEN c.locked_until > now() AND c.locked_by IS DISTINCT FROM ${viewerId ?? null}::uuid
                 THEN lu.name END AS locked_by_name,
@@ -273,6 +276,7 @@ function toItem(row: Row): InboxItem {
     status: row.status,
     text: row.text,
     authorName: row.author_name,
+    authorAvatarUrl: row.author_avatar_url,
     authorExternalId: row.author_external_id,
     createdTime: row.created_time,
     label: row.label,

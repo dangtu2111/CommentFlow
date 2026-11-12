@@ -11,6 +11,8 @@ export type CommentDetail = {
   status: string;
   text: string;
   authorName: string | null;
+  /** URL ảnh đại diện người bình luận (https, từ nền tảng); `null` = chưa có/nền tảng không trả. */
+  authorAvatarUrl: string | null;
   authorExternalId: string;
   createdTime: Date | null;
   label: string | null;
@@ -66,6 +68,7 @@ type Row = {
   status: string;
   text: string;
   author_name: string | null;
+  author_avatar_url: string | null;
   author_external_id: string;
   created_time: Date | null;
   label: string | null;
@@ -108,7 +111,7 @@ export async function getCommentDetail(
   viewerId: string,
 ): Promise<CommentDetail | null> {
   const result = await tx.execute<Row>(sql`
-    SELECT c.id, c.status, c.text, c.author_name, c.author_external_id, c.created_time, c.label, c.needs_followup,
+    SELECT c.id, c.status, c.text, c.author_name, c.author_avatar_url, c.author_external_id, c.created_time, c.label, c.needs_followup,
            c.parent_external_id, c.channel_id, ch.name AS channel_name, ch.platform, p.external_id AS post_external_id,
            p.is_ad, ch.status AS channel_status, c.deleted_at, c.is_hidden,
            lh.id AS hide_id, lh.action AS hide_action, lh.status AS hide_status, lh.error_code AS hide_error_code,
@@ -174,6 +177,7 @@ export async function getCommentDetail(
     status: row.status,
     text: row.text,
     authorName: row.author_name,
+    authorAvatarUrl: row.author_avatar_url,
     authorExternalId: row.author_external_id,
     createdTime: row.created_time,
     label: row.label,

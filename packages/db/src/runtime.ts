@@ -15,6 +15,7 @@ export {
 } from './channel-tokens';
 export { setChannelWebhookSubscribed } from './channel-webhook';
 export { createDb, type Database, type FlowDb } from './client';
+export { setCommentAuthorAvatar } from './comment-avatar';
 export { markCommentDeleted } from './comment-redact';
 export {
   disconnectFbSystemConnection,
