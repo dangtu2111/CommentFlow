@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
+import { ensureBootstrap } from './bootstrap-check';
 import { unrecordedMigrationTags } from './migration-drift';
 import { assertMigrationAllowed, assertTestResetAllowed } from './migration-guard';
 
@@ -41,6 +42,8 @@ export async function runMigrations({ appEnv, adminUrl }: AdminInput): Promise<v
   assertMigrationAllowed({ appEnv, databaseUrl: adminUrl });
   const pool = new pg.Pool({ connectionString: adminUrl, max: 1 });
   try {
+    // Tiền đề của migration 0000 (extension, role) — báo rõ thiếu gì thay vì lỗi khó đọc giữa chừng (DB-BOOTSTRAP).
+    await ensureBootstrap(pool);
     await migrate(drizzle(pool), { migrationsFolder: MIGRATIONS_FOLDER });
     await warnIfMigrationsDrifted(pool);
   } finally {

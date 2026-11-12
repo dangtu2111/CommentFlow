@@ -6,6 +6,12 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
 import {
+  ensureBootstrap,
+  evaluateBootstrap,
+  formatBootstrapProblem,
+  readBootstrapState,
+} from './bootstrap-check';
+import {
   assertStagingMigrateAllowed,
   type HashedMigrationEntry,
   type MigrationEntry,
@@ -251,10 +257,15 @@ export async function runStagingMigrate(input: {
       );
       input.log(`Migration trong mã: ${entries.length} · đang chờ: ${pendingBefore.length}`);
       for (const tag of pendingBefore) input.log(`  - chờ: ${tag}`);
+      // Chỉ ĐỌC: dry-run vẫn báo thiếu tiền đề (không tự cài gì).
+      const bootstrap = evaluateBootstrap(await readBootstrapState(pool));
+      if (!bootstrap.ok) input.log(formatBootstrapProblem(bootstrap));
       if (input.dryRun || pendingBefore.length === 0) {
         if (!input.dryRun) input.log('Không có migration chờ; không ghi gì.');
         return { databaseName, dryRun: input.dryRun, pendingBefore, pendingAfter: pendingBefore };
       }
+      // Tiền đề của migration (extension, role): báo rõ thiếu gì thay vì lỗi khó đọc giữa chừng (DB-BOOTSTRAP).
+      await ensureBootstrap(pool);
       await migrate(drizzle(pool), { migrationsFolder: folder });
       const pendingAfter = await readPending(pool, entries);
       input.log(`Sau khi áp: còn chờ ${pendingAfter.length}`);
