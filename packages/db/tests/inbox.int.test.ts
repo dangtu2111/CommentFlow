@@ -496,3 +496,99 @@ describe('FR-040 danh sách kênh cho bộ lọc', () => {
     expect(await run('a', (tx) => listInboxChannels(tx, wsB))).toEqual([]);
   });
 });
+
+describe('INBOX-LABEL-FILTER: lọc theo nhãn AI và ưu tiên Mua hàng/Khiếu nại', () => {
+  let wsC: string;
+  let userC: string;
+  const ids: Record<string, string> = {};
+  const view = <T>(fn: (tx: Parameters<Parameters<FlowDb['withActor']>[2]>[0]) => Promise<T>) =>
+    db.withActor(wsC, userC, fn);
+  const pending = (over: Partial<InboxFilter> = {}): InboxFilter => ({
+    tab: 'pending_review',
+    sort: 'oldest',
+    ...over,
+  });
+
+  beforeAll(async () => {
+    wsC = await seedWorkspace(admin);
+    userC = await seedUser(admin, 'label-owner');
+    await seedMember(admin, wsC, userC, 'owner');
+    const ch = await channel(wsC, 'facebook', 'Page C');
+    const pt = await post(wsC, ch);
+    const rows: Array<[string, string | undefined]> = [
+      ['m0', 'other'],
+      ['m1', 'purchase'],
+      ['m2', 'advice'],
+      ['m3', 'complaint'],
+      ['m4', 'price'],
+      ['m5', 'purchase'],
+      ['m6', undefined],
+    ];
+    for (const [i, [name, label]] of rows.entries()) {
+      ids[name] = await comment({
+        ws: wsC,
+        channelId: ch,
+        postId: pt,
+        text: name,
+        status: 'pending_review',
+        minutes: i,
+        ...(label ? { label } : {}),
+      });
+    }
+  });
+
+  const names = (items: Array<{ id: string }>) =>
+    items.map((item) => Object.entries(ids).find(([, id]) => id === item.id)?.[0]);
+
+  it('lọc một nhãn: danh sách và số tab cùng áp bộ lọc; nhãn chưa gán không khớp nhãn nào', async () => {
+    const page = await view((tx) => listComments(tx, wsC, pending({ label: 'purchase' })));
+    expect(names(page.items)).toEqual(['m1', 'm5']);
+    const counts = await view((tx) => countCommentsByTab(tx, wsC, pending({ label: 'purchase' })));
+    expect(counts.pending_review).toBe(2);
+    expect(counts.all).toBe(2);
+    const none = await view((tx) => listComments(tx, wsC, pending({ label: 'spam' })));
+    expect(none.items).toEqual([]);
+  });
+
+  it('không ưu tiên: đúng thứ tự thời gian như cũ', async () => {
+    const page = await view((tx) => listComments(tx, wsC, pending()));
+    expect(names(page.items)).toEqual(['m0', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6']);
+  });
+
+  it('ưu tiên Mua hàng/Khiếu nại lên đầu, trong nhóm vẫn theo cũ nhất/mới nhất', async () => {
+    const oldest = await view((tx) => listComments(tx, wsC, pending({ priorityFirst: true })));
+    expect(names(oldest.items)).toEqual(['m1', 'm3', 'm5', 'm0', 'm2', 'm4', 'm6']);
+    const newest = await view((tx) =>
+      listComments(tx, wsC, pending({ priorityFirst: true, sort: 'newest' })),
+    );
+    expect(names(newest.items)).toEqual(['m5', 'm3', 'm1', 'm6', 'm4', 'm2', 'm0']);
+  });
+
+  it('phân trang con trỏ khi ưu tiên: qua ranh giới nhóm không lặp/sót, cả hai chiều', async () => {
+    for (const sort of ['oldest', 'newest'] as const) {
+      const all = await view((tx) => listComments(tx, wsC, pending({ priorityFirst: true, sort })));
+      const seen: string[] = [];
+      let cursor: InboxFilter['cursor'] = null;
+      for (let guard = 0; guard < 10; guard += 1) {
+        const page = await view((tx) =>
+          listComments(tx, wsC, pending({ priorityFirst: true, sort, limit: 2, cursor })),
+        );
+        seen.push(...page.items.map((item) => item.id));
+        if (!page.nextCursor) break;
+        cursor = page.nextCursor;
+      }
+      expect(seen).toEqual(all.items.map((item) => item.id));
+      expect(new Set(seen).size).toBe(7);
+    }
+  });
+
+  it('con trỏ không có priority (cũ) khi ưu tiên bật → không lỗi (coi như nhóm thường)', async () => {
+    const page = await view((tx) =>
+      listComments(tx, wsC, {
+        ...pending({ priorityFirst: true }),
+        cursor: { createdTime: new Date(base).toISOString(), id: ids.m0 as string },
+      }),
+    );
+    expect(Array.isArray(page.items)).toBe(true);
+  });
+});

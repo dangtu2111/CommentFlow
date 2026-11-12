@@ -38,6 +38,9 @@ export async function loadInbox(
     ...(view.platform ? { platform: view.platform } : {}),
     ...(view.channelId ? { channelId: view.channelId } : {}),
     ...(view.adsOnly ? { adsOnly: true } : {}),
+    ...(view.label ? { label: view.label } : {}),
+    // UF-3: tab Chờ duyệt đưa Mua hàng/Khiếu nại lên đầu (trong nhóm vẫn theo cũ nhất/mới nhất).
+    ...(view.tab === 'pending_review' ? { priorityFirst: true } : {}),
     ...(view.search ? { search: view.search } : {}),
   };
   return getDb().withActor(workspaceId, userId, async (tx) => {

@@ -1,3 +1,4 @@
+import { COMMENT_LABELS, type CommentLabel } from '@flow/shared';
 import { z } from 'zod';
 
 /**
@@ -27,13 +28,15 @@ export const DEFAULT_INBOX_TAB: InboxTabKey = 'pending_review';
 export const INBOX_SEARCH_MAX = 100;
 export const INBOX_BASE_PATH = '/app/comments';
 
-export type InboxCursorValue = { createdTime: string; id: string };
+export type InboxCursorValue = { createdTime: string; id: string; priority?: 0 | 1 };
 
 export type InboxView = {
   tab: InboxTabKey;
   platform?: InboxPlatformKey;
   channelId?: string;
   adsOnly?: boolean;
+  /** Lọc theo nhãn AI (`comments.label`). */
+  label?: CommentLabel;
   search?: string;
   sort: 'oldest' | 'newest';
   cursor: InboxCursorValue | null;
@@ -48,10 +51,23 @@ const first = (value: string | string[] | undefined): string | undefined =>
 
 // timestamptz dạng chuỗi của Postgres (giữ micro-giây), ví dụ `2026-11-01 08:02:00.123456+00`.
 const TIMESTAMP = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}(:?\d{2})?)$/;
-const cursorSchema = z.object({ t: z.string().regex(TIMESTAMP), i: z.uuid() });
+const cursorSchema = z.object({
+  t: z.string().regex(TIMESTAMP),
+  i: z.uuid(),
+  p: z
+    .union([z.literal(0), z.literal(1)])
+    .optional()
+    .catch(undefined),
+});
 
 export function encodeInboxCursor(cursor: InboxCursorValue): string {
-  return Buffer.from(JSON.stringify({ t: cursor.createdTime, i: cursor.id })).toString('base64url');
+  return Buffer.from(
+    JSON.stringify({
+      t: cursor.createdTime,
+      i: cursor.id,
+      ...(cursor.priority === undefined ? {} : { p: cursor.priority }),
+    }),
+  ).toString('base64url');
 }
 
 function decodeCursor(raw: string | undefined): InboxCursorValue | null {
@@ -60,7 +76,13 @@ function decodeCursor(raw: string | undefined): InboxCursorValue | null {
     const parsed = cursorSchema.safeParse(
       JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')),
     );
-    return parsed.success ? { createdTime: parsed.data.t, id: parsed.data.i } : null;
+    return parsed.success
+      ? {
+          createdTime: parsed.data.t,
+          id: parsed.data.i,
+          ...(parsed.data.p === undefined ? {} : { priority: parsed.data.p }),
+        }
+      : null;
   } catch {
     return null;
   }
@@ -70,6 +92,7 @@ export function parseInboxSearchParams(params: RawParams): InboxView {
   const tab = z.enum(INBOX_TAB_KEYS).safeParse(first(params.tab));
   const platform = z.enum(INBOX_PLATFORM_KEYS).safeParse(first(params.platform));
   const channel = z.uuid().safeParse(first(params.channel));
+  const label = z.enum(COMMENT_LABELS).safeParse(first(params.label));
   const sort = z.enum(['oldest', 'newest']).safeParse(first(params.sort));
   const selected = z.uuid().safeParse(first(params.c));
   const search = first(params.q)?.trim().slice(0, INBOX_SEARCH_MAX);
@@ -78,6 +101,7 @@ export function parseInboxSearchParams(params: RawParams): InboxView {
     ...(platform.success ? { platform: platform.data } : {}),
     ...(channel.success ? { channelId: channel.data } : {}),
     ...(first(params.ads) === '1' ? { adsOnly: true } : {}),
+    ...(label.success ? { label: label.data } : {}),
     ...(search ? { search } : {}),
     sort: sort.success ? sort.data : 'oldest',
     cursor: decodeCursor(first(params.cursor)),
@@ -96,6 +120,7 @@ export function buildInboxHref(
   if (merged.platform) params.set('platform', merged.platform);
   if (merged.channelId) params.set('channel', merged.channelId);
   if (merged.adsOnly) params.set('ads', '1');
+  if (merged.label) params.set('label', merged.label);
   if (merged.search) params.set('q', merged.search);
   if (merged.sort && merged.sort !== 'oldest') params.set('sort', merged.sort);
   if (merged.cursor) params.set('cursor', encodeInboxCursor(merged.cursor));

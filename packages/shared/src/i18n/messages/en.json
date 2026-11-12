@@ -921,7 +921,9 @@
       "clear": "Clear filters",
       "platformAll": "All",
       "labelsTitle": "AI labels",
-      "advanced": "Advanced filters"
+      "advanced": "Advanced filters",
+      "allLabels": "All labels",
+      "priorityNote": "Purchase and Complaint are listed first"
     },
     "sort": {
       "oldest": "Oldest first",

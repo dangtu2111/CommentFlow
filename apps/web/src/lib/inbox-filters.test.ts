@@ -170,3 +170,39 @@ describe('FR-041 bình luận đang chọn (tham số c)', () => {
     expect(parseInboxSearchParams(Object.fromEntries(url.searchParams))).toEqual(view);
   });
 });
+
+describe('INBOX-LABEL-FILTER — nhãn AI và con trỏ ưu tiên', () => {
+  it('nhận nhãn hợp lệ; nhãn lạ bị bỏ qua (không vào truy vấn)', () => {
+    expect(parseInboxSearchParams({ label: 'purchase' }).label).toBe('purchase');
+    expect(parseInboxSearchParams({ label: 'complaint' }).label).toBe('complaint');
+    expect(parseInboxSearchParams({ label: "x'; DROP" }).label).toBeUndefined();
+    expect(parseInboxSearchParams({ label: '' }).label).toBeUndefined();
+    expect(parseInboxSearchParams({ label: ['spam', 'price'] }).label).toBe('spam');
+  });
+
+  it('buildInboxHref giữ nhãn; bỏ nhãn khi xóa; vòng đọc-ghi giữ nguyên', () => {
+    const view = parseInboxSearchParams({ label: 'price', tab: 'needs_human' });
+    expect(buildInboxHref(view)).toBe('/app/comments?tab=needs_human&label=price');
+    expect(buildInboxHref(view, { label: undefined })).toBe('/app/comments?tab=needs_human');
+    expect(
+      parseInboxSearchParams(
+        Object.fromEntries(new URL(buildInboxHref(view), 'http://x').searchParams),
+      ),
+    ).toEqual(view);
+  });
+
+  it('con trỏ mang nhóm ưu tiên (0/1) và đọc lại đúng; nhóm lạ bị bỏ, con trỏ cũ vẫn dùng được', () => {
+    const withPriority = { ...cursor, priority: 1 as const };
+    expect(parseInboxSearchParams({ cursor: encodeInboxCursor(withPriority) }).cursor).toEqual(
+      withPriority,
+    );
+    expect(
+      parseInboxSearchParams({ cursor: encodeInboxCursor({ ...cursor, priority: 0 }) }).cursor,
+    ).toEqual({ ...cursor, priority: 0 });
+    const odd = Buffer.from(JSON.stringify({ t: cursor.createdTime, i: uuid, p: 7 })).toString(
+      'base64url',
+    );
+    expect(parseInboxSearchParams({ cursor: odd }).cursor).toEqual(cursor);
+    expect(parseInboxSearchParams({ cursor: encodeInboxCursor(cursor) }).cursor).toEqual(cursor);
+  });
+});

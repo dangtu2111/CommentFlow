@@ -921,7 +921,9 @@
       "clear": "Xóa bộ lọc",
       "platformAll": "Tất cả",
       "labelsTitle": "Nhãn AI",
-      "advanced": "Bộ lọc nâng cao"
+      "advanced": "Bộ lọc nâng cao",
+      "allLabels": "Tất cả nhãn",
+      "priorityNote": "Mua hàng và Khiếu nại được xếp lên đầu"
     },
     "sort": {
       "oldest": "Cũ nhất trước",
