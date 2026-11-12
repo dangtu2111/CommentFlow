@@ -16,7 +16,12 @@ export async function listChunksToDistill(
   tx: Database,
   workspaceId: string,
   limit: number,
+  /** `ignoreDistillHash`: chọn cả đoạn đã chắt lọc (đo lại một prompt mới); vẫn loại đoạn nghi cài lệnh/FAQ/sản phẩm. Chỉ lệnh chạy tay dùng. */
+  options: { ignoreDistillHash?: boolean } = {},
 ): Promise<DistillChunkRow[]> {
+  const hashFilter = options.ignoreDistillHash
+    ? sql``
+    : sql`AND c.metadata ->> 'distill_hash' IS DISTINCT FROM c.content_hash`;
   const r = await tx.execute<{
     id: string;
     content: string;
@@ -29,7 +34,7 @@ export async function listChunksToDistill(
        AND NOT c.injection_suspected
        AND s.external_key IS DISTINCT FROM 'sync:faq'
        AND s.external_key IS DISTINCT FROM 'sync:product'
-       AND c.metadata ->> 'distill_hash' IS DISTINCT FROM c.content_hash
+       ${hashFilter}
      ORDER BY c.chunk_key
      LIMIT ${limit}`);
   return r.rows.map((row) => ({

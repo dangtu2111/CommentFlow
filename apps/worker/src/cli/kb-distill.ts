@@ -1,8 +1,9 @@
 // Lệnh DEV: chắt lọc kiến thức thô của MỘT workspace thành FAQ/thuộc tính NHÁP (M3, KB-DISTILL), in báo cáo số liệu (không in nội dung).
-//   pnpm --filter @flow/worker kb:distill -- <workspace-uuid> [--approve]
+//   pnpm --filter @flow/worker kb:distill -- <workspace-uuid> [--approve] [--force-first N]
 // Dùng role `cf_worker` (DATABASE_WORKER_URL) và LLM THẬT qua LiteLLM (LITELLM_BASE_URL/LITELLM_API_KEY + DISTILL_LLM_MODEL, chưa đặt thì DRAFT_LLM_MODEL); thiếu → lỗi rõ.
 // KHÔNG kiểm cờ `cf.ai.distill` (lệnh chạy tay có chủ đích) nhưng vẫn có trần chi phí 0,20 USD và ghi `ai_usage` (bước `distill`).
 // `--approve`: duyệt TOÀN BỘ nháp bằng quyền Owner — CHỈ cho workspace có tên bắt đầu bằng "[EVAL]" (bộ đo), để đo fs-m3. Shop thật: Owner duyệt ở tab "Chờ duyệt".
+// `--force-first N` (1–100): chỉ xét N đoạn đầu (theo chunk_key) và BỎ QUA `distill_hash` để đo lại prompt mới trên đoạn đã chắt lọc; đoạn được đánh dấu lại như thường.
 // Staging/production: không chạy lệnh này.
 import { createLlmClient, createLlmDistiller } from '@flow/ai';
 import { approveDraftFaq, createDb, listDraftFaqs, loadWorkspaceNameAndOwner } from '@flow/db';
@@ -17,6 +18,15 @@ try {
     throw new Error(
       'Cách dùng: pnpm --filter @flow/worker kb:distill -- <workspace-uuid> [--approve]',
     );
+  }
+  const forceIndex = args.indexOf('--force-first');
+  let forceFirst: number | undefined;
+  if (forceIndex !== -1) {
+    const raw = args[forceIndex + 1] ?? '';
+    if (!/^\d{1,3}$/.test(raw) || Number(raw) < 1 || Number(raw) > 100) {
+      throw new Error('--force-first cần một số nguyên từ 1 đến 100.');
+    }
+    forceFirst = Number(raw);
   }
   const appEnv = (process.env.APP_ENV ?? '').trim();
   if (appEnv === 'staging' || appEnv === 'production') {
@@ -44,9 +54,13 @@ try {
       db,
       workspaceId,
       distiller: createLlmDistiller({ llm, model }),
+      ...(forceFirst === undefined ? {} : { forceFirst }),
     });
     console.log(
       `Chắt lọc xong: xét ${stats.considered} đoạn, gọi LLM ${stats.called}, đạt kiểm cứng ${stats.accepted}, ghi nháp ${stats.inserted}, đầu ra hỏng ${stats.invalidOutput}, mục sai cấu trúc ${stats.malformed}.`,
+    );
+    console.log(
+      `Đề xuất thông tin shop: mục shop_field đạt ${stats.shopFieldsAccepted}, ghi ${stats.shopSuggested}.`,
     );
     console.log(
       `Bị loại: ${JSON.stringify(stats.rejected)} · chi phí ${stats.costUsd.toFixed(4)} USD`,

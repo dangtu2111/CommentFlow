@@ -87,6 +87,21 @@ describe('chắt lọc: chọn đoạn và đánh dấu', () => {
   });
 });
 
+describe('chắt lọc: bỏ qua distill_hash (đo lại)', () => {
+  it('ignoreDistillHash: đoạn đã đánh dấu vẫn được chọn, theo thứ tự chunk_key, có giới hạn; vẫn loại đoạn FAQ/nghi cài lệnh', async () => {
+    const first = await db.withJob(ws, (tx) => listChunksToDistill(tx, ws, 10));
+    await db.withJob(ws, (tx) => markChunksDistilled(tx, ws, first));
+    expect(await db.withJob(ws, (tx) => listChunksToDistill(tx, ws, 10))).toEqual([]);
+    const forced = await db.withJob(ws, (tx) =>
+      listChunksToDistill(tx, ws, 10, { ignoreDistillHash: true }),
+    );
+    expect(forced.map((c) => c.id)).toEqual([chunkId]);
+    expect(
+      await db.withJob(ws, (tx) => listChunksToDistill(tx, ws, 0, { ignoreDistillHash: true })),
+    ).toEqual([]);
+  });
+});
+
 describe('chắt lọc: nháp FAQ', () => {
   it('chèn nháp, bỏ trùng câu hỏi (không phân biệt hoa thường); nháp không vào danh sách đã duyệt', async () => {
     const n = await db.withJob(ws, (tx) =>
