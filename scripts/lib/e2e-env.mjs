@@ -85,10 +85,34 @@ export function buildE2eEnv(source, { port, lane }) {
     PHONE_VERIFY_ENABLED: 'true',
     NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED: 'true',
     SMS_MOCK_OUTBOX_FILE: join(tmpdir(), `cf-e2e-sms-outbox-${port}.jsonl`),
+    // Cờ tích hợp THẬT của máy dev (`.env`/`.env.local`) không được lọt vào E2E: bật Shopify làm web đổi token với Shopify thật khi lưu kết nối
+    // (tên miền E2E không tồn tại → "chưa kiểm tra được"), bật Facebook OAuth làm web đòi mọi khóa mã hóa token ở khởi động. CI không đặt các cờ này (mặc định tắt).
+    SHOPIFY_ENABLED: 'false',
+    FB_OAUTH_ENABLED: 'false',
     // Kết nối Shopify mã hóa Client secret bằng TOKEN_ENC_KEYS: E2E tự sinh khóa dùng một lần (không commit) khi môi trường chưa có.
     TOKEN_ENC_KEYS: source.TOKEN_ENC_KEYS || `v1:${randomBytes(32).toString('hex')}`,
     BETTER_AUTH_URL: baseUrl,
     E2E_BASE_URL: baseUrl,
     PORT: String(port),
+  };
+}
+
+/**
+ * Môi trường của bản web THỨ HAI "chưa cấu hình AI" (cùng DB/bản build, khác cổng, KHÔNG có dịch vụ LLM). LITELLM_* đặt thành chuỗi RỖNG chứ không xóa:
+ * `next.config.ts` gọi `loadRepoEnv` và `process.loadEnvFile` chỉ không ghi đè biến ĐÃ CÓ — biến vắng mặt sẽ được nạp lại từ `.env` ở gốc repo của máy dev
+ * (CI không có `.env` nên không lộ lỗi này). Mã đọc cấu hình coi chuỗi rỗng là chưa đặt.
+ * @param {Record<string, string>} env kết quả `buildE2eEnv` (đã gồm LITELLM_* của dịch vụ giả)
+ * @param {{ port: number }} options
+ * @returns {Record<string, string>}
+ */
+export function buildNoAiEnv(env, { port }) {
+  const base = `http://localhost:${port}`;
+  return {
+    ...env,
+    PORT: String(port),
+    BETTER_AUTH_URL: base,
+    E2E_BASE_URL: base,
+    LITELLM_BASE_URL: '',
+    LITELLM_API_KEY: '',
   };
 }

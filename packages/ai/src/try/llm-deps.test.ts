@@ -45,7 +45,7 @@ describe('createLlmDepsFromEnv — bật/tắt bằng cờ DB, env chỉ còn UR
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it('rewriter bị cờ cf.ai.rewrite chặn khi tắt; bật thì qua cổng', async () => {
+  it('rewriter: cờ cf.ai.rewrite tắt → bỏ qua LLM (câu quy tắc); bật thì qua cổng', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new Error('net'));
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const input = { workspaceId: WS, text: 'giá' } as never;
@@ -55,7 +55,10 @@ describe('createLlmDepsFromEnv — bật/tắt bằng cờ DB, env chỉ còn UR
       isStepEnabled: only('classify', 'draft'),
       fetchImpl,
     });
-    await expect(off.rewriter?.rewrite(input)).rejects.toThrow(/cf\.ai\.rewrite/);
+    // Bước viết lại là TÙY CHỌN: cờ tắt → dùng câu quy tắc (không gọi LLM, không làm hỏng cả lượt) dù REWRITE_LLM_MODEL đã đặt.
+    await expect(
+      off.rewriter?.rewrite({ workspaceId: WS, comment: 'giá' } as never),
+    ).resolves.toMatchObject({ source: 'rule' });
     expect(fetchImpl).not.toHaveBeenCalled();
     const on = createLlmDepsFromEnv({
       env: { ...base, ...models },

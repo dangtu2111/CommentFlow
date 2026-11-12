@@ -103,7 +103,11 @@ export function createFakeLitellm() {
       let content;
       if (step === 'extract') content = extractReply(lastUser);
       else if (step === 'draft') content = draftReply(all);
-      else return send(400, { error: `bước không hỗ trợ ở dịch vụ giả: ${String(step)}` });
+      else {
+        // Ghi tên bước lạ ra stderr: web chỉ thấy "LLM_UNAVAILABLE" nên nếu không có dòng này thì không biết bước nào làm lượt Thử AI hỏng.
+        console.error(`[fake-litellm] bước không hỗ trợ: ${String(step)}`);
+        return send(400, { error: `bước không hỗ trợ ở dịch vụ giả: ${String(step)}` });
+      }
       send(200, {
         id: 'fake-completion',
         model: body.model ?? 'e2e-fake-model',

@@ -7,7 +7,7 @@ import { createServer } from 'node:net';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildE2eEnv } from './lib/e2e-env.mjs';
+import { buildE2eEnv, buildNoAiEnv } from './lib/e2e-env.mjs';
 import { loadRepoEnv } from './lib/load-env.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -179,13 +179,7 @@ const web = spawn(webCommand, {
 // trung thực khi thiếu dịch vụ thật (không bản mẫu). Cookie đăng nhập không dùng chung giữa hai bản (mỗi bản có BETTER_AUTH_URL riêng).
 const noAiPort = await freePort();
 const noAiBase = `http://localhost:${noAiPort}`;
-const noAiEnv = {
-  ...env,
-  PORT: String(noAiPort),
-  BETTER_AUTH_URL: noAiBase,
-  E2E_BASE_URL: noAiBase,
-};
-for (const name of ['LITELLM_BASE_URL', 'LITELLM_API_KEY']) delete noAiEnv[name];
+const noAiEnv = buildNoAiEnv(env, { port: noAiPort });
 console.log(`[e2e] Khởi động web "chưa cấu hình AI" ở cổng ${noAiPort}…`);
 const webNoAi = spawn(
   mode === 'dev'

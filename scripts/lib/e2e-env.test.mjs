@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildE2eEnv, databaseNameOf, REQUIRED_VARS, testDatabaseUrl } from './e2e-env.mjs';
+import {
+  buildE2eEnv,
+  buildNoAiEnv,
+  databaseNameOf,
+  REQUIRED_VARS,
+  testDatabaseUrl,
+} from './e2e-env.mjs';
 
 const base = {
   TEST_DATABASE_URL: 'postgresql://cf_app:pw@10.0.0.1:5433/cf_test',
@@ -24,6 +30,17 @@ describe('buildE2eEnv', () => {
     const b = buildE2eEnv(base, { port: 3123 }).TOKEN_ENC_KEYS;
     expect(a).toMatch(/^v1:[0-9a-f]{64}$/);
     expect(a).not.toBe(b);
+  });
+
+  it('cờ tích hợp thật của máy (Shopify, Facebook OAuth) bị tắt trong E2E: kiểm thử không được gọi dịch vụ ngoài và chạy giống CI', () => {
+    const env = buildE2eEnv(
+      { ...base, SHOPIFY_ENABLED: 'true', FB_OAUTH_ENABLED: 'true' },
+      { port: 3123 },
+    );
+    expect(env.SHOPIFY_ENABLED).toBe('false');
+    expect(env.FB_OAUTH_ENABLED).toBe('false');
+    // Không có cờ ở máy → vẫn tắt (không để rơi về mặc định của môi trường khác).
+    expect(buildE2eEnv(base, { port: 3123 }).SHOPIFY_ENABLED).toBe('false');
   });
 
   it('đưa web về DB test, không dùng cf_dev, và đặt URL/cổng/APP_ENV', () => {
@@ -99,5 +116,26 @@ describe('buildE2eEnv', () => {
     expect(error).toContain('REDIS_URL');
     expect(error).not.toContain('pw@');
     expect(REQUIRED_VARS).toContain('BETTER_AUTH_SECRET');
+  });
+});
+
+describe('buildNoAiEnv (bản web "chưa cấu hình AI")', () => {
+  const env = {
+    ...buildE2eEnv(base, { port: 3123 }),
+    LITELLM_BASE_URL: 'http://127.0.0.1:9999',
+    LITELLM_API_KEY: 'e2e-virtual-key',
+  };
+
+  it('đổi cổng/URL, đặt LITELLM_* thành CHUỖI RỖNG (không xóa: Next sẽ nạp lại .env ở gốc repo nếu biến vắng mặt)', () => {
+    const noAi = buildNoAiEnv(env, { port: 4001 });
+    expect(noAi.PORT).toBe('4001');
+    expect(noAi.BETTER_AUTH_URL).toBe('http://localhost:4001');
+    expect(noAi.E2E_BASE_URL).toBe('http://localhost:4001');
+    expect(Object.hasOwn(noAi, 'LITELLM_BASE_URL')).toBe(true);
+    expect(noAi.LITELLM_BASE_URL).toBe('');
+    expect(noAi.LITELLM_API_KEY).toBe('');
+    // Không đổi bản gốc.
+    expect(env.LITELLM_BASE_URL).toBe('http://127.0.0.1:9999');
+    expect(env.PORT).toBe('3123');
   });
 });
