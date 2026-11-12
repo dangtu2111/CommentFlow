@@ -10,6 +10,7 @@ import {
   insertDistilledFaqDrafts,
   listChunksToDistill,
   markChunksDistilled,
+  replaceShopSuggestionDraftsForProfiles,
 } from '@flow/db';
 
 /**
@@ -24,6 +25,10 @@ export function distillOpsFor(db: FlowDb, workspaceId: string): DistillOps {
       db.withJob(workspaceId, (tx) => listChunksToDistill(tx, workspaceId, limit)),
     insertDrafts: (items) =>
       db.withJob(workspaceId, (tx) => insertDistilledFaqDrafts(tx, workspaceId, items)),
+    saveShopSuggestions: (items) =>
+      db.withJob(workspaceId, (tx) =>
+        replaceShopSuggestionDraftsForProfiles(tx, workspaceId, items),
+      ),
     markDistilled: (chunks) =>
       db.withJob(workspaceId, (tx) => markChunksDistilled(tx, workspaceId, chunks)),
   };

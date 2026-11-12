@@ -298,3 +298,57 @@ describe('runShopifySync', () => {
     expect(logged).not.toContain('boom');
   });
 });
+
+describe('runShopifySync — đề xuất thông tin shop (KB-SHOP-V2)', () => {
+  const SHOP = {
+    name: 'Demo',
+    contactEmail: 'a@demo.vn',
+    primaryDomainUrl: 'https://demo.vn',
+    description: null,
+    billingAddress: null,
+  };
+
+  it('có đủ bước → đọc thông tin shop, ghi đề xuất nháp, ghi số lượng vào kết quả', async () => {
+    const fetchShop = vi.fn().mockResolvedValue(SHOP);
+    const suggestShop = vi.fn().mockResolvedValue(3);
+    const { deps, record } = setup({ fetchShop, suggestShop });
+    expect(await runShopifySync(deps)).toBe('ok');
+    expect(fetchShop).toHaveBeenCalledWith('demo-shop.myshopify.com', 'shpat_exchanged_token');
+    expect(suggestShop).toHaveBeenCalledWith(SHOP);
+    expect(record).toHaveBeenCalledWith('ok', expect.objectContaining({ shopSuggested: 3 }));
+  });
+
+  it('không truyền bước → bỏ qua, không thêm khóa vào kết quả', async () => {
+    const { deps, record } = setup();
+    await runShopifySync(deps);
+    const detail = record.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(detail).not.toHaveProperty('shopSuggested');
+    expect(detail).not.toHaveProperty('shopSuggestionsSkipped');
+  });
+
+  it('thiếu quyền/lỗi khi đọc hoặc ghi đề xuất KHÔNG làm hỏng việc nạp: ok + shopSuggestionsSkipped + cảnh báo (không log nội dung)', async () => {
+    const denied = setup({
+      fetchShop: vi.fn().mockRejectedValue(new PlatformError('PERMISSION')),
+      suggestShop: vi.fn(),
+    });
+    expect(await runShopifySync(denied.deps)).toBe('ok');
+    expect(denied.record).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ shopSuggestionsSkipped: true }),
+    );
+    expect(denied.warn).toHaveBeenCalledWith({
+      event: 'shopify_shop_suggestions_skipped',
+      reason: 'PERMISSION',
+    });
+    const broken = setup({
+      fetchShop: vi.fn().mockResolvedValue(SHOP),
+      suggestShop: vi.fn().mockRejectedValue(new Error('a@demo.vn db down')),
+    });
+    expect(await runShopifySync(broken.deps)).toBe('ok');
+    expect(JSON.stringify(broken.warn.mock.calls)).not.toContain('a@demo.vn');
+    expect(broken.warn).toHaveBeenCalledWith({
+      event: 'shopify_shop_suggestions_skipped',
+      reason: 'unknown',
+    });
+  });
+});

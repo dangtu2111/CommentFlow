@@ -414,6 +414,14 @@ export {
   REPORT_MAX_ROWS,
 } from './queries/reports';
 export {
+  decideShopSuggestion,
+  listDraftShopSuggestions,
+  replaceShopSuggestionDrafts,
+  replaceShopSuggestionDraftsForProfiles,
+  type ShopSuggestionDecision,
+  type ShopSuggestionRow,
+} from './queries/shop-suggestions';
+export {
   applyShopifyPolicies,
   type ShopifyPolicyApplyResult,
   type ShopifyPolicyInput,

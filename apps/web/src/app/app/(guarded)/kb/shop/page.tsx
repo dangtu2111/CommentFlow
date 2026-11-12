@@ -1,4 +1,4 @@
-import { listShopProfiles } from '@flow/db/runtime';
+import { listDraftShopSuggestions, listShopProfiles } from '@flow/db/runtime';
 import { CONTENT_LANGS } from '@flow/shared';
 import { getTranslations } from 'next-intl/server';
 import {
@@ -14,6 +14,7 @@ import { getBrand } from '../../../../../server/brand';
 import { getDb } from '../../../../../server/db';
 import { requireAppUser } from '../../../../../server/require-app-user';
 import { saveShopProfileAction } from '../actions';
+import { decideShopSuggestionAction } from '../shop-suggestion-actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('kbContent');
@@ -28,9 +29,10 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 export default async function KbShopPage({ searchParams }: { searchParams: SearchParams }) {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
   const [t, query] = await Promise.all([getTranslations('kbContent'), searchParams]);
-  const profiles = await getDb().withActor(workspace.id, user.id, (tx) =>
-    listShopProfiles(tx, workspace.id),
-  );
+  const [profiles, suggestions] = await getDb().withActor(workspace.id, user.id, async (tx) => [
+    await listShopProfiles(tx, workspace.id),
+    await listDraftShopSuggestions(tx, workspace.id),
+  ]);
   const missing = CONTENT_LANGS.find((lang) => !profiles.some((p) => p.lang === lang)) ?? 'vi';
 
   return (
@@ -51,7 +53,12 @@ export default async function KbShopPage({ searchParams }: { searchParams: Searc
               <h2 className="font-title-md text-title-md text-on-surface">
                 {t('shop.cardTitle')} — {t(`lang.${profile.lang}`)}
               </h2>
-              <ShopSections profile={profile} t={t} idPrefix={`shop-${profile.lang}`} />
+              <ShopSections
+                profile={profile}
+                suggestions={suggestions.filter((s) => s.lang === profile.lang)}
+                t={t}
+                idPrefix={`shop-${profile.lang}`}
+              />
               <div className="flex justify-end">
                 <SaveButton>{t('save')}</SaveButton>
               </div>
@@ -60,11 +67,22 @@ export default async function KbShopPage({ searchParams }: { searchParams: Searc
           <form id={NEW_FORM_ID} action={saveShopProfileAction} className="space-y-space-md">
             <h2 className="font-title-md text-title-md text-on-surface">{t('shop.newTitle')}</h2>
             <LangSelect defaultValue={missing} />
-            <ShopSections profile={null} t={t} idPrefix={NEW_FORM_ID} />
+            <ShopSections
+              profile={null}
+              suggestions={suggestions.filter((s) => s.lang === missing && s.field === 'name')}
+              t={t}
+              idPrefix={NEW_FORM_ID}
+            />
             <div className="flex justify-end">
               <SaveButton>{t('add')}</SaveButton>
             </div>
           </form>
+          {/* Form Áp dụng/Bỏ của từng đề xuất nằm NGOÀI các form trên (không lồng form); nút ở trong ô gắn vào đây bằng thuộc tính `form`. */}
+          {suggestions.map((s) => (
+            <form key={s.id} id={`sugg-${s.id}`} action={decideShopSuggestionAction}>
+              <input type="hidden" name="id" value={s.id} />
+            </form>
+          ))}
         </div>
       </KbFrame>
     </main>

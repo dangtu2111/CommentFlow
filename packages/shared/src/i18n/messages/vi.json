@@ -3167,7 +3167,11 @@
       "invalid": "Thông tin chưa hợp lệ. Kiểm tra lại các ô bắt buộc (và địa chỉ website phải bắt đầu bằng http hoặc https).",
       "not_found": "Không tìm thấy mục này.",
       "unavailable": "Chưa thực hiện được lúc này. Vui lòng thử lại.",
-      "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại."
+      "rate_limited": "Bạn thao tác quá nhanh hoặc quá nhiều. Vui lòng đợi vài giây rồi thử lại.",
+      "applied": "Đã áp dụng đề xuất vào thông tin shop.",
+      "rejected": "Đã bỏ đề xuất.",
+      "no_profile": "Chưa có thông tin shop cho ngôn ngữ này. Hãy lưu tên shop trước rồi áp dụng lại.",
+      "too_long": "Ô \"Liên hệ công khai\" đã quá dài, không thêm được. Rút gọn ô đó rồi áp dụng lại."
     },
     "save": "Lưu",
     "delete": "Xóa",
@@ -3252,7 +3256,13 @@
         "title": "Cách AI dùng đoạn này:",
         "body": "Khi khách hỏi chung về shop (\"shop bán gì?\", \"shop ở đâu?\"), AI trả lời dựa trên đoạn giới thiệu này. Không nhập giá hay tồn kho."
       },
-      "industriesHint": "Các ngành cách nhau bằng dấu phẩy (tối đa 10)."
+      "industriesHint": "Các ngành cách nhau bằng dấu phẩy (tối đa 10).",
+      "suggest": {
+        "fromShopify": "Đề xuất từ Shopify",
+        "fromText": "Đề xuất từ đoạn",
+        "apply": "Áp dụng",
+        "reject": "Bỏ"
+      }
     },
     "policies": {
       "title": "Chính sách",

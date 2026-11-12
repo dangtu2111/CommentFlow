@@ -3167,7 +3167,11 @@
       "invalid": "The information is not valid. Check the required fields (and the website must start with http or https).",
       "not_found": "This item was not found.",
       "unavailable": "Could not complete this right now. Please try again.",
-      "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again."
+      "rate_limited": "You are going too fast or too often. Please wait a few seconds and try again.",
+      "applied": "Suggestion applied to the shop information.",
+      "rejected": "Suggestion dismissed.",
+      "no_profile": "No shop information exists for this language yet. Save the shop name first, then apply again.",
+      "too_long": "The \"Public contact\" field is too long to add this. Shorten it and apply again."
     },
     "save": "Save",
     "delete": "Delete",
@@ -3252,7 +3256,13 @@
         "title": "How the AI uses this text:",
         "body": "When a customer asks about the shop in general (\"what do you sell?\", \"where are you?\"), the AI answers from this introduction. Do not enter prices or stock."
       },
-      "industriesHint": "Industries separated by commas (up to 10)."
+      "industriesHint": "Industries separated by commas (up to 10).",
+      "suggest": {
+        "fromShopify": "Suggested from Shopify",
+        "fromText": "Suggested from the passage",
+        "apply": "Apply",
+        "reject": "Dismiss"
+      }
     },
     "policies": {
       "title": "Policies",

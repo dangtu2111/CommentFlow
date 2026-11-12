@@ -1,4 +1,4 @@
-import { maskPii } from '@flow/shared';
+import { extractContactSuggestions, maskPii, type ShopSuggestionInsert } from '@flow/shared';
 import type { Distiller } from './distiller';
 import type { DistillItem } from './schema';
 import { type DistillRejection, verifyDistillItem } from './verify';
@@ -8,9 +8,19 @@ export const DISTILL_COST_CAP_USD = 0.2;
 /** Số đoạn tối đa gọi LLM trong một lần chạy (chặn chạy tràn dù chi phí mỗi đoạn nhỏ). */
 export const DISTILL_MAX_CHUNKS_PER_RUN = 60;
 
-export type DistillChunk = { id: string; content: string; contentHash: string };
+export type DistillChunk = {
+  id: string;
+  content: string;
+  contentHash: string;
+  /** Tiêu đề nguồn (ghi vào `source_ref` của đề xuất thông tin shop để Owner biết đề xuất từ đoạn nào). */
+  title?: string;
+};
 
-export type DistillDraftInsert = DistillItem & { lang: 'vi' | 'en' | 'all'; sourceChunkId: string };
+export type DistillDraftInsert = DistillItem & {
+  kind: 'faq' | 'product_attr';
+  lang: 'vi' | 'en' | 'all';
+  sourceChunkId: string;
+};
 
 /** Thao tác DB của bước chắt lọc — tiêm vào để test đơn vị không cần DB (bản thật ở `@flow/db`). */
 export type DistillOps = {
@@ -18,6 +28,11 @@ export type DistillOps = {
   listChunks(limit: number): Promise<DistillChunk[]>;
   /** Ghi các mục đạt kiểm cứng thành nháp (`status='draft'`); trả số dòng thực sự chèn (bỏ trùng câu hỏi). */
   insertDrafts(items: DistillDraftInsert[]): Promise<number>;
+  /**
+   * Ghi đề xuất "Thông tin cửa hàng" (nháp, Owner Áp dụng/Bỏ); trả số đề xuất ghi được. Nơi cài đặt tự nhân ra từng ngôn ngữ đã có hồ sơ.
+   * Không truyền = bỏ qua (đề xuất thông tin shop tắt).
+   */
+  saveShopSuggestions?(items: ShopSuggestionInsert[]): Promise<number>;
   /** Đánh dấu đoạn đã chắt lọc ở bản nội dung này (chạy lại không gọi LLM nữa). */
   markDistilled(chunks: ReadonlyArray<{ id: string; contentHash: string }>): Promise<void>;
 };
@@ -29,6 +44,10 @@ export type DistillStats = {
   inserted: number;
   invalidOutput: number;
   malformed: number;
+  /** Mục `shop_field` đạt kiểm cứng (thành đề xuất thông tin shop, không thành FAQ). */
+  shopFieldsAccepted: number;
+  /** Số đề xuất thông tin shop thực sự ghi (gồm cả liên hệ tách bằng regex). */
+  shopSuggested: number;
   rejected: Partial<Record<DistillRejection, number>>;
   costUsd: number;
   stoppedByCap: boolean;
@@ -57,16 +76,32 @@ export async function runKbDistill(deps: {
     inserted: 0,
     invalidOutput: 0,
     malformed: 0,
+    shopFieldsAccepted: 0,
+    shopSuggested: 0,
     rejected: {},
     costUsd: 0,
     stoppedByCap: false,
   };
   const done: Array<{ id: string; contentHash: string }> = [];
   const drafts: DistillDraftInsert[] = [];
+  // Mỗi trường chỉ giữ lần gặp đầu tiên trong lượt chạy (mỗi (ngôn ngữ, trường, nguồn) chỉ một nháp).
+  const shopItems = new Map<string, ShopSuggestionInsert>();
+  const keepShop = (item: ShopSuggestionInsert) => {
+    if (!shopItems.has(item.field)) shopItems.set(item.field, item);
+  };
   for (const chunk of chunks) {
     if (stats.costUsd >= cap) {
       stats.stoppedByCap = true;
       break;
+    }
+    // Liên hệ (hotline/email/website/Zalo/Shopee/TikTok) do CODE tách trên văn bản gốc, tại chỗ — không gửi LLM.
+    if (deps.ops.saveShopSuggestions) {
+      for (const found of extractContactSuggestions(chunk.content, {
+        lang: 'vi',
+        ...(chunk.title ? { sourceRef: chunk.title.slice(0, 500) } : {}),
+      })) {
+        keepShop(found);
+      }
     }
     const masked = maskPii(chunk.content);
     const result = await deps.distiller.distill({ workspaceId: deps.workspaceId, text: masked });
@@ -84,8 +119,23 @@ export async function runKbDistill(deps: {
         continue;
       }
       stats.accepted += 1;
+      if (item.kind === 'shop_field') {
+        stats.shopFieldsAccepted += 1;
+        if (deps.ops.saveShopSuggestions && item.field && item.field !== 'none') {
+          keepShop({
+            lang: 'vi',
+            field: item.field,
+            value: item.answer,
+            evidenceQuote: item.evidenceQuote,
+            source: 'kb_text',
+            ...(chunk.title ? { sourceRef: chunk.title.slice(0, 500) } : {}),
+          });
+        }
+        continue;
+      }
       drafts.push({
         ...item,
+        kind: item.kind,
         lang: langOf(`${item.question} ${item.answer}`),
         sourceChunkId: chunk.id,
       });
@@ -93,6 +143,9 @@ export async function runKbDistill(deps: {
     done.push({ id: chunk.id, contentHash: chunk.contentHash });
   }
   if (drafts.length > 0) stats.inserted = await deps.ops.insertDrafts(drafts);
+  if (deps.ops.saveShopSuggestions && shopItems.size > 0) {
+    stats.shopSuggested = await deps.ops.saveShopSuggestions([...shopItems.values()]);
+  }
   if (done.length > 0) await deps.ops.markDistilled(done);
   return stats;
 }

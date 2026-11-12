@@ -6,7 +6,7 @@ import type { Database } from '../client';
  * Job hệ thống chỉ được ghi dòng `draft` (trigger `faq_items_guard_publish` chặn đưa lên `published`); chỉ Owner duyệt/từ chối.
  */
 
-export type DistillChunkRow = { id: string; content: string; contentHash: string };
+export type DistillChunkRow = { id: string; content: string; contentHash: string; title: string };
 
 /**
  * Đoạn nháp chưa chắt lọc ở bản nội dung HIỆN TẠI: không nghi cài lệnh, không phải đoạn FAQ (`sync:faq`) hay sản phẩm (`sync:product`: chắt lọc từ đây làm đoạn FAQ lấn đoạn sản phẩm khi tìm kiếm — EVAL fs-m3 lần 1 hạ nhóm mixed 29/30 → 21/30), và `metadata.distill_hash` khác `content_hash`
@@ -17,8 +17,13 @@ export async function listChunksToDistill(
   workspaceId: string,
   limit: number,
 ): Promise<DistillChunkRow[]> {
-  const r = await tx.execute<{ id: string; content: string; content_hash: string }>(sql`
-    SELECT c.id, c.content, c.content_hash
+  const r = await tx.execute<{
+    id: string;
+    content: string;
+    content_hash: string;
+    title: string;
+  }>(sql`
+    SELECT c.id, c.content, c.content_hash, s.title
       FROM cf.kb_chunks c JOIN cf.kb_sources s ON s.id = c.source_id AND s.workspace_id = c.workspace_id
      WHERE c.workspace_id = ${workspaceId}::uuid AND c.version_id IS NULL AND c.is_draft
        AND NOT c.injection_suspected
@@ -27,7 +32,12 @@ export async function listChunksToDistill(
        AND c.metadata ->> 'distill_hash' IS DISTINCT FROM c.content_hash
      ORDER BY c.chunk_key
      LIMIT ${limit}`);
-  return r.rows.map((row) => ({ id: row.id, content: row.content, contentHash: row.content_hash }));
+  return r.rows.map((row) => ({
+    id: row.id,
+    content: row.content,
+    contentHash: row.content_hash,
+    title: row.title,
+  }));
 }
 
 /** Đánh dấu đoạn đã chắt lọc ở bản nội dung này (chỉ khi `content_hash` vẫn đúng bản đã đọc). */

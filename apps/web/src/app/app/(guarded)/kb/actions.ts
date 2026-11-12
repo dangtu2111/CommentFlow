@@ -32,7 +32,11 @@ export type KbNotice =
   | 'invalid'
   | 'not_found'
   | 'unavailable'
-  | 'rate_limited';
+  | 'rate_limited'
+  | 'applied'
+  | 'rejected'
+  | 'no_profile'
+  | 'too_long';
 
 type Session = { workspaceId: string; userId: string };
 type Tx = Parameters<Parameters<ReturnType<typeof getDb>['withActor']>[2]>[0];

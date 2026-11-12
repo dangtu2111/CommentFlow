@@ -217,6 +217,52 @@ describe('FR-052 Shopify connector — phân trang', () => {
     ]);
   });
 
+  it('KB-SHOP-V2 đọc thông tin cửa hàng (chỉ query): tên, email liên hệ, tên miền chính, mô tả, địa chỉ thanh toán', async () => {
+    const { connector, calls } = harness([
+      jsonResponse({
+        data: {
+          shop: {
+            name: 'Demo Shop',
+            contactEmail: 'a@demo.vn',
+            primaryDomain: { url: 'https://demo.vn' },
+            description: null,
+            billingAddress: {
+              address1: '1 Lê Lợi',
+              city: 'Q1',
+              province: null,
+              country: 'Việt Nam',
+            },
+          },
+        },
+      }),
+    ]);
+    expect(await connector.fetchShop()).toEqual({
+      name: 'Demo Shop',
+      contactEmail: 'a@demo.vn',
+      primaryDomainUrl: 'https://demo.vn',
+      description: null,
+      billingAddress: { address1: '1 Lê Lợi', city: 'Q1', province: null, country: 'Việt Nam' },
+    });
+    expect(calls[0]?.body.query).toContain('billingAddress');
+    expect(calls[0]?.body.query).not.toContain('mutation');
+  });
+
+  it('KB-SHOP-V2 thông tin cửa hàng: thiếu quyền (ACCESS_DENIED) → PERMISSION; hình dạng sai bị chặn', async () => {
+    const denied = harness([
+      jsonResponse({
+        errors: [
+          {
+            message: 'Access denied for billingAddress field.',
+            extensions: { code: 'ACCESS_DENIED' },
+          },
+        ],
+      }),
+    ]);
+    expect((await failureOf(denied.connector.fetchShop())).code).toBe('PERMISSION');
+    const bad = harness([jsonResponse({ data: { shop: { name: 5 } } })]);
+    await expect(bad.connector.fetchShop()).rejects.toBeTruthy();
+  });
+
   it('FR-113 đọc chủ đề webhook đã đăng ký (chỉ query, không mutation), loại trùng', async () => {
     const { connector, calls } = harness([jsonResponse(webhooksResponse)]);
     expect(await connector.listWebhookSubscriptions()).toEqual([
