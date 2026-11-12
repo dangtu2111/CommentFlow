@@ -139,6 +139,7 @@ export {
   type ShopifyConnectorOptions,
   type ShopifyPolicy,
   type ShopifyProduct,
+  type ShopifyShop,
   type ShopifyVariant,
 } from './shopify/connector';
 export { buildShopifyImportPlan, parseShopifyMoney } from './shopify/normalize';

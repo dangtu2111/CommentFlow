@@ -6,6 +6,7 @@ import {
   isPlatformError,
   type ShopifyCatalog,
   type ShopifyPolicy,
+  type ShopifyShop,
   type TokenCipher,
   TokenDecryptError,
 } from '@flow/connectors';
@@ -17,6 +18,7 @@ import {
   readShopifyStoreCredentials,
   recordShopifySync,
   refreshPolicySuggestions,
+  replaceShopSuggestionDraftsForProfiles,
   type ShopifySyncDetail,
   type ShopifySyncResult,
   type ShopifySyncSummary,
@@ -26,6 +28,7 @@ import {
   htmlToPlainText,
   type ImportProductPlan,
   SHOPIFY_TOKEN_KEY,
+  shopifyShopToSuggestions,
   shopifySyncJobSchema,
 } from '@flow/shared';
 import type { Logger } from '../logger';
@@ -61,6 +64,10 @@ export type ShopifySyncDeps = {
   suggestPolicyFacts?: (
     policies: Array<{ type: string; content: string }>,
   ) => Promise<number | undefined>;
+  /** Thông tin cửa hàng để ĐỀ XUẤT điền hồ sơ (KB-SHOP-V2); thiếu quyền/lỗi KHÔNG làm hỏng việc nạp. Không truyền cả hai = bỏ qua. */
+  fetchShop?: (shopDomain: string, accessToken: string) => Promise<ShopifyShop>;
+  /** Ghi đề xuất NHÁP từ thông tin cửa hàng; trả số đề xuất ghi được. */
+  suggestShop?: (shop: ShopifyShop) => Promise<number>;
   buildPlan: (catalog: ShopifyCatalog) => ImportProductPlan[];
   apply: (plan: ImportProductPlan[]) => Promise<ShopifySyncSummary>;
   record: (result: ShopifySyncResult, summary: ShopifySyncDetail) => Promise<void>;
@@ -110,6 +117,7 @@ export async function runShopifySync(deps: ShopifySyncDeps): Promise<ShopifySync
       ...(await deps.apply(plan)),
       ...currencyWarning(catalog.currencyCode, plan),
       ...(await syncPolicies(deps, stored.shopDomain, accessToken)),
+      ...(await syncShopSuggestions(deps, stored.shopDomain, accessToken)),
       ...(grantedScope === null ? {} : { scope: grantedScope }),
     };
     result = 'ok';
@@ -207,6 +215,28 @@ async function syncPolicies(
   }
 }
 
+/**
+ * Đề xuất "Thông tin cửa hàng" từ Shopify (nháp, Owner duyệt): làm TỐT NHẤT CÓ THỂ — thiếu quyền (ACCESS_DENIED → PERMISSION) hay lỗi tạm chỉ đánh dấu
+ * `shopSuggestionsSkipped` và cảnh báo mã lỗi (không log nội dung), KHÔNG làm hỏng việc nạp sản phẩm.
+ */
+async function syncShopSuggestions(
+  deps: ShopifySyncDeps,
+  shopDomain: string,
+  accessToken: string,
+): Promise<{ shopSuggested?: number; shopSuggestionsSkipped?: true }> {
+  if (!deps.fetchShop || !deps.suggestShop) return {};
+  try {
+    const shop = await deps.fetchShop(shopDomain, accessToken);
+    return { shopSuggested: await deps.suggestShop(shop) };
+  } catch (error) {
+    deps.warn({
+      event: 'shopify_shop_suggestions_skipped',
+      reason: isPlatformError(error) ? error.code : 'unknown',
+    });
+    return { shopSuggestionsSkipped: true };
+  }
+}
+
 /** Danh sách quyền token được cấp, lọc ký tự (chỉ chữ thường, số, `_`, `,`) và cắt 300 ký tự — an toàn để lưu và hiển thị. */
 export function scopeOf(raw: string): string {
   return raw
@@ -271,6 +301,22 @@ export function createShopifySyncHandler(deps: {
             ...(deps.apiVersion ? { apiVersion: deps.apiVersion } : {}),
             ...(deps.fetchImpl ? { fetch: deps.fetchImpl } : {}),
           }).fetchPolicies(),
+        fetchShop: (shopDomain, accessToken) =>
+          createShopifyConnector({
+            shopDomain,
+            getAccessToken: async () => accessToken,
+            ...(deps.apiVersion ? { apiVersion: deps.apiVersion } : {}),
+            ...(deps.fetchImpl ? { fetch: deps.fetchImpl } : {}),
+          }).fetchShop(),
+        suggestShop: (shop) =>
+          db.withJob(workspaceId, (tx) =>
+            // Mỗi ngôn ngữ đã có hồ sơ nhận một bộ đề xuất (chưa có hồ sơ nào → 'vi').
+            replaceShopSuggestionDraftsForProfiles(
+              tx,
+              workspaceId,
+              shopifyShopToSuggestions(shop, 'vi'),
+            ),
+          ),
         applyPolicies: (policies) =>
           db.withJob(workspaceId, (tx) => applyShopifyPolicies(tx, workspaceId, policies)),
         suggestPolicyFacts: (policies) =>

@@ -1,4 +1,4 @@
-import type { ShopBranch, ShopContacts, ShopHours } from '@flow/shared';
+import type { ShopBranch, ShopContacts, ShopHours, ShopSuggestionField } from '@flow/shared';
 import { type ReactNode, useId } from 'react';
 import { Icon, type IconName } from '../ui/icon';
 
@@ -63,6 +63,7 @@ function RealField({
   type = 'text',
   maxLength,
   icon,
+  extra,
 }: {
   label: string;
   name: string;
@@ -73,6 +74,8 @@ function RealField({
   type?: 'text' | 'url';
   maxLength?: number;
   icon?: IconName;
+  /** Đề xuất của hệ thống cho ô này (Áp dụng/Bỏ), hiện ngay dưới ô. */
+  extra?: ReactNode;
 }) {
   const id = useId();
   const common = {
@@ -114,6 +117,87 @@ function RealField({
           {hint}
         </p>
       ) : null}
+      {extra}
+    </div>
+  );
+}
+
+/** Trường đề xuất ứng với từng ô của form. */
+const F = {
+  name: ['name'],
+  slogan: ['slogan'],
+  description: ['description'],
+  address: ['address'],
+  openingHours: ['opening_hours'],
+  contact: ['hotline', 'email'],
+  zalo: ['zalo'],
+  website: ['website'],
+  shopee: ['shopee'],
+  tiktok: ['tiktok'],
+  legalName: ['legal_name'],
+  taxId: ['tax_id'],
+} as const satisfies Record<string, readonly ShopSuggestionField[]>;
+
+/** Đề xuất (nháp) của hệ thống cho một ô: nguồn, giá trị, trích dẫn; nút Áp dụng/Bỏ là của Owner (gửi form riêng ở cuối trang qua thuộc tính `form`). */
+export type ShopSuggestionView = {
+  id: string;
+  field: ShopSuggestionField;
+  value: string;
+  evidenceQuote: string | null;
+  source: 'shopify' | 'kb_text';
+  sourceRef: string | null;
+};
+
+function Suggestions({
+  items,
+  fields,
+  t,
+}: {
+  items: readonly ShopSuggestionView[];
+  fields: readonly ShopSuggestionField[];
+  t: Translate;
+}) {
+  const mine = items.filter((item) => fields.includes(item.field));
+  if (mine.length === 0) return null;
+  return (
+    <div className="mt-2 space-y-2">
+      {mine.map((item) => (
+        <div
+          key={item.id}
+          className="p-space-md bg-secondary-fixed text-on-secondary-fixed rounded-lg space-y-1"
+        >
+          <p className="font-label-sm text-label-sm flex items-center gap-1">
+            <Icon name="auto_awesome" size={14} />
+            {item.source === 'shopify'
+              ? t('shop.suggest.fromShopify')
+              : `${t('shop.suggest.fromText')}${item.sourceRef ? ` “${item.sourceRef}”` : ''}`}
+          </p>
+          <p className="font-body-md text-body-md font-medium break-words">{item.value}</p>
+          {item.evidenceQuote ? (
+            <p className="font-body-sm text-body-sm italic break-words">“{item.evidenceQuote}”</p>
+          ) : null}
+          <div className="flex gap-2 pt-1">
+            <button
+              type="submit"
+              form={`sugg-${item.id}`}
+              name="decision"
+              value="applied"
+              className="px-3 py-1 rounded-lg bg-primary text-on-primary font-title-sm text-title-sm"
+            >
+              {t('shop.suggest.apply')}
+            </button>
+            <button
+              type="submit"
+              form={`sugg-${item.id}`}
+              name="decision"
+              value="rejected"
+              className="px-3 py-1 rounded-lg bg-surface-container-lowest text-on-surface font-title-sm text-title-sm"
+            >
+              {t('shop.suggest.reject')}
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -315,9 +399,11 @@ export function ShopGroundTruthBanner({ t }: { t: Translate }) {
 /** Các khối của MỘT bản ngôn ngữ (nằm trong `<form>` của trang). `profile = null` là bản mới. */
 export function ShopSections({
   profile,
+  suggestions = [],
   t,
   idPrefix,
 }: {
+  suggestions?: readonly ShopSuggestionView[];
   profile: {
     name: string;
     website: string | null;
@@ -338,6 +424,9 @@ export function ShopSections({
 }) {
   const p = (name: string) => `${idPrefix}-${name}`;
   const counter = `${profile?.description?.length ?? 0} / 2000`;
+  const sug = (fields: readonly ShopSuggestionField[]) => (
+    <Suggestions items={suggestions} fields={fields} t={t} />
+  );
   return (
     <div className="space-y-space-xl">
       <section aria-labelledby={p('identity')} className={SECTION}>
@@ -355,12 +444,14 @@ export function ShopSections({
               defaultValue={profile?.name}
               required
               maxLength={200}
+              extra={sug(F.name)}
             />
             <RealField
               label={t('shop.slogan')}
               name="slogan"
               defaultValue={profile?.slogan}
               maxLength={500}
+              extra={sug(F.slogan)}
             />
             <RealField
               label={t('shop.industries')}
@@ -396,6 +487,7 @@ export function ShopSections({
                 defaultValue={profile?.description}
                 hint={t('shop.descriptionHint')}
                 maxLength={2000}
+                extra={sug(F.description)}
               />
             </div>
             <AiNote title={t('shop.aiMechanism.title')}>{t('shop.aiMechanism.body')}</AiNote>
@@ -417,6 +509,7 @@ export function ShopSections({
               name="address"
               defaultValue={profile?.address}
               maxLength={500}
+              extra={sug(F.address)}
             />
           </div>
           <h3 className="font-title-md text-title-md text-on-surface">
@@ -453,6 +546,7 @@ export function ShopSections({
                   name="openingHours"
                   defaultValue={profile?.openingHours}
                   maxLength={500}
+                  extra={sug(F.openingHours)}
                 />
               </div>
               <div className="p-space-md bg-surface-container-low rounded-xl space-y-space-sm">
@@ -516,6 +610,7 @@ export function ShopSections({
                 hint={t('shop.contactHint')}
                 maxLength={200}
                 icon="call"
+                extra={sug(F.contact)}
               />
               <RealField
                 label={t('shop.channels.zalo')}
@@ -523,6 +618,7 @@ export function ShopSections({
                 defaultValue={profile?.contacts?.zalo}
                 maxLength={500}
                 icon="chat"
+                extra={sug(F.zalo)}
               />
               <RealField
                 label={t('shop.website')}
@@ -531,6 +627,7 @@ export function ShopSections({
                 defaultValue={profile?.website}
                 maxLength={500}
                 icon="language"
+                extra={sug(F.website)}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm pt-1">
                 <RealField
@@ -538,12 +635,14 @@ export function ShopSections({
                   name="shopee"
                   defaultValue={profile?.contacts?.shopee}
                   maxLength={500}
+                  extra={sug(F.shopee)}
                 />
                 <RealField
                   label={t('shop.channels.tiktok')}
                   name="tiktok"
                   defaultValue={profile?.contacts?.tiktok}
                   maxLength={500}
+                  extra={sug(F.tiktok)}
                 />
               </div>
             </div>
@@ -565,12 +664,14 @@ export function ShopSections({
               name="legalName"
               defaultValue={profile?.legalName}
               maxLength={500}
+              extra={sug(F.legalName)}
             />
             <RealField
               label={t('shop.legal.taxId')}
               name="taxId"
               defaultValue={profile?.taxId}
               maxLength={500}
+              extra={sug(F.taxId)}
             />
           </div>
           <div className="lg:col-span-7 bg-surface-container-low p-space-lg rounded-xl space-y-space-md">

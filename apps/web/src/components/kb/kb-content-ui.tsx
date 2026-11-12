@@ -16,6 +16,10 @@ const NOTICES = [
   'not_found',
   'unavailable',
   'rate_limited',
+  'applied',
+  'rejected',
+  'no_profile',
+  'too_long',
 ] as const;
 
 /** Mã thông báo `?n=` hợp lệ hoặc `null` (bỏ qua giá trị lạ). */
@@ -31,7 +35,8 @@ const LABEL = 'block font-title-sm text-title-sm text-on-surface';
 export async function KbNoticeBanner({ notice }: { notice: KbNotice | null }) {
   if (!notice) return null;
   const t = await getTranslations('kbContent');
-  const ok = notice === 'saved' || notice === 'deleted';
+  const ok =
+    notice === 'saved' || notice === 'deleted' || notice === 'applied' || notice === 'rejected';
   return (
     <p
       role={ok ? 'status' : 'alert'}

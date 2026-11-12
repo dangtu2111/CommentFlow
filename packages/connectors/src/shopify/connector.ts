@@ -80,6 +80,11 @@ const POLICIES_QUERY = `query CfPolicies {
   shop { shopPolicies { type title body url } }
 }`;
 
+/** Thông tin cửa hàng để ĐỀ XUẤT điền hồ sơ (KB-SHOP-V2); quyền đọc từng trường theo shopify.dev, thiếu quyền → ACCESS_DENIED → PERMISSION. CHƯA kiểm với cửa hàng thật. */
+const SHOP_QUERY = `query CfShop {
+  shop { name contactEmail primaryDomain { url } description billingAddress { address1 city province country } }
+}`;
+
 /** Danh sách webhook đã đăng ký cho app (FR-113); chỉ cần chủ đề, tối đa 100 (đủ cho vài chủ đề bắt buộc). */
 const WEBHOOKS_QUERY = `query CfWebhooks {
   webhookSubscriptions(first: 100) { nodes { topic } }
@@ -155,6 +160,22 @@ const policiesDataSchema = z.object({
     ),
   }),
 });
+const shopDataSchema = z.object({
+  shop: z.object({
+    name: z.string().nullable(),
+    contactEmail: z.string().nullable(),
+    primaryDomain: z.object({ url: z.string() }).nullable(),
+    description: z.string().nullable(),
+    billingAddress: z
+      .object({
+        address1: z.string().nullable(),
+        city: z.string().nullable(),
+        province: z.string().nullable(),
+        country: z.string().nullable(),
+      })
+      .nullable(),
+  }),
+});
 const envelopeSchema = z.object({
   data: z.unknown().optional(),
   errors: z
@@ -207,6 +228,20 @@ export type ShopifyProduct = {
 
 export type ShopifyCatalog = { currencyCode: string; products: ShopifyProduct[] };
 
+/** Thông tin cửa hàng (chỉ đọc) để đề xuất điền "Thông tin cửa hàng". */
+export type ShopifyShop = {
+  name: string | null;
+  contactEmail: string | null;
+  primaryDomainUrl: string | null;
+  description: string | null;
+  billingAddress: {
+    address1: string | null;
+    city: string | null;
+    province: string | null;
+    country: string | null;
+  } | null;
+};
+
 export type ShopifyPolicy = { type: string; title: string; body: string; url: string };
 
 export type ShopifyConnectorOptions = {
@@ -230,6 +265,8 @@ export interface ShopifyConnector {
   fetchCatalog(): Promise<ShopifyCatalog>;
   /** Chính sách cửa hàng có nội dung (đổi trả, vận chuyển…). */
   fetchPolicies(): Promise<ShopifyPolicy[]>;
+  /** Tên, email liên hệ, tên miền chính, mô tả, địa chỉ thanh toán của cửa hàng (để ĐỀ XUẤT, Owner duyệt). */
+  fetchShop(): Promise<ShopifyShop>;
   /** Chủ đề webhook (enum `WebhookSubscriptionTopic`) app đã đăng ký, loại trùng; để đối soát (FR-113). */
   listWebhookSubscriptions(): Promise<string[]>;
 }
@@ -495,6 +532,17 @@ export function createShopifyConnector(options: ShopifyConnectorOptions): Shopif
     async fetchPolicies() {
       const data = await run(POLICIES_QUERY, {}, policiesDataSchema);
       return data.shop.shopPolicies.filter((policy) => policy.body.trim() !== '');
+    },
+
+    async fetchShop() {
+      const { shop } = await run(SHOP_QUERY, {}, shopDataSchema);
+      return {
+        name: shop.name,
+        contactEmail: shop.contactEmail,
+        primaryDomainUrl: shop.primaryDomain?.url ?? null,
+        description: shop.description,
+        billingAddress: shop.billingAddress,
+      };
     },
 
     async listWebhookSubscriptions() {

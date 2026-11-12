@@ -502,6 +502,12 @@ export {
   shopSuggestionInsertSchema,
 } from './shop-profile';
 export {
+  extractContactSuggestions,
+  mergeContactText,
+  type ShopifyShopInfo,
+  shopifyShopToSuggestions,
+} from './shop-suggestions';
+export {
   DEFAULT_SHOPIFY_API_VERSION,
   isShopifyApiVersion,
   readShopifyConfig,

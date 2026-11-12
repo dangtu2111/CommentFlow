@@ -1,4 +1,4 @@
-import type { DistillItem } from './schema';
+import { DISTILL_SHOP_FIELDS, type DistillItem } from './schema';
 
 /**
  * Kiểm CỨNG một đề xuất chắt lọc bằng code (không tin model): mục không đạt bị bỏ và đếm theo lý do.
@@ -6,12 +6,14 @@ import type { DistillItem } from './schema';
  *  - `digit_not_in_quote`: có chữ số trong câu hỏi/đáp mà không có trong câu trích (không số nào do model bịa).
  *  - `money_in_answer`: có số tiền (giá chỉ lấy từ `products`, nguyên tắc #4).
  *  - `placeholder_in_text`: chứa chỗ giữ chỗ `{fact:…}`/`{src:…}` (dành riêng cho code).
+ *  - `invalid_shop_field`: mục `shop_field` thiếu/sai trường hoặc giá trị dài quá 500 ký tự.
  */
 export type DistillRejection =
   | 'quote_not_in_source'
   | 'digit_not_in_quote'
   | 'money_in_answer'
-  | 'placeholder_in_text';
+  | 'placeholder_in_text'
+  | 'invalid_shop_field';
 
 const collapse = (text: string): string => text.replace(/\s+/g, ' ').trim();
 
@@ -26,6 +28,10 @@ const MONEY =
 
 export function verifyDistillItem(item: DistillItem, sourceText: string): DistillRejection | null {
   if (/\{(?:fact|src):/i.test(`${item.question}\n${item.answer}`)) return 'placeholder_in_text';
+  if (item.kind === 'shop_field') {
+    const allowed = (DISTILL_SHOP_FIELDS as readonly string[]).includes(item.field ?? '');
+    if (!allowed || item.answer.length > 500) return 'invalid_shop_field';
+  }
   const quote = collapse(item.evidenceQuote);
   if (!sourceText.includes(item.evidenceQuote) && !collapse(sourceText).includes(quote)) {
     return 'quote_not_in_source';

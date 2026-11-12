@@ -225,3 +225,135 @@ describe('createLlmDistiller — gọi LLM qua LlmClient', () => {
     expect(result.malformed).toBe(0);
   });
 });
+
+/** KB-SHOP-V2 PR5: mục `shop_field` (tên/khẩu hiệu/mô tả/địa chỉ/giờ/pháp lý) và liên hệ do CODE tách — đều thành ĐỀ XUẤT, không thành FAQ. */
+const SHOP_SOURCE =
+  'Cửa hàng Áo Đẹp, địa chỉ 12 Lê Lợi, Quận 1.\nMở cửa từ 8h đến 21h hằng ngày.\nHotline: 0901234567. Email: cskh@aodep.vn.\nMã số thuế 0312345678. Giá áo từ 199k.';
+const shopItem = (over: Record<string, unknown> = {}) => ({
+  kind: 'shop_field' as const,
+  field: 'address' as const,
+  question: 'address',
+  answer: '12 Lê Lợi, Quận 1',
+  evidenceQuote: 'địa chỉ 12 Lê Lợi, Quận 1.',
+  ...over,
+});
+
+describe('shop_field — kiểm cứng', () => {
+  it('đạt: trích nguyên văn, chữ số có trong trích dẫn', () => {
+    expect(verifyDistillItem(shopItem(), SHOP_SOURCE)).toBeNull();
+  });
+
+  it('thiếu trường, trường ngoài danh sách LLM được phép, hoặc giá trị có số tiền → invalid_shop_field', () => {
+    expect(verifyDistillItem(shopItem({ field: undefined }), SHOP_SOURCE)).toBe(
+      'invalid_shop_field',
+    );
+    expect(verifyDistillItem(shopItem({ field: 'hotline' }), SHOP_SOURCE)).toBe(
+      'invalid_shop_field',
+    );
+    expect(
+      verifyDistillItem(
+        shopItem({
+          field: 'description',
+          answer: 'Giá áo từ 199k',
+          evidenceQuote: 'Giá áo từ 199k.',
+        }),
+        SHOP_SOURCE,
+      ),
+    ).toBe('money_in_answer');
+  });
+
+  it('chữ số bịa (không có trong trích dẫn) hoặc trích dẫn không có trong nguồn vẫn bị loại', () => {
+    expect(verifyDistillItem(shopItem({ answer: '99 Lê Lợi, Quận 1' }), SHOP_SOURCE)).toBe(
+      'digit_not_in_quote',
+    );
+    expect(verifyDistillItem(shopItem({ evidenceQuote: 'địa chỉ ở đâu đó' }), SHOP_SOURCE)).toBe(
+      'quote_not_in_source',
+    );
+  });
+});
+
+describe('parseDistillItems — shop_field', () => {
+  it('nhận mục shop_field có field; field "none" cho faq được chấp nhận; shop_field thiếu field là mục sai cấu trúc', () => {
+    const parsed = parseDistillItems(
+      JSON.stringify({
+        items: [
+          shopItem(),
+          { ...item(), field: 'none' },
+          { ...shopItem(), field: 'none' },
+          { ...shopItem(), field: 'bogus' },
+        ],
+      }),
+    );
+    expect(parsed?.items.map((i) => i.kind)).toEqual(['shop_field', 'product_attr']);
+    expect(parsed?.malformed).toBe(2);
+  });
+});
+
+describe('runKbDistill — đề xuất thông tin shop', () => {
+  const withShopOps = (chunks: DistillChunk[]) => {
+    const { ops, state } = fakeOps(chunks);
+    const saved: Array<Record<string, unknown>> = [];
+    ops.saveShopSuggestions = async (items) => {
+      saved.push(...(items as unknown as Array<Record<string, unknown>>));
+      return items.length;
+    };
+    return { ops, state, saved };
+  };
+  const shopChunk = (id: string, title = 'Giới thiệu'): DistillChunk => ({
+    ...chunk(id, SHOP_SOURCE),
+    title,
+  });
+
+  it('mục shop_field đạt → đề xuất (không vào FAQ); liên hệ tách bằng regex trên văn bản GỐC (không gửi LLM); kèm tiêu đề nguồn', async () => {
+    const seen: string[] = [];
+    const distiller: Distiller = {
+      distill: async ({ text }) => {
+        seen.push(text);
+        return {
+          items: [shopItem(), item({ evidenceQuote: 'câu bịa không có trong nguồn' })],
+          malformed: 0,
+          costUsd: 0.01,
+        };
+      },
+    };
+    const { ops, state, saved } = withShopOps([shopChunk('c1')]);
+    const stats = await runKbDistill({ workspaceId: 'w', distiller, ops });
+    expect(state.drafts).toEqual([]); // không có FAQ
+    expect(stats).toMatchObject({ shopFieldsAccepted: 1, shopSuggested: 3 });
+    const byField = Object.fromEntries(saved.map((x) => [x.field, x]));
+    expect(byField.address).toMatchObject({
+      value: '12 Lê Lợi, Quận 1',
+      source: 'kb_text',
+      sourceRef: 'Giới thiệu',
+      evidenceQuote: 'địa chỉ 12 Lê Lợi, Quận 1.',
+    });
+    expect(byField.hotline).toMatchObject({ value: '0901234567' });
+    expect(byField.email).toMatchObject({ value: 'cskh@aodep.vn' });
+    // Gửi LLM là bản đã che PII; regex chạy trên bản gốc nên vẫn thấy số.
+    expect(seen[0]).not.toMatch(/0901234567|cskh@aodep\.vn/);
+  });
+
+  it('cùng một trường ở nhiều đoạn: giữ lần gặp đầu tiên trong lượt chạy', async () => {
+    const distiller: Distiller = {
+      distill: async () => ({ items: [], malformed: 0, costUsd: 0 }),
+    };
+    const { ops, saved } = withShopOps([
+      { ...chunk('c1', 'Hotline 0901234567'), title: 'A' },
+      { ...chunk('c2', 'Hotline 0912345678'), title: 'B' },
+    ]);
+    await runKbDistill({ workspaceId: 'w', distiller, ops });
+    const hotlines = saved.filter((x) => x.field === 'hotline');
+    expect(hotlines).toHaveLength(1);
+    expect(hotlines[0]).toMatchObject({ value: '0901234567', sourceRef: 'A' });
+  });
+
+  it('không có bước lưu đề xuất → bỏ qua, không lỗi; shop_field vẫn không vào FAQ', async () => {
+    const distiller: Distiller = {
+      distill: async () => ({ items: [shopItem()], malformed: 0, costUsd: 0 }),
+    };
+    const { ops, state } = fakeOps([shopChunk('c1')]);
+    const stats = await runKbDistill({ workspaceId: 'w', distiller, ops });
+    expect(state.drafts).toEqual([]);
+    expect(stats.shopSuggested).toBe(0);
+  });
+});

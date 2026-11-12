@@ -14,5 +14,11 @@ export {
   type DistillStats,
   runKbDistill,
 } from './run-distill';
-export { DISTILL_KINDS, type DistillItem, type DistillKind } from './schema';
+export {
+  DISTILL_KINDS,
+  DISTILL_SHOP_FIELDS,
+  type DistillItem,
+  type DistillKind,
+  type DistillShopField,
+} from './schema';
 export { type DistillRejection, digitGroups, verifyDistillItem } from './verify';
