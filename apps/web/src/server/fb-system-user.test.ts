@@ -112,3 +112,22 @@ describe('disconnect', () => {
     expect(await code('08006')).toBe('unavailable');
   });
 });
+
+describe('mã lỗi Postgres nằm trong cause (Drizzle bọc lỗi)', () => {
+  it('42501/P0002 trong cause vẫn được dịch đúng, không thành unavailable', async () => {
+    const wrapped = (code: string) =>
+      Object.assign(new Error('Failed query'), { cause: Object.assign(new Error('pg'), { code }) });
+    const forbidden = build({
+      save: vi.fn(async () => {
+        throw wrapped('42501');
+      }),
+    });
+    expect(await forbidden.service.save(SESSION, TOKEN)).toBe('forbidden');
+    const missing = build({
+      disconnect: vi.fn(async () => {
+        throw wrapped('P0002');
+      }),
+    });
+    expect(await missing.service.disconnect(SESSION)).toBe('not_found');
+  });
+});

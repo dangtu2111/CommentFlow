@@ -80,12 +80,14 @@ describe('save / get / quyền', () => {
     expect(code).toBe(RLS);
   });
 
-  it('web (withActor, kể cả Owner) KHÔNG gọi được hàm đọc ciphertext và hàm đánh dấu hỏng', async () => {
+  it('Owner (withActor) đọc được ciphertext qua hàm DEFINER; Staff thì KHÔNG (0087)', async () => {
+    const token = await app.withActor(ws, owner, (tx) => readFbSystemConnectionToken(tx));
+    expect(token?.keyVersion).toBe(1);
     expect(
-      await expectRejectCode(app.withActor(ws, owner, (tx) => readFbSystemConnectionToken(tx))),
+      await expectRejectCode(app.withActor(ws, staff, (tx) => readFbSystemConnectionToken(tx))),
     ).toBe(RLS);
     expect(
-      await expectRejectCode(app.withActor(ws, owner, (tx) => markFbSystemConnectionInvalid(tx))),
+      await expectRejectCode(app.withActor(ws, staff, (tx) => markFbSystemConnectionInvalid(tx))),
     ).toBe(RLS);
   });
 
@@ -143,8 +145,11 @@ describe('đọc ciphertext (chỉ hệ thống) và vòng đời', () => {
     expect(Buffer.compare(token?.ciphertext ?? Buffer.alloc(0), data)).toBe(0);
   });
 
-  it('workspace khác đọc không ra token của workspace này', async () => {
+  it('workspace khác đọc không ra token của workspace này (cả Owner lẫn hệ thống)', async () => {
     expect(await worker.withJob(other, (tx) => readFbSystemConnectionToken(tx))).toBeNull();
+    expect(
+      await app.withActor(other, otherOwner, (tx) => readFbSystemConnectionToken(tx)),
+    ).toBeNull();
   });
 
   it('Meta từ chối token → invalid: không còn đọc được ciphertext; dán token mới thì connected lại', async () => {

@@ -610,6 +610,13 @@
       "when": 1795500000000,
       "tag": "0086_fb_system_connections",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1795600000000,
+      "tag": "0087_fb_system_connection_owner_read",
+      "breakpoints": true
     }
   ]
 }

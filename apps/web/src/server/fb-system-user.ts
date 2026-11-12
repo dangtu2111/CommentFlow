@@ -37,10 +37,16 @@ export type FbSystemUserDeps = {
   warn: (event: { event: string; reason: string }) => void;
 };
 
-const codeOf = (error: unknown): string | undefined =>
-  typeof error === 'object' && error !== null && 'code' in error
-    ? String((error as { code: unknown }).code)
-    : undefined;
+/** Mã lỗi Postgres; Drizzle bọc lỗi gốc trong `cause` nên đọc cả hai tầng. */
+const codeOf = (error: unknown): string | undefined => {
+  for (let current: unknown = error, depth = 0; current && depth < 3; depth += 1) {
+    if (typeof current === 'object' && 'code' in current) {
+      return String((current as { code: unknown }).code);
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+  return undefined;
+};
 
 /**
  * Dịch vụ token System User Facebook (CHANNELS-SYSTEM-USER). Quyền do DB quyết định (hàm DEFINER, migration 0086): ở đây chỉ kiểm

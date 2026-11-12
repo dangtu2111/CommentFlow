@@ -131,8 +131,8 @@ const SYSTEM_USER_REQUIRED_SCOPE = 'pages_show_list';
 
 /**
  * Dịch vụ token System User (CHANNELS-SYSTEM-USER) nối DB + Meta thật. Nơi gọi PHẢI đã gọi `requireAppUser({ role: 'owner' })`.
- * Lưu/ngắt đi qua `withActor` (DB tự kiểm Owner); ĐỌC ciphertext và đánh dấu hỏng đi qua `withJob(workspaceId)` — chỉ sau khi
- * Owner đã được kiểm (cùng cách `setFlag` của kênh). Mã hóa dùng `TOKEN_ENC_KEYS` cùng token Page; thiếu khóa → `encrypt = undefined`.
+ * Mọi thao tác đi qua `withActor` (DB tự kiểm Owner, migration 0086/0087): web chỉ có kết nối cf_app nên `withJob` không phải
+ * ngữ cảnh hệ thống (ADR 011). Mã hóa dùng `TOKEN_ENC_KEYS` cùng token Page; thiếu khóa → `encrypt = undefined`.
  */
 export function buildFbSystemUserService(config: EnabledFbConfig, fetchImpl?: typeof fetch) {
   const db = getDb();
@@ -175,10 +175,10 @@ export function buildFbSystemUserService(config: EnabledFbConfig, fetchImpl?: ty
       db.withActor(session.workspaceId, session.userId, (tx) => saveFbSystemConnection(tx, sealed)),
     readCipher: (session) =>
       db
-        .withJob(session.workspaceId, (tx) => readFbSystemConnectionToken(tx))
+        .withActor(session.workspaceId, session.userId, (tx) => readFbSystemConnectionToken(tx))
         .then((row) => (row ? { ciphertext: row.ciphertext, keyVersion: row.keyVersion } : null)),
     markInvalid: (session) =>
-      db.withJob(session.workspaceId, (tx) => markFbSystemConnectionInvalid(tx)),
+      db.withActor(session.workspaceId, session.userId, (tx) => markFbSystemConnectionInvalid(tx)),
     disconnect: (session) =>
       db.withActor(session.workspaceId, session.userId, (tx) => disconnectFbSystemConnection(tx)),
     warn: (event) => console.error(JSON.stringify(event)),
