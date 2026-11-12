@@ -6,7 +6,7 @@ import {
   createMlReranker,
   resolveEmbeddingConfig,
 } from '@flow/ai';
-import { createTokenCipher, parseTokenKeys } from '@flow/connectors';
+import { createTokenCipher, type FacebookConnector, parseTokenKeys } from '@flow/connectors';
 import {
   countEmbeddingModels,
   countRepliesForCommentThread,
@@ -14,6 +14,7 @@ import {
   DEFAULT_MERGE_WINDOW_SECONDS,
   getEmbeddingState,
   getMergeWindowSeconds,
+  hydratePostFields,
 } from '@flow/db';
 import { createFlags } from '@flow/saas-core';
 import {
@@ -44,6 +45,7 @@ import { createKbSyncHandler } from './jobs/kb-sync';
 import { createPingHandler } from './jobs/ping';
 import { createPipelineHandler } from './jobs/pipeline-job';
 import { startPipelineSweep } from './jobs/pipeline-sweep';
+import { createPostHydrator } from './jobs/post-hydrate';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
 import { createShopifySyncHandler } from './jobs/shopify-sync';
@@ -136,10 +138,39 @@ async function main(): Promise<void> {
           ),
       }
     : undefined;
+  // Sổ connector: RỖNG khi `FB_CONNECTOR_ENABLED` tắt (mặc định) → yêu cầu ghi `connector_unavailable`, không gọi Meta.
+  const registry = buildConnectorRegistry({
+    db,
+    facebook: config.facebook,
+    instagram: config.instagram,
+    tiktok: config.tiktok,
+    tokenEncKeys: config.tokenEncKeys,
+    logger,
+  });
+  // POST-HYDRATE: điền nội dung bài mới (cần connector Facebook; tắt → bỏ qua, bài hiện với mã ngoài như trước).
+  const facebookConnector = registry.has('facebook') ? registry.get('facebook') : undefined;
+  const fetchPost = (
+    facebookConnector as { fetchPost?: FacebookConnector['fetchPost'] } | undefined
+  )?.fetchPost?.bind(facebookConnector);
+  const hydrate = fetchPost
+    ? createPostHydrator({
+        fetchPost,
+        save: (target, info) =>
+          db.withJob(target.workspaceId, (tx) =>
+            hydratePostFields(tx, target.workspaceId, target.postId, info),
+          ),
+        logger,
+      })
+    : undefined;
   await boss.work(
     INGEST_QUEUE,
     { batchSize: 1, localConcurrency: 10 },
-    createIngestHandler({ db, logger, ...(pipelineHook ? { pipeline: pipelineHook } : {}) }),
+    createIngestHandler({
+      db,
+      logger,
+      ...(pipelineHook ? { pipeline: pipelineHook } : {}),
+      ...(hydrate ? { hydrate } : {}),
+    }),
   );
   let stopPipelineSweep: (() => void) | undefined;
   if (pipelineOn && llm.extractor && llm.drafter) {
@@ -182,15 +213,6 @@ async function main(): Promise<void> {
       isEnabled: pipelineEnabledFor,
     });
   }
-  // Sổ connector: RỖNG khi `FB_CONNECTOR_ENABLED` tắt (mặc định) → yêu cầu ghi `connector_unavailable`, không gọi Meta.
-  const registry = buildConnectorRegistry({
-    db,
-    facebook: config.facebook,
-    instagram: config.instagram,
-    tiktok: config.tiktok,
-    tokenEncKeys: config.tokenEncKeys,
-    logger,
-  });
   // docs/09 §9: send — tối đa 3 job đồng thời; `sendRecheck` + khóa theo yêu cầu chống gửi trùng.
   await boss.work(
     SEND_QUEUE,

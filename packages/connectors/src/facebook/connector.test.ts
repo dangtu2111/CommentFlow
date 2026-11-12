@@ -494,6 +494,60 @@ describe('fetchPostComments — GET /{post-id}/comments (filter=stream)', () => 
   });
 });
 
+describe('POST-HYDRATE fetchPost — GET /{post-id}?fields=message,permalink_url,full_picture,created_time', () => {
+  const POST = `${PAGE_ID}_3000000000003`;
+
+  it('đọc nội dung, liên kết, ảnh, thời gian đăng; chỉ GET, đúng trường', async () => {
+    const { connector, calls } = harness([
+      json({
+        id: POST,
+        message: '  Áo thun mới về\n\nGiá liên hệ  ',
+        permalink_url: 'https://www.facebook.com/1000000000001/posts/3000000000003',
+        full_picture: 'https://scontent.xx.fbcdn.net/v/t39/abc.jpg?x=1',
+        created_time: '2026-11-05T03:00:00+0000',
+      }),
+    ]);
+    const post = await connector.fetchPost(channel, POST);
+    expect(post).toEqual({
+      message: 'Áo thun mới về\n\nGiá liên hệ',
+      permalink: 'https://www.facebook.com/1000000000001/posts/3000000000003',
+      mediaUrl: 'https://scontent.xx.fbcdn.net/v/t39/abc.jpg?x=1',
+      createdTime: new Date('2026-11-05T03:00:00Z'),
+    });
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('GET');
+    expect(call.url.pathname).toBe(`/v27.0/${POST}`);
+    expect(call.url.searchParams.get('fields')).toBe(
+      'message,permalink_url,full_picture,created_time',
+    );
+  });
+
+  it('bài thiếu trường (ảnh không chữ, không ảnh) → trường vắng là null; địa chỉ không phải http(s) bị bỏ', async () => {
+    const { connector } = harness([
+      json({ id: POST, permalink_url: 'javascript:alert(1)', full_picture: 'ftp://x/y.jpg' }),
+    ]);
+    expect(await connector.fetchPost(channel, POST)).toEqual({
+      message: null,
+      permalink: null,
+      mediaUrl: null,
+      createdTime: null,
+    });
+  });
+
+  it('thân sai hình dạng → UNKNOWN; id sai → UNKNOWN không gọi mạng; lỗi Graph dùng chung xử lý (token hết hạn)', async () => {
+    const bad = harness([json({ message: 5 })]);
+    expect((await failureOf(bad.connector.fetchPost(channel, POST))).code).toBe('UNKNOWN');
+    const badId = harness([]);
+    expect((await failureOf(badId.connector.fetchPost(channel, '../x'))).message).toBe(
+      'facebook_invalid_id',
+    );
+    const expired = harness([json(graphError(190), 400)]);
+    expect((await failureOf(expired.connector.fetchPost(channel, POST))).code).toBe(
+      'TOKEN_EXPIRED',
+    );
+  });
+});
+
 describe('FR-023 fetchComments — quét cả Page theo bài có hoạt động gần đây (QP1)', () => {
   const since = new Date('2026-11-01T00:00:00Z');
 
@@ -651,6 +705,7 @@ describe('kiểm id trước khi ghép đường dẫn — id sai KHÔNG gọi m
       connector.setHidden(channel, id, true),
       connector.fetchReplies(channel, id),
       connector.fetchPostComments(channel, id),
+      connector.fetchPost(channel, id),
       connector.getPageSubscription({ ...channel, externalId: id }),
       connector.subscribePage({ ...channel, externalId: id }),
     ];

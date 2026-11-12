@@ -383,6 +383,7 @@ export {
   type SavePolicyFactInput,
   savePolicyFact,
 } from './queries/policy-facts';
+export { hydratePostFields, type PostHydration } from './queries/post-hydrate';
 export { createPostNote } from './queries/post-notes';
 export { linkProductsToPosts } from './queries/post-products';
 export {
