@@ -13,6 +13,7 @@ export {
   readChannelToken,
   setChannelToken,
 } from './channel-tokens';
+export { setChannelWebhookSubscribed } from './channel-webhook';
 export { createDb, type Database, type FlowDb } from './client';
 export { markCommentDeleted } from './comment-redact';
 export {

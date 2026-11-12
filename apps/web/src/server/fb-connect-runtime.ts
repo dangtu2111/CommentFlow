@@ -11,6 +11,7 @@ import {
   readFbSystemConnectionToken,
   saveFbSystemConnection,
   setChannelToken,
+  setChannelWebhookSubscribed,
   sql,
 } from '@flow/db/runtime';
 import { FB_SYSTEM_TOKEN_KEY } from '@flow/shared';
@@ -24,9 +25,8 @@ import { createFbSystemUserService, type FbSystemUserVerifyResult } from './fb-s
  * Nối nghiệp vụ kết nối Facebook với Meta + DB thật. Chỉ dùng khi `FB_OAUTH_ENABLED=true`. Nơi gọi PHẢI đã gọi
  * `requireAppUser({ role: 'owner' })` và truyền `workspaceId`/`userId` từ đó (không từ client).
  *
- * Quyền ghi: tạo kênh + lưu token đi qua `withActor` (hàm DEFINER tự kiểm Owner đang hoạt động — ADR 007 §2). Cột
- * `webhook_subscribed` chỉ ĐƯỜNG HỆ THỐNG đặt được (trigger `guard_channel_user_update`), nên bước cuối dùng
- * `withJob(workspaceId)` — chỉ chạy SAU khi đã xác nhận đăng ký webhook (xem `connectFacebookPages`).
+ * Quyền ghi: tạo kênh, lưu token và đặt cờ `webhook_subscribed` đều đi qua `withActor` (hàm DEFINER tự kiểm Owner đang hoạt động — ADR 007 §2;
+ * cờ webhook: migration 0088). Cờ chỉ được đặt `true` SAU khi đã xác nhận đăng ký webhook với Meta (xem `connectFacebookPages`).
  */
 export type EnabledFbConfig = Extract<FbOAuthConfig, { enabled: true }>;
 
@@ -95,15 +95,15 @@ export function buildChannelStore(
     clearWebhookSubscribed: (channelId) => setFlag(channelId, false),
   };
 
-  /** Đường hệ thống; 0 dòng bị đổi (kênh vừa bị ngắt/đổi trạng thái) → ném để không báo thành công sai. */
+  /**
+   * Đổi cờ qua hàm DEFINER cho Owner (migration 0088): web chỉ có kết nối cf_app nên `withJob` KHÔNG phải ngữ cảnh hệ thống (ADR 011) và trigger
+   * chặn đổi cột này. 0 dòng bị đổi (kênh vừa bị ngắt/đổi trạng thái) → ném để không báo thành công sai.
+   */
   async function setFlag(channelId: string, value: boolean): Promise<void> {
-    const result = await db.withJob(workspaceId, (tx) =>
-      tx.execute(sql`
-        UPDATE cf.channels SET webhook_subscribed = ${value}, updated_at = now()
-         WHERE id = ${channelId}::uuid AND workspace_id = ${workspaceId}::uuid
-           AND platform = 'facebook' AND status = 'connected'`),
+    const changed = await db.withActor(workspaceId, userId, (tx) =>
+      setChannelWebhookSubscribed(tx, channelId, value),
     );
-    if (result.rowCount !== 1) throw new Error('channel_not_updated');
+    if (!changed) throw new Error('channel_not_updated');
   }
 }
 
