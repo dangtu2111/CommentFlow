@@ -3923,7 +3923,7 @@
   "calendar": {
     "title": "Publishing calendar",
     "heading": "Publishing calendar and post management",
-    "subtitle": "See your shop's published posts week by week. Scheduling and drafts are coming later.",
+    "subtitle": "See your shop's published posts and the posts from CommentFlow (scheduled, publishing, failed) week by week; drafts are listed below.",
     "soon": "Coming soon",
     "views": {
       "label": "View",

@@ -22,7 +22,9 @@ let channel: string;
 let pageExternalId: string;
 const quiet = { info: () => {}, warn: () => {}, error: () => {} };
 
-const sweep = (publish: (ch: unknown, text: string) => Promise<{ externalId: string }>) =>
+const sweep = (
+  publish: (ch: { externalId: string }, text: string) => Promise<{ externalId: string }>,
+) =>
   runPublishSweep({
     listDueWorkspaces: async () =>
       (await db.withSystem((tx) => listDuePublishWorkspaces(tx, PUBLISH_MAX_WORKSPACES))).filter(

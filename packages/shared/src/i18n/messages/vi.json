@@ -3923,7 +3923,7 @@
   "calendar": {
     "title": "Lịch đăng",
     "heading": "Lịch phát hành và quản lý bài đăng",
-    "subtitle": "Xem các bài đã đăng của cửa hàng theo tuần. Lên lịch và bản nháp sẽ có ở bản sau.",
+    "subtitle": "Xem bài đã đăng của cửa hàng và bài đăng từ CommentFlow (đã lên lịch, đang đăng, đăng lỗi) theo tuần; bản nháp nằm ở khung bên dưới.",
     "soon": "Sắp có",
     "views": {
       "label": "Kiểu xem",
