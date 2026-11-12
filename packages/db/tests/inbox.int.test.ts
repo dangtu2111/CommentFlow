@@ -287,6 +287,43 @@ afterAll(async () => {
   await admin.end();
 });
 
+describe('COMMENT-AUTHOR-AVATAR — danh sách trả URL ảnh đại diện người bình luận', () => {
+  it('có URL ảnh → authorAvatarUrl; chưa có → null (dọn dữ liệu sau test để không lệch số đếm các test khác)', async () => {
+    const url = 'https://scontent.xx.fbcdn.net/v/avatar.jpg?oh=1';
+    const ids: string[] = [];
+    try {
+      const withAvatar = await comment({
+        ws: wsA,
+        channelId: fbA,
+        postId: normalPost,
+        text: 'có ảnh đại diện',
+        author: 'Khách Ảnh',
+      });
+      ids.push(withAvatar);
+      await admin.query('UPDATE cf.comments SET author_avatar_url = $2 WHERE id = $1', [
+        withAvatar,
+        url,
+      ]);
+      ids.push(
+        await comment({
+          ws: wsA,
+          channelId: fbA,
+          postId: normalPost,
+          text: 'chưa có ảnh đại diện',
+          author: 'Khách Không Ảnh',
+        }),
+      );
+      const items = (await list({ search: 'ảnh đại diện', limit: 50 })).items;
+      const byText = Object.fromEntries(items.map((i) => [i.text, i.authorAvatarUrl]));
+      expect(byText['có ảnh đại diện']).toBe(url);
+      expect(byText['chưa có ảnh đại diện']).toBeNull();
+    } finally {
+      if (ids.length > 0)
+        await admin.query('DELETE FROM cf.comments WHERE id = ANY($1::uuid[])', [ids]);
+    }
+  });
+});
+
 describe('FR-040 tab trạng thái', () => {
   const tabTexts = async (tab: InboxFilter['tab']) => texts((await list({ tab })).items);
 
