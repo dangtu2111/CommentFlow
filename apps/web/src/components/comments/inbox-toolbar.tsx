@@ -1,3 +1,4 @@
+import { COMMENT_LABELS } from '@flow/shared';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { buildInboxHref, INBOX_SEARCH_MAX, type InboxView } from '../../lib/inbox-filters';
@@ -21,7 +22,9 @@ export async function InboxToolbar({
   sample?: { priorityNote: string; newCount: number };
 }) {
   const t = await getTranslations('comments');
-  const hasFilter = Boolean(view.platform || view.channelId || view.adsOnly || view.search);
+  const hasFilter = Boolean(
+    view.platform || view.channelId || view.adsOnly || view.label || view.search,
+  );
   const nextSort = view.sort === 'oldest' ? 'newest' : 'oldest';
   return (
     <div className="shrink-0 space-y-2 bg-surface-container-lowest p-3">
@@ -45,7 +48,7 @@ export async function InboxToolbar({
               placeholder={t('toolbar.search')}
             />
           </label>
-          <details className="group/adv" open={Boolean(view.channelId)}>
+          <details className="group/adv" open={Boolean(view.channelId || view.label)}>
             <summary
               className="flex h-8 cursor-pointer list-none items-center rounded bg-surface-container px-2 text-on-surface-variant transition-colors hover:bg-surface-container-high [&::-webkit-details-marker]:hidden"
               title={t('toolbar.advanced')}
@@ -65,6 +68,21 @@ export async function InboxToolbar({
                   {channels.map((channel) => (
                     <option key={channel.id} value={channel.id}>
                       {channel.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-1 flex-col gap-1 font-label-sm text-label-sm text-on-surface-variant">
+                <span>{t('toolbar.labelsTitle')}</span>
+                <select
+                  name="label"
+                  className="h-8 rounded bg-surface-container-low px-2 font-body-sm text-body-sm text-on-surface"
+                  defaultValue={view.label ?? ''}
+                >
+                  <option value="">{t('toolbar.allLabels')}</option>
+                  {COMMENT_LABELS.map((label) => (
+                    <option key={label} value={label}>
+                      {t(`labels.${label}`)}
                     </option>
                   ))}
                 </select>
@@ -103,6 +121,8 @@ export async function InboxToolbar({
         </div>
         {sample ? (
           <span className="font-medium text-tertiary-container">{sample.priorityNote}</span>
+        ) : view.tab === 'pending_review' ? (
+          <span className="font-medium text-tertiary-container">{t('toolbar.priorityNote')}</span>
         ) : null}
       </div>
       {sample ? (

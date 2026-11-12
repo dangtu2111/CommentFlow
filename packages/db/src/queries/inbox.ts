@@ -27,7 +27,12 @@ export const INBOX_PLATFORMS = ['facebook', 'instagram', 'tiktok'] as const;
 export type InboxPlatform = (typeof INBOX_PLATFORMS)[number];
 
 /** Khóa phân trang: giá trị sắp xếp (timestamptz dạng chuỗi, giữ nguyên độ chính xác micro-giây) + id. */
-export type InboxCursor = { createdTime: string; id: string };
+export type InboxCursor = {
+  createdTime: string;
+  id: string;
+  /** Nhóm ưu tiên của dòng cuối trang trước (1 = Mua hàng/Khiếu nại); chỉ có khi sắp theo ưu tiên. */
+  priority?: 0 | 1;
+};
 
 export type InboxFilter = {
   tab: InboxTab;
@@ -37,6 +42,10 @@ export type InboxFilter = {
   adsOnly?: boolean;
   /** Tìm theo tên tác giả hoặc nội dung (không phân biệt hoa/thường và dấu). */
   search?: string;
+  /** Chỉ bình luận mang nhãn AI này (`comments.label`; nơi gọi đã kiểm thuộc `COMMENT_LABELS`). */
+  label?: string;
+  /** Đưa nhãn Mua hàng/Khiếu nại lên đầu (UF-3), trong từng nhóm vẫn theo `sort`. Con trỏ mang thêm nhóm ưu tiên. */
+  priorityFirst?: boolean;
   sort: 'oldest' | 'newest';
   cursor?: InboxCursor | null;
   limit?: number;
@@ -124,6 +133,12 @@ const FROM = sql`
   LEFT JOIN core.users lu ON lu.id = c.locked_by`;
 
 const SORT_KEY = sql`COALESCE(c.created_time, c.created_at)`;
+/** Nhãn cần xử lý trước (FR-005/UF-3): khách muốn mua hoặc đang khiếu nại. */
+const PRIORITY_LABELS = ['purchase', 'complaint'] as const;
+const PRIORITY = sql`(CASE WHEN c.label IN (${sql.join(
+  PRIORITY_LABELS.map((label) => sql`${label}`),
+  sql`, `,
+)}) THEN 1 ELSE 0 END)`;
 
 /** Bộ lọc dùng chung cho danh sách và đếm (không gồm tab, sắp xếp, con trỏ). */
 function commonConditions(workspaceId: string, filter: InboxFilter): SQL[] {
@@ -136,6 +151,7 @@ function commonConditions(workspaceId: string, filter: InboxFilter): SQL[] {
   if (filter.platform) conditions.push(sql`ch.platform = ${filter.platform}`);
   if (filter.channelId) conditions.push(sql`c.channel_id = ${filter.channelId}::uuid`);
   if (filter.adsOnly) conditions.push(sql`p.is_ad`);
+  if (filter.label) conditions.push(sql`c.label = ${filter.label}`);
   const search = filter.search?.trim().slice(0, MAX_SEARCH_LENGTH);
   if (search) {
     const pattern = `%${escapeLikePattern(search)}%`;
@@ -164,6 +180,7 @@ type Row = {
   is_ad: boolean;
   locked_by_name: string | null;
   sort_key: string;
+  priority: number;
 };
 
 export async function listComments(
@@ -178,29 +195,46 @@ export async function listComments(
   const tabPredicate = TAB_PREDICATE[filter.tab];
   if (tabPredicate) conditions.push(tabPredicate);
   const oldest = filter.sort === 'oldest';
+  const priorityFirst = filter.priorityFirst === true;
   if (filter.cursor) {
     const cursor = sql`(${filter.cursor.createdTime}::timestamptz, ${filter.cursor.id}::uuid)`;
+    const after = oldest
+      ? sql`(${SORT_KEY}, c.id) > ${cursor}`
+      : sql`(${SORT_KEY}, c.id) < ${cursor}`;
+    // Sắp theo ưu tiên: nhóm 1 trước nhóm 0 (PRIORITY DESC), trong nhóm theo thời gian; con trỏ cũ không có nhóm → coi là nhóm thường.
     conditions.push(
-      oldest ? sql`(${SORT_KEY}, c.id) > ${cursor}` : sql`(${SORT_KEY}, c.id) < ${cursor}`,
+      priorityFirst
+        ? sql`(${PRIORITY} < ${filter.cursor.priority ?? 0} OR (${PRIORITY} = ${filter.cursor.priority ?? 0} AND ${after}))`
+        : after,
     );
   }
   const direction = oldest ? sql`ASC` : sql`DESC`;
+  const order = priorityFirst
+    ? sql`${PRIORITY} DESC, ${SORT_KEY} ${direction}, c.id ${direction}`
+    : sql`${SORT_KEY} ${direction}, c.id ${direction}`;
   const result = await tx.execute<Row>(sql`
     SELECT c.id, c.status, c.text, c.author_name, c.author_external_id, c.created_time, c.label,
            c.needs_followup, c.channel_id, ch.name AS channel_name, ch.platform, p.is_ad,
            CASE WHEN c.locked_until > now() AND c.locked_by IS DISTINCT FROM ${viewerId ?? null}::uuid
                 THEN lu.name END AS locked_by_name,
-           (${SORT_KEY})::text AS sort_key
+           (${SORT_KEY})::text AS sort_key, ${PRIORITY} AS priority
     ${FROM}
     ${where(conditions)}
-    ORDER BY ${SORT_KEY} ${direction}, c.id ${direction}
+    ORDER BY ${order}
     LIMIT ${limit + 1}`);
   const rows = result.rows;
   const page = rows.slice(0, limit);
   const last = page.at(-1);
   return {
     items: page.map(toItem),
-    nextCursor: rows.length > limit && last ? { createdTime: last.sort_key, id: last.id } : null,
+    nextCursor:
+      rows.length > limit && last
+        ? {
+            createdTime: last.sort_key,
+            id: last.id,
+            ...(priorityFirst ? { priority: (Number(last.priority) === 1 ? 1 : 0) as 0 | 1 } : {}),
+          }
+        : null,
   };
 }
 
