@@ -44,6 +44,11 @@ const envShape = z.object({
     .string()
     .optional()
     .transform((value) => value === 'true'),
+  /** POST-PUBLISHING (Q-PUB1): đăng bài lên Fanpage Facebook thật — cờ MẶC ĐỊNH TẮT; chỉ đúng chữ `true` mới bật (cần `FB_CONNECTOR_ENABLED=true`). */
+  FB_PUBLISH_ENABLED: z
+    .string()
+    .optional()
+    .transform((value) => value?.trim() === 'true'),
   META_APP_ID: z.string().optional(),
   META_APP_SECRET: z.string().optional(),
 });
@@ -154,6 +159,8 @@ export type WorkerConfig = {
   metaAppSecret: string | undefined;
   facebook: FacebookConnectorConfig;
   workspaceDeleteEnabled: boolean;
+  /** Đăng bài lên Facebook (`FB_PUBLISH_ENABLED`, mặc định TẮT). Bật mà thiếu connector Facebook → lỗi rõ khi khởi động. */
+  publishEnabled: boolean;
   instagram: InstagramConnectorConfig;
   dataExport: DataExportConfig;
   /** Dịch vụ ml cho embedding (env chỉ bật/tắt + địa chỉ); `undefined` = không dùng. Model hoạt động đọc từ DB (`cf.embedding_state`), KHÔNG từ env (FR-133). */
@@ -183,6 +190,7 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     metaAppSecret: env.META_APP_SECRET,
     facebook: loadFacebookConfig(source),
     workspaceDeleteEnabled: env.WORKSPACE_DELETE_ENABLED,
+    publishEnabled: env.FB_PUBLISH_ENABLED,
     instagram: loadInstagramConfig(source),
     dataExport: loadDataExportConfig(source),
     pipeline: {
