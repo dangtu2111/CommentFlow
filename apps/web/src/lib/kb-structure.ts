@@ -19,6 +19,7 @@ export const KB_SUBNAV_GROUPS: ReadonlyArray<{ key: KbSubnavGroupKey; items: KbS
     key: 'structure',
     items: [
       { key: 'kbShop', href: '/app/kb/shop', group: 'structure' },
+      { key: 'kbCatalog', href: '/app/kb/catalog', group: 'structure' },
       { key: 'productImport', href: '/app/products/import', group: 'structure' },
       { key: 'kbPolicies', href: '/app/kb/policies', group: 'structure' },
       { key: 'kbFaq', href: '/app/kb/faq', group: 'structure' },

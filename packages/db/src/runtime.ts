@@ -111,6 +111,13 @@ export {
   saveMaxAiRepliesPerCustomerPost,
 } from './queries/automation-settings';
 export {
+  CATALOG_PAGE_SIZE,
+  type CatalogList,
+  type CatalogListOptions,
+  type CatalogProductRow,
+  listCatalogProducts,
+} from './queries/catalog-list';
+export {
   type ChannelAlert,
   type ChannelAlertStatus,
   listChannelAlerts,
