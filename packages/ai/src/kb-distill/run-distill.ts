@@ -44,6 +44,8 @@ export type DistillStats = {
   inserted: number;
   invalidOutput: number;
   malformed: number;
+  /** Số mục đạt kiểm cứng theo loại (để so các bản prompt). */
+  acceptedByKind: Record<'faq' | 'product_attr' | 'shop_field', number>;
   /** Mục `shop_field` đạt kiểm cứng (thành đề xuất thông tin shop, không thành FAQ). */
   shopFieldsAccepted: number;
   /** Số đề xuất thông tin shop thực sự ghi (gồm cả liên hệ tách bằng regex). */
@@ -76,6 +78,7 @@ export async function runKbDistill(deps: {
     inserted: 0,
     invalidOutput: 0,
     malformed: 0,
+    acceptedByKind: { faq: 0, product_attr: 0, shop_field: 0 },
     shopFieldsAccepted: 0,
     shopSuggested: 0,
     rejected: {},
@@ -119,6 +122,7 @@ export async function runKbDistill(deps: {
         continue;
       }
       stats.accepted += 1;
+      stats.acceptedByKind[item.kind] += 1;
       if (item.kind === 'shop_field') {
         stats.shopFieldsAccepted += 1;
         if (deps.ops.saveShopSuggestions && item.field && item.field !== 'none') {

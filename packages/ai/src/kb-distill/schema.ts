@@ -71,6 +71,36 @@ export const DISTILL_RESPONSE_FORMAT: NonNullable<LlmCallInput['responseFormat']
   },
 };
 
+/**
+ * Định dạng đầu ra của `distill@1` (trước KB-SHOP-V2 PR5): chỉ faq/product_attr, không có `field`. GIỮ NGUYÊN để A/B với `distill@2` cùng điều kiện;
+ * `parseDistillItems` đọc được cả hai (trường `field` tùy chọn).
+ */
+export const DISTILL_RESPONSE_FORMAT_V1: NonNullable<LlmCallInput['responseFormat']> = {
+  name: 'cf_distill',
+  schema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['items'],
+    properties: {
+      items: {
+        type: 'array',
+        maxItems: DISTILL_MAX_ITEMS_PER_CHUNK,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['kind', 'question', 'answer', 'evidenceQuote'],
+          properties: {
+            kind: { type: 'string', enum: ['faq', 'product_attr'] },
+            question: { type: 'string' },
+            answer: { type: 'string' },
+            evidenceQuote: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+};
+
 /** Đọc đầu ra thô của LLM: JSON hỏng → `null` (đoạn bị bỏ qua, đếm `invalid_output`). Mục sai cấu trúc được lọc riêng ở `parseDistillItems`. */
 export function parseDistillItems(
   text: string,

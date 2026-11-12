@@ -4,8 +4,10 @@ import type { LlmCallInput, LlmCallResult, LlmClient } from '../llm-client';
 import {
   createLlmDistiller,
   DISTILL_PROMPT_VERSION,
+  DISTILL_PROMPT_VERSIONS,
   DISTILL_STEP,
   type Distiller,
+  parseDistillPromptVersion,
 } from './distiller';
 import { type DistillChunk, type DistillOps, runKbDistill } from './run-distill';
 import { parseDistillItems } from './schema';
@@ -355,5 +357,87 @@ describe('runKbDistill — đề xuất thông tin shop', () => {
     const stats = await runKbDistill({ workspaceId: 'w', distiller, ops });
     expect(state.drafts).toEqual([]);
     expect(stats.shopSuggested).toBe(0);
+  });
+});
+
+/** A/B prompt chắt lọc (12/11/2026): giữ nguyên bản `distill@1` làm hằng số để đo cùng điều kiện với `distill@2`. */
+describe('prompt chắt lọc A/B', () => {
+  const fakeLlm = () => {
+    const calls: LlmCallInput[] = [];
+    const llm = {
+      call: async (input: LlmCallInput) => {
+        calls.push(input);
+        return { text: JSON.stringify({ items: [item()] }), costUsd: 0.001 } as LlmCallResult;
+      },
+    } as LlmClient;
+    return { llm, calls };
+  };
+  const text = unsafeMarkMasked(SOURCE);
+  const systemOf = (call: LlmCallInput | undefined) =>
+    String(call?.messages.find((m) => m.role === 'system')?.content ?? '');
+  const itemSchemaOf = (call: LlmCallInput | undefined) =>
+    (
+      call?.responseFormat?.schema as {
+        properties: {
+          items: { items: { required: string[]; properties: Record<string, unknown> } };
+        };
+      }
+    ).properties.items.items;
+
+  it('có đúng hai bản; mặc định là bản mới nhất; chuỗi lạ bị từ chối', () => {
+    expect(DISTILL_PROMPT_VERSIONS).toEqual(['distill@1', 'distill@2']);
+    expect(DISTILL_PROMPT_VERSION).toBe('distill@2');
+    expect(parseDistillPromptVersion('distill@1')).toBe('distill@1');
+    expect(parseDistillPromptVersion('distill@2')).toBe('distill@2');
+    expect(parseDistillPromptVersion('distill@3')).toBeNull();
+    expect(parseDistillPromptVersion('')).toBeNull();
+  });
+
+  it('distill@1: đúng prompt cũ (không nhắc shop_field), schema cũ không có field; ghi đúng prompt_version', async () => {
+    const { llm, calls } = fakeLlm();
+    await createLlmDistiller({ llm, model: 'm', promptVersion: 'distill@1' }).distill({
+      workspaceId: 'ws1',
+      text,
+    });
+    expect(calls[0]?.promptVersion).toBe('distill@1');
+    expect(systemOf(calls[0])).not.toContain('shop_field');
+    expect(systemOf(calls[0])).toContain('product_attr');
+    const schema = itemSchemaOf(calls[0]);
+    expect(schema.required).toEqual(['kind', 'question', 'answer', 'evidenceQuote']);
+    expect(schema.properties).not.toHaveProperty('field');
+  });
+
+  it('distill@2 (mặc định): nhắc shop_field, schema có field; vẫn còn product_attr trong cả prompt lẫn schema', async () => {
+    const { llm, calls } = fakeLlm();
+    await createLlmDistiller({ llm, model: 'm' }).distill({ workspaceId: 'ws1', text });
+    expect(calls[0]?.promptVersion).toBe('distill@2');
+    expect(systemOf(calls[0])).toContain('shop_field');
+    expect(systemOf(calls[0])).toContain('product_attr');
+    const schema = itemSchemaOf(calls[0]);
+    expect(schema.required).toContain('field');
+    expect((schema.properties.kind as { enum: string[] }).enum).toEqual([
+      'faq',
+      'product_attr',
+      'shop_field',
+    ]);
+  });
+});
+
+describe('runKbDistill — số mục đạt theo loại', () => {
+  it('acceptedByKind đếm faq / product_attr / shop_field', async () => {
+    const distiller: Distiller = {
+      distill: async () => ({
+        items: [
+          item({ kind: 'faq' }),
+          item({ kind: 'product_attr' }),
+          item({ kind: 'product_attr' }),
+        ],
+        malformed: 0,
+        costUsd: 0,
+      }),
+    };
+    const { ops } = fakeOps([chunk('c1')]);
+    const stats = await runKbDistill({ workspaceId: 'w', distiller, ops });
+    expect(stats.acceptedByKind).toEqual({ faq: 1, product_attr: 2, shop_field: 0 });
   });
 });
