@@ -34,4 +34,29 @@ describe('PostCard (Tailwind, design/stitch/posts.html)', () => {
     expect(html).toContain('Huy hiệu');
     expect(html).toContain('Chân');
   });
+
+  it('có ảnh bài https → hiện <img> lazy, không gửi referrer; không có/ảnh http hoặc URL lạ → giữ khung icon', () => {
+    const withImage = renderToStaticMarkup(
+      <PostCard
+        {...base}
+        pending={false}
+        imageUrl="https://scontent.xx.fbcdn.net/v/anh.jpg?oh=1"
+      />,
+    );
+    expect(withImage).toContain('<img');
+    expect(withImage).toContain('src="https://scontent.xx.fbcdn.net/v/anh.jpg?oh=1"');
+    expect(withImage).toContain('loading="lazy"');
+    expect(withImage).toMatch(/referrerpolicy="no-referrer"/i);
+    for (const bad of [
+      null,
+      undefined,
+      '',
+      'http://x.test/a.jpg',
+      'javascript:alert(1)',
+      'khong-phai-url',
+    ]) {
+      const html = renderToStaticMarkup(<PostCard {...base} pending={false} imageUrl={bad} />);
+      expect(html, String(bad)).not.toContain('<img');
+    }
+  });
 });
