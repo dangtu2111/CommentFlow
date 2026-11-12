@@ -1970,8 +1970,7 @@
       "body": "Something went wrong while loading. Please reload in a few minutes."
     },
     "soonItems": {
-      "kbDocs": "Documents",
-      "kbRules": "Rules & limits"
+      "kbDocs": "Documents"
     },
     "hub": {
       "shopify": {
@@ -2234,7 +2233,8 @@
       "kbFaq": "FAQ",
       "kbVoice": "Brand voice",
       "kbDictionary": "Abbreviation dictionary",
-      "kbCatalog": "Product catalog"
+      "kbCatalog": "Product catalog",
+      "kbRules": "Rules & Limits"
     },
     "logout": "Sign out",
     "navLabel": "Main navigation",
@@ -3429,6 +3429,45 @@
       "prev": "Previous page",
       "next": "Next page",
       "pageOf": "Page {page} of {pages}"
+    },
+    "rules": {
+      "title": "Reply rules & limits",
+      "subtitle": "All the limits currently applied to the shop's AI in one place. Each rule is edited on the page that holds it; this page is read-only.",
+      "soon": "Coming soon",
+      "edit": "Edit",
+      "tryAi": "Try the AI with your own question",
+      "tryAiHint": "Check how the AI answers under the current rules.",
+      "price": {
+        "title": "1. Public pricing",
+        "subtitle": "Price and stock are always read straight from product data; the AI never computes totals, discounts or shipping fees.",
+        "fixed": "Fixed system rule: every amount in a reply must exist in the data source, and code checks it before sending.",
+        "direct": "Quote the price directly",
+        "private": "Invite to private message",
+        "perPost": "Flexible per post",
+        "perChannel": "Choosing how to quote prices per channel is not available yet: it needs new settings storage (in progress).",
+        "autoLink": "Auto-send mode per channel (pricing, advice, purchase) is set in Auto-send settings."
+      },
+      "topics": {
+        "title": "2. What the AI must not do or say",
+        "subtitle": "The \"don't\" list in Brand voice goes straight into the reply-drafting prompt.",
+        "empty": "No prohibitions for this language yet."
+      },
+      "keywords": {
+        "title": "3. Auto-send blocking keywords",
+        "subtitle": "If the AI's draft reply contains a word from this list, the system does not auto-send it; it goes to Pending review for staff.",
+        "empty": "No keywords yet. Add them in Auto-send settings.",
+        "handoff": "Handoff invitations (by topic)",
+        "handoffEmpty": "No custom handoff invitations; the AI uses the default.",
+        "handoffCount": "{count} topics have their own wording"
+      },
+      "missing": {
+        "title": "4. When data is missing",
+        "subtitle": "The AI does not invent information the Knowledge base lacks. The system answers honestly or hands over to staff; code decides, not the AI.",
+        "gaps": "Questions it could not answer are always logged under \"Missing data\" so you can add FAQs.",
+        "gapsLink": "See missing data",
+        "custom": "Custom reply when unsure",
+        "customHint": "Not available yet: it needs new settings storage (in progress)."
+      }
     }
   },
   "kbPolicyFacts": {

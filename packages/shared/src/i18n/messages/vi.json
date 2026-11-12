@@ -1970,8 +1970,7 @@
       "body": "Đã có lỗi khi tải dữ liệu. Hãy tải lại trang sau ít phút."
     },
     "soonItems": {
-      "kbDocs": "Tài liệu",
-      "kbRules": "Quy tắc & Giới hạn"
+      "kbDocs": "Tài liệu"
     },
     "hub": {
       "shopify": {
@@ -2234,7 +2233,8 @@
       "kbFaq": "Hỏi – đáp FAQ",
       "kbVoice": "Giọng văn thương hiệu",
       "kbDictionary": "Từ điển viết tắt",
-      "kbCatalog": "Danh mục sản phẩm"
+      "kbCatalog": "Danh mục sản phẩm",
+      "kbRules": "Quy tắc & Giới hạn"
     },
     "logout": "Đăng xuất",
     "navLabel": "Điều hướng chính",
@@ -3429,6 +3429,45 @@
       "prev": "Trang trước",
       "next": "Trang sau",
       "pageOf": "Trang {page} / {pages}"
+    },
+    "rules": {
+      "title": "Quy tắc trả lời & Giới hạn",
+      "subtitle": "Tổng hợp các giới hạn đang áp dụng cho AI của shop. Mỗi quy tắc chỉnh ở trang chứa nó; trang này chỉ đọc để bạn xem tất cả ở một chỗ.",
+      "soon": "Sắp có",
+      "edit": "Chỉnh sửa",
+      "tryAi": "Thử AI với câu hỏi của bạn",
+      "tryAiHint": "Kiểm tra AI đang trả lời thế nào với các quy tắc hiện tại.",
+      "price": {
+        "title": "1. Công khai giá",
+        "subtitle": "Giá và tồn kho luôn đọc trực tiếp từ dữ liệu sản phẩm; AI không tự tính tổng tiền, giảm giá hay phí ship.",
+        "fixed": "Quy tắc cố định của hệ thống: mọi số tiền trong câu trả lời phải có trong nguồn dữ liệu, code kiểm trước khi gửi.",
+        "direct": "Nói giá trực tiếp",
+        "private": "Mời nhắn riêng",
+        "perPost": "Linh hoạt theo bài",
+        "perChannel": "Chọn cách báo giá theo từng kênh chưa dùng được: cần lưu trữ cấu hình mới (đang làm).",
+        "autoLink": "Chế độ tự gửi theo kênh (báo giá, tư vấn, chốt đơn) chỉnh ở Cài đặt tự gửi."
+      },
+      "topics": {
+        "title": "2. Điều AI không được làm hay nói",
+        "subtitle": "Danh sách \"không được\" trong Giọng văn được đưa thẳng vào lệnh soạn câu trả lời.",
+        "empty": "Chưa có điều cấm nào cho ngôn ngữ này."
+      },
+      "keywords": {
+        "title": "3. Từ khóa chặn tự gửi",
+        "subtitle": "Nếu câu trả lời nháp của AI chứa một từ trong danh sách, hệ thống không tự gửi mà chuyển sang Chờ duyệt để nhân viên xem.",
+        "empty": "Chưa có từ khóa nào. Thêm ở Cài đặt tự gửi.",
+        "handoff": "Câu mời chuyển người (theo chủ đề)",
+        "handoffEmpty": "Chưa có câu mời chuyển người riêng; AI dùng câu mặc định.",
+        "handoffCount": "{count} chủ đề có câu riêng"
+      },
+      "missing": {
+        "title": "4. Khi thiếu dữ liệu",
+        "subtitle": "AI không bịa thông tin khi Cơ sở kiến thức không có. Hệ thống trả lời thành thật hoặc chuyển nhân viên; do code quyết định, không do AI.",
+        "gaps": "Câu hỏi chưa trả lời được luôn được ghi vào mục \"Dữ liệu còn thiếu\" để bổ sung FAQ.",
+        "gapsLink": "Xem dữ liệu còn thiếu",
+        "custom": "Câu ứng xử riêng khi không biết",
+        "customHint": "Chưa dùng được: cần lưu trữ cấu hình mới (đang làm)."
+      }
     }
   },
   "kbPolicyFacts": {

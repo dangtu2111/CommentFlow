@@ -70,10 +70,18 @@ function runScenarios(locale: Locale) {
     const { context, page } = await open(browser, '/app/kb');
     try {
       const rail = page.getByRole('navigation', { name: t('kb.navLabel') });
-      for (const key of ['kbShop', 'kbCatalog', 'kbPolicies', 'kbFaq', 'kbVoice', 'kbDictionary']) {
+      for (const key of [
+        'kbShop',
+        'kbCatalog',
+        'kbPolicies',
+        'kbFaq',
+        'kbVoice',
+        'kbDictionary',
+        'kbRules',
+      ]) {
         await expect(rail.getByRole('link', { name: t(`shell.nav.${key}`) })).toBeVisible();
       }
-      for (const key of ['kbDocs', 'kbRules']) {
+      for (const key of ['kbDocs']) {
         await expect(
           rail.locator('[aria-disabled="true"]').filter({ hasText: t(`kb.soonItems.${key}`) }),
         ).toHaveCount(1);
@@ -220,6 +228,26 @@ function runScenarios(locale: Locale) {
       // Tìm kiếm và đổi bộ lọc giữ trang sống (không lỗi 500), báo "không khớp".
       await page.goto('/app/kb/catalog?q=khong-co&source=shopify&status=archived&page=9');
       await expect(page.getByText(t('kbContent.catalog.noMatch'))).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('Quy tắc & Giới hạn: trang chỉ đọc gom quy tắc đang áp dụng, mục chưa có nền tảng bị tắt, liên kết tới nơi chỉnh', async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, '/app/kb/rules');
+    try {
+      await expect(
+        page.getByRole('heading', { name: t('kbContent.rules.title'), level: 1 }),
+      ).toBeVisible();
+      await expect(page.getByText(t('kbContent.rules.keywords.empty'))).toBeVisible();
+      // Cách báo giá theo kênh chưa có nơi lưu → tắt, không phải ô chọn.
+      await expect(page.locator('[aria-disabled="true"]').first()).toBeVisible();
+      await expect(page.locator('input[type="radio"]')).toHaveCount(0);
+      await expect(page.locator('a[href="/app/automation"]').first()).toBeVisible();
+      await expect(page.locator('a[href="/app/kb/voice"]').first()).toBeVisible();
+      await expect(page.locator('a[href="/app/try-ai"]').first()).toBeVisible();
     } finally {
       await context.close();
     }
