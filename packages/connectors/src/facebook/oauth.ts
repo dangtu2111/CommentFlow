@@ -225,6 +225,7 @@ export function createFacebookOAuthClient(options: FacebookOAuthOptions): Facebo
       .filter((id) => /^[0-9]{1,30}$/.test(id) && !have.has(id))
       .slice(0, MAX_GRANTED_PAGE_LOOKUPS);
     const extra: FacebookPageGrant[] = [];
+    const outcomes: string[] = [];
     for (const id of ids) {
       try {
         const node = accountSchema.safeParse(
@@ -241,11 +242,18 @@ export function createFacebookOAuthClient(options: FacebookOAuthOptions): Facebo
             accessToken: node.data.access_token,
             tasks: node.data.tasks ?? [],
           });
+          outcomes.push('ok');
+        } else {
+          outcomes.push('invalid');
         }
-      } catch {
-        // Page này không đọc được bằng token người dùng: bỏ, không làm hỏng danh sách.
+      } catch (error) {
+        // Lỗi 100 ở đây = tài khoản không có vai trò trực tiếp trên Page nên Meta không trả token Page.
+        outcomes.push(`error:${(error as { message?: string })?.message ?? 'unknown'}`);
       }
     }
+    console.info(
+      JSON.stringify({ event: 'fb_granted_page_lookup', lookups: ids.length, outcomes }),
+    );
     return found.concat(extra);
   }
 
