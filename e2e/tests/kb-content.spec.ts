@@ -337,6 +337,9 @@ function runScenarios(locale: Locale) {
         .fill('Em chuyển bạn nhé');
       await voiceCard.locator('textarea[name="handoff.shipping.outHours"]').fill('Sáng mai em báo');
       await voiceCard.locator('textarea[name="handoff.discount.inHours"]').fill('Chỉ có một câu');
+      // Xưng hô (REPLY-ADDRESS-UI, FR-142): shop tự xưng + cách gọi khách theo ngôn ngữ.
+      await voiceCard.locator('select[name="shopPronoun"]').selectOption('minh');
+      await voiceCard.locator('select[name="customerAddress"]').selectOption('quy_khach');
       await voiceCard
         .getByRole('button', {
           name: t('kbContent.voice.saveFor', { lang: t('kbContent.lang.vi') }),
@@ -353,6 +356,26 @@ function runScenarios(locale: Locale) {
         'Em chuyển bạn nhé',
       );
       await expect(saved.locator('textarea[name="handoff.discount.inHours"]')).toHaveValue('');
+      await expect(saved.locator('select[name="shopPronoun"]')).toHaveValue('minh');
+      await expect(saved.locator('select[name="customerAddress"]')).toHaveValue('quy_khach');
+
+      // Tự xưng "tên riêng" mà để trống tên → không hợp lệ, không lưu (giữ giá trị cũ).
+      await pace(page, 1200);
+      await saved.locator('select[name="shopPronoun"]').selectOption('custom');
+      await saved
+        .getByRole('button', {
+          name: t('kbContent.voice.saveFor', { lang: t('kbContent.lang.vi') }),
+        })
+        .click();
+      await expect(
+        page.getByRole('alert').filter({ hasText: t('kbContent.notice.invalid') }),
+      ).toBeVisible();
+      await expect(
+        page
+          .locator('section')
+          .filter({ has: page.locator('#voice-vi') })
+          .locator('select[name="shopPronoun"]'),
+      ).toHaveValue('minh');
     } finally {
       await context.close();
     }
