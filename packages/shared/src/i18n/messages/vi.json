@@ -2539,6 +2539,71 @@
         "vi": "Tiếng Việt",
         "en": "English"
       }
+    },
+    "permissions": {
+      "title": "Quyền Facebook đã cấp",
+      "hint": "Quyền do Meta xác nhận ở lần kiểm kết nối gần nhất. Thiếu quyền nào thì tính năng tương ứng sẽ không chạy.",
+      "unknown": "Quyền Facebook: chưa kiểm tra — bấm \"Kiểm tra toàn bộ kết nối\" để xác nhận đã cấp đủ chưa.",
+      "unknownHint": "Chưa kiểm tra quyền. Bấm \"Kiểm tra toàn bộ kết nối\" ở đầu trang để Meta xác nhận từng quyền.",
+      "ok": "Đã cấp đủ {count}/{count} quyền cần thiết.",
+      "missing": "Thiếu quyền: {list}. Ảnh hưởng: {effects}.",
+      "grant": "Cấp thêm quyền",
+      "pickOk": "Đã cấp đủ các quyền cần thiết cho ứng dụng.",
+      "pickMissing": "Chưa cấp đủ quyền — thiếu: {list}. Bạn vẫn có thể kết nối, nhưng một số tính năng sẽ không chạy; bấm \"Cấp thêm quyền\" để cấp lại.",
+      "feature": {
+        "webhook": "không nhận được bình luận mới theo thời gian thực",
+        "read": "không đọc được bài và bình luận của khách",
+        "reply": "không trả lời/ẩn được bình luận"
+      },
+      "perm": {
+        "pages_manage_metadata": {
+          "name": "Quản lý cài đặt Page",
+          "why": "Đăng ký nhận bình luận mới (webhook)."
+        },
+        "pages_read_engagement": {
+          "name": "Đọc tương tác của Page",
+          "why": "Đọc bài viết và bình luận của Page."
+        },
+        "pages_read_user_content": {
+          "name": "Đọc nội dung do khách đăng",
+          "why": "Đọc nội dung bình luận của khách."
+        },
+        "pages_manage_engagement": {
+          "name": "Quản lý bình luận",
+          "why": "Trả lời và ẩn bình luận."
+        }
+      },
+      "granted": "Đã cấp",
+      "notGranted": "Chưa cấp"
+    },
+    "select": {
+      "title": "Chọn Fanpage kết nối vào Workspace",
+      "subtitle": "Hệ thống sẽ đồng bộ bình luận và gợi ý trả lời của AI cho các Fanpage bạn chọn.",
+      "switchAccount": "Đổi tài khoản Facebook khác",
+      "oauthValid": "Đăng nhập Meta hợp lệ",
+      "quota": "Hạn mức kết nối",
+      "quotaUsed": "{used} / {limit} kênh đã dùng",
+      "quotaPending": "(+{count} chuẩn bị thêm)",
+      "overLimit": "Chọn như vậy sẽ vượt hạn mức {limit} kênh của gói. Bỏ bớt Page hoặc nâng gói.",
+      "search": "Tìm theo tên Fanpage hoặc Page ID…",
+      "refresh": "Làm mới danh sách Meta",
+      "noMatch": "Không có Fanpage nào khớp.",
+      "emptyHint": "Meta không trả về Page nào cho tài khoản này. Kiểm tra: đã tick Page ở hộp thoại Facebook chưa, và tài khoản có vai trò trên Page chưa (Page thuộc Business Manager cần được cấp quyền Trang trực tiếp).",
+      "afterTitle": "Sau khi liên kết",
+      "backfill": "Nạp dữ liệu 7 ngày gần nhất",
+      "backfillHint": "Lấy bài viết và bình luận gần đây để AI hiểu bối cảnh.",
+      "safeMode": "Chế độ an toàn: duyệt tay",
+      "safeModeHint": "Mặc định AI chỉ soạn bản nháp; nhân viên duyệt trước khi gửi cho khách.",
+      "selected": "Đã chọn: {count} Fanpage mới",
+      "remaining": "(Hạn mức còn lại sau khi kết nối: {remaining}/{limit} kênh)",
+      "confirm": "Xác nhận & Kết nối {count} Fanpage",
+      "compliance": "CommentFlow AI chỉ dùng API chính thức của Meta, không tự đăng bài và không chia sẻ dữ liệu kinh doanh ra ngoài.",
+      "state": {
+        "selectable": "Sẵn sàng kết nối",
+        "connected": "Đã kết nối trong Workspace này",
+        "blocked": "Không khả dụng"
+      },
+      "pageId": "ID: {id}"
     }
   },
   "posts": {

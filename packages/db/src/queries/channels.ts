@@ -24,6 +24,8 @@ export type ChannelListItem = {
   replyLanguage: 'auto' | 'vi' | 'en';
   lastCheckedAt: Date | null;
   lastCheckResult: ChannelCheckResult | null;
+  /** Quyền nền tảng ĐÃ CẤP cho kênh (worker làm mới ở mỗi lần kiểm kết nối; trước lần kiểm đầu có thể rỗng/chưa đủ tin cậy — xem `lastCheckedAt`). */
+  scopes: string[];
 };
 
 export async function listChannels(tx: Database, workspaceId: string): Promise<ChannelListItem[]> {
@@ -36,9 +38,10 @@ export async function listChannels(tx: Database, workspaceId: string): Promise<C
     reply_language: ChannelListItem['replyLanguage'];
     last_checked_at: string | Date | null;
     last_check_result: ChannelCheckResult | null;
+    scopes: string[];
   }>(sql`
     SELECT ch.id, ch.name, ch.platform, ch.status, ch.webhook_subscribed, ch.reply_language,
-           ch.last_checked_at, ch.last_check_result
+           ch.last_checked_at, ch.last_check_result, ch.scopes
       FROM cf.channels ch
      WHERE ch.workspace_id = ${workspaceId}::uuid
      ORDER BY ch.name, ch.id`);
@@ -51,6 +54,7 @@ export async function listChannels(tx: Database, workspaceId: string): Promise<C
     replyLanguage: row.reply_language,
     lastCheckedAt: row.last_checked_at === null ? null : new Date(row.last_checked_at),
     lastCheckResult: row.last_check_result,
+    scopes: row.scopes,
   }));
 }
 

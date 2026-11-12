@@ -187,12 +187,162 @@ describe('listPages', () => {
   });
 });
 
+describe('listPages — includeGranted (Page được cấp ở hộp thoại nhưng me/accounts bỏ sót)', () => {
+  const debug = (targets: string[], scope = 'pages_show_list') => ({
+    data: { is_valid: true, scopes: [scope], granular_scopes: [{ scope, target_ids: targets }] },
+  });
+  const pageNode = (page: { id: string; name: string; token: string }) => ({
+    id: page.id,
+    name: page.name,
+    access_token: page.token,
+    tasks: ['MANAGE'],
+  });
+
+  it('me/accounts trả rỗng nhưng Meta báo Page đã cấp → lấy thẳng Page theo ID (token người dùng, ký proof)', async () => {
+    const { fn, calls } = mockFetch((url) => {
+      if (url.pathname.endsWith('/me/accounts')) return { body: { data: [] } };
+      if (url.pathname.endsWith('/debug_token')) return { body: debug([PAGE_A.id]) };
+      if (url.pathname.endsWith(`/${PAGE_A.id}`)) return { body: pageNode(PAGE_A) };
+      return { status: 404, body: graphError(100) };
+    });
+    const pages = await client(fn).listPages(FIXTURE_LONG_TOKEN, { includeGranted: true });
+    expect(pages).toEqual([
+      { id: PAGE_A.id, name: PAGE_A.name, accessToken: PAGE_A.token, tasks: ['MANAGE'] },
+    ]);
+    const direct = calls.find((c) => c.url.pathname.endsWith(`/${PAGE_A.id}`));
+    expect(direct?.url.searchParams.get('fields')).toBe('id,name,access_token,tasks');
+    expect(direct?.url.searchParams.get('access_token')).toBe(FIXTURE_LONG_TOKEN);
+    expect(direct?.url.searchParams.get('appsecret_proof')).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('không trùng Page đã có ở me/accounts; bỏ ID sai dạng; Page lỗi/thiếu token bị bỏ, Page còn lại vẫn trả', async () => {
+    const { fn, calls } = mockFetch((url) => {
+      if (url.pathname.endsWith('/me/accounts')) return { body: accountsResponse(PAGE_A) };
+      if (url.pathname.endsWith('/debug_token')) {
+        return { body: debug([PAGE_A.id, PAGE_B.id, '../x', '999']) };
+      }
+      if (url.pathname.endsWith(`/${PAGE_B.id}`)) return { body: pageNode(PAGE_B) };
+      if (url.pathname.endsWith('/999')) return { status: 403, body: graphError(200) };
+      return { status: 404, body: graphError(100) };
+    });
+    const pages = await client(fn).listPages(FIXTURE_LONG_TOKEN, { includeGranted: true });
+    expect(pages.map((p) => p.id)).toEqual([PAGE_A.id, PAGE_B.id]);
+    expect(calls.some((c) => c.url.pathname.endsWith(`/${PAGE_A.id}`))).toBe(false);
+    expect(calls.some((c) => c.url.pathname.includes('..'))).toBe(false);
+  });
+
+  it('hỏi quyền (debug_token) lỗi → trả đúng kết quả me/accounts, không ném; mặc định không gọi debug_token', async () => {
+    const failing = mockFetch((url) =>
+      url.pathname.endsWith('/debug_token')
+        ? { status: 500, body: {} }
+        : { body: accountsResponse(PAGE_A) },
+    );
+    const pages = await client(failing.fn).listPages(FIXTURE_LONG_TOKEN, { includeGranted: true });
+    expect(pages.map((p) => p.id)).toEqual([PAGE_A.id]);
+    const plain = mockFetch(() => ({ body: accountsResponse(PAGE_A) }));
+    await client(plain.fn).listPages(FIXTURE_LONG_TOKEN);
+    expect(plain.calls.some((c) => c.url.pathname.endsWith('/debug_token'))).toBe(false);
+  });
+
+  it('chỉ xét quyền pages_* và tối đa 20 Page lấy theo ID (trần chi phí)', async () => {
+    const ids = Array.from({ length: 30 }, (_, i) => String(200000000000000 + i));
+    const { fn, calls } = mockFetch((url) => {
+      if (url.pathname.endsWith('/me/accounts')) return { body: { data: [] } };
+      if (url.pathname.endsWith('/debug_token')) {
+        return {
+          body: {
+            data: {
+              is_valid: true,
+              scopes: ['pages_show_list', 'business_management'],
+              granular_scopes: [
+                { scope: 'pages_show_list', target_ids: ids },
+                { scope: 'business_management', target_ids: ['777000000000001'] },
+              ],
+            },
+          },
+        };
+      }
+      const id = url.pathname.split('/').pop() as string;
+      return { body: pageNode({ id, name: `P${id}`, token: `T${id}` }) };
+    });
+    const pages = await client(fn).listPages(FIXTURE_LONG_TOKEN, { includeGranted: true });
+    expect(pages).toHaveLength(20);
+    expect(calls.some((c) => c.url.pathname.endsWith('/777000000000001'))).toBe(false);
+  });
+});
+
 describe('getTokenOwnerId', () => {
   it('trả id của token', async () => {
     const { fn, calls } = mockFetch(() => ({ body: meResponse(PAGE_A.id) }));
     expect(await client(fn).getTokenOwnerId(PAGE_A.token)).toBe(PAGE_A.id);
     expect(calls[0]?.url.pathname).toBe('/v27.0/me');
     expect(calls[0]?.url.searchParams.get('fields')).toBe('id');
+  });
+});
+
+describe('buildAuthorizeUrl — xin lại quyền (rerequest)', () => {
+  it('rerequest → auth_type=rerequest; không có thì không đặt; Login for Business (config_id) không dùng auth_type', () => {
+    const plain = new URL(client(mockFetch(() => ({ body: {} })).fn).buildAuthorizeUrl('S1'));
+    expect(plain.searchParams.has('auth_type')).toBe(false);
+    const again = new URL(
+      client(mockFetch(() => ({ body: {} })).fn).buildAuthorizeUrl('S1', { rerequest: true }),
+    );
+    expect(again.searchParams.get('auth_type')).toBe('rerequest');
+    expect(again.searchParams.get('scope')).toContain('pages_manage_engagement');
+    const business = new URL(
+      client(mockFetch(() => ({ body: {} })).fn, { loginConfigId: '998877' }).buildAuthorizeUrl(
+        'S1',
+        { rerequest: true },
+      ),
+    );
+    expect(business.searchParams.has('auth_type')).toBe(false);
+  });
+});
+
+describe('debugToken — quyền ĐÃ CẤP của token người dùng', () => {
+  it('gọi /debug_token bằng token ứng dụng (không dùng token người dùng làm access_token) và trả quyền đã cấp', async () => {
+    const { fn, calls } = mockFetch(() => ({
+      body: {
+        data: {
+          is_valid: true,
+          scopes: ['pages_show_list', 'pages_read_engagement'],
+          granular_scopes: [{ scope: 'pages_read_engagement', target_ids: ['111'] }],
+          expires_at: 0,
+        },
+      },
+    }));
+    const info = await client(fn).debugToken(FIXTURE_LONG_TOKEN);
+    expect(info).toMatchObject({
+      valid: true,
+      scopes: ['pages_read_engagement', 'pages_show_list'],
+      granular: [{ scope: 'pages_read_engagement', targetIds: ['111'] }],
+      expiresAt: null,
+    });
+    const [call] = calls;
+    expect(call?.url.pathname).toBe('/v27.0/debug_token');
+    expect(call?.url.searchParams.get('input_token')).toBe(FIXTURE_LONG_TOKEN);
+    expect(call?.url.searchParams.get('access_token')).toBe(
+      `${FIXTURE_APP_ID}|${FIXTURE_APP_SECRET}`,
+    );
+    expect(call?.method).toBe('GET');
+  });
+
+  it('token không hợp lệ → valid=false (không ném); thân sai hình dạng và lỗi Graph → lỗi không lộ token/khóa', async () => {
+    const dead = mockFetch(() => ({ body: { data: { is_valid: false } } }));
+    expect((await client(dead.fn).debugToken(FIXTURE_LONG_TOKEN)).valid).toBe(false);
+    const bad = mockFetch(() => ({ body: { nope: 1 } }));
+    const error = await client(bad.fn)
+      .debugToken(FIXTURE_LONG_TOKEN)
+      .catch((e: unknown) => e);
+    expect(isPlatformError(error)).toBe(true);
+    expect(JSON.stringify(error)).not.toContain(FIXTURE_LONG_TOKEN);
+    expect(String((error as Error).message)).not.toContain(FIXTURE_APP_SECRET);
+    const denied = mockFetch(() => ({ status: 400, body: graphError(190) }));
+    const e2 = await client(denied.fn)
+      .debugToken(FIXTURE_LONG_TOKEN)
+      .catch((e: unknown) => e);
+    expect(isPlatformError(e2)).toBe(true);
+    expect(JSON.stringify(e2)).not.toContain(FIXTURE_LONG_TOKEN);
   });
 });
 

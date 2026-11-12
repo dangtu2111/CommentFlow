@@ -1,9 +1,10 @@
-import type {
-  ChannelRef,
-  EncryptedToken,
-  FacebookOAuthClient,
-  FacebookPageGrant,
-  TokenContext,
+import {
+  type ChannelRef,
+  type EncryptedToken,
+  type FacebookOAuthClient,
+  type FacebookPageGrant,
+  scopesForPage,
+  type TokenContext,
 } from '@flow/connectors';
 
 /**
@@ -54,14 +55,13 @@ export type FbChannelStore = {
 };
 
 export type FbConnectDeps = {
-  oauth: Pick<FacebookOAuthClient, 'listPages' | 'getTokenOwnerId'>;
+  oauth: Pick<FacebookOAuthClient, 'listPages' | 'getTokenOwnerId' | 'debugToken'>;
   store: FbChannelStore;
   encrypt(plaintext: string, ctx: TokenContext): EncryptedToken;
   /** Đăng ký `subscribed_apps` cho đúng `channel.externalId` bằng `pageToken` rồi xác nhận lại; ném nếu không thành. */
   subscribeAndVerify(channel: ChannelRef, pageToken: string): Promise<void>;
   /** Số kênh tối đa của workspace. */
   limit: number;
-  scopes: readonly string[];
   /** Ghi vết lỗi không PII (mã, không token). */
   warn?: (event: { event: string; pageId?: string; code?: string }) => void;
 };
@@ -75,7 +75,7 @@ export async function listConnectablePages(
   userToken: string,
 ): Promise<Array<{ id: string; name: string; connected: boolean; usable: boolean }>> {
   const [pages, active] = await Promise.all([
-    deps.oauth.listPages(userToken),
+    deps.oauth.listPages(userToken, { includeGranted: true }),
     deps.store.listActiveExternalIds(),
   ]);
   const activeSet = new Set(active);
@@ -95,7 +95,7 @@ export async function connectFacebookPages(
   if (selected.length === 0) throw new FbConnectError('no_selection');
 
   // Danh sách Page đọc lại từ Meta bằng token của chính Owner: id từ form không tự cấp quyền.
-  const granted = await deps.oauth.listPages(input.userToken);
+  const granted = await deps.oauth.listPages(input.userToken, { includeGranted: true });
   const byId = new Map(granted.map((page) => [page.id, page]));
   const chosen = selected.map((id) => byId.get(id));
   if (chosen.some((page) => page === undefined)) throw new FbConnectError('page_not_available');
@@ -124,11 +124,24 @@ export async function connectFacebookPages(
       return 'failed';
     }
 
+    // Quyền ĐÃ CẤP cho Page này (Meta `debug_token`), không phải quyền đã xin: người dùng có thể bỏ chọn ở hộp thoại Meta. Hỏi lỗi → rỗng (chưa biết);
+    // việc kiểm quyền đầy đủ do nút "Kiểm tra kết nối" làm sau (worker).
+    let grantedScopes: string[] = [];
+    try {
+      grantedScopes = scopesForPage(await deps.oauth.debugToken(page.accessToken), page.id);
+    } catch (error) {
+      deps.warn?.({
+        event: 'fb_connect_permissions_unreadable',
+        pageId: page.id,
+        code: codeOf(error),
+      });
+    }
+
     let channelId: string;
     try {
       // 2. Kênh + token mã hóa (một giao dịch Owner).
       channelId = await deps.store.saveChannel(
-        { externalId: page.id, name: page.name, scopes: deps.scopes },
+        { externalId: page.id, name: page.name, scopes: grantedScopes },
         (id) => deps.encrypt(page.accessToken, { workspaceId: input.workspaceId, channelId: id }),
       );
     } catch (error) {

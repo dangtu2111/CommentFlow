@@ -1,12 +1,16 @@
 import { listChannels, loadChannelActivity } from '@flow/db/runtime';
+import { evaluateFbPermissions } from '@flow/shared';
 import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { ChannelsHeaderActions, ChannelsHub } from '../../../../components/settings/channels-hub';
+import { FbPageSelectModal } from '../../../../components/settings/fb-page-select-modal';
 import { SettingsFrame } from '../../../../components/settings/settings-frame';
 import { Banner } from '../../../../components/ui/banner';
 import {
   canReconnect,
   countParam,
+  FB_REREQUEST_PATH,
+  FB_SELECT_PATH,
   FB_START_PATH,
   fbNoticeOf,
 } from '../../../../lib/fb-connect-view';
@@ -22,7 +26,6 @@ import {
 import { decodeOAuthSession, FB_SESSION_COOKIE } from '../../../../server/fb-oauth-state';
 import { requireAppUser } from '../../../../server/require-app-user';
 import { loadSettingsCounts } from '../../../../server/settings-counts';
-import { cancelConnectAction, connectPagesAction } from './actions';
 
 export async function generateMetadata() {
   const t = await getTranslations('channels');
@@ -68,6 +71,10 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
   const wantsSelect = query.fb === 'select';
   let pages: Awaited<ReturnType<typeof listConnectablePages>> | null = null;
   let loadFailed = false;
+  // Quyền Meta ĐÃ CẤP cho ứng dụng (token người dùng) — hiện ở bước chọn Page để Owner biết đủ quyền chưa TRƯỚC khi kết nối; null = không đọc được.
+  let grantedReport: ReturnType<typeof evaluateFbPermissions> | null = null;
+  let granularCounts: Record<string, number> | null = null;
+  let tokenValid = false;
   if (config && wantsSelect) {
     const session = decodeOAuthSession(
       getAuthRuntime().fbOAuthSession.open((await cookies()).get(FB_SESSION_COOKIE)?.value),
@@ -75,12 +82,39 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
     );
     if (session) {
       try {
+        const oauth = buildFbOAuthClient(config);
         pages = await listConnectablePages(
-          { oauth: buildFbOAuthClient(config), store: buildChannelStore(workspace.id, user.id) },
+          { oauth, store: buildChannelStore(workspace.id, user.id) },
           session.userToken,
         );
-      } catch {
+        try {
+          const tokenInfo = await oauth.debugToken(session.userToken);
+          grantedReport = evaluateFbPermissions(tokenInfo.scopes);
+          tokenValid = tokenInfo.valid;
+          // Số Page được cấp theo từng quyền (chỉ SỐ, không ID): Page không được tick ở hộp thoại Meta thì không xuất hiện ở đây.
+          granularCounts = Object.fromEntries(
+            tokenInfo.granular.map((entry) => [entry.scope, entry.targetIds.length]),
+          );
+        } catch {
+          grantedReport = null; // hỏi quyền lỗi: không chặn việc chọn Page, chỉ không hiện bảng quyền
+        }
+        // Chẩn đoán "không thấy Page nào": chỉ SỐ LƯỢNG và TÊN quyền (không token, không tên/ID Page).
+        console.info(
+          JSON.stringify({
+            event: 'fb_select_pages',
+            pages: pages.length,
+            usable: pages.filter((page) => page.usable).length,
+            granted: grantedReport?.granted ?? null,
+            missing: grantedReport?.missing ?? null,
+            granularPageCounts: granularCounts,
+          }),
+        );
+      } catch (error) {
         loadFailed = true;
+        const e = error as { code?: string };
+        console.error(
+          JSON.stringify({ event: 'fb_select_pages_failed', code: e?.code ?? 'unknown' }),
+        );
       }
     }
   }
@@ -139,41 +173,25 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
         {misconfigured ? <Banner variant="danger">{t('notice.unavailable')}</Banner> : null}
 
         {pages ? (
-          <section className="card stack" aria-labelledby="pick-title">
-            <h2 id="pick-title" className="section-title">
-              {t('pick.title')}
-            </h2>
-            <p className="muted">{t('pick.hint', { limit: config?.channelsLimit ?? 1 })}</p>
-            {pages.length === 0 ? <p>{t('pick.empty')}</p> : null}
-            <form action={connectPagesAction} className="stack">
-              <ul className="member-list">
-                {pages.map((page) => (
-                  <li key={page.id} className="member-item">
-                    <label className="member-info">
-                      <input type="checkbox" name="page" value={page.id} disabled={!page.usable} />{' '}
-                      <span className="member-name">{page.name}</span>
-                      {page.connected ? (
-                        <span className="badge badge-on">{t('pick.connected')}</span>
-                      ) : null}
-                      {page.usable ? null : <span className="muted">{t('pick.noPermission')}</span>}
-                    </label>
-                  </li>
-                ))}
-              </ul>
-              <div className="row">
-                <button type="submit" className="btn btn-primary" disabled={pages.length === 0}>
-                  {t('pick.submit')}
-                </button>
-                <button
-                  type="submit"
-                  formAction={cancelConnectAction}
-                  className="btn btn-secondary"
-                >
-                  {t('pick.cancel')}
-                </button>
-              </div>
-            </form>
-          </section>
+          <FbPageSelectModal
+            pages={pages}
+            used={
+              channels.filter((c) => c.platform === 'facebook' && c.status !== 'revoked').length
+            }
+            limit={config?.channelsLimit ?? 1}
+            permissions={
+              grantedReport
+                ? {
+                    sufficient: grantedReport.sufficient,
+                    missing: grantedReport.missing,
+                    tokenValid,
+                  }
+                : null
+            }
+            rerequestHref={FB_REREQUEST_PATH}
+            switchAccountHref={FB_START_PATH}
+            refreshHref={FB_SELECT_PATH}
+          />
         ) : null}
 
         {actionNotice ? (
