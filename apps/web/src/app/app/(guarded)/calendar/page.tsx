@@ -2,7 +2,9 @@ import { isLocale } from '@flow/shared';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { PostDrawer } from '../../../../components/calendar/post-drawer';
+import { PublishDrawer } from '../../../../components/calendar/publish-drawer';
 import { WeekBoard } from '../../../../components/calendar/week-board';
+import { NoticeBanner } from '../../../../components/composer/notice-banner';
 import { Icon, type IconName } from '../../../../components/ui/icon';
 import {
   groupByDay,
@@ -19,6 +21,7 @@ import {
 } from '../../../../lib/calendar-week';
 import { cx } from '../../../../lib/cx';
 import { COMPOSER_PLATFORMS } from '../../../../lib/post-counters';
+import { parsePublishNotice } from '../../../../lib/publish-notice';
 import { loadCalendar } from '../../../../server/post-calendar';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -99,7 +102,16 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const visible = platform ? data.posts.filter((post) => post.platform === platform) : data.posts;
   const totals = weekTotals(visible);
   const byDay = groupByDay(visible, days);
-  const openPost = visible.find((post) => post.id === first(params.post));
+  // Bài đăng từ CommentFlow chỉ lên Facebook: lọc nền tảng khác Facebook thì ẩn.
+  const publishVisible =
+    !platform || platform === 'facebook'
+      ? data.publish.filter((item): item is typeof item & { day: string } => item.day !== null)
+      : [];
+  const publishByDay = groupByDay(publishVisible, days);
+  const openId = first(params.post);
+  const openPost = visible.find((post) => post.id === openId);
+  const openPublish = publishVisible.find((item) => item.id === openId);
+  const notice = parsePublishNotice(params.n);
   const hrefWith = (over: { week?: string; platform?: string | undefined }) =>
     calendarHref({
       week: over.week ?? weekStart,
@@ -111,6 +123,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
     <main className="app-page app-page-wide">
       <div className="tw">
         <div className="space-y-space-lg">
+          {notice ? <NoticeBanner code={notice} /> : null}
           <div className="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
             <div className="space-y-space-xs">
               <h1 className="font-headline-md text-headline-md tracking-tight text-on-surface">
@@ -249,7 +262,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
             ))}
           </nav>
 
-          {visible.length === 0 ? (
+          {visible.length + publishVisible.length === 0 ? (
             <div className="rounded-xl bg-surface-container-lowest p-space-xl text-center shadow-sm">
               <h2 className="font-title-md text-title-md text-on-surface">{t('empty.title')}</h2>
               <p className="mt-space-xs font-body-md text-body-md text-on-surface-variant">
@@ -262,10 +275,51 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
             today={today}
             weekStart={weekStart}
             platform={platform}
-            openPostId={openPost?.id}
+            openPostId={openPost?.id ?? openPublish?.id}
             byDay={byDay}
+            publishByDay={publishByDay}
           />
+          <section
+            aria-label={t('drafts.title')}
+            className="rounded-xl bg-surface-container-lowest p-space-md shadow-sm"
+          >
+            <h2 className="mb-space-sm flex items-center gap-space-xs font-title-md text-title-md font-semibold text-on-surface">
+              <Icon name="draft" size={18} />
+              {t('drafts.title')} ({data.drafts.length})
+            </h2>
+            {data.drafts.length === 0 ? (
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                {t('drafts.empty')}
+              </p>
+            ) : (
+              <ul className="grid grid-cols-1 gap-space-sm md:grid-cols-2 lg:grid-cols-3">
+                {data.drafts.map((draft) => (
+                  <li key={draft.id}>
+                    <Link
+                      href={`/app/composer?id=${draft.id}`}
+                      className="flex h-full flex-col gap-1 rounded-lg bg-surface-container-low p-space-sm hover:bg-surface-container"
+                    >
+                      <span className="line-clamp-2 font-body-sm text-body-sm text-on-surface">
+                        {draft.message === '' ? t('drafts.untitled') : draft.message}
+                      </span>
+                      <span className="font-label-sm text-label-sm text-primary">
+                        {t('drafts.edit')}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
+        {openPublish ? (
+          <PublishDrawer
+            post={openPublish}
+            closeHref={hrefWith({})}
+            locale={locale}
+            timeZone={data.timeZone}
+          />
+        ) : null}
         {openPost ? (
           <PostDrawer
             post={openPost}

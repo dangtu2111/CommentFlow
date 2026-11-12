@@ -3815,11 +3815,13 @@
     "back": "Publishing calendar",
     "heading": "Create a new post",
     "soon": "Coming soon",
-    "banner": "This is the post editor interface. Saving drafts, scheduling and publishing are not available yet: nothing you type here is saved or sent anywhere.",
+    "banner": "Publishing to Facebook is not enabled on the server. You can still write and save drafts; Schedule and Publish now will work once an administrator enables it.",
     "actions": {
       "draft": "Save draft",
       "schedule": "Schedule",
-      "publish": "Publish now"
+      "publish": "Publish now",
+      "delete": "Delete",
+      "cancelSchedule": "Cancel schedule"
     },
     "channels": {
       "title": "Channels",
@@ -3838,7 +3840,9 @@
         "instagram": "Instagram",
         "tiktok": "TikTok"
       },
-      "unusable": "This channel cannot be used to publish yet"
+      "unusable": "This channel cannot be used to publish yet",
+      "noPublishPermission": "Missing publishing permission (pages_manage_posts)",
+      "missingPermission": "The selected channel(s) lack the publishing permission (pages_manage_posts): {names}. The post cannot be published until it is granted."
     },
     "content": {
       "title": "Post content",
@@ -3874,7 +3878,7 @@
       "date": "Publish date",
       "time": "Publish time",
       "zone": "Shop time zone: {zone}",
-      "unavailable": "Picking a date and time is for preview only; scheduling is not available yet."
+      "hint": "Pick the date and time in the shop's time zone; only needed for \"Schedule\"."
     },
     "preview": {
       "title": "Preview",
@@ -3894,6 +3898,26 @@
     "error": {
       "title": "Could not load the data",
       "body": "Something went wrong while loading this page. Try again later."
+    },
+    "headingEdit": "Edit post",
+    "bannerEnabled": "A post is only published when you press \"Publish now\" or at the scheduled time. The AI never writes or publishes posts on its own.",
+    "publishDisabledShort": "Publishing is not enabled on the server",
+    "notice": {
+      "saved": "Draft saved.",
+      "scheduled": "Post scheduled.",
+      "publishing": "Publish request received. The post will go out within a few minutes.",
+      "cancelled": "Schedule cancelled; the post is back to a draft.",
+      "deleted": "Post deleted.",
+      "publish_disabled": "Publishing is not enabled on the server, so you cannot schedule or publish yet.",
+      "forbidden": "Only the Owner can do this.",
+      "unavailable": "Could not complete this. Try again later.",
+      "not_editable": "The post is no longer in a state that allows this (published, publishing or changed).",
+      "invalid_channel": "A channel is invalid or not connected.",
+      "invalid_schedule": "The publish time must be between 2 minutes and 90 days from now, in the shop's time zone.",
+      "invalid": "The data is invalid (content too long or a wrong value).",
+      "empty_message": "Write the content before scheduling or publishing.",
+      "no_channel": "Choose at least one channel before scheduling or publishing.",
+      "rate_limited": "Too many attempts. Wait a moment and try again."
     }
   },
   "calendar": {
@@ -3937,7 +3961,12 @@
     },
     "today": "Today",
     "status": {
-      "published": "Published"
+      "published": "Published",
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "publishing": "Publishing",
+      "partial": "Partly published",
+      "failed": "Failed"
     },
     "ad": "Ad",
     "noContent": "Post content not available yet",
@@ -3966,6 +3995,38 @@
     "error": {
       "title": "Could not load the calendar",
       "body": "Something went wrong while loading this page. Try again later."
+    },
+    "targetStatus": {
+      "pending": "Waiting",
+      "publishing": "Publishing",
+      "published": "Published",
+      "failed": "Failed",
+      "unknown": "Result unknown"
+    },
+    "publishError": {
+      "missing_permission": "The channel lacks the publishing permission (pages_manage_posts).",
+      "permission": "Facebook refused the publishing permission.",
+      "token_expired": "The channel connection expired; reconnect it.",
+      "invalid_post": "The post content is not valid.",
+      "rate_limited": "Facebook is rate limiting; retried several times.",
+      "unknown_result": "Not sure whether the post went out. Check Facebook before publishing again.",
+      "lease_expired": "Not sure whether the post went out (no result for too long). Check Facebook."
+    },
+    "drafts": {
+      "title": "Drafts",
+      "empty": "No drafts yet.",
+      "untitled": "(No content yet)",
+      "edit": "Edit draft"
+    },
+    "own": {
+      "title": "Posts from CommentFlow",
+      "targets": "Channels",
+      "edit": "Edit post",
+      "cancel": "Cancel schedule",
+      "delete": "Delete post",
+      "scheduledAt": "Publish time",
+      "lockedHint": "The post is being published or was published successfully, so it cannot be edited or deleted.",
+      "openOnFacebook": "View on Facebook"
     }
   }
 }

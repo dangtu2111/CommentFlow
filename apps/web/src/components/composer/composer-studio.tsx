@@ -3,20 +3,37 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
+import {
+  cancelPublishScheduleAction,
+  deletePublishPostAction,
+  savePublishPostAction,
+} from '../../app/app/(guarded)/composer/actions';
 import { cx } from '../../lib/cx';
 import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/post-counters';
 import { Icon, type IconName } from '../ui/icon';
 
 /**
- * Biên tập bài viết (design/stitch/composer.html, COMPOSER-CALENDAR-UI, Q-CMP1): GIAO DIỆN soạn bài — chưa lưu, chưa lên lịch, chưa đăng. Dữ liệu THẬT: kênh đã kết nối,
- * bộ đếm ký tự theo nền tảng, bản xem trước theo nội dung đang gõ. Mọi thứ chưa có backend (AI caption, media, gắn sản phẩm, lưu/lên lịch/đăng) vô hiệu kèm "Sắp có".
- * Không có số liệu/gợi ý/tên mẫu như trong thiết kế (khung giờ vàng, hashtag gợi ý, sản phẩm mẫu…). Chỉ dùng bên trong `.tw`.
+ * Biên tập bài viết (design/stitch/composer.html, COMPOSER-CALENDAR-UI + POST-PUBLISHING, Q-CMP1/Q-PUB1): biểu mẫu soạn bài với Server Action thật — LƯU NHÁP, LÊN LỊCH, ĐĂNG NGAY
+ * (hai nút sau chỉ bật khi cờ `FB_PUBLISH_ENABLED` bật). Dữ liệu THẬT: kênh đã kết nối (mặc định KHÔNG chọn kênh nào để không đăng nhầm), bộ đếm ký tự theo nền tảng, bản xem trước.
+ * Phần chưa có backend (AI caption, media, gắn sản phẩm) vô hiệu kèm "Sắp có". Không có số liệu/gợi ý/tên mẫu như trong thiết kế. Chỉ dùng bên trong `.tw`.
  */
 export type ComposerChannel = {
   id: string;
   name: string;
   platform: string;
   status: 'connected' | 'expired' | 'revoked' | 'error';
+  /** Kênh có quyền `pages_manage_posts` (cần để đăng bài); thiếu → cảnh báo, vẫn lưu nháp được. */
+  canPublish: boolean;
+};
+
+/** Bài đang sửa (từ `?id=`); bài mới không có. Giờ lên lịch đã đổi sang ngày/giờ ĐỊA PHƯƠNG của cửa hàng. */
+export type ComposerInitial = {
+  id: string;
+  message: string;
+  channelIds: string[];
+  status: 'draft' | 'scheduled';
+  date: string;
+  time: string;
 };
 
 const PLATFORM_ICON: Record<ComposerPlatform, IconName> = {
@@ -42,21 +59,25 @@ const isPlatform = (value: string): value is ComposerPlatform =>
 
 const card =
   'flex flex-col gap-space-md rounded-xl bg-surface-container-lowest p-space-lg shadow-sm';
-const disabledBtn =
-  'inline-flex cursor-not-allowed items-center gap-space-xs rounded-lg px-space-md py-space-sm font-title-sm text-title-sm opacity-60';
+const actionBtn =
+  'inline-flex items-center gap-space-xs rounded-lg px-space-md py-space-sm font-title-sm text-title-sm transition-colors';
 
 export function ComposerStudio({
   channels,
   timeZone,
+  publishEnabled,
+  initial,
 }: {
   channels: ComposerChannel[];
   timeZone: string;
+  /** Cờ `FB_PUBLISH_ENABLED` của web: tắt → chỉ lưu nháp được. */
+  publishEnabled: boolean;
+  initial?: ComposerInitial;
 }) {
   const t = useTranslations('composer');
   const textId = useId();
-  const usable = channels.filter((channel) => channel.status === 'connected');
-  const [selected, setSelected] = useState<string[]>(usable.map((channel) => channel.id));
-  const [text, setText] = useState('');
+  const [selected, setSelected] = useState<string[]>(initial?.channelIds ?? []);
+  const [text, setText] = useState(initial?.message ?? '');
   const [tab, setTab] = useState<ComposerPlatform>('facebook');
   const soon = t('soon');
 
@@ -67,9 +88,17 @@ export function ComposerStudio({
   const previewChannel = channels.find(
     (channel) => selected.includes(channel.id) && channel.platform === tab,
   );
+  // Tiện ích phía trình duyệt: DB và Server Action kiểm lại tất cả; nút bị khóa chỉ để người dùng khỏi bấm vô ích.
+  const ready = text.trim() !== '' && selected.length > 0;
+  const canSend = publishEnabled && ready;
+  const missingPermission = channels.filter(
+    (channel) => selected.includes(channel.id) && !channel.canPublish,
+  );
 
   return (
-    <div className="space-y-space-lg">
+    <form action={savePublishPostAction} className="space-y-space-lg">
+      {initial ? <input type="hidden" name="id" value={initial.id} /> : null}
+      {initial ? <input type="hidden" name="postId" value={initial.id} /> : null}
       <div className="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
         <div className="flex min-w-0 flex-wrap items-center gap-space-md">
           <Link
@@ -81,36 +110,72 @@ export function ComposerStudio({
           </Link>
           <span className="text-outline-variant">/</span>
           <h1 className="font-headline-md text-headline-md font-bold tracking-tight text-on-surface">
-            {t('heading')}
+            {initial ? t('headingEdit') : t('heading')}
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-space-sm">
+          {initial ? (
+            <button
+              type="submit"
+              formAction={deletePublishPostAction}
+              formNoValidate
+              className={cx(actionBtn, 'bg-surface-container-low text-error')}
+            >
+              <Icon name="delete" size={18} />
+              {t('actions.delete')}
+            </button>
+          ) : null}
+          {initial?.status === 'scheduled' ? (
+            <button
+              type="submit"
+              formAction={cancelPublishScheduleAction}
+              formNoValidate
+              className={cx(actionBtn, 'bg-surface-container-low text-on-surface')}
+            >
+              <Icon name="event_busy" size={18} />
+              {t('actions.cancelSchedule')}
+            </button>
+          ) : null}
           <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title={soon}
-            className={cx(disabledBtn, 'bg-surface-container-high text-on-surface')}
+            type="submit"
+            name="intent"
+            value="draft"
+            className={cx(
+              actionBtn,
+              'bg-surface-container-high text-on-surface hover:bg-surface-container-highest',
+            )}
           >
             <Icon name="draft" size={18} />
             {t('actions.draft')}
           </button>
           <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title={soon}
-            className={cx(disabledBtn, 'bg-surface-container-low text-primary')}
+            type="submit"
+            name="intent"
+            value="schedule"
+            disabled={!canSend}
+            aria-disabled={!canSend}
+            title={publishEnabled ? undefined : t('publishDisabledShort')}
+            className={cx(
+              actionBtn,
+              'bg-surface-container-low text-primary',
+              canSend ? 'hover:bg-surface-container' : 'cursor-not-allowed opacity-60',
+            )}
           >
             <Icon name="schedule_send" size={18} />
             {t('actions.schedule')}
           </button>
           <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title={soon}
-            className={cx(disabledBtn, 'bg-primary-container text-on-primary font-bold')}
+            type="submit"
+            name="intent"
+            value="publish"
+            disabled={!canSend}
+            aria-disabled={!canSend}
+            title={publishEnabled ? undefined : t('publishDisabledShort')}
+            className={cx(
+              actionBtn,
+              'bg-primary-container font-bold text-on-primary',
+              canSend ? 'hover:bg-primary' : 'cursor-not-allowed opacity-60',
+            )}
           >
             <Icon name="rocket_launch" size={18} />
             {t('actions.publish')}
@@ -125,8 +190,21 @@ export function ComposerStudio({
         <span className="mt-0.5 text-tertiary">
           <Icon name="info" size={16} />
         </span>
-        <span>{t('banner')}</span>
+        <span>{publishEnabled ? t('bannerEnabled') : t('banner')}</span>
       </p>
+      {missingPermission.length > 0 ? (
+        <p
+          role="alert"
+          className="flex items-start gap-space-xs rounded-lg bg-error-container/60 p-space-md font-body-sm text-body-sm text-on-error-container"
+        >
+          <Icon name="warning" size={16} />
+          <span>
+            {t('channels.missingPermission', {
+              names: missingPermission.map((channel) => channel.name).join(', '),
+            })}
+          </span>
+        </p>
+      ) : null}
 
       <div className="grid grid-cols-12 items-start gap-space-lg">
         <div className="col-span-12 flex flex-col gap-space-lg lg:col-span-7">
@@ -182,6 +260,8 @@ export function ComposerStudio({
                         <input
                           id={id}
                           type="checkbox"
+                          name="channel"
+                          value={channel.id}
                           className="mt-1 accent-primary"
                           disabled={!ok}
                           checked={ok && selected.includes(channel.id)}
@@ -202,6 +282,11 @@ export function ComposerStudio({
                             />
                             {t(`channels.status.${channel.status}`)}
                           </span>
+                          {ok && !channel.canPublish ? (
+                            <span className="mt-1 font-label-sm text-label-sm text-error">
+                              {t('channels.noPublishPermission')}
+                            </span>
+                          ) : null}
                         </span>
                       </label>
                     </li>
@@ -265,6 +350,7 @@ export function ComposerStudio({
             </label>
             <textarea
               id={`${textId}-text`}
+              name="message"
               value={text}
               onChange={(event) => setText(event.target.value)}
               rows={8}
@@ -392,6 +478,8 @@ export function ComposerStudio({
                 {t('schedule.date')}
                 <input
                   type="date"
+                  name="date"
+                  defaultValue={initial?.date ?? ''}
                   className="rounded-lg bg-surface-container-low p-space-sm font-body-md text-body-md text-on-surface outline-none"
                 />
               </label>
@@ -399,12 +487,14 @@ export function ComposerStudio({
                 {t('schedule.time')}
                 <input
                   type="time"
+                  name="time"
+                  defaultValue={initial?.time ?? ''}
                   className="rounded-lg bg-surface-container-low p-space-sm font-body-md text-body-md text-on-surface outline-none"
                 />
               </label>
             </div>
             <p className="font-label-sm text-label-sm text-on-surface-variant">
-              {t('schedule.zone', { zone: timeZone })} · {t('schedule.unavailable')}
+              {t('schedule.zone', { zone: timeZone })} · {t('schedule.hint')}
             </p>
           </section>
         </div>
@@ -483,6 +573,6 @@ export function ComposerStudio({
           </section>
         </aside>
       </div>
-    </div>
+    </form>
   );
 }

@@ -2,22 +2,37 @@ import {
   type CalendarPost,
   type ChannelListItem,
   eq,
+  getPublishPost,
   listChannels,
   listPostsForWeek,
+  listPublishDrafts,
+  listPublishPostsForWeek,
+  type PublishPostItem,
   schema,
 } from '@flow/db/runtime';
 import { isValidTimezone } from '@flow/shared';
 import { getDb } from './db';
 
-export type CalendarData = { posts: CalendarPost[]; channels: ChannelListItem[]; timeZone: string };
-export type ComposerData = { channels: ChannelListItem[]; timeZone: string };
+export type CalendarData = {
+  posts: CalendarPost[];
+  /** Bài đăng từ CommentFlow (đã lên lịch/đang đăng/đã đăng/lỗi) của tuần. */
+  publish: PublishPostItem[];
+  drafts: PublishPostItem[];
+  channels: ChannelListItem[];
+  timeZone: string;
+};
+export type ComposerData = {
+  channels: ChannelListItem[];
+  timeZone: string;
+  /** Bài đang sửa (`?id=`); `null` = bài mới hoặc không tìm thấy. */
+  post: PublishPostItem | null;
+};
 
 const FALLBACK_TIME_ZONE = 'UTC';
 
-async function workspaceTimeZone(
-  tx: Parameters<Parameters<ReturnType<typeof getDb>['withActor']>[2]>[0],
-  workspaceId: string,
-): Promise<string> {
+type Tx = Parameters<Parameters<ReturnType<typeof getDb>['withActor']>[2]>[0];
+
+async function workspaceTimeZone(tx: Tx, workspaceId: string): Promise<string> {
   const rows = await tx
     .select({ timezone: schema.workspaces.timezone })
     .from(schema.workspaces)
@@ -26,9 +41,14 @@ async function workspaceTimeZone(
   return zone && isValidTimezone(zone) ? zone : FALLBACK_TIME_ZONE;
 }
 
+/** Múi giờ của workspace (để đổi giờ lên lịch nhập theo giờ cửa hàng sang UTC). Chỉ ĐỌC. */
+export async function loadWorkspaceTimeZone(workspaceId: string, userId: string): Promise<string> {
+  return getDb().withActor(workspaceId, userId, (tx) => workspaceTimeZone(tx, workspaceId));
+}
+
 /**
- * Dữ liệu trang Lịch đăng (COMPOSER-CALENDAR-UI): bài THẬT của một tuần + kênh, trong MỘT giao dịch `withActor` (RLS theo thành viên). `workspaceId`/`userId`
- * lấy từ `requireAppUser`, không từ URL. Chỉ ĐỌC.
+ * Dữ liệu trang Lịch đăng (COMPOSER-CALENDAR-UI + POST-PUBLISHING): bài THẬT của một tuần (từ Facebook), bài đăng từ CommentFlow của tuần, bản nháp và kênh, trong MỘT giao dịch
+ * `withActor` (RLS theo thành viên; bài đăng từ CommentFlow chỉ Owner thấy). `workspaceId`/`userId` lấy từ `requireAppUser`, không từ URL. Chỉ ĐỌC.
  */
 export async function loadCalendar(
   workspaceId: string,
@@ -37,21 +57,28 @@ export async function loadCalendar(
 ): Promise<CalendarData> {
   return getDb().withActor(workspaceId, userId, async (tx) => {
     const timeZone = await workspaceTimeZone(tx, workspaceId);
-    const [posts, channels] = await Promise.all([
+    const [posts, publish, drafts, channels] = await Promise.all([
       listPostsForWeek(tx, workspaceId, weekStart, timeZone),
+      listPublishPostsForWeek(tx, workspaceId, weekStart, timeZone),
+      listPublishDrafts(tx, workspaceId),
       listChannels(tx, workspaceId),
     ]);
-    return { posts, channels, timeZone };
+    return { posts, publish, drafts, channels, timeZone };
   });
 }
 
-/** Dữ liệu trang Biên tập bài viết: kênh thật đã kết nối của workspace + múi giờ (để hiện giờ đăng). Chỉ ĐỌC. */
-export async function loadComposer(workspaceId: string, userId: string): Promise<ComposerData> {
+/** Dữ liệu trang Biên tập bài viết: kênh thật của workspace, múi giờ và (nếu có `postId`) bài đang sửa. Chỉ ĐỌC. */
+export async function loadComposer(
+  workspaceId: string,
+  userId: string,
+  postId?: string,
+): Promise<ComposerData> {
   return getDb().withActor(workspaceId, userId, async (tx) => {
-    const [timeZone, channels] = await Promise.all([
+    const [timeZone, channels, post] = await Promise.all([
       workspaceTimeZone(tx, workspaceId),
       listChannels(tx, workspaceId),
+      postId ? getPublishPost(tx, workspaceId, postId) : Promise.resolve(null),
     ]);
-    return { channels, timeZone };
+    return { channels, timeZone, post };
   });
 }
