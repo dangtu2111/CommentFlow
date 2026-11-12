@@ -75,7 +75,7 @@ export async function listConnectablePages(
   userToken: string,
 ): Promise<Array<{ id: string; name: string; connected: boolean; usable: boolean }>> {
   const [pages, active] = await Promise.all([
-    deps.oauth.listPages(userToken),
+    deps.oauth.listPages(userToken, { includeGranted: true }),
     deps.store.listActiveExternalIds(),
   ]);
   const activeSet = new Set(active);
@@ -95,7 +95,7 @@ export async function connectFacebookPages(
   if (selected.length === 0) throw new FbConnectError('no_selection');
 
   // Danh sách Page đọc lại từ Meta bằng token của chính Owner: id từ form không tự cấp quyền.
-  const granted = await deps.oauth.listPages(input.userToken);
+  const granted = await deps.oauth.listPages(input.userToken, { includeGranted: true });
   const byId = new Map(granted.map((page) => [page.id, page]));
   const chosen = selected.map((id) => byId.get(id));
   if (chosen.some((page) => page === undefined)) throw new FbConnectError('page_not_available');

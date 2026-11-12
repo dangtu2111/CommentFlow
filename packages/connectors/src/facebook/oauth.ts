@@ -30,6 +30,8 @@ export const FACEBOOK_OAUTH_SCOPES = [
   'pages_manage_engagement',
 ] as const;
 const MAX_ACCOUNT_PAGES = 10;
+/** Trần số Page lấy thẳng theo ID (mỗi Page một lệnh gọi). */
+const MAX_GRANTED_PAGE_LOOKUPS = 20;
 const ACCOUNT_PAGE_SIZE = 100;
 
 export type FacebookOAuthOptions = {
@@ -61,7 +63,14 @@ export interface FacebookOAuthClient {
   exchangeCode(code: string): Promise<string>;
   /** user token ngắn hạn → dài hạn (Page token lấy từ token dài hạn không hết hạn). */
   extendUserToken(userToken: string): Promise<string>;
-  listPages(userToken: string): Promise<FacebookPageGrant[]>;
+  /**
+   * Page của người dùng: `me/accounts`; với `includeGranted` còn BỔ SUNG các Page mà hộp thoại Meta đã cấp (`granular_scopes` `pages_*` của `debug_token`) nhưng `me/accounts`
+   * bỏ sót (thường gặp với Page thuộc Business Portfolio) bằng cách lấy thẳng `GET /{page-id}`. Page lấy thẳng lỗi/thiếu token thì bỏ; hỏi quyền lỗi thì chỉ trả kết quả `me/accounts`.
+   */
+  listPages(
+    userToken: string,
+    options?: { includeGranted?: boolean },
+  ): Promise<FacebookPageGrant[]>;
   /** `GET /me?fields=id` bằng chính token đó: Page token trả Page ID của token. */
   getTokenOwnerId(token: string): Promise<string>;
   /** Quyền ĐÃ CẤP + hiệu lực của một token (`debug_token`, xác thực bằng token ứng dụng); dùng cho token người dùng ở bước chọn Page. */
@@ -152,6 +161,94 @@ export function createFacebookOAuthClient(options: FacebookOAuthOptions): Facebo
     return parsed.data.access_token;
   }
 
+  async function listAccountPages(userToken: string): Promise<FacebookPageGrant[]> {
+    const result: FacebookPageGrant[] = [];
+    const seen = new Set<string>();
+    let after: string | undefined;
+    for (let page = 1; page <= MAX_ACCOUNT_PAGES; page++) {
+      const parsed = accountsSchema.safeParse(
+        await get('me/accounts', {
+          fields: 'id,name,access_token,tasks',
+          limit: String(ACCOUNT_PAGE_SIZE),
+          access_token: userToken,
+          appsecret_proof: proof(userToken),
+          ...(after === undefined ? {} : { after }),
+        }),
+      );
+      if (!parsed.success) throw fail('facebook_bad_response');
+      for (const raw of parsed.data.data) {
+        const node = accountSchema.safeParse(raw);
+        // Dòng hỏng/thiếu token (vd tài khoản không đủ quyền) bị bỏ — không đoán.
+        if (!node.success || seen.has(node.data.id)) continue;
+        seen.add(node.data.id);
+        result.push({
+          id: node.data.id,
+          name: node.data.name,
+          accessToken: node.data.access_token,
+          tasks: node.data.tasks ?? [],
+        });
+      }
+      const next = parsed.data.paging?.next ? parsed.data.paging.cursors?.after : undefined;
+      if (!next) return result;
+      after = next;
+    }
+    throw fail('facebook_too_many_pages'); // không trả danh sách thiếu
+  }
+
+  async function debugTokenFor(token: string): Promise<FacebookTokenInfo> {
+    const info = parseDebugToken(
+      await get('debug_token', { input_token: token, access_token: `${appId}|${appSecret}` }),
+    );
+    if (!info) throw fail('facebook_bad_response');
+    return info;
+  }
+
+  /** Bổ sung Page đã được cấp ở hộp thoại Meta nhưng vắng ở `me/accounts` (xem `listPages`). Không bao giờ ném. */
+  async function withGrantedPages(
+    userToken: string,
+    found: FacebookPageGrant[],
+  ): Promise<FacebookPageGrant[]> {
+    let info: FacebookTokenInfo;
+    try {
+      info = await debugTokenFor(userToken);
+    } catch {
+      return found;
+    }
+    const have = new Set(found.map((page) => page.id));
+    const ids = [
+      ...new Set(
+        info.granular
+          .filter((entry) => entry.scope.startsWith('pages_'))
+          .flatMap((entry) => entry.targetIds),
+      ),
+    ]
+      .filter((id) => /^[0-9]{1,30}$/.test(id) && !have.has(id))
+      .slice(0, MAX_GRANTED_PAGE_LOOKUPS);
+    const extra: FacebookPageGrant[] = [];
+    for (const id of ids) {
+      try {
+        const node = accountSchema.safeParse(
+          await get(id, {
+            fields: 'id,name,access_token,tasks',
+            access_token: userToken,
+            appsecret_proof: proof(userToken),
+          }),
+        );
+        if (node.success && node.data.id === id) {
+          extra.push({
+            id,
+            name: node.data.name,
+            accessToken: node.data.access_token,
+            tasks: node.data.tasks ?? [],
+          });
+        }
+      } catch {
+        // Page này không đọc được bằng token người dùng: bỏ, không làm hỏng danh sách.
+      }
+    }
+    return found.concat(extra);
+  }
+
   return {
     buildAuthorizeUrl(state, opts) {
       if (!state) throw new Error('Thiếu state.');
@@ -190,47 +287,12 @@ export function createFacebookOAuthClient(options: FacebookOAuthOptions): Facebo
       });
     },
 
-    async listPages(userToken) {
-      const result: FacebookPageGrant[] = [];
-      const seen = new Set<string>();
-      let after: string | undefined;
-      for (let page = 1; page <= MAX_ACCOUNT_PAGES; page++) {
-        const parsed = accountsSchema.safeParse(
-          await get('me/accounts', {
-            fields: 'id,name,access_token,tasks',
-            limit: String(ACCOUNT_PAGE_SIZE),
-            access_token: userToken,
-            appsecret_proof: proof(userToken),
-            ...(after === undefined ? {} : { after }),
-          }),
-        );
-        if (!parsed.success) throw fail('facebook_bad_response');
-        for (const raw of parsed.data.data) {
-          const node = accountSchema.safeParse(raw);
-          // Dòng hỏng/thiếu token (vd tài khoản không đủ quyền) bị bỏ — không đoán.
-          if (!node.success || seen.has(node.data.id)) continue;
-          seen.add(node.data.id);
-          result.push({
-            id: node.data.id,
-            name: node.data.name,
-            accessToken: node.data.access_token,
-            tasks: node.data.tasks ?? [],
-          });
-        }
-        const next = parsed.data.paging?.next ? parsed.data.paging.cursors?.after : undefined;
-        if (!next) return result;
-        after = next;
-      }
-      throw fail('facebook_too_many_pages'); // không trả danh sách thiếu
+    async listPages(userToken, listOptions) {
+      const viaAccounts = await listAccountPages(userToken);
+      return listOptions?.includeGranted ? withGrantedPages(userToken, viaAccounts) : viaAccounts;
     },
 
-    async debugToken(token) {
-      const info = parseDebugToken(
-        await get('debug_token', { input_token: token, access_token: `${appId}|${appSecret}` }),
-      );
-      if (!info) throw fail('facebook_bad_response');
-      return info;
-    },
+    debugToken: (token) => debugTokenFor(token),
 
     async getTokenOwnerId(token) {
       const parsed = meSchema.safeParse(
