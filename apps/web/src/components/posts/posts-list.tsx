@@ -16,6 +16,8 @@ export type PostsListItem = {
   externalId: string;
   message: string | null;
   permalink: string | null;
+  /** Ảnh bài từ nền tảng (`posts.media_url`); bài mẫu/không có ảnh để trống. */
+  mediaUrl?: string | null;
   isAd: boolean;
   createdTime: Date | null;
   commentCount: number;
@@ -89,6 +91,7 @@ export async function PostsList({
             <PostCard
               key={post.id}
               pending={post.pendingCount > 0}
+              imageUrl={post.mediaUrl}
               meta={
                 <>
                   <Pill tone={look?.tone}>
