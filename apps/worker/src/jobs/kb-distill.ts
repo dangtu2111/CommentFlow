@@ -19,10 +19,14 @@ import {
  */
 export const KB_DISTILL_STEP = DISTILL_STEP;
 
-export function distillOpsFor(db: FlowDb, workspaceId: string): DistillOps {
+export function distillOpsFor(
+  db: FlowDb,
+  workspaceId: string,
+  options: { ignoreDistillHash?: boolean } = {},
+): DistillOps {
   return {
     listChunks: (limit) =>
-      db.withJob(workspaceId, (tx) => listChunksToDistill(tx, workspaceId, limit)),
+      db.withJob(workspaceId, (tx) => listChunksToDistill(tx, workspaceId, limit, options)),
     insertDrafts: (items) =>
       db.withJob(workspaceId, (tx) => insertDistilledFaqDrafts(tx, workspaceId, items)),
     saveShopSuggestions: (items) =>
@@ -39,11 +43,18 @@ export function runDistillForWorkspace(options: {
   workspaceId: string;
   distiller: Distiller;
   costCapUsd?: number;
+  /** Lệnh chạy tay để đo lại: chỉ xét N đoạn đầu (theo chunk_key), BỎ QUA `distill_hash` (đoạn đã chắt lọc vẫn được xét lại). */
+  forceFirst?: number;
 }): Promise<DistillStats> {
   return runKbDistill({
     workspaceId: options.workspaceId,
     distiller: options.distiller,
-    ops: distillOpsFor(options.db, options.workspaceId),
+    ops: distillOpsFor(
+      options.db,
+      options.workspaceId,
+      options.forceFirst === undefined ? {} : { ignoreDistillHash: true },
+    ),
+    ...(options.forceFirst === undefined ? {} : { maxChunks: options.forceFirst }),
     ...(options.costCapUsd === undefined ? {} : { costCapUsd: options.costCapUsd }),
   });
 }
