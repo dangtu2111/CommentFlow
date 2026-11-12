@@ -17,6 +17,8 @@ export type FbNoticeKey = (typeof FB_NOTICE_KEYS)[number];
 
 export const FB_START_PATH = '/api/channels/facebook/start';
 /** Bắt đầu lại OAuth và xin LẠI quyền còn thiếu (`auth_type=rerequest`). */
+/** Tải lại bước chọn Page (phiên chọn còn hiệu lực 10 phút) để lấy danh sách mới từ Meta. */
+export const FB_SELECT_PATH = '/app/channels?fb=select';
 export const FB_REREQUEST_PATH = `${FB_START_PATH}?rerequest=1`;
 
 /** `?fb=` từ URL → khóa thông báo (giá trị lạ → không hiện gì; `select` là bước chọn Page, không phải thông báo). */

@@ -2575,6 +2575,35 @@
       },
       "granted": "Granted",
       "notGranted": "Not granted"
+    },
+    "select": {
+      "title": "Choose the Fanpages to connect to this Workspace",
+      "subtitle": "The system will sync comments and AI reply suggestions for the Fanpages you pick.",
+      "switchAccount": "Switch to another Facebook account",
+      "oauthValid": "Meta sign-in valid",
+      "quota": "Connection quota",
+      "quotaUsed": "{used} / {limit} channels used",
+      "quotaPending": "(+{count} about to be added)",
+      "overLimit": "This selection would exceed your plan's {limit}-channel limit. Deselect a Page or upgrade.",
+      "search": "Search by Fanpage name or Page ID…",
+      "refresh": "Refresh the Meta list",
+      "noMatch": "No Fanpage matches.",
+      "emptyHint": "Meta returned no Pages for this account. Check that you ticked a Page in the Facebook dialog and that the account has a role on the Page (Pages owned by a Business Manager need direct Page access).",
+      "afterTitle": "After connecting",
+      "backfill": "Load the last 7 days",
+      "backfillHint": "Fetch recent posts and comments so the AI understands the context.",
+      "safeMode": "Safe mode: manual approval",
+      "safeModeHint": "By default the AI only drafts replies; staff approve before they reach customers.",
+      "selected": "Selected: {count} new Fanpage(s)",
+      "remaining": "(Quota left after connecting: {remaining}/{limit} channels)",
+      "confirm": "Confirm & connect {count} Fanpage(s)",
+      "compliance": "CommentFlow AI uses only Meta's official APIs, never posts on its own and never shares business data externally.",
+      "state": {
+        "selectable": "Ready to connect",
+        "connected": "Already connected in this Workspace",
+        "blocked": "Unavailable"
+      },
+      "pageId": "ID: {id}"
     }
   },
   "posts": {
