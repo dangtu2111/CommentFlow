@@ -397,6 +397,7 @@ export {
   CHANNEL_CHECK_QUEUE,
   type ChannelCheckJob,
   channelCheckJobSchema,
+  FB_SYSTEM_TOKEN_KEY,
   HIDE_QUEUE,
   type HideJob,
   hideJobSchema,

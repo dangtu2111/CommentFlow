@@ -603,6 +603,20 @@
       "when": 1795400000000,
       "tag": "0085_kb_shop_v2",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1795500000000,
+      "tag": "0086_fb_system_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1795600000000,
+      "tag": "0087_fb_system_connection_owner_read",
+      "breakpoints": true
     }
   ]
 }

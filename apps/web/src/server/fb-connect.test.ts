@@ -35,6 +35,9 @@ type Opts = {
   ownerOf?: Record<string, string>;
   failSubscribeFor?: string[];
   failSave?: boolean;
+  /** Lỗi ở bước đặt cờ / xóa cờ webhook (DB), để kiểm log nêu đúng bước. */
+  failMark?: boolean;
+  failClear?: boolean;
   /** pageId → quyền ĐÃ CẤP mà `debug_token` trả cho token Page đó (thiếu = lỗi hỏi quyền). */
   granted?: Record<string, string[]>;
   debugFails?: boolean;
@@ -80,8 +83,14 @@ function setup(o: Opts = {}) {
         log.push(`save:${page.externalId}`);
         return channelId;
       },
-      markWebhookSubscribed: async (id) => void log.push(`mark:${id}`),
-      clearWebhookSubscribed: async (id) => void log.push(`clear:${id}`),
+      markWebhookSubscribed: async (id) => {
+        if (o.failMark) throw new Error('channel_not_updated');
+        log.push(`mark:${id}`);
+      },
+      clearWebhookSubscribed: async (id) => {
+        if (o.failClear) throw new Error('channel_not_updated');
+        log.push(`clear:${id}`);
+      },
     },
     encrypt: (plaintext, ctx) => {
       log.push(`encrypt:${ctx.channelId}`);
@@ -140,6 +149,19 @@ describe('connectFacebookPages — thứ tự và WEBHOOK-SUBSCRIBE-VERIFY', () 
     expect(log.indexOf(`clear:chan-${A.id}`)).toBeLessThan(
       log.indexOf(`subscribe:${A.id}:TOKEN-A`),
     );
+  });
+
+  it('nhật ký nêu ĐÚNG bước webhook hỏng (xóa cờ / đăng ký Meta / đặt cờ), không chứa token', async () => {
+    const stageOf = async (o: Opts) => {
+      const { deps, warnings } = setup(o);
+      const result = await connect([A.id], deps);
+      expect(result[0]?.outcome).toBe('connected_without_webhook');
+      expect(JSON.stringify(warnings)).not.toContain('TOKEN-A');
+      return (warnings.at(-1) as { stage?: string }).stage;
+    };
+    expect(await stageOf({ failClear: true })).toBe('clear');
+    expect(await stageOf({ failSubscribeFor: [A.id] })).toBe('subscribe');
+    expect(await stageOf({ failMark: true })).toBe('mark');
   });
 
   it('lưu DB lỗi → failed, không subscribe, không đặt cờ', async () => {

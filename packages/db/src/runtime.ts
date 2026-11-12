@@ -16,6 +16,16 @@ export {
 export { createDb, type Database, type FlowDb } from './client';
 export { markCommentDeleted } from './comment-redact';
 export {
+  disconnectFbSystemConnection,
+  type FbSystemConnectionRow,
+  type FbSystemConnectionStatus,
+  type FbSystemConnectionToken,
+  getFbSystemConnection,
+  markFbSystemConnectionInvalid,
+  readFbSystemConnectionToken,
+  saveFbSystemConnection,
+} from './fb-system-connection';
+export {
   cancelCommentHide,
   HIDE_REJECTIONS,
   HideRejectedError,

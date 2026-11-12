@@ -5,13 +5,21 @@ import { CHANNEL_CHECK_QUEUE } from '@flow/shared';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { isCheckThrottled } from '../../../../lib/channel-check';
-import { connectSummaryQuery } from '../../../../lib/fb-connect-view';
+import {
+  connectSummaryQuery,
+  FB_SYSTEM_SELECT_QUERY,
+  FB_SYSTEM_SOURCE,
+} from '../../../../lib/fb-connect-view';
 import { actionAllowed } from '../../../../server/action-guard';
 import { getAuthRuntime } from '../../../../server/auth';
 import { createDisconnectChannelAction } from '../../../../server/channel-disconnect';
 import { getDb } from '../../../../server/db';
 import { connectFacebookPages, FbConnectError } from '../../../../server/fb-connect';
-import { buildConnectDeps, getEnabledFbConfig } from '../../../../server/fb-connect-runtime';
+import {
+  buildConnectDeps,
+  buildFbSystemUserService,
+  getEnabledFbConfig,
+} from '../../../../server/fb-connect-runtime';
 import {
   decodeOAuthSession,
   FB_SESSION_COOKIE,
@@ -35,11 +43,23 @@ export async function connectPagesAction(formData: FormData): Promise<void> {
   if (!config) notFound();
 
   const jar = await cookies();
-  const session = decodeOAuthSession(
-    getAuthRuntime().fbOAuthSession.open(jar.get(FB_SESSION_COOKIE)?.value),
-    { workspaceId: workspace.id, userId: user.id },
-  );
-  if (!session) redirect(`${BACK}?fb=expiredSession`);
+  // Nguồn token: phiên OAuth (cookie niêm phong) HOẶC token System User đã lưu (DB, giải mã tại đây). Không bao giờ từ form.
+  let userToken: string;
+  if (formData.get('source') === FB_SYSTEM_SOURCE) {
+    const loaded = await buildFbSystemUserService(config).load({
+      workspaceId: workspace.id,
+      userId: user.id,
+    });
+    if (loaded.status !== 'ok') redirect(`${BACK}?fbsu=${loaded.status}`);
+    userToken = loaded.token;
+  } else {
+    const session = decodeOAuthSession(
+      getAuthRuntime().fbOAuthSession.open(jar.get(FB_SESSION_COOKIE)?.value),
+      { workspaceId: workspace.id, userId: user.id },
+    );
+    if (!session) redirect(`${BACK}?fb=expiredSession`);
+    userToken = session.userToken;
+  }
 
   const selected = formData
     .getAll('page')
@@ -49,7 +69,7 @@ export async function connectPagesAction(formData: FormData): Promise<void> {
   let query: string;
   try {
     const results = await connectFacebookPages(
-      { workspaceId: workspace.id, userToken: session.userToken, selectedPageIds: selected },
+      { workspaceId: workspace.id, userToken, selectedPageIds: selected },
       buildConnectDeps(config, { workspaceId: workspace.id, userId: user.id }),
     );
     query = connectSummaryQuery(results);
@@ -72,6 +92,41 @@ export async function connectPagesAction(formData: FormData): Promise<void> {
   }
   jar.delete({ name: FB_SESSION_COOKIE, path: FB_SESSION_COOKIE_PATH });
   redirect(`${BACK}?${query}`);
+}
+
+/**
+ * Owner dán token System User: kiểm dạng → hỏi Meta (`debug_token`: còn hiệu lực + có `pages_show_list`) → mã hóa → lưu. Token chỉ nằm
+ * trong bộ nhớ của request này; không log, không vào URL/cookie. Thành công → mở bước chọn Page bằng token vừa lưu; lỗi → về trang Kênh
+ * kèm mã thông báo `fbsu`. Workspace/người dùng lấy từ `requireAppUser`, KHÔNG từ form.
+ */
+export async function saveSystemTokenAction(formData: FormData): Promise<void> {
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  const config = getEnabledFbConfig();
+  if (!config) notFound();
+  if (!(await actionAllowed('uiSensitive', { userId: user.id, workspaceId: workspace.id }))) {
+    redirect(`${BACK}?fbsu=rate_limited`);
+  }
+  const raw = formData.get('systemToken');
+  const result = await buildFbSystemUserService(config).save(
+    { workspaceId: workspace.id, userId: user.id },
+    typeof raw === 'string' ? raw : '',
+  );
+  redirect(result === 'ok' ? `${BACK}?${FB_SYSTEM_SELECT_QUERY}` : `${BACK}?fbsu=${result}`);
+}
+
+/** Owner ngắt token System User đã lưu (xóa ciphertext). Các kênh đã kết nối giữ nguyên vì dùng token Page riêng. */
+export async function disconnectSystemUserAction(): Promise<void> {
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  const config = getEnabledFbConfig();
+  if (!config) notFound();
+  if (!(await actionAllowed('uiSensitive', { userId: user.id, workspaceId: workspace.id }))) {
+    redirect(`${BACK}?fbsu=rate_limited`);
+  }
+  const result = await buildFbSystemUserService(config).disconnect({
+    workspaceId: workspace.id,
+    userId: user.id,
+  });
+  redirect(`${BACK}?fbsu=${result === 'ok' ? 'disconnected' : result}`);
 }
 
 /** Bỏ phiên chọn Page đang dở (xóa cookie token) rồi về trang Kênh. */

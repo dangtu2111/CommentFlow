@@ -30,6 +30,8 @@ export const CHANNEL_CHECK_QUEUE = 'channel-check';
 export const SHOPIFY_SYNC_QUEUE = 'shopify-sync';
 /** Khóa ngữ cảnh mã hóa (AAD) token Shopify: một cửa hàng mỗi workspace. Web mã hóa và worker giải mã phải dùng CÙNG giá trị. */
 export const SHOPIFY_TOKEN_KEY = 'shopify';
+/** Khóa ngữ cảnh mã hóa (AAD) token System User Facebook: một token mỗi workspace (migration 0086). */
+export const FB_SYSTEM_TOKEN_KEY = 'fb-system-user';
 export const shopifySyncJobSchema = z.object({ workspaceId: z.uuid() });
 export type ShopifySyncJob = z.infer<typeof shopifySyncJobSchema>;
 export const channelCheckJobSchema = z.object({ workspaceId: z.uuid() });

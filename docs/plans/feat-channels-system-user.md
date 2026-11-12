@@ -59,6 +59,7 @@ Quy tắc xử lý token: không lưu/không log token; lỗi Meta ánh xạ th�
 
 - Token System User không hết hạn và quyền rộng: người dùng phải hiểu rủi ro khi dán; giao diện nhắc chỉ tạo token với đúng quyền `pages_*`.
 - Page thuộc Business chỉ hiện nếu System User được gán Page với quyền quản lý nội dung.
+- Xoay `TOKEN_ENC_KEYS`: công cụ mã hóa lại hiện chỉ bao phủ token kênh (`channel-tokens`), chưa có cho `fb_system_connections` (Shopify cũng vậy). Khóa cũ phải còn trong `TOKEN_ENC_KEYS` cho tới khi có công cụ; thiếu khóa → `load` trả `unusable` và đánh dấu `invalid`, Owner dán lại token. Ghi nhận, không chặn nhánh này.
 
 ## Đề xuất thay đổi
 

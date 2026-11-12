@@ -63,7 +63,7 @@ export type FbConnectDeps = {
   /** Số kênh tối đa của workspace. */
   limit: number;
   /** Ghi vết lỗi không PII (mã, không token). */
-  warn?: (event: { event: string; pageId?: string; code?: string }) => void;
+  warn?: (event: { event: string; pageId?: string; code?: string; stage?: string }) => void;
 };
 
 const MODERATING_TASKS = ['MANAGE', 'MODERATE'];
@@ -149,9 +149,11 @@ export async function connectFacebookPages(
       return 'failed';
     }
 
+    // 3. Webhook đích danh + xác nhận; 4. đặt cờ. `stage` cho biết bước nào hỏng (clear → subscribe → mark) để chẩn đoán.
+    let stage: 'clear' | 'subscribe' | 'mark' = 'clear';
     try {
-      // 3. Webhook đích danh + xác nhận; 4. đặt cờ.
       await deps.store.clearWebhookSubscribed(channelId);
+      stage = 'subscribe';
       await deps.subscribeAndVerify(
         {
           id: channelId,
@@ -161,10 +163,16 @@ export async function connectFacebookPages(
         },
         page.accessToken,
       );
+      stage = 'mark';
       await deps.store.markWebhookSubscribed(channelId);
       return 'connected';
     } catch (error) {
-      deps.warn?.({ event: 'fb_connect_webhook_failed', pageId: page.id, code: codeOf(error) });
+      deps.warn?.({
+        event: 'fb_connect_webhook_failed',
+        pageId: page.id,
+        code: codeOf(error),
+        stage,
+      });
       return 'connected_without_webhook';
     }
   }
