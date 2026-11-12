@@ -149,6 +149,53 @@ describe('POST-HYDRATE — gọi hook điền nội dung bài', () => {
   });
 });
 
+describe('COMMENT-AUTHOR-AVATAR — gọi hook lấy ảnh đại diện người bình luận', () => {
+  it('mỗi bình luận MỚI của khách một lần, sau khi lưu xong; lỗi của hook không làm hỏng ingest', async () => {
+    const { pageId, channelId } = await seedPage();
+    const targets: Array<Record<string, unknown>> = [];
+    const hydrateAvatar = async (target: Record<string, unknown>) => {
+      targets.push(target);
+      throw new Error('hook hỏng không được làm hỏng ingest');
+    };
+    const run = createIngestHandler({ db, logger: quiet, hydrateAvatar: hydrateAvatar as never });
+
+    const first = await record(pageId, change(pageId));
+    await run(job(ws, first));
+    const saved = (await commentsOf(channelId))[0];
+    expect(targets).toHaveLength(1);
+    expect(targets[0]).toMatchObject({
+      workspaceId: ws,
+      channelId,
+      channelExternalId: pageId,
+    });
+    expect(typeof targets[0]?.commentId).toBe('string');
+    expect(typeof targets[0]?.commentExternalId).toBe('string');
+    expect(saved).toBeDefined(); // bình luận đã lưu dù hook ném
+
+    // Bình luận thứ hai → hook gọi thêm MỘT lần nữa (mỗi bình luận mới một lần).
+    await run(job(ws, await record(pageId, change(pageId))));
+    expect(targets).toHaveLength(2);
+    expect((await eventRow(first))?.status).toBe('done');
+  });
+
+  it('bình luận do chính Page viết (không lưu) → KHÔNG gọi hook', async () => {
+    const own = await seedPage();
+    const targets: unknown[] = [];
+    const run = createIngestHandler({
+      db,
+      logger: quiet,
+      hydrateAvatar: (async (t: unknown) => void targets.push(t)) as never,
+    });
+    await run(
+      job(
+        ws,
+        await record(own.pageId, change(own.pageId, { from: { id: own.pageId, name: 'Shop' } })),
+      ),
+    );
+    expect(targets).toHaveLength(0);
+  });
+});
+
 describe('FR-021 job ingest — bình luận mới', () => {
   it('tạo bài (nếu chưa có) + bình luận trạng thái new, tăng đếm đúng một lần, sự kiện done', async () => {
     const { pageId, channelId } = await seedPage();
