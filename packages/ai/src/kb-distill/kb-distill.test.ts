@@ -375,14 +375,17 @@ describe('prompt chắt lọc A/B', () => {
   const text = unsafeMarkMasked(SOURCE);
   const systemOf = (call: LlmCallInput | undefined) =>
     String(call?.messages.find((m) => m.role === 'system')?.content ?? '');
-  const itemSchemaOf = (call: LlmCallInput | undefined) =>
-    (
-      call?.responseFormat?.schema as {
+  const itemSchemaOf = (call: LlmCallInput | undefined) => {
+    const schema = call?.responseFormat?.schema;
+    if (!schema) throw new Error('thiếu responseFormat');
+    return (
+      schema as {
         properties: {
           items: { items: { required: string[]; properties: Record<string, unknown> } };
         };
       }
     ).properties.items.items;
+  };
 
   it('có đúng hai bản; mặc định là bản mới nhất; chuỗi lạ bị từ chối', () => {
     expect(DISTILL_PROMPT_VERSIONS).toEqual(['distill@1', 'distill@2']);
