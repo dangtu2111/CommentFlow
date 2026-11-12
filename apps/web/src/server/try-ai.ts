@@ -8,6 +8,7 @@ import {
   type TryQuota,
   type TryResult,
 } from '@flow/ai';
+import { isAppError } from '@flow/shared';
 import { z } from 'zod';
 import { TRY_AI_MAX_CHARS } from '../lib/try-ai-limits';
 import {
@@ -68,7 +69,7 @@ export type TryAiDeps = {
   knowledgeRunner?: KnowledgeRunner;
   /** LLM thật cho extract + soạn câu (bắt buộc cả hai, trừ khi test cắm `buildDeps`). Thiếu → `llm_*`; KHÔNG có bản mẫu. */
   llm?: TryLlmDeps;
-  warn?: (event: { event: string; reason?: string }) => void;
+  warn?: (event: { event: string; reason?: string; code?: string; message?: string }) => void;
 };
 
 const textSchema = z.string().trim().min(1);
@@ -106,6 +107,9 @@ const DEMO_VOICE = {
   shopPronoun: 'shop',
   customerAddress: 'ban',
 } as const;
+
+/** Mã lỗi mà thông điệp là chuỗi cố định của dịch vụ AI (an toàn để ghi log). */
+const SAFE_MESSAGE_CODES: ReadonlySet<string> = new Set(['LLM_UNAVAILABLE', 'CONFIG_INVALID']);
 
 export function createTryAiAction(deps: TryAiDeps) {
   const now = deps.now ?? (() => new Date());
@@ -191,7 +195,16 @@ export function createTryAiAction(deps: TryAiDeps) {
         warn({ event: 'try_ai_invalid_output' });
         return { ok: false, reason: 'ai_invalid_output' };
       }
-      warn({ event: 'try_ai_failed', reason: error instanceof Error ? error.name : 'unknown' });
+      warn({
+        event: 'try_ai_failed',
+        reason: error instanceof Error ? error.name : 'unknown',
+        // Mã lỗi nghiệp vụ (không phải thông điệp) để chẩn đoán; không chứa nội dung khách.
+        ...(isAppError(error) ? { code: error.code } : {}),
+        // Lỗi dịch vụ AI có thông điệp CỐ ĐỊNH (không chứa nội dung khách) → ghi để biết hỏng ở extract/draft/embed/rerank; mã khác chỉ ghi mã.
+        ...(isAppError(error) && SAFE_MESSAGE_CODES.has(error.code)
+          ? { message: error.message }
+          : {}),
+      });
       return { ok: false, reason: 'unavailable' };
     }
   };

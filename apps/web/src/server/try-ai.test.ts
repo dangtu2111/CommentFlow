@@ -5,7 +5,8 @@ import {
   createTryQuota,
   type Extractor,
 } from '@flow/ai';
-import { describe, expect, it } from 'vitest';
+import { AppError } from '@flow/shared';
+import { describe, expect, it, vi } from 'vitest';
 import { demoKnowledgeRunner, demoWiring } from './test-demo-wiring';
 import { createTryAiAction, TRY_AI_MAX_CHARS } from './try-ai';
 
@@ -47,6 +48,66 @@ describe('FR-059 US-034 BR-03 Thử AI (mock): đầu vào, giới hạn/ngày, 
   it('bình luận chỉ emoji → skipped, vẫn tính một lượt thử (không phải lượt gói)', async () => {
     const r = await action()(session, '😀😀');
     expect(r).toMatchObject({ ok: true, result: { status: 'skipped', billed: false } });
+  });
+
+  it('AppError trong pipeline → log mang MÃ lỗi (để chẩn đoán), không mang thông điệp/nội dung', async () => {
+    const warn = vi.fn();
+    const run = createTryAiAction({
+      quota: createTryQuota({ limit: 3 }),
+      now,
+      knowledgeRunner: demoKnowledgeRunner,
+      buildDeps: () => ({
+        extractor: {
+          extract: async () => {
+            throw new AppError('VALIDATION_FAILED', 'chi tiết 0912345678');
+          },
+        },
+        drafter: { draft: async () => ({ reply: 'x' }) as never },
+        knowledge: {
+          matchProducts: async () => ({ ids: [], names: [], missingAxes: [] }),
+          lookupProductFacts: async () => [],
+          searchKb: async () => [],
+        },
+      }),
+      warn,
+    });
+    expect(await run(session, 'ship bao nhiêu')).toEqual({ ok: false, reason: 'unavailable' });
+    expect(warn).toHaveBeenCalledWith({
+      event: 'try_ai_failed',
+      reason: 'AppError',
+      code: 'VALIDATION_FAILED',
+    });
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('0912345678');
+  });
+
+  it('LLM_UNAVAILABLE: log kèm thông điệp cố định của dịch vụ AI để biết hỏng ở bước nào', async () => {
+    const warn = vi.fn();
+    const run = createTryAiAction({
+      quota: createTryQuota({ limit: 3 }),
+      now,
+      knowledgeRunner: demoKnowledgeRunner,
+      buildDeps: () => ({
+        extractor: {
+          extract: async () => {
+            throw new AppError('LLM_UNAVAILABLE', 'Dịch vụ AI trả về lỗi HTTP 400.');
+          },
+        },
+        drafter: { draft: async () => ({ reply: 'x' }) as never },
+        knowledge: {
+          matchProducts: async () => ({ ids: [], names: [], missingAxes: [] }),
+          lookupProductFacts: async () => [],
+          searchKb: async () => [],
+        },
+      }),
+      warn,
+    });
+    await run(session, 'ship bao nhiêu');
+    expect(warn).toHaveBeenCalledWith({
+      event: 'try_ai_failed',
+      reason: 'AppError',
+      code: 'LLM_UNAVAILABLE',
+      message: 'Dịch vụ AI trả về lỗi HTTP 400.',
+    });
   });
 
   it('lỗi bất ngờ trong pipeline → unavailable, không lộ nội dung', async () => {

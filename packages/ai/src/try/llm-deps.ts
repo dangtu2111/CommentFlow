@@ -5,7 +5,7 @@ import { loadDraftConfig } from '../draft/draft-config';
 import { createLlmDrafter, type Drafter } from '../draft/drafter';
 import { createLlmClient, type LlmClientOptions } from '../llm-client';
 import { loadRewriteConfig } from '../rewrite/rewrite-config';
-import { createLlmRewriter, type Rewriter } from '../rewrite/rewriter';
+import { createLlmRewriter, type Rewriter, ruleResult } from '../rewrite/rewriter';
 
 /**
  * DÙNG CHUNG cho ô Thử AI (web) và job `pipeline` (worker) — một nơi dựng LLM (PIPE-ORCHESTRATOR lát E).
@@ -136,7 +136,10 @@ export function createLlmDepsFromEnv(options: LlmDepsOptions): LlmDeps {
       ? {
           rewriter: {
             rewrite: async (input) => {
-              await gate('rewrite', input.workspaceId);
+              // Tùy chọn: cờ tắt thì KHÔNG làm hỏng cả lượt (khác classify/draft bắt buộc) mà dùng câu tìm kiếm quy tắc, không tốn LLM.
+              if (!(await options.isStepEnabled('rewrite', input.workspaceId))) {
+                return ruleResult(input);
+              }
               return rewriterBase.rewrite(input);
             },
           } satisfies Rewriter,
