@@ -11,6 +11,7 @@ import type {
   PlatformConnector,
   TokenProvider,
 } from '../types';
+import { type FacebookTokenInfo, parseDebugToken, scopesForPage } from './debug-token';
 import { cleanText, parseMetaWebhook, verifyMetaSignature } from './webhook';
 
 /**
@@ -92,6 +93,11 @@ export interface FacebookConnector extends PlatformConnector {
    * (bài chỉ có ảnh không có chữ…); liên kết/ảnh chỉ nhận `http(s)`. Chỉ GET.
    */
   fetchPost(channel: ChannelRef, postExternalId: string): Promise<FacebookPostInfo>;
+  /**
+   * Quyền ĐÃ CẤP và hiệu lực của token Page đã lưu (`GET /debug_token`, xác thực bằng token ứng dụng): `scopes` chỉ gồm quyền áp cho Page này
+   * (xét `granular_scopes`). Chỉ GET; token Page nằm trong query như mọi lệnh đọc Graph (không log).
+   */
+  getTokenPermissions(channel: ChannelRef): Promise<FacebookTokenInfo & { pageScopes: string[] }>;
   getPageSubscription(channel: ChannelRef): Promise<PageSubscription>;
   subscribePage(channel: ChannelRef, fields?: string[]): Promise<void>;
 }
@@ -334,12 +340,16 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     path: string,
     params: Record<string, string>,
     overall?: AbortSignal,
+    /** Dùng token ỨNG DỤNG (`appId|appSecret`) thay token kênh — chỉ cho `debug_token`; không ký `appsecret_proof`. */
+    appAccessToken?: string,
   ): Promise<unknown> {
-    const token = await tokenOf(channel);
+    const token = appAccessToken ?? (await tokenOf(channel));
     const all = {
       ...params,
       access_token: token,
-      appsecret_proof: createHmac('sha256', appSecret).update(token).digest('hex'),
+      ...(appAccessToken
+        ? {}
+        : { appsecret_proof: createHmac('sha256', appSecret).update(token).digest('hex') }),
     };
     const url = new URL(`${GRAPH_BASE_URL}/${apiVersion}/${path}`);
     const init: RequestInit = {
@@ -534,9 +544,38 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       return { subscribed: mine !== undefined, fields: mine?.subscribed_fields ?? [] };
     },
 
+    async getTokenPermissions(channel) {
+      graphId(channel.externalId);
+      const token = await tokenOf(channel);
+      const info = parseDebugToken(
+        await call(
+          channel,
+          'GET',
+          'debug_token',
+          { input_token: token },
+          undefined,
+          `${appId}|${appSecret}`,
+        ),
+      );
+      if (!info) throw badResponse();
+      return { ...info, pageScopes: scopesForPage(info, channel.externalId) };
+    },
+
     async checkConnection(channel) {
       const subscription = await connector.getPageSubscription(channel);
-      return { webhookSubscribed: subscription.subscribed };
+      // Quyền đã cấp: làm TỐT NHẤT CÓ THỂ. Token không còn hiệu lực → TOKEN_EXPIRED (như mọi lệnh khác); lỗi khác khi hỏi quyền chỉ bỏ phần quyền, không làm hỏng kiểm tra webhook.
+      let grantedPermissions: string[] | undefined;
+      try {
+        const permissions = await connector.getTokenPermissions(channel);
+        if (!permissions.valid) throw fail('TOKEN_EXPIRED', 'facebook_token_invalid');
+        grantedPermissions = permissions.pageScopes;
+      } catch (error) {
+        if (isPlatformError(error) && error.code === 'TOKEN_EXPIRED') throw error;
+      }
+      return {
+        webhookSubscribed: subscription.subscribed,
+        ...(grantedPermissions ? { grantedPermissions } : {}),
+      };
     },
 
     async subscribePage(channel, fields = ['feed']) {

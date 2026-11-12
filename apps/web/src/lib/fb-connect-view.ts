@@ -16,6 +16,8 @@ export const FB_NOTICE_KEYS = [
 export type FbNoticeKey = (typeof FB_NOTICE_KEYS)[number];
 
 export const FB_START_PATH = '/api/channels/facebook/start';
+/** Bắt đầu lại OAuth và xin LẠI quyền còn thiếu (`auth_type=rerequest`). */
+export const FB_REREQUEST_PATH = `${FB_START_PATH}?rerequest=1`;
 
 /** `?fb=` từ URL → khóa thông báo (giá trị lạ → không hiện gì; `select` là bước chọn Page, không phải thông báo). */
 export function fbNoticeOf(value: string | string[] | undefined): FbNoticeKey | null {

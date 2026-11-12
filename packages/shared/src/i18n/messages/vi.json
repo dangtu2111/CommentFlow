@@ -2539,6 +2539,42 @@
         "vi": "Tiếng Việt",
         "en": "English"
       }
+    },
+    "permissions": {
+      "title": "Quyền Facebook đã cấp",
+      "hint": "Quyền do Meta xác nhận ở lần kiểm kết nối gần nhất. Thiếu quyền nào thì tính năng tương ứng sẽ không chạy.",
+      "unknown": "Quyền Facebook: chưa kiểm tra — bấm \"Kiểm tra toàn bộ kết nối\" để xác nhận đã cấp đủ chưa.",
+      "unknownHint": "Chưa kiểm tra quyền. Bấm \"Kiểm tra toàn bộ kết nối\" ở đầu trang để Meta xác nhận từng quyền.",
+      "ok": "Đã cấp đủ {count}/{count} quyền cần thiết.",
+      "missing": "Thiếu quyền: {list}. Ảnh hưởng: {effects}.",
+      "grant": "Cấp thêm quyền",
+      "pickOk": "Đã cấp đủ các quyền cần thiết cho ứng dụng.",
+      "pickMissing": "Chưa cấp đủ quyền — thiếu: {list}. Bạn vẫn có thể kết nối, nhưng một số tính năng sẽ không chạy; bấm \"Cấp thêm quyền\" để cấp lại.",
+      "feature": {
+        "webhook": "không nhận được bình luận mới theo thời gian thực",
+        "read": "không đọc được bài và bình luận của khách",
+        "reply": "không trả lời/ẩn được bình luận"
+      },
+      "perm": {
+        "pages_manage_metadata": {
+          "name": "Quản lý cài đặt Page",
+          "why": "Đăng ký nhận bình luận mới (webhook)."
+        },
+        "pages_read_engagement": {
+          "name": "Đọc tương tác của Page",
+          "why": "Đọc bài viết và bình luận của Page."
+        },
+        "pages_read_user_content": {
+          "name": "Đọc nội dung do khách đăng",
+          "why": "Đọc nội dung bình luận của khách."
+        },
+        "pages_manage_engagement": {
+          "name": "Quản lý bình luận",
+          "why": "Trả lời và ẩn bình luận."
+        }
+      },
+      "granted": "Đã cấp",
+      "notGranted": "Chưa cấp"
     }
   },
   "posts": {

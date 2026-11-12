@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
  * ký (10 phút, gắn người dùng + workspace) rồi chuyển sang hộp thoại đăng nhập của Meta. Dùng GET vì là điều hướng;
  * không có tác dụng phụ ngoài cookie `state` (không ghi DB).
  */
-export async function GET(): Promise<never> {
+export async function GET(request: Request): Promise<never> {
   const config = getEnabledFbConfig();
   if (!config) notFound();
   const { user, workspace } = await requireAppUser({ role: 'owner' });
@@ -33,5 +33,12 @@ export async function GET(): Promise<never> {
     path: '/api/channels/facebook',
     maxAge: FB_STATE_TTL_SECONDS,
   });
-  redirect(buildFbOAuthClient(config).buildAuthorizeUrl(state.nonce));
+  // `?rerequest=1`: xin lại quyền người dùng đã bỏ chọn/từ chối (Meta chỉ hỏi lại khi có `auth_type=rerequest`).
+  const rerequest = new URL(request.url).searchParams.get('rerequest') === '1';
+  redirect(
+    buildFbOAuthClient(config).buildAuthorizeUrl(
+      state.nonce,
+      rerequest ? { rerequest: true } : undefined,
+    ),
+  );
 }

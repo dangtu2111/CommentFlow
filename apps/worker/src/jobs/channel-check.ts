@@ -13,7 +13,13 @@ export type ChannelCheckStore = {
   /** Kênh Facebook đang `connected` của workspace. */
   listConnected(workspaceId: string): Promise<ChannelRef[]>;
   /** Ghi kết quả + thời điểm kiểm; `mark` đặt thêm `status` (chỉ khi còn `connected`). */
-  save(channel: ChannelRef, result: ChannelCheckResult, mark: ChannelMark): Promise<void>;
+  save(
+    channel: ChannelRef,
+    result: ChannelCheckResult,
+    mark: ChannelMark,
+    /** Quyền ĐÃ CẤP cho kênh (từ nền tảng); vắng = không đọc được lần này → giữ nguyên `scopes` cũ. */
+    granted?: string[],
+  ): Promise<void>;
 };
 
 type Probe = { checkConnection: (channel: ChannelRef) => Promise<ConnectionHealth> };
@@ -38,12 +44,14 @@ export async function checkChannels(options: {
     const probe = connectorFor(channel);
     let result: ChannelCheckResult;
     let mark: ChannelMark = null;
+    let granted: string[] | undefined;
     if (!probe) {
       result = 'unavailable';
     } else {
       try {
         const health = await probe.checkConnection(channel);
         result = health.webhookSubscribed === false ? 'webhook_missing' : 'ok';
+        granted = health.grantedPermissions;
       } catch (error) {
         if (isPlatformError(error) && error.code === 'TOKEN_EXPIRED') {
           result = 'token_invalid';
@@ -62,9 +70,18 @@ export async function checkChannels(options: {
     }
     if (result === 'ok') summary.ok += 1;
     else summary.problems += 1;
-    await store.save(channel, result, mark);
+    await store.save(channel, result, mark, granted);
   }
   return summary;
+}
+
+/** Mảng text của Postgres từ danh sách (tham số hóa từng phần tử; rỗng → `'{}'`). */
+function textArray(values: readonly string[]) {
+  if (values.length === 0) return sql`'{}'::text[]`;
+  return sql`ARRAY[${sql.join(
+    values.map((value) => sql`${value}`),
+    sql`, `,
+  )}]::text[]`;
 }
 
 /** Nối kho với DB thật: đọc/ghi bằng `withJob` (đường hệ thống; cột kết quả chỉ hệ thống ghi được, migration 0063). */
@@ -83,11 +100,12 @@ export function createDbChannelCheckStore(db: Pick<FlowDb, 'withJob'>): ChannelC
           externalId: row.external_id,
         }));
       }),
-    save: (channel, result, mark) =>
+    save: (channel, result, mark, granted) =>
       db.withJob(channel.workspaceId, async (tx) => {
         await tx.execute(sql`
           UPDATE cf.channels
              SET last_checked_at = now(), last_check_result = ${result},
+                 scopes = ${granted === undefined ? sql`scopes` : textArray(granted)},
                  status = CASE WHEN ${mark}::text IS NOT NULL AND status = 'connected' THEN ${mark}::text ELSE status END,
                  updated_at = now()
            WHERE id = ${channel.id}::uuid AND workspace_id = ${channel.workspaceId}::uuid`);

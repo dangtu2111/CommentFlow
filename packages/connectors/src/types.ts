@@ -66,7 +66,11 @@ export type NormalizedEvent =
  * là tùy chọn — có hay không PHẢI khớp `capabilities` (kiểm bằng `checkConnectorContract`).
  */
 /** Kết quả "kiểm tra kết nối" khi token còn sống: webhook đã đăng ký hay chưa (`null` = nền tảng không có khái niệm này). */
-export type ConnectionHealth = { webhookSubscribed: boolean | null };
+export type ConnectionHealth = {
+  webhookSubscribed: boolean | null;
+  /** Quyền ĐÃ CẤP cho kênh này theo nền tảng (vắng = không đọc được lần này); nơi gọi so với quyền bắt buộc. */
+  grantedPermissions?: string[];
+};
 
 export interface PlatformConnector {
   readonly platform: Platform;

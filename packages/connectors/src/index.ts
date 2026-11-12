@@ -46,6 +46,7 @@ export {
   type FacebookConnectorOptions,
   type PageSubscription,
 } from './facebook/connector';
+export { type FacebookTokenInfo, parseDebugToken, scopesForPage } from './facebook/debug-token';
 export {
   createFacebookOAuthClient,
   FACEBOOK_OAUTH_SCOPES,

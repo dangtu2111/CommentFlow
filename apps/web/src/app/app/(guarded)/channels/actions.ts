@@ -53,6 +53,12 @@ export async function connectPagesAction(formData: FormData): Promise<void> {
       buildConnectDeps(config, { workspaceId: workspace.id, userId: user.id }),
     );
     query = connectSummaryQuery(results);
+    // Kết nối xong thì đẩy một lượt kiểm (best-effort): worker ghi QUYỀN ĐÃ CẤP + webhook ngay, Owner thấy đủ/thiếu quyền mà không phải bấm.
+    if (results.some((result) => result.outcome !== 'failed')) {
+      await enqueueJob(CHANNEL_CHECK_QUEUE, { workspaceId: workspace.id }).catch(() => {
+        console.error(JSON.stringify({ event: 'channel_check_enqueue_failed' }));
+      });
+    }
   } catch (error) {
     if (error instanceof FbConnectError) {
       // Chọn lại được (cookie còn): chưa chọn gì → quay lại bước chọn.

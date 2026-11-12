@@ -85,6 +85,14 @@ export {
 export { parseEnv } from './env';
 export { AppError, type ErrorCode, isAppError } from './errors';
 export {
+  evaluateFbPermissions,
+  FB_PERMISSION_FEATURES,
+  FB_REQUIRED_PERMISSIONS,
+  type FbPermissionFeature,
+  type FbPermissionReport,
+  grantedScopesForTarget,
+} from './fb-permissions';
+export {
   AI_STEP_FLAGS,
   type AiStep,
   DISTILL_FLAG,

@@ -35,15 +35,32 @@ type Opts = {
   ownerOf?: Record<string, string>;
   failSubscribeFor?: string[];
   failSave?: boolean;
+  /** pageId → quyền ĐÃ CẤP mà `debug_token` trả cho token Page đó (thiếu = lỗi hỏi quyền). */
+  granted?: Record<string, string[]>;
+  debugFails?: boolean;
 };
 
 function setup(o: Opts = {}) {
   const log: string[] = [];
-  const saved: Array<{ externalId: string; ciphertext: EncryptedToken }> = [];
+  const saved: Array<{
+    externalId: string;
+    ciphertext: EncryptedToken;
+    scopes: readonly string[];
+  }> = [];
   const warnings: unknown[] = [];
   const deps: FbConnectDeps = {
     oauth: {
       listPages: async () => o.pages ?? [A, B, C],
+      debugToken: async (token) => {
+        if (o.debugFails) throw new Error('debug down');
+        const page = [A, B, C].find((p) => p.accessToken === token);
+        return {
+          valid: true,
+          scopes: o.granted?.[page?.id ?? ''] ?? [],
+          granular: [],
+          expiresAt: null,
+        };
+      },
       getTokenOwnerId: async (token) => {
         const page = [A, B, C].find((p) => p.accessToken === token);
         log.push(`me:${page?.id}`);
@@ -55,7 +72,11 @@ function setup(o: Opts = {}) {
       saveChannel: async (page, seal) => {
         if (o.failSave) throw new Error('db down');
         const channelId = `chan-${page.externalId}`;
-        saved.push({ externalId: page.externalId, ciphertext: seal(channelId) });
+        saved.push({
+          externalId: page.externalId,
+          ciphertext: seal(channelId),
+          scopes: page.scopes,
+        });
         log.push(`save:${page.externalId}`);
         return channelId;
       },
@@ -71,7 +92,6 @@ function setup(o: Opts = {}) {
       if (o.failSubscribeFor?.includes(channel.externalId)) throw new Error('boom');
     },
     limit: o.limit ?? 5,
-    scopes: ['pages_show_list'],
     warn: (e) => void warnings.push(e),
   };
   return { deps, log, saved, warnings };
@@ -189,5 +209,33 @@ describe('listConnectablePages', () => {
       { id: B.id, name: 'Shop B', connected: false, usable: true },
       { id: C.id, name: 'Shop C', connected: false, usable: false },
     ]);
+  });
+});
+
+describe('connectFacebookPages — lưu quyền ĐÃ CẤP (không phải quyền đã xin)', () => {
+  it('lưu đúng quyền Meta báo đã cấp cho token Page đó', async () => {
+    const { deps, saved } = setup({
+      granted: { [A.id]: ['pages_read_engagement', 'pages_manage_metadata'] },
+    });
+    await connect([A.id], deps);
+    expect(saved[0]?.scopes).toEqual(['pages_manage_metadata', 'pages_read_engagement']);
+  });
+
+  it('không hỏi được quyền (lỗi) → lưu danh sách RỖNG (chưa biết), vẫn kết nối bình thường, ghi cảnh báo mã lỗi', async () => {
+    const { deps, saved, warnings } = setup({ debugFails: true });
+    const result = await connect([A.id], deps);
+    expect(result[0]?.outcome).toBe('connected');
+    expect(saved[0]?.scopes).toEqual([]);
+    expect(warnings).toContainEqual({
+      event: 'fb_connect_permissions_unreadable',
+      pageId: A.id,
+      code: 'Error',
+    });
+  });
+
+  it('Page lệch danh tính không bị hỏi quyền (không gọi debug_token cho token đáng ngờ)', async () => {
+    const { deps, warnings } = setup({ ownerOf: { [A.id]: B.id }, debugFails: true });
+    await connect([A.id], deps);
+    expect(warnings).toEqual([{ event: 'fb_connect_identity_mismatch', pageId: A.id }]);
   });
 });

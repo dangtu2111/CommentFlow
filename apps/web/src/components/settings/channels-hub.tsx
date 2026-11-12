@@ -7,7 +7,9 @@ import {
   disconnectChannelAction,
   setChannelLanguageAction,
 } from '../../app/app/(guarded)/channels/actions';
+import { channelPermissionView } from '../../lib/channel-permissions';
 import { cn } from '../../lib/cn';
+import { FB_REREQUEST_PATH } from '../../lib/fb-connect-view';
 import { Icon, type IconName } from '../ui/icon';
 import { TwDialog, TwDialogTrigger, TwSubmit } from './tw/dialog';
 import { TwChip, TwSoonButton, twBtn } from './tw/ui';
@@ -344,6 +346,7 @@ async function ChannelRow({
   const initial = channel.name.trim().charAt(0).toUpperCase() || '?';
   const advancedId = `channel-advanced-${channel.id}`;
   const disconnectId = `channel-disconnect-${channel.id}`;
+  const permissions = channelPermissionView(channel);
   const checkedAt = channel.lastCheckedAt
     ? new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(
         channel.lastCheckedAt,
@@ -412,6 +415,35 @@ async function ChannelRow({
               ? t('hub.row.neverChecked')
               : `${t(CHECK_LABEL[channel.lastCheckResult])} · ${t('hub.row.checkedAt', { time: checkedAt ?? '' })}`}
           </p>
+          {ok && channel.platform === 'facebook' ? (
+            <p
+              className={cn(
+                'font-body-sm text-body-sm flex items-center gap-1.5 flex-wrap',
+                permissions.state === 'missing'
+                  ? 'text-error'
+                  : permissions.state === 'ok'
+                    ? 'text-[#237A36]'
+                    : 'text-on-surface-variant',
+              )}
+            >
+              <Icon
+                name={permissions.state === 'missing' ? 'warning' : 'verified_user'}
+                size={14}
+              />
+              {permissions.state === 'unknown'
+                ? t('permissions.unknown')
+                : permissions.state === 'ok'
+                  ? t('permissions.ok', { count: permissions.items.length })
+                  : t('permissions.missing', {
+                      list: permissions.missing
+                        .map((name) => t(`permissions.perm.${name}.name`))
+                        .join(', '),
+                      effects: permissions.missingFeatures
+                        .map((feature) => t(`permissions.feature.${feature}`))
+                        .join(', '),
+                    })}
+            </p>
+          ) : null}
           {ok ? null : (
             <p className="font-body-sm text-body-sm text-error">
               {t(`recovery.cause.${channel.status}`)}
@@ -420,6 +452,12 @@ async function ChannelRow({
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 flex-wrap">
+        {permissions.state === 'missing' && connectHref ? (
+          <a href={FB_REREQUEST_PATH} className={twBtn({ tone: 'primary' })}>
+            <Icon name="lock_reset" size={16} />
+            {t('permissions.grant')}
+          </a>
+        ) : null}
         {canReconnect && connectHref ? (
           <a href={connectHref} className={twBtn({ tone: ok ? 'soft' : 'primary' })}>
             <Icon name="lock_reset" size={16} />
@@ -452,6 +490,59 @@ async function ChannelRow({
         title={t('hub.row.advancedTitle', { name: channel.name })}
         icon={<Icon name="tune" size={20} />}
       >
+        {channel.platform === 'facebook' && ok ? (
+          <section aria-label={t('permissions.title')} className="mb-space-lg space-y-space-sm">
+            <h4 className="font-title-sm text-title-sm text-on-surface">
+              {t('permissions.title')}
+            </h4>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {permissions.state === 'unknown'
+                ? t('permissions.unknownHint')
+                : t('permissions.hint')}
+            </p>
+            <ul className="space-y-1.5">
+              {permissions.items.map((item) => (
+                <li key={item.permission} className="flex items-start gap-2">
+                  <span
+                    className={cn(
+                      'mt-0.5 shrink-0',
+                      permissions.state === 'unknown'
+                        ? 'text-on-surface-variant'
+                        : item.granted
+                          ? 'text-[#237A36]'
+                          : 'text-error',
+                    )}
+                  >
+                    <Icon
+                      name={
+                        permissions.state === 'unknown'
+                          ? 'help'
+                          : item.granted
+                            ? 'check_circle'
+                            : 'cancel'
+                      }
+                      size={16}
+                    />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="font-title-sm text-title-sm text-on-surface">
+                      {t(`permissions.perm.${item.permission}.name`)}
+                    </span>
+                    <span className="block font-body-sm text-body-sm text-on-surface-variant">
+                      {t(`permissions.perm.${item.permission}.why`)}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {permissions.state === 'missing' && connectHref ? (
+              <a href={FB_REREQUEST_PATH} className={twBtn({ tone: 'primary' })}>
+                <Icon name="lock_reset" size={16} />
+                {t('permissions.grant')}
+              </a>
+            ) : null}
+          </section>
+        ) : null}
         <form action={setChannelLanguageAction} className="space-y-space-md">
           <input type="hidden" name="channelId" value={channel.id} />
           <label

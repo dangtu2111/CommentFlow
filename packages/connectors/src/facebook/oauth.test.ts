@@ -196,6 +196,72 @@ describe('getTokenOwnerId', () => {
   });
 });
 
+describe('buildAuthorizeUrl — xin lại quyền (rerequest)', () => {
+  it('rerequest → auth_type=rerequest; không có thì không đặt; Login for Business (config_id) không dùng auth_type', () => {
+    const plain = new URL(client(mockFetch(() => ({ body: {} })).fn).buildAuthorizeUrl('S1'));
+    expect(plain.searchParams.has('auth_type')).toBe(false);
+    const again = new URL(
+      client(mockFetch(() => ({ body: {} })).fn).buildAuthorizeUrl('S1', { rerequest: true }),
+    );
+    expect(again.searchParams.get('auth_type')).toBe('rerequest');
+    expect(again.searchParams.get('scope')).toContain('pages_manage_engagement');
+    const business = new URL(
+      client(mockFetch(() => ({ body: {} })).fn, { loginConfigId: '998877' }).buildAuthorizeUrl(
+        'S1',
+        { rerequest: true },
+      ),
+    );
+    expect(business.searchParams.has('auth_type')).toBe(false);
+  });
+});
+
+describe('debugToken — quyền ĐÃ CẤP của token người dùng', () => {
+  it('gọi /debug_token bằng token ứng dụng (không dùng token người dùng làm access_token) và trả quyền đã cấp', async () => {
+    const { fn, calls } = mockFetch(() => ({
+      body: {
+        data: {
+          is_valid: true,
+          scopes: ['pages_show_list', 'pages_read_engagement'],
+          granular_scopes: [{ scope: 'pages_read_engagement', target_ids: ['111'] }],
+          expires_at: 0,
+        },
+      },
+    }));
+    const info = await client(fn).debugToken(FIXTURE_LONG_TOKEN);
+    expect(info).toMatchObject({
+      valid: true,
+      scopes: ['pages_read_engagement', 'pages_show_list'],
+      granular: [{ scope: 'pages_read_engagement', targetIds: ['111'] }],
+      expiresAt: null,
+    });
+    const [call] = calls;
+    expect(call?.url.pathname).toBe('/v27.0/debug_token');
+    expect(call?.url.searchParams.get('input_token')).toBe(FIXTURE_LONG_TOKEN);
+    expect(call?.url.searchParams.get('access_token')).toBe(
+      `${FIXTURE_APP_ID}|${FIXTURE_APP_SECRET}`,
+    );
+    expect(call?.method).toBe('GET');
+  });
+
+  it('token không hợp lệ → valid=false (không ném); thân sai hình dạng và lỗi Graph → lỗi không lộ token/khóa', async () => {
+    const dead = mockFetch(() => ({ body: { data: { is_valid: false } } }));
+    expect((await client(dead.fn).debugToken(FIXTURE_LONG_TOKEN)).valid).toBe(false);
+    const bad = mockFetch(() => ({ body: { nope: 1 } }));
+    const error = await client(bad.fn)
+      .debugToken(FIXTURE_LONG_TOKEN)
+      .catch((e: unknown) => e);
+    expect(isPlatformError(error)).toBe(true);
+    expect(JSON.stringify(error)).not.toContain(FIXTURE_LONG_TOKEN);
+    expect(String((error as Error).message)).not.toContain(FIXTURE_APP_SECRET);
+    const denied = mockFetch(() => ({ status: 400, body: graphError(190) }));
+    const e2 = await client(denied.fn)
+      .debugToken(FIXTURE_LONG_TOKEN)
+      .catch((e: unknown) => e);
+    expect(isPlatformError(e2)).toBe(true);
+    expect(JSON.stringify(e2)).not.toContain(FIXTURE_LONG_TOKEN);
+  });
+});
+
 describe('lỗi không lộ bí mật', () => {
   const secrets = [
     FIXTURE_APP_SECRET,

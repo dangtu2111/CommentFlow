@@ -46,6 +46,7 @@ describe('channels.last_checked_at / last_check_result', () => {
     const [row] = await app.withActor(ws, owner, (tx) => listChannels(tx, ws));
     expect(row?.lastCheckedAt).toBeNull();
     expect(row?.lastCheckResult).toBeNull();
+    expect(Array.isArray(row?.scopes)).toBe(true);
   });
 
   it('Owner (đường người dùng) KHÔNG ghi được kết quả kiểm', async () => {

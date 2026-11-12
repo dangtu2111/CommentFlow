@@ -10,6 +10,7 @@ import {
   MAX_TIMEOUT_MS,
   readBoundedText,
 } from './connector';
+import { type FacebookTokenInfo, parseDebugToken } from './debug-token';
 
 /**
  * Luồng OAuth Facebook Login for Business (docs/12 §1, docs/13 §2, ADR 010/011) — MỘT giao diện HTTP tiêm được
@@ -54,7 +55,8 @@ export type FacebookPageGrant = {
 };
 
 export interface FacebookOAuthClient {
-  buildAuthorizeUrl(state: string): string;
+  /** `rerequest`: xin lại quyền người dùng đã từ chối/bỏ chọn (`auth_type=rerequest`, chỉ khi dùng `scope`, không dùng `config_id`). */
+  buildAuthorizeUrl(state: string, options?: { rerequest?: boolean }): string;
   /** `code` → user token ngắn hạn. */
   exchangeCode(code: string): Promise<string>;
   /** user token ngắn hạn → dài hạn (Page token lấy từ token dài hạn không hết hạn). */
@@ -62,6 +64,8 @@ export interface FacebookOAuthClient {
   listPages(userToken: string): Promise<FacebookPageGrant[]>;
   /** `GET /me?fields=id` bằng chính token đó: Page token trả Page ID của token. */
   getTokenOwnerId(token: string): Promise<string>;
+  /** Quyền ĐÃ CẤP + hiệu lực của một token (`debug_token`, xác thực bằng token ứng dụng); dùng cho token người dùng ở bước chọn Page. */
+  debugToken(token: string): Promise<FacebookTokenInfo>;
 }
 
 const tokenResponseSchema = z.object({ access_token: z.string().min(1) });
@@ -149,7 +153,7 @@ export function createFacebookOAuthClient(options: FacebookOAuthOptions): Facebo
   }
 
   return {
-    buildAuthorizeUrl(state) {
+    buildAuthorizeUrl(state, opts) {
       if (!state) throw new Error('Thiếu state.');
       const url = new URL(`${FACEBOOK_DIALOG_BASE_URL}/${apiVersion}/dialog/oauth`);
       url.searchParams.set('client_id', appId);
@@ -162,6 +166,7 @@ export function createFacebookOAuthClient(options: FacebookOAuthOptions): Facebo
       } else {
         url.searchParams.set('scope', FACEBOOK_OAUTH_SCOPES.join(','));
         url.searchParams.set('response_type', 'code');
+        if (opts?.rerequest) url.searchParams.set('auth_type', 'rerequest');
       }
       return url.toString();
     },
@@ -217,6 +222,14 @@ export function createFacebookOAuthClient(options: FacebookOAuthOptions): Facebo
         after = next;
       }
       throw fail('facebook_too_many_pages'); // không trả danh sách thiếu
+    },
+
+    async debugToken(token) {
+      const info = parseDebugToken(
+        await get('debug_token', { input_token: token, access_token: `${appId}|${appSecret}` }),
+      );
+      if (!info) throw fail('facebook_bad_response');
+      return info;
     },
 
     async getTokenOwnerId(token) {

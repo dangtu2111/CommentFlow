@@ -1,7 +1,6 @@
 import {
   createFacebookOAuthClient,
   createTokenCipher,
-  FACEBOOK_OAUTH_SCOPES,
   type FacebookOAuthClient,
   parseTokenKeys,
 } from '@flow/connectors';
@@ -114,7 +113,6 @@ export function buildConnectDeps(
       ...(fetchImpl ? { fetch: fetchImpl } : {}),
     }),
     limit: config.channelsLimit,
-    scopes: FACEBOOK_OAUTH_SCOPES,
     warn: (event) => console.warn(JSON.stringify(event)),
   };
 }

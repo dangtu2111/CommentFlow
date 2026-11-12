@@ -2539,6 +2539,42 @@
         "vi": "Vietnamese",
         "en": "English"
       }
+    },
+    "permissions": {
+      "title": "Granted Facebook permissions",
+      "hint": "Permissions as confirmed by Meta at the latest connection check. A missing permission disables the matching feature.",
+      "unknown": "Facebook permissions: not checked yet — press \"Check all connections\" to confirm they are all granted.",
+      "unknownHint": "Permissions not checked yet. Press \"Check all connections\" at the top so Meta confirms each one.",
+      "ok": "All {count}/{count} required permissions granted.",
+      "missing": "Missing permissions: {list}. Impact: {effects}.",
+      "grant": "Grant more permissions",
+      "pickOk": "All required permissions are granted to the app.",
+      "pickMissing": "Not all permissions are granted — missing: {list}. You can still connect, but some features will not work; press \"Grant more permissions\" to grant them again.",
+      "feature": {
+        "webhook": "new comments are not received in real time",
+        "read": "posts and customer comments cannot be read",
+        "reply": "comments cannot be replied to or hidden"
+      },
+      "perm": {
+        "pages_manage_metadata": {
+          "name": "Manage Page settings",
+          "why": "Subscribe to new comments (webhook)."
+        },
+        "pages_read_engagement": {
+          "name": "Read Page engagement",
+          "why": "Read the Page's posts and comments."
+        },
+        "pages_read_user_content": {
+          "name": "Read user-generated content",
+          "why": "Read the text of customer comments."
+        },
+        "pages_manage_engagement": {
+          "name": "Manage comments",
+          "why": "Reply to and hide comments."
+        }
+      },
+      "granted": "Granted",
+      "notGranted": "Not granted"
     }
   },
   "posts": {

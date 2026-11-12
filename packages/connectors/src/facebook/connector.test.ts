@@ -494,6 +494,63 @@ describe('fetchPostComments — GET /{post-id}/comments (filter=stream)', () => 
   });
 });
 
+describe('getTokenPermissions / checkConnection — quyền ĐÃ CẤP của token Page', () => {
+  const debug = (extra: Record<string, unknown> = {}) =>
+    json({
+      data: {
+        is_valid: true,
+        scopes: ['pages_manage_metadata', 'pages_read_engagement', 'pages_read_user_content'],
+        granular_scopes: [{ scope: 'pages_manage_metadata', target_ids: [PAGE_ID] }],
+        expires_at: 0,
+        ...extra,
+      },
+    });
+
+  it('getTokenPermissions: gọi /debug_token với input_token = token Page và access_token = token ứng dụng; chỉ quyền áp cho Page này', async () => {
+    const { connector, calls } = harness([debug()]);
+    const info = await connector.getTokenPermissions(channel);
+    expect(info.valid).toBe(true);
+    expect(info.pageScopes).toEqual([
+      'pages_manage_metadata',
+      'pages_read_engagement',
+      'pages_read_user_content',
+    ]);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('GET');
+    expect(call.url.pathname).toBe('/v27.0/debug_token');
+    expect(call.url.searchParams.get('input_token')).toBe(TOKEN);
+    expect(call.url.searchParams.get('access_token')).toBe(`${APP_ID}|${APP_SECRET}`);
+    expect(call.url.searchParams.has('appsecret_proof')).toBe(false);
+  });
+
+  it('quyền chỉ cấp cho Page KHÁC (granular) không tính cho kênh này', async () => {
+    const { connector } = harness([
+      debug({ granular_scopes: [{ scope: 'pages_manage_metadata', target_ids: ['999'] }] }),
+    ]);
+    const info = await connector.getTokenPermissions(channel);
+    expect(info.pageScopes).not.toContain('pages_manage_metadata');
+    expect(info.pageScopes).toContain('pages_read_engagement');
+  });
+
+  it('checkConnection: kèm quyền đã cấp; hỏi quyền lỗi tạm → bỏ phần quyền, vẫn trả webhook; token hết hiệu lực → TOKEN_EXPIRED', async () => {
+    const ok = harness([json(SUBSCRIBED_APPS), debug()]);
+    expect(await ok.connector.checkConnection?.(channel)).toEqual({
+      webhookSubscribed: true,
+      grantedPermissions: [
+        'pages_manage_metadata',
+        'pages_read_engagement',
+        'pages_read_user_content',
+      ],
+    });
+    const flaky = harness([json(SUBSCRIBED_APPS), json({ bad: 1 })]);
+    expect(await flaky.connector.checkConnection?.(channel)).toEqual({ webhookSubscribed: true });
+    const dead = harness([json(SUBSCRIBED_APPS), json({ data: { is_valid: false } })]);
+    expect(
+      (await failureOf(dead.connector.checkConnection?.(channel) as Promise<unknown>)).code,
+    ).toBe('TOKEN_EXPIRED');
+  });
+});
+
 describe('POST-HYDRATE fetchPost — GET /{post-id}?fields=message,permalink_url,full_picture,created_time', () => {
   const POST = `${PAGE_ID}_3000000000003`;
 
@@ -706,6 +763,7 @@ describe('kiểm id trước khi ghép đường dẫn — id sai KHÔNG gọi m
       connector.fetchReplies(channel, id),
       connector.fetchPostComments(channel, id),
       connector.fetchPost(channel, id),
+      connector.getTokenPermissions({ ...channel, externalId: id }),
       connector.getPageSubscription({ ...channel, externalId: id }),
       connector.subscribePage({ ...channel, externalId: id }),
     ];

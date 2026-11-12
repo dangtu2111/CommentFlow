@@ -1,4 +1,5 @@
 import { listChannels, loadChannelActivity } from '@flow/db/runtime';
+import { evaluateFbPermissions, FB_REQUIRED_PERMISSIONS } from '@flow/shared';
 import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { ChannelsHeaderActions, ChannelsHub } from '../../../../components/settings/channels-hub';
@@ -7,6 +8,7 @@ import { Banner } from '../../../../components/ui/banner';
 import {
   canReconnect,
   countParam,
+  FB_REREQUEST_PATH,
   FB_START_PATH,
   fbNoticeOf,
 } from '../../../../lib/fb-connect-view';
@@ -68,6 +70,8 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
   const wantsSelect = query.fb === 'select';
   let pages: Awaited<ReturnType<typeof listConnectablePages>> | null = null;
   let loadFailed = false;
+  // Quyền Meta ĐÃ CẤP cho ứng dụng (token người dùng) — hiện ở bước chọn Page để Owner biết đủ quyền chưa TRƯỚC khi kết nối; null = không đọc được.
+  let grantedReport: ReturnType<typeof evaluateFbPermissions> | null = null;
   if (config && wantsSelect) {
     const session = decodeOAuthSession(
       getAuthRuntime().fbOAuthSession.open((await cookies()).get(FB_SESSION_COOKIE)?.value),
@@ -75,10 +79,16 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
     );
     if (session) {
       try {
+        const oauth = buildFbOAuthClient(config);
         pages = await listConnectablePages(
-          { oauth: buildFbOAuthClient(config), store: buildChannelStore(workspace.id, user.id) },
+          { oauth, store: buildChannelStore(workspace.id, user.id) },
           session.userToken,
         );
+        try {
+          grantedReport = evaluateFbPermissions((await oauth.debugToken(session.userToken)).scopes);
+        } catch {
+          grantedReport = null; // hỏi quyền lỗi: không chặn việc chọn Page, chỉ không hiện bảng quyền
+        }
       } catch {
         loadFailed = true;
       }
@@ -144,6 +154,43 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Sea
               {t('pick.title')}
             </h2>
             <p className="muted">{t('pick.hint', { limit: config?.channelsLimit ?? 1 })}</p>
+            {grantedReport ? (
+              <section className="stack" aria-label={t('permissions.title')}>
+                <p className={grantedReport.sufficient ? 'badge badge-on' : 'muted'}>
+                  {grantedReport.sufficient
+                    ? t('permissions.pickOk')
+                    : t('permissions.pickMissing', {
+                        list: grantedReport.missing
+                          .map((name) => t(`permissions.perm.${name}.name`))
+                          .join(', '),
+                      })}
+                </p>
+                <ul className="member-list">
+                  {FB_REQUIRED_PERMISSIONS.map((item) => (
+                    <li key={item.permission} className="member-item">
+                      <span className="member-info">
+                        <span className="badge">
+                          {grantedReport.granted.includes(item.permission)
+                            ? t('permissions.granted')
+                            : t('permissions.notGranted')}
+                        </span>{' '}
+                        <span className="member-name">
+                          {t(`permissions.perm.${item.permission}.name`)}
+                        </span>{' '}
+                        <span className="muted">
+                          {t(`permissions.perm.${item.permission}.why`)}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {grantedReport.sufficient ? null : (
+                  <a href={FB_REREQUEST_PATH} className="btn btn-secondary">
+                    {t('permissions.grant')}
+                  </a>
+                )}
+              </section>
+            ) : null}
             {pages.length === 0 ? <p>{t('pick.empty')}</p> : null}
             <form action={connectPagesAction} className="stack">
               <ul className="member-list">

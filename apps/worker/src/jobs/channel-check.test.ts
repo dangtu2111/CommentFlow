@@ -11,14 +11,16 @@ const REF = (id: string): ChannelRef => ({
 
 function setup(options: {
   channels: ChannelRef[];
-  check?: (channel: ChannelRef) => Promise<{ webhookSubscribed: boolean | null }>;
+  check?: (
+    channel: ChannelRef,
+  ) => Promise<{ webhookSubscribed: boolean | null; grantedPermissions?: string[] }>;
   hasConnector?: boolean;
 }) {
-  const saved: Array<{ id: string; result: string; mark: string | null }> = [];
+  const saved: Array<{ id: string; result: string; mark: string | null; granted?: string[] }> = [];
   const store: ChannelCheckStore = {
     listConnected: async () => options.channels,
-    save: async (channel, result, mark) => {
-      saved.push({ id: channel.id, result, mark });
+    save: async (channel, result, mark, granted) => {
+      saved.push({ id: channel.id, result, mark, ...(granted ? { granted } : {}) });
     },
   };
   const warn = vi.fn();
@@ -104,5 +106,46 @@ describe('checkChannels', () => {
     expect(logged).not.toContain('abc');
     expect(logged).not.toContain('secret-id');
     expect(logged).not.toContain('ext-secret-id');
+  });
+});
+
+describe('checkChannels — quyền đã cấp', () => {
+  it('ghi quyền ĐÃ CẤP kèm kết quả khi nền tảng trả về; không trả thì không ghi (giữ giá trị cũ)', async () => {
+    const withPerms = setup({
+      channels: [REF('a')],
+      check: async () => ({
+        webhookSubscribed: true,
+        grantedPermissions: ['pages_read_engagement', 'pages_manage_metadata'],
+      }),
+    });
+    await withPerms.run();
+    expect(withPerms.saved).toEqual([
+      {
+        id: 'a',
+        result: 'ok',
+        mark: null,
+        granted: ['pages_read_engagement', 'pages_manage_metadata'],
+      },
+    ]);
+    const without = setup({ channels: [REF('a')] });
+    await without.run();
+    expect(without.saved[0]).not.toHaveProperty('granted');
+  });
+
+  it('token hết hiệu lực → hạ trạng thái, KHÔNG ghi quyền; quyền rỗng (không còn quyền nào) vẫn được ghi để UI báo thiếu', async () => {
+    const dead = setup({
+      channels: [REF('a')],
+      check: async () => {
+        throw new PlatformError('TOKEN_EXPIRED');
+      },
+    });
+    await dead.run();
+    expect(dead.saved).toEqual([{ id: 'a', result: 'token_invalid', mark: 'expired' }]);
+    const empty = setup({
+      channels: [REF('a')],
+      check: async () => ({ webhookSubscribed: true, grantedPermissions: [] }),
+    });
+    await empty.run();
+    expect(empty.saved[0]?.granted).toEqual([]);
   });
 });
