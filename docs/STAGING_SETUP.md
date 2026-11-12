@@ -261,7 +261,7 @@ Và **Deployment branches = Selected branches → `main`** cho `staging-migrate`
 |---|---|
 | `pnpm db:migrate:staging --dry-run` | Chỉ đọc: liệt kê migration đang chờ (job `dry-run`) |
 | `pnpm db:migrate:staging` | Áp migration thật (job `migrate`), kiểm trước/sau |
-| `pnpm --filter @flow/worker queue:install:staging [--dry-run]` | Cài hàng đợi pg-boss: `ingest`, `send`, `hide`, `system.ping` |
+| `pnpm --filter @flow/worker queue:install:staging [--dry-run]` | Cài hàng đợi pg-boss: MỌI hàng đợi trong `apps/worker/src/queue/definitions.ts` (ingest, send, hide, kb-sync, kb-publish, pipeline, shopify-sync, …); `cf_app` chỉ đọc `pgboss.version` |
 
 Cấu hình cần có (D2/D2b): secret `STAGING_DATABASE_ADMIN_URL`; variable `CF_STAGING_DB_HOSTS` (`host:cổng`), `CF_STAGING_DB_NAME`; `DEPLOY_STAGING_ENABLED=true`. Biến xác nhận **`CF_CONFIRM_STAGING_MIGRATE`** = `<tên-db>@<số migration cuối>` (ví dụ `commentflow@0028`) — bạn nhập vào ô `confirm_migrate` khi chạy workflow; số cuối lấy từ kết quả dry-run (tiền tố của migration chờ cuối cùng). CLI so sánh chính xác, phân biệt hoa thường; production luôn bị từ chối.
 

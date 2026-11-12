@@ -84,6 +84,8 @@ async function performQueueInstall(adminUrl: string, queues: QueueDefinition[]):
     await pool.query(
       `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ${s} TO ${APP_ROLE}`,
     );
+    // Sổ phiên bản schema chỉ do bước cài (cf_owner) nâng cấp; role ứng dụng chỉ ĐỌC (worker chạy `migrate:false`). Thu hồi SAU khi cấp DML hàng loạt; chạy lại cài sẽ thu hồi lại.
+    await pool.query(`REVOKE INSERT, UPDATE, DELETE ON ${s}.version FROM ${APP_ROLE}`);
     await pool.query(`GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA ${s} TO ${APP_ROLE}`);
     await pool.query(`GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA ${s} TO ${APP_ROLE}`);
     // Bảng/hàm tạo SAU (ví dụ khi thêm hàng đợi mới) cũng tự có quyền.
