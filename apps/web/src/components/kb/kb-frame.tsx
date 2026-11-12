@@ -20,7 +20,8 @@ export type KbPublishState = { currentNumber: number | null; changes: number };
 /** Biểu tượng của từng mục rail (Material Symbols, lấy theo design/stitch/knowledge-base.html). */
 export const KB_RAIL_ICONS: Partial<Record<NavItemKey, IconName>> = {
   kb: 'menu_book',
-  productImport: 'inventory_2',
+  kbCatalog: 'inventory_2',
+  productImport: 'upload',
   kbGaps: 'quiz',
   readiness: 'verified',
   tryAi: 'science',

@@ -70,7 +70,7 @@ function runScenarios(locale: Locale) {
     const { context, page } = await open(browser, '/app/kb');
     try {
       const rail = page.getByRole('navigation', { name: t('kb.navLabel') });
-      for (const key of ['kbShop', 'kbPolicies', 'kbFaq', 'kbVoice', 'kbDictionary']) {
+      for (const key of ['kbShop', 'kbCatalog', 'kbPolicies', 'kbFaq', 'kbVoice', 'kbDictionary']) {
         await expect(rail.getByRole('link', { name: t(`shell.nav.${key}`) })).toBeVisible();
       }
       for (const key of ['kbDocs', 'kbRules']) {
@@ -194,6 +194,32 @@ function runScenarios(locale: Locale) {
       await expect(page.getByText(t('kbPolicyFacts.empty.title'))).toHaveCount(4);
       // Biểu mẫu chính sách văn bản cũ đã bỏ.
       await expect(page.locator('textarea[name=content]')).toHaveCount(0);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('Danh mục sản phẩm: trang chỉ đọc, workspace mới báo trống thật, tìm kiếm/lọc không làm lỗi', async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, '/app/kb/catalog');
+    try {
+      await expect(
+        page.getByRole('heading', { name: t('kbContent.catalog.title'), level: 1 }),
+      ).toBeVisible();
+      await expect(page.getByText(t('kbContent.catalog.empty'))).toBeVisible();
+      await expect(
+        page.getByRole('link', { name: t('kbContent.catalog.importFile') }),
+      ).toBeVisible();
+      // Điều khiển chưa có nền tảng bị tắt, không phải liên kết.
+      await expect(
+        page
+          .locator('[aria-disabled="true"]')
+          .filter({ hasText: t('kbContent.catalog.exportCatalog') }),
+      ).toHaveCount(1);
+      // Tìm kiếm và đổi bộ lọc giữ trang sống (không lỗi 500), báo "không khớp".
+      await page.goto('/app/kb/catalog?q=khong-co&source=shopify&status=archived&page=9');
+      await expect(page.getByText(t('kbContent.catalog.noMatch'))).toBeVisible();
     } finally {
       await context.close();
     }
