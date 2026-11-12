@@ -2,7 +2,12 @@
 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { cancelConnectAction, connectPagesAction } from '../../app/app/(guarded)/channels/actions';
+import {
+  cancelConnectAction,
+  connectPagesAction,
+  disconnectSystemUserAction,
+  saveSystemTokenAction,
+} from '../../app/app/(guarded)/channels/actions';
 import { cn } from '../../lib/cn';
 import {
   filterPages,
@@ -37,6 +42,8 @@ export function FbPageSelectModal({
   rerequestHref,
   switchAccountHref,
   refreshHref,
+  source,
+  systemStatus,
 }: {
   pages: SelectablePage[];
   /** Số kênh Facebook đang dùng (chưa bị ngắt) của workspace. */
@@ -46,12 +53,17 @@ export function FbPageSelectModal({
   rerequestHref: string;
   switchAccountHref: string;
   refreshHref: string;
+  /** `system` = Page lấy bằng token System User đã lưu; `oauth` = đăng nhập Facebook. */
+  source: 'oauth' | 'system';
+  /** Trạng thái token System User của workspace; `null` = chưa lưu. */
+  systemStatus: 'connected' | 'invalid' | 'disconnected' | null;
 }) {
   const t = useTranslations('channels');
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const visible = filterPages(pages, query);
   const state = selectionState({ selected, used, limit });
+  const systemSelectHref = `${refreshHref.split('&src=')[0]}&src=system`;
   const usedPercent = Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
   const nextPercent = Math.min(
     100 - usedPercent,
@@ -73,6 +85,7 @@ export function FbPageSelectModal({
       defaultOpen
     >
       <form action={connectPagesAction} className="space-y-space-md">
+        {source === 'system' ? <input type="hidden" name="source" value="system" /> : null}
         {selected.map((id) => (
           <input key={id} type="hidden" name="page" value={id} />
         ))}
@@ -195,6 +208,71 @@ export function FbPageSelectModal({
             />
           ))}
         </ul>
+
+        <details
+          className="rounded-lg bg-surface-container-low p-space-md"
+          open={source === 'system' || pages.length === 0}
+        >
+          <summary className="cursor-pointer font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+            <Icon name="key" size={16} />
+            {t('systemUser.title')}
+          </summary>
+          <div className="mt-space-sm space-y-space-sm">
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {t('systemUser.hint')}
+            </p>
+            {systemStatus === 'connected' ? (
+              <div className="flex flex-wrap items-center gap-space-sm">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm">
+                  <Icon name="check_circle" size={14} />
+                  {t('systemUser.saved')}
+                </span>
+                {source === 'system' ? null : (
+                  <a href={systemSelectHref} className={twBtn({ tone: 'primary' })}>
+                    {t('systemUser.use')}
+                  </a>
+                )}
+                <button
+                  type="submit"
+                  formAction={disconnectSystemUserAction}
+                  formNoValidate
+                  className={twBtn({ tone: 'soft' })}
+                >
+                  {t('systemUser.disconnect')}
+                </button>
+              </div>
+            ) : (
+              <>
+                {systemStatus === 'invalid' ? (
+                  <p role="alert" className="font-body-sm text-body-sm text-error">
+                    {t('systemUser.invalidSaved')}
+                  </p>
+                ) : null}
+                <label className="block space-y-1">
+                  <span className="font-label-md text-label-md text-on-surface">
+                    {t('systemUser.tokenLabel')}
+                  </span>
+                  <input
+                    type="password"
+                    name="systemToken"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest font-code-sm text-code-sm text-on-surface outline-none focus:shadow-sm"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  formAction={saveSystemTokenAction}
+                  formNoValidate
+                  className={twBtn({ tone: 'primary' })}
+                >
+                  <Icon name="lock" size={16} />
+                  {t('systemUser.save')}
+                </button>
+              </>
+            )}
+          </div>
+        </details>
 
         <div className="rounded-lg bg-surface-container-low p-space-md space-y-2">
           <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant flex items-center gap-1">

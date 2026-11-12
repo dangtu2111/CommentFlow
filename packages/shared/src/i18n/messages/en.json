@@ -2604,6 +2604,30 @@
         "blocked": "Unavailable"
       },
       "pageId": "ID: {id}"
+    },
+    "systemUser": {
+      "title": "Page owned by a Business? Use a System User token",
+      "hint": "If your Page lives in a Business Portfolio and does not show above: create a System User in Business Settings, assign the Page to it, generate a token (pages_show_list, pages_manage_metadata, pages_read_engagement, pages_read_user_content, pages_manage_engagement) and paste it here. The token is encrypted at rest and never shown again.",
+      "saved": "System User token saved",
+      "use": "List Pages with the saved token",
+      "disconnect": "Remove token",
+      "invalidSaved": "The saved token no longer works (expired or revoked). Paste a new one.",
+      "tokenLabel": "System User token",
+      "save": "Save token and list Pages",
+      "notice": {
+        "disconnected": "System User token removed. Connected channels keep working.",
+        "invalid": "The token has an invalid format.",
+        "invalid_credentials": "Meta rejected this token (wrong app, expired or revoked).",
+        "missing_scopes": "The token lacks pages_show_list. Generate it again with all permissions.",
+        "unreachable": "Could not reach Meta. Try again later.",
+        "not_configured": "The server has no token encryption key (TOKEN_ENC_KEYS), so it cannot be saved.",
+        "forbidden": "Only the Owner can save or remove this token.",
+        "unavailable": "Could not complete this. Try again later.",
+        "rate_limited": "Too many attempts. Wait a moment and try again.",
+        "not_found": "There is no token to remove.",
+        "none": "No System User token yet. Paste one to continue.",
+        "unusable": "The saved token could not be read. Paste a new one."
+      }
     }
   },
   "posts": {

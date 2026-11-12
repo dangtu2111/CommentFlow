@@ -2604,6 +2604,30 @@
         "blocked": "Không khả dụng"
       },
       "pageId": "ID: {id}"
+    },
+    "systemUser": {
+      "title": "Page thuộc Business? Dùng token System User",
+      "hint": "Nếu Page nằm trong Business Portfolio và không hiện ở trên: tạo System User trong Business Settings, gán Page cho nó, tạo token (quyền pages_show_list, pages_manage_metadata, pages_read_engagement, pages_read_user_content, pages_manage_engagement) rồi dán vào đây. Token được mã hóa khi lưu và không bao giờ hiển thị lại.",
+      "saved": "Đã lưu token System User",
+      "use": "Liệt kê Page bằng token đã lưu",
+      "disconnect": "Ngắt token",
+      "invalidSaved": "Token đã lưu không còn dùng được (hết hiệu lực hoặc bị thu hồi). Dán token mới.",
+      "tokenLabel": "Token System User",
+      "save": "Lưu token và liệt kê Page",
+      "notice": {
+        "disconnected": "Đã ngắt token System User. Các kênh đã kết nối vẫn hoạt động.",
+        "invalid": "Token không đúng định dạng.",
+        "invalid_credentials": "Meta từ chối token này (sai ứng dụng, hết hiệu lực hoặc bị thu hồi).",
+        "missing_scopes": "Token thiếu quyền pages_show_list. Tạo lại token với đủ quyền.",
+        "unreachable": "Không liên lạc được với Meta. Thử lại sau.",
+        "not_configured": "Máy chủ chưa có khóa mã hóa token (TOKEN_ENC_KEYS) nên không lưu được.",
+        "forbidden": "Chỉ Owner mới được lưu hoặc ngắt token này.",
+        "unavailable": "Chưa thực hiện được. Thử lại sau.",
+        "rate_limited": "Thao tác quá nhanh. Đợi một chút rồi thử lại.",
+        "not_found": "Chưa có token nào để ngắt.",
+        "none": "Chưa có token System User. Dán token để tiếp tục.",
+        "unusable": "Không đọc được token đã lưu. Dán token mới."
+      }
     }
   },
   "posts": {

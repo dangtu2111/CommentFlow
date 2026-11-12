@@ -18,6 +18,9 @@ export type FbNoticeKey = (typeof FB_NOTICE_KEYS)[number];
 export const FB_START_PATH = '/api/channels/facebook/start';
 /** Bắt đầu lại OAuth và xin LẠI quyền còn thiếu (`auth_type=rerequest`). */
 /** Tải lại bước chọn Page (phiên chọn còn hiệu lực 10 phút) để lấy danh sách mới từ Meta. */
+/** Nguồn token ở bước chọn Page: `system` = token System User đã lưu (Page thuộc Business); mặc định là phiên đăng nhập Facebook. */
+export const FB_SYSTEM_SOURCE = 'system';
+export const FB_SYSTEM_SELECT_QUERY = `fb=select&src=${FB_SYSTEM_SOURCE}`;
 export const FB_SELECT_PATH = '/app/channels?fb=select';
 export const FB_REREQUEST_PATH = `${FB_START_PATH}?rerequest=1`;
 
