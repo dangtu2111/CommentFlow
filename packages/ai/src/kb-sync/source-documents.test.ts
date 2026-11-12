@@ -34,6 +34,72 @@ describe('tài liệu từ FAQ / shop / sản phẩm', () => {
     expect(d?.text).toBe('Địa chỉ: 1 Lê Lợi\n\nGiờ mở cửa: 8-17h');
   });
 
+  it('shop v2: khẩu hiệu, ngành, pháp lý, giờ, Zalo/Shopee/TikTok và chi nhánh vào đoạn kiến thức (trả lời "ở đâu, mấy giờ, Zalo gì")', () => {
+    const [d] = buildShopDocuments(
+      [
+        {
+          lang: 'vi',
+          name: 'Shop A',
+          description: null,
+          address: '1 Lê Lợi, Q1',
+          openingHours: null,
+          contact: null,
+          website: null,
+          slogan: 'Đẹp mỗi ngày',
+          industries: ['Thời trang', 'Phụ kiện'],
+          legalName: 'Công ty TNHH A',
+          taxId: '0312345678',
+          hours: {
+            open: { days: [1, 2, 3, 4, 5, 6], from: '08:00', to: '21:00' },
+            support: { from: '08:00', to: '22:00' },
+          },
+          contacts: { hotline: '0900000000', zalo: 'zalo.me/shopa', shopee: 'shopee.vn/shopa' },
+          branches: [
+            { name: 'Cơ sở 2', address: '2 Hai Bà Trưng', hours: '9-18h', is_main: false },
+            { name: 'Trụ sở', address: '1 Lê Lợi', note: 'Có chỗ đậu xe', is_main: true },
+          ],
+        },
+      ],
+      'Thông tin shop',
+    );
+    const text = d?.text ?? '';
+    expect(text).toContain('Khẩu hiệu: Đẹp mỗi ngày');
+    expect(text).toContain('Ngành hàng: Thời trang, Phụ kiện');
+    expect(text).toContain('Tên pháp lý: Công ty TNHH A');
+    expect(text).toContain('Mã số thuế: 0312345678');
+    expect(text).toContain('Lịch mở cửa: T2–T7, 08:00–21:00');
+    expect(text).toContain('Giờ hỗ trợ online: 08:00–22:00');
+    expect(text).toContain('Hotline: 0900000000');
+    expect(text).toContain('Zalo: zalo.me/shopa');
+    expect(text).toContain('Shopee: shopee.vn/shopa');
+    expect(text).not.toContain('TikTok');
+    // Chi nhánh chính đứng trước, có nhãn.
+    expect(text.indexOf('Chi nhánh chính: Trụ sở')).toBeLessThan(
+      text.indexOf('Chi nhánh: Cơ sở 2'),
+    );
+    expect(text).toContain('Chi nhánh chính: Trụ sở — 1 Lê Lợi — Ghi chú: Có chỗ đậu xe');
+    expect(text).toContain('Chi nhánh: Cơ sở 2 — 2 Hai Bà Trưng — Giờ: 9-18h');
+  });
+
+  it('shop v2: ngày không liền nhau liệt kê từng ngày; chủ nhật là CN; chỉ có v2 vẫn tạo tài liệu', () => {
+    const [d] = buildShopDocuments(
+      [
+        {
+          lang: 'vi',
+          name: 'Shop A',
+          description: null,
+          address: null,
+          openingHours: null,
+          contact: null,
+          website: null,
+          hours: { open: { days: [2, 4, 7], from: '10:00', to: '20:00' } },
+        },
+      ],
+      'Thông tin shop',
+    );
+    expect(d?.text).toBe('Lịch mở cửa: T3, T5, CN, 10:00–20:00');
+  });
+
   it('sản phẩm: chỉ tên/mã/tùy chọn, KHÔNG có giá hay tồn', () => {
     const [d] = buildProductDocuments(
       [

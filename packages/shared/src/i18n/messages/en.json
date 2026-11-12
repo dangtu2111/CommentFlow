@@ -3203,7 +3203,13 @@
       "branches": {
         "title": "Branches",
         "empty": "No branches yet.",
-        "add": "+ Add a branch"
+        "add": "+ Add a branch",
+        "name": "Branch name",
+        "address": "Address",
+        "hours": "Opening hours (optional)",
+        "note": "Note (optional)",
+        "main": "Main branch",
+        "limit": "Up to 10 branches; a row with both name and address empty is ignored. Do not enter prices."
       },
       "maps": "Sync Google Maps",
       "hours": {
@@ -3211,7 +3217,18 @@
         "subtitle": "Opening hours and customer support schedule",
         "support": "Online reply hours",
         "night": "AI night shift",
-        "nightNote": "Not supported yet: the AI does not answer by itself after hours."
+        "nightNote": "Not supported yet: the AI does not answer by itself after hours.",
+        "days": "Open days",
+        "from": "From",
+        "to": "To",
+        "openHint": "Pick the days and open–close times; leave empty if you only use the free-text \"Opening hours\" above.",
+        "day1": "Mon",
+        "day2": "Tue",
+        "day3": "Wed",
+        "day4": "Thu",
+        "day5": "Fri",
+        "day6": "Sat",
+        "day7": "Sun"
       },
       "channels": {
         "title": "Contact & sales channels",
@@ -3234,7 +3251,8 @@
       "aiMechanism": {
         "title": "How the AI uses this text:",
         "body": "When a customer asks about the shop in general (\"what do you sell?\", \"where are you?\"), the AI answers from this introduction. Do not enter prices or stock."
-      }
+      },
+      "industriesHint": "Industries separated by commas (up to 10)."
     },
     "policies": {
       "title": "Policies",

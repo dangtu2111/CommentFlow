@@ -26,6 +26,10 @@ export type ReadinessInput = {
     contact?: string | null;
     openingHours?: string | null;
     address?: string | null;
+    /** Trường mới (KB-SHOP-V2): chỉ cờ có/không (đếm ở DB, không đọc số điện thoại/địa chỉ). */
+    hasStructuredHours?: boolean;
+    hasContactChannel?: boolean;
+    hasBranchAddress?: boolean;
   }>;
   policies: Array<{ kind: ReadinessPolicyKind; lang: ContentLang; content: string }>;
   faqs: Array<{ lang: ContentLang; question: string; tags: readonly string[] }>;
@@ -137,8 +141,14 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
   const profiles = input.shopProfiles.filter((p) => matchesLang(p.lang, lang));
   const policies = input.policies.filter((p) => matchesLang(p.lang, lang) && hasText(p.content));
   const hasPolicy = (kind: ReadinessPolicyKind) => policies.some((p) => p.kind === kind);
-  const hasProfile = (field: 'contact' | 'openingHours' | 'address') =>
-    profiles.some((p) => hasText(p[field]));
+  const hasProfile = (field: 'contact' | 'openingHours' | 'address') => {
+    const extra = {
+      contact: 'hasContactChannel',
+      openingHours: 'hasStructuredHours',
+      address: 'hasBranchAddress',
+    } as const;
+    return profiles.some((p) => hasText(p[field]) || p[extra[field]] === true);
+  };
 
   const requiredDoneMap: Record<ReadinessRequiredItem, boolean> = {
     product_price: products.withPrice > 0,

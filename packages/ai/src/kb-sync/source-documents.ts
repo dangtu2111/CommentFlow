@@ -1,4 +1,11 @@
-import { type ChunkDocument, cleanCardText, type ProductCard } from '@flow/shared';
+import {
+  type ChunkDocument,
+  cleanCardText,
+  type ProductCard,
+  type ShopBranch,
+  type ShopContacts,
+  type ShopHours,
+} from '@flow/shared';
 import { CARD_DETAIL_LABELS } from '../try/db-product-knowledge';
 import { detectChunkLang } from './lang';
 
@@ -22,7 +29,69 @@ export type ShopProfileInput = {
   openingHours: string | null;
   contact: string | null;
   website: string | null;
+  /** KB-SHOP-V2 (đều tùy chọn: hồ sơ cũ chưa có). Giá trị đã qua Zod ở ranh giới vào. */
+  slogan?: string | null;
+  industries?: readonly string[];
+  legalName?: string | null;
+  taxId?: string | null;
+  hours?: ShopHours | null;
+  contacts?: ShopContacts | null;
+  branches?: readonly ShopBranch[];
 };
+
+const WEEKDAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'] as const;
+
+/** Ngày 1–7 (1 = Thứ Hai) → "T2–T7" khi liền nhau từ 3 ngày trở lên, ngược lại liệt kê "T3, T5, CN". */
+function formatDays(days: readonly number[]): string {
+  const sorted = [...days].sort((a, b) => a - b);
+  const parts: string[] = [];
+  let i = 0;
+  while (i < sorted.length) {
+    let j = i;
+    while (j + 1 < sorted.length && (sorted[j + 1] as number) === (sorted[j] as number) + 1) j += 1;
+    const label = (n: number) => WEEKDAY_LABELS[n - 1] ?? String(n);
+    if (j - i >= 2) parts.push(`${label(sorted[i] as number)}–${label(sorted[j] as number)}`);
+    else for (let k = i; k <= j; k += 1) parts.push(label(sorted[k] as number));
+    i = j + 1;
+  }
+  return parts.join(', ');
+}
+
+function branchLine(branch: ShopBranch): string {
+  const parts = [
+    `${branch.is_main ? 'Chi nhánh chính' : 'Chi nhánh'}: ${branch.name}`,
+    branch.address,
+    branch.hours ? `Giờ: ${branch.hours}` : null,
+    branch.note ? `Ghi chú: ${branch.note}` : null,
+  ].filter((part): part is string => part !== null && part.trim() !== '');
+  return parts.join(' — ');
+}
+
+/** Các dòng của trường v2; chi nhánh chính đứng trước. Không log, không số tiền (Zod đã chặn). */
+function shopV2Lines(profile: ShopProfileInput): string[] {
+  const open = profile.hours?.open;
+  const support = profile.hours?.support;
+  const contacts = profile.contacts;
+  const branches = [...(profile.branches ?? [])].sort(
+    (a, b) => Number(b.is_main) - Number(a.is_main),
+  );
+  return [
+    profile.slogan ? `Khẩu hiệu: ${profile.slogan}` : null,
+    profile.industries && profile.industries.length > 0
+      ? `Ngành hàng: ${profile.industries.join(', ')}`
+      : null,
+    profile.legalName ? `Tên pháp lý: ${profile.legalName}` : null,
+    profile.taxId ? `Mã số thuế: ${profile.taxId}` : null,
+    open ? `Lịch mở cửa: ${formatDays(open.days)}, ${open.from}–${open.to}` : null,
+    support ? `Giờ hỗ trợ online: ${support.from}–${support.to}` : null,
+    contacts?.hotline ? `Hotline: ${contacts.hotline}` : null,
+    contacts?.zalo ? `Zalo: ${contacts.zalo}` : null,
+    contacts?.website ? `Website: ${contacts.website}` : null,
+    contacts?.shopee ? `Shopee: ${contacts.shopee}` : null,
+    contacts?.tiktok ? `TikTok Shop: ${contacts.tiktok}` : null,
+    ...branches.map(branchLine),
+  ].filter((line): line is string => line !== null);
+}
 
 /** Sản phẩm cho kiến thức: CHỈ tên/mã/tùy chọn biến thể — KHÔNG giá, KHÔNG tồn kho (đọc từ `products`/`product_variants`, nguyên tắc 4). */
 export type ProductInput = {
@@ -55,6 +124,7 @@ export function buildShopDocuments(
       profile.openingHours ? `Giờ mở cửa: ${profile.openingHours}` : null,
       profile.contact ? `Liên hệ: ${profile.contact}` : null,
       profile.website ? `Website: ${profile.website}` : null,
+      ...shopV2Lines(profile),
     ].filter((line): line is string => line !== null && line.trim() !== '');
     if (lines.length === 0) return [];
     return [

@@ -70,10 +70,10 @@ function runScenarios(locale: Locale) {
     const { context, page } = await open(browser, '/app/kb');
     try {
       const rail = page.getByRole('navigation', { name: t('kb.navLabel') });
-      for (const key of ['kbShop', 'kbPolicies', 'kbFaq', 'kbVoice']) {
+      for (const key of ['kbShop', 'kbPolicies', 'kbFaq', 'kbVoice', 'kbDictionary']) {
         await expect(rail.getByRole('link', { name: t(`shell.nav.${key}`) })).toBeVisible();
       }
-      for (const key of ['kbDocs', 'kbRules', 'kbDictionary']) {
+      for (const key of ['kbDocs', 'kbRules']) {
         await expect(
           rail.locator('[aria-disabled="true"]').filter({ hasText: t(`kb.soonItems.${key}`) }),
         ).toHaveCount(1);
@@ -218,6 +218,52 @@ function runScenarios(locale: Locale) {
       await expect(page.getByLabel(t('kbContent.shop.name'), { exact: true }).first()).toHaveValue(
         `Shop ${tag}`,
       );
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('Thông tin cửa hàng: trường mới (khẩu hiệu, Zalo, giờ, chi nhánh) lưu và hiện lại; chi nhánh thiếu địa chỉ bị từ chối', async ({
+    browser,
+  }) => {
+    const { context, page } = await open(browser, '/app/kb/shop');
+    try {
+      await pace(page, 1200); // qua cửa sổ chống bấm đúp của thao tác ghi ở test trước
+      const form = page.locator('form[id^="shop-"]').first(); // bản đã lưu ở test trước
+      const save = () =>
+        form.getByRole('button', { name: t('kbContent.save'), exact: true }).click();
+
+      // Thiếu địa chỉ → "không hợp lệ", không lưu.
+      await form.locator('input[name="branchName.0"]').fill(`CN ${tag}`);
+      await save();
+      await expect(
+        page.getByRole('alert').filter({ hasText: t('kbContent.notice.invalid') }),
+      ).toBeVisible();
+
+      await pace(page, 1200);
+      const again = page.locator('form[id^="shop-"]').first();
+      await again.getByLabel(t('kbContent.shop.slogan'), { exact: true }).fill(`Slogan ${tag}`);
+      await again
+        .getByLabel(t('kbContent.shop.channels.zalo'), { exact: true })
+        .fill(`zalo.me/${tag}`);
+      await again.locator('input[name="openDays"][value="1"]').check();
+      await again.locator('input[name="openFrom"]').fill('08:00');
+      await again.locator('input[name="openTo"]').fill('21:00');
+      await again.locator('input[name="branchName.0"]').fill(`CN ${tag}`);
+      await again.locator('input[name="branchAddress.0"]').fill('1 Lê Lợi');
+      await again.locator('input[name="branchMain"][value="0"]').check();
+      await again.getByRole('button', { name: t('kbContent.save'), exact: true }).click();
+      await expect(
+        page.getByRole('status').filter({ hasText: t('kbContent.notice.saved') }),
+      ).toBeVisible();
+
+      const saved = page.locator('form[id^="shop-"]').first();
+      await expect(saved.getByLabel(t('kbContent.shop.slogan'), { exact: true })).toHaveValue(
+        `Slogan ${tag}`,
+      );
+      await expect(saved.locator('input[name="openFrom"]')).toHaveValue('08:00');
+      await expect(saved.locator('input[name="branchAddress.0"]')).toHaveValue('1 Lê Lợi');
+      await expect(saved.locator('input[name="branchMain"][value="0"]')).toBeChecked();
     } finally {
       await context.close();
     }
