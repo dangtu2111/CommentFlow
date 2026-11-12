@@ -2201,6 +2201,7 @@
   "shell": {
     "groups": {
       "operations": "Điều hướng vận hành",
+      "publishing": "Biên tập & lịch đăng",
       "system": "Hệ thống & trí tuệ"
     },
     "tabsLabel": "Mục con của trang",
@@ -2236,7 +2237,9 @@
       "kbVoice": "Giọng văn thương hiệu",
       "kbDictionary": "Từ điển viết tắt",
       "kbCatalog": "Danh mục sản phẩm",
-      "kbRules": "Quy tắc & Giới hạn"
+      "kbRules": "Quy tắc & Giới hạn",
+      "composer": "Biên tập bài viết",
+      "calendar": "Lịch đăng"
     },
     "logout": "Đăng xuất",
     "navLabel": "Điều hướng chính",
@@ -3805,6 +3808,164 @@
       "hint": "Các câu dưới đây có trong văn bản chính sách đã nạp nhưng chưa thành giá trị có cấu trúc (không nêu số/điều kiện rõ ràng hoặc thuộc chủ đề khác). AI chưa dùng chúng để trả lời bằng sự kiện; bạn có thể nhập giá trị tương ứng bằng Sửa tay / Thêm giá trị.",
       "otherTitle": "Thông tin khác",
       "otherDesc": "Các câu trong văn bản thô không thuộc ship, đổi trả, bảo hành, thanh toán (ví dụ giờ làm việc, liên hệ, quyền riêng tư)."
+    }
+  },
+  "composer": {
+    "title": "Biên tập bài viết",
+    "back": "Lịch đăng",
+    "heading": "Tạo bài viết mới",
+    "soon": "Sắp có",
+    "banner": "Đây là giao diện soạn bài. Lưu nháp, lên lịch và đăng bài chưa khả dụng: nội dung bạn gõ ở đây chưa được lưu hay gửi đi đâu.",
+    "actions": {
+      "draft": "Lưu bản nháp",
+      "schedule": "Lên lịch đăng",
+      "publish": "Đăng ngay"
+    },
+    "channels": {
+      "title": "Kênh đăng",
+      "custom": "Tùy biến nội dung riêng từng kênh",
+      "empty": "Chưa có kênh nào được kết nối.",
+      "connect": "Kết nối kênh",
+      "selected": "Đã chọn {count} kênh",
+      "status": {
+        "connected": "Đã kết nối",
+        "expired": "Cần kết nối lại",
+        "revoked": "Đã ngắt",
+        "error": "Lỗi kết nối"
+      },
+      "platform": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "unusable": "Kênh chưa dùng được để đăng"
+    },
+    "content": {
+      "title": "Nội dung bài đăng",
+      "label": "Nội dung",
+      "placeholder": "Nhập nội dung bài viết…",
+      "aiCaption": "AI gợi ý caption",
+      "aiHashtag": "Tự động hashtag",
+      "emoji": "Chèn biểu tượng cảm xúc",
+      "mention": "Gắn thẻ trang hoặc người dùng",
+      "link": "Gắn liên kết",
+      "counters": "Số ký tự theo nền tảng",
+      "over": "Vượt giới hạn",
+      "ok": "Trong giới hạn"
+    },
+    "media": {
+      "title": "Hình ảnh và video",
+      "add": "Thêm media",
+      "empty": "Chưa có tệp nào. Tải ảnh và video lên chưa khả dụng."
+    },
+    "products": {
+      "title": "Gắn sản phẩm và cấu hình AI tư vấn",
+      "hint": "Kết nối bài viết với kho tri thức để AI báo giá và tư vấn đúng nguồn.",
+      "openKb": "Mở kho tri thức",
+      "pin": "Gắn sản phẩm",
+      "empty": "Chưa gắn sản phẩm nào.",
+      "noteLabel": "Ghi chú riêng cho AI (khách không nhìn thấy)",
+      "notePlaceholder": "Ví dụ: ưu tiên tư vấn combo, nhắc chính sách đổi trả…",
+      "rules": "Quy tắc tự trả lời bình luận của bài này theo cài đặt tự gửi chung của cửa hàng.",
+      "rulesLink": "Mở cài đặt tự gửi"
+    },
+    "schedule": {
+      "title": "Lịch đăng",
+      "date": "Ngày đăng",
+      "time": "Giờ đăng",
+      "zone": "Múi giờ của cửa hàng: {zone}",
+      "unavailable": "Chọn ngày giờ chỉ để xem trước; chưa thể lên lịch."
+    },
+    "preview": {
+      "title": "Xem trước",
+      "tabs": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "justNow": "Vừa xong",
+      "empty": "Nội dung bài viết sẽ hiện ở đây khi bạn gõ.",
+      "noPage": "Chưa chọn kênh",
+      "like": "Thích",
+      "comment": "Bình luận",
+      "share": "Chia sẻ",
+      "disclaimer": "Bản xem trước chỉ mang tính minh họa; hiển thị thật phụ thuộc vào nền tảng."
+    },
+    "error": {
+      "title": "Không tải được dữ liệu",
+      "body": "Đã có lỗi khi tải trang. Thử tải lại sau."
+    }
+  },
+  "calendar": {
+    "title": "Lịch đăng",
+    "heading": "Lịch phát hành và quản lý bài đăng",
+    "subtitle": "Xem các bài đã đăng của cửa hàng theo tuần. Lên lịch và bản nháp sẽ có ở bản sau.",
+    "soon": "Sắp có",
+    "views": {
+      "label": "Kiểu xem",
+      "week": "Lịch tuần",
+      "table": "Bảng biểu",
+      "kanban": "Kanban"
+    },
+    "nav": {
+      "prev": "Tuần trước",
+      "next": "Tuần sau",
+      "today": "Hôm nay",
+      "create": "Tạo bài viết mới",
+      "range": "Tuần {from} – {to}"
+    },
+    "kpi": {
+      "posts": "Bài trong tuần",
+      "comments": "Bình luận",
+      "pending": "Bình luận chờ xử lý"
+    },
+    "filter": {
+      "label": "Nền tảng",
+      "all": "Tất cả ({count})",
+      "facebook": "Facebook ({count})",
+      "instagram": "Instagram ({count})",
+      "tiktok": "TikTok ({count})"
+    },
+    "weekday": {
+      "0": "Thứ 2",
+      "1": "Thứ 3",
+      "2": "Thứ 4",
+      "3": "Thứ 5",
+      "4": "Thứ 6",
+      "5": "Thứ 7",
+      "6": "Chủ nhật"
+    },
+    "today": "Hôm nay",
+    "status": {
+      "published": "Đã đăng"
+    },
+    "ad": "Quảng cáo",
+    "noContent": "Chưa lấy được nội dung bài",
+    "comments": "{count} bình luận",
+    "emptyDay": "Không có bài",
+    "add": "Thêm bài",
+    "empty": {
+      "title": "Tuần này chưa có bài nào.",
+      "body": "Bài đăng của Page được đưa vào hệ thống khi nhận bình luận đầu tiên. Thử chuyển sang tuần khác."
+    },
+    "drawer": {
+      "title": "Chi tiết bài đăng",
+      "close": "Đóng",
+      "channel": "Kênh",
+      "time": "Thời gian đăng",
+      "content": "Nội dung",
+      "noContent": "Chưa lấy được nội dung bài từ nền tảng.",
+      "stats": "Số liệu",
+      "comments": "Bình luận",
+      "pending": "Chờ xử lý",
+      "openOriginal": "Xem bài gốc",
+      "openComments": "Xem bình luận",
+      "cancel": "Hủy lịch",
+      "edit": "Chỉnh sửa bài"
+    },
+    "error": {
+      "title": "Không tải được lịch",
+      "body": "Đã có lỗi khi tải trang. Thử tải lại sau."
     }
   }
 }

@@ -2201,6 +2201,7 @@
   "shell": {
     "groups": {
       "operations": "Operations",
+      "publishing": "Editing & scheduling",
       "system": "System & intelligence"
     },
     "tabsLabel": "Page sections",
@@ -2236,7 +2237,9 @@
       "kbVoice": "Brand voice",
       "kbDictionary": "Abbreviation dictionary",
       "kbCatalog": "Product catalog",
-      "kbRules": "Rules & Limits"
+      "kbRules": "Rules & Limits",
+      "composer": "Post editor",
+      "calendar": "Publishing calendar"
     },
     "logout": "Sign out",
     "navLabel": "Main navigation",
@@ -3805,6 +3808,164 @@
       "hint": "These sentences are in the loaded policy text but did not become structured values (no clear number/condition, or another topic). AI does not use them as facts yet; you can enter the matching value with Edit / Add value.",
       "otherTitle": "Other information",
       "otherDesc": "Sentences in the raw text outside shipping, returns, warranty and payment (for example opening hours, contact, privacy)."
+    }
+  },
+  "composer": {
+    "title": "Post editor",
+    "back": "Publishing calendar",
+    "heading": "Create a new post",
+    "soon": "Coming soon",
+    "banner": "This is the post editor interface. Saving drafts, scheduling and publishing are not available yet: nothing you type here is saved or sent anywhere.",
+    "actions": {
+      "draft": "Save draft",
+      "schedule": "Schedule",
+      "publish": "Publish now"
+    },
+    "channels": {
+      "title": "Channels",
+      "custom": "Customize content per channel",
+      "empty": "No channel is connected yet.",
+      "connect": "Connect a channel",
+      "selected": "{count} channel(s) selected",
+      "status": {
+        "connected": "Connected",
+        "expired": "Reconnect needed",
+        "revoked": "Disconnected",
+        "error": "Connection error"
+      },
+      "platform": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "unusable": "This channel cannot be used to publish yet"
+    },
+    "content": {
+      "title": "Post content",
+      "label": "Content",
+      "placeholder": "Write your post…",
+      "aiCaption": "AI caption suggestion",
+      "aiHashtag": "Auto hashtags",
+      "emoji": "Insert emoji",
+      "mention": "Tag a Page or person",
+      "link": "Add a link",
+      "counters": "Characters per platform",
+      "over": "Over the limit",
+      "ok": "Within the limit"
+    },
+    "media": {
+      "title": "Images and video",
+      "add": "Add media",
+      "empty": "No files yet. Uploading images and video is not available yet."
+    },
+    "products": {
+      "title": "Product tagging and AI advisor settings",
+      "hint": "Link the post to the knowledge base so the AI quotes and advises from the right source.",
+      "openKb": "Open knowledge base",
+      "pin": "Tag a product",
+      "empty": "No product tagged yet.",
+      "noteLabel": "Private note for the AI (customers cannot see it)",
+      "notePlaceholder": "For example: push the combo offer, mention the return policy…",
+      "rules": "Comment replies for this post follow the shop-wide auto-send settings.",
+      "rulesLink": "Open auto-send settings"
+    },
+    "schedule": {
+      "title": "Schedule",
+      "date": "Publish date",
+      "time": "Publish time",
+      "zone": "Shop time zone: {zone}",
+      "unavailable": "Picking a date and time is for preview only; scheduling is not available yet."
+    },
+    "preview": {
+      "title": "Preview",
+      "tabs": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "justNow": "Just now",
+      "empty": "Your post will appear here as you type.",
+      "noPage": "No channel selected",
+      "like": "Like",
+      "comment": "Comment",
+      "share": "Share",
+      "disclaimer": "The preview is illustrative; how the platform shows it may differ."
+    },
+    "error": {
+      "title": "Could not load the data",
+      "body": "Something went wrong while loading this page. Try again later."
+    }
+  },
+  "calendar": {
+    "title": "Publishing calendar",
+    "heading": "Publishing calendar and post management",
+    "subtitle": "See your shop's published posts week by week. Scheduling and drafts are coming later.",
+    "soon": "Coming soon",
+    "views": {
+      "label": "View",
+      "week": "Week",
+      "table": "Table",
+      "kanban": "Kanban"
+    },
+    "nav": {
+      "prev": "Previous week",
+      "next": "Next week",
+      "today": "Today",
+      "create": "Create a new post",
+      "range": "Week of {from} – {to}"
+    },
+    "kpi": {
+      "posts": "Posts this week",
+      "comments": "Comments",
+      "pending": "Comments to handle"
+    },
+    "filter": {
+      "label": "Platform",
+      "all": "All ({count})",
+      "facebook": "Facebook ({count})",
+      "instagram": "Instagram ({count})",
+      "tiktok": "TikTok ({count})"
+    },
+    "weekday": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "today": "Today",
+    "status": {
+      "published": "Published"
+    },
+    "ad": "Ad",
+    "noContent": "Post content not available yet",
+    "comments": "{count} comment(s)",
+    "emptyDay": "No posts",
+    "add": "Add a post",
+    "empty": {
+      "title": "No posts this week.",
+      "body": "A Page post is added to the system when it receives its first comment. Try another week."
+    },
+    "drawer": {
+      "title": "Post details",
+      "close": "Close",
+      "channel": "Channel",
+      "time": "Published at",
+      "content": "Content",
+      "noContent": "The post content could not be loaded from the platform.",
+      "stats": "Numbers",
+      "comments": "Comments",
+      "pending": "To handle",
+      "openOriginal": "View original post",
+      "openComments": "View comments",
+      "cancel": "Cancel schedule",
+      "edit": "Edit post"
+    },
+    "error": {
+      "title": "Could not load the calendar",
+      "body": "Something went wrong while loading this page. Try again later."
     }
   }
 }

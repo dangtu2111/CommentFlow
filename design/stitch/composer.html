@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-primary-fixed":"#001f26","primary-fixed":"#abedff","on-tertiary":"#ffffff","on-secondary":"#ffffff","on-secondary-fixed":"#1f0060","inverse-on-surface":"#e5f3fe","primary":"#005868","on-primary-container":"#bdf0ff","on-tertiary-fixed-variant":"#6c3a02","outline-variant":"#bec8cc","tertiary-container":"#945b23","surface-container-low":"#eaf5ff","on-error":"#ffffff","on-surface-variant":"#3f484b","inverse-surface":"#25323b","on-background":"#101d25","surface-variant":"#d7e4f0","inverse-primary":"#82d2e7","primary-fixed-dim":"#82d2e7","primary-container":"#0b7285","on-error-container":"#93000a","surface-container-lowest":"#ffffff","error":"#ba1a1a","surface-bright":"#f5faff","error-container":"#ffdad6","secondary":"#633cd5","tertiary":"#77440b","outline":"#6f797c","secondary-container":"#7c59ef","tertiary-fixed-dim":"#ffb779","on-surface":"#101d25","on-tertiary-fixed":"#2e1500","surface-tint":"#00687a","on-primary":"#ffffff","secondary-fixed":"#e7deff","surface-container":"#e2f0fb","surface-container-highest":"#d7e4f0","on-secondary-fixed-variant":"#4d1ebf","secondary-fixed-dim":"#ccbdff","tertiary-fixed":"#ffdcc1","background":"#f5faff","surface-dim":"#cedce7","on-primary-fixed-variant":"#004e5c","on-secondary-container":"#fffbff","surface":"#f5faff","surface-container-high":"#dceaf5","on-tertiary-container":"#ffe3cf"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-mobile":"1rem","gutter":"1rem","space-xl":"1.5rem","space-md":"0.75rem","space-sm":"0.5rem","gutter-mobile":"0.75rem","space-lg":"1rem","margin":"1.5rem","space-xs":"0.25rem"},"fontFamily":{"body-lg":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"label-md":["Be Vietnam Pro"],"body-md":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"label-sm":["Be Vietnam Pro"],"title-md":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"title-sm":["Be Vietnam Pro"],"code-sm":["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"body-sm":["Be Vietnam Pro"]},"fontSize":{"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"body-md":["13px",{"lineHeight":"19px","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"600"}],"title-md":["15px",{"lineHeight":"20px","fontWeight":"600"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"700"}],"title-sm":["13px",{"lineHeight":"18px","fontWeight":"600"}],"code-sm":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-hidden"><div class="flex flex-col flex-1 min-h-0"><div class="h-16 px-space-lg flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">chat_bubble</span></div><span class="font-title-md text-title-md text-on-surface font-bold tracking-tight">CommentFlow</span><span class="w-2 h-2 rounded-full bg-secondary-container" title="AI Powered"></span></div></div><div class="overflow-y-auto flex-1 px-space-sm py-space-sm"><nav class="flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title-sm font-semibold rounded-lg shadow-sm"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="binh-luan" href="#"><span class="material-symbols-outlined text-[20px]">forum</span><span class="font-body-md text-body-md">Bình luận</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="tin-nhan" href="#"><span class="material-symbols-outlined text-[20px]">mail</span><span class="font-body-md text-body-md">Tin nhắn</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="khach-tiem-nang" href="#"><span class="material-symbols-outlined text-[20px]">group</span><span class="font-body-md text-body-md">Khách tiềm năng</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="bai-viet-va-len-lich" href="#"><span class="material-symbols-outlined text-[20px]">calendar_month</span><span class="font-body-md text-body-md">Bài viết &amp; Lên lịch</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="co-so-kien-thuc" href="#"><span class="material-symbols-outlined text-[20px]">menu_book</span><span class="font-body-md text-body-md">Cơ sở kiến thức</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="tu-dong-hoa" href="#"><span class="material-symbols-outlined text-[20px]">smart_toy</span><span class="font-body-md text-body-md">Tự động hóa</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="bao-cao" href="#"><span class="material-symbols-outlined text-[20px]">bar_chart</span><span class="font-body-md text-body-md">Báo cáo</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="quy-tac-spam" href="#"><span class="material-symbols-outlined text-[20px]">shield</span><span class="font-body-md text-body-md">Quy tắc spam</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="nhat-ky" href="#"><span class="material-symbols-outlined text-[20px]">history</span><span class="font-body-md text-body-md">Nhật ký</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="cai-dat" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-body-md text-body-md">Cài đặt</span></a></nav></div></div><div class="p-space-md bg-surface-container-low flex flex-col gap-space-md"><div class="bg-surface-container-lowest p-space-sm rounded-lg flex flex-col gap-space-xs"><div class="flex items-center justify-between font-label-sm text-label-sm"><span class="text-on-surface-variant flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-secondary">bolt</span>Lượt AI đã dùng</span><span class="font-semibold text-secondary">2.140 / 3.000</span></div><div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-secondary-container h-full rounded-full" style="width: 71.3%"></div></div></div><div class="flex items-center justify-between pt-space-xs"><div class="flex items-center gap-space-sm min-w-0"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex flex-col min-w-0"><span class="font-title-sm text-title-sm text-on-surface truncate">Minh Hoàng</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Admin • Pro Plan</span></div></div><button class="text-on-surface-variant hover:text-on-surface p-space-xs" type="button"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">storefront</span><span class="font-title-sm text-title-sm text-on-surface">Thời Trang Unisex VN</span><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-surface-container-low"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface">Tất cả kênh</span></div><button class="flex items-center gap-1 px-space-xs py-0.5 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button"><span class="material-symbols-outlined text-[15px]">share</span><span>FB</span></button><button class="flex items-center gap-1 px-space-xs py-0.5 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button"><span class="material-symbols-outlined text-[15px]">photo_camera</span><span>IG</span></button><button class="flex items-center gap-1 px-space-xs py-0.5 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button"><span class="material-symbols-outlined text-[15px]">music_note</span><span>TikTok</span></button></div></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-space-sm text-on-surface-variant text-[18px]">search</span><input class="w-64 pl-9 pr-space-md py-space-xs bg-surface-container-low text-on-surface placeholder:text-on-surface-variant rounded-lg font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Tìm kiếm hội thoại, khách hàng..." type="text"/></div><button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-error-container text-on-error-container hover:bg-error hover:text-on-error font-title-sm text-title-sm font-semibold transition-all" type="button"><span class="material-symbols-outlined text-[18px]">power_settings_new</span><span>AI Kill-Switch</span></button><button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm font-semibold transition-all" type="button"><span class="material-symbols-outlined text-[18px]">add</span><span>Tạo bài đăng</span></button><button class="text-on-surface-variant hover:text-on-surface p-space-xs" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-16 w-full min-h-screen bg-surface"><div class="flex flex-col w-full">
+<div class="w-full px-space-lg py-space-md">
+<!-- Breadcrumb & Top Command Bar -->
+<div class="flex items-center justify-between gap-space-md mb-space-lg">
+<div class="flex items-center gap-space-md min-w-0">
+<a class="flex items-center gap-space-xs text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+<span>Bài viết &amp; Lên lịch</span>
+</a>
+<span class="text-outline-variant font-label-md text-label-md">/</span>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Tạo bài viết mới</h1>
+<span class="inline-flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+            AI Copilot Sẵn Sàng
+          </span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-all font-title-sm text-title-sm font-semibold" type="button">
+<span class="material-symbols-outlined text-[18px]">draft</span>
+<span>Lưu bản nháp</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container-low text-primary hover:bg-surface-container font-title-sm text-title-sm font-semibold transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">schedule_send</span>
+<span>Lên lịch đăng</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-sm hover:shadow transition-all font-title-sm text-title-sm font-bold" type="button">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+<span>Đăng ngay</span>
+</button>
+</div>
+</div>
+<!-- Main 2-Column Workstation (58% / 42%) -->
+<div class="grid grid-cols-12 gap-space-lg items-start">
+<!-- LEFT COLUMN: Editor & Publish Settings (58% -> 7 cols on desktop) -->
+<div class="col-span-12 lg:col-span-7 flex flex-col gap-space-lg">
+<!-- Section 1: Multi-Channel Destination -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">hub</span>
+<h2 class="font-title-md text-title-md text-on-surface font-semibold">Kênh phân phối đa nền tảng</h2>
+</div>
+<label class="flex items-center gap-space-xs cursor-pointer select-none">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-8 h-4 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-secondary relative"></div>
+<span class="font-label-md text-label-md text-on-surface-variant">Tùy biến nội dung riêng từng kênh</span>
+</label>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<!-- Channel 1: Facebook -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors relative group">
+<input checked="" class="mt-1 rounded accent-primary text-on-primary" type="checkbox"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="w-4 h-4 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[10px]">f</span>
+<span class="font-title-sm text-title-sm text-on-surface truncate font-semibold">Fanpage An Nhiên</span>
+</div>
+<div class="flex items-center gap-space-xs mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#12b886]"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Thời Trang Mẫu An Nhiên</span>
+</div>
+</div>
+</label>
+<!-- Channel 2: Instagram -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors relative group">
+<input checked="" class="mt-1 rounded accent-primary text-on-primary" type="checkbox"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-tertiary">photo_camera</span>
+<span class="font-title-sm text-title-sm text-on-surface truncate font-semibold">Instagram Store</span>
+</div>
+<div class="flex items-center gap-space-xs mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#12b886]"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">@annhien.store</span>
+</div>
+</div>
+</label>
+<!-- Channel 3: TikTok -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors relative group">
+<input checked="" class="mt-1 rounded accent-primary text-on-primary" type="checkbox"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-on-surface">music_note</span>
+<span class="font-title-sm text-title-sm text-on-surface truncate font-semibold">TikTok Shop</span>
+</div>
+<div class="flex items-center gap-space-xs mt-1">
+<span class="font-label-sm text-label-sm text-tertiary flex items-center gap-0.5 truncate">
+<span class="material-symbols-outlined text-[12px]">info</span>
+                    Carousel 3:4/9:16
+                  </span>
+</div>
+</div>
+</label>
+</div>
+</div>
+<!-- Section 2: Rich Post Composer & AI Spark Tools -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">edit_note</span>
+<h2 class="font-title-md text-title-md text-on-surface font-semibold">Nội dung bài đăng</h2>
+</div>
+<!-- AI Spark Violet Quick Actions -->
+<div class="flex items-center gap-space-xs">
+<button class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-container hover:text-on-secondary transition-all font-label-md text-label-md font-semibold" type="button">
+<span class="material-symbols-outlined text-[15px] text-secondary">magic_button</span>
+<span>AI Gợi ý Caption chuẩn giọng shop</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-high text-secondary hover:bg-secondary-fixed transition-all font-label-md text-label-md font-semibold" type="button">
+<span class="material-symbols-outlined text-[15px]">tag</span>
+<span>Tự động hashtag viral</span>
+</button>
+</div>
+</div>
+<!-- Formatting & Inset Toolbar -->
+<div class="rounded-lg bg-surface-container-low p-space-xs flex items-center justify-between flex-wrap gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Chèn biểu tượng cảm xúc" type="button">
+<span class="material-symbols-outlined text-[18px]">sentiment_satisfied</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Gắn thẻ trang / người dùng" type="button">
+<span class="material-symbols-outlined text-[18px]">alternate_email</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Gắn liên kết" type="button">
+<span class="material-symbols-outlined text-[18px]">link</span>
+</button>
+<span class="w-[1px] h-4 bg-outline-variant my-auto"></span>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hashtag gợi ý:</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-lowest text-primary font-label-sm text-label-sm cursor-pointer hover:bg-primary hover:text-on-primary transition-colors">#thoitrangnu</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-lowest text-primary font-label-sm text-label-sm cursor-pointer hover:bg-primary hover:text-on-primary transition-colors">#freeship</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-lowest text-primary font-label-sm text-label-sm cursor-pointer hover:bg-primary hover:text-on-primary transition-colors">#sale2025</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-secondary">tune</span>
+<span>Tone: Thân thiện &amp; Tươi vui</span>
+</div>
+</div>
+<!-- Textarea Input Area -->
+<div class="relative">
+<textarea class="w-full p-space-md bg-surface-container-lowest text-on-surface rounded-lg font-body-md text-body-md focus:outline-none focus:bg-surface-container-low transition-colors leading-relaxed resize-none shadow-inner" placeholder="Nhập nội dung bài viết bán hàng hoặc bấm 'AI Gợi ý Caption' để sáng tạo tự động..." rows="7">✨ BÙNG NỔ OUTFIT DẠO PHỐ CUỐI TUẦN CÙNG AN NHIÊN STORE! ✨
+
+Team mê phong cách năng động, tối giản thì nhất định không thể bỏ qua item quốc dân này nha:
+👕 Áo Thun Cotton Form Rộng Basic - Chất vải 100% cotton 4 chiều mềm mịn, thấm hút mồ hôi cực đỉnh, giặt máy không lo bai dão.
+👖 Kết hợp chuẩn gu cùng Quần Jean Xuông Cạp Cao tôn dáng dài miên man!
+
+🔥 ĐẶC QUYỀN DUY NHẤT HÔM NAY:
+- Giảm ngay 20k/áo khi chốt combo từ 2 áo.
+- Freeship toàn quốc cho đơn từ 299k.
+- Bình luận "SIZE" hoặc nhắn tin để nhận tư vấn bảng size chuẩn từng cm nhé các nàng ơi!
+
+#thoitrangnu #aothuncotton #quanjean #freeship #sale2025 #ootdvietnam</textarea>
+</div>
+<!-- Platform Character Counters -->
+<div class="flex flex-wrap items-center justify-between pt-space-xs bg-surface-container-low px-space-md py-space-xs rounded-lg font-label-sm text-label-sm">
+<div class="flex items-center gap-space-md text-on-surface-variant">
+<span class="flex items-center gap-1">
+<strong class="text-primary font-semibold">FB:</strong> 840 / 63.206
+              </span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1">
+<strong class="text-tertiary font-semibold">IG:</strong> 840 / 2.200
+              </span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1">
+<strong class="text-on-surface font-semibold">TikTok:</strong> 840 / 2.200
+              </span>
+</div>
+<div class="text-secondary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span>Độ dài hoàn hảo cho thuật toán Feed</span>
+</div>
+</div>
+</div>
+<!-- Section 3: Media Upload & Re-order Grid -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">perm_media</span>
+<h2 class="font-title-md text-title-md text-on-surface font-semibold">Hình ảnh &amp; Video bài viết (4 tệp)</h2>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">Tỷ lệ: 1:1 / 4:5</span>
+<button class="inline-flex items-center gap-1 px-space-sm py-1 rounded-lg bg-surface-container-low text-primary hover:bg-surface-container font-label-md text-label-md font-semibold transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">add_photo_alternate</span>
+<span>Thêm media</span>
+</button>
+</div>
+</div>
+<!-- 4-Image Grid with Product Pin Badges -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<!-- Media 1 (Hero) -->
+<div class="relative group rounded-lg overflow-hidden bg-surface-container-high aspect-square shadow-sm">
+<img class="w-full h-full object-cover" data-alt="High quality professional studio photoshoot of an Asian female model wearing an oversized white minimalist cotton t-shirt with clean aesthetic, soft neutral lighting, premium e-commerce look, soft pastel background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgTqjxQ6_LzgjuR1ETzWpFR2iz99wFbdys7YuzjVjgOGdeB3UqTTv4VJN7OPjsDWcnyXhOuiW-54CyGwFBK-rtF8UtN_si-x-7A5P_bd4Z3trNqgycXSL_Ux30fwGJaPH_MJJzvm6sZCGOqMKleNqscX9qMK6yTv5dt5qtSK4oflR_PMKnK93kVzkXTLpfofXSVVmVXB2A20FRXGNch4hMF40DmM4wLya94iF5U8Fe"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs">
+<button class="p-1 rounded-full bg-surface-container-lowest text-on-surface hover:text-primary" type="button"><span class="material-symbols-outlined text-[16px]">drag_indicator</span></button>
+<button class="p-1 rounded-full bg-surface-container-lowest text-error hover:bg-error-container" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-on-surface/75 text-surface font-label-sm text-label-sm backdrop-blur-xs font-semibold">Ảnh bìa 1:1</span>
+<span class="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-secondary text-on-secondary font-label-sm text-label-sm flex items-center gap-0.5 shadow-xs">
+<span class="material-symbols-outlined text-[12px]">sell</span>
+                1 Tag
+              </span>
+</div>
+<!-- Media 2 -->
+<div class="relative group rounded-lg overflow-hidden bg-surface-container-high aspect-square shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Close up fabric texture detail of 100 percent premium combed cotton t-shirt showing stitching quality, breathable fibers, clean minimalist aesthetic, high-end apparel macro view." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBk8CHUfo7rQS0P8vTpSZ8yh9RxNzpcvp2jGq8zVmpvUAqS7rp62wopaX4qAbdrwrCE4FSAEr4I_rhMWmvx9fEVDWsJN9sKeEgtv_Dn6GgJspWLQV-a85fVUc7EtWxxlVO205PIlnNhXZ3qjMGuiKnVGmJPKnnKY10WvIrMKleM96tXFe1O8d28LZ-Fzblirta0-KVhQ3g8FJSQdZSKB-Bq3c_0IC2Qt43jpY0_Xmxo"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs">
+<button class="p-1 rounded-full bg-surface-container-lowest text-on-surface hover:text-primary" type="button"><span class="material-symbols-outlined text-[16px]">drag_indicator</span></button>
+<button class="p-1 rounded-full bg-surface-container-lowest text-error hover:bg-error-container" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-sm text-label-sm backdrop-blur-xs">Ảnh 2</span>
+</div>
+<!-- Media 3 -->
+<div class="relative group rounded-lg overflow-hidden bg-surface-container-high aspect-square shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Model full body streetwear shot pairing oversized white cotton tee with high-waisted wide-leg denim jeans and sneakers, modern cafe lifestyle setting, warm daylight, stylish." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfKOnpy7v5nuKyYCB7rZgeGC5Q_13oCgZqsFPHkUpC8dYjuP8y99VCKgYOpIQwDkVYYgqFqBgGJnjUNlI22IRcFhW8Op4a9aM-ZBLsTCnH1j416Jpe522IXZV0VKxSbuVMjuPMYvd96HIGuyr31IJy2WXCxHxshMdLcJmVqmUNryPE5LNJvaZNJ7u-H2zvOcmbJsnkWkv-qptLMsTqGRRHPQfpBtnzyzItmFxpSpO6"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs">
+<button class="p-1 rounded-full bg-surface-container-lowest text-on-surface hover:text-primary" type="button"><span class="material-symbols-outlined text-[16px]">drag_indicator</span></button>
+<button class="p-1 rounded-full bg-surface-container-lowest text-error hover:bg-error-container" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-sm text-label-sm backdrop-blur-xs">Ảnh 3</span>
+<span class="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-secondary text-on-secondary font-label-sm text-label-sm flex items-center gap-0.5 shadow-xs">
+<span class="material-symbols-outlined text-[12px]">sell</span>
+                1 Tag
+              </span>
+</div>
+<!-- Media 4: Size chart -->
+<div class="relative group rounded-lg overflow-hidden bg-surface-container-high aspect-square shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Clean infographic clothing size chart diagram for S M L XL oversized unisex t-shirt, pastel aesthetic typography, clear measurements table in Vietnamese fashion design format." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_huJ4eFR7TD0nDx30KKRq-fdPgt6SdBkhw-12HmO44KanNr3I2GQ9EkJRtkrl-6DufxQBm5DDLd6iQtGdAZOGNRviZVx_ZR69IqMni-zx3vXf6ThJswuxh8gF_7OknZBlbXuHw45fOEo7aSo8gQhI9swQY_KK_EflcvKrkFRNkSh5w3ZqHkD0Ot6mXuM3nNTs-30yfGaEw-aYZAl--IjCNKGlhdkDaegrmIsXbrn5"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-space-xs">
+<button class="p-1 rounded-full bg-surface-container-lowest text-on-surface hover:text-primary" type="button"><span class="material-symbols-outlined text-[16px]">drag_indicator</span></button>
+<button class="p-1 rounded-full bg-surface-container-lowest text-error hover:bg-error-container" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+<span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-on-surface font-label-sm text-label-sm backdrop-blur-xs">Bảng size</span>
+</div>
+</div>
+</div>
+<!-- Section 4: CommentFlow AI Integration - Product Tagging & Knowledge Prompt -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary-fixed/30 rounded-bl-full pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">auto_awesome</span>
+<div>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">Gắn sản phẩm &amp; Cấu hình AI tư vấn</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Kết nối bài viết với kho tri thức để AI tự động báo giá và chốt đơn</p>
+</div>
+</div>
+<button class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container-high text-primary hover:bg-surface-container font-label-md text-label-md font-semibold transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">database</span>
+<span>Mở Kho tri thức</span>
+</button>
+</div>
+<!-- Tagged Products Pills -->
+<div class="flex flex-col gap-space-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Sản phẩm liên kết trong bài viết:</span>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<!-- Product 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-md bg-surface-container-highest shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Product thumbnail of white oversized cotton crewneck t-shirt folded neatly on neutral surface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgQOy80KfbkaKUCf3krflr2BlAXezBqqObbokYOfhT5MbPLY1H-29wLpkP-Jp7IUzQiVM5zqOldGJpK0TFhGa8gFC24hMDSw5xUq34conEgpkUzAWOD70kxyRQyEXT5BjIv_LFLXVAAR3zKbvx8LvhZ2biShcJhfgqZngrvMjAUeDzy2RnUpgb9_mG6LUSpKE-ZY1QrpSADUz01RAyJZhHJ-O5jSAI5NlpSwLRBwlC"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-sm text-title-sm text-on-surface truncate font-semibold">Áo Thun Cotton Form Rộng Basic</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-primary font-bold">199.000đ</span>
+<span class="px-1 py-0.2 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">SP chính</span>
+</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error p-1" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Product 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-md bg-surface-container-highest shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Product thumbnail of high-waist vintage blue wide-leg denim jeans on clean white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAxRC9xGuZBT-EdCX8WF-rhv417Txg-r7bE-Bn19BxiLmkxy3bDs--YqyHRznRpwDQku0-T5YZ714UCOgLfxEH9GhxM8IMw5vug0u--4fOcApiksvY5_lnD-ws_uL3JERnF3IXHA1eirHW0k2FE7i84xTOqFa6X_3hbGaJ1M2nFmMrHRpCIuND6_n0R9rFAi8v4jR9kf2o6vA_W0TAO-b0lgc630K6UJROpSk_dUzF"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-sm text-title-sm text-on-surface truncate font-semibold">Quần Jean Xuông Cạp Cao</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-primary font-bold">350.000đ</span>
+<span class="px-1 py-0.2 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Phụ kiện kèm</span>
+</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error p-1" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secret AI Context Note (Exclusive CommentFlow Feature) -->
+<div class="flex flex-col gap-space-xs p-space-md rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between">
+<label class="flex items-center gap-space-xs font-title-sm text-title-sm text-secondary font-semibold">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+                Ghi chú độc quyền cho AI tư vấn (Khách hàng không nhìn thấy):
+              </label>
+<span class="font-label-sm text-label-sm text-secondary">Ưu tiên xử lý</span>
+</div>
+<textarea class="w-full p-space-sm bg-surface-container-lowest text-on-surface rounded font-body-sm text-body-sm focus:outline-none resize-none shadow-xs" placeholder="VD: Khách comment hỏi combo giảm thêm 20k, hàng sẵn kho gửi trong 24h..." rows="2">Livestream tối nay giảm còn 169k khi mua từ 2 áo. Tặng kèm scrunchie lụa cho 50 đơn đầu tiên. Nếu khách hỏi chiều cao dưới 1m55 tư vấn size S form giấu quần.</textarea>
+</div>
+<!-- AI Automation Response Rules -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm pt-space-xs">
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">Tự động trả lời</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Bình luận hỏi giá</span>
+</div>
+<input checked="" class="rounded accent-secondary" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">Ngưỡng tin cậy</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">&gt;= 85% tự gửi</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]">psychology</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">Độ trễ phản hồi</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2 phút (tự nhiên)</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px]">timer</span>
+</div>
+</div>
+</div>
+<!-- Section 5: Smart Scheduler & Peak Hours -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md mb-space-xl">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">event_upcoming</span>
+<h2 class="font-title-md text-title-md text-on-surface font-semibold">Cài đặt lịch đăng &amp; Khung giờ vàng</h2>
+</div>
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[13px]">insights</span>
+              AI Analytics Đề xuất
+            </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Date Picker -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-medium">Ngày xuất bản</label>
+<div class="flex items-center justify-between p-space-sm bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md cursor-pointer hover:bg-surface-container transition-colors">
+<span class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">calendar_today</span>
+<span>Thứ Sáu, 28/02/2025</span>
+</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
+</div>
+</div>
+<!-- Time Picker with Peak Indicator -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-medium">Giờ đăng (Khung giờ vàng)</label>
+<div class="flex items-center justify-between p-space-sm bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md cursor-pointer hover:bg-surface-container transition-colors">
+<span class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[18px]">alarm_on</span>
+<span class="font-bold text-secondary">19:30</span>
+<span class="px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">Top tương tác</span>
+</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Micro Analytics Footnote -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">query_stats</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Dựa trên dữ liệu 30 ngày: Lượng người theo dõi của shop tương tác cao nhất từ <strong>19:15 - 20:45</strong> các tối Thứ Sáu.</span>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Live Omnichannel Preview (42% -> 5 cols on desktop, sticky) -->
+<div class="col-span-12 lg:col-span-5 sticky top-20 flex flex-col gap-space-md">
+<!-- Preview Device / Platform Tabs -->
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-lg bg-primary-container text-on-primary font-title-sm text-title-sm font-semibold transition-all" type="button">
+<span class="w-2 h-2 rounded-full bg-surface-bright"></span>
+<span>Facebook Feed</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" type="button">
+<span>Instagram Post</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-title-sm text-title-sm transition-all" type="button">
+<span>TikTok Carousel</span>
+</button>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant px-space-xs">
+<span class="material-symbols-outlined text-[18px]" title="Chế độ Desktop">desktop_windows</span>
+<span class="material-symbols-outlined text-[18px] text-primary" title="Chế độ Mobile">smartphone</span>
+</div>
+</div>
+<!-- Realistic Facebook Post Mockup Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col">
+<!-- Mockup Header -->
+<div class="p-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold overflow-hidden shadow-xs">
+<img class="w-full h-full object-cover" data-alt="Avatar brand logo of An Nhien Fashion store with elegant typography on pastel teal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSb2IQWzoyQxM09ZhTqzZp8tw_qAOLgFdiBsQol3dUxrpREUmeBMj7Fq79holmmXgzecfj4GHz6b7iDWQ2vJthilyZVYyQmxSICotIrSlHPAo34OVCrfTKrYGHRyHMv3CZ8EGFwSKz0pucbciByoQYXmD-ZEzSGf66Eiz3Jx8ebPxZMKtkqZITQxBeEEVbrTc1n6EfOerTsDwopqrkXWrZcq4BilzBN8C_NGbMTY8_"/>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1">
+<span class="font-title-sm text-title-sm text-on-surface font-bold">Thời Trang Mẫu An Nhiên</span>
+<span class="material-symbols-outlined text-[16px] text-[#1877F2]">verified</span>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant">
+<span>Vừa xong</span>
+<span>•</span>
+<span class="material-symbols-outlined text-[13px]">public</span>
+</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-1" type="button">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<!-- Mockup Text Body -->
+<div class="px-space-md pb-space-sm flex flex-col gap-1">
+<p class="font-body-md text-body-md text-on-surface whitespace-pre-line leading-relaxed">✨ BÙNG NỔ OUTFIT DẠO PHỐ CUỐI TUẦN CÙNG AN NHIÊN STORE! ✨
+
+Team mê phong cách năng động, tối giản thì nhất định không thể bỏ qua item quốc dân này nha:
+👕 Áo Thun Cotton Form Rộng Basic - Chất vải 100% cotton 4 chiều mềm mịn...</p>
+<div class="flex items-center justify-between">
+<span class="text-primary font-title-sm text-title-sm cursor-pointer hover:underline">... Xem thêm</span>
+<span class="font-label-sm text-label-sm text-secondary">#thoitrangnu #aothuncotton</span>
+</div>
+</div>
+<!-- Mockup Facebook 4-Image Collage (1 Big Left, 3 Stacked Right) -->
+<div class="grid grid-cols-3 gap-0.5 bg-surface-container h-80 relative select-none">
+<!-- Big Image (2 cols) -->
+<div class="col-span-2 relative h-full">
+<img class="w-full h-full object-cover" data-alt="High quality professional studio photoshoot of an Asian female model wearing an oversized white minimalist cotton t-shirt with clean aesthetic, soft neutral lighting, premium e-commerce look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPk_8dOZeHOLtEuWlrIXfF5VwR4XnxU1WCAKcqt5nAMaAagF4hYdNIVJ8x9Jnf9uuuyeQRU0D6Xy4gJnHbdCCAuMywQFCq95dp6wcj43cyJn0x1D4D-Qp_HS_UqU4U4blLjlTaK93wekEP9A9ZQeyVKWKjW-CH8lXUBv_nm5jqBpNfDY6Oye8km5xqT255-7nztERb6TaueGgoCLHKybl78uPYhhwTIMdYQnRlbDv7"/>
+<!-- Ghim Product Tag (CommentFlow Feature) -->
+<div class="absolute bottom-4 left-4 bg-on-surface/90 text-surface backdrop-blur-md px- space-sm py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm font-semibold">Áo Thun Basic - 199.000đ</span>
+<span class="material-symbols-outlined text-[13px]">shopping_bag</span>
+</div>
+</div>
+<!-- Right 3 Stacked Images -->
+<div class="col-span-1 grid grid-rows-3 gap-0.5 h-full">
+<div class="relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up fabric texture detail of 100 percent premium combed cotton t-shirt showing stitching quality, breathable fibers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfMS8c7rVLbJ138MKwSaQgRxAyFcsvE3KYMF0ZfoQ12ANqLItd-9ETx5yt5qQ7eIK33R9VSuyGic9cwPMuEAx9vpos1cQ4XST46KGaPKKvs2nH_eylpsV1DHhi8QTFkSBrtlFiUSDByyrDQ65m4wQjn-0sGnOsiag2sL9fXtjOiA1SAPzDvUwnFQGJPt0iHTx2zuJbwmZLbMRdbMXd2waJxMDhEGRDbNGyageTLcqm"/>
+</div>
+<div class="relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Model full body streetwear shot pairing oversized white cotton tee with high-waisted wide-leg denim jeans and sneakers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZdqUjafr24VJe4piy3pnWOGkfFpyagujfHKyDvRDANZ5M1368cu5YhSCE8dMvkuou7HOZrNf0mvRRmkNf5IC9h4tXdyIPRemp11xWoxsDl0MLLLL2GSGcZB4OpILYSM6chODpedV8c2YEixYb2YHqtyMptnuHE8GIrfQ0lFqM8dPFhv90Is0P-yi0uD_5Z0cTaAP6aEm20RJyQHNAF8fZQnCba79BQFiP6YLA9dmm"/>
+<!-- Ghim Product Tag on Jeans -->
+<div class="absolute bottom-1 right-1 bg-on-surface/85 text-surface px-1.5 py-0.5 rounded text-[10px] font-medium backdrop-blur-xs">
+                  Jean 350k
+                </div>
+</div>
+<div class="relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Clean infographic clothing size chart diagram for S M L XL oversized unisex t-shirt, pastel aesthetic typography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgho3XfgSyrI69CM0p9d1ZC8nV9qlBFk8jnNFyXuPWRVvoW7lGC4QG1FKeFklVsh3tzxoDMw3L9CqrKDnHtMdPOqSd-MDFIFB6FKUj4VYe6akle7nbMv6MU8XACIznEoNsdSci_U6V_qolmMk7l4gBM_01RgDVFHfpq19pfSO8nmCBa73mZjQOevb8CdpQ837j3nJm8hItFXK5_kultYvNW9dN2g7nluTtICBXDSWb"/>
+</div>
+</div>
+</div>
+<!-- Social Engagement Stats Bar -->
+<div class="px-space-md py-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-1">
+<span class="w-4 h-4 rounded-full bg-[#1877F2] text-surface flex items-center justify-center text-[10px] font-bold">👍</span>
+<span class="w-4 h-4 rounded-full bg-[#FA3E3E] text-surface flex items-center justify-center text-[10px] font-bold">❤️</span>
+<span>Bạn và 42 người khác</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span>18 bình luận</span>
+<span>5 lượt chia sẻ</span>
+</div>
+</div>
+<!-- Social Action Buttons -->
+<div class="px-space-md py-space-sm bg-surface-container-low flex items-center justify-around text-on-surface-variant font-title-sm text-title-sm">
+<button class="flex items-center gap-1.5 hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">thumb_up</span>
+<span>Thích</span>
+</button>
+<button class="flex items-center gap-1.5 text-primary font-bold" type="button">
+<span class="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+<span>Bình luận</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">share</span>
+<span>Chia sẻ</span>
+</button>
+</div>
+</div>
+<!-- Real-time AI Readiness Badge / Bot Status Box -->
+<div class="bg-secondary-fixed rounded-xl p-space-md shadow-sm flex items-start gap-space-sm text-on-secondary-fixed">
+<div class="w-8 h-8 rounded-lg bg-secondary text-on-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">smart_toy</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm font-bold">AI Bot Đã Sẵn Sàng 100%</span>
+<span class="w-2 h-2 rounded-full bg-[#12b886] animate-ping"></span>
+</div>
+<p class="font-body-sm text-body-sm opacity-90 mt-0.5">
+              Hệ thống sẽ tự động quét bình luận chứa từ khóa <em>"giá", "size", "ship", "combo"</em> và gửi tin nhắn chốt đơn kèm link giỏ hàng ngay khi bài viết được đăng tải vào lúc 19:30.
+            </p>
+</div>
+</div>
+<!-- Publication Summary Compact Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center justify-between">
+<span>Dung lượng dữ liệu bài đăng:</span>
+<span class="font-semibold text-on-surface">4.2 MB (Tối ưu hóa CDN)</span>
+</div>
+<div class="flex items-center justify-between">
+<span>Đồng bộ đồng thời:</span>
+<span class="font-semibold text-primary">3 nền tảng</span>
+</div>
+<div class="flex items-center justify-between">
+<span>Trạng thái kiểm duyệt Meta:</span>
+<span class="font-semibold text-[#12b886] flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+              Đạt chuẩn chính sách thương mại
+            </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>
