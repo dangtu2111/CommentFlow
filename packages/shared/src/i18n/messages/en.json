@@ -3991,7 +3991,8 @@
         "unsupported_claims": "AI added figures/prices/links not in your idea, so it was rejected. Try again.",
         "flag_off": "AI captions are off.",
         "not_configured": "AI captions are not configured.",
-        "unavailable": "AI is unavailable right now, try later."
+        "unavailable": "AI is unavailable right now, try later.",
+        "rate_limited": "Too many requests too quickly. Wait a few seconds and try again."
       },
       "hint": "Type an idea or your content in the box below, then click a button: AI suggests, you choose to use it or dismiss it."
     }
