@@ -1,5 +1,5 @@
 import { type ChannelRef, type ConnectionHealth, isPlatformError } from '@flow/connectors';
-import { type ChannelCheckResult, type FlowDb, sql } from '@flow/db';
+import { type ChannelCheckResult, type FlowDb, setChannelAvatar, sql } from '@flow/db';
 import { AppError, channelCheckJobSchema } from '@flow/shared';
 import type { Logger } from '../logger';
 import type { BatchHandler } from './run-job';
@@ -20,9 +20,15 @@ export type ChannelCheckStore = {
     /** Quyền ĐÃ CẤP cho kênh (từ nền tảng); vắng = không đọc được lần này → giữ nguyên `scopes` cũ. */
     granted?: string[],
   ): Promise<void>;
+  /** Ghi ảnh đại diện (https) của kênh. Tùy chọn: kho không có thì bỏ qua. */
+  saveAvatar?(channel: ChannelRef, url: string): Promise<void>;
 };
 
-type Probe = { checkConnection: (channel: ChannelRef) => Promise<ConnectionHealth> };
+type Probe = {
+  checkConnection: (channel: ChannelRef) => Promise<ConnectionHealth>;
+  /** Ảnh đại diện của Page (tùy chọn); lỗi chỉ ghi cảnh báo, không đổi kết quả kiểm kết nối. */
+  fetchPagePicture?: (channel: ChannelRef) => Promise<string | null>;
+};
 
 /**
  * Kiểm MỘT workspace: với từng kênh `connected`, gọi nền tảng bằng token Page đã lưu (connector `checkConnection`) rồi
@@ -71,6 +77,22 @@ export async function checkChannels(options: {
     if (result === 'ok') summary.ok += 1;
     else summary.problems += 1;
     await store.save(channel, result, mark, granted);
+    // Làm mới ảnh đại diện khi kết nối còn dùng được (lỗi ở đây KHÔNG ảnh hưởng kết quả kiểm).
+    if (
+      probe?.fetchPagePicture &&
+      store.saveAvatar &&
+      (result === 'ok' || result === 'webhook_missing')
+    ) {
+      try {
+        const url = await probe.fetchPagePicture(channel);
+        if (url) await store.saveAvatar(channel, url);
+      } catch (error) {
+        warn({
+          event: 'channel_avatar_failed',
+          reason: isPlatformError(error) ? error.code : 'unknown',
+        });
+      }
+    }
   }
   return summary;
 }
@@ -99,6 +121,10 @@ export function createDbChannelCheckStore(db: Pick<FlowDb, 'withJob'>): ChannelC
           platform: 'facebook' as const,
           externalId: row.external_id,
         }));
+      }),
+    saveAvatar: (channel, url) =>
+      db.withJob(channel.workspaceId, async (tx) => {
+        await setChannelAvatar(tx, channel.id, url);
       }),
     save: (channel, result, mark, granted) =>
       db.withJob(channel.workspaceId, async (tx) => {

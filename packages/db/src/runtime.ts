@@ -11,6 +11,7 @@ export {
   createChannel,
   listChannelKeyVersions,
   readChannelToken,
+  setChannelAvatar,
   setChannelToken,
 } from './channel-tokens';
 export { setChannelWebhookSubscribed } from './channel-webhook';
@@ -76,6 +77,42 @@ export {
   type SubscriptionRow,
   startTrial,
 } from './plans';
+export {
+  getMediaAsset,
+  listMediaForPublish,
+  listPublishPostMedia,
+  type MediaAssetRow,
+  type MediaKind,
+  purgeOrphanMedia,
+  registerMediaAsset,
+  setPublishPostMedia,
+} from './publish-media';
+export {
+  type ClaimedPublishTarget,
+  cancelPublishSchedule,
+  claimPublishTargets,
+  deletePublishPost,
+  getPublishPost,
+  getPublishPostNote,
+  listDuePublishWorkspaces,
+  listPickableProducts,
+  listPublishDrafts,
+  listPublishPostProductIds,
+  listPublishPostsForWeek,
+  PICKABLE_PRODUCT_LIMIT,
+  type PickableProduct,
+  PUBLISH_MAX_LEAD_DAYS,
+  PUBLISH_MAX_MESSAGE_CHARS,
+  PUBLISH_MIN_LEAD_MINUTES,
+  type PublishOutcome,
+  type PublishPostItem,
+  type PublishPostStatus,
+  type PublishTarget,
+  type PublishTargetStatus,
+  publishPostNow,
+  recordPublishResult,
+  savePublishPost,
+} from './publish-posts';
 export {
   createAbbreviation,
   deleteAbbreviation,
@@ -395,6 +432,11 @@ export {
   type SavePolicyFactInput,
   savePolicyFact,
 } from './queries/policy-facts';
+export {
+  type CalendarPost,
+  listPostsForWeek,
+  MAX_CALENDAR_POSTS,
+} from './queries/post-calendar';
 export { hydratePostFields, type PostHydration } from './queries/post-hydrate';
 export { createPostNote } from './queries/post-notes';
 export { linkProductsToPosts } from './queries/post-products';

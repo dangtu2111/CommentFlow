@@ -98,6 +98,17 @@ export interface FacebookConnector extends PlatformConnector {
    * ảnh mặc định (`is_silhouette`), thiếu `from`/`picture` (quyền riêng tư của người dùng) hoặc URL lạ → `null` — không bịa ảnh. Chỉ GET.
    */
   fetchCommentAuthorPicture(channel: ChannelRef, commentExternalId: string): Promise<string | null>;
+  /** Ảnh đại diện (https) của chính Page (`GET /{page-id}/picture?redirect=false`); ảnh mặc định (silhouette) hoặc URL không https → `null`. Chỉ ĐỌC. */
+  fetchPagePicture(channel: ChannelRef): Promise<string | null>;
+  /**
+   * Đăng MỘT bài chữ lên feed của Page (POST-PUBLISHING): `POST /{page-id}/feed` với `message`, token trong THÂN POST. Từ chối TRƯỚC khi gọi mạng nếu nội dung rỗng hoặc quá
+   * 63.206 ký tự. Phản hồi 2xx nhưng thiếu `id` → `UNKNOWN` (có thể ĐÃ đăng): nơi gọi KHÔNG ĐƯỢC tự thử lại. Lỗi quyền/token/tốc độ phân loại như mọi lệnh Graph.
+   */
+  publishPost(
+    channel: ChannelRef,
+    text: string,
+    media?: PostMedia,
+  ): Promise<{ externalId: string }>;
   /**
    * Quyền ĐÃ CẤP và hiệu lực của token Page đã lưu (`GET /debug_token`, xác thực bằng token ứng dụng): `scopes` chỉ gồm quyền áp cho Page này
    * (xét `granular_scopes`). Chỉ GET; token Page nằm trong query như mọi lệnh đọc Graph (không log).
@@ -106,6 +117,15 @@ export interface FacebookConnector extends PlatformConnector {
   getPageSubscription(channel: ChannelRef): Promise<PageSubscription>;
   subscribePage(channel: ChannelRef, fields?: string[]): Promise<void>;
 }
+
+/** File ảnh/video đã tải từ kho (COMPOSER-MEDIA). Loại/kích thước đã được web kiểm bằng nội dung trước khi lưu. */
+export type PostFile = { bytes: Uint8Array; contentType: string; filename: string };
+export type PostMedia = { kind: 'image'; files: PostFile[] } | { kind: 'video'; file: PostFile };
+/** Tải ảnh/video lên Graph có thể lâu; vẫn ngắn hơn thời hạn thuê 15 phút của mục tiêu đăng (migration 0090). */
+export const UPLOAD_TIMEOUT_MS = 10 * 60_000;
+const MAX_PHOTOS = 10;
+/** Lỗi tải ảnh lên (chưa đăng gì công khai vì ảnh để `published=false`): chắc chắn CHƯA đăng bài. */
+export const MEDIA_UPLOAD_FAILED = 'facebook_media_upload_failed';
 
 /**
  * Khai báo của connector này = khai báo Facebook (docs/12 §1) trừ hai hành động CHƯA làm: nhắn riêng và Messenger
@@ -245,6 +265,10 @@ const postDetailSchema = z.object({
   created_time: z.string().optional(),
 });
 
+const pagePictureSchema = z.object({
+  data: z.object({ url: z.string(), is_silhouette: z.boolean().optional() }),
+});
+
 const commentAuthorPictureSchema = z.object({
   from: z
     .object({
@@ -279,6 +303,8 @@ function httpUrlOrNull(value: string | undefined): string | null {
 }
 
 const successSchema = z.object({ success: z.literal(true) });
+/** Giới hạn độ dài bài đăng Facebook (số của thiết kế/nền tảng). */
+const MAX_POST_CHARS = 63206;
 const createdSchema = z.object({ id: z.string().min(1) });
 const subscribedAppsSchema = z.object({
   data: z.array(z.object({ id: z.string(), subscribed_fields: z.array(z.string()).optional() })),
@@ -369,6 +395,8 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     overall?: AbortSignal,
     /** Dùng token ỨNG DỤNG (`appId|appSecret`) thay token kênh — chỉ cho `debug_token`; không ký `appsecret_proof`. */
     appAccessToken?: string,
+    /** Tải một file (multipart) — dùng cho ảnh/video; thời hạn riêng dài hơn lệnh thường. */
+    upload?: { field: string; file: PostFile },
   ): Promise<unknown> {
     const token = appAccessToken ?? (await tokenOf(channel));
     const all = {
@@ -382,12 +410,21 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     const init: RequestInit = {
       method,
       signal: overall
-        ? AbortSignal.any([AbortSignal.timeout(timeoutMs), overall])
-        : AbortSignal.timeout(timeoutMs),
+        ? AbortSignal.any([AbortSignal.timeout(upload ? UPLOAD_TIMEOUT_MS : timeoutMs), overall])
+        : AbortSignal.timeout(upload ? UPLOAD_TIMEOUT_MS : timeoutMs),
       redirect: 'error',
     };
     // Ghi: token trong THÂN POST (không nằm trong URL/log truy cập); đọc: tham số truy vấn (tài liệu dùng cách này).
-    if (method === 'POST') {
+    if (method === 'POST' && upload) {
+      const form = new FormData();
+      for (const [key, value] of Object.entries(all)) form.set(key, value);
+      form.set(
+        upload.field,
+        new Blob([Buffer.from(upload.file.bytes)], { type: upload.file.contentType }),
+        upload.file.filename,
+      );
+      init.body = form;
+    } else if (method === 'POST') {
       init.body = new URLSearchParams(all);
     } else {
       for (const [key, value] of Object.entries(all)) url.searchParams.set(key, value);
@@ -529,6 +566,19 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       return httpsUrlOrNull(data.url);
     },
 
+    async fetchPagePicture(channel) {
+      const parsed = pagePictureSchema.safeParse(
+        await call(channel, 'GET', `${graphId(channel.externalId)}/picture`, {
+          redirect: 'false',
+          type: 'large',
+        }),
+      );
+      if (!parsed.success) throw badResponse();
+      const data = parsed.data.data;
+      if (data.is_silhouette === true) return null;
+      return httpsUrlOrNull(data.url);
+    },
+
     async fetchReplies(channel, parentCommentId, opts = {}) {
       const postExternalId = opts.postExternalId ?? '';
       return readAllComments(
@@ -562,6 +612,69 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       });
       const created = createdSchema.safeParse(body);
       // 2xx nhưng không có id: có thể ĐÃ đăng → UNKNOWN (job sẽ kiểm trước khi gửi lại).
+      if (!created.success) throw badResponse();
+      return { externalId: created.data.id };
+    },
+
+    async publishPost(channel, text, media) {
+      const message = text.trim();
+      if (message === '' || text.length > MAX_POST_CHARS)
+        throw fail('UNKNOWN', 'facebook_invalid_post');
+      const page = graphId(channel.externalId);
+      if (media?.kind === 'video') {
+        // Video: MỘT lệnh duy nhất (`/videos` với `source`), mô tả = nội dung bài. Lỗi mạng ở đây là KHÔNG RÕ (có thể đã tạo video) → UNKNOWN, không tự thử lại.
+        const body = await call(
+          channel,
+          'POST',
+          `${page}/videos`,
+          { description: message },
+          undefined,
+          undefined,
+          { field: 'source', file: media.file },
+        );
+        const created = createdSchema.safeParse(body);
+        if (!created.success) throw badResponse();
+        return { externalId: created.data.id };
+      }
+      const params: Record<string, string> = { message };
+      if (media?.kind === 'image') {
+        if (media.files.length === 0 || media.files.length > MAX_PHOTOS) {
+          throw fail('UNKNOWN', 'facebook_invalid_post');
+        }
+        // Ảnh: tải từng ảnh lên Page ở trạng thái CHƯA đăng (`published=false`) rồi đính vào bài. Lỗi ở giai đoạn này CHẮC CHẮN chưa có gì công khai.
+        let index = 0;
+        for (const file of media.files) {
+          let photoId: string;
+          try {
+            const body = await call(
+              channel,
+              'POST',
+              `${page}/photos`,
+              { published: 'false' },
+              undefined,
+              undefined,
+              { field: 'source', file },
+            );
+            const photo = createdSchema.safeParse(body);
+            if (!photo.success) throw badResponse();
+            photoId = photo.data.id;
+          } catch (error) {
+            if (
+              isPlatformError(error) &&
+              (error.code === 'PERMISSION' ||
+                error.code === 'TOKEN_EXPIRED' ||
+                error.code === 'RATE_LIMIT')
+            ) {
+              throw error;
+            }
+            throw fail('UNKNOWN', MEDIA_UPLOAD_FAILED);
+          }
+          params[`attached_media[${index}]`] = JSON.stringify({ media_fbid: photoId });
+          index += 1;
+        }
+      }
+      const body = await call(channel, 'POST', `${page}/feed`, params);
+      const created = createdSchema.safeParse(body);
       if (!created.success) throw badResponse();
       return { externalId: created.data.id };
     },

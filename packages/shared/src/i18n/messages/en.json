@@ -2201,6 +2201,7 @@
   "shell": {
     "groups": {
       "operations": "Operations",
+      "publishing": "Editing & scheduling",
       "system": "System & intelligence"
     },
     "tabsLabel": "Page sections",
@@ -2236,7 +2237,9 @@
       "kbVoice": "Brand voice",
       "kbDictionary": "Abbreviation dictionary",
       "kbCatalog": "Product catalog",
-      "kbRules": "Rules & Limits"
+      "kbRules": "Rules & Limits",
+      "composer": "Post editor",
+      "calendar": "Publishing calendar"
     },
     "logout": "Sign out",
     "navLabel": "Main navigation",
@@ -3805,6 +3808,312 @@
       "hint": "These sentences are in the loaded policy text but did not become structured values (no clear number/condition, or another topic). AI does not use them as facts yet; you can enter the matching value with Edit / Add value.",
       "otherTitle": "Other information",
       "otherDesc": "Sentences in the raw text outside shipping, returns, warranty and payment (for example opening hours, contact, privacy)."
+    }
+  },
+  "composer": {
+    "title": "Post editor",
+    "back": "Publishing calendar",
+    "heading": "Create a new post",
+    "soon": "Coming soon",
+    "banner": "Publishing to Facebook is not enabled on the server. You can still write and save drafts; Schedule and Publish now will work once an administrator enables it.",
+    "actions": {
+      "draft": "Save draft",
+      "schedule": "Schedule",
+      "publish": "Publish now",
+      "delete": "Delete",
+      "cancelSchedule": "Cancel schedule"
+    },
+    "channels": {
+      "title": "Channels",
+      "custom": "Customize content per channel",
+      "empty": "No channel is connected yet.",
+      "connect": "Connect a channel",
+      "selected": "{count} channel(s) selected",
+      "status": {
+        "connected": "Connected",
+        "expired": "Reconnect needed",
+        "revoked": "Disconnected",
+        "error": "Connection error"
+      },
+      "platform": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "unusable": "This channel cannot be used to publish yet",
+      "noPublishPermission": "Missing publishing permission (pages_manage_posts)",
+      "missingPermission": "The selected channel(s) lack the publishing permission (pages_manage_posts): {names}. The post cannot be published until it is granted."
+    },
+    "content": {
+      "title": "Post content",
+      "label": "Content",
+      "placeholder": "Write your post…",
+      "aiCaption": "AI caption suggestion",
+      "aiHashtag": "Auto hashtags",
+      "emoji": "Insert emoji",
+      "mention": "Tag a Page or person",
+      "link": "Add a link",
+      "counters": "Characters per platform",
+      "over": "Over the limit",
+      "ok": "Within the limit",
+      "mentionUnavailable": "Tagging unavailable: Facebook does not allow user/page tags in API posts",
+      "linkPlaceholder": "https://…",
+      "linkAdd": "Insert link",
+      "linkInvalid": "Only valid https links are accepted"
+    },
+    "media": {
+      "title": "Images and video",
+      "add": "Add media",
+      "empty": "No files yet.",
+      "rules": "Up to 10 images (JPG, PNG, WebP, ≤ 8MB each) or 1 video (MP4, MOV, ≤ 200MB); no mixing images with video.",
+      "notConfigured": "Media upload is off: the server has no file storage configured (MEDIA_S3_* variables — see the owner guide).",
+      "image": "Image",
+      "video": "Video",
+      "uploading": "Uploading {name}",
+      "remove": "Remove {name}",
+      "busy": "Uploading files; save/publish buttons are locked until it finishes.",
+      "error": {
+        "forbidden": "Request denied.",
+        "rate_limited": "Too fast, try again in a moment.",
+        "not_configured": "The server has no file storage configured.",
+        "length_required": "Could not determine the file size.",
+        "unsupported_type": "Only JPG, PNG, WebP images or MP4, MOV video (checked by file content).",
+        "empty": "The file is empty.",
+        "too_large": "File too large (images ≤ 8MB, video ≤ 200MB).",
+        "storage_failed": "File storage rejected the file, try again.",
+        "too_many_unattached": "Too many unused uploads; publish or remove some and retry.",
+        "unavailable": "Could not upload, try again later.",
+        "network": "Connection lost while uploading.",
+        "too_many_images": "At most 10 images per post.",
+        "too_many_videos": "Only 1 video per post.",
+        "mixed": "Do not mix images and video in one post."
+      }
+    },
+    "products": {
+      "title": "Product tagging and AI advisor settings",
+      "hint": "Link the post to the knowledge base so the AI quotes and advises from the right source.",
+      "openKb": "Open knowledge base",
+      "pin": "Tag products",
+      "empty": "No product tagged yet.",
+      "noteLabel": "Private note for the AI (customers cannot see it)",
+      "notePlaceholder": "For example: push the combo offer, mention the return policy…",
+      "rules": "Comment replies for this post follow the shop-wide auto-send settings.",
+      "rulesLink": "Open auto-send settings",
+      "noCatalog": "No products yet. Add them in the Knowledge base to tag them.",
+      "search": "Search by name or SKU",
+      "remove": "Remove {name}",
+      "primaryHint": "The first product is the primary one; AI uses these to quote prices when replying to this post's comments. Choosing here confirms the link.",
+      "limit": "{count}/{max} products selected",
+      "price": "{price} VND",
+      "noteHint": "Only the AI reads this note when advising on this post's comments (customers never see it). Saved once the post is published. {count}/{max} characters."
+    },
+    "schedule": {
+      "title": "Schedule",
+      "date": "Publish date",
+      "time": "Publish time",
+      "zone": "Shop time zone: {zone}",
+      "hint": "Pick the date and time in the shop's time zone; only needed for \"Schedule\"."
+    },
+    "preview": {
+      "title": "Preview",
+      "tabs": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "justNow": "Just now",
+      "empty": "Your post will appear here as you type.",
+      "noPage": "No channel selected",
+      "like": "Like",
+      "comment": "Comment",
+      "share": "Share",
+      "disclaimer": "The preview only illustrates the layout; real display depends on the platform and device. Engagement counts are always 0.",
+      "image": "Post image {n}",
+      "video": "Post video",
+      "seeMore": "See more",
+      "seeLess": "See less",
+      "igSeeMore": "more",
+      "igSeeLess": "less",
+      "commentsCount": "{count} comments",
+      "sharesCount": "{count} shares",
+      "likesCount": "{count} likes",
+      "handlePlaceholder": "account_name",
+      "igNeedsMedia": "Instagram needs at least one image or video. Add media on the left.",
+      "tiktokNeedsVideo": "TikTok needs a video. Add a video on the left.",
+      "prev": "Previous image",
+      "next": "Next image"
+    },
+    "error": {
+      "title": "Could not load the data",
+      "body": "Something went wrong while loading this page. Try again later."
+    },
+    "headingEdit": "Edit post",
+    "bannerEnabled": "A post is only published when you press \"Publish now\" or at the scheduled time. The AI never writes or publishes posts on its own.",
+    "publishDisabledShort": "Publishing is not enabled on the server",
+    "notice": {
+      "saved": "Draft saved.",
+      "scheduled": "Post scheduled.",
+      "publishing": "Publish request sent. The post will appear on Facebook in about 20–30 seconds; track it in the Calendar. No need to click again.",
+      "cancelled": "Schedule cancelled; the post is back to a draft.",
+      "deleted": "Post deleted.",
+      "publish_disabled": "Publishing is not enabled on the server, so you cannot schedule or publish yet.",
+      "forbidden": "Only the Owner can do this.",
+      "unavailable": "Could not complete this. Try again later.",
+      "not_editable": "The post is no longer in a state that allows this (published, publishing or changed).",
+      "invalid_channel": "A channel is invalid or not connected.",
+      "invalid_schedule": "The publish time must be between 2 minutes and 90 days from now, in the shop's time zone.",
+      "invalid": "The data is invalid (content too long or a wrong value).",
+      "empty_message": "Write the content before scheduling or publishing.",
+      "no_channel": "Choose at least one channel before scheduling or publishing.",
+      "rate_limited": "You clicked too fast so the extra click was blocked. The earlier request may already have been sent: check the Calendar before clicking again to avoid a duplicate post."
+    },
+    "pending": {
+      "draft": "Saving…",
+      "schedule": "Scheduling…",
+      "publish": "Sending…",
+      "note": "Sending your request, please wait and do NOT click again. The page will move on when done.",
+      "uploading": "Uploading files; save/publish buttons are locked until it finishes."
+    },
+    "ai": {
+      "loading": "Writing…",
+      "useCaption": "Use this caption",
+      "appendCaption": "Append",
+      "addHashtags": "Add hashtags",
+      "dismiss": "Dismiss",
+      "disclaimer": "AI only suggests. Read and edit before publishing.",
+      "notReady": {
+        "flag_off": "AI captions are off for this shop.",
+        "missing_service": "AI service is not configured.",
+        "missing_model": "Caption model is not configured (CAPTION_LLM_MODEL)."
+      },
+      "failure": {
+        "empty_input": "Enter an idea or content first.",
+        "empty": "AI returned nothing usable, try again.",
+        "unsupported_claims": "AI added figures/prices/links not in your idea, so it was rejected. Try again.",
+        "flag_off": "AI captions are off.",
+        "not_configured": "AI captions are not configured.",
+        "unavailable": "AI is unavailable right now, try later.",
+        "rate_limited": "Too many requests too quickly. Wait a few seconds and try again."
+      },
+      "hint": "Type an idea or your content in the box below, then click a button: AI suggests, you choose to use it or dismiss it."
+    }
+  },
+  "calendar": {
+    "title": "Publishing calendar",
+    "heading": "Publishing calendar and post management",
+    "subtitle": "See your shop's published posts and the posts from CommentFlow (scheduled, publishing, failed) week by week; drafts are listed below.",
+    "soon": "Coming soon",
+    "views": {
+      "label": "View",
+      "week": "Week",
+      "table": "Table",
+      "kanban": "Kanban"
+    },
+    "nav": {
+      "prev": "Previous week",
+      "next": "Next week",
+      "today": "Today",
+      "create": "Create a new post",
+      "range": "Week of {from} – {to}"
+    },
+    "kpi": {
+      "posts": "Posts this week",
+      "comments": "Comments",
+      "pending": "Comments to handle"
+    },
+    "filter": {
+      "label": "Platform",
+      "all": "All ({count})",
+      "facebook": "Facebook ({count})",
+      "instagram": "Instagram ({count})",
+      "tiktok": "TikTok ({count})"
+    },
+    "weekday": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "today": "Today",
+    "status": {
+      "published": "Published",
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "publishing": "Publishing",
+      "partial": "Partly published",
+      "failed": "Failed"
+    },
+    "ad": "Ad",
+    "noContent": "Post content not available yet",
+    "comments": "{count} comment(s)",
+    "emptyDay": "No posts",
+    "add": "Add a post",
+    "empty": {
+      "title": "No posts this week.",
+      "body": "A Page post is added to the system when it receives its first comment. Try another week."
+    },
+    "drawer": {
+      "title": "Post details",
+      "close": "Close",
+      "channel": "Channel",
+      "time": "Published at",
+      "content": "Content",
+      "noContent": "The post content could not be loaded from the platform.",
+      "stats": "Numbers",
+      "comments": "Comments",
+      "pending": "To handle",
+      "openOriginal": "View original post",
+      "openComments": "View comments",
+      "cancel": "Cancel schedule",
+      "edit": "Edit post"
+    },
+    "error": {
+      "title": "Could not load the calendar",
+      "body": "Something went wrong while loading this page. Try again later."
+    },
+    "targetStatus": {
+      "pending": "Waiting",
+      "publishing": "Publishing",
+      "published": "Published",
+      "failed": "Failed",
+      "unknown": "Result unknown"
+    },
+    "publishError": {
+      "missing_permission": "The channel lacks the publishing permission (pages_manage_posts).",
+      "permission": "Facebook refused the publishing permission.",
+      "token_expired": "The channel connection expired; reconnect it.",
+      "invalid_post": "The post content is not valid.",
+      "rate_limited": "Facebook is rate limiting; retried several times.",
+      "unknown_result": "Not sure whether the post went out. Check Facebook before publishing again.",
+      "lease_expired": "Not sure whether the post went out (no result for too long). Check Facebook."
+    },
+    "drafts": {
+      "title": "Drafts",
+      "empty": "No drafts yet.",
+      "untitled": "(No content yet)",
+      "edit": "Edit draft"
+    },
+    "own": {
+      "title": "Posts from CommentFlow",
+      "targets": "Channels",
+      "edit": "Edit post",
+      "cancel": "Cancel schedule",
+      "delete": "Delete post",
+      "scheduledAt": "Publish time",
+      "lockedHint": "The post is being published or was published successfully, so it cannot be edited or deleted.",
+      "openOnFacebook": "View on Facebook",
+      "pending": "Sending…",
+      "pendingNote": "Sending your request, please wait and do NOT click again."
+    },
+    "watch": {
+      "pending": "Publishing to Facebook… The result will show here within a minute, no need to click again.",
+      "published": "Published to Facebook successfully.",
+      "failed": "Publishing FAILED: {reason} The post is not on Facebook; you can edit and retry in the Composer.",
+      "unknown": "Not sure whether the post was published: {reason}",
+      "timeout": "No result after 2 minutes. Check the Page on Facebook and the post status in the Calendar before retrying (the worker may not be running)."
     }
   }
 }

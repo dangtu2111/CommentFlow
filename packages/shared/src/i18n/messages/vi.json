@@ -2201,6 +2201,7 @@
   "shell": {
     "groups": {
       "operations": "Điều hướng vận hành",
+      "publishing": "Biên tập & lịch đăng",
       "system": "Hệ thống & trí tuệ"
     },
     "tabsLabel": "Mục con của trang",
@@ -2236,7 +2237,9 @@
       "kbVoice": "Giọng văn thương hiệu",
       "kbDictionary": "Từ điển viết tắt",
       "kbCatalog": "Danh mục sản phẩm",
-      "kbRules": "Quy tắc & Giới hạn"
+      "kbRules": "Quy tắc & Giới hạn",
+      "composer": "Biên tập bài viết",
+      "calendar": "Lịch đăng"
     },
     "logout": "Đăng xuất",
     "navLabel": "Điều hướng chính",
@@ -3805,6 +3808,312 @@
       "hint": "Các câu dưới đây có trong văn bản chính sách đã nạp nhưng chưa thành giá trị có cấu trúc (không nêu số/điều kiện rõ ràng hoặc thuộc chủ đề khác). AI chưa dùng chúng để trả lời bằng sự kiện; bạn có thể nhập giá trị tương ứng bằng Sửa tay / Thêm giá trị.",
       "otherTitle": "Thông tin khác",
       "otherDesc": "Các câu trong văn bản thô không thuộc ship, đổi trả, bảo hành, thanh toán (ví dụ giờ làm việc, liên hệ, quyền riêng tư)."
+    }
+  },
+  "composer": {
+    "title": "Biên tập bài viết",
+    "back": "Lịch đăng",
+    "heading": "Tạo bài viết mới",
+    "soon": "Sắp có",
+    "banner": "Đăng bài lên Facebook chưa được bật trên máy chủ. Bạn vẫn soạn và lưu bản nháp được; Lên lịch và Đăng ngay sẽ dùng được khi quản trị viên bật tính năng này.",
+    "actions": {
+      "draft": "Lưu bản nháp",
+      "schedule": "Lên lịch đăng",
+      "publish": "Đăng ngay",
+      "delete": "Xóa",
+      "cancelSchedule": "Hủy lịch"
+    },
+    "channels": {
+      "title": "Kênh đăng",
+      "custom": "Tùy biến nội dung riêng từng kênh",
+      "empty": "Chưa có kênh nào được kết nối.",
+      "connect": "Kết nối kênh",
+      "selected": "Đã chọn {count} kênh",
+      "status": {
+        "connected": "Đã kết nối",
+        "expired": "Cần kết nối lại",
+        "revoked": "Đã ngắt",
+        "error": "Lỗi kết nối"
+      },
+      "platform": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "unusable": "Kênh chưa dùng được để đăng",
+      "noPublishPermission": "Thiếu quyền đăng bài (pages_manage_posts)",
+      "missingPermission": "Kênh đã chọn chưa có quyền đăng bài (pages_manage_posts): {names}. Bài sẽ không đăng được cho tới khi cấp quyền."
+    },
+    "content": {
+      "title": "Nội dung bài đăng",
+      "label": "Nội dung",
+      "placeholder": "Nhập nội dung bài viết…",
+      "aiCaption": "AI gợi ý caption",
+      "aiHashtag": "Tự động hashtag",
+      "emoji": "Chèn biểu tượng cảm xúc",
+      "mention": "Gắn thẻ trang hoặc người dùng",
+      "link": "Gắn liên kết",
+      "counters": "Số ký tự theo nền tảng",
+      "over": "Vượt giới hạn",
+      "ok": "Trong giới hạn",
+      "mentionUnavailable": "Gắn thẻ chưa khả dụng: Facebook không cho đăng bài có thẻ người dùng/trang qua API",
+      "linkPlaceholder": "https://…",
+      "linkAdd": "Chèn liên kết",
+      "linkInvalid": "Chỉ nhận liên kết https hợp lệ"
+    },
+    "media": {
+      "title": "Hình ảnh và video",
+      "add": "Thêm media",
+      "empty": "Chưa có tệp nào.",
+      "rules": "Tối đa 10 ảnh (JPG, PNG, WebP, mỗi ảnh ≤ 8MB) hoặc 1 video (MP4, MOV, ≤ 200MB); không trộn ảnh với video.",
+      "notConfigured": "Chưa bật tải ảnh/video: máy chủ chưa cấu hình kho lưu file (biến MEDIA_S3_* — xem hướng dẫn cho chủ dự án).",
+      "image": "Ảnh",
+      "video": "Video",
+      "uploading": "Đang tải {name}",
+      "remove": "Bỏ {name}",
+      "busy": "Đang tải tệp lên, các nút lưu/đăng tạm khóa cho tới khi xong.",
+      "error": {
+        "forbidden": "Yêu cầu bị từ chối.",
+        "rate_limited": "Bạn thao tác quá nhanh, thử lại sau giây lát.",
+        "not_configured": "Máy chủ chưa cấu hình kho lưu file.",
+        "length_required": "Không xác định được kích thước tệp.",
+        "unsupported_type": "Chỉ nhận ảnh JPG, PNG, WebP hoặc video MP4, MOV (kiểm bằng nội dung tệp).",
+        "empty": "Tệp rỗng.",
+        "too_large": "Tệp quá lớn (ảnh ≤ 8MB, video ≤ 200MB).",
+        "storage_failed": "Kho lưu file không nhận được tệp, thử lại.",
+        "too_many_unattached": "Có quá nhiều tệp tải lên chưa dùng; hãy đăng hoặc bỏ bớt rồi thử lại.",
+        "unavailable": "Chưa tải lên được, thử lại sau.",
+        "network": "Mất kết nối khi tải lên.",
+        "too_many_images": "Tối đa 10 ảnh mỗi bài.",
+        "too_many_videos": "Chỉ được 1 video mỗi bài.",
+        "mixed": "Không trộn ảnh với video trong cùng một bài."
+      }
+    },
+    "products": {
+      "title": "Gắn sản phẩm và cấu hình AI tư vấn",
+      "hint": "Kết nối bài viết với kho tri thức để AI báo giá và tư vấn đúng nguồn.",
+      "openKb": "Mở kho tri thức",
+      "pin": "Gắn sản phẩm",
+      "empty": "Chưa gắn sản phẩm nào.",
+      "noteLabel": "Ghi chú riêng cho AI (khách không nhìn thấy)",
+      "notePlaceholder": "Ví dụ: ưu tiên tư vấn combo, nhắc chính sách đổi trả…",
+      "rules": "Quy tắc tự trả lời bình luận của bài này theo cài đặt tự gửi chung của cửa hàng.",
+      "rulesLink": "Mở cài đặt tự gửi",
+      "noCatalog": "Cửa hàng chưa có sản phẩm. Thêm ở Kho tri thức để gắn vào bài.",
+      "search": "Tìm theo tên hoặc SKU",
+      "remove": "Bỏ {name}",
+      "primaryHint": "Sản phẩm đầu tiên là sản phẩm chính; AI dùng các sản phẩm này để báo giá khi trả lời bình luận của bài. Bạn chọn ở đây là bạn xác nhận liên kết.",
+      "limit": "Đã chọn {count}/{max} sản phẩm",
+      "price": "{price}đ",
+      "noteHint": "Chỉ AI đọc ghi chú này khi tư vấn bình luận của bài (khách không thấy). Được lưu khi bài đăng thành công. {count}/{max} ký tự."
+    },
+    "schedule": {
+      "title": "Lịch đăng",
+      "date": "Ngày đăng",
+      "time": "Giờ đăng",
+      "zone": "Múi giờ của cửa hàng: {zone}",
+      "hint": "Chọn ngày và giờ theo múi giờ của cửa hàng; chỉ cần khi bấm \"Lên lịch đăng\"."
+    },
+    "preview": {
+      "title": "Xem trước",
+      "tabs": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok"
+      },
+      "justNow": "Vừa xong",
+      "empty": "Nội dung bài viết sẽ hiện ở đây khi bạn gõ.",
+      "noPage": "Chưa chọn kênh",
+      "like": "Thích",
+      "comment": "Bình luận",
+      "share": "Chia sẻ",
+      "disclaimer": "Bản xem trước chỉ mang tính minh họa bố cục; hiển thị thật phụ thuộc vào nền tảng và thiết bị. Số lượt tương tác luôn là 0.",
+      "image": "Ảnh {n} của bài",
+      "video": "Video của bài",
+      "seeMore": "Xem thêm",
+      "seeLess": "Thu gọn",
+      "igSeeMore": "xem thêm",
+      "igSeeLess": "thu gọn",
+      "commentsCount": "{count} bình luận",
+      "sharesCount": "{count} lượt chia sẻ",
+      "likesCount": "{count} lượt thích",
+      "handlePlaceholder": "ten_tai_khoan",
+      "igNeedsMedia": "Instagram cần ít nhất một ảnh hoặc video. Hãy thêm media ở bên trái.",
+      "tiktokNeedsVideo": "TikTok cần một video. Hãy thêm video ở bên trái.",
+      "prev": "Ảnh trước",
+      "next": "Ảnh sau"
+    },
+    "error": {
+      "title": "Không tải được dữ liệu",
+      "body": "Đã có lỗi khi tải trang. Thử tải lại sau."
+    },
+    "headingEdit": "Sửa bài viết",
+    "bannerEnabled": "Bài chỉ được đăng khi bạn bấm \"Đăng ngay\" hoặc đến đúng giờ đã lên lịch. AI không tự viết hay tự đăng bài.",
+    "publishDisabledShort": "Đăng bài chưa được bật trên máy chủ",
+    "notice": {
+      "saved": "Đã lưu bản nháp.",
+      "scheduled": "Đã lên lịch đăng bài.",
+      "publishing": "Đã gửi lệnh đăng. Bài sẽ lên Facebook trong khoảng 20–30 giây; theo dõi trạng thái ở Lịch đăng. Không cần bấm lại.",
+      "cancelled": "Đã hủy lịch; bài trở về bản nháp.",
+      "deleted": "Đã xóa bài.",
+      "publish_disabled": "Đăng bài chưa được bật trên máy chủ nên chưa thể lên lịch hay đăng.",
+      "forbidden": "Chỉ Owner mới được thực hiện thao tác này.",
+      "unavailable": "Chưa thực hiện được. Thử lại sau.",
+      "not_editable": "Bài không còn ở trạng thái cho phép thao tác này (đã đăng, đang đăng hoặc đã bị đổi).",
+      "invalid_channel": "Có kênh không hợp lệ hoặc chưa kết nối.",
+      "invalid_schedule": "Giờ đăng phải cách hiện tại từ 2 phút đến 90 ngày, theo múi giờ của cửa hàng.",
+      "invalid": "Dữ liệu chưa hợp lệ (nội dung quá dài hoặc có giá trị sai).",
+      "empty_message": "Cần nhập nội dung trước khi lên lịch hoặc đăng.",
+      "no_channel": "Cần chọn ít nhất một kênh trước khi lên lịch hoặc đăng.",
+      "rate_limited": "Bạn bấm quá nhanh nên lần bấm sau bị chặn. Lệnh trước đó có thể đã được gửi: hãy mở Lịch đăng kiểm tra trước khi bấm lại để tránh đăng trùng."
+    },
+    "pending": {
+      "draft": "Đang lưu…",
+      "schedule": "Đang lên lịch…",
+      "publish": "Đang gửi…",
+      "note": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại. Trang sẽ tự chuyển khi xong.",
+      "uploading": "Đang tải tệp lên, các nút lưu/đăng tạm khóa cho tới khi xong."
+    },
+    "ai": {
+      "loading": "Đang soạn…",
+      "useCaption": "Dùng caption này",
+      "appendCaption": "Thêm vào cuối",
+      "addHashtags": "Thêm hashtag vào bài",
+      "dismiss": "Bỏ qua",
+      "disclaimer": "AI chỉ gợi ý. Hãy đọc và sửa trước khi đăng.",
+      "notReady": {
+        "flag_off": "AI soạn caption đang tắt cho cửa hàng này.",
+        "missing_service": "Chưa cấu hình dịch vụ AI.",
+        "missing_model": "Chưa cấu hình model soạn caption (CAPTION_LLM_MODEL)."
+      },
+      "failure": {
+        "empty_input": "Hãy nhập ý tưởng hoặc nội dung trước.",
+        "empty": "AI không trả về nội dung dùng được, thử lại.",
+        "unsupported_claims": "AI tự thêm số liệu/giá/liên kết không có trong ý tưởng của bạn nên đã bị từ chối. Hãy thử lại.",
+        "flag_off": "AI soạn caption đang tắt.",
+        "not_configured": "Chưa cấu hình AI soạn caption.",
+        "unavailable": "Chưa gọi được AI lúc này, thử lại sau.",
+        "rate_limited": "Bạn bấm quá nhanh hoặc quá nhiều lần. Hãy đợi vài giây rồi thử lại."
+      },
+      "hint": "Gõ ý tưởng hoặc nội dung vào ô bên dưới rồi bấm một nút: AI sẽ gợi ý, bạn chọn dùng hay bỏ qua."
+    }
+  },
+  "calendar": {
+    "title": "Lịch đăng",
+    "heading": "Lịch phát hành và quản lý bài đăng",
+    "subtitle": "Xem bài đã đăng của cửa hàng và bài đăng từ CommentFlow (đã lên lịch, đang đăng, đăng lỗi) theo tuần; bản nháp nằm ở khung bên dưới.",
+    "soon": "Sắp có",
+    "views": {
+      "label": "Kiểu xem",
+      "week": "Lịch tuần",
+      "table": "Bảng biểu",
+      "kanban": "Kanban"
+    },
+    "nav": {
+      "prev": "Tuần trước",
+      "next": "Tuần sau",
+      "today": "Hôm nay",
+      "create": "Tạo bài viết mới",
+      "range": "Tuần {from} – {to}"
+    },
+    "kpi": {
+      "posts": "Bài trong tuần",
+      "comments": "Bình luận",
+      "pending": "Bình luận chờ xử lý"
+    },
+    "filter": {
+      "label": "Nền tảng",
+      "all": "Tất cả ({count})",
+      "facebook": "Facebook ({count})",
+      "instagram": "Instagram ({count})",
+      "tiktok": "TikTok ({count})"
+    },
+    "weekday": {
+      "0": "Thứ 2",
+      "1": "Thứ 3",
+      "2": "Thứ 4",
+      "3": "Thứ 5",
+      "4": "Thứ 6",
+      "5": "Thứ 7",
+      "6": "Chủ nhật"
+    },
+    "today": "Hôm nay",
+    "status": {
+      "published": "Đã đăng",
+      "draft": "Bản nháp",
+      "scheduled": "Đã lên lịch",
+      "publishing": "Đang đăng",
+      "partial": "Đăng một phần",
+      "failed": "Đăng lỗi"
+    },
+    "ad": "Quảng cáo",
+    "noContent": "Chưa lấy được nội dung bài",
+    "comments": "{count} bình luận",
+    "emptyDay": "Không có bài",
+    "add": "Thêm bài",
+    "empty": {
+      "title": "Tuần này chưa có bài nào.",
+      "body": "Bài đăng của Page được đưa vào hệ thống khi nhận bình luận đầu tiên. Thử chuyển sang tuần khác."
+    },
+    "drawer": {
+      "title": "Chi tiết bài đăng",
+      "close": "Đóng",
+      "channel": "Kênh",
+      "time": "Thời gian đăng",
+      "content": "Nội dung",
+      "noContent": "Chưa lấy được nội dung bài từ nền tảng.",
+      "stats": "Số liệu",
+      "comments": "Bình luận",
+      "pending": "Chờ xử lý",
+      "openOriginal": "Xem bài gốc",
+      "openComments": "Xem bình luận",
+      "cancel": "Hủy lịch",
+      "edit": "Chỉnh sửa bài"
+    },
+    "error": {
+      "title": "Không tải được lịch",
+      "body": "Đã có lỗi khi tải trang. Thử tải lại sau."
+    },
+    "targetStatus": {
+      "pending": "Chờ đăng",
+      "publishing": "Đang đăng",
+      "published": "Đã đăng",
+      "failed": "Lỗi",
+      "unknown": "Chưa rõ kết quả"
+    },
+    "publishError": {
+      "missing_permission": "Kênh chưa có quyền đăng bài (pages_manage_posts).",
+      "permission": "Facebook từ chối quyền đăng bài.",
+      "token_expired": "Kết nối kênh đã hết hạn, cần kết nối lại.",
+      "invalid_post": "Nội dung bài không hợp lệ.",
+      "rate_limited": "Facebook đang giới hạn tốc độ; đã thử lại nhiều lần.",
+      "unknown_result": "Không rõ bài đã đăng chưa. Hãy kiểm tra trên Facebook trước khi đăng lại.",
+      "lease_expired": "Không rõ bài đã đăng chưa (quá lâu không có kết quả). Hãy kiểm tra trên Facebook."
+    },
+    "drafts": {
+      "title": "Bản nháp",
+      "empty": "Chưa có bản nháp nào.",
+      "untitled": "(Chưa có nội dung)",
+      "edit": "Sửa bản nháp"
+    },
+    "own": {
+      "title": "Bài đăng từ CommentFlow",
+      "targets": "Kênh đăng",
+      "edit": "Sửa bài",
+      "cancel": "Hủy lịch",
+      "delete": "Xóa bài",
+      "scheduledAt": "Giờ đăng",
+      "lockedHint": "Bài đang đăng hoặc đã đăng thành công nên không sửa hay xóa được.",
+      "openOnFacebook": "Xem trên Facebook",
+      "pending": "Đang gửi…",
+      "pendingNote": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại."
+    },
+    "watch": {
+      "pending": "Đang đăng bài lên Facebook… Kết quả sẽ hiện ở đây trong vài chục giây, bạn không cần bấm lại.",
+      "published": "Đăng bài thành công lên Facebook.",
+      "failed": "Đăng bài THẤT BẠI: {reason} Bài chưa lên Facebook; bạn có thể sửa rồi đăng lại ở Biên tập.",
+      "unknown": "Chưa rõ bài đã đăng chưa: {reason}",
+      "timeout": "Chưa có kết quả sau 2 phút. Hãy kiểm tra Page trên Facebook và trạng thái bài ở Lịch trước khi đăng lại (worker có thể chưa chạy)."
     }
   }
 }

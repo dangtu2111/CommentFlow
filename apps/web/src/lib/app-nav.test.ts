@@ -37,6 +37,8 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
       'posts',
       'leads',
       'reports',
+      'composer',
+      'calendar',
       'kb',
       'automation',
       'spamRules',
@@ -85,10 +87,12 @@ describe('FR-040 điều hướng khung ứng dụng (docs/08 §3)', () => {
     }
   });
 
-  it('FR-040 chia nhóm: vận hành (Bình luận) và cài đặt; không nhóm rỗng; href thuộc /app/ và không trùng', () => {
+  it('FR-040 chia nhóm: vận hành (Bình luận), biên tập & lịch đăng (chỉ Owner) và hệ thống; không nhóm rỗng; href thuộc /app/ và không trùng', () => {
     for (const role of ['owner', 'staff'] as const) {
       const groups = navGroupsFor(role);
-      expect(groups.map((g) => g.key)).toEqual(['operations', 'system']);
+      expect(groups.map((g) => g.key)).toEqual(
+        role === 'owner' ? ['operations', 'publishing', 'system'] : ['operations', 'system'],
+      );
       for (const group of groups) expect(group.items.length).toBeGreaterThan(0);
       const hrefs = groups.flatMap((g) => g.items.map((i) => i.href));
       expect(new Set(hrefs).size).toBe(hrefs.length);
@@ -156,5 +160,35 @@ describe('GĐ0-TENANCY bảng quyền theo vai trò lấy từ bảng quyền th
     const members = rows.find((r) => r.key === 'members');
     expect(members).toMatchObject({ owner: true, staff: false });
     expect(rows.find((r) => r.key === 'comments')).toMatchObject({ owner: true, staff: true });
+  });
+});
+
+describe('COMPOSER-CALENDAR-UI nhóm điều hướng "Biên tập & lịch đăng"', () => {
+  it('Owner có nhóm thứ ba giữa "vận hành" và "hệ thống" với hai trang thật; Staff không có nhóm này', () => {
+    expect(navGroupsFor('owner').map((g) => g.key)).toEqual(['operations', 'publishing', 'system']);
+    const publishing = navGroupsFor('owner').find((g) => g.key === 'publishing');
+    expect(publishing?.items.map((i) => [i.key, i.href])).toEqual([
+      ['composer', '/app/composer'],
+      ['calendar', '/app/calendar'],
+    ]);
+    expect(navGroupsFor('staff').map((g) => g.key)).toEqual(['operations', 'system']);
+  });
+
+  it('đang ở trang con của composer/calendar thì mục đó sáng; mục khác thì không', () => {
+    expect(isNavActive('/app/composer', '/app/composer')).toBe(true);
+    expect(isNavActive('/app/calendar', '/app/composer')).toBe(false);
+  });
+
+  it('nhóm và mục mới đều có chữ ở vi và en (không rơi về khóa trống)', () => {
+    for (const locale of ['vi', 'en'] as const) {
+      const shell = (
+        getMessages(locale) as {
+          shell: { groups: Record<string, string>; nav: Record<string, string> };
+        }
+      ).shell;
+      expect(shell.groups.publishing, locale).toBeTruthy();
+      expect(shell.nav.composer, locale).toBeTruthy();
+      expect(shell.nav.calendar, locale).toBeTruthy();
+    }
   });
 });

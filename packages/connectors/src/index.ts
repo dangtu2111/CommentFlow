@@ -44,7 +44,10 @@ export {
   DEFAULT_GRAPH_API_VERSION,
   type FacebookConnector,
   type FacebookConnectorOptions,
+  MEDIA_UPLOAD_FAILED,
   type PageSubscription,
+  type PostFile,
+  type PostMedia,
 } from './facebook/connector';
 export { type FacebookTokenInfo, parseDebugToken, scopesForPage } from './facebook/debug-token';
 export {

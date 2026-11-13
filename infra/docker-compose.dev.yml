@@ -1,5 +1,6 @@
-# Ghi đè cho project cf-dev: publish ĐÚNG 7 cổng ra LAN (máy code dùng qua IP máy phụ + portproxy).
-# Mọi dịch vụ còn lại (ClickHouse, SeaweedFS, Langfuse worker…) chỉ nằm trong mạng nội bộ của Compose.
+# Ghi đè cho project cf-dev: publish ĐÚNG 8 cổng ra LAN (máy code dùng qua IP máy phụ + portproxy).
+# Mọi dịch vụ còn lại (ClickHouse, Langfuse worker…) chỉ nằm trong mạng nội bộ của Compose.
+# SeaweedFS (S3) publish cổng 8333 để web/worker trên máy code lưu ảnh/video bài đăng (COMPOSER-MEDIA, Q-PUB4); S3 có xác thực bằng S3_ACCESS_KEY/S3_SECRET_KEY.
 services:
   postgres:
     ports: ["5433:5432"]
@@ -11,6 +12,8 @@ services:
     ports: ["4000:4000"]
   langfuse-web:
     ports: ["3100:3000"]
+  seaweedfs:
+    ports: ["8333:8333"]
 
   # Hộp thư giả cho dev: nhận email do ứng dụng gửi (quên mật khẩu, lời mời…) và hiển thị trên web.
   # CHỈ định nghĩa ở file dev này — KHÔNG đưa vào docker-compose.yml (nền) hay bất kỳ file staging/production.
