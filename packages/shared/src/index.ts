@@ -95,6 +95,7 @@ export {
 export {
   AI_STEP_FLAGS,
   type AiStep,
+  CAPTION_FLAG,
   DISTILL_FLAG,
   FACT_SLOTS_FLAG,
   FLAG_DEFAULTS,
