@@ -8,6 +8,7 @@ import { localDateTimeToUtc } from './zoned-time';
 export const MAX_POST_CHARS = 63206;
 export const MAX_PRODUCTS = 5;
 export const MAX_MEDIA = 10;
+export const MAX_AI_NOTE_CHARS = 1000;
 const MIN_LEAD_MS = 2 * 60_000;
 const MAX_LEAD_MS = 90 * 86_400_000;
 
@@ -20,6 +21,7 @@ export type PublishFormValue = {
   channelIds: string[];
   productIds: string[];
   mediaIds: string[];
+  aiNote: string | null;
   scheduledAt: Date | null;
 };
 export type PublishFormResult =
@@ -37,6 +39,7 @@ const schema = z.object({
   channelIds: z.array(z.uuid()).max(10),
   productIds: z.array(z.uuid()).max(MAX_PRODUCTS),
   mediaIds: z.array(z.uuid()).max(MAX_MEDIA),
+  aiNote: z.string().max(MAX_AI_NOTE_CHARS),
 });
 
 export function parsePublishForm(
@@ -52,20 +55,22 @@ export function parsePublishForm(
     channelIds: [...new Set(form.getAll('channel').map(text).filter(Boolean))],
     productIds: [...new Set(form.getAll('product').map(text).filter(Boolean))],
     mediaIds: [...new Set(form.getAll('media').map(text).filter(Boolean))],
+    aiNote: text(form.get('aiNote')).replace(/\r\n?/g, '\n').trim(),
   });
   if (!parsed.success) return { ok: false, code: 'invalid' };
   const { intent, id, message, channelIds, productIds, mediaIds } = parsed.data;
+  const aiNote = parsed.data.aiNote === '' ? null : parsed.data.aiNote;
   if (intent === 'draft')
     return {
       ok: true,
-      value: { intent, id, message, channelIds, productIds, mediaIds, scheduledAt: null },
+      value: { intent, id, message, channelIds, productIds, mediaIds, aiNote, scheduledAt: null },
     };
   if (message.trim() === '') return { ok: false, code: 'empty_message' };
   if (channelIds.length === 0) return { ok: false, code: 'no_channel' };
   if (intent === 'publish')
     return {
       ok: true,
-      value: { intent, id, message, channelIds, productIds, mediaIds, scheduledAt: null },
+      value: { intent, id, message, channelIds, productIds, mediaIds, aiNote, scheduledAt: null },
     };
   const at = localDateTimeToUtc(text(form.get('date')), text(form.get('time')), timeZone);
   const lead = at ? at.getTime() - now.getTime() : 0;
@@ -73,6 +78,6 @@ export function parsePublishForm(
     return { ok: false, code: 'invalid_schedule' };
   return {
     ok: true,
-    value: { intent, id, message, channelIds, productIds, mediaIds, scheduledAt: at },
+    value: { intent, id, message, channelIds, productIds, mediaIds, aiNote, scheduledAt: at },
   };
 }

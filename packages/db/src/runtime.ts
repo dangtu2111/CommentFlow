@@ -93,6 +93,7 @@ export {
   claimPublishTargets,
   deletePublishPost,
   getPublishPost,
+  getPublishPostNote,
   listDuePublishWorkspaces,
   listPickableProducts,
   listPublishDrafts,

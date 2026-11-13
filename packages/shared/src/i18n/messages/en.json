@@ -3904,7 +3904,8 @@
       "remove": "Remove {name}",
       "primaryHint": "The first product is the primary one; AI uses these to quote prices when replying to this post's comments. Choosing here confirms the link.",
       "limit": "{count}/{max} products selected",
-      "price": "{price} VND"
+      "price": "{price} VND",
+      "noteHint": "Only the AI reads this note when advising on this post's comments (customers never see it). Saved once the post is published. {count}/{max} characters."
     },
     "schedule": {
       "title": "Schedule",

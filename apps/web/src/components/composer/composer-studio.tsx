@@ -12,7 +12,7 @@ import {
 } from '../../app/app/(guarded)/composer/actions';
 import { cx } from '../../lib/cx';
 import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/post-counters';
-import { MAX_PRODUCTS } from '../../lib/publish-form';
+import { MAX_AI_NOTE_CHARS, MAX_PRODUCTS } from '../../lib/publish-form';
 import { safeHttpsUrl } from '../../lib/safe-url';
 import { appendHashtags, insertAtCursor, parseHttpsLink } from '../../lib/text-insert';
 import type { SuggestionResult } from '../../server/caption-service';
@@ -52,6 +52,8 @@ export type ComposerInitial = {
   message: string;
   channelIds: string[];
   productIds: string[];
+  /** Ghi chú riêng cho AI đã lưu ('' nếu chưa có). */
+  aiNote: string;
   status: 'draft' | 'scheduled';
   date: string;
   time: string;
@@ -130,6 +132,7 @@ export function ComposerStudio({
   const [text, setText] = useState(initial?.message ?? '');
   const [tab, setTab] = useState<ComposerPlatform>('facebook');
   const soon = t('soon');
+  const [aiNote, setAiNote] = useState(initial?.aiNote ?? '');
   const [mediaBusy, setMediaBusy] = useState(false);
   const [mediaList, setMediaList] = useState<ComposerMedia[]>(initialMedia);
   const [pickedIds, setPickedIds] = useState<string[]>(initial?.productIds ?? []);
@@ -742,13 +745,17 @@ export function ComposerStudio({
             </label>
             <textarea
               id={`${textId}-note`}
-              disabled
-              aria-disabled="true"
-              title={soon}
+              name="aiNote"
+              value={aiNote}
+              onChange={(event) => setAiNote(event.target.value)}
+              maxLength={MAX_AI_NOTE_CHARS}
               rows={3}
               placeholder={t('products.notePlaceholder')}
-              className="w-full cursor-not-allowed resize-none rounded-lg bg-surface-container-low p-space-md font-body-sm text-body-sm opacity-60"
+              className="w-full resize-y rounded-lg bg-surface-container-low p-space-md font-body-sm text-body-sm text-on-surface outline-none focus:bg-surface-container"
             />
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              {t('products.noteHint', { count: aiNote.length, max: MAX_AI_NOTE_CHARS })}
+            </p>
             <p className="flex flex-wrap items-center gap-space-xs rounded-lg bg-surface-container-low p-space-sm font-body-sm text-body-sm text-on-surface-variant">
               <Icon name="psychology" size={16} />
               <span>{t('products.rules')}</span>
