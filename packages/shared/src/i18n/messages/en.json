@@ -3864,7 +3864,30 @@
     "media": {
       "title": "Images and video",
       "add": "Add media",
-      "empty": "No files yet. Uploading images and video is not available yet."
+      "empty": "No files yet.",
+      "rules": "Up to 10 images (JPG, PNG, WebP, ≤ 8MB each) or 1 video (MP4, MOV, ≤ 200MB); no mixing images with video.",
+      "notConfigured": "Media upload is off: the server has no file storage configured (MEDIA_S3_* variables — see the owner guide).",
+      "image": "Image",
+      "video": "Video",
+      "uploading": "Uploading {name}",
+      "remove": "Remove {name}",
+      "busy": "Uploading files; save/publish buttons are locked until it finishes.",
+      "error": {
+        "forbidden": "Request denied.",
+        "rate_limited": "Too fast, try again in a moment.",
+        "not_configured": "The server has no file storage configured.",
+        "length_required": "Could not determine the file size.",
+        "unsupported_type": "Only JPG, PNG, WebP images or MP4, MOV video (checked by file content).",
+        "empty": "The file is empty.",
+        "too_large": "File too large (images ≤ 8MB, video ≤ 200MB).",
+        "storage_failed": "File storage rejected the file, try again.",
+        "too_many_unattached": "Too many unused uploads; publish or remove some and retry.",
+        "unavailable": "Could not upload, try again later.",
+        "network": "Connection lost while uploading.",
+        "too_many_images": "At most 10 images per post.",
+        "too_many_videos": "Only 1 video per post.",
+        "mixed": "Do not mix images and video in one post."
+      }
     },
     "products": {
       "title": "Product tagging and AI advisor settings",
@@ -3933,7 +3956,8 @@
       "draft": "Saving…",
       "schedule": "Scheduling…",
       "publish": "Sending…",
-      "note": "Sending your request, please wait and do NOT click again. The page will move on when done."
+      "note": "Sending your request, please wait and do NOT click again. The page will move on when done.",
+      "uploading": "Uploading files; save/publish buttons are locked until it finishes."
     },
     "ai": {
       "loading": "Writing…",

@@ -1,6 +1,12 @@
-import { type ChannelRef, isPlatformError } from '@flow/connectors';
+import {
+  type ChannelRef,
+  isPlatformError,
+  MEDIA_UPLOAD_FAILED,
+  type PostMedia,
+} from '@flow/connectors';
 import type { ClaimedPublishTarget, PublishOutcome } from '@flow/db';
 import type { Logger } from '../logger';
+import { MediaUnavailableError } from './publish-media';
 
 /**
  * POST-PUBLISHING (Q-PUB1): job quét đăng bài đã đến hạn. Cứ 20 giây, với từng workspace có bài đến hạn (không Dừng khẩn cấp): NHẬN mục tiêu (DB thuê + tăng `attempts` TRƯỚC khi gọi nền tảng),
@@ -34,7 +40,13 @@ export type PublishSweepDeps = {
     outcome: PublishOutcome,
     detail: { externalPostId?: string; error?: string },
   ) => Promise<boolean>;
-  publish: (channel: ChannelRef, text: string) => Promise<{ externalId: string }>;
+  publish: (
+    channel: ChannelRef,
+    text: string,
+    media?: PostMedia,
+  ) => Promise<{ externalId: string }>;
+  /** Tải ảnh/video của bài từ kho (`undefined` = bài không có file). Lỗi → `MediaUnavailableError` (chắc chắn chưa đăng). */
+  loadMedia: (workspaceId: string, postId: string) => Promise<PostMedia | undefined>;
   logger: Pick<Logger, 'info' | 'warn' | 'error'>;
 };
 
@@ -45,6 +57,9 @@ type Decision = { outcome: PublishOutcome; error: string };
 
 /** Phân loại lỗi đăng bài. Mặc định (không chắc chắn) là `unknown` — KHÔNG BAO GIỜ suy ra "chưa đăng" khi không chắc. */
 function decide(error: unknown, attempts: number): Decision {
+  // Kho không có/không đọc được file: xảy ra TRƯỚC khi gọi Facebook → chắc chắn chưa đăng.
+  if (error instanceof MediaUnavailableError)
+    return { outcome: 'failed', error: 'media_unavailable' };
   if (isPlatformError(error)) {
     if (error.code === 'PERMISSION') return { outcome: 'failed', error: 'permission' };
     if (error.code === 'TOKEN_EXPIRED') return { outcome: 'failed', error: 'token_expired' };
@@ -52,6 +67,10 @@ function decide(error: unknown, attempts: number): Decision {
       return attempts < PUBLISH_MAX_ATTEMPTS
         ? { outcome: 'retry', error: 'rate_limited' }
         : { outcome: 'failed', error: 'rate_limited' };
+    }
+    if (error.message === MEDIA_UPLOAD_FAILED) {
+      // Tải ảnh lên Page lỗi (ảnh để chưa đăng) → chắc chắn chưa có bài công khai.
+      return { outcome: 'failed', error: 'media_upload_failed' };
     }
     if (REJECTED_BEFORE_SEND.has(error.message))
       return { outcome: 'failed', error: 'invalid_post' };
@@ -77,15 +96,16 @@ async function publishOne(
     return;
   }
   try {
-    const created = await deps.publish(
-      {
-        id: claimed.channelId,
-        workspaceId,
-        platform: 'facebook',
-        externalId: claimed.channelExternalId,
-      },
-      claimed.message,
-    );
+    const media = await deps.loadMedia(workspaceId, claimed.postId);
+    const channel: ChannelRef = {
+      id: claimed.channelId,
+      workspaceId,
+      platform: 'facebook',
+      externalId: claimed.channelExternalId,
+    };
+    const created = media
+      ? await deps.publish(channel, claimed.message, media)
+      : await deps.publish(channel, claimed.message);
     await deps.record(workspaceId, claimed.targetId, 'published', {
       externalPostId: created.externalId,
     });

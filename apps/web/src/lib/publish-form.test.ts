@@ -35,6 +35,7 @@ describe('parsePublishForm', () => {
         message: 'Dòng 1\nDòng 2',
         channelIds: [CH1, CH2],
         productIds: [],
+        mediaIds: [],
         scheduledAt: null,
       },
     });
@@ -154,6 +155,26 @@ describe('parsePublishForm', () => {
       code: 'invalid',
     });
     expect(parsePublishForm(form({ intent: 'draft', product: ['x'] }), ZONE, NOW)).toEqual({
+      ok: false,
+      code: 'invalid',
+    });
+  });
+
+  it('media: bỏ trùng, giữ thứ tự, tối đa 10, id sai → invalid', () => {
+    const mediaId = (n: number) =>
+      `bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb${String(n).padStart(2, '0')}`;
+    const ok = parsePublishForm(
+      form({ intent: 'draft', message: 'x', media: [mediaId(2), mediaId(1), mediaId(2)] }),
+      ZONE,
+      NOW,
+    );
+    expect(ok).toMatchObject({ ok: true, value: { mediaIds: [mediaId(2), mediaId(1)] } });
+    const eleven = Array.from({ length: 11 }, (_, i) => mediaId(i));
+    expect(parsePublishForm(form({ intent: 'draft', media: eleven }), ZONE, NOW)).toEqual({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(parsePublishForm(form({ intent: 'draft', media: ['x'] }), ZONE, NOW)).toEqual({
       ok: false,
       code: 'invalid',
     });

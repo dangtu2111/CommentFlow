@@ -1,0 +1,23 @@
+{
+  "name": "@flow/storage",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Kho lưu file (ảnh/video bài đăng) qua S3 tương thích (SeaweedFS). Chỉ phụ thuộc @flow/shared.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./rules": "./src/media-rules.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1168.0",
+    "@flow/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "vitest": "5.0.5"
+  }
+}

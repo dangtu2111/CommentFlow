@@ -1090,7 +1090,7 @@ async function checkWorkerDirectPrivileges(
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace,
          LATERAL aclexplode(p.proacl) a, w
     WHERE p.proacl IS NOT NULL AND a.grantee = w.oid AND n.nspname IN ('core', 'cf', 'public')
-      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox', 'list_pending_pipeline_comments', 'begin_embedding_switch', 'list_embedding_switch_pending', 'switch_active_embedding', 'list_workspaces_with_pending_pipeline_comments', 'list_due_publish_workspaces')
+      AND NOT (n.nspname = 'cf' AND p.proname IN ('read_channel_token', 'list_stuck_outbox', 'list_pending_pipeline_comments', 'begin_embedding_switch', 'list_embedding_switch_pending', 'switch_active_embedding', 'list_workspaces_with_pending_pipeline_comments', 'list_due_publish_workspaces', 'purge_orphan_media')
                AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname = 'consume_usage' AND a.privilege_type = 'EXECUTE')
       AND NOT (n.nspname = 'core' AND p.proname IN ('create_invoice', 'confirm_invoice_payment', 'void_invoice')
@@ -1185,6 +1185,8 @@ const SWEEP_FUNCTIONS = [
   'list_workspaces_with_pending_pipeline_comments',
   // POST-PUBLISHING (0090): workspace có bài đến hạn đăng, không đang Dừng khẩn cấp; chỉ ngữ cảnh trần của cf_worker.
   'list_due_publish_workspaces',
+  // COMPOSER-MEDIA (0092): dọn file mồ côi; chỉ ngữ cảnh trần của cf_worker.
+  'purge_orphan_media',
 ] as const;
 
 async function checkStuckOutboxFunction(db: Queryable, violations: RlsViolation[]): Promise<void> {

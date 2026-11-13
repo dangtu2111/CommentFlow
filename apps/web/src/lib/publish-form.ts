@@ -7,6 +7,7 @@ import { localDateTimeToUtc } from './zoned-time';
  */
 export const MAX_POST_CHARS = 63206;
 export const MAX_PRODUCTS = 5;
+export const MAX_MEDIA = 10;
 const MIN_LEAD_MS = 2 * 60_000;
 const MAX_LEAD_MS = 90 * 86_400_000;
 
@@ -18,6 +19,7 @@ export type PublishFormValue = {
   message: string;
   channelIds: string[];
   productIds: string[];
+  mediaIds: string[];
   scheduledAt: Date | null;
 };
 export type PublishFormResult =
@@ -34,6 +36,7 @@ const schema = z.object({
   message: z.string().max(MAX_POST_CHARS),
   channelIds: z.array(z.uuid()).max(10),
   productIds: z.array(z.uuid()).max(MAX_PRODUCTS),
+  mediaIds: z.array(z.uuid()).max(MAX_MEDIA),
 });
 
 export function parsePublishForm(
@@ -48,18 +51,28 @@ export function parsePublishForm(
     message: text(form.get('message')).replace(/\r\n?/g, '\n'),
     channelIds: [...new Set(form.getAll('channel').map(text).filter(Boolean))],
     productIds: [...new Set(form.getAll('product').map(text).filter(Boolean))],
+    mediaIds: [...new Set(form.getAll('media').map(text).filter(Boolean))],
   });
   if (!parsed.success) return { ok: false, code: 'invalid' };
-  const { intent, id, message, channelIds, productIds } = parsed.data;
+  const { intent, id, message, channelIds, productIds, mediaIds } = parsed.data;
   if (intent === 'draft')
-    return { ok: true, value: { intent, id, message, channelIds, productIds, scheduledAt: null } };
+    return {
+      ok: true,
+      value: { intent, id, message, channelIds, productIds, mediaIds, scheduledAt: null },
+    };
   if (message.trim() === '') return { ok: false, code: 'empty_message' };
   if (channelIds.length === 0) return { ok: false, code: 'no_channel' };
   if (intent === 'publish')
-    return { ok: true, value: { intent, id, message, channelIds, productIds, scheduledAt: null } };
+    return {
+      ok: true,
+      value: { intent, id, message, channelIds, productIds, mediaIds, scheduledAt: null },
+    };
   const at = localDateTimeToUtc(text(form.get('date')), text(form.get('time')), timeZone);
   const lead = at ? at.getTime() - now.getTime() : 0;
   if (!at || lead < MIN_LEAD_MS || lead > MAX_LEAD_MS)
     return { ok: false, code: 'invalid_schedule' };
-  return { ok: true, value: { intent, id, message, channelIds, productIds, scheduledAt: at } };
+  return {
+    ok: true,
+    value: { intent, id, message, channelIds, productIds, mediaIds, scheduledAt: at },
+  };
 }

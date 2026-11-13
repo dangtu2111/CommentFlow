@@ -34,6 +34,7 @@ const sweep = (
     record: (workspaceId, targetId, outcome, detail) =>
       db.withJob(workspaceId, (tx) => recordPublishResult(tx, targetId, outcome, detail)),
     publish: publish as never,
+    loadMedia: async () => undefined,
     logger: quiet,
   });
 

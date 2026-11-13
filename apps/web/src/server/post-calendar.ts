@@ -7,8 +7,10 @@ import {
   listPickableProducts,
   listPostsForWeek,
   listPublishDrafts,
+  listPublishPostMedia,
   listPublishPostProductIds,
   listPublishPostsForWeek,
+  type MediaAssetRow,
   type PickableProduct,
   type PublishPostItem,
   schema,
@@ -33,6 +35,8 @@ export type ComposerData = {
   /** Sản phẩm đang bán để chọn gắn vào bài, và các sản phẩm đã gắn vào bài đang sửa. */
   products: PickableProduct[];
   selectedProductIds: string[];
+  /** Ảnh/video đã gắn vào bài đang sửa (theo thứ tự). */
+  media: MediaAssetRow[];
 };
 
 const FALLBACK_TIME_ZONE = 'UTC';
@@ -93,13 +97,14 @@ export async function loadComposer(
   postId?: string,
 ): Promise<ComposerData> {
   return getDb().withActor(workspaceId, userId, async (tx) => {
-    const [timeZone, channels, post, products, selectedProductIds] = await Promise.all([
+    const [timeZone, channels, post, products, selectedProductIds, media] = await Promise.all([
       workspaceTimeZone(tx, workspaceId),
       listChannels(tx, workspaceId),
       postId ? getPublishPost(tx, workspaceId, postId) : Promise.resolve(null),
       listPickableProducts(tx, workspaceId),
       postId ? listPublishPostProductIds(tx, workspaceId, postId) : Promise.resolve([]),
+      postId ? listPublishPostMedia(tx, workspaceId, postId) : Promise.resolve([]),
     ]);
-    return { channels, timeZone, post, products, selectedProductIds };
+    return { channels, timeZone, post, products, selectedProductIds, media };
   });
 }

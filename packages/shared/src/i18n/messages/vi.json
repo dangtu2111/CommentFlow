@@ -3864,7 +3864,30 @@
     "media": {
       "title": "Hình ảnh và video",
       "add": "Thêm media",
-      "empty": "Chưa có tệp nào. Tải ảnh và video lên chưa khả dụng."
+      "empty": "Chưa có tệp nào.",
+      "rules": "Tối đa 10 ảnh (JPG, PNG, WebP, mỗi ảnh ≤ 8MB) hoặc 1 video (MP4, MOV, ≤ 200MB); không trộn ảnh với video.",
+      "notConfigured": "Chưa bật tải ảnh/video: máy chủ chưa cấu hình kho lưu file (biến MEDIA_S3_* — xem hướng dẫn cho chủ dự án).",
+      "image": "Ảnh",
+      "video": "Video",
+      "uploading": "Đang tải {name}",
+      "remove": "Bỏ {name}",
+      "busy": "Đang tải tệp lên, các nút lưu/đăng tạm khóa cho tới khi xong.",
+      "error": {
+        "forbidden": "Yêu cầu bị từ chối.",
+        "rate_limited": "Bạn thao tác quá nhanh, thử lại sau giây lát.",
+        "not_configured": "Máy chủ chưa cấu hình kho lưu file.",
+        "length_required": "Không xác định được kích thước tệp.",
+        "unsupported_type": "Chỉ nhận ảnh JPG, PNG, WebP hoặc video MP4, MOV (kiểm bằng nội dung tệp).",
+        "empty": "Tệp rỗng.",
+        "too_large": "Tệp quá lớn (ảnh ≤ 8MB, video ≤ 200MB).",
+        "storage_failed": "Kho lưu file không nhận được tệp, thử lại.",
+        "too_many_unattached": "Có quá nhiều tệp tải lên chưa dùng; hãy đăng hoặc bỏ bớt rồi thử lại.",
+        "unavailable": "Chưa tải lên được, thử lại sau.",
+        "network": "Mất kết nối khi tải lên.",
+        "too_many_images": "Tối đa 10 ảnh mỗi bài.",
+        "too_many_videos": "Chỉ được 1 video mỗi bài.",
+        "mixed": "Không trộn ảnh với video trong cùng một bài."
+      }
     },
     "products": {
       "title": "Gắn sản phẩm và cấu hình AI tư vấn",
@@ -3933,7 +3956,8 @@
       "draft": "Đang lưu…",
       "schedule": "Đang lên lịch…",
       "publish": "Đang gửi…",
-      "note": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại. Trang sẽ tự chuyển khi xong."
+      "note": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại. Trang sẽ tự chuyển khi xong.",
+      "uploading": "Đang tải tệp lên, các nút lưu/đăng tạm khóa cho tới khi xong."
     },
     "ai": {
       "loading": "Đang soạn…",
