@@ -3993,7 +3993,8 @@
         "not_configured": "Chưa cấu hình AI soạn caption.",
         "unavailable": "Chưa gọi được AI lúc này, thử lại sau.",
         "rate_limited": "Bạn bấm quá nhanh hoặc quá nhiều lần. Hãy đợi vài giây rồi thử lại."
-      }
+      },
+      "hint": "Gõ ý tưởng hoặc nội dung vào ô bên dưới rồi bấm một nút: AI sẽ gợi ý, bạn chọn dùng hay bỏ qua."
     }
   },
   "calendar": {
