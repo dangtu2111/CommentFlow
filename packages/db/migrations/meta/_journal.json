@@ -666,6 +666,13 @@
       "when": 1796260000000,
       "tag": "0094_publish_post_ai_note",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1796350000000,
+      "tag": "0095_update_publish_post",
+      "breakpoints": true
     }
   ]
 }

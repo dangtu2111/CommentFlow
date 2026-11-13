@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { calendarHref } from '../../lib/calendar-week';
 import { cx } from '../../lib/cx';
 import { Icon, type IconName } from '../ui/icon';
+import { DayDropZone, type DragKind, DragPost } from './dnd';
 
 /**
  * Lưới tuần 7 cột của Lịch đăng (design/stitch/calendar.html). Hai loại bài THẬT đặt đúng ngày/giờ theo múi giờ workspace: bài đã có trên Facebook (`posts`) và bài đăng từ CommentFlow
@@ -28,6 +29,11 @@ const STATUS_STYLE: Record<PublishPostStatus, string> = {
   partial: 'bg-tertiary-fixed text-on-tertiary-fixed',
   failed: 'bg-error-container text-on-error-container',
 };
+
+/** Chỉ bài ĐÃ LÊN LỊCH mới kéo được sang ngày khác. */
+const dragKindOf = (status: PublishPostStatus): DragKind | null =>
+  status === 'scheduled' ? SCHEDULED : null;
+const SCHEDULED: DragKind = 'scheduled';
 
 export async function WeekBoard({
   days,
@@ -56,9 +62,11 @@ export async function WeekBoard({
           const posts = byDay[day] ?? [];
           const own = publishByDay[day] ?? [];
           return (
-            <li
+            <DayDropZone
               key={day}
-              aria-current={isToday ? 'date' : undefined}
+              day={day}
+              weekStart={weekStart}
+              isToday={isToday}
               className={cx(
                 'flex min-h-48 flex-col gap-space-sm rounded-xl p-space-sm',
                 isToday ? 'bg-primary-fixed/40 shadow-sm' : 'bg-surface-container-lowest shadow-sm',
@@ -92,41 +100,44 @@ export async function WeekBoard({
                     const open = item.id === openPostId;
                     return (
                       <li key={item.id}>
-                        <Link
-                          href={calendarHref({
-                            week: weekStart,
-                            post: item.id,
-                            ...(platform ? { platform } : {}),
-                          })}
-                          aria-current={open ? 'true' : undefined}
-                          className={cx(
-                            'flex flex-col gap-1 rounded-lg p-space-sm transition-colors',
-                            open
-                              ? 'bg-secondary-fixed'
-                              : 'bg-surface-container-low hover:bg-surface-container',
-                          )}
-                        >
-                          <span className="flex items-center justify-between gap-1 font-label-sm text-label-sm text-on-surface-variant">
-                            <span className="flex items-center gap-1">
-                              <Icon name="public" size={14} />
-                              {item.time}
+                        <DragPost id={item.id} day={day} kind={dragKindOf(item.status)}>
+                          <Link
+                            draggable={false}
+                            href={calendarHref({
+                              week: weekStart,
+                              post: item.id,
+                              ...(platform ? { platform } : {}),
+                            })}
+                            aria-current={open ? 'true' : undefined}
+                            className={cx(
+                              'flex flex-col gap-1 rounded-lg p-space-sm transition-colors',
+                              open
+                                ? 'bg-secondary-fixed'
+                                : 'bg-surface-container-low hover:bg-surface-container',
+                            )}
+                          >
+                            <span className="flex items-center justify-between gap-1 font-label-sm text-label-sm text-on-surface-variant">
+                              <span className="flex items-center gap-1">
+                                <Icon name="public" size={14} />
+                                {item.time}
+                              </span>
+                              <span
+                                className={cx(
+                                  'whitespace-nowrap rounded px-1.5 py-0.5',
+                                  STATUS_STYLE[item.status],
+                                )}
+                              >
+                                {t(`status.${item.status}`)}
+                              </span>
                             </span>
-                            <span
-                              className={cx(
-                                'whitespace-nowrap rounded px-1.5 py-0.5',
-                                STATUS_STYLE[item.status],
-                              )}
-                            >
-                              {t(`status.${item.status}`)}
+                            <span className="line-clamp-2 font-body-sm text-body-sm text-on-surface">
+                              {item.message}
                             </span>
-                          </span>
-                          <span className="line-clamp-2 font-body-sm text-body-sm text-on-surface">
-                            {item.message}
-                          </span>
-                          <span className="font-label-sm text-label-sm text-on-surface-variant">
-                            {item.targets.map((target) => target.channelName).join(', ')}
-                          </span>
-                        </Link>
+                            <span className="font-label-sm text-label-sm text-on-surface-variant">
+                              {item.targets.map((target) => target.channelName).join(', ')}
+                            </span>
+                          </Link>
+                        </DragPost>
                       </li>
                     );
                   })}
@@ -182,7 +193,7 @@ export async function WeekBoard({
                 <Icon name="add" size={12} />
                 {t('add')}
               </Link>
-            </li>
+            </DayDropZone>
           );
         })}
       </ol>

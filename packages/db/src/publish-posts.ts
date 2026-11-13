@@ -145,6 +145,19 @@ export async function listPublishPostProductIds(
   return r.rows.map((row) => row.product_id);
 }
 
+/**
+ * Sửa nhanh nội dung và/hoặc giờ của MỘT bài nháp/đã lên lịch (Lịch: kéo thả, hộp thoại chỉnh sửa); không đụng kênh/media/sản phẩm/ghi chú.
+ * `scheduledAt = null` → nháp; có giờ → lên lịch. Chỉ Owner (42501); đầu vào/giờ sai 22023; bài không còn sửa được 55000.
+ */
+export async function updatePublishPost(
+  tx: Database,
+  input: { id: string; message: string; scheduledAt: Date | null },
+): Promise<void> {
+  await tx.execute(
+    sql`SELECT cf.update_publish_post(${input.id}::uuid, ${input.message}, ${input.scheduledAt ? input.scheduledAt.toISOString() : null}::timestamptz)`,
+  );
+}
+
 /** Hủy lịch (`scheduled` → `draft`). `false` nếu không còn `scheduled` hoặc đã có mục tiêu đi tiếp. */
 export async function cancelPublishSchedule(tx: Database, id: string): Promise<boolean> {
   const r = await tx.execute<{ ok: boolean }>(

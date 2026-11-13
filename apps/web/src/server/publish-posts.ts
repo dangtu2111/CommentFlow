@@ -1,3 +1,6 @@
+import type { PublishPostItem } from '@flow/db/runtime';
+import type { CalendarEditValue } from '../lib/calendar-edit-form';
+import { moveToDay } from '../lib/calendar-move';
 import { weekStartOf } from '../lib/calendar-week';
 import type { PublishFormValue } from '../lib/publish-form';
 import { utcToLocalParts } from '../lib/zoned-time';
@@ -16,7 +19,9 @@ export type PublishNotice =
   | 'not_editable'
   | 'invalid_channel'
   | 'invalid_schedule'
-  | 'invalid';
+  | 'invalid'
+  | 'moved'
+  | 'updated';
 
 /** Kết quả một thao tác của Owner: thông báo + nơi chuyển tới (`week` = thứ Hai của tuần chứa giờ đăng, để Lịch mở đúng tuần). */
 export type PublishActionResult = {
@@ -44,6 +49,13 @@ export type PublishPostDeps = {
   publishNow: (session: PublishSession, id: string) => Promise<boolean>;
   cancelSchedule: (session: PublishSession, id: string) => Promise<boolean>;
   remove: (session: PublishSession, id: string) => Promise<boolean>;
+  /** Đọc một bài của workspace (để kéo thả giữ nguyên giờ/nội dung). */
+  get: (session: PublishSession, id: string) => Promise<PublishPostItem | null>;
+  /** Sửa nhanh nội dung/giờ (hàm DB `update_publish_post`). */
+  update: (
+    session: PublishSession,
+    input: { id: string; message: string; scheduledAt: Date | null },
+  ) => Promise<void>;
   warn: (event: { event: string; reason: string }) => void;
 };
 
@@ -113,6 +125,57 @@ export function createPublishPostService(deps: PublishPostDeps) {
           : { notice: 'unavailable', postId, to: 'composer' };
       } catch (error) {
         return { ...fail(error, 'composer'), postId };
+      }
+    },
+
+    /** Kéo bài ĐÃ LÊN LỊCH sang ngày khác trên Lịch: giữ nguyên giờ địa phương của cửa hàng, đổi ngày. */
+    async move(
+      session: PublishSession,
+      id: string,
+      day: string,
+      timeZone: string,
+      now: Date = new Date(),
+    ): Promise<PublishActionResult> {
+      try {
+        const post = await deps.get(session, id);
+        if (!post || post.status !== 'scheduled' || !post.scheduledAt) {
+          return { notice: 'not_editable', to: 'calendar' };
+        }
+        const next = moveToDay(post.scheduledAt, day, timeZone, now);
+        if (!next) return { notice: 'invalid_schedule', to: 'calendar', week: weekStartOf(day) };
+        await deps.update(session, { id, message: post.message, scheduledAt: next });
+        return { notice: 'moved', postId: id, to: 'calendar', week: weekStartOf(day) };
+      } catch (error) {
+        return fail(error, 'calendar');
+      }
+    },
+
+    /** Lưu thay đổi từ hộp thoại bài trên Lịch (nội dung và/hoặc giờ). Lên lịch/đổi giờ cần cờ đăng bài bật (như Biên tập). */
+    async edit(
+      session: PublishSession,
+      value: CalendarEditValue,
+      timeZone: string,
+    ): Promise<PublishActionResult> {
+      if (value.scheduledAt && !deps.publishEnabled()) {
+        return { notice: 'publish_disabled', to: 'calendar' };
+      }
+      try {
+        await deps.update(session, {
+          id: value.id,
+          message: value.message,
+          scheduledAt: value.scheduledAt,
+        });
+        const week = value.scheduledAt
+          ? weekStartOf(utcToLocalParts(value.scheduledAt, timeZone).date)
+          : undefined;
+        return {
+          notice: value.scheduledAt ? 'updated' : 'saved',
+          postId: value.id,
+          to: 'calendar',
+          ...(week ? { week } : {}),
+        };
+      } catch (error) {
+        return fail(error, 'calendar');
       }
     },
 

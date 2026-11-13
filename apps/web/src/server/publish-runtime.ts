@@ -1,8 +1,10 @@
 import {
   cancelPublishSchedule,
   deletePublishPost,
+  getPublishPost,
   publishPostNow,
   savePublishPost,
+  updatePublishPost,
 } from '@flow/db/runtime';
 import { getDb } from './db';
 import { createPublishPostService } from './publish-posts';
@@ -31,6 +33,12 @@ export function publishPostService() {
       db.withActor(session.workspaceId, session.userId, (tx) => cancelPublishSchedule(tx, id)),
     remove: (session, id) =>
       db.withActor(session.workspaceId, session.userId, (tx) => deletePublishPost(tx, id)),
+    get: (session, id) =>
+      db.withActor(session.workspaceId, session.userId, (tx) =>
+        getPublishPost(tx, session.workspaceId, id),
+      ),
+    update: (session, input) =>
+      db.withActor(session.workspaceId, session.userId, (tx) => updatePublishPost(tx, input)),
     warn: (event) => console.error(JSON.stringify(event)),
   });
 }

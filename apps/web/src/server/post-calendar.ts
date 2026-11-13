@@ -81,6 +81,17 @@ export async function loadCalendar(
   });
 }
 
+/** Ảnh/video của một bài (để hộp thoại bài trên Lịch xem trước). Chỉ ĐỌC; RLS: chỉ Owner. */
+export async function loadPublishMedia(
+  workspaceId: string,
+  userId: string,
+  postId: string,
+): Promise<MediaAssetRow[]> {
+  return getDb().withActor(workspaceId, userId, (tx) =>
+    listPublishPostMedia(tx, workspaceId, postId),
+  );
+}
+
 /** Kết quả đăng hiện tại của một bài (chỉ ĐỌC; RLS: chỉ Owner thấy bài của workspace mình). Không thấy bài → `null`. */
 export async function loadPublishOutcome(
   workspaceId: string,

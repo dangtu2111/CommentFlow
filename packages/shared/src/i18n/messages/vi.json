@@ -3965,7 +3965,9 @@
       "invalid": "Dữ liệu chưa hợp lệ (nội dung quá dài hoặc có giá trị sai).",
       "empty_message": "Cần nhập nội dung trước khi lên lịch hoặc đăng.",
       "no_channel": "Cần chọn ít nhất một kênh trước khi lên lịch hoặc đăng.",
-      "rate_limited": "Bạn bấm quá nhanh nên lần bấm sau bị chặn. Lệnh trước đó có thể đã được gửi: hãy mở Lịch đăng kiểm tra trước khi bấm lại để tránh đăng trùng."
+      "rate_limited": "Bạn bấm quá nhanh nên lần bấm sau bị chặn. Lệnh trước đó có thể đã được gửi: hãy mở Lịch đăng kiểm tra trước khi bấm lại để tránh đăng trùng.",
+      "moved": "Đã chuyển bài sang ngày mới (giữ nguyên giờ đăng).",
+      "updated": "Đã lưu thay đổi của bài."
     },
     "pending": {
       "draft": "Đang lưu…",
@@ -4088,7 +4090,9 @@
       "invalid_post": "Nội dung bài không hợp lệ.",
       "rate_limited": "Facebook đang giới hạn tốc độ; đã thử lại nhiều lần.",
       "unknown_result": "Không rõ bài đã đăng chưa. Hãy kiểm tra trên Facebook trước khi đăng lại.",
-      "lease_expired": "Không rõ bài đã đăng chưa (quá lâu không có kết quả). Hãy kiểm tra trên Facebook."
+      "lease_expired": "Không rõ bài đã đăng chưa (quá lâu không có kết quả). Hãy kiểm tra trên Facebook.",
+      "media_unavailable": "Không đọc được ảnh/video của bài từ kho lưu file.",
+      "media_upload_failed": "Tải ảnh lên Facebook không thành công; bài chưa được đăng."
     },
     "drafts": {
       "title": "Bản nháp",
@@ -4114,6 +4118,27 @@
       "failed": "Đăng bài THẤT BẠI: {reason} Bài chưa lên Facebook; bạn có thể sửa rồi đăng lại ở Biên tập.",
       "unknown": "Chưa rõ bài đã đăng chưa: {reason}",
       "timeout": "Chưa có kết quả sau 2 phút. Hãy kiểm tra Page trên Facebook và trạng thái bài ở Lịch trước khi đăng lại (worker có thể chưa chạy)."
+    },
+    "modal": {
+      "title": "Bài đăng",
+      "content": "Nội dung",
+      "when": "Ngày giờ đăng",
+      "date": "Ngày",
+      "time": "Giờ",
+      "zone": "Múi giờ của cửa hàng: {zone}",
+      "prefilled": "Ngày đã chọn theo vị trí bạn thả",
+      "preview": "Xem trước",
+      "noChannel": "Bài chưa chọn kênh. Mở trình soạn đầy đủ để chọn kênh.",
+      "fullEditorHint": "Kênh, ảnh/video, sản phẩm và ghi chú AI sửa ở trình soạn đầy đủ.",
+      "publishOff": "Đăng bài chưa được bật trên máy chủ nên chưa thể lên lịch hay đổi giờ; vẫn lưu nháp được.",
+      "saveDraft": "Lưu nháp",
+      "schedule": "Lên lịch đăng",
+      "saveChanges": "Lưu thay đổi"
+    },
+    "dnd": {
+      "dragHint": "Kéo sang ngày khác để đổi lịch",
+      "dropHere": "Thả vào đây",
+      "moving": "Đang chuyển bài…"
     }
   }
 }

@@ -112,6 +112,7 @@ export {
   publishPostNow,
   recordPublishResult,
   savePublishPost,
+  updatePublishPost,
 } from './publish-posts';
 export {
   createAbbreviation,
