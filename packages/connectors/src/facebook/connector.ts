@@ -99,6 +99,11 @@ export interface FacebookConnector extends PlatformConnector {
    */
   fetchCommentAuthorPicture(channel: ChannelRef, commentExternalId: string): Promise<string | null>;
   /**
+   * Đăng MỘT bài chữ lên feed của Page (POST-PUBLISHING): `POST /{page-id}/feed` với `message`, token trong THÂN POST. Từ chối TRƯỚC khi gọi mạng nếu nội dung rỗng hoặc quá
+   * 63.206 ký tự. Phản hồi 2xx nhưng thiếu `id` → `UNKNOWN` (có thể ĐÃ đăng): nơi gọi KHÔNG ĐƯỢC tự thử lại. Lỗi quyền/token/tốc độ phân loại như mọi lệnh Graph.
+   */
+  publishPost(channel: ChannelRef, text: string): Promise<{ externalId: string }>;
+  /**
    * Quyền ĐÃ CẤP và hiệu lực của token Page đã lưu (`GET /debug_token`, xác thực bằng token ứng dụng): `scopes` chỉ gồm quyền áp cho Page này
    * (xét `granular_scopes`). Chỉ GET; token Page nằm trong query như mọi lệnh đọc Graph (không log).
    */
@@ -279,6 +284,8 @@ function httpUrlOrNull(value: string | undefined): string | null {
 }
 
 const successSchema = z.object({ success: z.literal(true) });
+/** Giới hạn độ dài bài đăng Facebook (số của thiết kế/nền tảng). */
+const MAX_POST_CHARS = 63206;
 const createdSchema = z.object({ id: z.string().min(1) });
 const subscribedAppsSchema = z.object({
   data: z.array(z.object({ id: z.string(), subscribed_fields: z.array(z.string()).optional() })),
@@ -562,6 +569,16 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       });
       const created = createdSchema.safeParse(body);
       // 2xx nhưng không có id: có thể ĐÃ đăng → UNKNOWN (job sẽ kiểm trước khi gửi lại).
+      if (!created.success) throw badResponse();
+      return { externalId: created.data.id };
+    },
+
+    async publishPost(channel, text) {
+      const message = text.trim();
+      if (message === '' || text.length > MAX_POST_CHARS)
+        throw fail('UNKNOWN', 'facebook_invalid_post');
+      const body = await call(channel, 'POST', `${graphId(channel.externalId)}/feed`, { message });
+      const created = createdSchema.safeParse(body);
       if (!created.success) throw badResponse();
       return { externalId: created.data.id };
     },

@@ -551,6 +551,53 @@ describe('getTokenPermissions / checkConnection — quyền ĐÃ CẤP của tok
   });
 });
 
+describe('POST-PUBLISHING publishPost — POST /{page-id}/feed', () => {
+  const POST_CREATED = { id: `${PAGE_ID}_5000000000005` };
+
+  it('đăng chữ lên feed của Page: token + appsecret_proof trong THÂN POST, URL sạch; trả id bài', async () => {
+    const { connector, calls } = harness([json(POST_CREATED)]);
+    const result = await connector.publishPost(channel, 'Khai trương cửa hàng 🎉');
+    expect(result).toEqual({ externalId: POST_CREATED.id });
+    expect(calls).toHaveLength(1);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('POST');
+    expect(call.url.pathname).toBe(`/v27.0/${PAGE_ID}/feed`);
+    expect(call.url.search).toBe('');
+    const body = bodyOf(call);
+    expect(body.get('message')).toBe('Khai trương cửa hàng 🎉');
+    expect(body.get('access_token')).toBe(TOKEN);
+    expect(body.get('appsecret_proof')).toBe(proofOf(TOKEN));
+  });
+
+  it('nội dung rỗng / chỉ khoảng trắng / quá 63.206 ký tự → từ chối TRƯỚC khi gọi mạng', async () => {
+    for (const bad of ['', '   \t ', 'a'.repeat(63207)]) {
+      const { connector, calls } = harness([]);
+      expect((await failureOf(connector.publishPost(channel, bad))).message).toBe(
+        'facebook_invalid_post',
+      );
+      expect(calls).toHaveLength(0);
+    }
+  });
+
+  it('phản hồi 200 thiếu id / sai hình dạng → UNKNOWN (có thể ĐÃ đăng: nơi gọi không được thử lại)', async () => {
+    for (const body of [{}, { id: '' }, { success: true }]) {
+      const { connector } = harness([json(body)]);
+      expect((await failureOf(connector.publishPost(channel, 'x'))).code).toBe('UNKNOWN');
+    }
+  });
+
+  it('lỗi quyền (#200/#10) → PERMISSION; token hết hạn (#190) → TOKEN_EXPIRED; chặn tốc độ (#4) → RATE_LIMIT', async () => {
+    const perm = harness([json(graphError(200), 403)]);
+    expect((await failureOf(perm.connector.publishPost(channel, 'x'))).code).toBe('PERMISSION');
+    const expiredToken = harness([json(graphError(190), 400)]);
+    expect((await failureOf(expiredToken.connector.publishPost(channel, 'x'))).code).toBe(
+      'TOKEN_EXPIRED',
+    );
+    const limited = harness([json(graphError(4), 400, { 'x-app-usage': APP_USAGE_HEADER })]);
+    expect((await failureOf(limited.connector.publishPost(channel, 'x'))).code).toBe('RATE_LIMIT');
+  });
+});
+
 describe('COMMENT-AUTHOR-AVATAR fetchCommentAuthorPicture — GET /{comment-id}?fields=from{picture}', () => {
   const COMMENT = `${PAGE_ID}_3000000000003_4000000000004`;
   const picture = (url: string, silhouette: boolean) => ({

@@ -77,6 +77,27 @@ export {
   startTrial,
 } from './plans';
 export {
+  type ClaimedPublishTarget,
+  cancelPublishSchedule,
+  claimPublishTargets,
+  deletePublishPost,
+  getPublishPost,
+  listDuePublishWorkspaces,
+  listPublishDrafts,
+  listPublishPostsForWeek,
+  PUBLISH_MAX_LEAD_DAYS,
+  PUBLISH_MAX_MESSAGE_CHARS,
+  PUBLISH_MIN_LEAD_MINUTES,
+  type PublishOutcome,
+  type PublishPostItem,
+  type PublishPostStatus,
+  type PublishTarget,
+  type PublishTargetStatus,
+  publishPostNow,
+  recordPublishResult,
+  savePublishPost,
+} from './publish-posts';
+export {
   createAbbreviation,
   deleteAbbreviation,
   listAbbreviations,
@@ -395,6 +416,11 @@ export {
   type SavePolicyFactInput,
   savePolicyFact,
 } from './queries/policy-facts';
+export {
+  type CalendarPost,
+  listPostsForWeek,
+  MAX_CALENDAR_POSTS,
+} from './queries/post-calendar';
 export { hydratePostFields, type PostHydration } from './queries/post-hydrate';
 export { createPostNote } from './queries/post-notes';
 export { linkProductsToPosts } from './queries/post-products';

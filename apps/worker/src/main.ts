@@ -8,6 +8,7 @@ import {
 } from '@flow/ai';
 import { createTokenCipher, type FacebookConnector, parseTokenKeys } from '@flow/connectors';
 import {
+  claimPublishTargets,
   countEmbeddingModels,
   countRepliesForCommentThread,
   createDb,
@@ -15,6 +16,8 @@ import {
   getEmbeddingState,
   getMergeWindowSeconds,
   hydratePostFields,
+  listDuePublishWorkspaces,
+  recordPublishResult,
   setCommentAuthorAvatar,
 } from '@flow/db';
 import { createFlags } from '@flow/saas-core';
@@ -48,6 +51,7 @@ import { createPingHandler } from './jobs/ping';
 import { createPipelineHandler } from './jobs/pipeline-job';
 import { startPipelineSweep } from './jobs/pipeline-sweep';
 import { createPostHydrator } from './jobs/post-hydrate';
+import { PUBLISH_BATCH, PUBLISH_MAX_WORKSPACES, startPublishSweep } from './jobs/publish-sweep';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
 import { createShopifySyncHandler } from './jobs/shopify-sync';
@@ -367,6 +371,29 @@ async function main(): Promise<void> {
       'POLLING_ENABLED bật nhưng chưa có hàm liệt kê kênh (POLLING-CHANNEL-LIST): quét bù KHÔNG chạy',
     );
   }
+  // POST-PUBLISHING (Q-PUB1): đăng bài đã đến hạn lên Fanpage. Cờ `FB_PUBLISH_ENABLED` MẶC ĐỊNH TẮT; bật mà thiếu connector Facebook thì dừng khởi động với lỗi rõ ràng (không chạy bản giả).
+  let stopPublish: (() => void) | undefined;
+  if (config.publishEnabled) {
+    const publishPost = (
+      facebookConnector as { publishPost?: FacebookConnector['publishPost'] } | undefined
+    )?.publishPost?.bind(facebookConnector);
+    if (!publishPost) {
+      throw new Error(
+        'FB_PUBLISH_ENABLED=true cần FB_CONNECTOR_ENABLED=true (connector Facebook + META_APP_ID/META_APP_SECRET/TOKEN_ENC_KEYS)',
+      );
+    }
+    stopPublish = startPublishSweep({
+      listDueWorkspaces: () =>
+        db.withSystem((tx) => listDuePublishWorkspaces(tx, PUBLISH_MAX_WORKSPACES)),
+      claim: (workspaceId) =>
+        db.withJob(workspaceId, (tx) => claimPublishTargets(tx, PUBLISH_BATCH)),
+      record: (workspaceId, targetId, outcome, detail) =>
+        db.withJob(workspaceId, (tx) => recordPublishResult(tx, targetId, outcome, detail)),
+      publish: publishPost,
+      logger,
+    });
+    logger.info('đăng bài lên Facebook: BẬT (FB_PUBLISH_ENABLED=true)');
+  }
   // SEND-SWEEP + HIDE-SWEEP (ADR 008/009): mỗi 60 giây xử lý lại yêu cầu gửi/ẩn kẹt qua đúng job gửi/ẩn (kiểm lại R1–R3/H1–H3).
   // Dùng chung sổ connector `registry` với `send`/`hide`.
   const stopSweep = startSweep({ db, registry, logger });
@@ -380,6 +407,7 @@ async function main(): Promise<void> {
     stopWorkspaceDeletion();
     stopSweep();
     stopPipelineSweep?.();
+    stopPublish?.();
     await flags.stop();
     await boss.stop({ graceful: true });
     await db.close();

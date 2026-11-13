@@ -2,18 +2,20 @@
  * Điều hướng của khung ứng dụng (docs/08 §3, design/stitch/comments.png). Thuần, không phụ thuộc React/DB để test được
  * và dùng được ở cả Server Component (lọc theo vai trò) lẫn Client Component (đánh dấu mục đang mở).
  *
- * Thanh bên chỉ có MỤC CHÍNH, chia hai nhóm: "Điều hướng vận hành" và "Hệ thống & trí tuệ". Trang con gom vào trang
+ * Thanh bên chỉ có MỤC CHÍNH, chia ba nhóm: "Điều hướng vận hành", "Biên tập & lịch đăng" (COMPOSER-CALENDAR-UI) và "Hệ thống & trí tuệ". Trang con gom vào trang
  * cha (`parent`), URL giữ nguyên: Cơ sở kiến thức có khung `KbFrame`, Bình luận và Cài đặt có thanh tab (`sectionTabsFor`).
  * CHỈ liệt kê trang ĐÃ TỒN TẠI (không tạo liên kết chết): Tin nhắn, Khách tiềm năng, Báo cáo thêm khi trang ra đời.
  * Quyền xem trang vẫn do chính trang kiểm (`requireAppUser`); lọc ở đây chỉ để không hiện liên kết vô ích.
  */
 export type NavRole = 'owner' | 'staff';
-export type NavGroupKey = 'operations' | 'system';
+export type NavGroupKey = 'operations' | 'publishing' | 'system';
 export type NavItemKey =
   | 'comments'
   | 'posts'
   | 'leads'
   | 'reports'
+  | 'composer'
+  | 'calendar'
   | 'aiSent'
   | 'kb'
   | 'tryAi'
@@ -56,6 +58,9 @@ const ENTRIES: readonly Entry[] = [
   // Khách tiềm năng (FR-082) và Báo cáo (FR-083): chỉ đọc; Staff thấy Kanban của workspace (RLS) và số liệu cá nhân.
   { key: 'leads', href: '/app/leads', group: 'operations', roles: BOTH },
   { key: 'reports', href: '/app/reports', group: 'operations', roles: BOTH },
+  // Biên tập bài viết + Lịch đăng (COMPOSER-CALENDAR-UI, Q-CMP1): giao diện trước chức năng; chỉ Owner (đăng bài hướng ra ngoài).
+  { key: 'composer', href: '/app/composer', group: 'publishing', roles: OWNER },
+  { key: 'calendar', href: '/app/calendar', group: 'publishing', roles: OWNER },
   // Cơ sở kiến thức (trang trung tâm, QUKP1) + các trang con (khung `KbFrame`); chỉ Owner.
   { key: 'kb', href: '/app/kb', group: 'system', roles: OWNER },
   { key: 'tryAi', href: '/app/try-ai', group: 'system', roles: OWNER, parent: 'kb' },
@@ -99,7 +104,7 @@ const ENTRIES: readonly Entry[] = [
 /** Mục cha hiện thanh tab ở đầu trang (Cơ sở kiến thức có `KbFrame`, Cài đặt có `SettingsFrame` — cột trái). */
 const TAB_SECTIONS: readonly NavItemKey[] = ['comments'];
 
-const GROUP_ORDER: readonly NavGroupKey[] = ['operations', 'system'];
+const GROUP_ORDER: readonly NavGroupKey[] = ['operations', 'publishing', 'system'];
 
 /** Mục đang mở: đúng đường dẫn hoặc trang con (bỏ query/hash, dấu `/` cuối); không khớp tiền tố giả. */
 export function isNavActive(pathname: string, href: string): boolean {
