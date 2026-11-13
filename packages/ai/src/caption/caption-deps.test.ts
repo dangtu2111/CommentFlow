@@ -51,3 +51,42 @@ describe('createCaptionDepsFromEnv — không có bản giả khi thiếu cấu 
     ).rejects.toMatchObject({ code: 'LLM_UNAVAILABLE' });
   });
 });
+
+describe('createCaptionDepsFromEnv — cổng cờ ở MỖI lần gọi', () => {
+  it('cờ tắt giữa chừng → cả caption lẫn hashtag ném LLM_UNAVAILABLE, KHÔNG gọi LLM', async () => {
+    let enabled = true;
+    const fetchImpl = vi.fn();
+    const deps = createCaptionDepsFromEnv({
+      env,
+      db,
+      isEnabled: async () => enabled,
+      fetchImpl: fetchImpl as never,
+    });
+    enabled = false;
+    const input = { workspaceId: 'w1', draft: 'ý tưởng' };
+    await expect(deps.captioner?.suggestCaption(input)).rejects.toMatchObject({
+      code: 'LLM_UNAVAILABLE',
+    });
+    await expect(deps.captioner?.suggestHashtags(input)).rejects.toMatchObject({
+      code: 'LLM_UNAVAILABLE',
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('cờ bật nhưng LiteLLM lỗi → lỗi được ném tiếp (không nuốt), nhật ký chỉ có siêu dữ liệu', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchImpl = vi.fn(async () => new Response('{}', { status: 500 }));
+    const deps = createCaptionDepsFromEnv({
+      env,
+      db: { withWorkspace: async (_w: string, fn: (tx: unknown) => unknown) => fn({}) } as never,
+      isEnabled: async () => true,
+      fetchImpl: fetchImpl as never,
+    });
+    const input = { workspaceId: '11111111-1111-4111-8111-111111111111', draft: 'NỘI DUNG RIÊNG' };
+    await expect(deps.captioner?.suggestCaption(input)).rejects.toBeDefined();
+    await expect(deps.captioner?.suggestHashtags(input)).rejects.toBeDefined();
+    expect(logged).toHaveBeenCalled();
+    expect(JSON.stringify(logged.mock.calls)).not.toContain('NỘI DUNG RIÊNG');
+    logged.mockRestore();
+  });
+});
