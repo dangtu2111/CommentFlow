@@ -34,7 +34,6 @@ export const KB_SUBNAV_GROUPS: ReadonlyArray<{ key: KbSubnavGroupKey; items: KbS
       { key: 'kbDictionary', href: '/app/kb/abbreviations', group: 'tuning' },
       { key: 'readiness', href: '/app/readiness', group: 'tuning' },
       { key: 'tryAi', href: '/app/try-ai', group: 'tuning' },
-      { key: 'kbTestset', href: '/app/kb-testset', group: 'tuning' },
       { key: 'kbPublish', href: '/app/kb-publish', group: 'tuning' },
     ],
   },

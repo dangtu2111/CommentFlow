@@ -7,7 +7,7 @@ import { KbFrameView } from './kb-frame-view';
 
 export type KbActive = NavItemKey;
 
-const TEST_HREF = '/app/kb-testset';
+const TEST_HREF = '/app/readiness#test-lab';
 const PUBLISH_HREF = '/app/kb-publish';
 const READINESS_HREF = '/app/readiness';
 
@@ -25,7 +25,6 @@ export const KB_RAIL_ICONS: Partial<Record<NavItemKey, IconName>> = {
   kbGaps: 'quiz',
   readiness: 'verified',
   tryAi: 'science',
-  kbTestset: 'flaky',
   kbPublish: 'history_edu',
   kbShop: 'storefront',
   kbPolicies: 'policy',

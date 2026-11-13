@@ -1785,7 +1785,7 @@
   },
   "readiness": {
     "details": "Xem chi tiết độ sẵn sàng",
-    "pageTitle": "Độ sẵn sàng của AI",
+    "pageTitle": "Độ sẵn sàng AI & Kiểm thử",
     "title": "Độ sẵn sàng của AI",
     "subtitle": "AI cần đủ thông tin shop thì mới trả lời đúng. Điểm dưới {min}% hoặc thiếu mục bắt buộc thì chưa bật được chế độ Tự động.",
     "basisNote": "Điểm tính từ dữ liệu bạn đã nhập (sản phẩm, chính sách, FAQ, thông tin shop) theo ngôn ngữ đang dùng; chưa đo bằng AI thật.",
@@ -1858,6 +1858,93 @@
     "error": {
       "title": "Không tải được độ sẵn sàng",
       "body": "Đã có lỗi khi đọc dữ liệu. Hãy thử lại sau."
+    },
+    "lab": {
+      "hero": {
+        "title": "Độ sẵn sàng của AI Core",
+        "engine": "AI Guardian Engine",
+        "outOf": "/ 100 điểm",
+        "bands": {
+          "unsafe": "Chưa an toàn",
+          "basic": "Hỗ trợ & duyệt trước",
+          "ready": "Sẵn sàng tự động"
+        },
+        "range": {
+          "unsafe": "Chưa an toàn (0–50)",
+          "basic": "Cơ bản (51–{max})",
+          "ready": "Tự động ({min}–100)"
+        },
+        "needMore": "Cần thêm {points} điểm để mở chế độ Tự động trả lời.",
+        "needRequired": "Còn thiếu mục bắt buộc: bổ sung đủ {total} mục để mở chế độ Tự động.",
+        "readyNote": "Dữ liệu đã đạt ngưỡng {min} điểm và đủ mục bắt buộc; bạn có thể bật chế độ Tự động."
+      },
+      "pillars": {
+        "policies": {
+          "title": "Chính sách",
+          "sub": "Giao hàng, đổi trả, bảo hành, thanh toán"
+        },
+        "products": {
+          "title": "Sản phẩm & Giá",
+          "sub": "Giá, tồn kho, size, màu"
+        },
+        "shop": {
+          "title": "Thông tin cửa hàng",
+          "sub": "Giờ làm việc, liên hệ, địa chỉ"
+        },
+        "faq": {
+          "title": "FAQ & Khuyến mãi",
+          "sub": "Câu hỏi thường gặp, chương trình giảm giá"
+        },
+        "answerable": "{done}/{total} câu mẫu trả lời được",
+        "complete": "{percent}% hoàn tất",
+        "fix": "Bổ sung",
+        "allGood": "Đã đủ dữ liệu cho các câu mẫu."
+      },
+      "coach": {
+        "title": "AI Coach khuyến nghị",
+        "subtitle": "Làm lần lượt các việc dưới đây để nâng điểm sẵn sàng.",
+        "none": "Không còn việc nào cần bổ sung.",
+        "required": "Bắt buộc:"
+      },
+      "test": {
+        "title": "Bộ câu kiểm thử hồi quy",
+        "badge": "Regression Suite",
+        "subtitle": "Mô phỏng comment/inbox thật của khách để đo chất lượng trả lời trước khi bật Tự động.",
+        "addTitle": "Thêm câu test (mỗi dòng một câu)",
+        "run": "Chạy bộ câu kiểm thử",
+        "running": "Đang chạy…",
+        "empty": "Chưa có kết quả. Nhập câu hỏi rồi bấm \"Chạy bộ câu kiểm thử\".",
+        "search": "Tìm câu hỏi…",
+        "noMatch": "Không có câu nào khớp bộ lọc.",
+        "tabs": {
+          "all": "Tất cả ({count})",
+          "pass": "Đạt ({count})",
+          "fail": "Không đạt ({count})",
+          "error": "Lỗi ({count})"
+        },
+        "stats": {
+          "accuracy": "Tỷ lệ chính xác",
+          "failed": "Câu cần xem lại",
+          "gate": "Cổng xuất bản"
+        },
+        "gate": {
+          "pass": "Đạt",
+          "fail": "Chưa đạt"
+        },
+        "columns": {
+          "scenario": "Kịch bản & câu hỏi",
+          "expected": "Hành động mong đợi",
+          "reply": "AI trả lời thực tế",
+          "verdict": "Kết quả"
+        }
+      },
+      "sandbox": {
+        "title": "Trình thử nghiệm tức thì (Live Sandbox)",
+        "body": "Gõ một câu khách hay hỏi để xem AI trả lời ngay với kiến thức hiện tại."
+      },
+      "nav": {
+        "title": "Độ sẵn sàng AI & Kiểm thử"
+      }
     }
   },
   "kbTestset": {
@@ -1956,10 +2043,6 @@
       "tryAi": {
         "title": "Thử AI",
         "body": "Gõ một câu khách hỏi để xem AI sẽ trả lời gì. Không trừ lượt."
-      },
-      "kbTestset": {
-        "title": "Kiểm thử",
-        "body": "Chạy bộ câu hỏi mẫu để chắc AI vẫn đúng trước khi xuất bản."
       },
       "kbPublish": {
         "title": "Phiên bản",
@@ -2219,13 +2302,12 @@
       "reports": "Báo cáo",
       "kb": "Cơ sở kiến thức",
       "tryAi": "Thử AI",
-      "readiness": "Độ sẵn sàng AI",
+      "readiness": "Độ sẵn sàng AI & Kiểm thử",
       "automation": "Cài đặt tự gửi",
       "aiSent": "AI đã gửi",
       "productImport": "Nhập sản phẩm",
       "kbGaps": "Câu hỏi chưa trả lời",
       "kbPublish": "Phiên bản kiến thức",
-      "kbTestset": "Câu kiểm thử",
       "spamRules": "Quy tắc spam",
       "channels": "Kênh",
       "members": "Thành viên",

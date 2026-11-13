@@ -109,7 +109,7 @@ describe('FR-040 trang con gom vào trang cha', () => {
 
   it('FR-040 mục cha có đường dẫn của mọi trang con (đánh dấu "đang mở", URL giữ nguyên)', () => {
     const subs = ['/app/try-ai', '/app/readiness', '/app/kb-gaps', '/app/kb-publish'];
-    subs.push('/app/kb-testset', '/app/products/import');
+    subs.push('/app/products/import');
     for (const sub of subs) expect(item('owner', 'kb')?.matchHrefs, sub).toContain(sub);
     expect(item('owner', 'settings')?.matchHrefs).toEqual(
       expect.arrayContaining(['/app/settings', '/app/channels', '/app/members']),
