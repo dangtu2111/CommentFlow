@@ -20,6 +20,7 @@ const stagingSchema = z.object({
   CF_STAGING_DB_HOSTS: optional,
   CF_STAGING_DB_NAME: optional,
   CF_CONFIRM_STAGING_MIGRATE: optional,
+  CF_STAGING_SOLO_OPERATOR: optional,
   GITHUB_ACTIONS: optional,
   GITHUB_WORKFLOW_REF: optional,
 });

@@ -1,8 +1,8 @@
 # Bản chạy thật cá nhân trên máy ảo (cf-staging, chỉ mình chủ dự án dùng)
 
-**Tóm tắt.** Chạy CommentFlow thật (web + worker + Postgres + Valkey riêng, dữ liệu sạch) trên máy ảo, ra internet qua **Cloudflare Tunnel cố định**, dùng chung dịch vụ AI/kho ảnh của `cf-dev` trên cùng máy (LiteLLM, ml, SeaweedFS). Đi **đường CI có duyệt** của dự án: project Compose `cf-staging`, migration + deploy bằng GitHub Actions (self-hosted runner, bạn duyệt từng bước). Đây là "bản thật" của bạn; khi có khách thật sẽ dựng `production` riêng (VPS) theo `docs/15`.
+**Tóm tắt.** Chạy CommentFlow thật (web + worker + Postgres + Valkey riêng, dữ liệu sạch) trên máy ảo, ra internet qua **Cloudflare Tunnel cố định**, dùng chung dịch vụ AI/kho ảnh của `cf-dev` trên cùng máy (LiteLLM, ml, SeaweedFS). Project Compose `cf-staging`. Repo **PUBLIC** nên **KHÔNG dùng runner GitHub tự host** (người lạ mở PR có thể chạy mã trên máy ảo): migration + deploy bằng **script trên máy ảo** `infra/scripts/staging-deploy.sh` (Q-SOLO2). Nếu sau này repo chuyển private thì có thể quay về đường CI có duyệt (mục cuối). Đây là "bản thật" của bạn; khi có khách thật sẽ dựng `production` riêng (VPS) theo `docs/15`.
 
-Quyết định: `docs/plans/quyet-dinh/qsolo1.md`. Từng bước dựng nền (A–F) vẫn nằm ở `docs/STAGING_SETUP.md`; tài liệu này nói **phần riêng của bản cá nhân** và thứ tự làm.
+Quyết định: `docs/plans/quyet-dinh/qsolo1.md` và `qsolo2.md`. Từng bước dựng nền (A–F) vẫn nằm ở `docs/STAGING_SETUP.md`; tài liệu này nói **phần riêng của bản cá nhân** và thứ tự làm.
 
 ## Kiến trúc
 
@@ -23,29 +23,28 @@ Hệ quả khi dùng chung: tắt `cf-dev` hoặc `ml`/LiteLLM thì bản thật
 - `docker-compose.staging.yml`: nối dịch vụ dùng chung + biến AI/ảnh/Facebook cho web và worker.
 - `env.cf-staging.example`, `staging-add-shared-secrets.sh`, `staging-backup.sh`.
 
-### 1. Bạn: nền theo `docs/STAGING_SETUP.md`
-| Bước | Việc | Ghi chú riêng cho bản cá nhân |
-|---|---|---|
-| A | Cài runner GitHub tự host (user `gh-runner`, nhãn `cf-staging`) | máy ảo; repo phải private |
-| B | `infra/scripts/gen-staging-env.sh --domain <tên-miền>` | tên miền = địa chỉ web của bạn, ví dụ `app.<miền-của-bạn>` |
-| C | Cloudflare: thêm tên miền, tạo Tunnel có tên, route `<tên-miền>` → `http://web:3000`, lấy token | điền `CLOUDFLARE_TUNNEL_TOKEN` vào `.env.cf-staging` |
-| C8 | SMTP | tạm dùng Mailpit: `SMTP_HOST=host.docker.internal`, `SMTP_PORT=1025`, `SMTP_FROM=CommentFlow <no-reply@local>`, `SMTP_SECURE=false` |
-| D | Biến/secret/environment trên GitHub | `CF_STAGING_DB_NAME=commentflow`, `CF_STAGING_DB_HOSTS=127.0.0.1:5434`, người duyệt = bạn |
+### 1. Nền (một lần)
+| Việc | Cách làm |
+|---|---|
+| Tên miền + Cloudflare Tunnel có tên | thêm tên miền vào Cloudflare, tạo Tunnel `commentflow`, route `app.<miền>` → `http://web:3000`, lấy token |
+| File biến `.env.cf-staging` | `bash ~/CommentFlow/infra/scripts/gen-staging-env.sh --domain app.<miền>` (bạn chạy; khóa ngẫu nhiên MỚI, riêng cho bản thật) |
+| Token Cloudflare | điền bằng lệnh nhập ẩn: `ssh -t cf 'read -rsp "Token: " T; echo; sed -i "s|^CLOUDFLARE_TUNNEL_TOKEN=.*|CLOUDFLARE_TUNNEL_TOKEN=$T|" ~/cf-staging/.env.cf-staging; unset T'` |
+| SMTP tạm (Mailpit của cf-dev) | `SMTP_HOST=host.docker.internal`, `SMTP_PORT=1025`, `SMTP_FROM="CommentFlow <no-reply@local>"`, `SMTP_SECURE=false` |
+| Bí mật dùng chung (khóa LiteLLM riêng, khóa S3, bucket) | `bash ~/CommentFlow/infra/scripts/staging-add-shared-secrets.sh --budget 10` |
+| Meta | `META_APP_ID`, `META_APP_SECRET` (nhập ẩn, như token), `META_WEBHOOK_VERIFY_TOKEN` đã được script sinh sẵn; bật `FB_CONNECTOR_ENABLED=true` khi sẵn sàng |
 
-### 2. Bạn chạy trên máy ảo (hoặc nhờ tôi chạy qua `ssh cf` khi bạn đồng ý; không in bí mật)
+### 2. Dựng lần đầu (trên máy ảo, repo công khai nên clone không cần khóa)
 ```
-bash ~/CommentFlow/infra/scripts/staging-add-shared-secrets.sh --budget 10
+git clone https://github.com/dangtu2111/CommentFlow.git ~/cf-staging/src
+bash ~/cf-staging/src/infra/scripts/staging-deploy.sh init                    # Postgres + Valkey, đánh dấu DB
+bash ~/cf-staging/src/infra/scripts/staging-deploy.sh deploy --apply-migrations
 ```
-Thêm `LITELLM_API_KEY` riêng (trần 10 USD/30 ngày), `MEDIA_S3_*`, tạo bucket `cf-media-staging`. Rồi mở `.env.cf-staging` (quyền 600) và điền, theo nhu cầu:
-```
-META_APP_ID=...            META_APP_SECRET=...        META_WEBHOOK_VERIFY_TOKEN=<chuỗi mới, KHÔNG dùng lại của dev>
-FB_CONNECTOR_ENABLED=true  FB_PUBLISH_ENABLED=false   # bật FB_PUBLISH_ENABLED=true sau khi thử ổn trên Page thử
-```
+`deploy --apply-migrations`: lấy mã `origin/main` → build web + worker → **sao lưu** → liệt kê migration chờ → **hỏi mã xác nhận** `commentflow@<số cuối>` (gõ tay) → áp → worker lên trước, web sau → bật cloudflared khi có token. Hàng đợi (pg-boss) tạo tự động ở lần chạy worker đầu; nếu cần tạo tay: `staging-deploy.sh queue --apply`.
 
-### 3. Migration rồi deploy (GitHub → Actions, bạn duyệt)
-1. `Migrate staging`: nhập `staging` và mã xác nhận `commentflow@<số migration cuối>` (số cuối: `ls packages/db/migrations | tail -2`). Job **dry-run** → đọc danh sách migration chờ → duyệt job **migrate**.
-2. `Deploy staging`: nhập `staging` → build image, chạy worker trước rồi web, kiểm sức khỏe.
-3. Kiểm: `https://<tên-miền>` mở được trang đăng nhập; `docker compose -p cf-staging ps` đều `healthy`.
+Kiểm: `https://app.<miền>` hiện trang đăng nhập; `staging-deploy.sh status` đều `healthy`.
+
+### 3. (Không dùng) GitHub Actions
+Workflow `Migrate staging` / `Deploy staging` và runner tự host **không dùng** khi repo public (xem mục cuối).
 
 ### 4. Lần đầu dùng
 1. Đăng ký tài khoản Owner (thư xác minh đọc ở Mailpit `http://<IP máy ảo>:8025`), tạo workspace.
@@ -67,13 +66,15 @@ insert into core.feature_flag_overrides (flag_key, workspace_id, enabled, reason
 
 ## Cập nhật dần (mỗi tính năng mới)
 1. Merge PR vào `main` như hiện nay (CI xanh).
-2. GitHub → Actions → `Migrate staging` (nếu PR có migration) → duyệt dry-run, đọc, duyệt migrate.
-3. `Deploy staging` → duyệt. Worker lên trước, web sau; image cũ vẫn còn trên máy.
-4. **Lùi bản:** chạy lại `Deploy staging` từ **commit cũ** (chọn nhánh/commit cũ khi bấm Run; hoặc `IMAGE_TAG=<sha-cũ>` rồi `docker compose ... up -d --no-build web worker` trên máy ảo). Migration KHÔNG tự lùi: mọi migration của dự án chỉ-thêm và có đường lùi viết ở đầu file; lùi DB là thao tác tay có chủ đích.
-5. Trước migration lớn: `bash ~/CommentFlow/infra/scripts/staging-backup.sh`.
+2. Trên máy ảo (hoặc nhờ tôi chạy qua `ssh cf`): `bash ~/cf-staging/src/infra/scripts/staging-deploy.sh deploy` — build, sao lưu, **liệt kê migration chờ**. Nếu có migration: chạy lại với `--apply-migrations`, đọc danh sách rồi gõ mã xác nhận.
+3. **Lùi bản:** `staging-deploy.sh rollback <sha12-cũ>` (image cũ còn trên máy; xem `docker images cf/web`). Migration KHÔNG tự lùi: mọi migration của dự án chỉ-thêm và có đường lùi viết ở đầu file; lùi DB là thao tác tay có chủ đích (khôi phục từ bản sao lưu).
+4. Trước migration lớn: `bash ~/cf-staging/src/infra/scripts/staging-backup.sh` (deploy cũng tự sao lưu).
 
 ## Việc còn mở khi dùng thật
 - **Thư thật:** Mailpit không gửi ra ngoài; quên mật khẩu/đổi email dùng được nhưng bạn đọc thư ở Mailpit.
 - **Sao lưu ngoài máy ảo:** chép `~/cf-backups` sang nơi khác định kỳ.
 - **Ổ đĩa:** máy ảo ~63 GB, còn ít; dọn image cũ (`docker image prune`) khi cần.
 - **Langfuse:** để mặc định tắt; nếu bật cần khóa riêng (đừng dùng khóa của dev).
+
+## Nếu sau này repo chuyển private
+Có thể dùng đường CI có duyệt (`docs/STAGING_SETUP.md` A–F: runner `gh-runner`, environment `staging`/`staging-migrate`, workflow `Migrate staging` → `Deploy staging`). Chế độ `CF_STAGING_SOLO_OPERATOR` chỉ là lối đi cho tới lúc đó; khi có khách thật dựng `production` riêng trên VPS.

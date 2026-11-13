@@ -155,6 +155,11 @@ export type StagingMigrateInput = {
   githubActions: string | undefined;
   /** Giá trị GITHUB_WORKFLOW_REF. */
   workflowRef: string | undefined;
+  /**
+   * Giá trị CF_STAGING_SOLO_OPERATOR (SOLO-DEPLOY, Q-SOLO2): chỉ đúng chữ `true` mới bật. Dùng cho bản chạy thật cá nhân khi repo PUBLIC nên KHÔNG dùng runner GitHub tự host:
+   * bỏ yêu cầu "đang ở workflow migrate-staging.yml trên GitHub Actions" và NGƯỢC LẠI mọi cổng khác giữ nguyên (APP_ENV=staging, production bị từ chối, đúng tên DB, host:cổng trong danh sách, mã xác nhận khi áp thật).
+   */
+  soloOperator?: string | undefined;
   /** Giá trị CF_CONFIRM_STAGING_MIGRATE. */
   confirmation: string | undefined;
   entries: MigrationEntry[];
@@ -177,7 +182,12 @@ export function assertStagingMigrateAllowed(input: StagingMigrateInput): {
     throw new AppError('FORBIDDEN', 'Từ chối: APP_ENV phải đúng là "staging".');
   }
   // Chỉ chống chạy NHẦM từ máy dev/nhánh khác; kẻ sửa được workflow vẫn phải vượt pg_hba + secret của environment.
-  if (input.githubActions !== 'true' || !input.workflowRef?.endsWith(ALLOWED_WORKFLOW_REF_SUFFIX)) {
+  // Chế độ người vận hành duy nhất (`soloOperator === 'true'`) thay lớp này bằng việc chạy TRÊN máy ảo với khóa admin chỉ nằm ở đó.
+  const solo = input.soloOperator === 'true';
+  if (
+    !solo &&
+    (input.githubActions !== 'true' || !input.workflowRef?.endsWith(ALLOWED_WORKFLOW_REF_SUFFIX))
+  ) {
     throw new AppError(
       'FORBIDDEN',
       'Từ chối: chỉ chạy trong workflow migrate-staging.yml của nhánh main trên GitHub Actions.',
