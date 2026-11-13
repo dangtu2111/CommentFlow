@@ -37,6 +37,8 @@ export type StagingMigrateEnv = {
   CF_STAGING_DB_HOSTS?: string | undefined;
   CF_STAGING_DB_NAME?: string | undefined;
   CF_CONFIRM_STAGING_MIGRATE?: string | undefined;
+  /** `true` = người vận hành duy nhất chạy trên máy ảo (bỏ yêu cầu GitHub Actions; mọi cổng khác giữ nguyên). */
+  CF_STAGING_SOLO_OPERATOR?: string | undefined;
   GITHUB_ACTIONS?: string | undefined;
   GITHUB_WORKFLOW_REF?: string | undefined;
 };
@@ -80,6 +82,7 @@ export function guardStagingFromEnv(
     expectedDatabase: env.CF_STAGING_DB_NAME,
     githubActions: env.GITHUB_ACTIONS,
     workflowRef: env.GITHUB_WORKFLOW_REF,
+    soloOperator: env.CF_STAGING_SOLO_OPERATOR,
     confirmation: env.CF_CONFIRM_STAGING_MIGRATE,
     entries,
     requireConfirmation: options.requireConfirmation,

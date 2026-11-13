@@ -389,6 +389,66 @@ describe('cổng bổ sung (verifier-security)', () => {
   });
 });
 
+describe('chế độ người vận hành duy nhất (SOLO-DEPLOY, Q-SOLO2)', () => {
+  const solo = { ...base, soloOperator: 'true', githubActions: undefined, workflowRef: undefined };
+
+  it('bật bằng đúng chữ "true": không cần GitHub Actions; các cổng khác vẫn đủ', () => {
+    expect(assertStagingMigrateAllowed(solo)).toEqual({
+      databaseName: 'cf_staging',
+      host: 'db.staging.internal',
+    });
+    expect(
+      assertStagingMigrateAllowed({ ...solo, confirmation: undefined, requireConfirmation: false })
+        .databaseName,
+    ).toBe('cf_staging');
+  });
+
+  it('giá trị khác "true" (hoa/thường, 1, yes, rỗng) KHÔNG bật → vẫn đòi GitHub Actions', () => {
+    for (const soloOperator of [undefined, '', 'TRUE', 'True', '1', 'yes', 'false']) {
+      expect(codeOf(() => assertStagingMigrateAllowed({ ...solo, soloOperator }))).toBe(
+        'FORBIDDEN',
+      );
+    }
+  });
+
+  it('KHÔNG nới gì khác: production, APP_ENV sai, tên DB sai, host lạ, thiếu/sai mã xác nhận đều bị từ chối', () => {
+    for (const over of [
+      { appEnv: 'production' },
+      { appEnv: 'prod' },
+      { appEnv: 'dev' },
+      { appEnv: undefined },
+      { expectedDatabase: 'cf_other' },
+      { expectedDatabase: undefined },
+      { allowedHosts: 'khac.example:5432' },
+      { allowedHosts: undefined },
+      { confirmation: undefined },
+      { confirmation: 'cf_staging@0001' },
+      { adminUrl: undefined },
+    ]) {
+      expect(
+        codeOf(() => assertStagingMigrateAllowed({ ...solo, ...over })),
+        JSON.stringify(over),
+      ).toMatch(/FORBIDDEN|CONFIG_INVALID/);
+    }
+    expect(
+      codeOf(() =>
+        assertStagingMigrateAllowed({
+          ...solo,
+          adminUrl: `postgresql://u:${SECRET}@db.staging.internal:5432/cf_prod_copy`,
+          expectedDatabase: 'cf_prod_copy',
+          confirmation: 'cf_prod_copy@0002',
+        }),
+      ),
+    ).toBe('FORBIDDEN');
+  });
+
+  it('thông báo lỗi vẫn không lộ bí mật ở chế độ này', () => {
+    const msg = messageOf(() => assertStagingMigrateAllowed({ ...solo, confirmation: 'sai' }));
+    expect(msg).not.toContain(SECRET);
+    expect(msg).not.toContain('db.staging.internal');
+  });
+});
+
 describe('verifyAppliedHashes', () => {
   const hashed = ENTRIES.map((e) => ({ ...e, hash: `h${e.idx}` }));
   const row = (i: number) => ({ hash: `h${i}`, createdAt: ENTRIES[i]?.when ?? 0 });
