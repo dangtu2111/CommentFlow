@@ -5,6 +5,7 @@ import { NoticeBanner } from '../../../../components/composer/notice-banner';
 import { calendarHref } from '../../../../lib/calendar-week';
 import { parsePublishNotice } from '../../../../lib/publish-notice';
 import { utcToLocalParts } from '../../../../lib/zoned-time';
+import { captionNotReady } from '../../../../server/caption-runtime';
 import { loadComposer } from '../../../../server/post-calendar';
 import { publishEnabled } from '../../../../server/publish-runtime';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -52,6 +53,7 @@ export default async function ComposerPage({ searchParams }: { searchParams: Sea
   if (postId && (!post || (post.status !== 'draft' && post.status !== 'scheduled'))) {
     redirect(`${calendarHref({})}?n=not_editable`);
   }
+  const aiReason = await captionNotReady(workspace.id).catch(() => 'missing_service' as const);
   const local = post?.scheduledAt ? utcToLocalParts(post.scheduledAt, data.timeZone) : null;
   return (
     <main className="app-page app-page-wide">
@@ -64,6 +66,7 @@ export default async function ComposerPage({ searchParams }: { searchParams: Sea
         <ComposerStudio
           timeZone={data.timeZone}
           publishEnabled={publishEnabled()}
+          aiReason={aiReason}
           channels={data.channels.map((channel) => ({
             id: channel.id,
             name: channel.name,
