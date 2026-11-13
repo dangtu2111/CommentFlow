@@ -12,9 +12,27 @@
 
 # Anchor chung CHỈ gồm biến không phải thông tin đăng nhập DB: mỗi service tự nhận URL DB của role mình (ADR 011 §3) —
 # web chỉ cf_app/cf_auth, worker chỉ cf_worker (không DATABASE_URL: worker không đọc biến này).
+# Dịch vụ dùng chung (LiteLLM, ml, SeaweedFS S3) của project cf-dev CÙNG MÁY ẢO: truy cập qua cổng đã publish trên máy ảo bằng `host.docker.internal` (không nối mạng Docker của cf-dev
+# để tên `postgres`/`valkey` của hai project không lẫn nhau). Khóa/URL ghi đè được bằng .env.cf-staging; để trống/tắt thì tính năng AI/ảnh-video tắt kèm lý do (không bản giả).
 x-app-env: &app-env
   APP_ENV: staging
   TOKEN_ENC_KEYS: ${TOKEN_ENC_KEYS:-}
+  LITELLM_BASE_URL: ${LITELLM_BASE_URL:-http://host.docker.internal:4000}
+  LITELLM_API_KEY: ${LITELLM_API_KEY:-}
+  CLASSIFY_LLM_MODEL: ${CLASSIFY_LLM_MODEL:-cf-classify}
+  DRAFT_LLM_MODEL: ${DRAFT_LLM_MODEL:-cf-draft}
+  REWRITE_LLM_MODEL: ${REWRITE_LLM_MODEL:-cf-classify}
+  DISTILL_LLM_MODEL: ${DISTILL_LLM_MODEL:-cf-draft}
+  CAPTION_LLM_MODEL: ${CAPTION_LLM_MODEL:-cf-draft}
+  ML_URL: ${ML_URL:-http://host.docker.internal:8001}
+  ML_EMBED_ENABLED: ${ML_EMBED_ENABLED:-true}
+  ML_RERANK_ENABLED: ${ML_RERANK_ENABLED:-true}
+  MEDIA_S3_ENDPOINT: ${MEDIA_S3_ENDPOINT:-http://host.docker.internal:8333}
+  MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET:-cf-media-staging}
+  MEDIA_S3_ACCESS_KEY: ${MEDIA_S3_ACCESS_KEY:-}
+  MEDIA_S3_SECRET_KEY: ${MEDIA_S3_SECRET_KEY:-}
+  FB_CONNECTOR_ENABLED: ${FB_CONNECTOR_ENABLED:-false}
+  FB_PUBLISH_ENABLED: ${FB_PUBLISH_ENABLED:-false}
 
 services:
   postgres:
@@ -31,6 +49,7 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
       valkey: { condition: service_healthy }
+    extra_hosts: ["host.docker.internal:host-gateway"]
     environment:
       <<: *app-env
       DATABASE_URL: postgresql://cf_app:${CF_APP_PASSWORD:?}@postgres:5432/${CF_APP_DATABASE:?}
@@ -61,8 +80,11 @@ services:
     mem_limit: 512m
     depends_on:
       postgres: { condition: service_healthy }
+    extra_hosts: ["host.docker.internal:host-gateway"]
     environment:
       <<: *app-env
+      META_APP_ID: ${META_APP_ID:-}
+      META_APP_SECRET: ${META_APP_SECRET:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       WORKER_PORT: "3001"
       # Role cf_worker (ADR 011): CHỈ worker nhận mật khẩu này; web không có biến CF_WORKER_PASSWORD/DATABASE_WORKER_URL.
