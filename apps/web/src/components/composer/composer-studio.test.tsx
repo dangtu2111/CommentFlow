@@ -164,7 +164,15 @@ describe('ComposerStudio', () => {
     const none = render();
     expect(none).toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*Gắn sản phẩm/s);
     expect(none).toContain('Cửa hàng chưa có sản phẩm');
-    const products = [{ id: 'pr1', name: 'Áo thun basic', sku: 'AT1', priceVnd: 199000 }];
+    const products = [
+      {
+        id: 'pr1',
+        name: 'Áo thun basic',
+        sku: 'AT1',
+        priceVnd: 199000,
+        imageUrl: 'https://cdn.shopify.com/a.jpg',
+      },
+    ];
     const some = render({ products });
     expect(some).not.toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*Gắn sản phẩm/s);
     const editing = render({
@@ -181,5 +189,28 @@ describe('ComposerStudio', () => {
     });
     expect(editing).toMatch(/<input[^>]*name="product"[^>]*value="pr1"/);
     expect(editing).toContain('Áo thun basic');
+    expect(editing).toContain('src="https://cdn.shopify.com/a.jpg"');
+    const unsafe = render({
+      products: [
+        {
+          id: 'pr1',
+          name: 'Áo thun basic',
+          sku: null,
+          priceVnd: null,
+          imageUrl: 'http://x.vn/a.jpg',
+        },
+      ],
+      initial: {
+        id: 'p1',
+        message: 'x',
+        channelIds: [],
+        productIds: ['pr1'],
+        status: 'draft',
+        date: '',
+        time: '',
+      },
+    });
+    expect(unsafe).toContain('Áo thun basic');
+    expect(unsafe).not.toContain('http://x.vn/a.jpg');
   });
 });

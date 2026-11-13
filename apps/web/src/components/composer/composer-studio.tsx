@@ -11,6 +11,7 @@ import {
 import { cx } from '../../lib/cx';
 import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/post-counters';
 import { MAX_PRODUCTS } from '../../lib/publish-form';
+import { safeHttpsUrl } from '../../lib/safe-url';
 import { Icon, type IconName } from '../ui/icon';
 
 /**
@@ -33,6 +34,7 @@ export type ComposerProduct = {
   name: string;
   sku: string | null;
   priceVnd: number | null;
+  imageUrl: string | null;
 };
 
 /** Bài đang sửa (từ `?id=`); bài mới không có. Giờ lên lịch đã đổi sang ngày/giờ ĐỊA PHƯƠNG của cửa hàng. */
@@ -71,6 +73,33 @@ const card =
   'flex flex-col gap-space-md rounded-xl bg-surface-container-lowest p-space-lg shadow-sm';
 const actionBtn =
   'inline-flex items-center gap-space-xs rounded-lg px-space-md py-space-sm font-title-sm text-title-sm transition-colors';
+
+/** Ảnh nhỏ của sản phẩm (chỉ https; không có/không hợp lệ → biểu tượng thay thế). */
+function ProductThumb({ url, size }: { url: string | null; size: 'sm' | 'md' }) {
+  const src = safeHttpsUrl(url);
+  const box = size === 'md' ? 'h-10 w-10' : 'h-6 w-6';
+  return (
+    <span
+      className={cx(
+        'flex shrink-0 items-center justify-center overflow-hidden rounded bg-surface-container-high text-on-surface-variant',
+        box,
+      )}
+    >
+      {src ? (
+        // biome-ignore lint/performance/noImgElement: ảnh CDN của nguồn sản phẩm (không qua next/image, tên miền do CSP kiểm soát)
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Icon name="sell" size={size === 'md' ? 18 : 12} />
+      )}
+    </span>
+  );
+}
 
 export function ComposerStudio({
   channels,
@@ -481,6 +510,7 @@ export function ComposerStudio({
                   className="inline-flex items-center gap-1 rounded-full bg-secondary-fixed px-space-sm py-1 font-label-md text-label-md text-on-secondary-fixed"
                 >
                   <input type="hidden" name="product" value={product.id} />
+                  <ProductThumb url={product.imageUrl} size="sm" />
                   {index === 0 ? <Icon name="star" size={14} /> : null}
                   {product.name}
                   <button
@@ -520,6 +550,7 @@ export function ComposerStudio({
                               disabled={full}
                               onChange={() => toggleProduct(product.id)}
                             />
+                            <ProductThumb url={product.imageUrl} size="md" />
                             <span className="min-w-0 flex-1 truncate font-body-sm text-body-sm text-on-surface">
                               {product.name}
                             </span>

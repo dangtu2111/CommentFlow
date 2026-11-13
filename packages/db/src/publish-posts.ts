@@ -85,6 +85,8 @@ export type PickableProduct = {
   name: string;
   sku: string | null;
   priceVnd: number | null;
+  /** Ảnh sản phẩm từ nguồn đồng bộ; web chỉ hiển thị nếu là https. */
+  imageUrl: string | null;
 };
 export const PICKABLE_PRODUCT_LIMIT = 200;
 
@@ -98,14 +100,16 @@ export async function listPickableProducts(
     name: string;
     sku: string | null;
     price_vnd: string | number | null;
+    image_url: string | null;
   }>(sql`
-    SELECT id, name, sku, price_vnd FROM cf.products
+    SELECT id, name, sku, price_vnd, image_url FROM cf.products
      WHERE workspace_id = ${workspaceId}::uuid AND status = 'active'
      ORDER BY name, id LIMIT ${PICKABLE_PRODUCT_LIMIT}`);
   return r.rows.map((row) => ({
     id: row.id,
     name: row.name,
     sku: row.sku,
+    imageUrl: row.image_url,
     priceVnd: row.price_vnd === null ? null : Number(row.price_vnd),
   }));
 }
