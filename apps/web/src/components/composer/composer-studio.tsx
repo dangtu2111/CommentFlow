@@ -19,6 +19,7 @@ import type { SuggestionResult } from '../../server/caption-service';
 import { Icon, type IconName } from '../ui/icon';
 import { type ComposerMedia, MediaUploader } from './media-uploader';
 import { PendingNote, PendingSubmit } from './pending-submit';
+import { PostPreview } from './post-preview';
 
 /**
  * Biên tập bài viết (design/stitch/composer.html, COMPOSER-CALENDAR-UI + POST-PUBLISHING, Q-CMP1/Q-PUB1): biểu mẫu soạn bài với Server Action thật — LƯU NHÁP, LÊN LỊCH, ĐĂNG NGAY
@@ -71,62 +72,6 @@ const card =
   'flex flex-col gap-space-md rounded-xl bg-surface-container-lowest p-space-lg shadow-sm';
 const actionBtn =
   'inline-flex items-center gap-space-xs rounded-lg px-space-md py-space-sm font-title-sm text-title-sm transition-colors';
-
-/** Ảnh/video trong bản xem trước bài (giống bố cục Facebook: 1 ảnh lớn; 2 ảnh chia đôi; từ 3 ảnh lưới, ảnh cuối ghi "+N"). */
-function PreviewMedia({ media }: { media: ComposerMedia[] }) {
-  const t = useTranslations('composer');
-  if (media.length === 0) return null;
-  const src = (item: ComposerMedia) => `/app/api/media/${item.id}`;
-  const video = media[0]?.kind === 'video' ? media[0] : undefined;
-  if (video) {
-    return (
-      <div className="mt-space-md overflow-hidden rounded-lg bg-surface-container-high">
-        <video
-          src={src(video)}
-          controls
-          preload="metadata"
-          className="max-h-96 w-full object-contain"
-          aria-label={t('preview.video')}
-        >
-          <track kind="captions" />
-        </video>
-      </div>
-    );
-  }
-  const shown = media.slice(0, 4);
-  const extra = media.length - shown.length;
-  const cols = shown.length === 1 ? 'grid-cols-1' : 'grid-cols-2';
-  return (
-    <ul className={cx('mt-space-md grid gap-1 overflow-hidden rounded-lg', cols)}>
-      {shown.map((item, index) => (
-        <li
-          key={item.id}
-          className={cx(
-            'relative bg-surface-container-high',
-            shown.length === 1 ? 'max-h-96' : 'aspect-square',
-            shown.length === 3 && index === 0 ? 'col-span-2 aspect-video' : '',
-          )}
-        >
-          {/* biome-ignore lint/performance/noImgElement: xem trước từ route riêng tư của ứng dụng (không qua next/image) */}
-          <img
-            src={src(item)}
-            alt={t('preview.image', { n: index + 1 })}
-            loading="lazy"
-            className={cx(
-              'w-full',
-              shown.length === 1 ? 'max-h-96 object-contain' : 'h-full object-cover',
-            )}
-          />
-          {extra > 0 && index === shown.length - 1 ? (
-            <span className="absolute inset-0 grid place-items-center bg-black/50 font-headline-md text-headline-md font-bold text-white">
-              +{extra}
-            </span>
-          ) : null}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 /** Ảnh nhỏ của sản phẩm (chỉ https; không có/không hợp lệ → biểu tượng thay thế). */
 function ProductThumb({ url, size }: { url: string | null; size: 'sm' | 'md' }) {
@@ -875,46 +820,12 @@ export function ComposerStudio({
                 ))}
               </div>
             </div>
-            <div className="rounded-xl bg-surface-container-low p-space-md">
-              <div className="flex items-center gap-space-sm">
-                <span
-                  className="grid size-10 place-items-center rounded-full bg-primary-fixed text-primary"
-                  aria-hidden="true"
-                >
-                  <Icon name={PLATFORM_ICON[tab]} size={20} />
-                </span>
-                <div className="min-w-0">
-                  <div className="truncate font-title-sm text-title-sm font-semibold text-on-surface">
-                    {previewChannel?.name ?? t('preview.noPage')}
-                  </div>
-                  <div className="font-label-sm text-label-sm text-on-surface-variant">
-                    {t('preview.justNow')}
-                  </div>
-                </div>
-              </div>
-              <p className="mt-space-md whitespace-pre-wrap break-words font-body-md text-body-md text-on-surface">
-                {text.trim() === '' ? (
-                  <span className="text-on-surface-variant">{t('preview.empty')}</span>
-                ) : (
-                  text
-                )}
-              </p>
-              <PreviewMedia media={mediaList} />
-              <div className="mt-space-md flex items-center justify-around border-t border-outline-variant pt-space-sm font-label-md text-label-md text-on-surface-variant">
-                <span className="flex items-center gap-1">
-                  <Icon name="thumb_up" size={16} />
-                  {t('preview.like')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Icon name="chat_bubble_outline" size={16} />
-                  {t('preview.comment')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Icon name="share" size={16} />
-                  {t('preview.share')}
-                </span>
-              </div>
-            </div>
+            <PostPreview
+              platform={tab}
+              pageName={previewChannel?.name ?? null}
+              text={text}
+              media={mediaList}
+            />
             <p className="font-label-sm text-label-sm text-on-surface-variant">
               {t('preview.disclaimer')}
             </p>

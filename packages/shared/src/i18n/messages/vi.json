@@ -3926,9 +3926,21 @@
       "like": "Thích",
       "comment": "Bình luận",
       "share": "Chia sẻ",
-      "disclaimer": "Bản xem trước chỉ mang tính minh họa; hiển thị thật phụ thuộc vào nền tảng.",
+      "disclaimer": "Bản xem trước chỉ mang tính minh họa bố cục; hiển thị thật phụ thuộc vào nền tảng và thiết bị. Số lượt tương tác luôn là 0.",
       "image": "Ảnh {n} của bài",
-      "video": "Video của bài"
+      "video": "Video của bài",
+      "seeMore": "Xem thêm",
+      "seeLess": "Thu gọn",
+      "igSeeMore": "xem thêm",
+      "igSeeLess": "thu gọn",
+      "commentsCount": "{count} bình luận",
+      "sharesCount": "{count} lượt chia sẻ",
+      "likesCount": "{count} lượt thích",
+      "handlePlaceholder": "ten_tai_khoan",
+      "igNeedsMedia": "Instagram cần ít nhất một ảnh hoặc video. Hãy thêm media ở bên trái.",
+      "tiktokNeedsVideo": "TikTok cần một video. Hãy thêm video ở bên trái.",
+      "prev": "Ảnh trước",
+      "next": "Ảnh sau"
     },
     "error": {
       "title": "Không tải được dữ liệu",

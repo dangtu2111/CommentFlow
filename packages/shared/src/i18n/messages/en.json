@@ -3926,9 +3926,21 @@
       "like": "Like",
       "comment": "Comment",
       "share": "Share",
-      "disclaimer": "The preview is illustrative; how the platform shows it may differ.",
+      "disclaimer": "The preview only illustrates the layout; real display depends on the platform and device. Engagement counts are always 0.",
       "image": "Post image {n}",
-      "video": "Post video"
+      "video": "Post video",
+      "seeMore": "See more",
+      "seeLess": "See less",
+      "igSeeMore": "more",
+      "igSeeLess": "less",
+      "commentsCount": "{count} comments",
+      "sharesCount": "{count} shares",
+      "likesCount": "{count} likes",
+      "handlePlaceholder": "account_name",
+      "igNeedsMedia": "Instagram needs at least one image or video. Add media on the left.",
+      "tiktokNeedsVideo": "TikTok needs a video. Add a video on the left.",
+      "prev": "Previous image",
+      "next": "Next image"
     },
     "error": {
       "title": "Could not load the data",
