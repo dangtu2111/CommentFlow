@@ -1,29 +1,53 @@
 'use client';
 
-import type { TestCaseResult, TestSetSummary } from '@flow/ai';
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import {
-  type KbTestSetState,
-  runKbTestSetAction,
+  addTestCasesAction,
+  deleteTestCaseAction,
+  type LabActionState,
+  runSavedTestsAction,
 } from '../../app/app/(guarded)/readiness/test-lab-actions';
 import { cx } from '../../lib/cx';
 import { KB_TESTSET_MAX_LINES } from '../../lib/kb-testset-limits';
-import { filterLabResults, LAB_FILTERS, type LabFilter, labCounts } from '../../lib/readiness-lab';
+import {
+  filterLabResults,
+  LAB_FILTERS,
+  type LabFilter,
+  type LabStatus,
+  labAccuracy,
+  labCounts,
+} from '../../lib/readiness-lab';
 import { Icon } from '../ui/icon';
 
-const IDLE: KbTestSetState = { status: 'idle' };
+const IDLE: LabActionState = { status: 'idle' };
+const UNTESTED = 'untested' as const;
+
+/** Một câu đã lưu (đã chuyển sang kiểu thuần để qua ranh giới server → client). */
+export type LabCase = {
+  id: string;
+  question: string;
+  expectAction: 'answer' | 'clarify' | 'redirect' | 'handoff' | 'skip';
+  replyIncludes: string[];
+  lastStatus: LabStatus;
+  lastActual: 'answer' | 'clarify' | 'redirect' | 'handoff' | 'skip' | null;
+  lastReply: string | null;
+  lastFailures: string[];
+};
 
 const CARD =
   'rounded-xl border border-outline-variant bg-surface-container-lowest p-space-lg shadow-sm';
 const MUTED = 'font-body-sm text-body-sm text-on-surface-variant';
 const AREA =
   'w-full resize-y rounded-xl bg-surface-container-low p-space-md font-body-md text-body-md text-on-surface outline-none focus:bg-surface-container-lowest focus:shadow-md';
+const BTN =
+  'flex items-center gap-1.5 rounded-lg px-4 py-2 font-title-sm text-title-sm shadow-md transition-all disabled:cursor-wait disabled:opacity-60';
 
 const STATUS_STYLE = {
   pass: 'bg-primary-fixed text-on-primary-fixed-variant',
   fail: 'bg-error-container text-on-error-container',
   error: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
+  untested: 'bg-surface-container-high text-on-surface-variant',
 } as const;
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -35,12 +59,34 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ResultTable({ results }: { results: readonly TestCaseResult[] }) {
+function Failure({ state }: { state: LabActionState }) {
+  const t = useTranslations();
+  if (state.status !== 'done' || state.ok) return null;
+  const message =
+    state.reason === 'rate_limited'
+      ? t('readiness.lab.test.rateLimited')
+      : state.reason === 'too_many_saved'
+        ? t('readiness.lab.test.tooManySaved')
+        : t(`kbTestset.errors.${state.reason}`, {
+            max: KB_TESTSET_MAX_LINES,
+            line: state.line ?? 0,
+          });
+  return (
+    <p
+      role="alert"
+      className="rounded-lg bg-error-container px-3 py-2 font-body-md text-body-md text-on-error-container"
+    >
+      {message}
+    </p>
+  );
+}
+
+function CaseTable({ cases }: { cases: readonly LabCase[] }) {
   const t = useTranslations();
   const [filter, setFilter] = useState<LabFilter>('all');
   const [query, setQuery] = useState('');
-  const counts = labCounts(results);
-  const rows = filterLabResults(results, filter, query);
+  const counts = labCounts(cases);
+  const rows = filterLabResults(cases, filter, query);
   return (
     <div className="space-y-space-md">
       <div className="flex flex-col gap-space-sm md:flex-row md:items-center md:justify-between">
@@ -76,7 +122,7 @@ function ResultTable({ results }: { results: readonly TestCaseResult[] }) {
         <p className={MUTED}>{t('readiness.lab.test.noMatch')}</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-outline-variant">
-          <table className="w-full min-w-[40rem] text-left">
+          <table className="w-full min-w-[44rem] text-left">
             <thead className="bg-surface-container-low font-label-sm text-label-sm uppercase text-on-surface-variant">
               <tr>
                 <th className="px-space-md py-space-sm">
@@ -89,59 +135,73 @@ function ResultTable({ results }: { results: readonly TestCaseResult[] }) {
                 <th className="px-space-md py-space-sm">
                   {t('readiness.lab.test.columns.verdict')}
                 </th>
+                <th className="px-space-md py-space-sm">
+                  <span className="sr-only">{t('readiness.lab.test.columns.actions')}</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-container">
-              {rows.map((r) => (
-                <tr key={r.index} className="align-top font-body-md text-body-md text-on-surface">
-                  <td className="px-space-md py-space-sm">
-                    <div className="font-label-sm text-label-sm text-on-surface-variant">
-                      {t('kbTestset.result.line', { n: r.index + 1 })}
-                    </div>
-                    <p>{r.question}</p>
-                  </td>
-                  <td className="px-space-md py-space-sm">
-                    <span className="font-label-md text-label-md">
-                      {t(`kbTestset.actions.${r.expected}`)}
-                    </span>
-                    {r.actual ? (
-                      <div className={MUTED}>
-                        {t('kbTestset.result.actual')}: {t(`kbTestset.actions.${r.actual}`)}
-                      </div>
-                    ) : null}
-                  </td>
-                  <td className="space-y-1 px-space-md py-space-sm">
-                    {r.reply ? <p className="whitespace-pre-wrap">{r.reply}</p> : null}
-                    {r.failures.map((f) => (
-                      <p
-                        key={f}
-                        role="alert"
-                        className="rounded bg-error-container px-2 py-1 font-body-sm text-body-sm text-on-error-container"
+              {rows.map((r) => {
+                const verdict = r.lastStatus ?? UNTESTED;
+                return (
+                  <tr key={r.id} className="align-top font-body-md text-body-md text-on-surface">
+                    <td className="px-space-md py-space-sm">
+                      <p>{r.question}</p>
+                      {r.replyIncludes.length > 0 ? (
+                        <p className={MUTED}>
+                          {t('readiness.lab.test.keywords', { words: r.replyIncludes.join(', ') })}
+                        </p>
+                      ) : null}
+                    </td>
+                    <td className="px-space-md py-space-sm">
+                      <span className="font-label-md text-label-md">
+                        {t(`kbTestset.actions.${r.expectAction}`)}
+                      </span>
+                      {r.lastActual ? (
+                        <div className={MUTED}>
+                          {t('kbTestset.result.actual')}: {t(`kbTestset.actions.${r.lastActual}`)}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="space-y-1 px-space-md py-space-sm">
+                      {r.lastReply ? <p className="whitespace-pre-wrap">{r.lastReply}</p> : null}
+                      {r.lastFailures.map((f) => (
+                        <p
+                          key={f}
+                          role="alert"
+                          className="rounded bg-error-container px-2 py-1 font-body-sm text-body-sm text-on-error-container"
+                        >
+                          {t(`kbTestset.failures.${f}`)}
+                        </p>
+                      ))}
+                    </td>
+                    <td className="px-space-md py-space-sm">
+                      <span
+                        className={cx(
+                          'inline-block rounded-full px-space-sm py-0.5 font-label-sm text-label-sm font-semibold',
+                          STATUS_STYLE[verdict],
+                        )}
                       >
-                        {t(`kbTestset.failures.${f}`)}
-                      </p>
-                    ))}
-                    {r.missing.length > 0 ? (
-                      <p className={MUTED}>
-                        {t('kbTestset.result.missing', { words: r.missing.join(', ') })}
-                      </p>
-                    ) : null}
-                    {r.error ? (
-                      <p className={MUTED}>{t('kbTestset.result.errorName', { name: r.error })}</p>
-                    ) : null}
-                  </td>
-                  <td className="px-space-md py-space-sm">
-                    <span
-                      className={cx(
-                        'inline-block rounded-full px-space-sm py-0.5 font-label-sm text-label-sm font-semibold',
-                        STATUS_STYLE[r.status],
-                      )}
-                    >
-                      {t(`kbTestset.result.${r.status}`)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                        {verdict === UNTESTED
+                          ? t('readiness.lab.test.untested')
+                          : t(`kbTestset.result.${verdict}`)}
+                      </span>
+                    </td>
+                    <td className="px-space-md py-space-sm text-right">
+                      <form action={deleteTestCaseAction}>
+                        <input type="hidden" name="id" value={r.id} />
+                        <button
+                          type="submit"
+                          aria-label={t('readiness.lab.test.delete')}
+                          className="rounded p-1 text-on-surface-variant hover:bg-error-container hover:text-on-error-container"
+                        >
+                          <Icon name="delete" size={18} />
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -150,34 +210,16 @@ function ResultTable({ results }: { results: readonly TestCaseResult[] }) {
   );
 }
 
-function Stats({ summary }: { summary: TestSetSummary }) {
-  const t = useTranslations();
-  const accuracy = summary.total === 0 ? 0 : Math.round((100 * summary.passed) / summary.total);
-  return (
-    <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-3">
-      <Stat
-        label={t('readiness.lab.test.stats.accuracy')}
-        value={`${accuracy}% (${summary.passed}/${summary.total})`}
-      />
-      <Stat
-        label={t('readiness.lab.test.stats.failed')}
-        value={String(summary.failed + summary.errored)}
-      />
-      <Stat
-        label={t('readiness.lab.test.stats.gate')}
-        value={t(`readiness.lab.test.gate.${summary.gate}`)}
-      />
-    </div>
-  );
-}
-
 /**
- * Bộ câu kiểm thử hồi quy (FR-054) trong trang Độ sẵn sàng & Kiểm thử: mỗi dòng một ca → chạy cả bộ bằng AI thật (không trừ lượt gói),
- * kết quả lọc/tìm tại chỗ. Bộ câu CHƯA được lưu (cần bảng riêng): chỉ hiện kết quả của lần chạy vừa rồi, số liệu đều thật của lần chạy.
+ * Bộ câu kiểm thử hồi quy (FR-054; migration 0096 lưu bộ câu): Owner thêm câu (mỗi dòng "câu hỏi | hành động | từ khóa"), chạy lại cả bộ bằng AI thật
+ * (không trừ lượt gói), kết quả LẦN CHẠY CUỐI của từng câu được lưu và lọc/tìm tại chỗ. Số liệu chỉ từ các câu đã chạy; chưa chạy → không hiện số.
  */
-export function ReadinessTestLab() {
+export function ReadinessTestLab({ cases }: { cases: readonly LabCase[] }) {
   const t = useTranslations();
-  const [state, action, pending] = useActionState(runKbTestSetAction, IDLE);
+  const [addState, addAction, adding] = useActionState(addTestCasesAction, IDLE);
+  const [runState, runAction, running] = useActionState(runSavedTestsAction, IDLE);
+  const accuracy = labAccuracy(cases);
+  const counts = labCounts(cases);
   return (
     <section
       id="test-lab"
@@ -197,19 +239,62 @@ export function ReadinessTestLab() {
           </span>
         </div>
         <p className={MUTED}>{t('readiness.lab.test.subtitle')}</p>
-        <p className={MUTED}>{t('kbTestset.mockNote')}</p>
       </header>
 
-      <form action={action} className="space-y-space-sm" aria-busy={pending}>
+      <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-3">
+        <Stat
+          label={t('readiness.lab.test.stats.accuracy')}
+          value={accuracy === null ? '—' : `${accuracy}%`}
+        />
+        <Stat label={t('readiness.lab.test.stats.total')} value={String(counts.all)} />
+        <Stat
+          label={t('readiness.lab.test.stats.failed')}
+          value={String(counts.fail + counts.error)}
+        />
+      </div>
+
+      <form
+        action={runAction}
+        className="flex flex-wrap items-center gap-space-md"
+        aria-busy={running}
+      >
+        <button
+          type="submit"
+          disabled={running || cases.length === 0}
+          className={cx(BTN, 'bg-primary-container text-on-primary hover:bg-primary')}
+        >
+          <Icon name="play_circle" size={18} />
+          {running
+            ? t('readiness.lab.test.running')
+            : t('readiness.lab.test.run', { count: cases.length })}
+        </button>
+        {runState.status === 'done' && runState.ok && runState.quota ? (
+          <span className={MUTED}>
+            {t('kbTestset.quota', { used: runState.quota.used, limit: runState.quota.limit })}
+          </span>
+        ) : null}
+      </form>
+      <Failure state={runState} />
+
+      {cases.length === 0 ? (
+        <p className={MUTED}>{t('readiness.lab.test.empty')}</p>
+      ) : (
+        <CaseTable cases={cases} />
+      )}
+
+      <form
+        action={addAction}
+        className="space-y-space-sm border-t border-outline-variant pt-space-md"
+      >
         <label htmlFor="lab-cases" className="font-label-md text-label-md text-on-surface">
           {t('readiness.lab.test.addTitle')}
         </label>
         <textarea
           id="lab-cases"
           name="cases"
-          rows={6}
+          rows={5}
           required
-          defaultValue={t('kbTestset.sample')}
+          defaultValue={cases.length === 0 ? t('kbTestset.sample') : ''}
           aria-describedby="lab-hint"
           className={AREA}
         />
@@ -219,47 +304,20 @@ export function ReadinessTestLab() {
         <div className="flex flex-wrap items-center gap-space-md">
           <button
             type="submit"
-            disabled={pending}
-            className="flex items-center gap-1.5 rounded-lg bg-primary-container px-4 py-2 font-title-sm text-title-sm text-on-primary shadow-md transition-all hover:bg-primary disabled:cursor-wait disabled:opacity-60"
+            disabled={adding}
+            className={cx(BTN, 'bg-secondary-container text-on-secondary-container')}
           >
-            <Icon name="play_circle" size={18} />
-            {pending ? t('readiness.lab.test.running') : t('readiness.lab.test.run')}
+            <Icon name="add" size={18} />
+            {t('readiness.lab.test.add')}
           </button>
-          {state.status === 'done' && state.ok ? (
-            <span className={MUTED}>
-              {t('kbTestset.quota', { used: state.quota.used, limit: state.quota.limit })}
+          {addState.status === 'done' && addState.ok ? (
+            <span role="status" className={MUTED}>
+              {t('readiness.lab.test.added', { count: addState.added ?? 0 })}
             </span>
           ) : null}
         </div>
+        <Failure state={addState} />
       </form>
-
-      {state.status === 'done' && !state.ok ? (
-        <p
-          role="alert"
-          className="rounded-lg bg-error-container px-3 py-2 font-body-md text-body-md text-on-error-container"
-        >
-          {t(`kbTestset.errors.${state.reason}`, {
-            max: KB_TESTSET_MAX_LINES,
-            line: state.reason === 'invalid_line' ? state.line : 0,
-          })}
-        </p>
-      ) : null}
-
-      {state.status === 'done' && state.ok ? (
-        <div className="space-y-space-md">
-          <p className={MUTED}>{t(`kbTestset.knowledge.${state.knowledge}`)}</p>
-          <Stats summary={state.summary} />
-          <p
-            role="status"
-            className="rounded-lg bg-secondary-fixed px-3 py-2 font-title-sm text-title-sm text-on-secondary-fixed"
-          >
-            {t(`kbTestset.gate.${state.summary.gate}`)}
-          </p>
-          <ResultTable results={state.results} />
-        </div>
-      ) : (
-        <p className={MUTED}>{t('readiness.lab.test.empty')}</p>
-      )}
     </section>
   );
 }

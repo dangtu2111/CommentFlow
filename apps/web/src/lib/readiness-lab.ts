@@ -100,32 +100,47 @@ export function coachSteps(
   return steps.slice(0, limit);
 }
 
-export type LabFilter = 'all' | 'pass' | 'fail' | 'error';
+/** Trạng thái lần chạy cuối của một câu; `null` = chưa chạy lần nào. */
+export type LabStatus = 'pass' | 'fail' | 'error' | null;
+export type LabFilter = 'all' | 'pass' | 'fail' | 'error' | 'untested';
 
-export const LAB_FILTERS: readonly LabFilter[] = ['all', 'pass', 'fail', 'error'];
+export const LAB_FILTERS: readonly LabFilter[] = ['all', 'pass', 'fail', 'error', 'untested'];
 
-/** Lọc kết quả theo tab và từ khóa (không phân biệt hoa thường). */
-export function filterLabResults<T extends { status: 'pass' | 'fail' | 'error'; question: string }>(
-  results: readonly T[],
+const matchesFilter = (status: LabStatus, filter: LabFilter): boolean =>
+  filter === 'all' || (filter === 'untested' ? status === null : status === filter);
+
+/** Lọc câu theo tab và từ khóa (không phân biệt hoa thường). */
+export function filterLabResults<T extends { lastStatus: LabStatus; question: string }>(
+  rows: readonly T[],
   filter: LabFilter,
   query: string,
 ): T[] {
   const needle = query.trim().toLowerCase();
-  return results.filter(
+  return rows.filter(
     (r) =>
-      (filter === 'all' || r.status === filter) &&
+      matchesFilter(r.lastStatus, filter) &&
       (needle === '' || r.question.toLowerCase().includes(needle)),
   );
 }
 
 /** Số lượng theo tab để hiện trên nhãn. */
 export function labCounts(
-  results: ReadonlyArray<{ status: 'pass' | 'fail' | 'error' }>,
+  rows: ReadonlyArray<{ lastStatus: LabStatus }>,
 ): Record<LabFilter, number> {
+  const count = (filter: LabFilter) =>
+    rows.filter((r) => matchesFilter(r.lastStatus, filter)).length;
   return {
-    all: results.length,
-    pass: results.filter((r) => r.status === 'pass').length,
-    fail: results.filter((r) => r.status === 'fail').length,
-    error: results.filter((r) => r.status === 'error').length,
+    all: rows.length,
+    pass: count('pass'),
+    fail: count('fail'),
+    error: count('error'),
+    untested: count('untested'),
   };
+}
+
+/** Tỷ lệ chính xác (%) trên các câu ĐÃ chạy; chưa câu nào chạy → `null` (không hiện số bịa). */
+export function labAccuracy(rows: ReadonlyArray<{ lastStatus: LabStatus }>): number | null {
+  const run = rows.filter((r) => r.lastStatus !== null);
+  if (run.length === 0) return null;
+  return Math.round((100 * run.filter((r) => r.lastStatus === 'pass').length) / run.length);
 }

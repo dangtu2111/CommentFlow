@@ -1909,34 +1909,39 @@
       "test": {
         "title": "Bộ câu kiểm thử hồi quy",
         "badge": "Regression Suite",
-        "subtitle": "Mô phỏng comment/inbox thật của khách để đo chất lượng trả lời trước khi bật Tự động.",
         "addTitle": "Thêm câu test (mỗi dòng một câu)",
-        "run": "Chạy bộ câu kiểm thử",
-        "running": "Đang chạy…",
-        "empty": "Chưa có kết quả. Nhập câu hỏi rồi bấm \"Chạy bộ câu kiểm thử\".",
         "search": "Tìm câu hỏi…",
         "noMatch": "Không có câu nào khớp bộ lọc.",
         "tabs": {
           "all": "Tất cả ({count})",
           "pass": "Đạt ({count})",
           "fail": "Không đạt ({count})",
-          "error": "Lỗi ({count})"
+          "error": "Lỗi ({count})",
+          "untested": "Chưa chạy ({count})"
         },
         "stats": {
           "accuracy": "Tỷ lệ chính xác",
-          "failed": "Câu cần xem lại",
-          "gate": "Cổng xuất bản"
-        },
-        "gate": {
-          "pass": "Đạt",
-          "fail": "Chưa đạt"
+          "total": "Số câu trong bộ",
+          "failed": "Câu cần xem lại"
         },
         "columns": {
           "scenario": "Kịch bản & câu hỏi",
           "expected": "Hành động mong đợi",
-          "reply": "AI trả lời thực tế",
-          "verdict": "Kết quả"
-        }
+          "reply": "AI trả lời lần chạy cuối",
+          "verdict": "Kết quả",
+          "actions": "Thao tác"
+        },
+        "run": "Chạy lại cả bộ ({count} câu)",
+        "running": "Đang chạy…",
+        "add": "Thêm vào bộ",
+        "added": "Đã thêm {count} câu vào bộ.",
+        "delete": "Xóa câu này",
+        "untested": "Chưa chạy",
+        "keywords": "Từ khóa phải có: {words}",
+        "empty": "Bộ câu còn trống. Thêm câu ở khung bên dưới rồi bấm chạy.",
+        "rateLimited": "Bạn thao tác quá nhanh. Vui lòng đợi vài giây rồi thử lại.",
+        "tooManySaved": "Bộ câu đã đủ 100 câu. Hãy xóa bớt câu cũ trước khi thêm.",
+        "subtitle": "Bộ câu của shop được lưu lại; mỗi lần chạy dùng AI thật và kiến thức thật, lưu kết quả lần chạy cuối của từng câu. Không trừ lượt AI của gói."
       },
       "sandbox": {
         "title": "Trình thử nghiệm tức thì (Live Sandbox)",

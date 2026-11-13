@@ -1909,34 +1909,39 @@
       "test": {
         "title": "Regression test suite",
         "badge": "Regression Suite",
-        "subtitle": "Simulate real customer comments/inbox to measure answer quality before turning Auto on.",
         "addTitle": "Add test cases (one per line)",
-        "run": "Run test suite",
-        "running": "Running…",
-        "empty": "No results yet. Enter questions and press \"Run test suite\".",
         "search": "Search questions…",
         "noMatch": "No case matches the filter.",
         "tabs": {
           "all": "All ({count})",
           "pass": "Passed ({count})",
           "fail": "Failed ({count})",
-          "error": "Errors ({count})"
+          "error": "Errors ({count})",
+          "untested": "Not run ({count})"
         },
         "stats": {
           "accuracy": "Accuracy",
-          "failed": "Cases to review",
-          "gate": "Publish gate"
-        },
-        "gate": {
-          "pass": "Pass",
-          "fail": "Not passed"
+          "total": "Cases in suite",
+          "failed": "Cases to review"
         },
         "columns": {
           "scenario": "Scenario & question",
           "expected": "Expected action",
-          "reply": "Actual AI reply",
-          "verdict": "Result"
-        }
+          "reply": "AI reply (last run)",
+          "verdict": "Result",
+          "actions": "Actions"
+        },
+        "run": "Run whole suite ({count} cases)",
+        "running": "Running…",
+        "add": "Add to suite",
+        "added": "Added {count} cases to the suite.",
+        "delete": "Delete this case",
+        "untested": "Not run",
+        "keywords": "Must include: {words}",
+        "empty": "The suite is empty. Add cases below, then run.",
+        "rateLimited": "You are acting too fast. Please wait a few seconds and try again.",
+        "tooManySaved": "The suite already has 100 cases. Delete some before adding more.",
+        "subtitle": "Your shop's test suite is saved; each run uses the real AI and real knowledge and stores the last result of every case. Does not use your plan quota."
       },
       "sandbox": {
         "title": "Live sandbox",

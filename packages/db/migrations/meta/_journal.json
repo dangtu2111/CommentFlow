@@ -673,6 +673,13 @@
       "when": 1796350000000,
       "tag": "0095_update_publish_post",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1796440000000,
+      "tag": "0096_kb_test_cases",
+      "breakpoints": true
     }
   ]
 }
