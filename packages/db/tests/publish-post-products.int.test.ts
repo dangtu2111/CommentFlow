@@ -118,20 +118,22 @@ describe('chọn sản phẩm khi soạn', () => {
   it('sản phẩm đã lưu trữ, của workspace khác hoặc quá 5 → 22023', async () => {
     const six = [pA, pB, randomUUID(), randomUUID(), randomUUID(), randomUUID()];
     for (const productIds of [[pArchived], [pOther], six]) {
-      await expectRejectCode(
-        asOwner((tx) => savePublishPost(tx, { message: 'x', channelIds: [], productIds })),
-        INVALID,
-      );
+      expect(
+        await expectRejectCode(
+          asOwner((tx) => savePublishPost(tx, { message: 'x', channelIds: [], productIds })),
+        ),
+      ).toBe(INVALID);
     }
   });
 
   it('Staff không gắn được (42501); danh sách chọn chỉ có sản phẩm đang bán của workspace mình', async () => {
-    await expectRejectCode(
-      app.withActor(ws, staff, (tx) =>
-        savePublishPost(tx, { message: 'x', channelIds: [], productIds: [pA] }),
+    expect(
+      await expectRejectCode(
+        app.withActor(ws, staff, (tx) =>
+          savePublishPost(tx, { message: 'x', channelIds: [], productIds: [pA] }),
+        ),
       ),
-      RLS,
-    );
+    ).toBe(RLS);
     const names = (await asOwner((tx) => listPickableProducts(tx, ws))).map((p) => p.name);
     expect([...names].sort()).toEqual(['Quần B', 'Áo thun A'].sort());
   });
