@@ -100,3 +100,14 @@ describe('TikTok', () => {
     expect(render({ platform: 'tiktok' })).toContain('TikTok cần một video');
   });
 });
+
+describe('ảnh đại diện kênh', () => {
+  it('Facebook và Instagram hiện ảnh thật (https); http hoặc thiếu → chữ cái đầu', () => {
+    const url = 'https://scontent.fbcdn.net/page.jpg';
+    expect(render({ pageAvatarUrl: url })).toContain(`src="${url}"`);
+    expect(render({ platform: 'instagram', pageAvatarUrl: url })).toContain(`src="${url}"`);
+    const unsafe = render({ pageAvatarUrl: 'http://x.vn/a.jpg' });
+    expect(unsafe).not.toContain('http://x.vn/a.jpg');
+    expect(unsafe).toContain('>L<');
+  });
+});

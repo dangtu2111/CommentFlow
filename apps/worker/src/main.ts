@@ -253,7 +253,12 @@ async function main(): Promise<void> {
       connectorFor: () => {
         const connector = registry.has('facebook') ? registry.get('facebook') : undefined;
         const check = connector?.checkConnection?.bind(connector);
-        return check ? { checkConnection: check } : undefined;
+        const picture = (
+          connector as { fetchPagePicture?: FacebookConnector['fetchPagePicture'] } | undefined
+        )?.fetchPagePicture?.bind(connector);
+        return check
+          ? { checkConnection: check, ...(picture ? { fetchPagePicture: picture } : {}) }
+          : undefined;
       },
       logger,
     }),

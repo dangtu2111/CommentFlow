@@ -149,3 +149,58 @@ describe('checkChannels — quyền đã cấp', () => {
     expect(empty.saved[0]?.granted).toEqual([]);
   });
 });
+
+describe('checkChannels — ảnh đại diện kênh', () => {
+  const build = (
+    picture: (c: ChannelRef) => Promise<string | null>,
+    result: 'ok' | 'bad' = 'ok',
+  ) => {
+    const avatars: Array<{ id: string; url: string }> = [];
+    const warn = vi.fn();
+    const store: ChannelCheckStore = {
+      listConnected: async () => [REF('a')],
+      save: async () => {},
+      saveAvatar: async (channel, url) => {
+        avatars.push({ id: channel.id, url });
+      },
+    };
+    const run = () =>
+      checkChannels({
+        workspaceId: 'w1',
+        store,
+        connectorFor: () => ({
+          checkConnection: async () => {
+            if (result === 'bad') throw new PlatformError('TOKEN_EXPIRED');
+            return { webhookSubscribed: true };
+          },
+          fetchPagePicture: picture,
+        }),
+        warn,
+      });
+    return { run, avatars, warn };
+  };
+
+  it('kết nối ổn → lấy và lưu ảnh đại diện', async () => {
+    const { run, avatars } = build(async () => 'https://scontent.fbcdn.net/p.jpg');
+    await run();
+    expect(avatars).toEqual([{ id: 'a', url: 'https://scontent.fbcdn.net/p.jpg' }]);
+  });
+
+  it('không có ảnh (null) → không lưu; kết nối hỏng → không gọi lấy ảnh', async () => {
+    const none = build(async () => null);
+    await none.run();
+    expect(none.avatars).toEqual([]);
+    const fetchPicture = vi.fn(async () => 'https://x.fbcdn.net/a.jpg');
+    const bad = build(fetchPicture, 'bad');
+    await bad.run();
+    expect(fetchPicture).not.toHaveBeenCalled();
+  });
+
+  it('lỗi khi lấy ảnh chỉ ghi cảnh báo, kết quả kiểm vẫn ghi và không ném', async () => {
+    const { run, warn } = build(async () => {
+      throw new PlatformError('RATE_LIMIT');
+    });
+    await expect(run()).resolves.toMatchObject({ ok: 1 });
+    expect(warn).toHaveBeenCalledWith({ event: 'channel_avatar_failed', reason: 'RATE_LIMIT' });
+  });
+});

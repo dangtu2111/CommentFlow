@@ -98,6 +98,8 @@ export interface FacebookConnector extends PlatformConnector {
    * ảnh mặc định (`is_silhouette`), thiếu `from`/`picture` (quyền riêng tư của người dùng) hoặc URL lạ → `null` — không bịa ảnh. Chỉ GET.
    */
   fetchCommentAuthorPicture(channel: ChannelRef, commentExternalId: string): Promise<string | null>;
+  /** Ảnh đại diện (https) của chính Page (`GET /{page-id}/picture?redirect=false`); ảnh mặc định (silhouette) hoặc URL không https → `null`. Chỉ ĐỌC. */
+  fetchPagePicture(channel: ChannelRef): Promise<string | null>;
   /**
    * Đăng MỘT bài chữ lên feed của Page (POST-PUBLISHING): `POST /{page-id}/feed` với `message`, token trong THÂN POST. Từ chối TRƯỚC khi gọi mạng nếu nội dung rỗng hoặc quá
    * 63.206 ký tự. Phản hồi 2xx nhưng thiếu `id` → `UNKNOWN` (có thể ĐÃ đăng): nơi gọi KHÔNG ĐƯỢC tự thử lại. Lỗi quyền/token/tốc độ phân loại như mọi lệnh Graph.
@@ -261,6 +263,10 @@ const postDetailSchema = z.object({
   permalink_url: z.string().optional(),
   full_picture: z.string().optional(),
   created_time: z.string().optional(),
+});
+
+const pagePictureSchema = z.object({
+  data: z.object({ url: z.string(), is_silhouette: z.boolean().optional() }),
 });
 
 const commentAuthorPictureSchema = z.object({
@@ -557,6 +563,19 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       if (!parsed.success) throw badResponse();
       const data = parsed.data.from?.picture?.data;
       if (!data || data.is_silhouette === true) return null;
+      return httpsUrlOrNull(data.url);
+    },
+
+    async fetchPagePicture(channel) {
+      const parsed = pagePictureSchema.safeParse(
+        await call(channel, 'GET', `${graphId(channel.externalId)}/picture`, {
+          redirect: 'false',
+          type: 'large',
+        }),
+      );
+      if (!parsed.success) throw badResponse();
+      const data = parsed.data.data;
+      if (data.is_silhouette === true) return null;
       return httpsUrlOrNull(data.url);
     },
 

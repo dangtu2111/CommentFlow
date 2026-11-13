@@ -10,6 +10,7 @@ import {
 import { channelPermissionView } from '../../lib/channel-permissions';
 import { cn } from '../../lib/cn';
 import { FB_REREQUEST_PATH } from '../../lib/fb-connect-view';
+import { safeHttpsUrl } from '../../lib/safe-url';
 import { Icon, type IconName } from '../ui/icon';
 import { TwDialog, TwDialogTrigger, TwSubmit } from './tw/dialog';
 import { TwChip, TwSoonButton, twBtn } from './tw/ui';
@@ -344,6 +345,7 @@ async function ChannelRow({
   const ok = channel.status === 'connected';
   const revoked = channel.status === 'revoked';
   const initial = channel.name.trim().charAt(0).toUpperCase() || '?';
+  const avatar = safeHttpsUrl(channel.avatarUrl);
   const advancedId = `channel-advanced-${channel.id}`;
   const disconnectId = `channel-disconnect-${channel.id}`;
   const permissions = channelPermissionView(channel);
@@ -367,7 +369,18 @@ async function ChannelRow({
     >
       <div className="flex items-start gap-space-md min-w-0">
         <span className="relative shrink-0 size-14 rounded-full bg-surface-container-lowest grid place-items-center font-title-md text-title-md text-primary">
-          {initial}
+          {avatar ? (
+            // biome-ignore lint/performance/noImgElement: ảnh CDN của nền tảng (không qua next/image, tên miền do CSP kiểm soát)
+            <img
+              src={avatar}
+              alt=""
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="size-full rounded-full object-cover"
+            />
+          ) : (
+            initial
+          )}
           <span
             className={cn(
               'absolute -bottom-0.5 -right-0.5 size-5 rounded-full grid place-items-center text-white',

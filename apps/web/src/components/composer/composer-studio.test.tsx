@@ -24,14 +24,23 @@ const channels: ComposerChannel[] = [
     id: 'c1',
     name: 'Fanpage An Nhiên',
     platform: 'facebook',
+    avatarUrl: 'https://scontent.fbcdn.net/page.jpg',
     status: 'connected',
     canPublish: true,
   },
-  { id: 'c2', name: 'Page hết hạn', platform: 'facebook', status: 'expired', canPublish: true },
+  {
+    id: 'c2',
+    name: 'Page hết hạn',
+    platform: 'facebook',
+    avatarUrl: null,
+    status: 'expired',
+    canPublish: true,
+  },
   {
     id: 'c3',
     name: 'Page thiếu quyền',
     platform: 'facebook',
+    avatarUrl: 'http://insecure.example/x.jpg',
     status: 'connected',
     canPublish: false,
   },
@@ -253,5 +262,11 @@ describe('ComposerStudio', () => {
     const ready = render({ aiReason: null });
     expect(ready).not.toContain('AI soạn caption đang tắt');
     expect(ready).not.toContain('CAPTION_LLM_MODEL');
+  });
+
+  it('ảnh đại diện kênh: hiện ảnh https trong danh sách kênh; http/không có → chữ cái đầu', () => {
+    const html = render();
+    expect(html).toContain('src="https://scontent.fbcdn.net/page.jpg"');
+    expect(html).not.toContain('insecure.example');
   });
 });

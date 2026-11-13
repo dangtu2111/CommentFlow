@@ -11,6 +11,7 @@ export {
   createChannel,
   listChannelKeyVersions,
   readChannelToken,
+  setChannelAvatar,
   setChannelToken,
 } from './channel-tokens';
 export { setChannelWebhookSubscribed } from './channel-webhook';

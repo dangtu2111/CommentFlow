@@ -19,7 +19,7 @@ import type { SuggestionResult } from '../../server/caption-service';
 import { Icon, type IconName } from '../ui/icon';
 import { type ComposerMedia, MediaUploader } from './media-uploader';
 import { PendingNote, PendingSubmit } from './pending-submit';
-import { PostPreview } from './post-preview';
+import { ChannelAvatar, PostPreview } from './post-preview';
 
 /**
  * Biên tập bài viết (design/stitch/composer.html, COMPOSER-CALENDAR-UI + POST-PUBLISHING, Q-CMP1/Q-PUB1): biểu mẫu soạn bài với Server Action thật — LƯU NHÁP, LÊN LỊCH, ĐĂNG NGAY
@@ -30,6 +30,8 @@ export type ComposerChannel = {
   id: string;
   name: string;
   platform: string;
+  /** Ảnh đại diện của kênh (https) hoặc `null`. */
+  avatarUrl: string | null;
   status: 'connected' | 'expired' | 'revoked' | 'error';
   /** Kênh có quyền `pages_manage_posts` (cần để đăng bài); thiếu → cảnh báo, vẫn lưu nháp được. */
   canPublish: boolean;
@@ -373,6 +375,7 @@ export function ComposerStudio({
                         />
                         <span className="flex min-w-0 flex-col">
                           <span className="flex items-center gap-space-xs font-title-sm text-title-sm font-semibold text-on-surface">
+                            <ChannelAvatar name={channel.name} url={channel.avatarUrl} size="xs" />
                             <Icon name={PLATFORM_ICON[platform]} size={16} />
                             <span className="truncate">{channel.name}</span>
                           </span>
@@ -823,6 +826,7 @@ export function ComposerStudio({
             <PostPreview
               platform={tab}
               pageName={previewChannel?.name ?? null}
+              pageAvatarUrl={previewChannel?.avatarUrl ?? null}
               text={text}
               media={mediaList}
             />
