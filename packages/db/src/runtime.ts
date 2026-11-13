@@ -51,6 +51,17 @@ export {
   voidInvoice,
 } from './invoices';
 export {
+  addKbTestCases,
+  deleteKbTestCase,
+  type KbTestAction,
+  type KbTestCaseInput,
+  type KbTestCaseRow,
+  type KbTestRunRecord,
+  type KbTestStatus,
+  listKbTestCases,
+  recordKbTestRun,
+} from './kb-test-cases';
+export {
   createLeadCaptureFromEnv,
   createLeadContactSink,
   type LeadCaptureConfig,
@@ -77,17 +88,6 @@ export {
   type SubscriptionRow,
   startTrial,
 } from './plans';
-export {
-  addKbTestCases,
-  deleteKbTestCase,
-  type KbTestAction,
-  type KbTestCaseInput,
-  type KbTestCaseRow,
-  type KbTestRunRecord,
-  type KbTestStatus,
-  listKbTestCases,
-  recordKbTestRun,
-} from './kb-test-cases';
 export {
   getMediaAsset,
   listMediaForPublish,
