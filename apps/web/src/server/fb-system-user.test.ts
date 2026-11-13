@@ -36,6 +36,17 @@ describe('save', () => {
     expect(deps.save).not.toHaveBeenCalled();
   });
 
+  it('sai dạng → nhật ký chỉ có LOẠI lý do, không có giá trị đã dán', async () => {
+    const { deps, service } = build();
+    const secret = `EAAB${'x'.repeat(40)} chen-khoang-trang-${'y'.repeat(20)}`;
+    expect(await service.save(SESSION, secret)).toBe('invalid');
+    expect(deps.warn).toHaveBeenCalledWith({
+      event: 'fb_system_token_rejected',
+      reason: 'bad_chars',
+    });
+    expect(JSON.stringify(vi.mocked(deps.warn).mock.calls)).not.toContain('EAAB');
+  });
+
   it('thiếu khóa mã hóa → not_configured, không lưu', async () => {
     const { deps, service } = build({ encrypt: undefined });
     expect(await service.save(SESSION, TOKEN)).toBe('not_configured');
