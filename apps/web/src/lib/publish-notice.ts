@@ -55,3 +55,12 @@ export function noticeVariant(code: PublishNoticeCode): NoticeVariant {
   if (WARNING.has(code)) return 'warning';
   return 'danger';
 }
+
+/** Kết quả LỖI của "Lưu nháp / Lên lịch / Đăng ngay" trả về cho Biên tập (không chuyển trang → giữ nguyên thông tin đã nhập). `postId`: bài đã được tạo (đừng tạo trùng ở lần bấm sau). */
+export type SaveFailure = { notice: PublishNoticeCode; postId?: string };
+export type SaveState = SaveFailure | null;
+
+/** Mã thông báo mang ý nghĩa thành công (chuyển trang như cũ); mã khác là lỗi/cảnh báo → ở lại trang, giữ dữ liệu. */
+export function isSuccessNotice(code: PublishNoticeCode): boolean {
+  return noticeVariant(code) === 'success';
+}

@@ -74,6 +74,9 @@ const render = (
 
 const button = (html: string, value: string) =>
   html.match(new RegExp(`<button[^>]*value="${value}"[^>]*>`))?.[0] ?? '';
+// Nút "Lên lịch đăng" chỉ MỞ hộp thoại (không gửi biểu mẫu); nút gửi ý định schedule nằm trong hộp thoại.
+const scheduleOpener = (html: string) =>
+  html.match(/<button[^>]*aria-haspopup="dialog"[^>]*>/)?.[0] ?? '';
 
 describe('ComposerStudio', () => {
   it('hiện kênh THẬT; kênh hết hạn bị khóa; mặc định KHÔNG chọn kênh nào (tránh đăng nhầm)', () => {
@@ -104,25 +107,28 @@ describe('ComposerStudio', () => {
     expect(html.match(/0 \/ 2\.200/g)).toHaveLength(2);
   });
 
-  it('có biểu mẫu thật: trường message, channel, date, time và ba nút gửi với ý định draft / schedule / publish', () => {
+  it('có biểu mẫu thật: trường message, channel, date, time và hai nút gửi draft / publish và nút mở hộp thoại Lên lịch (không còn thẻ Lịch đăng)', () => {
     const html = render();
     expect(html).toMatch(/<form[^>]*>/);
     expect(html).toContain('name="message"');
     expect(html).toContain('name="date"');
     expect(html).toContain('name="time"');
-    for (const intent of ['draft', 'schedule', 'publish']) {
+    for (const intent of ['draft', 'publish']) {
       expect(button(html, intent), intent).toContain('type="submit"');
     }
+    expect(scheduleOpener(html)).toContain('type="button"');
+    expect(button(html, 'schedule')).toBe('');
+    expect(html).not.toContain('Ngày đăng');
   });
 
   it('LƯU NHÁP luôn bấm được; Lên lịch/Đăng ngay bị khóa khi cờ TẮT hoặc chưa có nội dung và kênh', () => {
     const off = render({ publishEnabled: false });
     expect(button(off, 'draft')).not.toContain('disabled');
-    expect(button(off, 'schedule')).toContain('disabled');
+    expect(scheduleOpener(off)).toContain('disabled');
     expect(button(off, 'publish')).toContain('disabled');
     expect(off).toContain('chưa được bật trên máy chủ');
     const on = render({ publishEnabled: true });
-    expect(button(on, 'schedule')).toContain('disabled'); // chưa có nội dung + kênh
+    expect(scheduleOpener(on)).toContain('disabled'); // chưa có nội dung + kênh
     expect(on).toContain('AI không tự viết hay tự đăng bài');
   });
 

@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { calendarHref } from '../../../../lib/calendar-week';
 import { parsePublishForm } from '../../../../lib/publish-form';
+import { isSuccessNotice, type SaveState } from '../../../../lib/publish-notice';
 import type { PublishOutcome } from '../../../../lib/publish-outcome';
 import { actionAllowed } from '../../../../server/action-guard';
 import { suggestForWorkspace } from '../../../../server/caption-runtime';
@@ -16,13 +17,17 @@ const COMPOSER = '/app/composer';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Chuyển hướng theo kết quả: về Biên tập (kèm `id` bài để sửa tiếp) hoặc Lịch (kèm tuần); luôn mang mã thông báo `n`. */
-function go(result: PublishActionResult): never {
+function go(result: PublishActionResult): SaveState {
   const notice = `n=${result.notice}`;
-  if (result.to === 'calendar') {
+  if (result.to === 'calendar' && isSuccessNotice(result.notice)) {
     const base = calendarHref(result.week ? { week: result.week } : {});
     // "Đăng ngay": Lịch theo dõi bài (`watch`) rồi báo thành công/thất bại khi worker có kết quả.
     const watch = result.notice === 'publishing' && result.postId ? `&watch=${result.postId}` : '';
     redirect(`${base}${base.includes('?') ? '&' : '?'}${notice}${watch}`);
+  }
+  // Lỗi/cảnh báo ở Biên tập: KHÔNG chuyển trang (chuyển là mất nội dung đang soạn) — trả về để biểu mẫu hiện thông báo và giữ nguyên dữ liệu.
+  if (!isSuccessNotice(result.notice)) {
+    return { notice: result.notice, ...(result.postId ? { postId: result.postId } : {}) };
   }
   redirect(`${COMPOSER}?${result.postId ? `id=${result.postId}&` : ''}${notice}`);
 }
@@ -31,16 +36,19 @@ function go(result: PublishActionResult): never {
  * Owner lưu nháp / lên lịch / đăng ngay (POST-PUBLISHING, Q-PUB1). KHÔNG nhận workspace/người dùng từ form: lấy từ `requireAppUser({ role: 'owner' })`. Giờ lên lịch nhập theo MÚI GIỜ của cửa hàng.
  * Lên lịch/đăng ngay là hành động hướng ra ngoài nên dùng bộ giới hạn `uiSensitive`; lưu nháp dùng `uiWrite`. Cờ `FB_PUBLISH_ENABLED` tắt → chỉ lưu nháp được.
  */
-export async function savePublishPostAction(formData: FormData): Promise<void> {
+export async function savePublishPostAction(
+  _previous: SaveState,
+  formData: FormData,
+): Promise<SaveState> {
   const { user, workspace } = await requireAppUser({ role: 'owner' });
   const timeZone = await loadWorkspaceTimeZone(workspace.id, user.id);
   const parsed = parsePublishForm(formData, timeZone);
-  if (!parsed.ok) redirect(`${COMPOSER}?n=${parsed.code}`);
+  if (!parsed.ok) return { notice: parsed.code };
   const guard = parsed.value.intent === 'draft' ? 'uiWrite' : 'uiSensitive';
   if (!(await actionAllowed(guard, { userId: user.id, workspaceId: workspace.id }))) {
-    redirect(`${COMPOSER}?${parsed.value.id ? `id=${parsed.value.id}&` : ''}n=rate_limited`);
+    return { notice: 'rate_limited', ...(parsed.value.id ? { postId: parsed.value.id } : {}) };
   }
-  go(
+  return go(
     await publishPostService().submit(
       { workspaceId: workspace.id, userId: user.id },
       parsed.value,

@@ -3912,7 +3912,9 @@
       "date": "Publish date",
       "time": "Publish time",
       "zone": "Shop time zone: {zone}",
-      "hint": "Pick the date and time in the shop's time zone; only needed for \"Schedule\"."
+      "hint": "Pick the date and time in the shop's time zone; only needed for \"Schedule\".",
+      "close": "Close",
+      "confirm": "Confirm schedule"
     },
     "preview": {
       "title": "Preview",
