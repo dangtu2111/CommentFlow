@@ -3992,7 +3992,8 @@
         "flag_off": "AI captions are off.",
         "not_configured": "AI captions are not configured.",
         "unavailable": "AI is unavailable right now, try later."
-      }
+      },
+      "hint": "Type an idea or your content in the box below, then click a button: AI suggests, you choose to use it or dismiss it."
     }
   },
   "calendar": {

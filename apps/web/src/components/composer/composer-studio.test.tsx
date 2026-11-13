@@ -253,7 +253,7 @@ describe('ComposerStudio', () => {
     expect(withFiles).toMatch(/<video[^>]*src="\/app\/api\/media\/m2"/);
   });
 
-  it('AI caption/hashtag: cờ tắt → nút khóa kèm lý do; sẵn sàng → bật khi đã có nội dung', () => {
+  it('AI caption/hashtag: cờ tắt → nút khóa kèm lý do; sẵn sàng → nút bật ngay cả khi chưa có nội dung, kèm hướng dẫn', () => {
     const off = render({ aiReason: 'flag_off' });
     expect(off).toContain('AI soạn caption đang tắt cho cửa hàng này.');
     expect(off).toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*AI gợi ý caption/s);
@@ -262,6 +262,8 @@ describe('ComposerStudio', () => {
     const ready = render({ aiReason: null });
     expect(ready).not.toContain('AI soạn caption đang tắt');
     expect(ready).not.toContain('CAPTION_LLM_MODEL');
+    expect(ready).not.toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*AI gợi ý caption/s);
+    expect(ready).toContain('Gõ ý tưởng hoặc nội dung');
   });
 
   it('ảnh đại diện kênh: hiện ảnh https trong danh sách kênh; http/không có → chữ cái đầu', () => {
