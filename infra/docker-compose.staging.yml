@@ -69,6 +69,9 @@ services:
       META_APP_ID: ${META_APP_ID:-}
       META_APP_SECRET: ${META_APP_SECRET:-}
       META_WEBHOOK_VERIFY_TOKEN: ${META_WEBHOOK_VERIFY_TOKEN:-}
+      FB_OAUTH_ENABLED: ${FB_OAUTH_ENABLED:-false}
+      META_OAUTH_REDIRECT_URL: ${META_OAUTH_REDIRECT_URL:-}
+      FB_LOGIN_CONFIG_ID: ${FB_LOGIN_CONFIG_ID:-}
     # Cố ý KHÔNG có `ports:` — xem ghi chú đầu file.
 
   worker:
