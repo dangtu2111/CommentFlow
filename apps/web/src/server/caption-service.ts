@@ -7,6 +7,7 @@ export type CaptionFailure =
   | 'unsupported_claims'
   | 'flag_off'
   | 'not_configured'
+  | 'rate_limited'
   | 'unavailable';
 export type SuggestionResult =
   | { ok: true; kind: 'caption'; text: string }

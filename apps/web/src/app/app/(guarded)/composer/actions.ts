@@ -86,7 +86,7 @@ const MAX_DRAFT_CHARS = 4000;
 
 /**
  * Owner xin AI GỢI Ý caption/hashtag từ nội dung đang soạn (không lưu, không đăng; người dùng tự quyết). Workspace lấy từ phiên, không từ form.
- * Dùng bộ giới hạn `uiHeavy` vì mỗi lần là một lệnh gọi LLM tốn tiền.
+ * Dùng bộ giới hạn `uiSensitive` (1 lần/2 giây, 10 lần/10 phút mỗi người) vì mỗi lần là một lệnh gọi LLM tốn tiền; quá giới hạn → `rate_limited` (thông báo riêng, không nhầm với lỗi dịch vụ).
  */
 export async function suggestCaptionAction(
   kind: CaptionKind,
@@ -96,8 +96,8 @@ export async function suggestCaptionAction(
   if ((kind !== 'caption' && kind !== 'hashtags') || typeof draft !== 'string') {
     return { ok: false, reason: 'empty_input' };
   }
-  if (!(await actionAllowed('uiHeavy', { userId: user.id, workspaceId: workspace.id }))) {
-    return { ok: false, reason: 'unavailable' };
+  if (!(await actionAllowed('uiSensitive', { userId: user.id, workspaceId: workspace.id }))) {
+    return { ok: false, reason: 'rate_limited' };
   }
   return suggestForWorkspace(workspace.id, kind, draft.slice(0, MAX_DRAFT_CHARS));
 }
