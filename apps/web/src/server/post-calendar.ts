@@ -3,6 +3,7 @@ import {
   type ChannelListItem,
   eq,
   getPublishPost,
+  getPublishPostNote,
   listChannels,
   listPickableProducts,
   listPostsForWeek,
@@ -37,6 +38,8 @@ export type ComposerData = {
   selectedProductIds: string[];
   /** Ảnh/video đã gắn vào bài đang sửa (theo thứ tự). */
   media: MediaAssetRow[];
+  /** Ghi chú riêng cho AI của bài đang sửa. */
+  aiNote: string | null;
 };
 
 const FALLBACK_TIME_ZONE = 'UTC';
@@ -97,14 +100,16 @@ export async function loadComposer(
   postId?: string,
 ): Promise<ComposerData> {
   return getDb().withActor(workspaceId, userId, async (tx) => {
-    const [timeZone, channels, post, products, selectedProductIds, media] = await Promise.all([
-      workspaceTimeZone(tx, workspaceId),
-      listChannels(tx, workspaceId),
-      postId ? getPublishPost(tx, workspaceId, postId) : Promise.resolve(null),
-      listPickableProducts(tx, workspaceId),
-      postId ? listPublishPostProductIds(tx, workspaceId, postId) : Promise.resolve([]),
-      postId ? listPublishPostMedia(tx, workspaceId, postId) : Promise.resolve([]),
-    ]);
-    return { channels, timeZone, post, products, selectedProductIds, media };
+    const [timeZone, channels, post, products, selectedProductIds, media, aiNote] =
+      await Promise.all([
+        workspaceTimeZone(tx, workspaceId),
+        listChannels(tx, workspaceId),
+        postId ? getPublishPost(tx, workspaceId, postId) : Promise.resolve(null),
+        listPickableProducts(tx, workspaceId),
+        postId ? listPublishPostProductIds(tx, workspaceId, postId) : Promise.resolve([]),
+        postId ? listPublishPostMedia(tx, workspaceId, postId) : Promise.resolve([]),
+        postId ? getPublishPostNote(tx, workspaceId, postId) : Promise.resolve(null),
+      ]);
+    return { channels, timeZone, post, products, selectedProductIds, media, aiNote };
   });
 }

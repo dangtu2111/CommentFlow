@@ -86,6 +86,7 @@ export default async function ComposerPage({ searchParams }: { searchParams: Sea
                   message: post.message,
                   channelIds: post.targets.map((target) => target.channelId),
                   productIds: data.selectedProductIds,
+                  aiNote: data.aiNote ?? '',
                   status: post.status,
                   date: local?.date ?? '',
                   time: local?.time ?? '',

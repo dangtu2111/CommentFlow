@@ -56,6 +56,8 @@ export async function savePublishPost(
     productIds?: readonly string[];
     /** Ảnh/video gắn vào bài (thứ tự giữ nguyên; tối đa 10 ảnh hoặc 1 video). Luôn đặt lại toàn bộ (rỗng = gỡ hết). */
     mediaIds?: readonly string[];
+    /** Ghi chú riêng cho AI (1–1000 ký tự; rỗng/null = xóa). Khi bài đăng thành công, thành ghi chú bài ở `post_notes`. */
+    aiNote?: string | null;
   },
 ): Promise<string> {
   const channels =
@@ -81,7 +83,20 @@ export async function savePublishPost(
         )}]::uuid[]`;
   await tx.execute(sql`SELECT cf.set_publish_post_products(${id}::uuid, ${productArray})`);
   await setPublishPostMedia(tx, id, input.mediaIds ?? []);
+  await tx.execute(sql`SELECT cf.set_publish_post_note(${id}::uuid, ${input.aiNote ?? null})`);
   return id;
+}
+
+/** Ghi chú riêng cho AI của một bài (chỉ Owner thấy; RLS của publish_posts). */
+export async function getPublishPostNote(
+  tx: Database,
+  workspaceId: string,
+  postId: string,
+): Promise<string | null> {
+  const r = await tx.execute<{ ai_note: string | null }>(
+    sql`SELECT ai_note FROM cf.publish_posts WHERE workspace_id = ${workspaceId}::uuid AND id = ${postId}::uuid`,
+  );
+  return r.rows[0]?.ai_note ?? null;
 }
 
 export type PickableProduct = {

@@ -36,6 +36,7 @@ describe('parsePublishForm', () => {
         channelIds: [CH1, CH2],
         productIds: [],
         mediaIds: [],
+        aiNote: null,
         scheduledAt: null,
       },
     });
@@ -178,5 +179,21 @@ describe('parsePublishForm', () => {
       ok: false,
       code: 'invalid',
     });
+  });
+
+  it('ghi chú cho AI: chuẩn hóa xuống dòng, cắt khoảng trắng, rỗng → null, quá 1000 ký tự → invalid', () => {
+    const ok = parsePublishForm(
+      form({ intent: 'draft', message: 'x', aiNote: '  Ưu tiên combo\r\nNhắc đổi trả  ' }),
+      ZONE,
+      NOW,
+    );
+    expect(ok).toMatchObject({ ok: true, value: { aiNote: 'Ưu tiên combo\nNhắc đổi trả' } });
+    expect(parsePublishForm(form({ intent: 'draft', aiNote: '   ' }), ZONE, NOW)).toMatchObject({
+      ok: true,
+      value: { aiNote: null },
+    });
+    expect(
+      parsePublishForm(form({ intent: 'draft', aiNote: 'a'.repeat(1001) }), ZONE, NOW),
+    ).toEqual({ ok: false, code: 'invalid' });
   });
 });

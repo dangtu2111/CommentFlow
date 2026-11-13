@@ -133,6 +133,7 @@ describe('ComposerStudio', () => {
         message: 'Nội dung cũ',
         channelIds: ['c1'],
         productIds: ['pr1'],
+        aiNote: '',
         status: 'scheduled',
         date: '2026-12-02',
         time: '10:30',
@@ -200,6 +201,7 @@ describe('ComposerStudio', () => {
         message: 'x',
         channelIds: [],
         productIds: ['pr1'],
+        aiNote: '',
         status: 'draft',
         date: '',
         time: '',
@@ -223,6 +225,7 @@ describe('ComposerStudio', () => {
         message: 'x',
         channelIds: [],
         productIds: ['pr1'],
+        aiNote: '',
         status: 'draft',
         date: '',
         time: '',
@@ -270,5 +273,26 @@ describe('ComposerStudio', () => {
     const html = render();
     expect(html).toContain('src="https://scontent.fbcdn.net/page.jpg"');
     expect(html).not.toContain('insecure.example');
+  });
+
+  it('ghi chú riêng cho AI: ô nhập bật, có đếm ký tự; bài sửa điền lại ghi chú đã lưu', () => {
+    const fresh = render();
+    expect(fresh).toMatch(/<textarea[^>]*name="aiNote"/);
+    expect(fresh).not.toMatch(/<textarea[^>]*name="aiNote"[^>]*disabled/);
+    expect(fresh).toContain('0/1000 ký tự');
+    const editing = render({
+      initial: {
+        id: 'p1',
+        message: 'x',
+        channelIds: [],
+        productIds: [],
+        aiNote: 'Ưu tiên tư vấn combo',
+        status: 'draft',
+        date: '',
+        time: '',
+      },
+    });
+    expect(editing).toContain('Ưu tiên tư vấn combo');
+    expect(editing).toContain('20/1000 ký tự');
   });
 });

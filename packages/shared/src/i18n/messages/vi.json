@@ -3904,7 +3904,8 @@
       "remove": "Bỏ {name}",
       "primaryHint": "Sản phẩm đầu tiên là sản phẩm chính; AI dùng các sản phẩm này để báo giá khi trả lời bình luận của bài. Bạn chọn ở đây là bạn xác nhận liên kết.",
       "limit": "Đã chọn {count}/{max} sản phẩm",
-      "price": "{price}đ"
+      "price": "{price}đ",
+      "noteHint": "Chỉ AI đọc ghi chú này khi tư vấn bình luận của bài (khách không thấy). Được lưu khi bài đăng thành công. {count}/{max} ký tự."
     },
     "schedule": {
       "title": "Lịch đăng",

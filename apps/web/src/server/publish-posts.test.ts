@@ -14,6 +14,7 @@ const value = (over: Partial<PublishFormValue> = {}): PublishFormValue => ({
   channelIds: CH,
   productIds: [],
   mediaIds: [],
+  aiNote: null,
   scheduledAt: null,
   ...over,
 });
@@ -51,6 +52,7 @@ describe('submit — ý định của Owner', () => {
       channelIds: CH,
       productIds: [],
       mediaIds: [],
+      aiNote: null,
       scheduledAt: null,
     });
   });
