@@ -3912,7 +3912,9 @@
       "date": "Ngày đăng",
       "time": "Giờ đăng",
       "zone": "Múi giờ của cửa hàng: {zone}",
-      "hint": "Chọn ngày và giờ theo múi giờ của cửa hàng; chỉ cần khi bấm \"Lên lịch đăng\"."
+      "hint": "Chọn ngày và giờ theo múi giờ của cửa hàng; chỉ cần khi bấm \"Lên lịch đăng\".",
+      "close": "Đóng",
+      "confirm": "Xác nhận lên lịch"
     },
     "preview": {
       "title": "Xem trước",

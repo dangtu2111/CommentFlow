@@ -31,3 +31,19 @@ describe('mọi mã thông báo đều có chữ ở vi và en', () => {
     }
   });
 });
+
+describe('isSuccessNotice (lỗi ở lại trang, giữ dữ liệu)', () => {
+  it('thành công → chuyển trang; lỗi/cảnh báo → ở lại', async () => {
+    const { isSuccessNotice } = await import('./publish-notice');
+    for (const ok of ['saved', 'scheduled', 'publishing'] as const)
+      expect(isSuccessNotice(ok)).toBe(true);
+    for (const bad of [
+      'unavailable',
+      'forbidden',
+      'invalid_schedule',
+      'rate_limited',
+      'publish_disabled',
+    ] as const)
+      expect(isSuccessNotice(bad)).toBe(false);
+  });
+});

@@ -3,7 +3,7 @@
 import type { CaptionNotReady } from '@flow/ai';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useId, useRef, useState, useTransition } from 'react';
+import { useActionState, useEffect, useId, useRef, useState, useTransition } from 'react';
 import {
   cancelPublishScheduleAction,
   deletePublishPostAction,
@@ -13,6 +13,7 @@ import {
 import { cx } from '../../lib/cx';
 import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/post-counters';
 import { MAX_AI_NOTE_CHARS, MAX_PRODUCTS } from '../../lib/publish-form';
+import { noticeVariant, type PublishNoticeCode } from '../../lib/publish-notice';
 import { safeHttpsUrl } from '../../lib/safe-url';
 import { appendHashtags, insertAtCursor, parseHttpsLink } from '../../lib/text-insert';
 import type { SuggestionResult } from '../../server/caption-service';
@@ -104,6 +105,28 @@ function ProductThumb({ url, size }: { url: string | null; size: 'sm' | 'md' }) 
   );
 }
 
+/** Thông báo lỗi/cảnh báo sau khi bấm Lưu/Lên lịch/Đăng ngay (ở lại trang, giữ dữ liệu đang soạn). */
+function SaveFailureBanner({ code }: { code: PublishNoticeCode }) {
+  const t = useTranslations('composer');
+  const danger = noticeVariant(code) === 'danger';
+  return (
+    <p
+      role="alert"
+      className={cx(
+        'flex items-start gap-space-xs rounded-lg p-space-md font-body-sm text-body-sm',
+        danger
+          ? 'bg-error-container text-on-error-container'
+          : 'bg-tertiary-fixed/50 text-on-surface',
+      )}
+    >
+      <span className="mt-0.5">
+        <Icon name="warning" size={16} />
+      </span>
+      <span>{t(`notice.${code}`)}</span>
+    </p>
+  );
+}
+
 export function ComposerStudio({
   channels,
   timeZone,
@@ -134,6 +157,16 @@ export function ComposerStudio({
   const soon = t('soon');
   const [aiNote, setAiNote] = useState(initial?.aiNote ?? '');
   const [mediaBusy, setMediaBusy] = useState(false);
+  const [state, submitAction] = useActionState(savePublishPostAction, null);
+  // Lỗi khi lên lịch/đăng: ở lại trang, GIỮ nguyên mọi thông tin đã nhập; đóng hộp thoại để thấy thông báo.
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  useEffect(() => {
+    if (state) setScheduleOpen(false);
+  }, [state]);
+  // Bài đã được tạo trước khi lỗi (vd. đăng ngay thất bại) → lần bấm sau cập nhật chính bài đó, không tạo trùng.
+  const postId = state?.postId ?? initial?.id;
+  const [date, setDate] = useState(initial?.date ?? '');
+  const [time, setTime] = useState(initial?.time ?? '');
   const [mediaList, setMediaList] = useState<ComposerMedia[]>(initialMedia);
   const [pickedIds, setPickedIds] = useState<string[]>(initial?.productIds ?? []);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -210,10 +243,11 @@ export function ComposerStudio({
   );
 
   return (
-    <form action={savePublishPostAction} className="space-y-space-lg">
-      {initial ? <input type="hidden" name="id" value={initial.id} /> : null}
-      {initial ? <input type="hidden" name="postId" value={initial.id} /> : null}
-      <div className="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
+    <form action={submitAction} className="space-y-space-lg">
+      {postId ? <input type="hidden" name="id" value={postId} /> : null}
+      {postId ? <input type="hidden" name="postId" value={postId} /> : null}
+      {/* Dòng tiêu đề + nút hành động ghim ở đầu vùng cuộn để cuộn xuống vẫn bấm được. */}
+      <div className="sticky top-0 z-30 -mx-space-sm flex flex-col justify-between gap-space-md bg-surface/95 px-space-sm py-space-sm backdrop-blur lg:flex-row lg:items-center">
         <div className="flex min-w-0 flex-wrap items-center gap-space-md">
           <Link
             href="/app/calendar"
@@ -261,10 +295,10 @@ export function ComposerStudio({
             <Icon name="draft" size={18} />
             {t('actions.draft')}
           </PendingSubmit>
-          <PendingSubmit
-            name="intent"
-            value="schedule"
-            pendingLabel={t('pending.schedule')}
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setScheduleOpen(true)}
             disabled={!canSend}
             aria-disabled={!canSend}
             title={publishEnabled ? undefined : t('publishDisabledShort')}
@@ -276,7 +310,7 @@ export function ComposerStudio({
           >
             <Icon name="schedule_send" size={18} />
             {t('actions.schedule')}
-          </PendingSubmit>
+          </button>
           <PendingSubmit
             name="intent"
             value="publish"
@@ -297,6 +331,7 @@ export function ComposerStudio({
       </div>
 
       <PendingNote>{t('pending.note')}</PendingNote>
+      {state ? <SaveFailureBanner code={state.notice} /> : null}
       <p
         role="note"
         className="flex items-start gap-space-xs rounded-lg bg-tertiary-fixed/40 p-space-md font-body-sm text-body-sm text-on-surface"
@@ -772,38 +807,6 @@ export function ComposerStudio({
               </Link>
             </p>
           </section>
-
-          <section className={card}>
-            <h2 className="flex items-center gap-space-xs font-title-md text-title-md font-semibold text-on-surface">
-              <span className="text-primary">
-                <Icon name="event_upcoming" size={20} />
-              </span>
-              {t('schedule.title')}
-            </h2>
-            <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2">
-              <label className="flex flex-col gap-1 font-label-md text-label-md text-on-surface-variant">
-                {t('schedule.date')}
-                <input
-                  type="date"
-                  name="date"
-                  defaultValue={initial?.date ?? ''}
-                  className="rounded-lg bg-surface-container-low p-space-sm font-body-md text-body-md text-on-surface outline-none"
-                />
-              </label>
-              <label className="flex flex-col gap-1 font-label-md text-label-md text-on-surface-variant">
-                {t('schedule.time')}
-                <input
-                  type="time"
-                  name="time"
-                  defaultValue={initial?.time ?? ''}
-                  className="rounded-lg bg-surface-container-low p-space-sm font-body-md text-body-md text-on-surface outline-none"
-                />
-              </label>
-            </div>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">
-              {t('schedule.zone', { zone: timeZone })} · {t('schedule.hint')}
-            </p>
-          </section>
         </div>
 
         <aside className="col-span-12 flex flex-col gap-space-md lg:sticky lg:top-space-lg lg:col-span-5">
@@ -848,6 +851,81 @@ export function ComposerStudio({
           </section>
         </aside>
       </div>
+
+      {/* Ngày/giờ luôn nằm trong biểu mẫu (nhập ở hộp thoại Lên lịch) để cả Lưu nháp lẫn Lên lịch đều gửi cùng giá trị. */}
+      <input type="hidden" name="date" value={date} />
+      <input type="hidden" name="time" value={time} />
+      {scheduleOpen ? (
+        <div className="tw">
+          <button
+            type="button"
+            aria-label={t('schedule.close')}
+            onClick={() => setScheduleOpen(false)}
+            className="fixed inset-0 z-40 cursor-default bg-inverse-surface/50"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('schedule.title')}
+            className="fixed left-1/2 top-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-space-md rounded-2xl bg-surface-container-lowest p-space-lg shadow-2xl"
+          >
+            <h2 className="flex items-center gap-space-xs font-title-md text-title-md font-semibold text-on-surface">
+              <span className="text-primary">
+                <Icon name="event_upcoming" size={20} />
+              </span>
+              {t('schedule.title')}
+            </h2>
+            <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2">
+              <label className="flex flex-col gap-1 font-label-md text-label-md text-on-surface-variant">
+                {t('schedule.date')}
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(event) => setDate(event.target.value)}
+                  className="rounded-lg bg-surface-container-low p-space-sm font-body-md text-body-md text-on-surface outline-none"
+                />
+              </label>
+              <label className="flex flex-col gap-1 font-label-md text-label-md text-on-surface-variant">
+                {t('schedule.time')}
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(event) => setTime(event.target.value)}
+                  className="rounded-lg bg-surface-container-low p-space-sm font-body-md text-body-md text-on-surface outline-none"
+                />
+              </label>
+            </div>
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              {t('schedule.zone', { zone: timeZone })} · {t('schedule.hint')}
+            </p>
+            <div className="flex justify-end gap-space-sm">
+              <button
+                type="button"
+                onClick={() => setScheduleOpen(false)}
+                className={cx(actionBtn, 'bg-surface-container-low text-on-surface')}
+              >
+                {t('schedule.close')}
+              </button>
+              <PendingSubmit
+                name="intent"
+                value="schedule"
+                pendingLabel={t('pending.schedule')}
+                disabled={!canSend || date === '' || time === ''}
+                className={cx(
+                  actionBtn,
+                  'bg-primary-container font-bold text-on-primary',
+                  canSend && date !== '' && time !== ''
+                    ? 'hover:bg-primary'
+                    : 'cursor-not-allowed opacity-60',
+                )}
+              >
+                <Icon name="schedule_send" size={18} />
+                {t('schedule.confirm')}
+              </PendingSubmit>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }
