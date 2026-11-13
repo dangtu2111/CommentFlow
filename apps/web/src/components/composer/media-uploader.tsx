@@ -26,6 +26,8 @@ type Item = {
   error?: string;
 };
 
+/** Chờ giữa các lần tải để không chạm giới hạn 1 lần/giây của thao tác ghi. */
+const RATE_LIMIT_WAIT_MS = 1200;
 const ACCEPT = 'image/jpeg,image/png,image/webp,video/mp4,video/quicktime';
 const KIND_OF_MIME: Record<string, MediaKind> = {
   'image/jpeg': 'image',
@@ -80,11 +82,14 @@ export function MediaUploader({
   enabled,
   initial,
   onBusyChange,
+  onChange,
 }: {
   enabled: boolean;
   initial: ComposerMedia[];
   /** Báo cho biểu mẫu biết đang tải lên (khóa nút lưu/đăng để không mất file chưa xong). */
   onBusyChange?: (busy: boolean) => void;
+  /** Báo danh sách file đã tải xong (theo thứ tự) để bản xem trước hiển thị cùng bài. */
+  onChange?: (media: ComposerMedia[]) => void;
 }) {
   const t = useTranslations('composer');
   const inputId = useId();
@@ -103,6 +108,11 @@ export function MediaUploader({
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
   const done = items.flatMap((item) => (item.status === 'done' && item.media ? [item.media] : []));
+  const doneKey = done.map((media) => media.id).join(',');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: chỉ báo khi danh sách id thay đổi (doneKey), không theo danh tính mảng
+  useEffect(() => {
+    onChange?.(done);
+  }, [doneKey, onChange]);
 
   const patch = (key: string, change: Partial<Item>) =>
     setItems((current) =>
@@ -111,7 +121,17 @@ export function MediaUploader({
 
   const startUpload = async (file: File, key: string) => {
     try {
-      const media = await upload(file, (ratio) => patch(key, { progress: ratio }));
+      // Bộ giới hạn thao tác ghi cho phép 1 lần/giây: tải lần lượt, gặp `rate_limited` thì đợi rồi thử lại (tối đa 3 lần) thay vì báo lỗi.
+      let media: ComposerMedia | undefined;
+      for (let attempt = 0; media === undefined; attempt += 1) {
+        try {
+          media = await upload(file, (ratio) => patch(key, { progress: ratio }));
+        } catch (error) {
+          const limited = error instanceof Error && error.message === 'rate_limited';
+          if (!limited || attempt >= 3) throw error;
+          await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_WAIT_MS));
+        }
+      }
       patch(key, { status: 'done', progress: 1, media });
     } catch (error) {
       patch(key, {

@@ -72,6 +72,62 @@ const card =
 const actionBtn =
   'inline-flex items-center gap-space-xs rounded-lg px-space-md py-space-sm font-title-sm text-title-sm transition-colors';
 
+/** Ảnh/video trong bản xem trước bài (giống bố cục Facebook: 1 ảnh lớn; 2 ảnh chia đôi; từ 3 ảnh lưới, ảnh cuối ghi "+N"). */
+function PreviewMedia({ media }: { media: ComposerMedia[] }) {
+  const t = useTranslations('composer');
+  if (media.length === 0) return null;
+  const src = (item: ComposerMedia) => `/app/api/media/${item.id}`;
+  const video = media[0]?.kind === 'video' ? media[0] : undefined;
+  if (video) {
+    return (
+      <div className="mt-space-md overflow-hidden rounded-lg bg-surface-container-high">
+        <video
+          src={src(video)}
+          controls
+          preload="metadata"
+          className="max-h-96 w-full object-contain"
+          aria-label={t('preview.video')}
+        >
+          <track kind="captions" />
+        </video>
+      </div>
+    );
+  }
+  const shown = media.slice(0, 4);
+  const extra = media.length - shown.length;
+  const cols = shown.length === 1 ? 'grid-cols-1' : 'grid-cols-2';
+  return (
+    <ul className={cx('mt-space-md grid gap-1 overflow-hidden rounded-lg', cols)}>
+      {shown.map((item, index) => (
+        <li
+          key={item.id}
+          className={cx(
+            'relative bg-surface-container-high',
+            shown.length === 1 ? 'max-h-96' : 'aspect-square',
+            shown.length === 3 && index === 0 ? 'col-span-2 aspect-video' : '',
+          )}
+        >
+          {/* biome-ignore lint/performance/noImgElement: xem trước từ route riêng tư của ứng dụng (không qua next/image) */}
+          <img
+            src={src(item)}
+            alt={t('preview.image', { n: index + 1 })}
+            loading="lazy"
+            className={cx(
+              'w-full',
+              shown.length === 1 ? 'max-h-96 object-contain' : 'h-full object-cover',
+            )}
+          />
+          {extra > 0 && index === shown.length - 1 ? (
+            <span className="absolute inset-0 grid place-items-center bg-black/50 font-headline-md text-headline-md font-bold text-white">
+              +{extra}
+            </span>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Ảnh nhỏ của sản phẩm (chỉ https; không có/không hợp lệ → biểu tượng thay thế). */
 function ProductThumb({ url, size }: { url: string | null; size: 'sm' | 'md' }) {
   const src = safeHttpsUrl(url);
@@ -128,6 +184,7 @@ export function ComposerStudio({
   const [tab, setTab] = useState<ComposerPlatform>('facebook');
   const soon = t('soon');
   const [mediaBusy, setMediaBusy] = useState(false);
+  const [mediaList, setMediaList] = useState<ComposerMedia[]>(initialMedia);
   const [pickedIds, setPickedIds] = useState<string[]>(initial?.productIds ?? []);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [productQuery, setProductQuery] = useState('');
@@ -621,6 +678,7 @@ export function ComposerStudio({
             enabled={mediaEnabled}
             initial={initialMedia}
             onBusyChange={setMediaBusy}
+            onChange={setMediaList}
           />
 
           <section className={card}>
@@ -841,6 +899,7 @@ export function ComposerStudio({
                   text
                 )}
               </p>
+              <PreviewMedia media={mediaList} />
               <div className="mt-space-md flex items-center justify-around border-t border-outline-variant pt-space-sm font-label-md text-label-md text-on-surface-variant">
                 <span className="flex items-center gap-1">
                   <Icon name="thumb_up" size={16} />

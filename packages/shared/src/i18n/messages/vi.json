@@ -3926,7 +3926,9 @@
       "like": "Thích",
       "comment": "Bình luận",
       "share": "Chia sẻ",
-      "disclaimer": "Bản xem trước chỉ mang tính minh họa; hiển thị thật phụ thuộc vào nền tảng."
+      "disclaimer": "Bản xem trước chỉ mang tính minh họa; hiển thị thật phụ thuộc vào nền tảng.",
+      "image": "Ảnh {n} của bài",
+      "video": "Video của bài"
     },
     "error": {
       "title": "Không tải được dữ liệu",

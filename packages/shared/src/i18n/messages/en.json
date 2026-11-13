@@ -3926,7 +3926,9 @@
       "like": "Like",
       "comment": "Comment",
       "share": "Share",
-      "disclaimer": "The preview is illustrative; how the platform shows it may differ."
+      "disclaimer": "The preview is illustrative; how the platform shows it may differ.",
+      "image": "Post image {n}",
+      "video": "Post video"
     },
     "error": {
       "title": "Could not load the data",

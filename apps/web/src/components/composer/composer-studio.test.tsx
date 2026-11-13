@@ -254,4 +254,26 @@ describe('ComposerStudio', () => {
     expect(ready).not.toContain('AI soạn caption đang tắt');
     expect(ready).not.toContain('CAPTION_LLM_MODEL');
   });
+
+  it('bản xem trước hiện ảnh/video của bài: 1 ảnh, lưới có "+N" khi nhiều hơn 4 ảnh, video có điều khiển', () => {
+    const img = (n: number) => ({
+      id: `m${n}`,
+      kind: 'image' as const,
+      contentType: 'image/png',
+      sizeBytes: 10,
+    });
+    const one = render({ mediaEnabled: true, initialMedia: [img(1)] });
+    expect(one).toContain('alt="Ảnh 1 của bài"');
+    expect(one).not.toContain('>+');
+    const six = render({ mediaEnabled: true, initialMedia: [1, 2, 3, 4, 5, 6].map(img) });
+    expect(six).toContain('alt="Ảnh 4 của bài"');
+    expect(six).not.toContain('alt="Ảnh 5 của bài"');
+    expect(six).toContain('+2');
+    const video = render({
+      mediaEnabled: true,
+      initialMedia: [{ id: 'v1', kind: 'video', contentType: 'video/mp4', sizeBytes: 5 }],
+    });
+    expect(video).toContain('aria-label="Video của bài"');
+    expect(render()).not.toContain('Ảnh 1 của bài');
+  });
 });
