@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Fragment, type ReactNode, useState } from 'react';
+import { Fragment, type ReactNode, type SyntheticEvent, useState } from 'react';
 import { cx } from '../../lib/cx';
+import { facebookLayout } from '../../lib/fb-media-layout';
 import type { ComposerPlatform } from '../../lib/post-counters';
 import { safeHttpsUrl } from '../../lib/safe-url';
 import { Icon } from '../ui/icon';
@@ -136,99 +137,57 @@ function VideoPlayer({ item, className }: { item: ComposerMedia; className: stri
   );
 }
 
-function Photo({
-  item,
-  index,
-  className,
-  extra,
-}: {
-  item: ComposerMedia;
-  index: number;
-  className?: string;
-  extra?: number;
-}) {
-  const t = useTranslations('composer');
-  return (
-    <div className={cx('relative overflow-hidden bg-surface-container-high', className)}>
-      {/* biome-ignore lint/performance/noImgElement: xem trước từ route riêng tư của ứng dụng (không qua next/image) */}
-      <img
-        src={mediaSrc(item)}
-        alt={t('preview.image', { n: index + 1 })}
-        loading="lazy"
-        className="h-full w-full object-cover"
-      />
-      {extra && extra > 0 ? (
-        <span className="absolute inset-0 grid place-items-center bg-black/55 font-headline-md text-headline-md font-bold text-white">
-          +{extra}
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
-/** Lưới ảnh kiểu Facebook: 1 ảnh nguyên khổ; 2 ảnh cạnh nhau; 3 ảnh = 1 lớn + 2 nhỏ; 4 ảnh = 2×2; từ 5 ảnh = 2 trên + 3 dưới, ô cuối ghi "+N". */
+/**
+ * Lưới ảnh kiểu Facebook: bố cục chọn theo SỐ ẢNH và HƯỚNG ảnh (rộng/vuông/dọc) — xem `lib/fb-media-layout.ts`. Tỉ lệ thật của ảnh đo khi ảnh tải xong (chưa biết → coi như vuông).
+ */
 function FacebookMedia({ media }: { media: ComposerMedia[] }) {
+  const t = useTranslations('composer');
+  const [ratios, setRatios] = useState<Record<string, number>>({});
   const first = media[0];
   if (!first) return null;
   if (first.kind === 'video') {
     return <VideoPlayer item={first} className="max-h-[28rem] w-full bg-black" />;
   }
-  const count = media.length;
-  const extra = count - 5;
-  if (count === 1) {
-    return (
-      <div className="max-h-[32rem] overflow-hidden bg-surface-container-high">
-        {/* biome-ignore lint/performance/noImgElement: xem trước từ route riêng tư của ứng dụng */}
-        <img
-          src={mediaSrc(first)}
-          alt=""
-          loading="lazy"
-          className="max-h-[32rem] w-full object-cover"
-        />
-      </div>
-    );
-  }
-  const at = (i: number) => media[i] as ComposerMedia;
-  if (count === 2) {
-    return (
-      <div className="grid grid-cols-2 gap-0.5">
-        <Photo item={at(0)} index={0} className="aspect-square" />
-        <Photo item={at(1)} index={1} className="aspect-square" />
-      </div>
-    );
-  }
-  if (count === 3) {
-    return (
-      <div className="grid grid-cols-2 gap-0.5">
-        <Photo item={at(0)} index={0} className="col-span-2 aspect-video" />
-        <Photo item={at(1)} index={1} className="aspect-square" />
-        <Photo item={at(2)} index={2} className="aspect-square" />
-      </div>
-    );
-  }
-  if (count === 4) {
-    return (
-      <div className="grid grid-cols-2 gap-0.5">
-        {[0, 1, 2, 3].map((i) => (
-          <Photo key={at(i).id} item={at(i)} index={i} className="aspect-square" />
-        ))}
-      </div>
-    );
-  }
+  const layout = facebookLayout(media.map((item) => ratios[item.id] ?? 1));
+  const measured = (id: string) => (event: SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    if (naturalWidth === 0 || naturalHeight === 0) return;
+    const ratio = naturalWidth / naturalHeight;
+    setRatios((current) => (current[id] === ratio ? current : { ...current, [id]: ratio }));
+  };
   return (
-    <div className="grid grid-cols-6 gap-0.5">
-      {[0, 1].map((i) => (
-        <Photo key={at(i).id} item={at(i)} index={i} className="col-span-3 aspect-square" />
-      ))}
-      {[2, 3, 4].map((i) => (
-        <Photo
-          key={at(i).id}
-          item={at(i)}
-          index={i}
-          className="col-span-2 aspect-square"
-          {...(i === 4 ? { extra } : {})}
-        />
-      ))}
+    <div
+      className="grid gap-0.5 bg-surface-container-lowest"
+      style={{
+        aspectRatio: String(layout.aspect),
+        gridTemplateColumns: layout.columns,
+        gridTemplateRows: layout.rows,
+      }}
+    >
+      {layout.cells.map((place) => {
+        const item = media[place.index] as ComposerMedia;
+        return (
+          <div
+            key={item.id}
+            className="relative min-h-0 min-w-0 overflow-hidden bg-surface-container-high"
+            style={{ gridColumn: place.column, gridRow: place.row }}
+          >
+            {/* biome-ignore lint/performance/noImgElement: xem trước từ route riêng tư của ứng dụng (không qua next/image) */}
+            <img
+              src={mediaSrc(item)}
+              alt={t('preview.image', { n: place.index + 1 })}
+              loading="lazy"
+              onLoad={measured(item.id)}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            {layout.extra > 0 && place.index === layout.cells.length - 1 ? (
+              <span className="absolute inset-0 grid place-items-center bg-black/55 font-headline-md text-headline-md font-bold text-white">
+                +{layout.extra}
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
