@@ -7,6 +7,7 @@ export * from './automation';
 export * from './autopause';
 export * from './cache';
 export * from './calibration';
+export * from './caption';
 export * from './classify';
 export * from './confidence';
 export * from './cost-gate';

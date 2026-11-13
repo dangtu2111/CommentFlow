@@ -20,6 +20,9 @@ export const DISTILL_FLAG = 'cf.ai.distill';
 /** Cờ theo workspace: guard kiểm theo THẺ/chủ đề (ADR 018 T2/T4: nguồn = đoạn tìm được cùng chủ đề; nháp rỗng có nguồn → gọi lại 1 lần kèm mã lỗi). Mặc định TẮT. */
 export const GUARD_FACTS_FLAG = 'cf.ai.guard_facts';
 
+/** Cờ theo workspace: nút "AI gợi ý caption / hashtag" ở Biên tập bài viết (POST-PUBLISHING; tốn tiền LLM, có ghi `ai_usage`). Mặc định TẮT. */
+export const CAPTION_FLAG = 'cf.ai.caption';
+
 export type AiStep = keyof typeof AI_STEP_FLAGS;
 
 export const FLAG_DEFAULTS: Readonly<Record<string, boolean>> = {
@@ -30,4 +33,5 @@ export const FLAG_DEFAULTS: Readonly<Record<string, boolean>> = {
   [FACT_SLOTS_FLAG]: false,
   [DISTILL_FLAG]: false,
   [GUARD_FACTS_FLAG]: false,
+  [CAPTION_FLAG]: false,
 };

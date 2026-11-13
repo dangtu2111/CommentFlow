@@ -3855,7 +3855,11 @@
       "link": "Gắn liên kết",
       "counters": "Số ký tự theo nền tảng",
       "over": "Vượt giới hạn",
-      "ok": "Trong giới hạn"
+      "ok": "Trong giới hạn",
+      "mentionUnavailable": "Gắn thẻ chưa khả dụng: Facebook không cho đăng bài có thẻ người dùng/trang qua API",
+      "linkPlaceholder": "https://…",
+      "linkAdd": "Chèn liên kết",
+      "linkInvalid": "Chỉ nhận liên kết https hợp lệ"
     },
     "media": {
       "title": "Hình ảnh và video",
@@ -3930,6 +3934,27 @@
       "schedule": "Đang lên lịch…",
       "publish": "Đang gửi…",
       "note": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại. Trang sẽ tự chuyển khi xong."
+    },
+    "ai": {
+      "loading": "Đang soạn…",
+      "useCaption": "Dùng caption này",
+      "appendCaption": "Thêm vào cuối",
+      "addHashtags": "Thêm hashtag vào bài",
+      "dismiss": "Bỏ qua",
+      "disclaimer": "AI chỉ gợi ý. Hãy đọc và sửa trước khi đăng.",
+      "notReady": {
+        "flag_off": "AI soạn caption đang tắt cho cửa hàng này.",
+        "missing_service": "Chưa cấu hình dịch vụ AI.",
+        "missing_model": "Chưa cấu hình model soạn caption (CAPTION_LLM_MODEL)."
+      },
+      "failure": {
+        "empty_input": "Hãy nhập ý tưởng hoặc nội dung trước.",
+        "empty": "AI không trả về nội dung dùng được, thử lại.",
+        "unsupported_claims": "AI tự thêm số liệu/giá/liên kết không có trong ý tưởng của bạn nên đã bị từ chối. Hãy thử lại.",
+        "flag_off": "AI soạn caption đang tắt.",
+        "not_configured": "Chưa cấu hình AI soạn caption.",
+        "unavailable": "Chưa gọi được AI lúc này, thử lại sau."
+      }
     }
   },
   "calendar": {
