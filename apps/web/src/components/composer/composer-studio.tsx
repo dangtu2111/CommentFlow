@@ -179,6 +179,11 @@ export function ComposerStudio({
   const ask = (kind: 'caption' | 'hashtags') =>
     startAi(async () => {
       setSuggestion(null);
+      // Chưa có nội dung: báo ngay (không gọi máy chủ/LLM) thay vì khóa nút khiến người dùng tưởng tính năng không dùng được.
+      if (text.trim() === '') {
+        setSuggestion({ ok: false, reason: 'empty_input' });
+        return;
+      }
       setSuggestion(await suggestCaptionAction(kind, text));
     });
   const addLink = () => {
@@ -421,7 +426,7 @@ export function ComposerStudio({
                 <button
                   type="button"
                   onClick={() => ask('caption')}
-                  disabled={!aiReady || pending || text.trim() === ''}
+                  disabled={!aiReady || pending}
                   title={aiHint}
                   className="inline-flex items-center gap-space-xs rounded-full px-space-sm py-1 font-label-md text-label-md font-semibold disabled:cursor-not-allowed disabled:opacity-60 bg-secondary-fixed text-on-secondary-fixed"
                 >
@@ -431,7 +436,7 @@ export function ComposerStudio({
                 <button
                   type="button"
                   onClick={() => ask('hashtags')}
-                  disabled={!aiReady || pending || text.trim() === ''}
+                  disabled={!aiReady || pending}
                   title={aiHint}
                   className="inline-flex items-center gap-space-xs rounded-full px-space-sm py-1 font-label-md text-label-md font-semibold disabled:cursor-not-allowed disabled:opacity-60 bg-surface-container-high text-secondary"
                 >
@@ -440,9 +445,9 @@ export function ComposerStudio({
                 </button>
               </div>
             </div>
-            {aiHint ? (
-              <p className="font-label-sm text-label-sm text-on-surface-variant">{aiHint}</p>
-            ) : null}
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              {aiHint ?? t('ai.hint')}
+            </p>
             {suggestion ? (
               <div role="status" className="rounded-lg bg-secondary-fixed/30 p-space-md">
                 {suggestion.ok && suggestion.kind === 'caption' ? (
