@@ -2619,7 +2619,7 @@
       "save": "Save token and list Pages",
       "notice": {
         "disconnected": "System User token removed. Connected channels keep working.",
-        "invalid": "The token has an invalid format.",
+        "invalid": "The token has an invalid format: only letters, digits, _ and -, 30–2048 characters, with no spaces or line breaks inside. Copy the whole token string again from Meta.",
         "invalid_credentials": "Meta rejected this token (wrong app, expired or revoked).",
         "missing_scopes": "The token lacks pages_show_list. Generate it again with all permissions.",
         "unreachable": "Could not reach Meta. Try again later.",

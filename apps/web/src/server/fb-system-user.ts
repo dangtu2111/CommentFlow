@@ -1,4 +1,4 @@
-import { parseFbSystemToken } from '../lib/fb-system-token-form';
+import { diagnoseFbSystemToken, parseFbSystemToken } from '../lib/fb-system-token-form';
 
 export type FbSystemUserSession = { workspaceId: string; userId: string };
 export type FbSealed = { ciphertext: Buffer; keyVersion: number };
@@ -66,7 +66,11 @@ export function createFbSystemUserService(deps: FbSystemUserDeps) {
   return {
     async save(session: FbSystemUserSession, tokenInput: string): Promise<FbSystemUserSaveResult> {
       const token = parseFbSystemToken(tokenInput);
-      if (!token) return 'invalid';
+      if (!token) {
+        // Chỉ ghi LOẠI lý do (rỗng / quá ngắn / quá dài / ký tự lạ), không bao giờ ghi giá trị đã dán.
+        deps.warn({ event: 'fb_system_token_rejected', reason: diagnoseFbSystemToken(tokenInput) });
+        return 'invalid';
+      }
       if (!deps.encrypt) return 'not_configured';
       let verified: FbSystemUserVerifyResult;
       try {

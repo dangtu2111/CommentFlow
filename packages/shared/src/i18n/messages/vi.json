@@ -2619,7 +2619,7 @@
       "save": "Lưu token và liệt kê Page",
       "notice": {
         "disconnected": "Đã ngắt token System User. Các kênh đã kết nối vẫn hoạt động.",
-        "invalid": "Token không đúng định dạng.",
+        "invalid": "Token không đúng định dạng: chỉ gồm chữ, số, dấu _ và -, dài 30–2048 ký tự, không có khoảng trắng hay xuống dòng ở giữa. Hãy sao chép lại cả chuỗi token từ Meta.",
         "invalid_credentials": "Meta từ chối token này (sai ứng dụng, hết hiệu lực hoặc bị thu hồi).",
         "missing_scopes": "Token thiếu quyền pages_show_list. Tạo lại token với đủ quyền.",
         "unreachable": "Không liên lạc được với Meta. Thử lại sau.",
