@@ -26,6 +26,8 @@ function build(over: Partial<PublishPostDeps> = {}) {
     publishNow: vi.fn(async () => true),
     cancelSchedule: vi.fn(async () => true),
     remove: vi.fn(async () => true),
+    get: vi.fn(async () => null),
+    update: vi.fn(async () => {}),
     warn: vi.fn(),
     ...over,
   };
@@ -151,5 +153,115 @@ describe('hủy lịch và xóa', () => {
     expect(
       await build({ remove: throwing(dbError('42501')) }).service.remove(SESSION, POST),
     ).toEqual({ notice: 'forbidden', to: 'calendar' });
+  });
+});
+
+describe('CALENDAR-DND — move (kéo thả) và edit (hộp thoại)', () => {
+  const NOW = new Date('2026-11-13T03:00:00Z'); // 10:00 giờ VN
+  const scheduled = (over: Record<string, unknown> = {}) =>
+    ({
+      id: POST,
+      message: 'Hàng mới',
+      status: 'scheduled',
+      scheduledAt: new Date('2026-11-15T02:30:00Z'), // 09:30 VN
+      publishedAt: null,
+      day: null,
+      time: null,
+      targets: [],
+      ...over,
+    }) as never;
+
+  it('kéo sang ngày khác: giữ nguyên nội dung và GIỜ địa phương, về Lịch đúng tuần kèm thông báo moved', async () => {
+    const { deps, service } = build({ get: vi.fn(async () => scheduled()) });
+    const result = await service.move(SESSION, POST, '2026-11-18', ZONE, NOW);
+    expect(result).toEqual({ notice: 'moved', postId: POST, to: 'calendar', week: '2026-11-16' });
+    expect(deps.update).toHaveBeenCalledWith(SESSION, {
+      id: POST,
+      message: 'Hàng mới',
+      scheduledAt: new Date('2026-11-18T02:30:00Z'),
+    });
+  });
+
+  it('bài không tồn tại/không còn lên lịch (nháp, đã đăng) → not_editable, KHÔNG ghi', async () => {
+    for (const post of [null, scheduled({ status: 'published' }), scheduled({ status: 'draft' })]) {
+      const { deps, service } = build({ get: vi.fn(async () => post) });
+      expect(await service.move(SESSION, POST, '2026-11-18', ZONE, NOW)).toEqual({
+        notice: 'not_editable',
+        to: 'calendar',
+      });
+      expect(deps.update).not.toHaveBeenCalled();
+    }
+  });
+
+  it('thả vào ngày quá khứ hoặc giờ mới quá gần → invalid_schedule, KHÔNG ghi; lỗi DB được dịch', async () => {
+    const past = build({ get: vi.fn(async () => scheduled()) });
+    expect((await past.service.move(SESSION, POST, '2026-11-10', ZONE, NOW)).notice).toBe(
+      'invalid_schedule',
+    );
+    expect(past.deps.update).not.toHaveBeenCalled();
+    const denied = build({
+      get: vi.fn(async () => scheduled()),
+      update: throwing(dbError('42501')),
+    });
+    expect((await denied.service.move(SESSION, POST, '2026-11-18', ZONE, NOW)).notice).toBe(
+      'forbidden',
+    );
+  });
+
+  it('edit nháp: lưu nội dung, không cần cờ đăng bài; edit có giờ: cần cờ, về đúng tuần, thông báo updated', async () => {
+    const off = build({ publishEnabled: () => false });
+    expect(
+      await off.service.edit(
+        SESSION,
+        { id: POST, intent: 'draft', message: 'x', scheduledAt: null },
+        ZONE,
+      ),
+    ).toEqual({ notice: 'saved', postId: POST, to: 'calendar' });
+    expect(
+      (
+        await off.service.edit(
+          SESSION,
+          { id: POST, intent: 'save', message: 'x', scheduledAt: new Date('2026-11-20T02:30:00Z') },
+          ZONE,
+        )
+      ).notice,
+    ).toBe('publish_disabled');
+    expect(off.deps.update).toHaveBeenCalledTimes(1);
+    const on = build();
+    expect(
+      await on.service.edit(
+        SESSION,
+        {
+          id: POST,
+          intent: 'schedule',
+          message: 'x',
+          scheduledAt: new Date('2026-11-20T02:30:00Z'),
+        },
+        ZONE,
+      ),
+    ).toEqual({ notice: 'updated', postId: POST, to: 'calendar', week: '2026-11-16' });
+  });
+
+  it('edit: bài không còn sửa được (55000) → not_editable; nhật ký chỉ có MÃ lỗi', async () => {
+    const { deps, service } = build({ update: throwing(dbError('55000')) });
+    expect(
+      (
+        await service.edit(
+          SESSION,
+          { id: POST, intent: 'draft', message: 'BÍ MẬT', scheduledAt: null },
+          ZONE,
+        )
+      ).notice,
+    ).toBe('not_editable');
+    const boom = build({ update: throwing(dbError('08006')) });
+    await boom.service.edit(
+      SESSION,
+      { id: POST, intent: 'draft', message: 'BÍ MẬT', scheduledAt: null },
+      ZONE,
+    );
+    expect(JSON.stringify((boom.deps.warn as ReturnType<typeof vi.fn>).mock.calls)).not.toContain(
+      'BÍ MẬT',
+    );
+    void deps;
   });
 });

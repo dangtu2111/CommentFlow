@@ -3965,7 +3965,9 @@
       "invalid": "The data is invalid (content too long or a wrong value).",
       "empty_message": "Write the content before scheduling or publishing.",
       "no_channel": "Choose at least one channel before scheduling or publishing.",
-      "rate_limited": "You clicked too fast so the extra click was blocked. The earlier request may already have been sent: check the Calendar before clicking again to avoid a duplicate post."
+      "rate_limited": "You clicked too fast so the extra click was blocked. The earlier request may already have been sent: check the Calendar before clicking again to avoid a duplicate post.",
+      "moved": "Post moved to the new day (same publish time).",
+      "updated": "Post changes saved."
     },
     "pending": {
       "draft": "Saving…",
@@ -4088,7 +4090,9 @@
       "invalid_post": "The post content is not valid.",
       "rate_limited": "Facebook is rate limiting; retried several times.",
       "unknown_result": "Not sure whether the post went out. Check Facebook before publishing again.",
-      "lease_expired": "Not sure whether the post went out (no result for too long). Check Facebook."
+      "lease_expired": "Not sure whether the post went out (no result for too long). Check Facebook.",
+      "media_unavailable": "Could not read the post's images/video from storage.",
+      "media_upload_failed": "Uploading the images to Facebook failed; the post was not published."
     },
     "drafts": {
       "title": "Drafts",
@@ -4114,6 +4118,27 @@
       "failed": "Publishing FAILED: {reason} The post is not on Facebook; you can edit and retry in the Composer.",
       "unknown": "Not sure whether the post was published: {reason}",
       "timeout": "No result after 2 minutes. Check the Page on Facebook and the post status in the Calendar before retrying (the worker may not be running)."
+    },
+    "modal": {
+      "title": "Post",
+      "content": "Content",
+      "when": "Publish date and time",
+      "date": "Date",
+      "time": "Time",
+      "zone": "Shop time zone: {zone}",
+      "prefilled": "Date picked from where you dropped it",
+      "preview": "Preview",
+      "noChannel": "No channel selected. Open the full editor to pick one.",
+      "fullEditorHint": "Channels, images/video, products and the AI note are edited in the full editor.",
+      "publishOff": "Publishing is not enabled on the server, so you cannot schedule or change the time yet; saving drafts still works.",
+      "saveDraft": "Save draft",
+      "schedule": "Schedule",
+      "saveChanges": "Save changes"
+    },
+    "dnd": {
+      "dragHint": "Drag to another day to reschedule",
+      "dropHere": "Drop here",
+      "moving": "Moving post…"
     }
   }
 }

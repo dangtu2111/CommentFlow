@@ -1,10 +1,17 @@
 import type { CalendarPost, PublishPostItem } from '@flow/db/runtime';
+import { NextIntlClientProvider } from 'next-intl';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import vi_messages from '../../../../../packages/shared/src/i18n/messages/vi.json';
 
 vi.mock('next-intl/server', () => ({
   getTranslations: async () => (key: string, vars?: Record<string, unknown>) =>
     vars ? `${key}:${JSON.stringify(vars)}` : key,
+}));
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('../../app/app/(guarded)/calendar/actions', () => ({
+  movePublishPostAction: vi.fn(),
 }));
 
 import { WeekBoard } from './week-board';
@@ -39,16 +46,20 @@ const post = (over: Partial<CalendarPost>): CalendarPost => ({
 
 const render = async (byDay: Record<string, CalendarPost[]>, over: Record<string, unknown> = {}) =>
   renderToStaticMarkup(
-    await WeekBoard({
-      days: DAYS,
-      today: '2026-11-12',
-      weekStart: '2026-11-09',
-      platform: undefined,
-      openPostId: undefined,
-      byDay,
-      publishByDay: Object.fromEntries(DAYS.map((d) => [d, []])),
-      ...over,
-    } as Parameters<typeof WeekBoard>[0]),
+    <NextIntlClientProvider locale="vi" messages={vi_messages}>
+      {
+        await WeekBoard({
+          days: DAYS,
+          today: '2026-11-12',
+          weekStart: '2026-11-09',
+          platform: undefined,
+          openPostId: undefined,
+          byDay,
+          publishByDay: Object.fromEntries(DAYS.map((d) => [d, []])),
+          ...over,
+        } as Parameters<typeof WeekBoard>[0])
+      }
+    </NextIntlClientProvider>,
   );
 
 describe('WeekBoard', () => {
@@ -111,21 +122,35 @@ describe('WeekBoard', () => {
         },
       ],
     };
-    const html = renderToStaticMarkup(
-      await WeekBoard({
-        days: DAYS,
-        today: '2026-11-12',
-        weekStart: '2026-11-09',
-        platform: undefined,
-        openPostId: undefined,
-        byDay: Object.fromEntries(DAYS.map((d) => [d, []])),
-        publishByDay: { ...Object.fromEntries(DAYS.map((d) => [d, []])), '2026-11-15': [own] },
-      } as Parameters<typeof WeekBoard>[0]),
-    );
+    const html = await render(Object.fromEntries(DAYS.map((d) => [d, []])), {
+      publishByDay: { ...Object.fromEntries(DAYS.map((d) => [d, []])), '2026-11-15': [own] },
+    });
     expect(html).toContain('Khai trương Chủ nhật');
     expect(html).toContain('status.scheduled');
     expect(html).toContain('Fanpage A');
     expect(html).toContain('post=pp1');
     expect(html.match(/emptyDay/g)?.length).toBe(6);
+  });
+
+  it('kéo thả: bài đã lên lịch kéo được (kèm gợi ý), bài đã đăng/lỗi/nháp thì không; mỗi ngày là vùng thả', async () => {
+    const mk = (id: string, status: PublishPostItem['status']): PublishPostItem => ({
+      id,
+      message: `bài ${id}`,
+      status,
+      scheduledAt: new Date('2026-11-15T03:00:00Z'),
+      publishedAt: null,
+      day: '2026-11-15',
+      time: '10:00',
+      targets: [],
+    });
+    const html = await render(Object.fromEntries(DAYS.map((d) => [d, []])), {
+      publishByDay: {
+        ...Object.fromEntries(DAYS.map((d) => [d, []])),
+        '2026-11-15': [mk('s1', 'scheduled'), mk('p1', 'published'), mk('f1', 'failed')],
+      },
+    });
+    expect(html.match(/draggable="true"/g) ?? []).toHaveLength(1);
+    expect(html).toContain('Kéo sang ngày khác để đổi lịch');
+    expect(html.match(/<li/g)?.length).toBeGreaterThanOrEqual(7);
   });
 });

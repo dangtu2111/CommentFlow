@@ -17,6 +17,8 @@ export const PUBLISH_NOTICES = [
   'empty_message',
   'no_channel',
   'rate_limited',
+  'moved',
+  'updated',
 ] as const;
 export type PublishNoticeCode = (typeof PUBLISH_NOTICES)[number];
 export type NoticeVariant = 'success' | 'info' | 'warning' | 'danger';
@@ -34,6 +36,8 @@ const SUCCESS: ReadonlySet<PublishNoticeCode> = new Set([
   'publishing',
   'cancelled',
   'deleted',
+  'moved',
+  'updated',
 ]);
 const WARNING: ReadonlySet<PublishNoticeCode> = new Set([
   'publish_disabled',

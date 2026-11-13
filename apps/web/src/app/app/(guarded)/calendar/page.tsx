@@ -1,12 +1,14 @@
 import { isLocale } from '@flow/shared';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { DragPost } from '../../../../components/calendar/dnd';
 import { PostDrawer } from '../../../../components/calendar/post-drawer';
-import { PublishDrawer } from '../../../../components/calendar/publish-drawer';
+import { PublishModal } from '../../../../components/calendar/publish-modal';
 import { PublishWatcher } from '../../../../components/calendar/publish-watcher';
 import { WeekBoard } from '../../../../components/calendar/week-board';
 import { NoticeBanner } from '../../../../components/composer/notice-banner';
 import { Icon, type IconName } from '../../../../components/ui/icon';
+import { isDay } from '../../../../lib/calendar-move';
 import {
   groupByDay,
   parsePlatformFilter,
@@ -23,7 +25,9 @@ import {
 import { cx } from '../../../../lib/cx';
 import { COMPOSER_PLATFORMS } from '../../../../lib/post-counters';
 import { parsePublishNotice } from '../../../../lib/publish-notice';
-import { loadCalendar } from '../../../../server/post-calendar';
+import { utcToLocalParts } from '../../../../lib/zoned-time';
+import { loadCalendar, loadPublishMedia } from '../../../../server/post-calendar';
+import { publishEnabled } from '../../../../server/publish-runtime';
 import { requireAppUser } from '../../../../server/require-app-user';
 
 export async function generateMetadata() {
@@ -32,6 +36,7 @@ export async function generateMetadata() {
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+const DRAFT = 'draft' as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const first = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
@@ -112,7 +117,13 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const publishByDay = groupByDay(publishVisible, days);
   const openId = first(params.post);
   const openPost = visible.find((post) => post.id === openId);
-  const openPublish = publishVisible.find((item) => item.id === openId);
+  const openDraft = data.drafts.find((draft) => draft.id === openId);
+  const openPublish = publishVisible.find((item) => item.id === openId) ?? openDraft;
+  const rawDate = first(params.date);
+  const prefillDate = rawDate && isDay(rawDate) ? rawDate : undefined;
+  const modalMedia = openPublish
+    ? await loadPublishMedia(workspace.id, user.id, openPublish.id).catch(() => [])
+    : [];
   const notice = parsePublishNotice(params.n);
   const rawWatch = first(params.watch);
   const watchId = notice === 'publishing' && rawWatch && UUID.test(rawWatch) ? rawWatch : undefined;
@@ -300,17 +311,24 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
               <ul className="grid grid-cols-1 gap-space-sm md:grid-cols-2 lg:grid-cols-3">
                 {data.drafts.map((draft) => (
                   <li key={draft.id}>
-                    <Link
-                      href={`/app/composer?id=${draft.id}`}
-                      className="flex h-full flex-col gap-1 rounded-lg bg-surface-container-low p-space-sm hover:bg-surface-container"
-                    >
-                      <span className="line-clamp-2 font-body-sm text-body-sm text-on-surface">
-                        {draft.message === '' ? t('drafts.untitled') : draft.message}
-                      </span>
-                      <span className="font-label-sm text-label-sm text-primary">
-                        {t('drafts.edit')}
-                      </span>
-                    </Link>
+                    <DragPost id={draft.id} day={null} kind={DRAFT}>
+                      <Link
+                        draggable={false}
+                        href={calendarHref({
+                          week: weekStart,
+                          post: draft.id,
+                          ...(platform ? { platform } : {}),
+                        })}
+                        className="flex h-full flex-col gap-1 rounded-lg bg-surface-container-low p-space-sm hover:bg-surface-container"
+                      >
+                        <span className="line-clamp-2 font-body-sm text-body-sm text-on-surface">
+                          {draft.message === '' ? t('drafts.untitled') : draft.message}
+                        </span>
+                        <span className="font-label-sm text-label-sm text-primary">
+                          {t('drafts.edit')}
+                        </span>
+                      </Link>
+                    </DragPost>
                   </li>
                 ))}
               </ul>
@@ -318,11 +336,29 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
           </section>
         </div>
         {openPublish ? (
-          <PublishDrawer
-            post={openPublish}
+          <PublishModal
+            post={{
+              id: openPublish.id,
+              status: openPublish.status,
+              message: openPublish.message,
+              ...(() => {
+                const at = openPublish.publishedAt ?? openPublish.scheduledAt;
+                const local = at ? utcToLocalParts(at, data.timeZone) : { date: '', time: '' };
+                return { date: local.date, time: local.time };
+              })(),
+              targets: openPublish.targets.map((target) => ({
+                id: target.id,
+                channelName: target.channelName,
+                avatarUrl: data.channels.find((c) => c.id === target.channelId)?.avatarUrl ?? null,
+                status: target.status,
+                errorCode: target.errorCode,
+              })),
+            }}
+            media={modalMedia}
             closeHref={hrefWith({})}
-            locale={locale}
             timeZone={data.timeZone}
+            publishEnabled={publishEnabled()}
+            prefillDate={prefillDate}
           />
         ) : null}
         {openPost ? (
