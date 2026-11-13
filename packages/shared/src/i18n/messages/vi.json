@@ -4041,6 +4041,13 @@
       "openOnFacebook": "Xem trên Facebook",
       "pending": "Đang gửi…",
       "pendingNote": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại."
+    },
+    "watch": {
+      "pending": "Đang đăng bài lên Facebook… Kết quả sẽ hiện ở đây trong vài chục giây, bạn không cần bấm lại.",
+      "published": "Đăng bài thành công lên Facebook.",
+      "failed": "Đăng bài THẤT BẠI: {reason} Bài chưa lên Facebook; bạn có thể sửa rồi đăng lại ở Biên tập.",
+      "unknown": "Chưa rõ bài đã đăng chưa: {reason}",
+      "timeout": "Chưa có kết quả sau 2 phút. Hãy kiểm tra Page trên Facebook và trạng thái bài ở Lịch trước khi đăng lại (worker có thể chưa chạy)."
     }
   }
 }

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { PostDrawer } from '../../../../components/calendar/post-drawer';
 import { PublishDrawer } from '../../../../components/calendar/publish-drawer';
+import { PublishWatcher } from '../../../../components/calendar/publish-watcher';
 import { WeekBoard } from '../../../../components/calendar/week-board';
 import { NoticeBanner } from '../../../../components/composer/notice-banner';
 import { Icon, type IconName } from '../../../../components/ui/icon';
@@ -31,6 +32,7 @@ export async function generateMetadata() {
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const first = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
 
@@ -112,6 +114,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const openPost = visible.find((post) => post.id === openId);
   const openPublish = publishVisible.find((item) => item.id === openId);
   const notice = parsePublishNotice(params.n);
+  const rawWatch = first(params.watch);
+  const watchId = notice === 'publishing' && rawWatch && UUID.test(rawWatch) ? rawWatch : undefined;
   const hrefWith = (over: { week?: string; platform?: string | undefined }) =>
     calendarHref({
       week: over.week ?? weekStart,
@@ -124,6 +128,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
       <div className="tw">
         <div className="space-y-space-lg">
           {notice ? <NoticeBanner code={notice} /> : null}
+          {watchId ? <PublishWatcher key={watchId} postId={watchId} /> : null}
           <div className="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
             <div className="space-y-space-xs">
               <h1 className="font-headline-md text-headline-md tracking-tight text-on-surface">

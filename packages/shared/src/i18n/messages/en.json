@@ -4041,6 +4041,13 @@
       "openOnFacebook": "View on Facebook",
       "pending": "Sending…",
       "pendingNote": "Sending your request, please wait and do NOT click again."
+    },
+    "watch": {
+      "pending": "Publishing to Facebook… The result will show here within a minute, no need to click again.",
+      "published": "Published to Facebook successfully.",
+      "failed": "Publishing FAILED: {reason} The post is not on Facebook; you can edit and retry in the Composer.",
+      "unknown": "Not sure whether the post was published: {reason}",
+      "timeout": "No result after 2 minutes. Check the Page on Facebook and the post status in the Calendar before retrying (the worker may not be running)."
     }
   }
 }

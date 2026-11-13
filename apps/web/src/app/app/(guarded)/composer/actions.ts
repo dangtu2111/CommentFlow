@@ -3,8 +3,9 @@
 import { redirect } from 'next/navigation';
 import { calendarHref } from '../../../../lib/calendar-week';
 import { parsePublishForm } from '../../../../lib/publish-form';
+import type { PublishOutcome } from '../../../../lib/publish-outcome';
 import { actionAllowed } from '../../../../server/action-guard';
-import { loadWorkspaceTimeZone } from '../../../../server/post-calendar';
+import { loadPublishOutcome, loadWorkspaceTimeZone } from '../../../../server/post-calendar';
 import type { PublishActionResult } from '../../../../server/publish-posts';
 import { publishPostService } from '../../../../server/publish-runtime';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -17,7 +18,9 @@ function go(result: PublishActionResult): never {
   const notice = `n=${result.notice}`;
   if (result.to === 'calendar') {
     const base = calendarHref(result.week ? { week: result.week } : {});
-    redirect(`${base}${base.includes('?') ? '&' : '?'}${notice}`);
+    // "Đăng ngay": Lịch theo dõi bài (`watch`) rồi báo thành công/thất bại khi worker có kết quả.
+    const watch = result.notice === 'publishing' && result.postId ? `&watch=${result.postId}` : '';
+    redirect(`${base}${base.includes('?') ? '&' : '?'}${notice}${watch}`);
   }
   redirect(`${COMPOSER}?${result.postId ? `id=${result.postId}&` : ''}${notice}`);
 }
@@ -68,4 +71,11 @@ export async function deletePublishPostAction(formData: FormData): Promise<void>
     redirect(`${calendarHref({})}?n=rate_limited`);
   }
   go(await publishPostService().remove({ workspaceId: workspace.id, userId: user.id }, id));
+}
+
+/** Lịch hỏi kết quả đăng của một bài vừa "Đăng ngay" (chỉ ĐỌC, chỉ Owner). Không thấy bài → coi như chưa có kết quả. */
+export async function checkPublishOutcomeAction(postId: string): Promise<PublishOutcome> {
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  if (typeof postId !== 'string' || !UUID.test(postId)) return { state: 'pending' };
+  return (await loadPublishOutcome(workspace.id, user.id, postId)) ?? { state: 'pending' };
 }

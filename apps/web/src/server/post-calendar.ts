@@ -14,6 +14,7 @@ import {
   schema,
 } from '@flow/db/runtime';
 import { isValidTimezone } from '@flow/shared';
+import { outcomeOf, type PublishOutcome } from '../lib/publish-outcome';
 import { getDb } from './db';
 
 export type CalendarData = {
@@ -70,6 +71,18 @@ export async function loadCalendar(
       listChannels(tx, workspaceId),
     ]);
     return { posts, publish, drafts, channels, timeZone };
+  });
+}
+
+/** Kết quả đăng hiện tại của một bài (chỉ ĐỌC; RLS: chỉ Owner thấy bài của workspace mình). Không thấy bài → `null`. */
+export async function loadPublishOutcome(
+  workspaceId: string,
+  userId: string,
+  postId: string,
+): Promise<PublishOutcome | null> {
+  return getDb().withActor(workspaceId, userId, async (tx) => {
+    const post = await getPublishPost(tx, workspaceId, postId);
+    return post ? outcomeOf(post.targets) : null;
   });
 }
 
