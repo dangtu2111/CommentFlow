@@ -1,4 +1,4 @@
-import { PlatformError } from '@flow/connectors';
+import { MEDIA_UPLOAD_FAILED, PlatformError } from '@flow/connectors';
 import type { ClaimedPublishTarget } from '@flow/db';
 import { describe, expect, it, vi } from 'vitest';
 import { PUBLISH_PERMISSION, runPublishSweep } from './publish-sweep';
@@ -18,6 +18,7 @@ function build(opts: {
   workspaces?: string[];
   claimed?: ClaimedPublishTarget[];
   publish?: (channel: unknown, text: string) => Promise<{ externalId: string }>;
+  loadMedia?: () => Promise<unknown>;
 }) {
   const record = vi.fn(async () => true);
   const publish = vi.fn(opts.publish ?? (async () => ({ externalId: '1000000000001_77' })));
@@ -29,6 +30,7 @@ function build(opts: {
       claim,
       record,
       publish: publish as never,
+      loadMedia: (opts.loadMedia ?? (async () => undefined)) as never,
       logger,
     });
   return { run, record, publish, logger, claim };
@@ -143,10 +145,48 @@ describe('runPublishSweep — đăng bài đến hạn', () => {
       claim,
       record,
       publish: async () => ({ externalId: '1_1' }),
+      loadMedia: async () => undefined,
       logger,
     });
     expect(calls).toBe(2);
     expect(result.published).toBe(1);
     expect(logger.error).toHaveBeenCalled();
+  });
+});
+
+describe('COMPOSER-MEDIA — ảnh/video trong lượt đăng', () => {
+  const media = { kind: 'image' as const, files: [] };
+
+  it('bài có file: truyền file cho connector; bài chỉ chữ: KHÔNG truyền đối số thứ ba', async () => {
+    const withMedia = build({ claimed: [target()], loadMedia: async () => media });
+    await withMedia.run();
+    expect((withMedia.publish.mock.calls[0] as unknown[])[2]).toBe(media);
+    const plain = build({ claimed: [target()] });
+    await plain.run();
+    expect(plain.publish.mock.calls[0]).toHaveLength(2);
+  });
+
+  it('kho không đọc được file → failed media_unavailable và KHÔNG gọi Facebook', async () => {
+    const { MediaUnavailableError } = await import('./publish-media');
+    const { run, record, publish } = build({
+      claimed: [target()],
+      loadMedia: async () => {
+        throw new MediaUnavailableError('missing');
+      },
+    });
+    expect(await run()).toMatchObject({ failed: 1, unknown: 0 });
+    expect(publish).not.toHaveBeenCalled();
+    expect(record).toHaveBeenCalledWith('w1', 't1', 'failed', { error: 'media_unavailable' });
+  });
+
+  it('tải ảnh lên Page lỗi → failed media_upload_failed (chắc chắn chưa đăng), không phải unknown', async () => {
+    const { run, record } = build({
+      claimed: [target()],
+      publish: async () => {
+        throw new PlatformError('UNKNOWN', { message: MEDIA_UPLOAD_FAILED });
+      },
+    });
+    expect(await run()).toMatchObject({ failed: 1, unknown: 0 });
+    expect(record).toHaveBeenCalledWith('w1', 't1', 'failed', { error: 'media_upload_failed' });
   });
 });

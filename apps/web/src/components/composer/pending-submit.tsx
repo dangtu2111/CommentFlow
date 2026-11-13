@@ -23,8 +23,8 @@ export function PendingSubmit({
     <button
       type="submit"
       {...rest}
-      disabled={pending || rest.disabled}
-      aria-disabled={pending || rest.disabled}
+      disabled={pending || rest.disabled || undefined}
+      aria-disabled={pending || rest.disabled || undefined}
       aria-busy={mine || undefined}
       className={`${className ?? ''}${pending ? ' cursor-wait opacity-70' : ''}`}
     >

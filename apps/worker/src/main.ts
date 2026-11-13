@@ -17,6 +17,8 @@ import {
   getMergeWindowSeconds,
   hydratePostFields,
   listDuePublishWorkspaces,
+  listMediaForPublish,
+  purgeOrphanMedia,
   recordPublishResult,
   setCommentAuthorAvatar,
 } from '@flow/db';
@@ -30,6 +32,7 @@ import {
   kbSyncEnqueueOptions,
   PIPELINE_FLAG,
 } from '@flow/shared';
+import { createMediaStoreFromEnv } from '@flow/storage';
 import { buildConnectorRegistry } from './channels/connector-registry';
 import { verifyTokenKeysAtStartup } from './channels/verify-token-keys';
 import { loadConfig } from './config';
@@ -51,6 +54,7 @@ import { createPingHandler } from './jobs/ping';
 import { createPipelineHandler } from './jobs/pipeline-job';
 import { startPipelineSweep } from './jobs/pipeline-sweep';
 import { createPostHydrator } from './jobs/post-hydrate';
+import { createMediaLoader, startMediaGc } from './jobs/publish-media';
 import { PUBLISH_BATCH, PUBLISH_MAX_WORKSPACES, startPublishSweep } from './jobs/publish-sweep';
 import { startRetention } from './jobs/retention';
 import { createSendHandler } from './jobs/send';
@@ -373,6 +377,7 @@ async function main(): Promise<void> {
   }
   // POST-PUBLISHING (Q-PUB1): đăng bài đã đến hạn lên Fanpage. Cờ `FB_PUBLISH_ENABLED` MẶC ĐỊNH TẮT; bật mà thiếu connector Facebook thì dừng khởi động với lỗi rõ ràng (không chạy bản giả).
   let stopPublish: (() => void) | undefined;
+  let stopMediaGc: (() => void) | undefined;
   if (config.publishEnabled) {
     const publishPost = (
       facebookConnector as { publishPost?: FacebookConnector['publishPost'] } | undefined
@@ -382,6 +387,25 @@ async function main(): Promise<void> {
         'FB_PUBLISH_ENABLED=true cần FB_CONNECTOR_ENABLED=true (connector Facebook + META_APP_ID/META_APP_SECRET/TOKEN_ENC_KEYS)',
       );
     }
+    // Ảnh/video: kho S3 (`MEDIA_S3_*`). Không cấu hình → bài có file báo `media_unavailable` (không bản giả); bài chỉ chữ vẫn đăng bình thường.
+    const mediaStore = createMediaStoreFromEnv(process.env);
+    if (!mediaStore.ok) {
+      logger.warn(
+        { missing: mediaStore.missing },
+        'kho ảnh/video chưa cấu hình (MEDIA_S3_*): bài có ảnh/video sẽ không đăng được',
+      );
+    } else {
+      stopMediaGc = startMediaGc({
+        purge: (limit) => db.withSystem((tx) => purgeOrphanMedia(tx, limit)),
+        store: mediaStore.store,
+        logger,
+      });
+    }
+    const loadMedia = createMediaLoader({
+      list: (workspaceId, postId) =>
+        db.withJob(workspaceId, (tx) => listMediaForPublish(tx, postId)),
+      store: mediaStore.ok ? mediaStore.store : undefined,
+    });
     stopPublish = startPublishSweep({
       listDueWorkspaces: () =>
         db.withSystem((tx) => listDuePublishWorkspaces(tx, PUBLISH_MAX_WORKSPACES)),
@@ -390,6 +414,7 @@ async function main(): Promise<void> {
       record: (workspaceId, targetId, outcome, detail) =>
         db.withJob(workspaceId, (tx) => recordPublishResult(tx, targetId, outcome, detail)),
       publish: publishPost,
+      loadMedia,
       logger,
     });
     logger.info('đăng bài lên Facebook: BẬT (FB_PUBLISH_ENABLED=true)');
@@ -408,6 +433,7 @@ async function main(): Promise<void> {
     stopSweep();
     stopPipelineSweep?.();
     stopPublish?.();
+    stopMediaGc?.();
     await flags.stop();
     await boss.stop({ graceful: true });
     await db.close();

@@ -36,6 +36,7 @@ export type PublishPostDeps = {
       message: string;
       channelIds: string[];
       productIds: string[];
+      mediaIds: string[];
       scheduledAt: Date | null;
     },
   ) => Promise<string>;
@@ -91,6 +92,7 @@ export function createPublishPostService(deps: PublishPostDeps) {
           message: value.message,
           channelIds: value.channelIds,
           productIds: value.productIds,
+          mediaIds: value.mediaIds,
           scheduledAt: value.intent === 'schedule' ? value.scheduledAt : null,
         });
       } catch (error) {

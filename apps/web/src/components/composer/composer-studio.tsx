@@ -13,6 +13,7 @@ import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/
 import { MAX_PRODUCTS } from '../../lib/publish-form';
 import { safeHttpsUrl } from '../../lib/safe-url';
 import { Icon, type IconName } from '../ui/icon';
+import { type ComposerMedia, MediaUploader } from './media-uploader';
 import { PendingNote, PendingSubmit } from './pending-submit';
 
 /**
@@ -107,10 +108,15 @@ export function ComposerStudio({
   timeZone,
   publishEnabled,
   products,
+  mediaEnabled,
+  initialMedia,
   initial,
 }: {
   channels: ComposerChannel[];
   products: ComposerProduct[];
+  /** Kho ảnh/video đã cấu hình (`MEDIA_S3_*`); chưa → khóa phần tải lên kèm lý do. */
+  mediaEnabled: boolean;
+  initialMedia: ComposerMedia[];
   timeZone: string;
   /** Cờ `FB_PUBLISH_ENABLED` của web: tắt → chỉ lưu nháp được. */
   publishEnabled: boolean;
@@ -122,6 +128,7 @@ export function ComposerStudio({
   const [text, setText] = useState(initial?.message ?? '');
   const [tab, setTab] = useState<ComposerPlatform>('facebook');
   const soon = t('soon');
+  const [mediaBusy, setMediaBusy] = useState(false);
   const [pickedIds, setPickedIds] = useState<string[]>(initial?.productIds ?? []);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [productQuery, setProductQuery] = useState('');
@@ -153,7 +160,7 @@ export function ComposerStudio({
   );
   // Tiện ích phía trình duyệt: DB và Server Action kiểm lại tất cả; nút bị khóa chỉ để người dùng khỏi bấm vô ích.
   const ready = text.trim() !== '' && selected.length > 0;
-  const canSend = publishEnabled && ready;
+  const canSend = publishEnabled && ready && !mediaBusy;
   const missingPermission = channels.filter(
     (channel) => selected.includes(channel.id) && !channel.canPublish,
   );
@@ -200,6 +207,7 @@ export function ComposerStudio({
           <PendingSubmit
             name="intent"
             value="draft"
+            disabled={mediaBusy}
             pendingLabel={t('pending.draft')}
             className={cx(
               actionBtn,
@@ -442,29 +450,11 @@ export function ComposerStudio({
             </ul>
           </section>
 
-          <section className={card}>
-            <div className="flex items-center justify-between gap-space-sm">
-              <h2 className="flex items-center gap-space-xs font-title-md text-title-md font-semibold text-on-surface">
-                <span className="text-primary">
-                  <Icon name="perm_media" size={20} />
-                </span>
-                {t('media.title')}
-              </h2>
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                title={soon}
-                className="inline-flex cursor-not-allowed items-center gap-1 rounded-lg bg-surface-container-low px-space-sm py-1 font-label-md text-label-md font-semibold text-primary opacity-60"
-              >
-                <Icon name="add_photo_alternate" size={16} />
-                {t('media.add')}
-              </button>
-            </div>
-            <p className="rounded-lg bg-surface-container-low p-space-md font-body-sm text-body-sm text-on-surface-variant">
-              {t('media.empty')}
-            </p>
-          </section>
+          <MediaUploader
+            enabled={mediaEnabled}
+            initial={initialMedia}
+            onBusyChange={setMediaBusy}
+          />
 
           <section className={card}>
             <div className="flex flex-wrap items-center justify-between gap-space-sm">

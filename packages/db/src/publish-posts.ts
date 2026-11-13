@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import type { Database } from './client';
+import { setPublishPostMedia } from './publish-media';
 
 /**
  * Bài viết để đăng lên Facebook (migration 0090, POST-PUBLISHING, Q-PUB1). `cf_app` không ghi được bảng; mọi ghi qua hàm DEFINER:
@@ -53,6 +54,8 @@ export async function savePublishPost(
     scheduledAt?: Date | null;
     /** Sản phẩm gắn vào bài (thứ tự đầu = chính, tối đa 5). Owner chọn lúc soạn = xác nhận (migration 0091). */
     productIds?: readonly string[];
+    /** Ảnh/video gắn vào bài (thứ tự giữ nguyên; tối đa 10 ảnh hoặc 1 video). Luôn đặt lại toàn bộ (rỗng = gỡ hết). */
+    mediaIds?: readonly string[];
   },
 ): Promise<string> {
   const channels =
@@ -77,6 +80,7 @@ export async function savePublishPost(
           sql`, `,
         )}]::uuid[]`;
   await tx.execute(sql`SELECT cf.set_publish_post_products(${id}::uuid, ${productArray})`);
+  await setPublishPostMedia(tx, id, input.mediaIds ?? []);
   return id;
 }
 

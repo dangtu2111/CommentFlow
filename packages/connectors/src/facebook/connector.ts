@@ -102,7 +102,11 @@ export interface FacebookConnector extends PlatformConnector {
    * Đăng MỘT bài chữ lên feed của Page (POST-PUBLISHING): `POST /{page-id}/feed` với `message`, token trong THÂN POST. Từ chối TRƯỚC khi gọi mạng nếu nội dung rỗng hoặc quá
    * 63.206 ký tự. Phản hồi 2xx nhưng thiếu `id` → `UNKNOWN` (có thể ĐÃ đăng): nơi gọi KHÔNG ĐƯỢC tự thử lại. Lỗi quyền/token/tốc độ phân loại như mọi lệnh Graph.
    */
-  publishPost(channel: ChannelRef, text: string): Promise<{ externalId: string }>;
+  publishPost(
+    channel: ChannelRef,
+    text: string,
+    media?: PostMedia,
+  ): Promise<{ externalId: string }>;
   /**
    * Quyền ĐÃ CẤP và hiệu lực của token Page đã lưu (`GET /debug_token`, xác thực bằng token ứng dụng): `scopes` chỉ gồm quyền áp cho Page này
    * (xét `granular_scopes`). Chỉ GET; token Page nằm trong query như mọi lệnh đọc Graph (không log).
@@ -111,6 +115,15 @@ export interface FacebookConnector extends PlatformConnector {
   getPageSubscription(channel: ChannelRef): Promise<PageSubscription>;
   subscribePage(channel: ChannelRef, fields?: string[]): Promise<void>;
 }
+
+/** File ảnh/video đã tải từ kho (COMPOSER-MEDIA). Loại/kích thước đã được web kiểm bằng nội dung trước khi lưu. */
+export type PostFile = { bytes: Uint8Array; contentType: string; filename: string };
+export type PostMedia = { kind: 'image'; files: PostFile[] } | { kind: 'video'; file: PostFile };
+/** Tải ảnh/video lên Graph có thể lâu; vẫn ngắn hơn thời hạn thuê 15 phút của mục tiêu đăng (migration 0090). */
+export const UPLOAD_TIMEOUT_MS = 10 * 60_000;
+const MAX_PHOTOS = 10;
+/** Lỗi tải ảnh lên (chưa đăng gì công khai vì ảnh để `published=false`): chắc chắn CHƯA đăng bài. */
+export const MEDIA_UPLOAD_FAILED = 'facebook_media_upload_failed';
 
 /**
  * Khai báo của connector này = khai báo Facebook (docs/12 §1) trừ hai hành động CHƯA làm: nhắn riêng và Messenger
@@ -376,6 +389,8 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     overall?: AbortSignal,
     /** Dùng token ỨNG DỤNG (`appId|appSecret`) thay token kênh — chỉ cho `debug_token`; không ký `appsecret_proof`. */
     appAccessToken?: string,
+    /** Tải một file (multipart) — dùng cho ảnh/video; thời hạn riêng dài hơn lệnh thường. */
+    upload?: { field: string; file: PostFile },
   ): Promise<unknown> {
     const token = appAccessToken ?? (await tokenOf(channel));
     const all = {
@@ -389,12 +404,21 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
     const init: RequestInit = {
       method,
       signal: overall
-        ? AbortSignal.any([AbortSignal.timeout(timeoutMs), overall])
-        : AbortSignal.timeout(timeoutMs),
+        ? AbortSignal.any([AbortSignal.timeout(upload ? UPLOAD_TIMEOUT_MS : timeoutMs), overall])
+        : AbortSignal.timeout(upload ? UPLOAD_TIMEOUT_MS : timeoutMs),
       redirect: 'error',
     };
     // Ghi: token trong THÂN POST (không nằm trong URL/log truy cập); đọc: tham số truy vấn (tài liệu dùng cách này).
-    if (method === 'POST') {
+    if (method === 'POST' && upload) {
+      const form = new FormData();
+      for (const [key, value] of Object.entries(all)) form.set(key, value);
+      form.set(
+        upload.field,
+        new Blob([Buffer.from(upload.file.bytes)], { type: upload.file.contentType }),
+        upload.file.filename,
+      );
+      init.body = form;
+    } else if (method === 'POST') {
       init.body = new URLSearchParams(all);
     } else {
       for (const [key, value] of Object.entries(all)) url.searchParams.set(key, value);
@@ -573,11 +597,64 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       return { externalId: created.data.id };
     },
 
-    async publishPost(channel, text) {
+    async publishPost(channel, text, media) {
       const message = text.trim();
       if (message === '' || text.length > MAX_POST_CHARS)
         throw fail('UNKNOWN', 'facebook_invalid_post');
-      const body = await call(channel, 'POST', `${graphId(channel.externalId)}/feed`, { message });
+      const page = graphId(channel.externalId);
+      if (media?.kind === 'video') {
+        // Video: MỘT lệnh duy nhất (`/videos` với `source`), mô tả = nội dung bài. Lỗi mạng ở đây là KHÔNG RÕ (có thể đã tạo video) → UNKNOWN, không tự thử lại.
+        const body = await call(
+          channel,
+          'POST',
+          `${page}/videos`,
+          { description: message },
+          undefined,
+          undefined,
+          { field: 'source', file: media.file },
+        );
+        const created = createdSchema.safeParse(body);
+        if (!created.success) throw badResponse();
+        return { externalId: created.data.id };
+      }
+      const params: Record<string, string> = { message };
+      if (media?.kind === 'image') {
+        if (media.files.length === 0 || media.files.length > MAX_PHOTOS) {
+          throw fail('UNKNOWN', 'facebook_invalid_post');
+        }
+        // Ảnh: tải từng ảnh lên Page ở trạng thái CHƯA đăng (`published=false`) rồi đính vào bài. Lỗi ở giai đoạn này CHẮC CHẮN chưa có gì công khai.
+        let index = 0;
+        for (const file of media.files) {
+          let photoId: string;
+          try {
+            const body = await call(
+              channel,
+              'POST',
+              `${page}/photos`,
+              { published: 'false' },
+              undefined,
+              undefined,
+              { field: 'source', file },
+            );
+            const photo = createdSchema.safeParse(body);
+            if (!photo.success) throw badResponse();
+            photoId = photo.data.id;
+          } catch (error) {
+            if (
+              isPlatformError(error) &&
+              (error.code === 'PERMISSION' ||
+                error.code === 'TOKEN_EXPIRED' ||
+                error.code === 'RATE_LIMIT')
+            ) {
+              throw error;
+            }
+            throw fail('UNKNOWN', MEDIA_UPLOAD_FAILED);
+          }
+          params[`attached_media[${index}]`] = JSON.stringify({ media_fbid: photoId });
+          index += 1;
+        }
+      }
+      const body = await call(channel, 'POST', `${page}/feed`, params);
       const created = createdSchema.safeParse(body);
       if (!created.success) throw badResponse();
       return { externalId: created.data.id };

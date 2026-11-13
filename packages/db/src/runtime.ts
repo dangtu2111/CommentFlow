@@ -77,6 +77,16 @@ export {
   startTrial,
 } from './plans';
 export {
+  getMediaAsset,
+  listMediaForPublish,
+  listPublishPostMedia,
+  type MediaAssetRow,
+  type MediaKind,
+  purgeOrphanMedia,
+  registerMediaAsset,
+  setPublishPostMedia,
+} from './publish-media';
+export {
   type ClaimedPublishTarget,
   cancelPublishSchedule,
   claimPublishTargets,

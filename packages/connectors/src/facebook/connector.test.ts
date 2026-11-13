@@ -1086,3 +1086,101 @@ describe('FR-143 tệp đính kèm của bình luận qua Graph', () => {
     expect(calls[0]?.url.searchParams.get('fields')).toContain('attachment');
   });
 });
+
+describe('COMPOSER-MEDIA publishPost — ảnh và video', () => {
+  const file = (name: string, type: string) => ({
+    bytes: Uint8Array.from([1, 2, 3, 4]),
+    contentType: type,
+    filename: name,
+  });
+  const formOf = (call: Call) => call.init.body as FormData;
+
+  it('ảnh: tải từng ảnh lên Page ở trạng thái CHƯA đăng (multipart), rồi đăng feed kèm attached_media theo thứ tự', async () => {
+    const { connector, calls } = harness([
+      json({ id: 'photo1' }),
+      json({ id: 'photo2' }),
+      json({ id: `${PAGE_ID}_77` }),
+    ]);
+    const result = await connector.publishPost(channel, 'Hàng mới', {
+      kind: 'image',
+      files: [file('a.jpg', 'image/jpeg'), file('b.png', 'image/png')],
+    });
+    expect(result).toEqual({ externalId: `${PAGE_ID}_77` });
+    expect(calls).toHaveLength(3);
+    const [p1, p2, feed] = calls as [Call, Call, Call];
+    for (const c of [p1, p2]) {
+      expect(c.url.pathname).toBe(`/v27.0/${PAGE_ID}/photos`);
+      expect(c.url.search).toBe('');
+      const form = formOf(c);
+      expect(form.get('published')).toBe('false');
+      expect(form.get('access_token')).toBe(TOKEN);
+      expect(form.get('appsecret_proof')).toBe(proofOf(TOKEN));
+      expect(form.get('source')).toBeInstanceOf(Blob);
+    }
+    expect((formOf(p1).get('source') as File).name).toBe('a.jpg');
+    expect(feed.url.pathname).toBe(`/v27.0/${PAGE_ID}/feed`);
+    const body = bodyOf(feed);
+    expect(body.get('message')).toBe('Hàng mới');
+    expect(body.get('attached_media[0]')).toBe('{"media_fbid":"photo1"}');
+    expect(body.get('attached_media[1]')).toBe('{"media_fbid":"photo2"}');
+  });
+
+  it('ảnh: lỗi tải ảnh (mạng/phản hồi lạ) → lỗi "chắc chắn chưa đăng" và KHÔNG gọi feed; lỗi quyền/token/tốc độ giữ nguyên mã', async () => {
+    const bad = harness([json({ nope: 1 })]);
+    const failure = await failureOf(
+      bad.connector.publishPost(channel, 'x', {
+        kind: 'image',
+        files: [file('a.jpg', 'image/jpeg')],
+      }),
+    );
+    expect(failure.message).toBe('facebook_media_upload_failed');
+    expect(bad.calls).toHaveLength(1);
+    const perm = harness([json(graphError(200), 403)]);
+    expect(
+      (
+        await failureOf(
+          perm.connector.publishPost(channel, 'x', {
+            kind: 'image',
+            files: [file('a.jpg', 'image/jpeg')],
+          }),
+        )
+      ).code,
+    ).toBe('PERMISSION');
+  });
+
+  it('ảnh: danh sách rỗng hoặc quá 10 ảnh → từ chối trước khi gọi mạng', async () => {
+    for (const files of [[], Array.from({ length: 11 }, () => file('a.jpg', 'image/jpeg'))]) {
+      const { connector, calls } = harness([]);
+      expect(
+        (await failureOf(connector.publishPost(channel, 'x', { kind: 'image', files }))).message,
+      ).toBe('facebook_invalid_post');
+      expect(calls).toHaveLength(0);
+    }
+  });
+
+  it('video: MỘT lệnh /videos với source + description; phản hồi thiếu id → UNKNOWN (không tự thử lại)', async () => {
+    const { connector, calls } = harness([json({ id: 'vid1' })]);
+    const result = await connector.publishPost(channel, 'Video mới', {
+      kind: 'video',
+      file: file('v.mp4', 'video/mp4'),
+    });
+    expect(result).toEqual({ externalId: 'vid1' });
+    expect(calls).toHaveLength(1);
+    const [call] = calls as [Call];
+    expect(call.url.pathname).toBe(`/v27.0/${PAGE_ID}/videos`);
+    const form = formOf(call);
+    expect(form.get('description')).toBe('Video mới');
+    expect((form.get('source') as File).name).toBe('v.mp4');
+    const broken = harness([json({})]);
+    expect(
+      (
+        await failureOf(
+          broken.connector.publishPost(channel, 'x', {
+            kind: 'video',
+            file: file('v.mp4', 'video/mp4'),
+          }),
+        )
+      ).code,
+    ).toBe('UNKNOWN');
+  });
+});

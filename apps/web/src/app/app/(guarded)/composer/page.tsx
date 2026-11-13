@@ -5,6 +5,7 @@ import { NoticeBanner } from '../../../../components/composer/notice-banner';
 import { calendarHref } from '../../../../lib/calendar-week';
 import { parsePublishNotice } from '../../../../lib/publish-notice';
 import { utcToLocalParts } from '../../../../lib/zoned-time';
+import { mediaEnabled } from '../../../../server/media-runtime';
 import { loadComposer } from '../../../../server/post-calendar';
 import { publishEnabled } from '../../../../server/publish-runtime';
 import { requireAppUser } from '../../../../server/require-app-user';
@@ -65,6 +66,8 @@ export default async function ComposerPage({ searchParams }: { searchParams: Sea
           timeZone={data.timeZone}
           publishEnabled={publishEnabled()}
           products={data.products}
+          mediaEnabled={mediaEnabled()}
+          initialMedia={data.media}
           channels={data.channels.map((channel) => ({
             id: channel.id,
             name: channel.name,

@@ -15,6 +15,7 @@ import {
   type ComposerProduct,
   ComposerStudio,
 } from './composer-studio';
+import type { ComposerMedia } from './media-uploader';
 
 const channels: ComposerChannel[] = [
   {
@@ -38,6 +39,8 @@ const render = (
   over: {
     channels?: ComposerChannel[];
     products?: ComposerProduct[];
+    mediaEnabled?: boolean;
+    initialMedia?: ComposerMedia[];
     publishEnabled?: boolean;
     initial?: ComposerInitial;
   } = {},
@@ -47,6 +50,8 @@ const render = (
       <ComposerStudio
         channels={over.channels ?? channels}
         products={over.products ?? []}
+        mediaEnabled={over.mediaEnabled ?? false}
+        initialMedia={over.initialMedia ?? []}
         timeZone="Asia/Ho_Chi_Minh"
         publishEnabled={over.publishEnabled ?? true}
         {...(over.initial ? { initial: over.initial } : {})}
@@ -130,9 +135,9 @@ describe('ComposerStudio', () => {
     expect(html).toContain('name="id" value="p1"');
   });
 
-  it('phần chưa có backend (AI caption, hashtag, media, gắn sản phẩm) vẫn vô hiệu', () => {
+  it('phần chưa có backend (AI caption, hashtag, gắn sản phẩm khi chưa có sản phẩm) vẫn vô hiệu', () => {
     const html = render();
-    for (const label of ['AI gợi ý caption', 'Tự động hashtag', 'Thêm media', 'Gắn sản phẩm']) {
+    for (const label of ['AI gợi ý caption', 'Tự động hashtag', 'Gắn sản phẩm']) {
       expect(html, label).toMatch(
         new RegExp(`<button[^>]*disabled=""[^>]*>(?:(?!</button>).)*${label}`, 's'),
       );
@@ -212,5 +217,26 @@ describe('ComposerStudio', () => {
     });
     expect(unsafe).toContain('Áo thun basic');
     expect(unsafe).not.toContain('http://x.vn/a.jpg');
+  });
+
+  it('ảnh/video: chưa cấu hình kho → khóa kèm lý do; bật → có quy tắc; bài sửa điền lại file đã tải (ảnh và video)', () => {
+    const off = render();
+    expect(off).toContain('Chưa bật tải ảnh/video');
+    expect(off).toMatch(
+      /<input[^>]*type="file"[^>]*disabled=""|<input[^>]*disabled=""[^>]*type="file"/,
+    );
+    const on = render({ mediaEnabled: true });
+    expect(on).not.toContain('Chưa bật tải ảnh/video');
+    expect(on).toContain('Tối đa 10 ảnh');
+    const withFiles = render({
+      mediaEnabled: true,
+      initialMedia: [
+        { id: 'm1', kind: 'image', contentType: 'image/png', sizeBytes: 10 },
+        { id: 'm2', kind: 'video', contentType: 'video/mp4', sizeBytes: 20 },
+      ],
+    });
+    expect(withFiles).toMatch(/<input[^>]*name="media"[^>]*value="m1"/);
+    expect(withFiles).toContain('src="/app/api/media/m1"');
+    expect(withFiles).toMatch(/<video[^>]*src="\/app\/api\/media\/m2"/);
   });
 });
