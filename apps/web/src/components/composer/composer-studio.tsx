@@ -247,7 +247,7 @@ export function ComposerStudio({
       {postId ? <input type="hidden" name="id" value={postId} /> : null}
       {postId ? <input type="hidden" name="postId" value={postId} /> : null}
       {/* Dòng tiêu đề + nút hành động ghim ở đầu vùng cuộn để cuộn xuống vẫn bấm được. */}
-      <div className="sticky top-0 z-30 -mx-space-sm flex flex-col justify-between gap-space-md bg-surface/95 px-space-sm py-space-sm backdrop-blur lg:flex-row lg:items-center">
+      <div className="sticky top-0 z-30 -mx-space-sm min-[900px]:top-16 flex flex-col justify-between gap-space-md bg-[var(--color-bg)] px-space-sm py-space-sm shadow-[0_1px_0_var(--color-border)] lg:flex-row lg:items-center">
         <div className="flex min-w-0 flex-wrap items-center gap-space-md">
           <Link
             href="/app/calendar"
