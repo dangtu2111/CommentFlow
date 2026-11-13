@@ -19,6 +19,8 @@ export type ChannelListItem = {
   id: string;
   name: string;
   platform: InboxPlatform;
+  /** Ảnh đại diện của kênh (URL https; worker làm mới ở mỗi lần kiểm kết nối). */
+  avatarUrl: string | null;
   status: 'connected' | 'expired' | 'revoked' | 'error';
   webhookSubscribed: boolean;
   replyLanguage: 'auto' | 'vi' | 'en';
@@ -39,8 +41,9 @@ export async function listChannels(tx: Database, workspaceId: string): Promise<C
     last_checked_at: string | Date | null;
     last_check_result: ChannelCheckResult | null;
     scopes: string[];
+    avatar_url: string | null;
   }>(sql`
-    SELECT ch.id, ch.name, ch.platform, ch.status, ch.webhook_subscribed, ch.reply_language,
+    SELECT ch.id, ch.name, ch.platform, ch.avatar_url, ch.status, ch.webhook_subscribed, ch.reply_language,
            ch.last_checked_at, ch.last_check_result, ch.scopes
       FROM cf.channels ch
      WHERE ch.workspace_id = ${workspaceId}::uuid
@@ -49,6 +52,7 @@ export async function listChannels(tx: Database, workspaceId: string): Promise<C
     id: row.id,
     name: row.name,
     platform: row.platform,
+    avatarUrl: row.avatar_url,
     status: row.status,
     webhookSubscribed: row.webhook_subscribed,
     replyLanguage: row.reply_language,

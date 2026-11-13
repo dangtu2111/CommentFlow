@@ -1184,3 +1184,33 @@ describe('COMPOSER-MEDIA publishPost — ảnh và video', () => {
     ).toBe('UNKNOWN');
   });
 });
+
+describe('CHANNEL-AVATAR fetchPagePicture — GET /{page-id}/picture', () => {
+  const body = (url: string, silhouette?: boolean) => ({
+    data: { url, ...(silhouette === undefined ? {} : { is_silhouette: silhouette }) },
+  });
+
+  it('ảnh thật → URL https; chỉ GET, redirect=false, đúng đường dẫn', async () => {
+    const url = 'https://scontent.xx.fbcdn.net/v/t1/page.jpg?oh=1';
+    const { connector, calls } = harness([json(body(url, false))]);
+    expect(await connector.fetchPagePicture(channel)).toBe(url);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('GET');
+    expect(call.url.pathname).toBe(`/v27.0/${PAGE_ID}/picture`);
+    expect(call.url.searchParams.get('redirect')).toBe('false');
+    expect(call.url.searchParams.get('type')).toBe('large');
+  });
+
+  it('ảnh mặc định (silhouette) hoặc URL không phải https → null; thân sai → UNKNOWN', async () => {
+    for (const b of [
+      body('https://scontent.xx.fbcdn.net/v/s.jpg', true),
+      body('http://scontent.xx.fbcdn.net/v/a.jpg', false),
+      body('javascript:alert(1)'),
+    ]) {
+      const { connector } = harness([json(b)]);
+      expect(await connector.fetchPagePicture(channel)).toBeNull();
+    }
+    const bad = harness([json({ nope: 1 })]);
+    expect((await failureOf(bad.connector.fetchPagePicture(channel))).code).toBe('UNKNOWN');
+  });
+});

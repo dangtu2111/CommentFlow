@@ -19,6 +19,18 @@ export type CreateChannelInput = {
 };
 
 /** Tạo kênh hoặc kết nối lại (upsert theo `(platform, external_id, workspace)`); trả `channel_id` thật của hàng. */
+/** WORKER (`withJob`): ghi ảnh đại diện (https) của kênh; `true` nếu đã đổi. URL sai → 22023. */
+export async function setChannelAvatar(
+  tx: Database,
+  channelId: string,
+  url: string,
+): Promise<boolean> {
+  const r = await tx.execute<{ ok: boolean }>(
+    sql`SELECT cf.set_channel_avatar(${channelId}::uuid, ${url}) AS ok`,
+  );
+  return r.rows[0]?.ok === true;
+}
+
 export async function createChannel(tx: Database, input: CreateChannelInput): Promise<string> {
   const scopes = sql`ARRAY[${sql.join(
     (input.scopes ?? []).map((scope) => sql`${scope}`),

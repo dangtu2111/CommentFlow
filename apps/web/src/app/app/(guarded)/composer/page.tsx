@@ -75,6 +75,7 @@ export default async function ComposerPage({ searchParams }: { searchParams: Sea
             id: channel.id,
             name: channel.name,
             platform: channel.platform,
+            avatarUrl: channel.avatarUrl,
             status: channel.status,
             canPublish: channel.scopes.includes(PUBLISH_PERMISSION),
           }))}

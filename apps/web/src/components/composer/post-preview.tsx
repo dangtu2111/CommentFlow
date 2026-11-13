@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Fragment, type ReactNode, useState } from 'react';
 import { cx } from '../../lib/cx';
 import type { ComposerPlatform } from '../../lib/post-counters';
+import { safeHttpsUrl } from '../../lib/safe-url';
 import { Icon } from '../ui/icon';
 import type { ComposerMedia } from './media-uploader';
 
@@ -16,6 +17,8 @@ export type PreviewProps = {
   platform: ComposerPlatform;
   /** Tên kênh đã chọn của nền tảng này; không có → chữ "Chưa chọn kênh". */
   pageName: string | null;
+  /** Ảnh đại diện của kênh (https); không có → chữ cái đầu của tên. */
+  pageAvatarUrl?: string | null;
   text: string;
   media: ComposerMedia[];
 };
@@ -77,16 +80,43 @@ function useClamp(text: string, limit: number) {
   };
 }
 
-function Avatar({ name, size }: { name: string | null; size: 'md' | 'sm' }) {
+const AVATAR_SIZE = {
+  md: 'size-10 text-title-sm',
+  sm: 'size-8 text-label-md',
+  xs: 'size-5 text-label-sm',
+} as const;
+
+/** Ảnh đại diện tròn của kênh: ảnh thật (chỉ https) hoặc chữ cái đầu của tên. */
+export function ChannelAvatar({
+  name,
+  url,
+  size,
+}: {
+  name: string | null;
+  url?: string | null;
+  size: keyof typeof AVATAR_SIZE;
+}) {
+  const src = safeHttpsUrl(url);
   return (
     <span
       aria-hidden="true"
       className={cx(
-        'grid shrink-0 place-items-center rounded-full bg-primary-fixed font-title-sm font-bold text-primary',
-        size === 'md' ? 'size-10 text-title-sm' : 'size-8 text-label-md',
+        'grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-fixed font-title-sm font-bold text-primary',
+        AVATAR_SIZE[size],
       )}
     >
-      {initialOf(name)}
+      {src ? (
+        // biome-ignore lint/performance/noImgElement: ảnh CDN của nền tảng (không qua next/image, tên miền do CSP kiểm soát)
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="size-full object-cover"
+        />
+      ) : (
+        initialOf(name)
+      )}
     </span>
   );
 }
@@ -203,14 +233,14 @@ function FacebookMedia({ media }: { media: ComposerMedia[] }) {
   );
 }
 
-function FacebookPreview({ pageName, text, media }: Omit<PreviewProps, 'platform'>) {
+function FacebookPreview({ pageName, pageAvatarUrl, text, media }: Omit<PreviewProps, 'platform'>) {
   const t = useTranslations('composer');
   const clamp = useClamp(text, FB_TEXT_LIMIT);
   const empty = text.trim() === '';
   return (
     <article className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
       <header className="flex items-center gap-space-sm p-space-md pb-space-sm">
-        <Avatar name={pageName} size="md" />
+        <ChannelAvatar name={pageName} url={pageAvatarUrl} size="md" />
         <div className="min-w-0 flex-1">
           <div className="truncate font-title-sm text-title-sm font-semibold text-on-surface">
             {pageName ?? t('preview.noPage')}
@@ -276,7 +306,12 @@ function FacebookPreview({ pageName, text, media }: Omit<PreviewProps, 'platform
   );
 }
 
-function InstagramPreview({ pageName, text, media }: Omit<PreviewProps, 'platform'>) {
+function InstagramPreview({
+  pageName,
+  pageAvatarUrl,
+  text,
+  media,
+}: Omit<PreviewProps, 'platform'>) {
   const t = useTranslations('composer');
   const handle = handleOf(pageName) || t('preview.handlePlaceholder');
   const clamp = useClamp(text, IG_TEXT_LIMIT);
@@ -289,7 +324,7 @@ function InstagramPreview({ pageName, text, media }: Omit<PreviewProps, 'platfor
       <header className="flex items-center gap-space-sm p-space-sm">
         <span className="rounded-full bg-gradient-to-tr from-tertiary via-error to-secondary p-0.5">
           <span className="block rounded-full bg-surface-container-lowest p-0.5">
-            <Avatar name={pageName} size="sm" />
+            <ChannelAvatar name={pageName} url={pageAvatarUrl} size="sm" />
           </span>
         </span>
         <div className="min-w-0 flex-1 truncate font-title-sm text-title-sm font-semibold text-on-surface">
