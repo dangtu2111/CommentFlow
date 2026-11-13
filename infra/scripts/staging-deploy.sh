@@ -43,11 +43,12 @@ main() {
   }
 
   # docker compose của cf-staging (chạy trong thư mục mã nguồn). Thẻ image lấy từ biến TAG (nếu có).
+  # `< /dev/null`: docker compose KHÔNG được đọc stdin, nếu không nó nuốt mã xác nhận đưa vào cho `read`.
   dc() {
     local profile=()
     if [[ -n "$(getenvfile CLOUDFLARE_TUNNEL_TOKEN)" ]]; then profile=(--profile tunnel); fi
     (cd "$SRC" && IMAGE_TAG="${TAG:-$(getenvfile IMAGE_TAG)}" docker compose -p "$PROJECT" --env-file "$ENV_FILE" \
-      -f infra/docker-compose.yml -f infra/docker-compose.staging.yml "${profile[@]}" "$@")
+      -f infra/docker-compose.yml -f infra/docker-compose.staging.yml "${profile[@]}" "$@" < /dev/null)
   }
 
   last_migration() { grep -o '"tag": "[0-9]\{4\}' "$SRC/packages/db/migrations/meta/_journal.json" | tail -1 | grep -o '[0-9]\{4\}$'; }
@@ -58,7 +59,7 @@ main() {
     [[ -n "$owner_pw" ]] || die "Thiếu CF_OWNER_PASSWORD trong $ENV_FILE"
     DATABASE_ADMIN_URL="postgresql://cf_owner:${owner_pw}@postgres:5432/${DB_NAME}" \
     CF_CONFIRM_STAGING_MIGRATE="${2:-}" \
-    dc run --rm --no-deps \
+    dc run --rm --no-deps -T \
       -e APP_ENV=staging -e CF_STAGING_SOLO_OPERATOR=true \
       -e CF_STAGING_DB_HOSTS=postgres:5432 -e CF_STAGING_DB_NAME="$DB_NAME" \
       -e DATABASE_ADMIN_URL -e CF_CONFIRM_STAGING_MIGRATE \

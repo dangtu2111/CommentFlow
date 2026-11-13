@@ -29,7 +29,7 @@ Hệ quả khi dùng chung: tắt `cf-dev` hoặc `ml`/LiteLLM thì bản thật
 | Tên miền + Cloudflare Tunnel có tên | thêm tên miền vào Cloudflare, tạo Tunnel `commentflow`, route `app.<miền>` → `http://web:3000`, lấy token |
 | File biến `.env.cf-staging` | `bash ~/CommentFlow/infra/scripts/gen-staging-env.sh --domain app.<miền>` (bạn chạy; khóa ngẫu nhiên MỚI, riêng cho bản thật) |
 | Token Cloudflare | điền bằng lệnh nhập ẩn: `ssh -t cf 'read -rsp "Token: " T; echo; sed -i "s|^CLOUDFLARE_TUNNEL_TOKEN=.*|CLOUDFLARE_TUNNEL_TOKEN=$T|" ~/cf-staging/.env.cf-staging; unset T'` |
-| SMTP tạm (Mailpit của cf-dev) | `SMTP_HOST=host.docker.internal`, `SMTP_PORT=1025`, `SMTP_FROM="CommentFlow <no-reply@local>"`, `SMTP_SECURE=false` |
+| SMTP tạm (Mailpit của cf-dev) | `SMTP_HOST=host.docker.internal`, `SMTP_PORT=1025`, `SMTP_FROM="CommentFlow <no-reply@local>"`, `SMTP_SECURE=false`, **và `SMTP_USER`/`SMTP_PASS` đặt giá trị bất kỳ (ví dụ `mailpit`)**: web ở staging bắt buộc hai biến này khác rỗng; Mailpit chấp nhận mọi tài khoản |
 | Bí mật dùng chung (khóa LiteLLM riêng, khóa S3, bucket) | `bash ~/CommentFlow/infra/scripts/staging-add-shared-secrets.sh --budget 10` |
 | Meta | `META_APP_ID`, `META_APP_SECRET` (nhập ẩn, như token), `META_WEBHOOK_VERIFY_TOKEN` đã được script sinh sẵn; bật `FB_CONNECTOR_ENABLED=true` khi sẵn sàng |
 
