@@ -3866,12 +3866,18 @@
       "title": "Product tagging and AI advisor settings",
       "hint": "Link the post to the knowledge base so the AI quotes and advises from the right source.",
       "openKb": "Open knowledge base",
-      "pin": "Tag a product",
+      "pin": "Tag products",
       "empty": "No product tagged yet.",
       "noteLabel": "Private note for the AI (customers cannot see it)",
       "notePlaceholder": "For example: push the combo offer, mention the return policy…",
       "rules": "Comment replies for this post follow the shop-wide auto-send settings.",
-      "rulesLink": "Open auto-send settings"
+      "rulesLink": "Open auto-send settings",
+      "noCatalog": "No products yet. Add them in the Knowledge base to tag them.",
+      "search": "Search by name or SKU",
+      "remove": "Remove {name}",
+      "primaryHint": "The first product is the primary one; AI uses these to quote prices when replying to this post's comments. Choosing here confirms the link.",
+      "limit": "{count}/{max} products selected",
+      "price": "{price} VND"
     },
     "schedule": {
       "title": "Schedule",

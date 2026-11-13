@@ -3871,7 +3871,13 @@
       "noteLabel": "Ghi chú riêng cho AI (khách không nhìn thấy)",
       "notePlaceholder": "Ví dụ: ưu tiên tư vấn combo, nhắc chính sách đổi trả…",
       "rules": "Quy tắc tự trả lời bình luận của bài này theo cài đặt tự gửi chung của cửa hàng.",
-      "rulesLink": "Mở cài đặt tự gửi"
+      "rulesLink": "Mở cài đặt tự gửi",
+      "noCatalog": "Cửa hàng chưa có sản phẩm. Thêm ở Kho tri thức để gắn vào bài.",
+      "search": "Tìm theo tên hoặc SKU",
+      "remove": "Bỏ {name}",
+      "primaryHint": "Sản phẩm đầu tiên là sản phẩm chính; AI dùng các sản phẩm này để báo giá khi trả lời bình luận của bài. Bạn chọn ở đây là bạn xác nhận liên kết.",
+      "limit": "Đã chọn {count}/{max} sản phẩm",
+      "price": "{price}đ"
     },
     "schedule": {
       "title": "Lịch đăng",

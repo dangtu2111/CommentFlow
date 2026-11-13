@@ -34,6 +34,7 @@ describe('parsePublishForm', () => {
         id: POST,
         message: 'Dòng 1\nDòng 2',
         channelIds: [CH1, CH2],
+        productIds: [],
         scheduledAt: null,
       },
     });
@@ -137,5 +138,24 @@ describe('parsePublishForm', () => {
     expect(
       parsePublishForm(form({ intent: 'draft', message: 'a'.repeat(63207) }), ZONE, NOW),
     ).toEqual({ ok: false, code: 'invalid' });
+  });
+
+  it('sản phẩm: bỏ trùng, giữ thứ tự (đầu = chính), tối đa 5, id sai → invalid', () => {
+    const productId = (n: number) => `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa${n}`;
+    const ok = parsePublishForm(
+      form({ intent: 'draft', message: 'x', product: [productId(2), productId(1), productId(2)] }),
+      ZONE,
+      NOW,
+    );
+    expect(ok).toMatchObject({ ok: true, value: { productIds: [productId(2), productId(1)] } });
+    const six = [1, 2, 3, 4, 5, 6].map(productId);
+    expect(parsePublishForm(form({ intent: 'draft', product: six }), ZONE, NOW)).toEqual({
+      ok: false,
+      code: 'invalid',
+    });
+    expect(parsePublishForm(form({ intent: 'draft', product: ['x'] }), ZONE, NOW)).toEqual({
+      ok: false,
+      code: 'invalid',
+    });
   });
 });

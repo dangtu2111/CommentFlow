@@ -9,7 +9,12 @@ vi.mock('../../app/app/(guarded)/composer/actions', () => ({
   deletePublishPostAction: vi.fn(),
 }));
 
-import { type ComposerChannel, type ComposerInitial, ComposerStudio } from './composer-studio';
+import {
+  type ComposerChannel,
+  type ComposerInitial,
+  type ComposerProduct,
+  ComposerStudio,
+} from './composer-studio';
 
 const channels: ComposerChannel[] = [
   {
@@ -30,12 +35,18 @@ const channels: ComposerChannel[] = [
 ];
 
 const render = (
-  over: { channels?: ComposerChannel[]; publishEnabled?: boolean; initial?: ComposerInitial } = {},
+  over: {
+    channels?: ComposerChannel[];
+    products?: ComposerProduct[];
+    publishEnabled?: boolean;
+    initial?: ComposerInitial;
+  } = {},
 ) =>
   renderToStaticMarkup(
     <NextIntlClientProvider locale="vi" messages={vi_messages}>
       <ComposerStudio
         channels={over.channels ?? channels}
+        products={over.products ?? []}
         timeZone="Asia/Ho_Chi_Minh"
         publishEnabled={over.publishEnabled ?? true}
         {...(over.initial ? { initial: over.initial } : {})}
@@ -103,6 +114,7 @@ describe('ComposerStudio', () => {
         id: 'p1',
         message: 'Nội dung cũ',
         channelIds: ['c1'],
+        productIds: ['pr1'],
         status: 'scheduled',
         date: '2026-12-02',
         time: '10:30',
@@ -146,5 +158,28 @@ describe('ComposerStudio', () => {
     expect(html).toContain('href="/app/kb"');
     expect(html).toContain('href="/app/automation"');
     expect(html).toContain('href="/app/calendar"');
+  });
+
+  it('gắn sản phẩm: chưa có sản phẩm → nút khóa kèm lý do; có sản phẩm → bật; bài sửa điền lại sản phẩm đã chọn', () => {
+    const none = render();
+    expect(none).toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*Gắn sản phẩm/s);
+    expect(none).toContain('Cửa hàng chưa có sản phẩm');
+    const products = [{ id: 'pr1', name: 'Áo thun basic', sku: 'AT1', priceVnd: 199000 }];
+    const some = render({ products });
+    expect(some).not.toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*Gắn sản phẩm/s);
+    const editing = render({
+      products,
+      initial: {
+        id: 'p1',
+        message: 'x',
+        channelIds: [],
+        productIds: ['pr1'],
+        status: 'draft',
+        date: '',
+        time: '',
+      },
+    });
+    expect(editing).toMatch(/<input[^>]*name="product"[^>]*value="pr1"/);
+    expect(editing).toContain('Áo thun basic');
   });
 });

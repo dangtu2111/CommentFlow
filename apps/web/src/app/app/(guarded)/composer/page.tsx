@@ -64,6 +64,7 @@ export default async function ComposerPage({ searchParams }: { searchParams: Sea
         <ComposerStudio
           timeZone={data.timeZone}
           publishEnabled={publishEnabled()}
+          products={data.products}
           channels={data.channels.map((channel) => ({
             id: channel.id,
             name: channel.name,
@@ -77,6 +78,7 @@ export default async function ComposerPage({ searchParams }: { searchParams: Sea
                   id: post.id,
                   message: post.message,
                   channelIds: post.targets.map((target) => target.channelId),
+                  productIds: data.selectedProductIds,
                   status: post.status,
                   date: local?.date ?? '',
                   time: local?.time ?? '',
