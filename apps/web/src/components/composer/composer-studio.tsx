@@ -19,6 +19,7 @@ import type { SuggestionResult } from '../../server/caption-service';
 import { Icon, type IconName } from '../ui/icon';
 import { type ComposerMedia, MediaUploader } from './media-uploader';
 import { PendingNote, PendingSubmit } from './pending-submit';
+import { PostPreview } from './post-preview';
 
 /**
  * Biên tập bài viết (design/stitch/composer.html, COMPOSER-CALENDAR-UI + POST-PUBLISHING, Q-CMP1/Q-PUB1): biểu mẫu soạn bài với Server Action thật — LƯU NHÁP, LÊN LỊCH, ĐĂNG NGAY
@@ -128,6 +129,7 @@ export function ComposerStudio({
   const [tab, setTab] = useState<ComposerPlatform>('facebook');
   const soon = t('soon');
   const [mediaBusy, setMediaBusy] = useState(false);
+  const [mediaList, setMediaList] = useState<ComposerMedia[]>(initialMedia);
   const [pickedIds, setPickedIds] = useState<string[]>(initial?.productIds ?? []);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [productQuery, setProductQuery] = useState('');
@@ -621,6 +623,7 @@ export function ComposerStudio({
             enabled={mediaEnabled}
             initial={initialMedia}
             onBusyChange={setMediaBusy}
+            onChange={setMediaList}
           />
 
           <section className={card}>
@@ -817,45 +820,12 @@ export function ComposerStudio({
                 ))}
               </div>
             </div>
-            <div className="rounded-xl bg-surface-container-low p-space-md">
-              <div className="flex items-center gap-space-sm">
-                <span
-                  className="grid size-10 place-items-center rounded-full bg-primary-fixed text-primary"
-                  aria-hidden="true"
-                >
-                  <Icon name={PLATFORM_ICON[tab]} size={20} />
-                </span>
-                <div className="min-w-0">
-                  <div className="truncate font-title-sm text-title-sm font-semibold text-on-surface">
-                    {previewChannel?.name ?? t('preview.noPage')}
-                  </div>
-                  <div className="font-label-sm text-label-sm text-on-surface-variant">
-                    {t('preview.justNow')}
-                  </div>
-                </div>
-              </div>
-              <p className="mt-space-md whitespace-pre-wrap break-words font-body-md text-body-md text-on-surface">
-                {text.trim() === '' ? (
-                  <span className="text-on-surface-variant">{t('preview.empty')}</span>
-                ) : (
-                  text
-                )}
-              </p>
-              <div className="mt-space-md flex items-center justify-around border-t border-outline-variant pt-space-sm font-label-md text-label-md text-on-surface-variant">
-                <span className="flex items-center gap-1">
-                  <Icon name="thumb_up" size={16} />
-                  {t('preview.like')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Icon name="chat_bubble_outline" size={16} />
-                  {t('preview.comment')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Icon name="share" size={16} />
-                  {t('preview.share')}
-                </span>
-              </div>
-            </div>
+            <PostPreview
+              platform={tab}
+              pageName={previewChannel?.name ?? null}
+              text={text}
+              media={mediaList}
+            />
             <p className="font-label-sm text-label-sm text-on-surface-variant">
               {t('preview.disclaimer')}
             </p>
