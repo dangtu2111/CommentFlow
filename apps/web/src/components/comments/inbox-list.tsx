@@ -16,6 +16,7 @@ export type InboxListItem = {
   status: string;
   text: string;
   authorName: string | null;
+  authorAvatarUrl?: string | null;
   createdTime: Date | null;
   label: string | null;
   needsFollowup: boolean;
@@ -121,7 +122,11 @@ export async function InboxList({
               />
               <div className="mb-1.5 flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
-                  <Avatar size="sm" badge={platformBadgeText(item.platform)}>
+                  <Avatar
+                    size="sm"
+                    badge={platformBadgeText(item.platform)}
+                    src={item.authorAvatarUrl}
+                  >
                     {userInitials(item.authorName ?? t('list.anonymous'))}
                   </Avatar>
                   <div className="min-w-0">

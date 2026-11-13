@@ -551,6 +551,102 @@ describe('getTokenPermissions / checkConnection — quyền ĐÃ CẤP của tok
   });
 });
 
+describe('POST-PUBLISHING publishPost — POST /{page-id}/feed', () => {
+  const POST_CREATED = { id: `${PAGE_ID}_5000000000005` };
+
+  it('đăng chữ lên feed của Page: token + appsecret_proof trong THÂN POST, URL sạch; trả id bài', async () => {
+    const { connector, calls } = harness([json(POST_CREATED)]);
+    const result = await connector.publishPost(channel, 'Khai trương cửa hàng 🎉');
+    expect(result).toEqual({ externalId: POST_CREATED.id });
+    expect(calls).toHaveLength(1);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('POST');
+    expect(call.url.pathname).toBe(`/v27.0/${PAGE_ID}/feed`);
+    expect(call.url.search).toBe('');
+    const body = bodyOf(call);
+    expect(body.get('message')).toBe('Khai trương cửa hàng 🎉');
+    expect(body.get('access_token')).toBe(TOKEN);
+    expect(body.get('appsecret_proof')).toBe(proofOf(TOKEN));
+  });
+
+  it('nội dung rỗng / chỉ khoảng trắng / quá 63.206 ký tự → từ chối TRƯỚC khi gọi mạng', async () => {
+    for (const bad of ['', '   \t ', 'a'.repeat(63207)]) {
+      const { connector, calls } = harness([]);
+      expect((await failureOf(connector.publishPost(channel, bad))).message).toBe(
+        'facebook_invalid_post',
+      );
+      expect(calls).toHaveLength(0);
+    }
+  });
+
+  it('phản hồi 200 thiếu id / sai hình dạng → UNKNOWN (có thể ĐÃ đăng: nơi gọi không được thử lại)', async () => {
+    for (const body of [{}, { id: '' }, { success: true }]) {
+      const { connector } = harness([json(body)]);
+      expect((await failureOf(connector.publishPost(channel, 'x'))).code).toBe('UNKNOWN');
+    }
+  });
+
+  it('lỗi quyền (#200/#10) → PERMISSION; token hết hạn (#190) → TOKEN_EXPIRED; chặn tốc độ (#4) → RATE_LIMIT', async () => {
+    const perm = harness([json(graphError(200), 403)]);
+    expect((await failureOf(perm.connector.publishPost(channel, 'x'))).code).toBe('PERMISSION');
+    const expiredToken = harness([json(graphError(190), 400)]);
+    expect((await failureOf(expiredToken.connector.publishPost(channel, 'x'))).code).toBe(
+      'TOKEN_EXPIRED',
+    );
+    const limited = harness([json(graphError(4), 400, { 'x-app-usage': APP_USAGE_HEADER })]);
+    expect((await failureOf(limited.connector.publishPost(channel, 'x'))).code).toBe('RATE_LIMIT');
+  });
+});
+
+describe('COMMENT-AUTHOR-AVATAR fetchCommentAuthorPicture — GET /{comment-id}?fields=from{picture}', () => {
+  const COMMENT = `${PAGE_ID}_3000000000003_4000000000004`;
+  const picture = (url: string, silhouette: boolean) => ({
+    id: COMMENT,
+    from: { id: '5000000000005', picture: { data: { url, is_silhouette: silhouette } } },
+  });
+
+  it('ảnh thật → trả URL https; chỉ GET, đúng trường, đúng đường dẫn', async () => {
+    const url = 'https://scontent.xx.fbcdn.net/v/t1/avatar.jpg?oh=1&oe=2';
+    const { connector, calls } = harness([json(picture(url, false))]);
+    expect(await connector.fetchCommentAuthorPicture(channel, COMMENT)).toBe(url);
+    const [call] = calls as [Call];
+    expect(call.init.method).toBe('GET');
+    expect(call.url.pathname).toBe(`/v27.0/${COMMENT}`);
+    expect(call.url.searchParams.get('fields')).toBe(
+      'from{id,picture.type(large){url,is_silhouette}}',
+    );
+  });
+
+  it('ảnh mặc định (is_silhouette), thiếu from/picture, URL không phải https → null (không bịa ảnh)', async () => {
+    const cases = [
+      picture('https://scontent.xx.fbcdn.net/v/silhouette.jpg', true),
+      { id: COMMENT },
+      { id: COMMENT, from: { id: '5000000000005' } },
+      picture('http://scontent.xx.fbcdn.net/v/a.jpg', false),
+      picture('javascript:alert(1)', false),
+    ];
+    for (const body of cases) {
+      const { connector } = harness([json(body)]);
+      expect(await connector.fetchCommentAuthorPicture(channel, COMMENT)).toBeNull();
+    }
+  });
+
+  it('thân sai hình dạng → UNKNOWN; id sai → không gọi mạng; lỗi quyền (#10/#200) → lỗi dùng chung', async () => {
+    const bad = harness([json({ from: 5 })]);
+    expect((await failureOf(bad.connector.fetchCommentAuthorPicture(channel, COMMENT))).code).toBe(
+      'UNKNOWN',
+    );
+    const badId = harness([]);
+    expect(
+      (await failureOf(badId.connector.fetchCommentAuthorPicture(channel, '../x'))).message,
+    ).toBe('facebook_invalid_id');
+    const denied = harness([json(graphError(10), 400)]);
+    expect(
+      (await failureOf(denied.connector.fetchCommentAuthorPicture(channel, COMMENT))).code,
+    ).toBe('PERMISSION');
+  });
+});
+
 describe('POST-HYDRATE fetchPost — GET /{post-id}?fields=message,permalink_url,full_picture,created_time', () => {
   const POST = `${PAGE_ID}_3000000000003`;
 

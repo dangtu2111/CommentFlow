@@ -18,6 +18,7 @@ describe('loadConfig', () => {
       metaAppSecret: undefined,
       facebook: { enabled: false },
       workspaceDeleteEnabled: false,
+      publishEnabled: false,
       instagram: { enabled: false },
       dataExport: { enabled: false },
       messenger: { enabled: false },
@@ -25,6 +26,22 @@ describe('loadConfig', () => {
       shopify: { enabled: false, apiVersion: undefined },
       pipeline: { turnLimit: 500 },
     });
+  });
+
+  it('cờ FB_PUBLISH_ENABLED (đăng bài) mặc định TẮT; chỉ đúng chữ "true" (bỏ khoảng trắng) mới bật', () => {
+    expect(loadConfig({ DATABASE_WORKER_URL }).publishEnabled).toBe(false);
+    for (const value of ['', 'false', 'TRUE', '1', 'yes', ' no ']) {
+      expect(
+        loadConfig({ DATABASE_WORKER_URL, FB_PUBLISH_ENABLED: value }).publishEnabled,
+        value,
+      ).toBe(false);
+    }
+    expect(loadConfig({ DATABASE_WORKER_URL, FB_PUBLISH_ENABLED: 'true' }).publishEnabled).toBe(
+      true,
+    );
+    expect(loadConfig({ DATABASE_WORKER_URL, FB_PUBLISH_ENABLED: ' true ' }).publishEnabled).toBe(
+      true,
+    );
   });
 
   it('cờ SHOPIFY_ENABLED mặc định TẮT; chỉ đúng chữ "true" mới bật; đọc SHOPIFY_API_VERSION', () => {

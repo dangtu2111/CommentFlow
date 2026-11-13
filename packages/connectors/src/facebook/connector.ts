@@ -94,6 +94,16 @@ export interface FacebookConnector extends PlatformConnector {
    */
   fetchPost(channel: ChannelRef, postExternalId: string): Promise<FacebookPostInfo>;
   /**
+   * Ảnh đại diện của NGƯỜI VIẾT một bình luận (COMMENT-AUTHOR-AVATAR): `GET /{comment-id}?fields=from{id,picture...}`. Chỉ trả URL `https` của ảnh THẬT;
+   * ảnh mặc định (`is_silhouette`), thiếu `from`/`picture` (quyền riêng tư của người dùng) hoặc URL lạ → `null` — không bịa ảnh. Chỉ GET.
+   */
+  fetchCommentAuthorPicture(channel: ChannelRef, commentExternalId: string): Promise<string | null>;
+  /**
+   * Đăng MỘT bài chữ lên feed của Page (POST-PUBLISHING): `POST /{page-id}/feed` với `message`, token trong THÂN POST. Từ chối TRƯỚC khi gọi mạng nếu nội dung rỗng hoặc quá
+   * 63.206 ký tự. Phản hồi 2xx nhưng thiếu `id` → `UNKNOWN` (có thể ĐÃ đăng): nơi gọi KHÔNG ĐƯỢC tự thử lại. Lỗi quyền/token/tốc độ phân loại như mọi lệnh Graph.
+   */
+  publishPost(channel: ChannelRef, text: string): Promise<{ externalId: string }>;
+  /**
    * Quyền ĐÃ CẤP và hiệu lực của token Page đã lưu (`GET /debug_token`, xác thực bằng token ứng dụng): `scopes` chỉ gồm quyền áp cho Page này
    * (xét `granular_scopes`). Chỉ GET; token Page nằm trong query như mọi lệnh đọc Graph (không log).
    */
@@ -240,6 +250,28 @@ const postDetailSchema = z.object({
   created_time: z.string().optional(),
 });
 
+const commentAuthorPictureSchema = z.object({
+  from: z
+    .object({
+      picture: z
+        .object({
+          data: z.object({ url: z.string().optional(), is_silhouette: z.boolean().optional() }),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
+/** Chỉ nhận địa chỉ https (ảnh hiển thị trong trang; CSP `img-src` chỉ cho https); sai → null. */
+function httpsUrlOrNull(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    return new URL(value).protocol === 'https:' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Chỉ nhận địa chỉ http(s) (không `javascript:`/`data:`…); sai → null. */
 function httpUrlOrNull(value: string | undefined): string | null {
   if (!value) return null;
@@ -252,6 +284,8 @@ function httpUrlOrNull(value: string | undefined): string | null {
 }
 
 const successSchema = z.object({ success: z.literal(true) });
+/** Giới hạn độ dài bài đăng Facebook (số của thiết kế/nền tảng). */
+const MAX_POST_CHARS = 63206;
 const createdSchema = z.object({ id: z.string().min(1) });
 const subscribedAppsSchema = z.object({
   data: z.array(z.object({ id: z.string(), subscribed_fields: z.array(z.string()).optional() })),
@@ -490,6 +524,18 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       };
     },
 
+    async fetchCommentAuthorPicture(channel, commentExternalId) {
+      const parsed = commentAuthorPictureSchema.safeParse(
+        await call(channel, 'GET', graphId(commentExternalId), {
+          fields: 'from{id,picture.type(large){url,is_silhouette}}',
+        }),
+      );
+      if (!parsed.success) throw badResponse();
+      const data = parsed.data.from?.picture?.data;
+      if (!data || data.is_silhouette === true) return null;
+      return httpsUrlOrNull(data.url);
+    },
+
     async fetchReplies(channel, parentCommentId, opts = {}) {
       const postExternalId = opts.postExternalId ?? '';
       return readAllComments(
@@ -523,6 +569,16 @@ export function createFacebookConnector(options: FacebookConnectorOptions): Face
       });
       const created = createdSchema.safeParse(body);
       // 2xx nhưng không có id: có thể ĐÃ đăng → UNKNOWN (job sẽ kiểm trước khi gửi lại).
+      if (!created.success) throw badResponse();
+      return { externalId: created.data.id };
+    },
+
+    async publishPost(channel, text) {
+      const message = text.trim();
+      if (message === '' || text.length > MAX_POST_CHARS)
+        throw fail('UNKNOWN', 'facebook_invalid_post');
+      const body = await call(channel, 'POST', `${graphId(channel.externalId)}/feed`, { message });
+      const created = createdSchema.safeParse(body);
       if (!created.success) throw badResponse();
       return { externalId: created.data.id };
     },

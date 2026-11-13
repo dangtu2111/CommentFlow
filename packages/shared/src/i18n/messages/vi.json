@@ -3815,11 +3815,13 @@
     "back": "Lịch đăng",
     "heading": "Tạo bài viết mới",
     "soon": "Sắp có",
-    "banner": "Đây là giao diện soạn bài. Lưu nháp, lên lịch và đăng bài chưa khả dụng: nội dung bạn gõ ở đây chưa được lưu hay gửi đi đâu.",
+    "banner": "Đăng bài lên Facebook chưa được bật trên máy chủ. Bạn vẫn soạn và lưu bản nháp được; Lên lịch và Đăng ngay sẽ dùng được khi quản trị viên bật tính năng này.",
     "actions": {
       "draft": "Lưu bản nháp",
       "schedule": "Lên lịch đăng",
-      "publish": "Đăng ngay"
+      "publish": "Đăng ngay",
+      "delete": "Xóa",
+      "cancelSchedule": "Hủy lịch"
     },
     "channels": {
       "title": "Kênh đăng",
@@ -3838,7 +3840,9 @@
         "instagram": "Instagram",
         "tiktok": "TikTok"
       },
-      "unusable": "Kênh chưa dùng được để đăng"
+      "unusable": "Kênh chưa dùng được để đăng",
+      "noPublishPermission": "Thiếu quyền đăng bài (pages_manage_posts)",
+      "missingPermission": "Kênh đã chọn chưa có quyền đăng bài (pages_manage_posts): {names}. Bài sẽ không đăng được cho tới khi cấp quyền."
     },
     "content": {
       "title": "Nội dung bài đăng",
@@ -3874,7 +3878,7 @@
       "date": "Ngày đăng",
       "time": "Giờ đăng",
       "zone": "Múi giờ của cửa hàng: {zone}",
-      "unavailable": "Chọn ngày giờ chỉ để xem trước; chưa thể lên lịch."
+      "hint": "Chọn ngày và giờ theo múi giờ của cửa hàng; chỉ cần khi bấm \"Lên lịch đăng\"."
     },
     "preview": {
       "title": "Xem trước",
@@ -3894,12 +3898,32 @@
     "error": {
       "title": "Không tải được dữ liệu",
       "body": "Đã có lỗi khi tải trang. Thử tải lại sau."
+    },
+    "headingEdit": "Sửa bài viết",
+    "bannerEnabled": "Bài chỉ được đăng khi bạn bấm \"Đăng ngay\" hoặc đến đúng giờ đã lên lịch. AI không tự viết hay tự đăng bài.",
+    "publishDisabledShort": "Đăng bài chưa được bật trên máy chủ",
+    "notice": {
+      "saved": "Đã lưu bản nháp.",
+      "scheduled": "Đã lên lịch đăng bài.",
+      "publishing": "Đã nhận lệnh đăng. Bài sẽ được đăng trong ít phút.",
+      "cancelled": "Đã hủy lịch; bài trở về bản nháp.",
+      "deleted": "Đã xóa bài.",
+      "publish_disabled": "Đăng bài chưa được bật trên máy chủ nên chưa thể lên lịch hay đăng.",
+      "forbidden": "Chỉ Owner mới được thực hiện thao tác này.",
+      "unavailable": "Chưa thực hiện được. Thử lại sau.",
+      "not_editable": "Bài không còn ở trạng thái cho phép thao tác này (đã đăng, đang đăng hoặc đã bị đổi).",
+      "invalid_channel": "Có kênh không hợp lệ hoặc chưa kết nối.",
+      "invalid_schedule": "Giờ đăng phải cách hiện tại từ 2 phút đến 90 ngày, theo múi giờ của cửa hàng.",
+      "invalid": "Dữ liệu chưa hợp lệ (nội dung quá dài hoặc có giá trị sai).",
+      "empty_message": "Cần nhập nội dung trước khi lên lịch hoặc đăng.",
+      "no_channel": "Cần chọn ít nhất một kênh trước khi lên lịch hoặc đăng.",
+      "rate_limited": "Thao tác quá nhanh. Đợi một chút rồi thử lại."
     }
   },
   "calendar": {
     "title": "Lịch đăng",
     "heading": "Lịch phát hành và quản lý bài đăng",
-    "subtitle": "Xem các bài đã đăng của cửa hàng theo tuần. Lên lịch và bản nháp sẽ có ở bản sau.",
+    "subtitle": "Xem bài đã đăng của cửa hàng và bài đăng từ CommentFlow (đã lên lịch, đang đăng, đăng lỗi) theo tuần; bản nháp nằm ở khung bên dưới.",
     "soon": "Sắp có",
     "views": {
       "label": "Kiểu xem",
@@ -3937,7 +3961,12 @@
     },
     "today": "Hôm nay",
     "status": {
-      "published": "Đã đăng"
+      "published": "Đã đăng",
+      "draft": "Bản nháp",
+      "scheduled": "Đã lên lịch",
+      "publishing": "Đang đăng",
+      "partial": "Đăng một phần",
+      "failed": "Đăng lỗi"
     },
     "ad": "Quảng cáo",
     "noContent": "Chưa lấy được nội dung bài",
@@ -3966,6 +3995,38 @@
     "error": {
       "title": "Không tải được lịch",
       "body": "Đã có lỗi khi tải trang. Thử tải lại sau."
+    },
+    "targetStatus": {
+      "pending": "Chờ đăng",
+      "publishing": "Đang đăng",
+      "published": "Đã đăng",
+      "failed": "Lỗi",
+      "unknown": "Chưa rõ kết quả"
+    },
+    "publishError": {
+      "missing_permission": "Kênh chưa có quyền đăng bài (pages_manage_posts).",
+      "permission": "Facebook từ chối quyền đăng bài.",
+      "token_expired": "Kết nối kênh đã hết hạn, cần kết nối lại.",
+      "invalid_post": "Nội dung bài không hợp lệ.",
+      "rate_limited": "Facebook đang giới hạn tốc độ; đã thử lại nhiều lần.",
+      "unknown_result": "Không rõ bài đã đăng chưa. Hãy kiểm tra trên Facebook trước khi đăng lại.",
+      "lease_expired": "Không rõ bài đã đăng chưa (quá lâu không có kết quả). Hãy kiểm tra trên Facebook."
+    },
+    "drafts": {
+      "title": "Bản nháp",
+      "empty": "Chưa có bản nháp nào.",
+      "untitled": "(Chưa có nội dung)",
+      "edit": "Sửa bản nháp"
+    },
+    "own": {
+      "title": "Bài đăng từ CommentFlow",
+      "targets": "Kênh đăng",
+      "edit": "Sửa bài",
+      "cancel": "Hủy lịch",
+      "delete": "Xóa bài",
+      "scheduledAt": "Giờ đăng",
+      "lockedHint": "Bài đang đăng hoặc đã đăng thành công nên không sửa hay xóa được.",
+      "openOnFacebook": "Xem trên Facebook"
     }
   }
 }

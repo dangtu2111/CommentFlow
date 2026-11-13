@@ -15,6 +15,7 @@ export {
 } from './channel-tokens';
 export { setChannelWebhookSubscribed } from './channel-webhook';
 export { createDb, type Database, type FlowDb } from './client';
+export { setCommentAuthorAvatar } from './comment-avatar';
 export { markCommentDeleted } from './comment-redact';
 export {
   disconnectFbSystemConnection,
@@ -75,6 +76,27 @@ export {
   type SubscriptionRow,
   startTrial,
 } from './plans';
+export {
+  type ClaimedPublishTarget,
+  cancelPublishSchedule,
+  claimPublishTargets,
+  deletePublishPost,
+  getPublishPost,
+  listDuePublishWorkspaces,
+  listPublishDrafts,
+  listPublishPostsForWeek,
+  PUBLISH_MAX_LEAD_DAYS,
+  PUBLISH_MAX_MESSAGE_CHARS,
+  PUBLISH_MIN_LEAD_MINUTES,
+  type PublishOutcome,
+  type PublishPostItem,
+  type PublishPostStatus,
+  type PublishTarget,
+  type PublishTargetStatus,
+  publishPostNow,
+  recordPublishResult,
+  savePublishPost,
+} from './publish-posts';
 export {
   createAbbreviation,
   deleteAbbreviation,

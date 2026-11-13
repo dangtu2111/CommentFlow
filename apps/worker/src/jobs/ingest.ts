@@ -46,10 +46,20 @@ export type CreatedPost = {
   postExternalId: string;
 };
 
+/** Bình luận MỚI của khách vừa được lưu (để nơi gọi lấy ảnh đại diện người viết SAU khi giao dịch commit, xem `comment-avatar.ts`). */
+export type CreatedComment = {
+  workspaceId: string;
+  channelId: string;
+  channelExternalId: string;
+  commentId: string;
+  commentExternalId: string;
+};
+
 export async function processIngestEvent(
   tx: Database,
   job: IngestJob,
   onNewPost?: (post: CreatedPost) => void,
+  onNewComment?: (comment: CreatedComment) => void,
 ): Promise<IngestedComment[]> {
   const newComments: IngestedComment[] = [];
   const [event] = await tx
@@ -139,6 +149,13 @@ export async function processIngestEvent(
       if (born?.deletedAt) await logSystemAction(tx, job.workspaceId, 'comment.deleted', born.id);
       else if (born) {
         newComments.push({ id: born.id, ingestSource: source });
+        onNewComment?.({
+          workspaceId: job.workspaceId,
+          channelId: channel.id,
+          channelExternalId: parsed.channelExternalId,
+          commentId: born.id,
+          commentExternalId: c.externalId,
+        });
         await tx
           .update(posts)
           .set({
@@ -282,21 +299,30 @@ export function createIngestHandler(options: {
   pipeline?: IngestPipelineHook;
   /** Điền nội dung bài mới từ nền tảng (POST-HYDRATE): gọi SAU khi giao dịch commit; hook phải tự bắt lỗi, lỗi nếu có cũng bị bỏ qua ở đây. */
   hydrate?: (post: CreatedPost) => Promise<void>;
+  /** Lấy ảnh đại diện người bình luận mới (COMMENT-AUTHOR-AVATAR): gọi SAU commit, mỗi bình luận một lần; hook phải tự bắt lỗi, lỗi nếu có cũng bị bỏ qua. */
+  hydrateAvatar?: (comment: CreatedComment) => Promise<void>;
 }): BatchHandler {
-  const { db, logger, pipeline, hydrate } = options;
+  const { db, logger, pipeline, hydrate, hydrateAvatar } = options;
   let created: IngestedComment[] = [];
   let newPosts: CreatedPost[] = [];
+  let newAvatarTargets: CreatedComment[] = [];
   const inner = workspaceJob({
     db,
     schema: ingestJobSchema,
     handler: async ({ tx, payload }) => {
-      created = await processIngestEvent(tx, payload, (post) => newPosts.push(post));
+      created = await processIngestEvent(
+        tx,
+        payload,
+        (post) => newPosts.push(post),
+        (comment) => newAvatarTargets.push(comment),
+      );
     },
   });
   return async (jobs) => {
     for (const job of jobs) {
       created = [];
       newPosts = [];
+      newAvatarTargets = [];
       try {
         await inner([job]);
       } catch (error) {
@@ -310,6 +336,10 @@ export function createIngestHandler(options: {
       // Điền nội dung bài mới (best-effort, sau commit): lỗi không làm hỏng ingest — bài vẫn hiện với mã ngoài như trước.
       if (hydrate) {
         for (const post of newPosts) await hydrate(post).catch(() => undefined);
+      }
+      // Ảnh đại diện người bình luận (best-effort, sau commit): thiếu ảnh không ảnh hưởng gì — giao diện vẫn hiện chữ cái đầu.
+      if (hydrateAvatar) {
+        for (const comment of newAvatarTargets) await hydrateAvatar(comment).catch(() => undefined);
       }
       // MỘT nơi quyết định xếp job: ở đây (và job quét, cùng `shouldAutoRunPipeline`). Xếp lỗi KHÔNG làm hỏng ingest: bình luận đã
       // lưu ở `new` và job quét sẽ nhặt lại.
