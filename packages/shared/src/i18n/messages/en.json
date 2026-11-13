@@ -2044,10 +2044,6 @@
         "title": "Try AI",
         "body": "Type a customer question to see how the AI would answer. No quota used."
       },
-      "kbTestset": {
-        "title": "Tests",
-        "body": "Run sample questions to make sure the AI is still right before publishing."
-      },
       "kbPublish": {
         "title": "Versions",
         "body": "Publish or restore a knowledge version."
