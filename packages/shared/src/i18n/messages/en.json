@@ -3911,7 +3911,7 @@
     "notice": {
       "saved": "Draft saved.",
       "scheduled": "Post scheduled.",
-      "publishing": "Publish request received. The post will go out within a few minutes.",
+      "publishing": "Publish request sent. The post will appear on Facebook in about 20–30 seconds; track it in the Calendar. No need to click again.",
       "cancelled": "Schedule cancelled; the post is back to a draft.",
       "deleted": "Post deleted.",
       "publish_disabled": "Publishing is not enabled on the server, so you cannot schedule or publish yet.",
@@ -3923,7 +3923,13 @@
       "invalid": "The data is invalid (content too long or a wrong value).",
       "empty_message": "Write the content before scheduling or publishing.",
       "no_channel": "Choose at least one channel before scheduling or publishing.",
-      "rate_limited": "Too many attempts. Wait a moment and try again."
+      "rate_limited": "You clicked too fast so the extra click was blocked. The earlier request may already have been sent: check the Calendar before clicking again to avoid a duplicate post."
+    },
+    "pending": {
+      "draft": "Saving…",
+      "schedule": "Scheduling…",
+      "publish": "Sending…",
+      "note": "Sending your request, please wait and do NOT click again. The page will move on when done."
     }
   },
   "calendar": {
@@ -4032,7 +4038,9 @@
       "delete": "Delete post",
       "scheduledAt": "Publish time",
       "lockedHint": "The post is being published or was published successfully, so it cannot be edited or deleted.",
-      "openOnFacebook": "View on Facebook"
+      "openOnFacebook": "View on Facebook",
+      "pending": "Sending…",
+      "pendingNote": "Sending your request, please wait and do NOT click again."
     }
   }
 }

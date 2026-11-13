@@ -8,6 +8,7 @@ import {
 } from '../../app/app/(guarded)/composer/actions';
 import { cx } from '../../lib/cx';
 import { formatAbsoluteTime } from '../../lib/inbox-format';
+import { PendingNote, PendingSubmit } from '../composer/pending-submit';
 import { Icon } from '../ui/icon';
 
 /**
@@ -143,25 +144,26 @@ export async function PublishDrawer({
             </Link>
           ) : null}
           {post.status === 'scheduled' ? (
-            <button
-              type="submit"
+            <PendingSubmit
               formAction={cancelPublishScheduleAction}
+              pendingLabel={t('own.pending')}
               className="inline-flex items-center gap-1 rounded-lg bg-surface-container-high px-space-md py-space-sm font-title-sm text-title-sm text-on-surface hover:bg-surface-container-highest"
             >
               <Icon name="event_busy" size={16} />
               {t('own.cancel')}
-            </button>
+            </PendingSubmit>
           ) : null}
           {deletable ? (
-            <button
-              type="submit"
+            <PendingSubmit
               formAction={deletePublishPostAction}
+              pendingLabel={t('own.pending')}
               className="inline-flex items-center gap-1 rounded-lg bg-surface-container-low px-space-md py-space-sm font-title-sm text-title-sm text-error hover:bg-surface-container"
             >
               <Icon name="delete" size={16} />
               {t('own.delete')}
-            </button>
+            </PendingSubmit>
           ) : null}
+          <PendingNote>{t('own.pendingNote')}</PendingNote>
         </form>
       </aside>
     </>

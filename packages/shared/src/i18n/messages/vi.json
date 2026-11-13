@@ -3911,7 +3911,7 @@
     "notice": {
       "saved": "Đã lưu bản nháp.",
       "scheduled": "Đã lên lịch đăng bài.",
-      "publishing": "Đã nhận lệnh đăng. Bài sẽ được đăng trong ít phút.",
+      "publishing": "Đã gửi lệnh đăng. Bài sẽ lên Facebook trong khoảng 20–30 giây; theo dõi trạng thái ở Lịch đăng. Không cần bấm lại.",
       "cancelled": "Đã hủy lịch; bài trở về bản nháp.",
       "deleted": "Đã xóa bài.",
       "publish_disabled": "Đăng bài chưa được bật trên máy chủ nên chưa thể lên lịch hay đăng.",
@@ -3923,7 +3923,13 @@
       "invalid": "Dữ liệu chưa hợp lệ (nội dung quá dài hoặc có giá trị sai).",
       "empty_message": "Cần nhập nội dung trước khi lên lịch hoặc đăng.",
       "no_channel": "Cần chọn ít nhất một kênh trước khi lên lịch hoặc đăng.",
-      "rate_limited": "Thao tác quá nhanh. Đợi một chút rồi thử lại."
+      "rate_limited": "Bạn bấm quá nhanh nên lần bấm sau bị chặn. Lệnh trước đó có thể đã được gửi: hãy mở Lịch đăng kiểm tra trước khi bấm lại để tránh đăng trùng."
+    },
+    "pending": {
+      "draft": "Đang lưu…",
+      "schedule": "Đang lên lịch…",
+      "publish": "Đang gửi…",
+      "note": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại. Trang sẽ tự chuyển khi xong."
     }
   },
   "calendar": {
@@ -4032,7 +4038,9 @@
       "delete": "Xóa bài",
       "scheduledAt": "Giờ đăng",
       "lockedHint": "Bài đang đăng hoặc đã đăng thành công nên không sửa hay xóa được.",
-      "openOnFacebook": "Xem trên Facebook"
+      "openOnFacebook": "Xem trên Facebook",
+      "pending": "Đang gửi…",
+      "pendingNote": "Đang gửi lệnh, vui lòng đợi và KHÔNG bấm lại."
     }
   }
 }

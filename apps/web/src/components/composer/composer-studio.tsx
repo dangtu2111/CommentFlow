@@ -13,6 +13,7 @@ import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/
 import { MAX_PRODUCTS } from '../../lib/publish-form';
 import { safeHttpsUrl } from '../../lib/safe-url';
 import { Icon, type IconName } from '../ui/icon';
+import { PendingNote, PendingSubmit } from './pending-submit';
 
 /**
  * Biên tập bài viết (design/stitch/composer.html, COMPOSER-CALENDAR-UI + POST-PUBLISHING, Q-CMP1/Q-PUB1): biểu mẫu soạn bài với Server Action thật — LƯU NHÁP, LÊN LỊCH, ĐĂNG NGAY
@@ -177,31 +178,29 @@ export function ComposerStudio({
         </div>
         <div className="flex flex-wrap items-center gap-space-sm">
           {initial ? (
-            <button
-              type="submit"
+            <PendingSubmit
               formAction={deletePublishPostAction}
               formNoValidate
               className={cx(actionBtn, 'bg-surface-container-low text-error')}
             >
               <Icon name="delete" size={18} />
               {t('actions.delete')}
-            </button>
+            </PendingSubmit>
           ) : null}
           {initial?.status === 'scheduled' ? (
-            <button
-              type="submit"
+            <PendingSubmit
               formAction={cancelPublishScheduleAction}
               formNoValidate
               className={cx(actionBtn, 'bg-surface-container-low text-on-surface')}
             >
               <Icon name="event_busy" size={18} />
               {t('actions.cancelSchedule')}
-            </button>
+            </PendingSubmit>
           ) : null}
-          <button
-            type="submit"
+          <PendingSubmit
             name="intent"
             value="draft"
+            pendingLabel={t('pending.draft')}
             className={cx(
               actionBtn,
               'bg-surface-container-high text-on-surface hover:bg-surface-container-highest',
@@ -209,11 +208,11 @@ export function ComposerStudio({
           >
             <Icon name="draft" size={18} />
             {t('actions.draft')}
-          </button>
-          <button
-            type="submit"
+          </PendingSubmit>
+          <PendingSubmit
             name="intent"
             value="schedule"
+            pendingLabel={t('pending.schedule')}
             disabled={!canSend}
             aria-disabled={!canSend}
             title={publishEnabled ? undefined : t('publishDisabledShort')}
@@ -225,11 +224,11 @@ export function ComposerStudio({
           >
             <Icon name="schedule_send" size={18} />
             {t('actions.schedule')}
-          </button>
-          <button
-            type="submit"
+          </PendingSubmit>
+          <PendingSubmit
             name="intent"
             value="publish"
+            pendingLabel={t('pending.publish')}
             disabled={!canSend}
             aria-disabled={!canSend}
             title={publishEnabled ? undefined : t('publishDisabledShort')}
@@ -241,10 +240,11 @@ export function ComposerStudio({
           >
             <Icon name="rocket_launch" size={18} />
             {t('actions.publish')}
-          </button>
+          </PendingSubmit>
         </div>
       </div>
 
+      <PendingNote>{t('pending.note')}</PendingNote>
       <p
         role="note"
         className="flex items-start gap-space-xs rounded-lg bg-tertiary-fixed/40 p-space-md font-body-sm text-body-sm text-on-surface"
