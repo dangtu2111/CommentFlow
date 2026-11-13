@@ -3855,7 +3855,11 @@
       "link": "Add a link",
       "counters": "Characters per platform",
       "over": "Over the limit",
-      "ok": "Within the limit"
+      "ok": "Within the limit",
+      "mentionUnavailable": "Tagging unavailable: Facebook does not allow user/page tags in API posts",
+      "linkPlaceholder": "https://…",
+      "linkAdd": "Insert link",
+      "linkInvalid": "Only valid https links are accepted"
     },
     "media": {
       "title": "Images and video",
@@ -3954,6 +3958,27 @@
       "publish": "Sending…",
       "note": "Sending your request, please wait and do NOT click again. The page will move on when done.",
       "uploading": "Uploading files; save/publish buttons are locked until it finishes."
+    },
+    "ai": {
+      "loading": "Writing…",
+      "useCaption": "Use this caption",
+      "appendCaption": "Append",
+      "addHashtags": "Add hashtags",
+      "dismiss": "Dismiss",
+      "disclaimer": "AI only suggests. Read and edit before publishing.",
+      "notReady": {
+        "flag_off": "AI captions are off for this shop.",
+        "missing_service": "AI service is not configured.",
+        "missing_model": "Caption model is not configured (CAPTION_LLM_MODEL)."
+      },
+      "failure": {
+        "empty_input": "Enter an idea or content first.",
+        "empty": "AI returned nothing usable, try again.",
+        "unsupported_claims": "AI added figures/prices/links not in your idea, so it was rejected. Try again.",
+        "flag_off": "AI captions are off.",
+        "not_configured": "AI captions are not configured.",
+        "unavailable": "AI is unavailable right now, try later."
+      }
     }
   },
   "calendar": {

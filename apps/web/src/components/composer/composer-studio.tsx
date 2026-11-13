@@ -1,17 +1,21 @@
 'use client';
 
+import type { CaptionNotReady } from '@flow/ai';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useId, useState } from 'react';
+import { useId, useRef, useState, useTransition } from 'react';
 import {
   cancelPublishScheduleAction,
   deletePublishPostAction,
   savePublishPostAction,
+  suggestCaptionAction,
 } from '../../app/app/(guarded)/composer/actions';
 import { cx } from '../../lib/cx';
 import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/post-counters';
 import { MAX_PRODUCTS } from '../../lib/publish-form';
 import { safeHttpsUrl } from '../../lib/safe-url';
+import { appendHashtags, insertAtCursor, parseHttpsLink } from '../../lib/text-insert';
+import type { SuggestionResult } from '../../server/caption-service';
 import { Icon, type IconName } from '../ui/icon';
 import { type ComposerMedia, MediaUploader } from './media-uploader';
 import { PendingNote, PendingSubmit } from './pending-submit';
@@ -58,15 +62,7 @@ const PLATFORM_ICON: Record<ComposerPlatform, IconName> = {
 
 const DEFAULT_PLATFORM: ComposerPlatform = 'facebook';
 const formatCount = (value: number): string => value.toLocaleString('vi-VN');
-/** Nút định dạng của thanh công cụ (chưa có chức năng → vô hiệu kèm "Sắp có"). */
-const TOOLBAR: ReadonlyArray<{
-  icon: IconName;
-  label: 'content.emoji' | 'content.mention' | 'content.link';
-}> = [
-  { icon: 'sentiment_satisfied', label: 'content.emoji' },
-  { icon: 'alternate_email', label: 'content.mention' },
-  { icon: 'link', label: 'content.link' },
-];
+const EMOJIS = ['😍', '🔥', '✨', '🎉', '👍', '❤️', '🛍️', '🚚', '💯', '🙏'] as const;
 
 const isPlatform = (value: string): value is ComposerPlatform =>
   (COMPOSER_PLATFORMS as readonly string[]).includes(value);
@@ -110,6 +106,7 @@ export function ComposerStudio({
   products,
   mediaEnabled,
   initialMedia,
+  aiReason,
   initial,
 }: {
   channels: ComposerChannel[];
@@ -120,6 +117,8 @@ export function ComposerStudio({
   timeZone: string;
   /** Cờ `FB_PUBLISH_ENABLED` của web: tắt → chỉ lưu nháp được. */
   publishEnabled: boolean;
+  /** Vì sao AI soạn caption chưa dùng được (`null` = dùng được). */
+  aiReason: CaptionNotReady | null;
   initial?: ComposerInitial;
 }) {
   const t = useTranslations('composer');
@@ -150,6 +149,39 @@ export function ComposerStudio({
           ? current
           : [...current, id],
     );
+  const areaRef = useRef<HTMLTextAreaElement>(null);
+  const [pending, startAi] = useTransition();
+  const [suggestion, setSuggestion] = useState<SuggestionResult | null>(null);
+  const [panel, setPanel] = useState<'emoji' | 'link' | null>(null);
+  const [link, setLink] = useState('');
+  const [linkBad, setLinkBad] = useState(false);
+  const aiReady = aiReason === null;
+  const aiHint = aiReason === null ? undefined : t(`ai.notReady.${aiReason}`);
+
+  const insert = (value: string) => {
+    const el = areaRef.current;
+    const from = el?.selectionStart ?? text.length;
+    const to = el?.selectionEnd ?? text.length;
+    const next = insertAtCursor(text, from, to, value);
+    setText(next.text);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(next.cursor, next.cursor);
+    });
+  };
+  const ask = (kind: 'caption' | 'hashtags') =>
+    startAi(async () => {
+      setSuggestion(null);
+      setSuggestion(await suggestCaptionAction(kind, text));
+    });
+  const addLink = () => {
+    const url = parseHttpsLink(link);
+    setLinkBad(url === null);
+    if (url === null) return;
+    insert(`${text === '' || text.endsWith('\n') ? '' : '\n'}${url}`);
+    setLink('');
+    setPanel(null);
+  };
 
   const toggle = (id: string) =>
     setSelected((current) =>
@@ -380,46 +412,181 @@ export function ComposerStudio({
               <div className="flex flex-wrap items-center gap-space-xs">
                 <button
                   type="button"
-                  disabled
-                  aria-disabled="true"
-                  title={soon}
-                  className="inline-flex cursor-not-allowed items-center gap-space-xs rounded-full bg-secondary-fixed px-space-sm py-1 font-label-md text-label-md font-semibold text-on-secondary-fixed opacity-60"
+                  onClick={() => ask('caption')}
+                  disabled={!aiReady || pending || text.trim() === ''}
+                  title={aiHint}
+                  className="inline-flex items-center gap-space-xs rounded-full px-space-sm py-1 font-label-md text-label-md font-semibold disabled:cursor-not-allowed disabled:opacity-60 bg-secondary-fixed text-on-secondary-fixed"
                 >
                   <Icon name="magic_button" size={15} />
-                  {t('content.aiCaption')}
+                  {pending ? t('ai.loading') : t('content.aiCaption')}
                 </button>
                 <button
                   type="button"
-                  disabled
-                  aria-disabled="true"
-                  title={soon}
-                  className="inline-flex cursor-not-allowed items-center gap-space-xs rounded-full bg-surface-container-high px-space-sm py-1 font-label-md text-label-md font-semibold text-secondary opacity-60"
+                  onClick={() => ask('hashtags')}
+                  disabled={!aiReady || pending || text.trim() === ''}
+                  title={aiHint}
+                  className="inline-flex items-center gap-space-xs rounded-full px-space-sm py-1 font-label-md text-label-md font-semibold disabled:cursor-not-allowed disabled:opacity-60 bg-surface-container-high text-secondary"
                 >
                   <Icon name="tag" size={15} />
                   {t('content.aiHashtag')}
                 </button>
               </div>
             </div>
+            {aiHint ? (
+              <p className="font-label-sm text-label-sm text-on-surface-variant">{aiHint}</p>
+            ) : null}
+            {suggestion ? (
+              <div role="status" className="rounded-lg bg-secondary-fixed/30 p-space-md">
+                {suggestion.ok && suggestion.kind === 'caption' ? (
+                  <>
+                    <p className="whitespace-pre-wrap font-body-md text-body-md text-on-surface">
+                      {suggestion.text}
+                    </p>
+                    <div className="mt-space-sm flex flex-wrap gap-space-xs">
+                      <button
+                        type="button"
+                        className="rounded-full px-space-sm py-1 font-label-md text-label-md bg-primary text-on-primary"
+                        onClick={() => {
+                          setText(suggestion.text);
+                          setSuggestion(null);
+                        }}
+                      >
+                        {t('ai.useCaption')}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full px-space-sm py-1 font-label-md text-label-md bg-surface-container-high text-on-surface"
+                        onClick={() => {
+                          setText(`${text.replace(/\s+$/, '')}\n\n${suggestion.text}`.trim());
+                          setSuggestion(null);
+                        }}
+                      >
+                        {t('ai.appendCaption')}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full px-space-sm py-1 font-label-md text-label-md text-on-surface-variant"
+                        onClick={() => setSuggestion(null)}
+                      >
+                        {t('ai.dismiss')}
+                      </button>
+                    </div>
+                  </>
+                ) : suggestion.ok ? (
+                  <>
+                    <p className="font-body-md text-body-md text-on-surface">
+                      {suggestion.hashtags.join(' ')}
+                    </p>
+                    <div className="mt-space-sm flex flex-wrap gap-space-xs">
+                      <button
+                        type="button"
+                        className="rounded-full px-space-sm py-1 font-label-md text-label-md bg-primary text-on-primary"
+                        onClick={() => {
+                          setText(appendHashtags(text, suggestion.hashtags));
+                          setSuggestion(null);
+                        }}
+                      >
+                        {t('ai.addHashtags')}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full px-space-sm py-1 font-label-md text-label-md text-on-surface-variant"
+                        onClick={() => setSuggestion(null)}
+                      >
+                        {t('ai.dismiss')}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="font-body-md text-body-md text-error">
+                    {t(`ai.failure.${suggestion.reason}`)}
+                  </p>
+                )}
+                <p className="mt-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                  {t('ai.disclaimer')}
+                </p>
+              </div>
+            ) : null}
             <div className="flex items-center gap-space-xs rounded-lg bg-surface-container-low p-space-xs">
-              {TOOLBAR.map(({ icon, label: key }) => (
-                <button
-                  key={key}
-                  type="button"
-                  disabled
-                  aria-disabled="true"
-                  title={`${t(key)} · ${soon}`}
-                  aria-label={t(key)}
-                  className="cursor-not-allowed rounded p-1 text-on-surface-variant opacity-60"
-                >
-                  <Icon name={icon} size={18} />
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => setPanel(panel === 'emoji' ? null : 'emoji')}
+                aria-expanded={panel === 'emoji'}
+                aria-label={t('content.emoji')}
+                title={t('content.emoji')}
+                className="rounded p-1 text-on-surface-variant hover:bg-surface-container-high"
+              >
+                <Icon name="sentiment_satisfied" size={18} />
+              </button>
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                aria-label={t('content.mention')}
+                title={t('content.mentionUnavailable')}
+                className="cursor-not-allowed rounded p-1 text-on-surface-variant opacity-60"
+              >
+                <Icon name="alternate_email" size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPanel(panel === 'link' ? null : 'link')}
+                aria-expanded={panel === 'link'}
+                aria-label={t('content.link')}
+                title={t('content.link')}
+                className="rounded p-1 text-on-surface-variant hover:bg-surface-container-high"
+              >
+                <Icon name="link" size={18} />
+              </button>
             </div>
+            {panel === 'emoji' ? (
+              <div className="flex flex-wrap gap-space-xs rounded-lg bg-surface-container-low p-space-xs">
+                {EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => insert(emoji)}
+                    className="rounded p-1 text-xl hover:bg-surface-container-high"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {panel === 'link' ? (
+              <div className="flex flex-wrap items-center gap-space-xs rounded-lg bg-surface-container-low p-space-xs">
+                <input
+                  type="url"
+                  value={link}
+                  onChange={(event) => {
+                    setLink(event.target.value);
+                    setLinkBad(false);
+                  }}
+                  placeholder={t('content.linkPlaceholder')}
+                  aria-label={t('content.link')}
+                  aria-invalid={linkBad}
+                  className="min-w-0 flex-1 rounded bg-surface-container-lowest px-space-sm py-1 font-body-sm text-body-sm outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={addLink}
+                  className="rounded-full px-space-sm py-1 font-label-md text-label-md bg-primary text-on-primary"
+                >
+                  {t('content.linkAdd')}
+                </button>
+                {linkBad ? (
+                  <span className="font-label-sm text-label-sm text-error">
+                    {t('content.linkInvalid')}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
             <label htmlFor={`${textId}-text`} className="sr-only">
               {t('content.label')}
             </label>
             <textarea
               id={`${textId}-text`}
+              ref={areaRef}
               name="message"
               value={text}
               onChange={(event) => setText(event.target.value)}

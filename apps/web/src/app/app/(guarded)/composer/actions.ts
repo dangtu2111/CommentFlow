@@ -5,6 +5,8 @@ import { calendarHref } from '../../../../lib/calendar-week';
 import { parsePublishForm } from '../../../../lib/publish-form';
 import type { PublishOutcome } from '../../../../lib/publish-outcome';
 import { actionAllowed } from '../../../../server/action-guard';
+import { suggestForWorkspace } from '../../../../server/caption-runtime';
+import type { CaptionKind, SuggestionResult } from '../../../../server/caption-service';
 import { loadPublishOutcome, loadWorkspaceTimeZone } from '../../../../server/post-calendar';
 import type { PublishActionResult } from '../../../../server/publish-posts';
 import { publishPostService } from '../../../../server/publish-runtime';
@@ -78,4 +80,24 @@ export async function checkPublishOutcomeAction(postId: string): Promise<Publish
   const { user, workspace } = await requireAppUser({ role: 'owner' });
   if (typeof postId !== 'string' || !UUID.test(postId)) return { state: 'pending' };
   return (await loadPublishOutcome(workspace.id, user.id, postId)) ?? { state: 'pending' };
+}
+
+const MAX_DRAFT_CHARS = 4000;
+
+/**
+ * Owner xin AI GỢI Ý caption/hashtag từ nội dung đang soạn (không lưu, không đăng; người dùng tự quyết). Workspace lấy từ phiên, không từ form.
+ * Dùng bộ giới hạn `uiHeavy` vì mỗi lần là một lệnh gọi LLM tốn tiền.
+ */
+export async function suggestCaptionAction(
+  kind: CaptionKind,
+  draft: string,
+): Promise<SuggestionResult> {
+  const { user, workspace } = await requireAppUser({ role: 'owner' });
+  if ((kind !== 'caption' && kind !== 'hashtags') || typeof draft !== 'string') {
+    return { ok: false, reason: 'empty_input' };
+  }
+  if (!(await actionAllowed('uiHeavy', { userId: user.id, workspaceId: workspace.id }))) {
+    return { ok: false, reason: 'unavailable' };
+  }
+  return suggestForWorkspace(workspace.id, kind, draft.slice(0, MAX_DRAFT_CHARS));
 }

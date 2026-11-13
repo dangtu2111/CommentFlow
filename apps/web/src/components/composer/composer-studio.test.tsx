@@ -1,3 +1,4 @@
+import type { CaptionNotReady } from '@flow/ai';
 import { NextIntlClientProvider } from 'next-intl';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -7,6 +8,7 @@ vi.mock('../../app/app/(guarded)/composer/actions', () => ({
   savePublishPostAction: vi.fn(),
   cancelPublishScheduleAction: vi.fn(),
   deletePublishPostAction: vi.fn(),
+  suggestCaptionAction: vi.fn(),
 }));
 
 import {
@@ -42,6 +44,7 @@ const render = (
     mediaEnabled?: boolean;
     initialMedia?: ComposerMedia[];
     publishEnabled?: boolean;
+    aiReason?: CaptionNotReady | null;
     initial?: ComposerInitial;
   } = {},
 ) =>
@@ -54,6 +57,7 @@ const render = (
         initialMedia={over.initialMedia ?? []}
         timeZone="Asia/Ho_Chi_Minh"
         publishEnabled={over.publishEnabled ?? true}
+        aiReason={over.aiReason === undefined ? 'flag_off' : over.aiReason}
         {...(over.initial ? { initial: over.initial } : {})}
       />
     </NextIntlClientProvider>,
@@ -238,5 +242,16 @@ describe('ComposerStudio', () => {
     expect(withFiles).toMatch(/<input[^>]*name="media"[^>]*value="m1"/);
     expect(withFiles).toContain('src="/app/api/media/m1"');
     expect(withFiles).toMatch(/<video[^>]*src="\/app\/api\/media\/m2"/);
+  });
+
+  it('AI caption/hashtag: cờ tắt → nút khóa kèm lý do; sẵn sàng → bật khi đã có nội dung', () => {
+    const off = render({ aiReason: 'flag_off' });
+    expect(off).toContain('AI soạn caption đang tắt cho cửa hàng này.');
+    expect(off).toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*AI gợi ý caption/s);
+    const missing = render({ aiReason: 'missing_model' });
+    expect(missing).toContain('CAPTION_LLM_MODEL');
+    const ready = render({ aiReason: null });
+    expect(ready).not.toContain('AI soạn caption đang tắt');
+    expect(ready).not.toContain('CAPTION_LLM_MODEL');
   });
 });
