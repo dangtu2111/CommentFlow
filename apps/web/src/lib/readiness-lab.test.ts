@@ -4,6 +4,7 @@ import {
   bandOf,
   coachSteps,
   filterLabResults,
+  labAccuracy,
   labCounts,
   PILLAR_OF_TOPIC,
   pillarsOf,
@@ -68,19 +69,26 @@ describe('coachSteps', () => {
   });
 });
 
-describe('filterLabResults / labCounts', () => {
+describe('filterLabResults / labCounts / labAccuracy', () => {
   const rows = [
-    { status: 'pass' as const, question: 'Giá áo dài?' },
-    { status: 'fail' as const, question: 'Ship COD Nam Định' },
-    { status: 'error' as const, question: 'Đổi size' },
+    { lastStatus: 'pass' as const, question: 'Giá áo dài?' },
+    { lastStatus: 'fail' as const, question: 'Ship COD Nam Định' },
+    { lastStatus: 'error' as const, question: 'Đổi size' },
+    { lastStatus: null, question: 'Giờ mở cửa' },
   ];
-  it('lọc theo tab và từ khóa không phân biệt hoa thường', () => {
-    expect(filterLabResults(rows, 'all', '')).toHaveLength(3);
+  it('lọc theo tab (kể cả "chưa chạy") và từ khóa không phân biệt hoa thường', () => {
+    expect(filterLabResults(rows, 'all', '')).toHaveLength(4);
     expect(filterLabResults(rows, 'fail', '')).toEqual([rows[1]]);
+    expect(filterLabResults(rows, 'untested', '')).toEqual([rows[3]]);
     expect(filterLabResults(rows, 'all', ' ship ')).toEqual([rows[1]]);
     expect(filterLabResults(rows, 'pass', 'ship')).toEqual([]);
   });
   it('đếm theo tab', () => {
-    expect(labCounts(rows)).toEqual({ all: 3, pass: 1, fail: 1, error: 1 });
+    expect(labCounts(rows)).toEqual({ all: 4, pass: 1, fail: 1, error: 1, untested: 1 });
+  });
+  it('tỷ lệ chính xác tính trên câu đã chạy; chưa chạy câu nào → null', () => {
+    expect(labAccuracy(rows)).toBe(33);
+    expect(labAccuracy([{ lastStatus: null }])).toBeNull();
+    expect(labAccuracy([])).toBeNull();
   });
 });

@@ -5,6 +5,7 @@ import { ReadinessOverview } from '../../../../components/readiness/readiness-ov
 import { ReadinessTestLab } from '../../../../components/readiness/readiness-test-lab';
 import { Icon } from '../../../../components/ui/icon';
 import { getBrand } from '../../../../server/brand';
+import { loadKbTestCases } from '../../../../server/kb-test-cases';
 import { loadReadiness, readinessLangOf } from '../../../../server/readiness';
 import { requireAppUser } from '../../../../server/require-app-user';
 
@@ -23,8 +24,12 @@ export default async function ReadinessPage() {
   const [t, locale] = await Promise.all([getTranslations(), getLocale()]);
 
   let result: Awaited<ReturnType<typeof loadReadiness>> | null = null;
+  let cases: Awaited<ReturnType<typeof loadKbTestCases>> = [];
   try {
-    result = await loadReadiness(workspace.id, user.id, readinessLangOf(locale));
+    [result, cases] = await Promise.all([
+      loadReadiness(workspace.id, user.id, readinessLangOf(locale)),
+      loadKbTestCases(workspace.id, user.id),
+    ]);
   } catch {
     // Không lộ chi tiết lỗi ra giao diện.
     result = null;
@@ -58,7 +63,18 @@ export default async function ReadinessPage() {
             </p>
           </header>
           <ReadinessOverview result={result} />
-          <ReadinessTestLab />
+          <ReadinessTestLab
+            cases={cases.map((c) => ({
+              id: c.id,
+              question: c.question,
+              expectAction: c.expectAction,
+              replyIncludes: [...c.replyIncludes],
+              lastStatus: c.lastStatus,
+              lastActual: c.lastActual,
+              lastReply: c.lastReply,
+              lastFailures: c.lastFailures,
+            }))}
+          />
           <section
             aria-labelledby="lab-sandbox"
             className="rounded-xl border border-outline-variant bg-surface-container-lowest p-space-lg shadow-sm"

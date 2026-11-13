@@ -78,6 +78,17 @@ export {
   startTrial,
 } from './plans';
 export {
+  addKbTestCases,
+  deleteKbTestCase,
+  type KbTestAction,
+  type KbTestCaseInput,
+  type KbTestCaseRow,
+  type KbTestRunRecord,
+  type KbTestStatus,
+  listKbTestCases,
+  recordKbTestRun,
+} from './kb-test-cases';
+export {
   getMediaAsset,
   listMediaForPublish,
   listPublishPostMedia,

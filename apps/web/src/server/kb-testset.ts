@@ -1,4 +1,5 @@
 import {
+  parseTestCases,
   runTestSet,
   runTryPipeline,
   type TestCaseResult,
@@ -6,7 +7,7 @@ import {
   type TryDeps,
   type TryQuota,
 } from '@flow/ai';
-import { parseTestSetText } from '../lib/kb-testset-form';
+import { type ParseTestSetTextResult, parseTestSetText } from '../lib/kb-testset-form';
 import {
   type KnowledgeRunner,
   NoKnowledgeError,
@@ -68,6 +69,16 @@ const realDeps = (llm: TryLlmDeps | undefined): TryDeps | null =>
       }
     : null;
 
+/** Đầu vào là văn bản của form HOẶC mảng câu đã lưu (đã tách sẵn); cả hai đều qua cùng bộ kiểm Zod. */
+function parseInput(raw: unknown): ParseTestSetTextResult {
+  if (!Array.isArray(raw)) return parseTestSetText(raw);
+  const parsed = parseTestCases(raw);
+  if (parsed.ok) return parsed;
+  return parsed.reason === 'invalid'
+    ? { ok: false, reason: 'invalid_line', line: parsed.index + 1 }
+    : { ok: false, reason: parsed.reason };
+}
+
 const DEMO_VOICE = { do: [], dont: [], shopPronoun: 'shop', customerAddress: 'ban' } as const;
 
 export function createKbTestSetAction(deps: KbTestSetDeps) {
@@ -79,7 +90,7 @@ export function createKbTestSetAction(deps: KbTestSetDeps) {
     session: TrySession,
     rawText: unknown,
   ): Promise<KbTestSetResult> {
-    const parsed = parseTestSetText(rawText);
+    const parsed = parseInput(rawText);
     if (!parsed.ok) return parsed;
 
     // Nêu ĐÚNG nguyên nhân AI chưa chạy được: thiếu dịch vụ LiteLLM / thiếu tên model / cờ DB cf.ai.* tắt cho workspace — kiểm trước khi tốn lượt.
