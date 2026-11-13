@@ -24,7 +24,6 @@ export type NavItemKey =
   | 'productImport'
   | 'kbGaps'
   | 'kbPublish'
-  | 'kbTestset'
   | 'kbShop'
   | 'kbPolicies'
   | 'kbFaq'
@@ -76,7 +75,6 @@ const ENTRIES: readonly Entry[] = [
   },
   { key: 'kbGaps', href: '/app/kb-gaps', group: 'system', roles: OWNER, parent: 'kb' },
   { key: 'kbPublish', href: '/app/kb-publish', group: 'system', roles: OWNER, parent: 'kb' },
-  { key: 'kbTestset', href: '/app/kb-testset', group: 'system', roles: OWNER, parent: 'kb' },
   // Kiến thức nhập tay (FR-050, FR-142): thông tin cửa hàng, chính sách, FAQ, giọng văn — chỉ Owner.
   { key: 'kbShop', href: '/app/kb/shop', group: 'system', roles: OWNER, parent: 'kb' },
   { key: 'kbPolicies', href: '/app/kb/policies', group: 'system', roles: OWNER, parent: 'kb' },

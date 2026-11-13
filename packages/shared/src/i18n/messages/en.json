@@ -1785,7 +1785,7 @@
   },
   "readiness": {
     "details": "See readiness details",
-    "pageTitle": "AI readiness",
+    "pageTitle": "AI readiness & tests",
     "title": "AI readiness",
     "subtitle": "The AI needs enough shop information to answer correctly. Below {min}% or with a required item missing, Auto mode cannot be turned on.",
     "basisNote": "The score is computed from the data you entered (products, policies, FAQ, shop info) for the current language; it is not measured with a real AI run.",
@@ -1858,6 +1858,93 @@
     "error": {
       "title": "Could not load readiness",
       "body": "Something went wrong reading the data. Please try again later."
+    },
+    "lab": {
+      "hero": {
+        "title": "AI Core readiness",
+        "engine": "AI Guardian Engine",
+        "outOf": "/ 100 points",
+        "bands": {
+          "unsafe": "Not safe yet",
+          "basic": "Assist & review first",
+          "ready": "Ready for Auto"
+        },
+        "range": {
+          "unsafe": "Not safe (0–50)",
+          "basic": "Basic (51–{max})",
+          "ready": "Auto ({min}–100)"
+        },
+        "needMore": "{points} more points needed to unlock Auto reply.",
+        "needRequired": "Required items missing: complete all {total} to unlock Auto reply.",
+        "readyNote": "Your data reached {min} points and has every required item; you can turn Auto on."
+      },
+      "pillars": {
+        "policies": {
+          "title": "Policies",
+          "sub": "Shipping, returns, warranty, payment"
+        },
+        "products": {
+          "title": "Products & prices",
+          "sub": "Price, stock, size, colour"
+        },
+        "shop": {
+          "title": "Shop information",
+          "sub": "Opening hours, contact, address"
+        },
+        "faq": {
+          "title": "FAQ & promotions",
+          "sub": "Frequently asked questions, discounts"
+        },
+        "answerable": "{done}/{total} sample questions answerable",
+        "complete": "{percent}% complete",
+        "fix": "Add data",
+        "allGood": "Enough data for the sample questions."
+      },
+      "coach": {
+        "title": "AI Coach suggestions",
+        "subtitle": "Do these in order to raise your readiness score.",
+        "none": "Nothing left to add.",
+        "required": "Required:"
+      },
+      "test": {
+        "title": "Regression test suite",
+        "badge": "Regression Suite",
+        "subtitle": "Simulate real customer comments/inbox to measure answer quality before turning Auto on.",
+        "addTitle": "Add test cases (one per line)",
+        "run": "Run test suite",
+        "running": "Running…",
+        "empty": "No results yet. Enter questions and press \"Run test suite\".",
+        "search": "Search questions…",
+        "noMatch": "No case matches the filter.",
+        "tabs": {
+          "all": "All ({count})",
+          "pass": "Passed ({count})",
+          "fail": "Failed ({count})",
+          "error": "Errors ({count})"
+        },
+        "stats": {
+          "accuracy": "Accuracy",
+          "failed": "Cases to review",
+          "gate": "Publish gate"
+        },
+        "gate": {
+          "pass": "Pass",
+          "fail": "Not passed"
+        },
+        "columns": {
+          "scenario": "Scenario & question",
+          "expected": "Expected action",
+          "reply": "Actual AI reply",
+          "verdict": "Result"
+        }
+      },
+      "sandbox": {
+        "title": "Live sandbox",
+        "body": "Type a question customers often ask and see the AI reply right away with your current knowledge."
+      },
+      "nav": {
+        "title": "AI readiness & tests"
+      }
     }
   },
   "kbTestset": {
@@ -1956,10 +2043,6 @@
       "tryAi": {
         "title": "Try AI",
         "body": "Type a customer question to see how the AI would answer. No quota used."
-      },
-      "kbTestset": {
-        "title": "Tests",
-        "body": "Run sample questions to make sure the AI is still right before publishing."
       },
       "kbPublish": {
         "title": "Versions",
@@ -2219,13 +2302,12 @@
       "reports": "Reports",
       "kb": "Knowledge base",
       "tryAi": "Try AI",
-      "readiness": "AI readiness",
+      "readiness": "AI readiness & tests",
       "automation": "Auto-send settings",
       "aiSent": "AI sent",
       "productImport": "Import products",
       "kbGaps": "Unanswered questions",
       "kbPublish": "Knowledge versions",
-      "kbTestset": "Test questions",
       "spamRules": "Spam rules",
       "channels": "Channels",
       "members": "Members",

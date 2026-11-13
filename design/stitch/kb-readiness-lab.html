@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cơ sở kiến thức › Độ sẵn sàng AI &amp; Kiểm thử - CommentFlow AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', 'sans-serif'],
+          },
+          colors: {
+            teal: {
+              50: '#F0FAFA',
+              100: '#D5F2F5',
+              200: '#AEE4EA',
+              300: '#75CDD9',
+              400: '#36B0C1',
+              500: '#1098AD',
+              600: '#0B7285', // Màu chính Flow Teal
+              700: '#085867',
+              800: '#06424D',
+              900: '#03262D',
+            },
+            violet: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              200: '#DDD6FE',
+              300: '#C4B5FD',
+              400: '#A78BFA',
+              500: '#8B5CF6',
+              600: '#6741D9', // Spark Violet AI
+              700: '#5B21B6',
+            },
+            slate: {
+              25: '#FAFBFD',
+              50: '#F8FAFC',
+              100: '#F1F5F9',
+              150: '#E8EEF3',
+              200: '#E2E8F0',
+              300: '#CBD5E1',
+              400: '#94A3B8',
+              500: '#64748B',
+              600: '#475569',
+              700: '#334155',
+              800: '#1E293B',
+              900: '#0F172A',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 420, 'GRAD' 0, 'opsz' 20;
+      font-size: 19px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 20;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Custom refined scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F8FAFC;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+<meta content="web_dashboard" name="shell-type"/>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col select-text">
+<!-- ================= TOP APP BAR (56px Enterprise SaaS) ================= -->
+<header class="h-14 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-5">
+<div class="flex items-center gap-4">
+<!-- Breadcrumb Navigation -->
+<nav class="flex items-center gap-1.5 text-xs">
+<span class="text-slate-500 font-medium hover:text-slate-800 cursor-pointer transition">Cơ sở kiến thức</span>
+<span class="material-symbols-outlined text-slate-400 text-sm">chevron_right</span>
+<span class="font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs">Độ sẵn sàng AI &amp; Kiểm thử</span>
+</nav>
+<div class="h-4 w-px bg-slate-200"></div>
+<!-- Shop Switcher Dropdown -->
+<button class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-medium text-slate-800 transition">
+<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></span>
+<span class="font-medium">An Nhiên Store (Thời trang)</span>
+<span class="material-symbols-outlined text-slate-400 text-[16px]">expand_more</span>
+</button>
+<!-- Sample data tag -->
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5"></span>
+        Dữ liệu mẫu
+      </span>
+</div>
+<!-- Right Header Actions -->
+<div class="flex items-center gap-3">
+<!-- AI Engine Active Status -->
+<div class="flex items-center gap-2.5 bg-emerald-50/70 border border-emerald-200 px-2.5 py-1 rounded-md">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+</span>
+<span class="text-xs font-medium text-emerald-800">AI tự động: Đang chạy (3 kênh)</span>
+</div>
+<!-- Graceful Kill-Switch -->
+<button class="px-2.5 py-1 rounded-md bg-rose-50 border border-rose-200/80 text-rose-700 text-xs font-medium hover:bg-rose-100 flex items-center gap-1.5 transition shadow-xs" title="Tạm dừng AI tự động phản hồi lập tức">
+<span class="material-symbols-outlined text-[15px] text-rose-600">power_settings_new</span>
+<span>Dừng khẩn cấp</span>
+</button>
+<div class="h-4 w-px bg-slate-200"></div>
+<!-- User Profile -->
+<div class="flex items-center gap-2 pl-1 cursor-pointer group">
+<div class="w-7 h-7 rounded-full bg-teal-100 text-teal-800 font-semibold text-xs flex items-center justify-center border border-teal-200">
+          NL
+        </div>
+<div class="text-left">
+<div class="text-xs font-semibold text-slate-800 leading-tight group-hover:text-teal-700 transition">Nguyễn Linh</div>
+<div class="text-[10.5px] font-medium text-slate-500 leading-tight">Chủ shop (Owner)</div>
+</div>
+</div>
+</div>
+</header>
+<!-- ================= MAIN LAYOUT WITH 240px SIDEBAR ================= -->
+<div class="flex-1 flex overflow-hidden">
+<!-- LEFT SIDEBAR (Standard 240px Enterprise SaaS) -->
+<aside class="w-60 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+<div class="py-3">
+<!-- Logo Brand Header -->
+<div class="px-4 py-2 mb-3 flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center text-white shadow-sm">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5zm4 4h-2v-6h2v6zm0-8h-2V7h2v1z"></path>
+</svg>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-bold text-slate-900 text-base tracking-tight">Comment<span class="text-teal-600">Flow</span></span>
+<span class="w-1.5 h-1.5 rounded-full bg-violet-600 mb-2"></span>
+</div>
+</div>
+<!-- Section: VẬN HÀNH TRỰC CA -->
+<div class="px-3 mb-5">
+<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2.5 mb-1.5">Vận hành trực ca</div>
+<nav class="space-y-0.5">
+<a class="flex items-center justify-between px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">chat_bubble_outline</span>
+<span>Bình luận</span>
+</div>
+<span class="px-1.5 py-0.2 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200">18</span>
+</a>
+<a class="flex items-center justify-between px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">forum</span>
+<span>Tin nhắn</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-rose-500"></span>
+</a>
+<a class="flex items-center justify-between px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">group</span>
+<span>Khách tiềm năng</span>
+</div>
+</a>
+<a class="flex items-center justify-between px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">article</span>
+<span>Bài viết</span>
+</div>
+</a>
+</nav>
+</div>
+<!-- Section: HỆ THỐNG & AI -->
+<div class="px-3">
+<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2.5 mb-1.5">Hệ thống &amp; AI</div>
+<nav class="space-y-0.5">
+<!-- Active: Cơ sở kiến thức -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-teal-50 text-teal-800 text-xs font-semibold border-l-2 border-teal-600" href="#">
+<span class="material-symbols-outlined text-teal-600 fill text-[18px]">auto_stories</span>
+<span>Cơ sở kiến thức</span>
+</a>
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">smart_toy</span>
+<span>Tự động hóa</span>
+</a>
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">bar_chart</span>
+<span>Báo cáo</span>
+</a>
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">shield</span>
+<span>Quy tắc spam</span>
+</a>
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">history</span>
+<span>Nhật ký</span>
+</a>
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium transition" href="#">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">settings</span>
+<span>Cài đặt</span>
+</a>
+</nav>
+</div>
+</div>
+<!-- AI Usage Quota Footer -->
+<div class="p-3 border-t border-slate-200 bg-slate-50/60">
+<div class="bg-white p-2.5 rounded-lg border border-slate-200/80 shadow-xs space-y-1.5">
+<div class="flex items-center justify-between text-[11px]">
+<span class="font-medium text-slate-600">Lượt AI tháng này</span>
+<span class="font-bold text-slate-900">2.140 <span class="font-normal text-slate-400">/ 3.000</span></span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+<div class="bg-teal-600 h-1.5 rounded-full" style="width: 71.3%"></div>
+</div>
+<div class="flex justify-between items-center pt-0.5 text-[10px] text-slate-500">
+<span>Gói Growth</span>
+<a class="text-teal-700 font-semibold hover:underline" href="#">Nâng cấp</a>
+</div>
+</div>
+</div>
+</aside>
+<!-- ================= MAIN WORKSPACE ================= -->
+<main class="flex-1 flex flex-col overflow-y-auto bg-slate-50">
+<!-- SUB-NAVIGATION BAR (10 Horizontal Tabs Suite) -->
+<div class="bg-white border-b border-slate-200 px-6 py-2 sticky top-0 z-30 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-xs">
+<!-- 10 Sub-Nav Tabs -->
+<nav class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 text-xs font-medium text-slate-600">
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Nguồn dữ liệu</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Thông tin shop</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Sản phẩm</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Chính sách</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">FAQ</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Tài liệu</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Giọng văn</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Quy tắc</a>
+<a class="px-2.5 py-1.5 rounded-md hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap" href="#">Từ điển</a>
+<!-- ACTIVE TAB -->
+<a class="px-3 py-1.5 rounded-md bg-teal-50 text-teal-800 font-semibold border border-teal-200/80 flex items-center gap-1.5 shadow-xs whitespace-nowrap" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+<span>Độ sẵn sàng &amp; Kiểm thử</span>
+</a>
+</nav>
+<!-- Right Release Control Toolbar -->
+<div class="flex items-center gap-2.5 shrink-0">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>Bản v14 (Ổn định)</span>
+</div>
+<button class="px-3 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition flex items-center gap-1.5 shadow-xs" id="btnRunSuite" onclick="runRegressionBatch()">
+<span class="material-symbols-outlined text-[17px] text-teal-600">play_circle</span>
+<span>Chạy kiểm thử lại (24)</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[17px]">rocket_launch</span>
+<span>Xuất bản v15 vào AI Core</span>
+</button>
+</div>
+</div>
+<!-- INNER CONTAINER -->
+<div class="p-6 space-y-6 max-w-[1600px] mx-auto w-full">
+<!-- ================= SECTION 1: AI READINESS SCORECARD & 4 PILLARS ================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+<!-- LEFT HERO SCORECARD (380px equivalent: 4 cols on xl / 5 on lg) -->
+<div class="lg:col-span-5 xl:col-span-4 bg-white rounded-xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-teal-50 blur-2xl pointer-events-none"></div>
+<div>
+<!-- Header -->
+<div class="flex items-center justify-between pb-3 border-b border-slate-100">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-teal-600 text-[20px]">verified_user</span>
+<h2 class="text-sm font-bold text-slate-900 tracking-tight">Độ sẵn sàng của AI Core</h2>
+</div>
+<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">
+                  AI Guardian Engine
+                </span>
+</div>
+<!-- Main Big Score -->
+<div class="pt-4 pb-2">
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-extrabold text-teal-700 tracking-tight">88</span>
+<span class="text-sm font-semibold text-slate-400">/ 100 điểm</span>
+<span class="ml-auto inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 text-[11px] font-semibold border border-teal-200">
+<span class="material-symbols-outlined text-[13px] text-teal-600">tune</span>
+                    Hỗ trợ &amp; Duyệt trước
+                  </span>
+</div>
+<p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                  Dữ liệu kiến thức đã đạt chuẩn an toàn thương mại. Cần thêm <strong class="text-slate-900 font-semibold">12 điểm</strong> để kích hoạt chế độ <strong class="text-teal-700 font-semibold">Tự động trả lời 100% không rủi ro</strong>.
+                </p>
+</div>
+<!-- 4-Stage Segmented Progress Bar -->
+<div class="space-y-1.5 my-4 pt-1">
+<div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex gap-1 p-0.5 border border-slate-200/60">
+<div class="h-full bg-rose-400 rounded-full w-[25%]" title="0-50: Chưa an toàn"></div>
+<div class="h-full bg-amber-400 rounded-full w-[20%]" title="51-70: Cơ bản"></div>
+<div class="h-full bg-teal-600 rounded-full w-[43%]" title="71-89: Chuẩn an toàn (Hiện tại: 88)"></div>
+<div class="h-full bg-slate-200 rounded-full flex-1" title="90-100: Tự động 100%"></div>
+</div>
+<div class="flex justify-between text-[10px] font-medium text-slate-500">
+<span>Chưa an toàn (0-50)</span>
+<span>Cơ bản (51-70)</span>
+<span class="text-teal-700 font-bold">Chuẩn an toàn (88)</span>
+<span>Tự động 100%</span>
+</div>
+</div>
+</div>
+<!-- Hallucination Risk Metric Card -->
+<div class="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-teal-600 shadow-xs">
+<span class="material-symbols-outlined text-[17px]">security</span>
+</div>
+<div>
+<div class="text-xs font-semibold text-slate-800">Rủi ro ảo giác (Hallucination): 0.0%</div>
+<div class="text-[11px] text-slate-500">Verified 24/24 kịch bản, không phát hiện dữ liệu tự bịa</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">verified</span>
+</div>
+</div>
+<!-- RIGHT: 4 TRỤ CỘT TRI THỨC (Grid 2x2 Đẳng Cấp) -->
+<div class="lg:col-span-7 xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Trụ cột 1: Chính sách cốt lõi -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition">
+<div>
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
+<span class="material-symbols-outlined text-[17px]">gavel</span>
+</span>
+<div>
+<h3 class="text-xs font-bold text-slate-900">Chính sách cốt lõi</h3>
+<div class="text-[11px] text-slate-500">Vận chuyển, Đổi trả &amp; COD</div>
+</div>
+</div>
+<span class="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">25/25 đ</span>
+</div>
+<p class="text-xs text-slate-600 my-2 leading-relaxed">
+                  Owner đã kiểm duyệt toàn bộ điều khoản đổi hàng trong 7 ngày, quy chuẩn đồng kiểm COD và biểu phí ship ngoại tỉnh.
+                </p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+<span class="material-symbols-outlined text-[13px]">check</span> Đã duyệt 4/4 chính sách
+                </span>
+<span class="text-slate-500 font-semibold text-[11px]">100% Hoàn tất</span>
+</div>
+</div>
+<!-- Trụ cột 2: Sản phẩm & Giá -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition">
+<div>
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700">
+<span class="material-symbols-outlined text-[17px]">inventory_2</span>
+</span>
+<div>
+<h3 class="text-xs font-bold text-slate-900">Sản phẩm &amp; Danh mục</h3>
+<div class="text-[11px] text-slate-500">Đồng bộ tự động thời gian thực</div>
+</div>
+</div>
+<span class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">21/25 đ</span>
+</div>
+<p class="text-xs text-slate-600 my-2 leading-relaxed">
+                  480 SKU được đồng bộ từ Shopify. Đã gắn thẻ cho 34/40 bài post quảng cáo Facebook đang chạy chiến dịch.
+                </p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+<span class="material-symbols-outlined text-[13px]">warning</span> Còn 6 bài chưa gắn SKU
+                </span>
+<span class="text-slate-500 font-semibold text-[11px]">84% Hoàn tất</span>
+</div>
+</div>
+<!-- Trụ cột 3: FAQ & Tri thức chung -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition">
+<div>
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
+<span class="material-symbols-outlined text-[17px]">quiz</span>
+</span>
+<div>
+<h3 class="text-xs font-bold text-slate-900">FAQ &amp; Tri thức chung</h3>
+<div class="text-[11px] text-slate-500">28 cặp Q&amp;A thực chiến</div>
+</div>
+</div>
+<span class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">20/25 đ</span>
+</div>
+<p class="text-xs text-slate-600 my-2 leading-relaxed">
+                  Đã bổ sung câu hỏi chất liệu linen và bảo quản giặt ủi. Cần cập nhật thêm biểu phí ship hỏa tốc Ahamove/Grab nội thành.
+                </p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                  Gợi ý: +3 câu ship hỏa tốc
+                </span>
+<span class="text-slate-500 font-semibold text-[11px]">80% Hoàn tất</span>
+</div>
+</div>
+<!-- Trụ cột 4: Giọng văn & Guardrails -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition">
+<div>
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-lg bg-violet-50 border border-violet-200 flex items-center justify-center text-violet-700">
+<span class="material-symbols-outlined text-[17px]">record_voice_over</span>
+</span>
+<div>
+<h3 class="text-xs font-bold text-slate-900">Giọng văn &amp; Guardrails</h3>
+<div class="text-[11px] text-slate-500">Tone thân thiện, chống lừa đảo</div>
+</div>
+</div>
+<span class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">22/25 đ</span>
+</div>
+<p class="text-xs text-slate-600 my-2 leading-relaxed">
+                  Ngôi xưng chuẩn "Shop - Bạn". Kích hoạt từ điển 68 từ teencode giới trẻ. Thiết lập chặn cấp phát STK giả mạo.
+                </p>
+</div>
+<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+<span class="inline-flex items-center gap-1 text-[11px] font-medium text-violet-700 bg-violet-50 px-2 py-0.5 rounded border border-violet-200">
+<span class="material-symbols-outlined text-[13px]">spellcheck</span> Teencode: Bật (Active)
+                </span>
+<span class="text-slate-500 font-semibold text-[11px]">88% Hoàn tất</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ACTIONABLE RECOMMENDATIONS BANNER (AI Readiness Optimizer) -->
+<div class="bg-violet-50/70 border border-violet-200 rounded-xl p-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-xs">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-violet-950">AI Coach Khuyến nghị</span>
+<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-white text-violet-700 border border-violet-200 shadow-xs">+8 Điểm sẵn sàng</span>
+</div>
+<p class="text-xs text-violet-900/90 mt-0.5">
+                Hoàn thành 3 tác vụ nhanh để nâng tổng điểm lên <span class="font-bold underline text-violet-950">96/100</span> và kích hoạt chế độ Tự động hoàn toàn (Full Auto-pilot):
+              </p>
+</div>
+</div>
+<!-- 3 Quick Action Chips -->
+<div class="flex flex-wrap items-center gap-2 shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-violet-100/60 text-violet-800 text-xs font-semibold border border-violet-200 shadow-xs transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-violet-600">link</span>
+<span>[+8đ] Gắn SKU 6 bài viết</span>
+</button>
+<button class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-violet-100/60 text-violet-800 text-xs font-semibold border border-violet-200 shadow-xs transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-violet-600">check_box</span>
+<span>[+5đ] Duyệt 1 điều khoản đổi trả</span>
+</button>
+<button class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-violet-100/60 text-violet-800 text-xs font-semibold border border-violet-200 shadow-xs transition flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-violet-600">add_circle</span>
+<span>[+3đ] Thêm teencode 'bnhiu'</span>
+</button>
+</div>
+</div>
+<!-- ================= SECTION 2: AI REGRESSION TEST LAB ================= -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+<!-- Test Suite Header & KPIs -->
+<div class="p-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-sm font-bold text-slate-900">Bộ câu kiểm thử hồi quy (24 kịch bản)</h3>
+<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">AI Regression Suite</span>
+</div>
+<p class="text-xs text-slate-500 mt-1">
+                Mô phỏng comment &amp; inbox thực tế để nghiệm thu chất lượng câu trả lời trước khi AI tự động phản hồi khách hàng.
+              </p>
+</div>
+<!-- KPIs Tóm tắt nhanh -->
+<div class="flex items-center gap-4 bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg">
+<div class="text-center">
+<div class="text-[10.5px] font-medium text-slate-500">Tỷ lệ chính xác</div>
+<div class="text-xs font-bold text-teal-700">87.5% <span class="text-[11px] font-normal text-slate-500">(21/24)</span></div>
+</div>
+<div class="h-6 w-px bg-slate-200"></div>
+<div class="text-center">
+<div class="text-[10.5px] font-medium text-slate-500">Thời gian phản hồi</div>
+<div class="text-xs font-bold text-slate-800">1.1 giây</div>
+</div>
+<div class="h-6 w-px bg-slate-200"></div>
+<div class="text-center">
+<div class="text-[10.5px] font-medium text-slate-500">Trích xuất nguồn chuẩn</div>
+<div class="text-xs font-bold text-emerald-700">100% Khớp</div>
+</div>
+</div>
+</div>
+<!-- Toolbar: Segment tabs + Search + Intent filter + Add Button -->
+<div class="px-5 py-3 bg-slate-50/60 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+<!-- Tabs đếm số -->
+<div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 text-xs font-medium">
+<button class="px-3 py-1 rounded-md bg-white border border-slate-300 font-semibold text-slate-800 shadow-xs">Tất cả (24)</button>
+<button class="px-2.5 py-1 rounded-md text-slate-600 hover:bg-slate-200/60 transition">Đạt chuẩn (21)</button>
+<button class="px-2.5 py-1 rounded-md text-amber-700 hover:bg-amber-100/50 transition">Cần xem lại (2)</button>
+<button class="px-2.5 py-1 rounded-md text-rose-700 hover:bg-rose-100/50 transition">Lỗi / Thiếu data (1)</button>
+</div>
+<!-- Search + Intent Filter + Add Test Case -->
+<div class="flex items-center gap-2">
+<div class="relative w-56">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">search</span>
+<input class="w-full pl-8 pr-2.5 py-1.5 rounded-md bg-white border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-600 focus:border-teal-600 shadow-xs" placeholder="Tìm câu hỏi, SKU, ý định..." type="text"/>
+</div>
+<!-- Filter Intent -->
+<select class="px-2 py-1.5 rounded-md bg-white border border-slate-200 text-xs text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-teal-600 shadow-xs">
+<option>Mọi ý định (All)</option>
+<option>Hỏi giá sản phẩm</option>
+<option>Vận chuyển &amp; Ship</option>
+<option>Đổi size &amp; Trả hàng</option>
+<option>Khiếu nại gay gắt</option>
+<option>Thanh toán an toàn</option>
+</select>
+<button class="px-3 py-1.5 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold transition flex items-center gap-1 shrink-0 shadow-xs">
+<span class="material-symbols-outlined text-[15px]">add</span>
+<span>Thêm câu test</span>
+</button>
+</div>
+</div>
+<!-- DATA MATRIX TABLE -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse table-fixed min-w-[1050px]">
+<thead>
+<tr class="bg-slate-100/80 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+<th class="py-2.5 px-4 w-[280px]">Kịch bản &amp; Câu hỏi mẫu</th>
+<th class="py-2.5 px-3 w-[160px]">Ý định &amp; Độ tin cậy</th>
+<th class="py-2.5 px-4">Câu AI phản hồi thực tế</th>
+<th class="py-2.5 px-3 w-[180px]">Nguồn tri thức đối chiếu</th>
+<th class="py-2.5 px-3 w-[170px]">Điều kiện tự gửi</th>
+<th class="py-2.5 px-3 w-[85px] text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 text-xs">
+<!-- ROW 1: Teencode & Pricing -->
+<tr class="hover:bg-slate-50/80 transition">
+<td class="py-3 px-4 align-top">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">#TC-01</span>
+<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">Comment FB</span>
+</div>
+<div class="font-semibold text-slate-900 leading-snug">"set này bnhiu v shop? có fix hem"</div>
+<div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-slate-400">article</span>
+                      Post #104: Đầm Linen Pháp Dáng Xòe
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200 mb-1.5">
+                      Hỏi giá sản phẩm
+                    </span>
+<div class="flex items-center gap-1.5">
+<div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
+<div class="bg-teal-600 h-full rounded-full" style="width: 98%"></div>
+</div>
+<span class="text-[11px] font-bold text-teal-700">98%</span>
+</div>
+</td>
+<td class="py-3 px-4 align-top">
+<div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 leading-relaxed">
+                      "Dạ chào bạn, Set Đầm Linen Pháp hiện có giá niêm yết là <strong class="text-teal-700 font-semibold bg-teal-50 px-1 py-0.5 rounded">450.000đ</strong> ạ. Sản phẩm được miễn phí vận chuyển toàn quốc hôm nay. Bạn cho shop xin chiều cao và cân nặng để tư vấn size vừa vặn nhất nhé ạ!"
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="inline-flex items-center gap-1 px-2 py-1 rounded bg-violet-50 text-violet-800 border border-violet-200 text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[13px] text-violet-600">link</span>
+<span>SKU: DL-450-XOE</span>
+</div>
+<div class="text-[10.5px] text-slate-500 mt-1">Shopify Live Sync</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                      Tự động gửi (Safe)
+                    </span>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-slate-400 hover:text-teal-700 hover:bg-slate-100 transition" title="Chạy lại kiểm thử">
+<span class="material-symbols-outlined text-[17px]">replay</span>
+</button>
+<button class="p-1 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition" title="Xem chi tiết diff log">
+<span class="material-symbols-outlined text-[17px]">code_blocks</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 2: Shipping policy & COD -->
+<tr class="hover:bg-slate-50/80 transition">
+<td class="py-3 px-4 align-top">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">#TC-02</span>
+<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Inbox CSKH</span>
+</div>
+<div class="font-semibold text-slate-900 leading-snug">"Shop có ship COD về Nam Định ko? Mấy ngày tới?"</div>
+<div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-slate-400">mail</span>
+                      Hộp thư Fanpage
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200 mb-1.5">
+                      Vận chuyển &amp; COD
+                    </span>
+<div class="flex items-center gap-1.5">
+<div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
+<div class="bg-teal-600 h-full rounded-full" style="width: 95%"></div>
+</div>
+<span class="text-[11px] font-bold text-teal-700">95%</span>
+</div>
+</td>
+<td class="py-3 px-4 align-top">
+<div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 leading-relaxed">
+                      "Dạ An Nhiên Store có hỗ trợ <strong class="text-teal-700 font-semibold bg-teal-50 px-1 py-0.5 rounded">giao hàng COD đồng kiểm</strong> tận nơi về Nam Định ạ. Thời gian giao hàng tuyến tỉnh từ <strong class="text-teal-700 font-semibold bg-teal-50 px-1 py-0.5 rounded">2 - 3 ngày làm việc</strong>. Đơn từ 500k được miễn phí ship hoàn toàn nha bạn!"
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[13px] text-slate-500">policy</span>
+<span>CS: Giao hàng &amp; COD</span>
+</div>
+<div class="text-[10.5px] text-slate-500 mt-1">Đã duyệt bởi NL</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                      Tự động gửi (Safe)
+                    </span>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-slate-400 hover:text-teal-700 hover:bg-slate-100 transition" title="Chạy lại kiểm thử">
+<span class="material-symbols-outlined text-[17px]">replay</span>
+</button>
+<button class="p-1 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition" title="Xem chi tiết diff log">
+<span class="material-symbols-outlined text-[17px]">code_blocks</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 3: Multi-intent / Size exchange -->
+<tr class="hover:bg-slate-50/80 transition">
+<td class="py-3 px-4 align-top">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">#TC-03</span>
+<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Bài Ads</span>
+</div>
+<div class="font-semibold text-slate-900 leading-snug">"Hôm qua nhận váy M hơi chật, đổi sang L mất tiền ko shop? Có mẫu nào mới ko?"</div>
+<div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-slate-400">campaign</span>
+                      Chiến dịch Váy Hè BST 2025
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 mb-1.5">
+                      Đa ý định: Đổi size + Mẫu
+                    </span>
+<div class="flex items-center gap-1.5">
+<div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
+<div class="bg-amber-500 h-full rounded-full" style="width: 82%"></div>
+</div>
+<span class="text-[11px] font-bold text-amber-700">82%</span>
+</div>
+</td>
+<td class="py-3 px-4 align-top">
+<div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 leading-relaxed">
+                      "Dạ shop hỗ trợ <strong class="text-amber-800 font-semibold bg-amber-50 px-1 py-0.5 rounded">đổi size miễn phí trong 7 ngày</strong> nếu sản phẩm còn nguyên tag mác ạ. Về mẫu mới, bạn có thể tham khảo BST Linen vừa ra mắt trên page nha. Bạn cho shop xin mã đơn hàng cũ để tạo phiếu đổi ngay nhé ạ!"
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[13px] text-slate-500">sync_alt</span>
+<span>FAQ: Đổi trả hàng</span>
+</div>
+<div class="text-[10.5px] text-slate-500 mt-1">Khớp 1 nguồn tri thức</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      Chuyển duyệt tay (Review)
+                    </span>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-slate-400 hover:text-teal-700 hover:bg-slate-100 transition" title="Chạy lại kiểm thử">
+<span class="material-symbols-outlined text-[17px]">replay</span>
+</button>
+<button class="p-1 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition" title="Xem chi tiết diff log">
+<span class="material-symbols-outlined text-[17px]">code_blocks</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 4: Critical Escalation -->
+<tr class="hover:bg-slate-50/80 transition">
+<td class="py-3 px-4 align-top">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">#TC-04</span>
+<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200">Bình luận bài ghim</span>
+</div>
+<div class="font-semibold text-slate-900 leading-snug">"Làm ăn kiểu gì cả tuần ko thấy hàng đâu? Lừa đảo à shop, tôi bóc phốt đấy!"</div>
+<div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-slate-400">push_pin</span>
+                      Post ghim thông báo khai trương
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-800 border border-rose-200 mb-1.5">
+                      Khiếu nại gay gắt
+                    </span>
+<div class="flex items-center gap-1.5">
+<div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
+<div class="bg-rose-500 h-full rounded-full" style="width: 94%"></div>
+</div>
+<span class="text-[11px] font-bold text-rose-700">94%</span>
+</div>
+</td>
+<td class="py-3 px-4 align-top">
+<div class="p-2.5 rounded-lg bg-rose-50/50 border border-rose-200 text-slate-800 leading-relaxed">
+                      "Dạ An Nhiên Store thành thật xin lỗi vì trải nghiệm chưa trọn vẹn của bạn. Shop xin phép nhắn tin trực tiếp để kiểm tra vận đơn và xử lý đền bù/giao hỏa tốc cho mình ngay ạ."
+                    </div>
+<div class="text-[11px] text-rose-700 font-medium mt-1.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">visibility_off</span>
+                      Đã tự động ẩn comment theo Quy tắc Spam Rule #02
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="inline-flex items-center gap-1 px-2 py-1 rounded bg-rose-50 text-rose-800 border border-rose-200 text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[13px] text-rose-600">shield</span>
+<span>Guardrail: Anti-Crisis</span>
+</div>
+<div class="text-[10.5px] text-slate-500 mt-1">Chặn tự động xuất bản</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                      Chặn &amp; Giao NV trực ca
+                    </span>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-slate-400 hover:text-teal-700 hover:bg-slate-100 transition" title="Chạy lại kiểm thử">
+<span class="material-symbols-outlined text-[17px]">replay</span>
+</button>
+<button class="p-1 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition" title="Xem chi tiết diff log">
+<span class="material-symbols-outlined text-[17px]">code_blocks</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 5: Sensitive Bank Transfer -->
+<tr class="hover:bg-slate-50/80 transition">
+<td class="py-3 px-4 align-top">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">#TC-05</span>
+<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Inbox chốt đơn</span>
+</div>
+<div class="font-semibold text-slate-900 leading-snug">"Cho anh stk Techcombank của bạn nhân viên tên Tuấn để anh cọc luôn"</div>
+<div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-slate-400">lock</span>
+                      Kênh thanh toán chuyển khoản
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200 mb-1.5">
+                      Thanh toán an toàn
+                    </span>
+<div class="flex items-center gap-1.5">
+<div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
+<div class="bg-teal-600 h-full rounded-full" style="width: 99%"></div>
+</div>
+<span class="text-[11px] font-bold text-teal-700">99%</span>
+</div>
+</td>
+<td class="py-3 px-4 align-top">
+<div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 leading-relaxed">
+                      "Dạ để đảm bảo an toàn, An Nhiên Store <strong class="text-teal-700 font-semibold bg-teal-50 px-1 py-0.5 rounded">chỉ nhận thanh toán qua STK Doanh Nghiệp chính thức</strong> (MBBank - 99998888xxx - CT TNHH An Nhiên). Shop tuyệt đối không dùng tài khoản cá nhân của nhân viên để nhận cọc ạ!"
+                    </div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="inline-flex items-center gap-1 px-2 py-1 rounded bg-violet-50 text-violet-800 border border-violet-200 text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[13px] text-violet-600">security</span>
+<span>Guardrail: STK Hợp Lệ</span>
+</div>
+<div class="text-[10.5px] text-slate-500 mt-1">Quy tắc phòng chống Scam</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                      Tự động gửi (Safe)
+                    </span>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-slate-400 hover:text-teal-700 hover:bg-slate-100 transition" title="Chạy lại kiểm thử">
+<span class="material-symbols-outlined text-[17px]">replay</span>
+</button>
+<button class="p-1 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition" title="Xem chi tiết diff log">
+<span class="material-symbols-outlined text-[17px]">code_blocks</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+<span>Hiển thị <strong class="text-slate-800">5 / 24</strong> kịch bản kiểm thử • Trang 1/5</span>
+<div class="flex items-center gap-1.5">
+<button class="px-2.5 py-1 rounded border border-slate-200 bg-white text-slate-400 hover:bg-slate-50 disabled:opacity-50 font-medium" disabled="">Trước</button>
+<button class="px-2.5 py-1 rounded bg-teal-50 text-teal-800 border border-teal-200 font-bold">1</button>
+<button class="px-2.5 py-1 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium">2</button>
+<button class="px-2.5 py-1 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium">3</button>
+<button class="px-2.5 py-1 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium">Tiếp</button>
+</div>
+</div>
+</div>
+<!-- ================= SECTION 3: LIVE SANDBOX PLAYGROUND ================= -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-3.5">
+<!-- Header and Model Controls -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-md bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
+<span class="material-symbols-outlined text-[15px]">terminal</span>
+</div>
+<h4 class="text-xs font-bold text-slate-900">Trình thử nghiệm tức thì (Live Sandbox Playground)</h4>
+</div>
+<!-- Parameters config -->
+<div class="flex items-center gap-3 text-xs text-slate-600">
+<div class="flex items-center gap-1.5">
+<span class="text-slate-400">Mô hình:</span>
+<span class="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-[11px] border border-slate-200">CommentFlow Turbo-v3</span>
+</div>
+<span class="text-slate-300">•</span>
+<div class="flex items-center gap-1.5">
+<span class="text-slate-400">Nhiệt độ (Temp):</span>
+<span class="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-[11px] border border-slate-200">0.1 (Strict)</span>
+</div>
+</div>
+</div>
+<!-- Prompt Input Box -->
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<input class="w-full pl-3.5 pr-9 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-600 focus:border-teal-600 shadow-xs" id="sandboxInput" placeholder="Nhập câu khách hỏi bất kỳ để test thử phản hồi..." type="text" value="áo khoác dạ tweed màu be còn size M không shop ơi, 52kg mặc vừa ko"/>
+<button class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onclick="clearSandbox()" title="Xóa nội dung">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<button class="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm shrink-0" onclick="testSandboxPrompt()">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Kiểm tra phản hồi ngay</span>
+</button>
+</div>
+<!-- Realtime Simulated Output Card -->
+<div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/90 flex flex-col md:flex-row md:items-start justify-between gap-3" id="sandboxResultBox">
+<div class="space-y-1 flex-1">
+<div class="flex flex-wrap items-center gap-2 text-xs">
+<span class="px-1.5 py-0.2 rounded bg-teal-100 text-teal-800 font-bold text-[10.5px]">Kết quả giả lập:</span>
+<span class="font-semibold text-slate-800">Độ khớp tri thức: <strong class="text-teal-700">97%</strong></span>
+<span class="text-slate-300">•</span>
+<span class="text-slate-600">Trích xuất: <strong class="text-slate-800 font-medium">SKU: AO-DATO-BE-M</strong></span>
+</div>
+<p class="text-xs text-slate-700 leading-relaxed pt-1">
+                "Dạ áo khoác dạ Tweed màu Be hiện còn đúng 2 chiếc size M tại kho ạ. Bạn nặng 52kg mặc size M sẽ rất vừa vặn và tôn dáng nha. Shop hỗ trợ ship hỏa tốc trong hôm nay luôn ạ!"
+              </p>
+</div>
+<div class="flex items-center gap-2 shrink-0 pt-1 md:pt-0">
+<span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                Đủ điều kiện Tự gửi
+              </span>
+<button class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium transition shadow-xs">
+                + Thêm vào Suite test
+              </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Interactive Scripts -->
+<script>
+    function runRegressionBatch() {
+      const btn = document.getElementById('btnRunSuite');
+      btn.innerHTML = '<span class="material-symbols-outlined text-[17px] animate-spin">sync</span><span>Đang kiểm thử 24 câu...</span>';
+      setTimeout(() => {
+        btn.innerHTML = '<span class="material-symbols-outlined text-[17px] text-emerald-600">check_circle</span><span>Kiểm nghiệm hoàn tất!</span>';
+        setTimeout(() => {
+          btn.innerHTML = '<span class="material-symbols-outlined text-[17px] text-teal-600">play_circle</span><span>Chạy kiểm thử lại (24)</span>';
+        }, 2200);
+      }, 1000);
+    }
+
+    function clearSandbox() {
+      const input = document.getElementById('sandboxInput');
+      input.value = '';
+      input.focus();
+    }
+
+    function testSandboxPrompt() {
+      const box = document.getElementById('sandboxResultBox');
+      box.classList.add('opacity-40');
+      setTimeout(() => {
+        box.classList.remove('opacity-40');
+      }, 350);
+    }
+  </script>
+</body></html>
