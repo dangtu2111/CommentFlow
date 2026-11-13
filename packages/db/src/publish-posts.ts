@@ -51,6 +51,8 @@ export async function savePublishPost(
     message: string;
     channelIds: readonly string[];
     scheduledAt?: Date | null;
+    /** Sản phẩm gắn vào bài (thứ tự đầu = chính, tối đa 5). Owner chọn lúc soạn = xác nhận (migration 0091). */
+    productIds?: readonly string[];
   },
 ): Promise<string> {
   const channels =
@@ -66,7 +68,62 @@ export async function savePublishPost(
     ) AS id`);
   const id = r.rows[0]?.id;
   if (!id) throw new Error('publish_post_not_saved');
+  const products = input.productIds ?? [];
+  const productArray =
+    products.length === 0
+      ? sql`'{}'::uuid[]`
+      : sql`ARRAY[${sql.join(
+          products.map((p) => sql`${p}::uuid`),
+          sql`, `,
+        )}]::uuid[]`;
+  await tx.execute(sql`SELECT cf.set_publish_post_products(${id}::uuid, ${productArray})`);
   return id;
+}
+
+export type PickableProduct = {
+  id: string;
+  name: string;
+  sku: string | null;
+  priceVnd: number | null;
+  /** Ảnh sản phẩm từ nguồn đồng bộ; web chỉ hiển thị nếu là https. */
+  imageUrl: string | null;
+};
+export const PICKABLE_PRODUCT_LIMIT = 200;
+
+/** Sản phẩm đang bán của workspace để Owner chọn gắn vào bài (RLS theo workspace). Giá đọc từ `products`, không từ vector. */
+export async function listPickableProducts(
+  tx: Database,
+  workspaceId: string,
+): Promise<PickableProduct[]> {
+  const r = await tx.execute<{
+    id: string;
+    name: string;
+    sku: string | null;
+    price_vnd: string | number | null;
+    image_url: string | null;
+  }>(sql`
+    SELECT id, name, sku, price_vnd, image_url FROM cf.products
+     WHERE workspace_id = ${workspaceId}::uuid AND status = 'active'
+     ORDER BY name, id LIMIT ${PICKABLE_PRODUCT_LIMIT}`);
+  return r.rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    sku: row.sku,
+    imageUrl: row.image_url,
+    priceVnd: row.price_vnd === null ? null : Number(row.price_vnd),
+  }));
+}
+
+/** Id sản phẩm đã gắn vào một bài (theo thứ tự chọn; chỉ Owner thấy). */
+export async function listPublishPostProductIds(
+  tx: Database,
+  workspaceId: string,
+  postId: string,
+): Promise<string[]> {
+  const r = await tx.execute<{ product_id: string }>(sql`
+    SELECT product_id FROM cf.publish_post_products
+     WHERE workspace_id = ${workspaceId}::uuid AND post_id = ${postId}::uuid ORDER BY position`);
+  return r.rows.map((row) => row.product_id);
 }
 
 /** Hủy lịch (`scheduled` → `draft`). `false` nếu không còn `scheduled` hoặc đã có mục tiêu đi tiếp. */

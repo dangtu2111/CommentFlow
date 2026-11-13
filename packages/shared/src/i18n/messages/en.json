@@ -3870,12 +3870,18 @@
       "title": "Product tagging and AI advisor settings",
       "hint": "Link the post to the knowledge base so the AI quotes and advises from the right source.",
       "openKb": "Open knowledge base",
-      "pin": "Tag a product",
+      "pin": "Tag products",
       "empty": "No product tagged yet.",
       "noteLabel": "Private note for the AI (customers cannot see it)",
       "notePlaceholder": "For example: push the combo offer, mention the return policy…",
       "rules": "Comment replies for this post follow the shop-wide auto-send settings.",
-      "rulesLink": "Open auto-send settings"
+      "rulesLink": "Open auto-send settings",
+      "noCatalog": "No products yet. Add them in the Knowledge base to tag them.",
+      "search": "Search by name or SKU",
+      "remove": "Remove {name}",
+      "primaryHint": "The first product is the primary one; AI uses these to quote prices when replying to this post's comments. Choosing here confirms the link.",
+      "limit": "{count}/{max} products selected",
+      "price": "{price} VND"
     },
     "schedule": {
       "title": "Schedule",
@@ -3909,7 +3915,7 @@
     "notice": {
       "saved": "Draft saved.",
       "scheduled": "Post scheduled.",
-      "publishing": "Publish request received. The post will go out within a few minutes.",
+      "publishing": "Publish request sent. The post will appear on Facebook in about 20–30 seconds; track it in the Calendar. No need to click again.",
       "cancelled": "Schedule cancelled; the post is back to a draft.",
       "deleted": "Post deleted.",
       "publish_disabled": "Publishing is not enabled on the server, so you cannot schedule or publish yet.",
@@ -3921,7 +3927,13 @@
       "invalid": "The data is invalid (content too long or a wrong value).",
       "empty_message": "Write the content before scheduling or publishing.",
       "no_channel": "Choose at least one channel before scheduling or publishing.",
-      "rate_limited": "Too many attempts. Wait a moment and try again."
+      "rate_limited": "You clicked too fast so the extra click was blocked. The earlier request may already have been sent: check the Calendar before clicking again to avoid a duplicate post."
+    },
+    "pending": {
+      "draft": "Saving…",
+      "schedule": "Scheduling…",
+      "publish": "Sending…",
+      "note": "Sending your request, please wait and do NOT click again. The page will move on when done."
     },
     "ai": {
       "loading": "Writing…",
@@ -4051,7 +4063,16 @@
       "delete": "Delete post",
       "scheduledAt": "Publish time",
       "lockedHint": "The post is being published or was published successfully, so it cannot be edited or deleted.",
-      "openOnFacebook": "View on Facebook"
+      "openOnFacebook": "View on Facebook",
+      "pending": "Sending…",
+      "pendingNote": "Sending your request, please wait and do NOT click again."
+    },
+    "watch": {
+      "pending": "Publishing to Facebook… The result will show here within a minute, no need to click again.",
+      "published": "Published to Facebook successfully.",
+      "failed": "Publishing FAILED: {reason} The post is not on Facebook; you can edit and retry in the Composer.",
+      "unknown": "Not sure whether the post was published: {reason}",
+      "timeout": "No result after 2 minutes. Check the Page on Facebook and the post status in the Calendar before retrying (the worker may not be running)."
     }
   }
 }

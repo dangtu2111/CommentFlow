@@ -12,9 +12,12 @@ import {
 } from '../../app/app/(guarded)/composer/actions';
 import { cx } from '../../lib/cx';
 import { COMPOSER_PLATFORMS, type ComposerPlatform, counterOf } from '../../lib/post-counters';
+import { MAX_PRODUCTS } from '../../lib/publish-form';
+import { safeHttpsUrl } from '../../lib/safe-url';
 import { appendHashtags, insertAtCursor, parseHttpsLink } from '../../lib/text-insert';
 import type { SuggestionResult } from '../../server/caption-service';
 import { Icon, type IconName } from '../ui/icon';
+import { PendingNote, PendingSubmit } from './pending-submit';
 
 /**
  * Biên tập bài viết (design/stitch/composer.html, COMPOSER-CALENDAR-UI + POST-PUBLISHING, Q-CMP1/Q-PUB1): biểu mẫu soạn bài với Server Action thật — LƯU NHÁP, LÊN LỊCH, ĐĂNG NGAY
@@ -30,11 +33,21 @@ export type ComposerChannel = {
   canPublish: boolean;
 };
 
+/** Sản phẩm đang bán để chọn gắn vào bài (giá đọc từ bảng sản phẩm). */
+export type ComposerProduct = {
+  id: string;
+  name: string;
+  sku: string | null;
+  priceVnd: number | null;
+  imageUrl: string | null;
+};
+
 /** Bài đang sửa (từ `?id=`); bài mới không có. Giờ lên lịch đã đổi sang ngày/giờ ĐỊA PHƯƠNG của cửa hàng. */
 export type ComposerInitial = {
   id: string;
   message: string;
   channelIds: string[];
+  productIds: string[];
   status: 'draft' | 'scheduled';
   date: string;
   time: string;
@@ -58,14 +71,43 @@ const card =
 const actionBtn =
   'inline-flex items-center gap-space-xs rounded-lg px-space-md py-space-sm font-title-sm text-title-sm transition-colors';
 
+/** Ảnh nhỏ của sản phẩm (chỉ https; không có/không hợp lệ → biểu tượng thay thế). */
+function ProductThumb({ url, size }: { url: string | null; size: 'sm' | 'md' }) {
+  const src = safeHttpsUrl(url);
+  const box = size === 'md' ? 'h-10 w-10' : 'h-6 w-6';
+  return (
+    <span
+      className={cx(
+        'flex shrink-0 items-center justify-center overflow-hidden rounded bg-surface-container-high text-on-surface-variant',
+        box,
+      )}
+    >
+      {src ? (
+        // biome-ignore lint/performance/noImgElement: ảnh CDN của nguồn sản phẩm (không qua next/image, tên miền do CSP kiểm soát)
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Icon name="sell" size={size === 'md' ? 18 : 12} />
+      )}
+    </span>
+  );
+}
+
 export function ComposerStudio({
   channels,
   timeZone,
   publishEnabled,
+  products,
   aiReason,
   initial,
 }: {
   channels: ComposerChannel[];
+  products: ComposerProduct[];
   timeZone: string;
   /** Cờ `FB_PUBLISH_ENABLED` của web: tắt → chỉ lưu nháp được. */
   publishEnabled: boolean;
@@ -79,6 +121,27 @@ export function ComposerStudio({
   const [text, setText] = useState(initial?.message ?? '');
   const [tab, setTab] = useState<ComposerPlatform>('facebook');
   const soon = t('soon');
+  const [pickedIds, setPickedIds] = useState<string[]>(initial?.productIds ?? []);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [productQuery, setProductQuery] = useState('');
+  const pickedProducts = pickedIds
+    .map((id) => products.find((product) => product.id === id))
+    .filter((product): product is ComposerProduct => product !== undefined);
+  const needle = productQuery.trim().toLowerCase();
+  const visibleProducts = products.filter(
+    (product) =>
+      needle === '' ||
+      product.name.toLowerCase().includes(needle) ||
+      (product.sku ?? '').toLowerCase().includes(needle),
+  );
+  const toggleProduct = (id: string) =>
+    setPickedIds((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : current.length >= MAX_PRODUCTS
+          ? current
+          : [...current, id],
+    );
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const [pending, startAi] = useTransition();
   const [suggestion, setSuggestion] = useState<SuggestionResult | null>(null);
@@ -147,31 +210,29 @@ export function ComposerStudio({
         </div>
         <div className="flex flex-wrap items-center gap-space-sm">
           {initial ? (
-            <button
-              type="submit"
+            <PendingSubmit
               formAction={deletePublishPostAction}
               formNoValidate
               className={cx(actionBtn, 'bg-surface-container-low text-error')}
             >
               <Icon name="delete" size={18} />
               {t('actions.delete')}
-            </button>
+            </PendingSubmit>
           ) : null}
           {initial?.status === 'scheduled' ? (
-            <button
-              type="submit"
+            <PendingSubmit
               formAction={cancelPublishScheduleAction}
               formNoValidate
               className={cx(actionBtn, 'bg-surface-container-low text-on-surface')}
             >
               <Icon name="event_busy" size={18} />
               {t('actions.cancelSchedule')}
-            </button>
+            </PendingSubmit>
           ) : null}
-          <button
-            type="submit"
+          <PendingSubmit
             name="intent"
             value="draft"
+            pendingLabel={t('pending.draft')}
             className={cx(
               actionBtn,
               'bg-surface-container-high text-on-surface hover:bg-surface-container-highest',
@@ -179,11 +240,11 @@ export function ComposerStudio({
           >
             <Icon name="draft" size={18} />
             {t('actions.draft')}
-          </button>
-          <button
-            type="submit"
+          </PendingSubmit>
+          <PendingSubmit
             name="intent"
             value="schedule"
+            pendingLabel={t('pending.schedule')}
             disabled={!canSend}
             aria-disabled={!canSend}
             title={publishEnabled ? undefined : t('publishDisabledShort')}
@@ -195,11 +256,11 @@ export function ComposerStudio({
           >
             <Icon name="schedule_send" size={18} />
             {t('actions.schedule')}
-          </button>
-          <button
-            type="submit"
+          </PendingSubmit>
+          <PendingSubmit
             name="intent"
             value="publish"
+            pendingLabel={t('pending.publish')}
             disabled={!canSend}
             aria-disabled={!canSend}
             title={publishEnabled ? undefined : t('publishDisabledShort')}
@@ -211,10 +272,11 @@ export function ComposerStudio({
           >
             <Icon name="rocket_launch" size={18} />
             {t('actions.publish')}
-          </button>
+          </PendingSubmit>
         </div>
       </div>
 
+      <PendingNote>{t('pending.note')}</PendingNote>
       <p
         role="note"
         className="flex items-start gap-space-xs rounded-lg bg-tertiary-fixed/40 p-space-md font-body-sm text-body-sm text-on-surface"
@@ -590,20 +652,90 @@ export function ComposerStudio({
             <p className="font-body-sm text-body-sm text-on-surface-variant">
               {t('products.hint')}
             </p>
-            <div className="flex flex-wrap items-center gap-space-sm">
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                title={soon}
-                className="inline-flex cursor-not-allowed items-center gap-1 rounded-lg bg-secondary-fixed px-space-sm py-1 font-label-md text-label-md font-semibold text-on-secondary-fixed opacity-60"
-              >
-                <Icon name="sell" size={16} />
-                {t('products.pin')}
-              </button>
-              <span className="font-body-sm text-body-sm text-on-surface-variant">
-                {t('products.empty')}
-              </span>
+            <div className="flex flex-col gap-space-sm">
+              <div className="flex flex-wrap items-center gap-space-sm">
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(!pickerOpen)}
+                  aria-expanded={pickerOpen}
+                  disabled={products.length === 0}
+                  title={products.length === 0 ? t('products.noCatalog') : undefined}
+                  className="inline-flex items-center gap-1 bg-secondary-fixed text-on-secondary-fixed disabled:cursor-not-allowed disabled:opacity-60 rounded-lg px-space-sm py-1 font-label-md text-label-md font-semibold"
+                >
+                  <Icon name="sell" size={16} />
+                  {t('products.pin')}
+                </button>
+                {pickedProducts.length === 0 ? (
+                  <span className="font-body-sm text-body-sm text-on-surface-variant">
+                    {products.length === 0 ? t('products.noCatalog') : t('products.empty')}
+                  </span>
+                ) : null}
+              </div>
+              {pickedProducts.map((product, index) => (
+                <span
+                  key={product.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-secondary-fixed px-space-sm py-1 font-label-md text-label-md text-on-secondary-fixed"
+                >
+                  <input type="hidden" name="product" value={product.id} />
+                  <ProductThumb url={product.imageUrl} size="sm" />
+                  {index === 0 ? <Icon name="star" size={14} /> : null}
+                  {product.name}
+                  <button
+                    type="button"
+                    aria-label={t('products.remove', { name: product.name })}
+                    onClick={() => toggleProduct(product.id)}
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
+                </span>
+              ))}
+              {pickedProducts.length > 0 ? (
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
+                  {t('products.primaryHint')}
+                </p>
+              ) : null}
+              {pickerOpen ? (
+                <div className="rounded-lg bg-surface-container-low p-space-sm">
+                  <input
+                    type="search"
+                    value={productQuery}
+                    onChange={(event) => setProductQuery(event.target.value)}
+                    placeholder={t('products.search')}
+                    aria-label={t('products.search')}
+                    className="mb-space-xs w-full rounded bg-surface-container-lowest px-space-sm py-1 font-body-sm text-body-sm outline-none"
+                  />
+                  <ul className="max-h-56 overflow-y-auto">
+                    {visibleProducts.map((product) => {
+                      const checked = pickedIds.includes(product.id);
+                      const full = !checked && pickedIds.length >= MAX_PRODUCTS;
+                      return (
+                        <li key={product.id}>
+                          <label className="flex cursor-pointer items-center gap-space-sm rounded px-space-xs py-1 hover:bg-surface-container-high">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={full}
+                              onChange={() => toggleProduct(product.id)}
+                            />
+                            <ProductThumb url={product.imageUrl} size="md" />
+                            <span className="min-w-0 flex-1 truncate font-body-sm text-body-sm text-on-surface">
+                              {product.name}
+                            </span>
+                            {product.priceVnd === null ? null : (
+                              <span className="font-label-sm text-label-sm text-on-surface-variant">
+                                {t('products.price', { price: formatCount(product.priceVnd) })}
+                              </span>
+                            )}
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="mt-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                    {t('products.limit', { count: pickedIds.length, max: MAX_PRODUCTS })}
+                  </p>
+                </div>
+              ) : null}
             </div>
             <label
               htmlFor={`${textId}-note`}

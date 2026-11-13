@@ -4,13 +4,17 @@ import {
   eq,
   getPublishPost,
   listChannels,
+  listPickableProducts,
   listPostsForWeek,
   listPublishDrafts,
+  listPublishPostProductIds,
   listPublishPostsForWeek,
+  type PickableProduct,
   type PublishPostItem,
   schema,
 } from '@flow/db/runtime';
 import { isValidTimezone } from '@flow/shared';
+import { outcomeOf, type PublishOutcome } from '../lib/publish-outcome';
 import { getDb } from './db';
 
 export type CalendarData = {
@@ -26,6 +30,9 @@ export type ComposerData = {
   timeZone: string;
   /** Bài đang sửa (`?id=`); `null` = bài mới hoặc không tìm thấy. */
   post: PublishPostItem | null;
+  /** Sản phẩm đang bán để chọn gắn vào bài, và các sản phẩm đã gắn vào bài đang sửa. */
+  products: PickableProduct[];
+  selectedProductIds: string[];
 };
 
 const FALLBACK_TIME_ZONE = 'UTC';
@@ -67,6 +74,18 @@ export async function loadCalendar(
   });
 }
 
+/** Kết quả đăng hiện tại của một bài (chỉ ĐỌC; RLS: chỉ Owner thấy bài của workspace mình). Không thấy bài → `null`. */
+export async function loadPublishOutcome(
+  workspaceId: string,
+  userId: string,
+  postId: string,
+): Promise<PublishOutcome | null> {
+  return getDb().withActor(workspaceId, userId, async (tx) => {
+    const post = await getPublishPost(tx, workspaceId, postId);
+    return post ? outcomeOf(post.targets) : null;
+  });
+}
+
 /** Dữ liệu trang Biên tập bài viết: kênh thật của workspace, múi giờ và (nếu có `postId`) bài đang sửa. Chỉ ĐỌC. */
 export async function loadComposer(
   workspaceId: string,
@@ -74,11 +93,13 @@ export async function loadComposer(
   postId?: string,
 ): Promise<ComposerData> {
   return getDb().withActor(workspaceId, userId, async (tx) => {
-    const [timeZone, channels, post] = await Promise.all([
+    const [timeZone, channels, post, products, selectedProductIds] = await Promise.all([
       workspaceTimeZone(tx, workspaceId),
       listChannels(tx, workspaceId),
       postId ? getPublishPost(tx, workspaceId, postId) : Promise.resolve(null),
+      listPickableProducts(tx, workspaceId),
+      postId ? listPublishPostProductIds(tx, workspaceId, postId) : Promise.resolve([]),
     ]);
-    return { channels, timeZone, post };
+    return { channels, timeZone, post, products, selectedProductIds };
   });
 }
